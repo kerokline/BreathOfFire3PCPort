@@ -61,7 +61,7 @@ constexpr std::uint32_t kAccessoryStride = 0x18;
 }  // namespace at
 
 struct Callees {
-    void (__cdecl* set_draw_mode)(unsigned char*, int, int, unsigned, unsigned long);   // Gpu_SetDrawMode (psx_gpu.cpp)
+    void (__cdecl* set_draw_mode)(unsigned char*, int, int, unsigned, std::uint32_t);   // Gpu_SetDrawMode (psx_gpu.cpp)
     void (__cdecl* commit_prim)(unsigned, unsigned);                                   // Gfx_CommitPrim (draw_emit.cpp)
     void (__cdecl* set_poly_ft4)(unsigned char*);                                      // Gpu_SetPolyFT4 (psx_gpu.cpp)
     void (__cdecl* set_sprt)(unsigned char*);                                          // Gpu_SetSprt (psx_gpu.cpp)

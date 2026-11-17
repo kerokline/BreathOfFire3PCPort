@@ -1063,8 +1063,8 @@ extern "C" void __cdecl GameMode5_Leave(void) {
         const unsigned char flags = EventBattle_Flags;
         Field_StepCount = 0;
         if (!(flags & 2)) {
-            const long z = Field_Kind2Z, x = Field_Kind2X;
-            const long height = SH_CALL(AreaMap_Elevation)(x, z);
+            const std::int32_t z = Field_Kind2Z, x = Field_Kind2X;
+            const std::int32_t height = SH_CALL(AreaMap_Elevation)(x, z);
             SH_CALL(MapView_SetElevation)(static_cast<int>(height));
         }
         if (!(EventBattle_Flags & 0x40) && !(Battle_EndFlags & 8)) {

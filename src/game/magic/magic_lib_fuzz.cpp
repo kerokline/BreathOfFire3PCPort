@@ -94,7 +94,7 @@ unsigned g_out;          // Battle_ActorIsOut's answers, a bit per actor 0..10
 // --- the effects (callees' recorders that compute their answers) --------------------------------------------------------------------
 
 std::uint32_t VectorNormalAct(const std::uint32_t* a, std::uint32_t) {
-    const auto* const in = reinterpret_cast<const long*>(static_cast<std::uintptr_t>(a[0]));
+    const auto* const in = reinterpret_cast<const std::int32_t*>(static_cast<std::uintptr_t>(a[0]));
     mh::Note(static_cast<std::uint32_t>(in[0]), static_cast<std::uint32_t>(in[1]), static_cast<std::uint32_t>(in[2]), 0);
     return static_cast<std::uint32_t>(::Gte_VectorNormalS(in, reinterpret_cast<short*>(static_cast<std::uintptr_t>(a[1]))));
 }

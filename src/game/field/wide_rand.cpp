@@ -122,8 +122,8 @@ struct Saved {
     unsigned char area[kAreaBytes];
     unsigned char layers[kLayerBytes];
     unsigned short cells[kCells];
-    unsigned long handlers[77];
-    unsigned long cell_base;
+    std::uint32_t handlers[77];
+    std::uint32_t cell_base;
     short row, column;
     unsigned char inset, input_flags, buffer_index;
 };
@@ -421,7 +421,7 @@ void SelfTest() {
     g_rng = 0x56FD2A02u;
     for (unsigned round = 0; round < kRounds; ++round) {
         // The camera and the view, biased to the insets the field sees.
-        unsigned long angle = Next();
+        std::uint32_t angle = Next();
         if (Next() % 2) angle = (angle & ~0xFFFFul) | (0x200u + Next() % 0x81 - 0x40);
         static const short kDistance[] = {0, 256, 1124, 1543, 2176, 2560, 3900, -256, 7296};
         const short distance = Next() % 3 == 0 ? static_cast<short>(Next()) : kDistance[Next() % 9];

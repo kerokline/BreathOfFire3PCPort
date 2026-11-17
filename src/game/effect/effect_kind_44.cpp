@@ -132,9 +132,9 @@ void NextState() {
     s[1] = static_cast<unsigned char>(s[1] + 1);
 }
 
-long* Point(unsigned char* p) { return reinterpret_cast<long*>(p); }
+std::int32_t* Point(unsigned char* p) { return reinterpret_cast<std::int32_t*>(p); }
 
-const long* Point(const unsigned char* p) { return reinterpret_cast<const long*>(p); }
+const std::int32_t* Point(const unsigned char* p) { return reinterpret_cast<const std::int32_t*>(p); }
 
 float* Out(unsigned char* p) { return reinterpret_cast<float*>(p); }
 
@@ -385,7 +385,7 @@ extern "C" void __cdecl EffectKind44_SparksStep(void) {
             unsigned char* q = EffectKind44_SparkCursor;
             SetULEffect2c(q + 0x2C, ULEffect2c(q + 0x2C) + ULEffect2c(q + 0xC));
             q = EffectKind44_SparkCursor;
-            const long ground = SH_CALL(AreaMap_Elevation)(Long(q + 0x28), Long(q + 0x2C));
+            const std::int32_t ground = SH_CALL(AreaMap_Elevation)(Long(q + 0x28), Long(q + 0x2C));
             SetULEffect2c(EffectKind44_SparkCursor + 0x30, static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(ground))) << 16);
             SH_CALL(EffectKind44_SparkTrail)(EffectKind44_SparkCursor);
             q = EffectKind44_SparkCursor;
@@ -487,7 +487,7 @@ extern "C" void __cdecl EffectKind44_SparkEmit(void) {
     v = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(e))) << 8;
     SetULEffect2c(EffectKind44_SparkCursor + 0x2C, v + static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->z));
     const unsigned char* q = EffectKind44_SparkCursor;
-    const long ground = SH_CALL(AreaMap_Elevation)(Long(q + 0x28), Long(q + 0x2C));
+    const std::int32_t ground = SH_CALL(AreaMap_Elevation)(Long(q + 0x28), Long(q + 0x2C));
     const U angle = static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(spread))) + e + 0x800u;
     SetULEffect2c(EffectKind44_SparkCursor + 0x30, static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(ground))) << 16);
     v = static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(angle))) << 4;

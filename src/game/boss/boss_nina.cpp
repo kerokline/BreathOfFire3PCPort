@@ -328,9 +328,9 @@ void DeathStates() {
 // The two ground words: enemy 0's +0x3E and the leader's, AreaMap_Elevation
 // of their (+0x34, +0x38).
 void GroundWords() {
-    const long e = BH_CALL(AreaMap_Elevation)(Battle_Enemies[0].x, Battle_Enemies[0].z);
+    const std::int32_t e = BH_CALL(AreaMap_Elevation)(Battle_Enemies[0].x, Battle_Enemies[0].z);
     Battle_Enemies[0].height_whole = static_cast<unsigned>(e) & 0xFFFF;
-    const long l = BH_CALL(AreaMap_Elevation)(ObjTrio[0].x, ObjTrio[0].z);
+    const std::int32_t l = BH_CALL(AreaMap_Elevation)(ObjTrio[0].x, ObjTrio[0].z);
     ObjTrio[0].height_whole = static_cast<unsigned>(l) & 0xFFFF;
 }
 
@@ -348,7 +348,7 @@ void StoreHooksBossSe(U end, U exit, U event) {
 }  // namespace
 
 // original 0x439E00: BossKind_Table[17]: by +1 through BossNina_Steps (12).
-extern "C" unsigned long __cdecl BossNina_Dispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl BossNina_Dispatch(std::uint32_t through) {
     return DispatchBossSc("BossNina_Dispatch", ::bof3::Img(0x64CD48), 12, 1, through);
 }
 
@@ -362,7 +362,7 @@ extern "C" void __cdecl BossNina_Enter(void) {
 
 // original 0x439E70: BossNina_Steps 9: by +2 through BossNina_WalkSteps (3:
 // BossNina_WalkStart, BossNina_WalkStep, 0x4373C0).
-extern "C" unsigned long __cdecl BossNina_WalkDispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl BossNina_WalkDispatch(std::uint32_t through) {
     return DispatchBossSc("BossNina_WalkDispatch", ::bof3::Img(0x64CD78), 3, 2, through);
 }
 
@@ -392,7 +392,7 @@ extern "C" unsigned __cdecl BossNina_WalkStep(void) {
 
 // original 0x439EE0: the +0xF4 hook: through BossNina_Hooks (3:
 // BossNina_HookAct, BossNina_HookHit, BareRet).
-extern "C" unsigned long __cdecl BossNina_Hook(unsigned long word) { return HookDispatchBossSc("BossNina_Hook", ::bof3::Img(0x64CD84), word); }
+extern "C" std::uint32_t __cdecl BossNina_Hook(std::uint32_t word) { return HookDispatchBossSc("BossNina_Hook", ::bof3::Img(0x64CD84), word); }
 
 // original 0x439EF0: hook entry 0: with the fight's bit 0, action 3; else
 // while the wait count 0x675F00 is not 0, action 0 and the count down; at 0,
@@ -566,7 +566,7 @@ extern "C" void __cdecl Boss16_Exit(void) {
 }
 
 // original 0x43A360: BossKind_Table[15]: by +1 through BossRocky_Steps (12).
-extern "C" unsigned long __cdecl BossRocky_Dispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl BossRocky_Dispatch(std::uint32_t through) {
     return DispatchBossSc("BossRocky_Dispatch", ::bof3::Img(0x64CDAC), 12, 1, through);
 }
 
@@ -579,10 +579,10 @@ extern "C" unsigned char __cdecl BossRocky_Enter(void) {
 }
 
 // original 0x43A3C0: the +0xF4 hook: through BossRocky_Hooks (3, all BareRet).
-extern "C" unsigned long __cdecl BossRocky_Hook(unsigned long word) { return HookDispatchBossSc("BossRocky_Hook", ::bof3::Img(0x64CDDC), word); }
+extern "C" std::uint32_t __cdecl BossRocky_Hook(std::uint32_t word) { return HookDispatchBossSc("BossRocky_Hook", ::bof3::Img(0x64CDDC), word); }
 
 // original 0x43A3D0: BossKind_Table[53]: by +1 through BossSample8_Steps (12).
-extern "C" unsigned long __cdecl BossSample8_Dispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl BossSample8_Dispatch(std::uint32_t through) {
     return DispatchBossSc("BossSample8_Dispatch", ::bof3::Img(0x64CDE8), 12, 1, through);
 }
 
@@ -598,7 +598,7 @@ extern "C" unsigned char __cdecl BossSample8_Enter(void) {
 }
 
 // original 0x43A450: the +0xF4 hook: through BossSample8_Hooks (3, all BareRet).
-extern "C" unsigned long __cdecl BossSample8_Hook(unsigned long word) {
+extern "C" std::uint32_t __cdecl BossSample8_Hook(std::uint32_t word) {
     return HookDispatchBossSc("BossSample8_Hook", ::bof3::Img(0x64CE18), word);
 }
 
@@ -622,7 +622,7 @@ extern "C" void __cdecl Boss46_Setup(void) {
 }
 
 // original 0x43A4D0: BossKind_Table[16]: by +1 through BossPooch_Steps (12).
-extern "C" unsigned long __cdecl BossPooch_Dispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl BossPooch_Dispatch(std::uint32_t through) {
     return DispatchBossSc("BossPooch_Dispatch", ::bof3::Img(0x64CE38), 12, 1, through);
 }
 
@@ -635,7 +635,7 @@ extern "C" unsigned char __cdecl BossPooch_Enter(void) {
 }
 
 // original 0x43A530: the +0xF4 hook: through BossPooch_Hooks (3, all BareRet).
-extern "C" unsigned long __cdecl BossPooch_Hook(unsigned long word) { return HookDispatchBossSc("BossPooch_Hook", ::bof3::Img(0x64CE68), word); }
+extern "C" std::uint32_t __cdecl BossPooch_Hook(std::uint32_t word) { return HookDispatchBossSc("BossPooch_Hook", ::bof3::Img(0x64CE68), word); }
 
 // original 0x43A540: Boss_SetupTable[15]: End = Boss15_End, Exit =
 // Boss15_Exit, Event = BareRetZero.
@@ -930,9 +930,9 @@ extern "C" void __cdecl BossMap_UpdateFromEnemies(void) {
         BH_CALL(Sprite_EnsureAnimation)(up ? 3 : 2);
         BH_CALL(BossMap_SetCorners)(e.cell, up ? 1 : 0);
     }
-    const long ground = BH_CALL(AreaMap_Elevation)(Battle_Enemies[0].x, Battle_Enemies[0].z);
+    const std::int32_t ground = BH_CALL(AreaMap_Elevation)(Battle_Enemies[0].x, Battle_Enemies[0].z);
     Battle_Enemies[0].height_whole = static_cast<unsigned>(ground) & 0xFFFF;
-    const long leader = BH_CALL(AreaMap_Elevation)(ObjTrio[0].x, ObjTrio[0].z);
+    const std::int32_t leader = BH_CALL(AreaMap_Elevation)(ObjTrio[0].x, ObjTrio[0].z);
     ObjTrio[0].height_whole = static_cast<unsigned>(leader) & 0xFFFF;
     if (rv::Bytes(ObjTrio)[0x134] & 2) BossH_CameraY = ObjTrio[0].height;
 }

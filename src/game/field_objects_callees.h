@@ -18,18 +18,18 @@ struct CalleesFieldObjects {
     void (__cdecl* move)(unsigned char*, unsigned char);
     void (__cdecl* settle)(unsigned char*, unsigned char);
     void (__cdecl* motion)(unsigned char*);
-    long (__cdecl* elevation)(long, long);
+    std::int32_t (__cdecl* elevation)(std::int32_t, std::int32_t);
     void (__cdecl* party_apply)(unsigned char*);
     void (__cdecl* party_move)(unsigned char*, unsigned char);
     unsigned char (__cdecl* by_handle)(unsigned char);
-    void (__cdecl* attach_offset)(long*, unsigned char);
+    void (__cdecl* attach_offset)(std::int32_t*, unsigned char);
     void (__cdecl* update)(unsigned char*);
     void (__cdecl* push_matrix)();
     short* (__cdecl* rot_matrix)(const short*, short*);
-    void (__cdecl* trans_matrix)(unsigned long*, const unsigned long*);
-    void (__cdecl* set_rot)(const unsigned long*);
-    void (__cdecl* set_trans)(const unsigned long*);
-    void (__cdecl* rot_trans)(const short*, long*);
+    void (__cdecl* trans_matrix)(std::uint32_t*, const std::uint32_t*);
+    void (__cdecl* set_rot)(const std::uint32_t*);
+    void (__cdecl* set_trans)(const std::uint32_t*);
+    void (__cdecl* rot_trans)(const short*, std::int32_t*);
     void (__cdecl* pop_matrix)();
 };
 

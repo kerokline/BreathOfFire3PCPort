@@ -223,7 +223,7 @@ MS19_EXPORT void __cdecl BarrierDisc_Draw(void) {
         Put16(::bof3::Img(Prim_VertexScratch_addr) + 4, 0);
         MH_CALL(Gpu_SetPolyG3)(prim);
         MH_CALL(Gpu_SetSemiTrans)(prim, 1);
-        long depth;
+        std::int32_t depth;
         MH_CALL(Gte_RotTransPers3)(Vec(::bof3::Img(Prim_VertexScratch_addr)), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x8), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x10), At(prim, 8), At(prim, 0x18), At(prim, 0x28), &depth);
         MH_CALL(Gte_PrimDepths3_10B)(prim);
         prim[4] = static_cast<unsigned char>(Sprite_Current[9] * 6);

@@ -123,14 +123,14 @@ literal	src/game/area/area_136.cpp	0x470000	1	AH_CALL(Field_ChangeArea)(0x88, 0x
 literal	src/game/area/area_140.cpp	0x558000	1	if (static_cast<U>(x) != 0x558000) return 0;
 literal	src/game/area/area_141.cpp	0x450000	1	const std::int32_t d = static_cast<std::int32_t>(static_cast<U>(rv::Current<records::SpriteObject>()->x) - 0x450000u) >> 15;
 literal	src/game/area/area_143.cpp	0x580000	1	extern " " void __cdecl Area143_ChangeArea70(void) { AH_CALL(Field_ChangeArea)(0x70, 0xC8000, 0x580000, 0x81); }
-literal	src/game/area/area_145.cpp	0x428000	2	AH_CALL(Area145_SpawnTrail)(0x428000, 0x638000, static_cast<long>(0x428000u - (n << 16)), 0x638000);
+literal	src/game/area/area_145.cpp	0x428000	2	AH_CALL(Area145_SpawnTrail)(0x428000, 0x638000, static_cast<std::int32_t>(0x428000u - (n << 16)), 0x638000);
 literal	src/game/area/area_145.cpp	0x500000	1	rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->step_y, 0x500000);
 literal	src/game/area/area_145.cpp	0x500000	1	rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->work_20, 0x500000);
 literal	src/game/area/area_145.cpp	0x5D0000	1	AH_CALL(Field_ChangeArea)(0x91, 0x3B8000, 0x5D0000, 0x82);
 literal	src/game/area/area_145.cpp	0x5F0000	1	AH_CALL(Field_ChangeArea)(0x91, 0x3E0000, 0x5F0000, 1);
 literal	src/game/area/area_145.cpp	0x630000	1	AH_CALL(Field_ChangeArea)(0x91, 0xA0000, 0x630000, 0x80);
-literal	src/game/area/area_145.cpp	0x638000	1	AH_CALL(Area145_SpawnTrail)(0x3D8000, 0x638000, static_cast<long>(x), static_cast<long>(z));
-literal	src/game/area/area_145.cpp	0x638000	2	AH_CALL(Area145_SpawnTrail)(0x428000, 0x638000, static_cast<long>(0x428000u - (n << 16)), 0x638000);
+literal	src/game/area/area_145.cpp	0x638000	1	AH_CALL(Area145_SpawnTrail)(0x3D8000, 0x638000, static_cast<std::int32_t>(x), static_cast<std::int32_t>(z));
+literal	src/game/area/area_145.cpp	0x638000	2	AH_CALL(Area145_SpawnTrail)(0x428000, 0x638000, static_cast<std::int32_t>(0x428000u - (n << 16)), 0x638000);
 literal	src/game/area/area_145.cpp	0x638000	1	Field_Kind2Z = 0x638000;
 literal	src/game/area/area_149.cpp	0x630000	1	AH_CALL(Field_ChangeArea)(0xA7, 0x280000, 0x630000, 0x81);
 literal	src/game/area/area_167.cpp	0x560000	1	AH_CALL(Field_ChangeArea)(0xA7, 0x1A8000, 0x560000, 5);
@@ -672,8 +672,8 @@ literal	src/game/effect/effect_kind_18_sub_0d.cpp	0x878000	1	SH_CALL(EffectKind1
 literal	src/game/effect/effect_kind_18_sub_0d.cpp	0x878000	1	SH_CALL(EffectKind18_0A_DrawDoor)(Div256(n + 0x80), 0x878000, (n > 0x30 ? 0x10u : 0u) + 1);
 literal	src/game/effect/effect_kind_18_sub_0d.cpp	0x888000	1	SH_CALL(EffectKind18_0A_DrawDoor)(0xC00, 0x888000, 0x11);
 literal	src/game/effect/effect_kind_18_sub_10.cpp	0x400000	1	y -= 0x400000u;
-literal	src/game/effect/effect_kind_18_sub_10.cpp	0x418000	1	ground = SH_CALL(AreaMap_Elevation)(0x418000, static_cast<long>(ez));
-literal	src/game/effect/effect_kind_18_sub_10.cpp	0x418000	1	long ground = SH_CALL(AreaMap_Elevation)(0x418000, static_cast<long>(ez));
+literal	src/game/effect/effect_kind_18_sub_10.cpp	0x418000	1	ground = SH_CALL(AreaMap_Elevation)(0x418000, static_cast<std::int32_t>(ez));
+literal	src/game/effect/effect_kind_18_sub_10.cpp	0x418000	1	std::int32_t ground = SH_CALL(AreaMap_Elevation)(0x418000, static_cast<std::int32_t>(ez));
 literal	src/game/effect/effect_kind_18_sub_10.cpp	0x428000	1	const std::int32_t dx = I(Abs(x - 0x428000u));
 literal	src/game/effect/effect_kind_18_sub_17.cpp	0x400000	1	c -= 0x400000;
 literal	src/game/effect/effect_kind_18_sub_17.cpp	0x430000	1	so->x = 0x430000;
@@ -686,8 +686,8 @@ literal	src/game/effect/effect_kind_18_sub_3f.cpp	0x568000	1	U CornerZ(unsigned 
 literal	src/game/effect/effect_kind_18_sub_3f.cpp	0x800000	1	return (5u - r) | ((q + 6u) << 10) | ((q | 0x800000u) << 5);
 literal	src/game/effect/effect_kind_18_sub_44.cpp	0x00400000	1	if ((bits & 0x7F800000u) == 0x7F800000u && (bits & 0x007FFFFFu) != 0) bits |= 0x00400000u;
 literal	src/game/effect/effect_kind_18_sub_44.cpp	0x007FFFFF	1	if ((bits & 0x7F800000u) == 0x7F800000u && (bits & 0x007FFFFFu) != 0) bits |= 0x00400000u;
-literal	src/game/effect/effect_kind_18_sub_44.cpp	0x800000	1	MapView_FocusX = static_cast<long>(SarRest3g(0x800000u - static_cast<U>(Field_Kind2X), 8));
-literal	src/game/effect/effect_kind_18_sub_44.cpp	0x800000	1	MapView_FocusZ = static_cast<long>(SarRest3g(0x800000u - static_cast<U>(Field_Kind2Z), 8));
+literal	src/game/effect/effect_kind_18_sub_44.cpp	0x800000	1	MapView_FocusX = static_cast<std::int32_t>(SarRest3g(0x800000u - static_cast<U>(Field_Kind2X), 8));
+literal	src/game/effect/effect_kind_18_sub_44.cpp	0x800000	1	MapView_FocusZ = static_cast<std::int32_t>(SarRest3g(0x800000u - static_cast<U>(Field_Kind2Z), 8));
 literal	src/game/effect/effect_kind_1c.cpp	0x600000	1	rv::Current<records::EffectObject>()->x = 0x600000;
 literal	src/game/effect/effect_kind_20.cpp	0x400000	1	rv::Current<records::EffectObject>()->height = static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->height) + 0x400000;
 literal	src/game/effect/effect_kind_29.cpp	0x568000	1	SetUL(q, 0x568000);
@@ -710,7 +710,7 @@ literal	src/game/effect/effect_kind_3d.cpp	0x500000	1	rv::Store<std::uint32_t>(r
 literal	src/game/effect/effect_kind_3d.cpp	0x500000	1	rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_20, 0x500000);
 literal	src/game/effect/effect_kind_3d.cpp	0x638000	1	rv::Current<records::EffectObject>()->z = 0x638000;
 literal	src/game/effect/effect_kind_3d.cpp	0x800000	1	SetUL(r + 8, UL(leader + 8) + 0x800000u);
-literal	src/game/effect/effect_kind_3d.cpp	0x800000	1	const long point[3] = {Long(leader), Long(leader + 4), static_cast<long>(UL(leader + 8) + 0x800000u)};
+literal	src/game/effect/effect_kind_3d.cpp	0x800000	1	const std::int32_t point[3] = {Long(leader), Long(leader + 4), static_cast<std::int32_t>(UL(leader + 8) + 0x800000u)};
 literal	src/game/effect/effect_kind_43.cpp	0x748000	1	rv::Current<records::EffectObject>()->z = 0x748000;
 literal	src/game/effect/effect_kind_48.cpp	0x800000	1	if (speed != 0) rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->step_y, speed + 0x800000u);
 literal	src/game/effect/effect_kind_48.cpp	0x800000	1	rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->step_y, static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->step_y) + 0x800000u);
@@ -2041,7 +2041,7 @@ literal	src/game/scenario/scena_06_3.cpp	0x598000	1	ChangeArea(0x27, 0x598000, 0
 literal	src/game/scenario/scena_06_3.cpp	0x718000	1	ChangeArea(0x2F, 0x718000, 0x90000, 0x80);
 literal	src/game/scenario/scena_07_2.cpp	0x410000	1	ChangeArea(0x55, 0x258000, 0x410000, 0x82);
 literal	src/game/scenario/scena_07_2.cpp	0x410000	1	Kind2At(0x258000, 0x410000);
-literal	src/game/scenario/scena_07_2.cpp	0x410000	1	const long e = SH_CALL(AreaMap_Elevation)(x, 0x410000);
+literal	src/game/scenario/scena_07_2.cpp	0x410000	1	const std::int32_t e = SH_CALL(AreaMap_Elevation)(x, 0x410000);
 literal	src/game/scenario/scena_07_2.cpp	0x410000	1	rv::As<records::EffectObject>(p)->step_z = 0x410000;
 literal	src/game/scenario/scena_07_2.cpp	0x410000	6	rv::As<records::EffectObject>(p)->z = 0x410000;
 literal	src/game/scenario/scena_07_2.cpp	0x410000	3	rv::As<records::EffectObject>(q)->z = 0x410000;

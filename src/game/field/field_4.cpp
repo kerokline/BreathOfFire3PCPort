@@ -275,12 +275,12 @@ const Callees kOriginals = {
     Fn<int (__cdecl*)(unsigned, unsigned)>(::bof3::Code(fn::kCellHook.v)),
     Fn<void (__cdecl*)(unsigned, unsigned, unsigned)>(::bof3::Code(fn::kSetCell.v)),
     Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(::bof3::Code(fn::kPartyVisible.v)),
-    Fn<unsigned char (__cdecl*)(long, long, unsigned, unsigned, unsigned)>(::bof3::Code(fn::kMemberFits.v)),
+    Fn<unsigned char (__cdecl*)(std::int32_t, std::int32_t, unsigned, unsigned, unsigned)>(::bof3::Code(fn::kMemberFits.v)),
     Fn<void (__cdecl*)()>(::bof3::Code(fn::kLeaderMove.v)),
     Fn<void (__cdecl*)()>(::bof3::Code(fn::kLeaderFollow.v)),
     Fn<void (__cdecl*)()>(::bof3::Code(fn::kLeaderGround.v)),
     Fn<unsigned char (__cdecl*)()>(::bof3::Code(fn::kStepCode.v)),
-    Fn<long (__cdecl*)(long, long, std::uint32_t)>(::bof3::Code(fn::kSlopeAt.v)),
+    Fn<std::int32_t (__cdecl*)(std::int32_t, std::int32_t, std::uint32_t)>(::bof3::Code(fn::kSlopeAt.v)),
     Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(::bof3::Code(fn::kTestFB.v)),
     {Fn<Hook>(::bof3::CodePlace(kStepHandlers[0])), Fn<Hook>(::bof3::CodePlace(kStepHandlers[1])), Fn<Hook>(::bof3::CodePlace(kStepHandlers[2])), Fn<Hook>(::bof3::CodePlace(kStepHandlers[3])),
      Fn<Hook>(::bof3::CodePlace(kStepHandlers[4])), Fn<Hook>(::bof3::CodePlace(kStepHandlers[5])), Fn<Hook>(::bof3::CodePlace(kStepHandlers[6])), Fn<Hook>(::bof3::CodePlace(kStepHandlers[7])),
@@ -321,10 +321,10 @@ const Callees kOriginals = {
     Field_MemberSprite, Sprite_LoadPalette, MapView_SetElevation, Encounter_RollInitiative, Sprite_ScriptTick,
     Area_PassageAhead, EventScript_Run, Msg_OpenScript, Msg_OpenSystem, Flags_Test, Flags_Set, Sound_PlayEffect,
     Item_NamePtr, Inventory_Add, MoveCmd_TestFC, MapView_SlopeAt, Sprite_ObjectAt,
-    Fn<unsigned char (__cdecl*)(long, long, unsigned)>(::bof3::Code(fn::kPathClear.v)),
+    Fn<unsigned char (__cdecl*)(std::int32_t, std::int32_t, unsigned)>(::bof3::Code(fn::kPathClear.v)),
     Fn<void (__cdecl*)(int)>(::bof3::Code(fn::kGiveZenny.v)),
     Fn<const unsigned char* (__cdecl*)()>(::bof3::Code(fn::kAreaExits.v)),
-    Fn<unsigned char (__cdecl*)(long, long, long)>(::bof3::Code(fn::kWayBlockedWide.v)),
+    Fn<unsigned char (__cdecl*)(std::int32_t, std::int32_t, std::int32_t)>(::bof3::Code(fn::kWayBlockedWide.v)),
 };
 Callees g = kOriginals;
 
@@ -408,8 +408,8 @@ extern "C" void __cdecl Field_LeaderStart(void) {
     Sprite_Current[0xB] = 0;
     {
         const records::PartyMember* const c = rv::Current<records::PartyMember>();
-        const long z = c->z, x = c->x;
-        const long ground = field_event::g.ground_at(x, z);
+        const std::int32_t z = c->z, x = c->x;
+        const std::int32_t ground = field_event::g.ground_at(x, z);
         rv::Store<unsigned>(rv::Current<records::PartyMember>()->height_whole, static_cast<std::uint16_t>(ground));
     }
     Field_State[0x128] = 3;
@@ -714,7 +714,7 @@ extern "C" unsigned char __cdecl Field_LeaderStepTarget(void) {
         }
     }
     if (Field_Request != 9) {
-        const int taken = event_ops::g.step_hook(static_cast<long>(x), static_cast<long>(z));
+        const int taken = event_ops::g.step_hook(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z));
         if (taken != 0) {
             if (Sprite_Current[1] == 2) return 0xFF;
             code = 0;
@@ -726,7 +726,7 @@ extern "C" unsigned char __cdecl Field_LeaderStepTarget(void) {
     switch (code) {
     case 0: return 1;
     case 2: {
-        const auto slope = static_cast<short>(event_ops::g.slope_at(static_cast<long>(x), static_cast<long>(z),
+        const auto slope = static_cast<short>(event_ops::g.slope_at(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z),
                                                           DirectionInPointer(Sprite_Current)));
         event_ops::g.step_cell();
         if (event_ops::at::kScratch.b_00 == 0) {
@@ -760,7 +760,7 @@ extern "C" unsigned char __cdecl Field_LeaderStepTarget(void) {
         return 0;
     }
     case 3: {
-        const auto slope = static_cast<short>(event_ops::g.slope_at(static_cast<long>(x), static_cast<long>(z),
+        const auto slope = static_cast<short>(event_ops::g.slope_at(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z),
                                                           DirectionInPointer(Sprite_Current)));
         if (event_ops::at::kScratch.b_00 == 0) return 0;
         if (slope > 0x40) {
@@ -1011,7 +1011,7 @@ extern "C" void __cdecl Field_SwapGather(void) {
             } else {
                 placed = false;
                 const std::uint32_t x = FormationX(slot, dir), z = FormationZ(slot, dir);
-                if (event_leader::g.spot_free(static_cast<long>(x), static_cast<long>(z), dir, m[0x70])) {
+                if (event_leader::g.spot_free(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), dir, m[0x70])) {
                     unsigned char* const sc = Sprite_Current;
                     placed = event_leader::g.path_clear(event_leader::at::kTargetX, static_cast<std::int32_t>(Scratch_Swap), sc[0x70]) != 0;
                 }
@@ -1047,8 +1047,8 @@ extern "C" void __cdecl Field_SwapGather(void) {
 // third argument is not read.
 // As the original has it: +9 is put back only on success, and into
 // Sprite_Current read again after the second ground call.
-extern "C" unsigned char __cdecl Field_SpotFree(long x, long z, unsigned, unsigned raised) {
-    const long ground = event_leader::g.ground_at(x, z);
+extern "C" unsigned char __cdecl Field_SpotFree(std::int32_t x, std::int32_t z, unsigned, unsigned raised) {
+    const std::int32_t ground = event_leader::g.ground_at(x, z);
     unsigned char* const sc = Sprite_Current;
     const unsigned char steps = sc[9];
     sc[9] = 0;
@@ -1057,7 +1057,7 @@ extern "C" unsigned char __cdecl Field_SpotFree(long x, long z, unsigned, unsign
     if (std::abs(rise) > 0x40) return 0;
     event_leader::at::kTargetX = static_cast<std::int32_t>(x);
     Scratch_Swap = static_cast<std::int32_t>(z);
-    const long at_spot = event_leader::g.ground_at(x, z);
+    const std::int32_t at_spot = event_leader::g.ground_at(x, z);
     unsigned char* const sc2 = Sprite_Current;
     event_leader::at::kScratch2 = static_cast<unsigned>(at_spot);
     sc2[9] = steps;
@@ -1070,7 +1070,7 @@ extern "C" unsigned char __cdecl Field_SpotFree(long x, long z, unsigned, unsign
 // Each step: the ground (MapView_GroundAt) within 0x40 of the leader's height
 // +0x3E, and not Field_WayBlocked(.., raised, the ground). al 1 open, 0 not.
 // Called by Field_SwapGather and Field_SwapExchange (event_leader.cpp).
-extern "C" unsigned char __cdecl Field_PathClear(long x, long z, unsigned raised) {
+extern "C" unsigned char __cdecl Field_PathClear(std::int32_t x, std::int32_t z, unsigned raised) {
     const std::int32_t leader_z = ObjTrio[0].z;
     const std::int32_t along_x = Abs32(static_cast<std::int32_t>(x) - ObjTrio[0].x) >> 15;
     const std::int32_t along_z = Abs32(static_cast<std::int32_t>(z) - leader_z) >> 15;
@@ -1080,16 +1080,16 @@ extern "C" unsigned char __cdecl Field_PathClear(long x, long z, unsigned raised
     const int sz = zh > lzh ? 1 : zh == lzh ? 0 : -1;
     std::int32_t offset = 0;
     for (std::int32_t i = 0; i <= along_x; ++i) {
-        const auto px = static_cast<long>(static_cast<std::uint32_t>(ObjTrio[0].x) + static_cast<std::uint32_t>(offset));
-        const long ground = SH_CALL(MapView_GroundAt)(px, z);
+        const auto px = static_cast<std::int32_t>(static_cast<std::uint32_t>(ObjTrio[0].x) + static_cast<std::uint32_t>(offset));
+        const std::int32_t ground = SH_CALL(MapView_GroundAt)(px, z);
         if (Abs32(static_cast<short>(ObjTrio[0].height_whole) - S16(static_cast<std::uint32_t>(ground))) > 0x40) return 0;
         if (SH_CALL(Field_WayBlocked)(px, z, raised, ground)) return 0;
         offset = static_cast<std::int32_t>(static_cast<std::uint32_t>(offset) + (static_cast<std::uint32_t>(sx) << 15));
     }
     offset = 0;
     for (std::int32_t i = 0; i <= along_z; ++i) {
-        const auto pz = static_cast<long>(static_cast<std::uint32_t>(ObjTrio[0].z) + static_cast<std::uint32_t>(offset));
-        const long ground = SH_CALL(MapView_GroundAt)(x, pz);
+        const auto pz = static_cast<std::int32_t>(static_cast<std::uint32_t>(ObjTrio[0].z) + static_cast<std::uint32_t>(offset));
+        const std::int32_t ground = SH_CALL(MapView_GroundAt)(x, pz);
         if (Abs32(static_cast<short>(ObjTrio[0].height_whole) - S16(static_cast<std::uint32_t>(ground))) > 0x40) return 0;
         if (SH_CALL(Field_WayBlocked)(x, pz, raised, ground)) return 0;
         offset = static_cast<std::int32_t>(static_cast<std::uint32_t>(offset) + (static_cast<std::uint32_t>(sz) << 15));
@@ -1175,7 +1175,7 @@ extern "C" void __cdecl Field_SwapExchange(void) {
             const unsigned char raised = sc[0x70];
             const std::uint32_t x = FormationX(static_cast<int>(i), d), z = FormationZ(static_cast<int>(i), d);
             bool found = false;
-            if (event_leader::g.spot_free(static_cast<long>(x), static_cast<long>(z), d, raised)) {
+            if (event_leader::g.spot_free(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), d, raised)) {
                 unsigned char* const s = Sprite_Current;
                 found = event_leader::g.path_clear(event_leader::at::kTargetX, static_cast<std::int32_t>(Scratch_Swap), s[0x70]) != 0;
             }
@@ -1189,7 +1189,7 @@ extern "C" void __cdecl Field_SwapExchange(void) {
         }
         rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, event_leader::at::kTargetX);
         rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, static_cast<std::int32_t>(Scratch_Swap));
-        long ground;
+        std::int32_t ground;
         {
             unsigned char* const s = Sprite_Current;
             ground = event_leader::g.ground_at(rv::As<records::SpriteObject>(s)->x, rv::As<records::SpriteObject>(s)->z);
@@ -1202,9 +1202,9 @@ extern "C" void __cdecl Field_SwapExchange(void) {
     const auto lx = static_cast<std::uint32_t>(ObjTrio[0].x);
     const auto lz = static_cast<std::uint32_t>(ObjTrio[0].z);
     std::int32_t far = Abs(static_cast<std::uint32_t>(Field_Kind2X) - lx);
-    Field_Kind2X = static_cast<long>(lx);
+    Field_Kind2X = static_cast<std::int32_t>(lx);
     const std::int32_t far_z = Abs(static_cast<std::uint32_t>(Field_Kind2Z) - lz);
-    Field_Kind2Z = static_cast<long>(lz);
+    Field_Kind2Z = static_cast<std::int32_t>(lz);
     MoveScript_F3Divisor = 0x20;
     if (far < far_z) far = far_z;
     const auto frames = static_cast<unsigned char>(far >> 13);

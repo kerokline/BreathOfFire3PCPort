@@ -197,7 +197,7 @@ extern "C" void __cdecl Area135_MarkerRoute(void) {
         const U z = (r[4] ? 0x8000u : 0u) | static_cast<U>(r[5]) << 16;
         last[0x24] = static_cast<unsigned char>(last[0x24] & 0xDF);
         Sprite_Current[2] = 0;
-        AH_CALL(MoveCmd_OpF7)(static_cast<long>(x), static_cast<long>(z), 0x10, MoveScript_Object);
+        AH_CALL(MoveCmd_OpF7)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), 0x10, MoveScript_Object);
         MoveScript_Object[7] = 1;
         Sprite_Current[8] = r[6];
         last = Sprite_Current;
@@ -260,7 +260,7 @@ extern "C" void __cdecl Area135_FallToFloor(void) {
         U x = static_cast<U>(rv::Current<records::SpriteObject>()->x) - 0x18000;
         for (unsigned column = 0; column < 4; ++column) {
             MapView_HeightScale = 1;
-            const auto ground = static_cast<U>(AH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z)));
+            const auto ground = static_cast<U>(AH_CALL(MapView_GroundAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z)));
             if (static_cast<short>(best) < static_cast<short>(ground)) best = ground;
             x += 0x10000;
         }
@@ -270,7 +270,7 @@ extern "C" void __cdecl Area135_FallToFloor(void) {
         AH_CALL(Area135_ObjectAtCell)(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
     B(::bof3::Img(AreaW0c_TailSub_addr)) = found;
     if (found != 0xFF) {
-        const long top = AH_CALL(AreaMap_Elevation)(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
+        const std::int32_t top = AH_CALL(AreaMap_Elevation)(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
         AH_CALL(Area135_FallTo)(static_cast<unsigned>(top + 0x280));
         return;
     }
@@ -311,7 +311,7 @@ extern "C" void __cdecl Area135_JumpByOccupied(void) {
         const U z = static_cast<U>(B(::bof3::Img(Area135_JumpCells_addr) + k * 2 + 1)) << 16 | 0x8000;
         if (static_cast<U>(tCur->x) != x) continue;
         if (static_cast<U>(tCur->z) != z) continue;
-        if (AH_CALL(Area135_ObjectAtCell)(static_cast<long>(x), static_cast<long>(z)) != 0xFF) break;
+        if (AH_CALL(Area135_ObjectAtCell)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z)) != 0xFF) break;
         cur = Sprite_Current;
         tCur = rv::AsConst<records::SpriteObject>(cur);
     }
@@ -511,7 +511,7 @@ extern "C" unsigned char __cdecl Area135_CellHook(unsigned x, unsigned z) {
 // original 0x41E5E0 (Area_StepHook's case for area 135, 0x56E162): in zones 4,
 // 6 and 7 with story flag 0xC set and Area135_NearMarker(x, z):
 // Party_DropIn(0), al 1; else al 0.
-extern "C" unsigned char __cdecl Area135_StepHook(long x, long z) {
+extern "C" unsigned char __cdecl Area135_StepHook(std::int32_t x, std::int32_t z) {
     const unsigned char zone = Cond_ByteFD;
     if (zone != 4 && zone != 6 && zone != 7) return 0;
     if (AH_CALL(Flags_Test)(Mem(::bof3::Img(Cond_Flags_addr) + 0xa0), 0xC) == 0) return 0;
@@ -764,7 +764,7 @@ extern "C" void __cdecl Area135_FallTo(unsigned height) {
 // original 0x41EC40: the first field object (0..29) in use (+0 bit 0), not
 // the running object (read at entry), of kind +6 = 0xA, at exactly (x, z);
 // al its index, else 0xFF.
-extern "C" unsigned char __cdecl Area135_ObjectAtCell(long x, long z) {
+extern "C" unsigned char __cdecl Area135_ObjectAtCell(std::int32_t x, std::int32_t z) {
     const unsigned char* const self = Sprite_Current;
     for (unsigned i = 0; i < at::kObjectCount; ++i) {
         const unsigned char* const o = Mem(::bof3::Img(Sprite_Objects_addr) + i * at::kObjectStride);
@@ -785,7 +785,7 @@ extern "C" unsigned char __cdecl Area135_ObjectAtCell(long x, long z) {
 extern "C" unsigned char __cdecl Area135_CountQueue(void) {
     unsigned char n = 0;
     for (; n < 4; ++n)
-        if (AH_CALL(Area135_ObjectAtCell)(0x208000, static_cast<long>((static_cast<U>(n) << 17) + 0xC8000)) == 0xFF) break;
+        if (AH_CALL(Area135_ObjectAtCell)(0x208000, static_cast<std::int32_t>((static_cast<U>(n) << 17) + 0xC8000)) == 0xFF) break;
     return n;
 }
 
@@ -846,7 +846,7 @@ extern "C" void __cdecl Area135_RestoreCells(void) {
 // marker's + 2) << 15 of the marker's position less its step (+0xC, +0x10)
 // times its +9 on both axes (|d| < r, signed, |INT_MIN| staying negative):
 // al 1, else 0.
-extern "C" unsigned char __cdecl Area135_NearMarker(long x, long z) {
+extern "C" unsigned char __cdecl Area135_NearMarker(std::int32_t x, std::int32_t z) {
     const U marker = static_cast<U>(Long(Mem(::bof3::Img(Sprite_ObjectsExtra_addr) + 0x25c))) & 0xFF;
     const U self = static_cast<U>(static_cast<std::int32_t>(rv::Current<records::SpriteHead>()->reach)) & 0xFF;
     const U frames = B(::bof3::Img(Sprite_ObjectsExtra_addr) + 0x1f5);

@@ -194,7 +194,7 @@ unsigned __cdecl StubGetTPage(unsigned tp, unsigned abr, int x, int y) {
     Disturb();
     return Hash();
 }
-void __cdecl StubDrawMode(unsigned char* prim, int dfe, int dtd, unsigned tpage, unsigned long tw) {
+void __cdecl StubDrawMode(unsigned char* prim, int dfe, int dtd, unsigned tpage, std::uint32_t tw) {
     Record(4, Id(prim), static_cast<std::uint32_t>(dfe), static_cast<std::uint32_t>(dtd), tpage, static_cast<std::uint32_t>(tw));
     PutDword(prim + 4, 0xE8000000u | (tpage & 0xFFFFu));
     if (dfe) prim[6] = static_cast<unsigned char>(prim[6] | 1);

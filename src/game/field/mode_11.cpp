@@ -571,8 +571,8 @@ extern "C" void __cdecl Mode11_ObjectDraw(void) {
     vertex[2] = static_cast<short>(-((S16FieldE2(WFieldE2(::bof3::Img(at::kObject) + 0x3E)) + 0x80) / 2));
     vertex[3] = 0;
     alignas(4) unsigned char screen[8];
-    long depth, flag;
-    const long z = SH_CALL(Gte_RotTransPers)(vertex, reinterpret_cast<unsigned long*>(screen), &depth);
+    std::int32_t depth, flag;
+    const std::int32_t z = SH_CALL(Gte_RotTransPers)(vertex, reinterpret_cast<std::uint32_t*>(screen), &depth);
     static_cast<void>(flag);
     SetL(Key(Sprite_Current) + 0x60, static_cast<U>(z));
     rv::Store<unsigned>(rv::Current<records::SpriteHead>()->screen_x, Ftol(screen));
@@ -613,11 +613,11 @@ extern "C" void __cdecl Mode11_ObjectDraw(void) {
     move[2] = static_cast<short>(-(S16FieldE2(rv::As<records::SpriteHead>(s)->height_whole) / 2));
     move[3] = 0;
     alignas(4) unsigned char matrix[0x20];
-    SH_CALL(Gte_RotTrans)(move, reinterpret_cast<long*>(matrix + 0x14));
+    SH_CALL(Gte_RotTrans)(move, reinterpret_cast<std::int32_t*>(matrix + 0x14));
     SH_CALL(Gte_RotMatrix)(angles, reinterpret_cast<short*>(matrix));
     SH_CALL(Gte_MulMatrix0)(Camera_Matrix, reinterpret_cast<short*>(matrix), reinterpret_cast<short*>(matrix));
-    SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<unsigned long*>(matrix));
-    SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<unsigned long*>(matrix));
+    SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<std::uint32_t*>(matrix));
+    SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<std::uint32_t*>(matrix));
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x5E, 0);
     CommitAtObject(0xC);
     counter = Frame_Counter;
@@ -642,7 +642,7 @@ extern "C" void __cdecl Mode11_ObjectDraw(void) {
         v[9] = static_cast<short>(static_cast<std::int32_t>(s1 * static_cast<U>(r)) >> 12);
         SH_CALL(Gpu_SetPolyG3)(prim);
         SH_CALL(Gpu_SetSemiTrans)(prim, 1);
-        long fan_depth;
+        std::int32_t fan_depth;
         SH_CALL(Gte_RotTransPers3)(v, v + 4, v + 8, reinterpret_cast<float*>(prim + 8), reinterpret_cast<float*>(prim + 0x18),
                                    reinterpret_cast<float*>(prim + 0x28), &fan_depth);
         SH_CALL(Gte_PrimDepths3_10B)(prim);

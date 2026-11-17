@@ -173,11 +173,11 @@ unsigned char Test(unsigned id, unsigned one_in) {
     return static_cast<unsigned char>(h % one_in == 0 ? 1 + (h >> 8) % 255 : 0);
 }
 // A value that sits on a > 0x40 boundary a good part of the time.
-long Height(std::uint32_t salt) {
+std::int32_t Height(std::uint32_t salt) {
     const std::uint32_t h = Hash(salt);
     static const unsigned short kEdges[] = {0x3F, 0x40, 0x41, 0x8000, 0x7FFF, 0};
     const unsigned short low = h % 3 ? kEdges[(h >> 4) % 6] : static_cast<unsigned short>(h >> 8);
-    return static_cast<long>((Hash(salt + 1) & 0xFFFF0000u) | low);
+    return static_cast<std::int32_t>((Hash(salt + 1) & 0xFFFF0000u) | low);
 }
 
 void __cdecl StubRestoreClut() { Record(1, Address(Sprite_Current)); Disturb(1); }
@@ -189,11 +189,11 @@ void __cdecl StubClearSteps() {
         SetLong(Sprite_Current + 0x10, 0);
     }
 }
-long __cdecl StubGroundAt(long x, long z) {
+std::int32_t __cdecl StubGroundAt(std::int32_t x, std::int32_t z) {
     Record(3, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), Address(Sprite_Current));
     Disturb(3);
     const std::uint32_t h = Hash(30);
-    return static_cast<long>(h % 2 ? h : (h & 0xFFFF0000u) | (h >> 8) % 0x800);
+    return static_cast<std::int32_t>(h % 2 ? h : (h & 0xFFFF0000u) | (h >> 8) % 0x800);
 }
 void __cdecl StubSetAnimation(unsigned animation) { Record(4, animation & 0xFF, Address(Sprite_Current)); Disturb(4); }
 unsigned char __cdecl StubScriptTick() { Record(5, Address(Sprite_Current)); Disturb(5); return static_cast<unsigned char>(Hash(50)); }
@@ -234,18 +234,18 @@ void __cdecl StubFollow() {
     }
 }
 // Member_FollowStep reads the position after it.
-void __cdecl StubCatchUp(long x, long z) {
+void __cdecl StubCatchUp(std::int32_t x, std::int32_t z) {
     Record(22, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), Address(Sprite_Current));
     Disturb(22);
     const std::uint32_t h = Hash(220);
     if (h % 3 == 0) {
-        SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(x + static_cast<long>((h >> 4) % 0xE0000) - 0x70000));
-        SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(z + static_cast<long>((h >> 12) % 0xE0000) - 0x70000));
+        SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(x + static_cast<std::int32_t>((h >> 4) % 0xE0000) - 0x70000));
+        SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(z + static_cast<std::int32_t>((h >> 12) % 0xE0000) - 0x70000));
     }
 }
 // The destination is Sprite_Current +8 or a stack byte (Member_CatchUp's,
 // whose address differs between the copy and ours): only which is recorded.
-void __cdecl StubDirectionTo(long x, long z, unsigned char* direction) {
+void __cdecl StubDirectionTo(std::int32_t x, std::int32_t z, unsigned char* direction) {
     Record(23, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), direction == Sprite_Current + 8);
     Disturb(23);
     *direction = static_cast<unsigned char>(Hash(230) % 11);
@@ -264,7 +264,7 @@ unsigned char __cdecl StubStepAhead() {
     static const unsigned char kAnswers[] = {0, 1, 1, 1, 5, 6, 0xFF, 2};
     return kAnswers[(h >> 8) % 8];
 }
-unsigned char __cdecl StubBlockedAt(long x, long z, unsigned raised, long ground) {
+unsigned char __cdecl StubBlockedAt(std::int32_t x, std::int32_t z, unsigned raised, std::int32_t ground) {
     Record(25, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), (raised & 0xFF) ^ static_cast<std::uint32_t>(ground) << 8);
     Disturb(25);
     const std::uint32_t h = Hash(250);
@@ -277,7 +277,7 @@ unsigned char __cdecl StubCellAhead() {
     return static_cast<unsigned char>(h % 3 == 0 ? 3 : h % 10);
 }
 // It leaves cell 0, which every caller reads.
-long __cdecl StubObjectAt(long x, long z, unsigned dir) {
+std::int32_t __cdecl StubObjectAt(std::int32_t x, std::int32_t z, unsigned dir) {
     Record(27, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), dir & 0xFF);
     Disturb(27);
     Cells()[0] = static_cast<unsigned char>(Hash(270) % 3 ? Hash(271) % 2 : Hash(272));
@@ -334,7 +334,7 @@ unsigned char __cdecl StubByteAt(short x, short z) {
     return h % 3 ? kBytes[(h >> 8) % 16] : static_cast<unsigned char>(h >> 16);
 }
 unsigned char __cdecl StubCellFacing(unsigned cell) { Record(39, cell & 0xFF); return Test(39, 4); }
-unsigned char __cdecl StubObjectAhead(long x, long z) {
+unsigned char __cdecl StubObjectAhead(std::int32_t x, std::int32_t z) {
     Record(40, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z));
     return Test(40, 3);
 }

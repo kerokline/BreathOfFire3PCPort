@@ -100,8 +100,8 @@ std::uint32_t StepX(unsigned d, std::uint32_t n) { return static_cast<std::uint3
 
 std::uint32_t StepY(unsigned d, std::uint32_t n) { return static_cast<std::uint32_t>(Field_DirectionSteps[(d & 7) * 2 + 1]) * n; }
 
-long Ahead(const unsigned char* object, unsigned at, std::uint32_t step) {
-    return static_cast<long>(static_cast<std::uint32_t>(move_script::Long(object + at)) + step);
+std::int32_t Ahead(const unsigned char* object, unsigned at, std::uint32_t step) {
+    return static_cast<std::int32_t>(static_cast<std::uint32_t>(move_script::Long(object + at)) + step);
 }
 
 using U = std::uint32_t;
@@ -906,8 +906,8 @@ CalleesFieldBlocked gFieldBlocked = Originals();
 // Sprite_Current for each object test, as the original re-reads it.
 extern "C" unsigned char __cdecl Field_ObjectBlockedAhead(unsigned char* object) {
     const unsigned d = object[8] & 7;
-    const long x = Ahead(object, 0x34, StepX(d, 1));
-    const long y = Ahead(object, 0x38, StepY(d, 1));
+    const std::int32_t x = Ahead(object, 0x34, StepX(d, 1));
+    const std::int32_t y = Ahead(object, 0x38, StepY(d, 1));
     if (Al(field_blocked::gFieldBlocked.map_ahead(object))) return 1;
     if (Al(field_blocked::gFieldBlocked.object_at(x, y, Sprite_Current[0x70])) != 0xFF) return 1;
     return Al(field_blocked::gFieldBlocked.member_at(x, y, Sprite_Current[0x70])) != 0xFF ? 1 : 0;
@@ -924,8 +924,8 @@ extern "C" unsigned char __cdecl Field_MapBlockedAhead(unsigned char* object) {
     const unsigned d = Sprite_Current[8] & 7;
     const unsigned char size = Sprite_Current[0x70];
     const std::uint32_t n = size + 1u;
-    const long x = Ahead(object, 0x34, StepX(d, n));
-    const long y = Ahead(object, 0x38, StepY(d, n));
+    const std::int32_t x = Ahead(object, 0x34, StepX(d, n));
+    const std::int32_t y = Ahead(object, 0x38, StepY(d, n));
     return Al(size != 0 ? field_blocked::gFieldBlocked.wide(x, y, d) : field_blocked::gFieldBlocked.narrow(x, y, d));
 }
 
@@ -943,7 +943,7 @@ extern "C" unsigned char __cdecl Field_MapBlockedAhead(unsigned char* object) {
 // and the sum's non-zero-ness returned. Cell coordinates are 16-bit: X + 1
 // wraps as the original's low word does (the dwords it pushes carry the
 // neighbouring argument's bytes above them; AreaMap_ByteAt reads 16 bits).
-extern "C" unsigned char __cdecl AreaMap_BlockedWide(long x, long y, unsigned direction) {
+extern "C" unsigned char __cdecl AreaMap_BlockedWide(std::int32_t x, std::int32_t y, unsigned direction) {
     const auto ux = static_cast<std::uint32_t>(x), uy = static_cast<std::uint32_t>(y);
     const auto cx = static_cast<short>(ux >> 16), cy = static_cast<short>(uy >> 16);
     const bool fx = (ux & 0xFFFFu) != 0, fy = (uy & 0xFFFFu) != 0;
@@ -957,8 +957,8 @@ extern "C" unsigned char __cdecl AreaMap_BlockedWide(long x, long y, unsigned di
         sum = static_cast<unsigned char>(sum + Al(field_blocked::gFieldBlocked.cell(plus(cx, 1), row)));
         if (!fx) sum = static_cast<unsigned char>(sum + Al(field_blocked::gFieldBlocked.cell(plus(cx, -1), row)));
         sum = static_cast<unsigned char>(sum + Al(field_blocked::gFieldBlocked.steep(x, y)));
-        sum = static_cast<unsigned char>(sum + Al(field_blocked::gFieldBlocked.steep(static_cast<long>(ux + 0x8000u), y)));
-        sum = static_cast<unsigned char>(sum + Al(field_blocked::gFieldBlocked.steep(static_cast<long>(ux - 0x8000u), y)));
+        sum = static_cast<unsigned char>(sum + Al(field_blocked::gFieldBlocked.steep(static_cast<std::int32_t>(ux + 0x8000u), y)));
+        sum = static_cast<unsigned char>(sum + Al(field_blocked::gFieldBlocked.steep(static_cast<std::int32_t>(ux - 0x8000u), y)));
         break;
     }
     case 3:
@@ -968,8 +968,8 @@ extern "C" unsigned char __cdecl AreaMap_BlockedWide(long x, long y, unsigned di
         sum = static_cast<unsigned char>(sum + Al(field_blocked::gFieldBlocked.cell(column, plus(cy, 1))));
         if (!fy) sum = static_cast<unsigned char>(sum + Al(field_blocked::gFieldBlocked.cell(column, plus(cy, -1))));
         sum = static_cast<unsigned char>(sum + Al(field_blocked::gFieldBlocked.steep(x, y)));
-        sum = static_cast<unsigned char>(sum + Al(field_blocked::gFieldBlocked.steep(x, static_cast<long>(uy + 0x8000u))));
-        sum = static_cast<unsigned char>(sum + Al(field_blocked::gFieldBlocked.steep(x, static_cast<long>(uy - 0x8000u))));
+        sum = static_cast<unsigned char>(sum + Al(field_blocked::gFieldBlocked.steep(x, static_cast<std::int32_t>(uy + 0x8000u))));
+        sum = static_cast<unsigned char>(sum + Al(field_blocked::gFieldBlocked.steep(x, static_cast<std::int32_t>(uy - 0x8000u))));
         break;
     }
     default:
@@ -992,14 +992,14 @@ extern "C" unsigned char __cdecl AreaMap_BlockedWide(long x, long y, unsigned di
 // are the neighbouring argument's bytes (it reads its arguments unaligned, and
 // X + 1 is added to the whole dword); AreaMap_CellBlocked reads 16 bits. Its one
 // caller, Field_MapBlockedAhead (ours), reads al.
-extern "C" unsigned char __cdecl AreaMap_BlockedNarrow(long x_arg, long y_arg, unsigned direction) {
+extern "C" unsigned char __cdecl AreaMap_BlockedNarrow(std::int32_t x_arg, std::int32_t y_arg, unsigned direction) {
     const field_misc::U x = static_cast<field_misc::U>(x_arg), y = static_cast<field_misc::U>(y_arg);
     const auto X = static_cast<short>(x >> 16), Y = static_cast<short>(y >> 16);
     const auto X1 = static_cast<short>((x >> 16) + 1), Y1 = static_cast<short>((y >> 16) + 1);
     const bool fx = (x & 0xFFFF) != 0, fy = (y & 0xFFFF) != 0;
-    const auto xl = static_cast<long>(x), yl = static_cast<long>(y);
-    const auto x_cell = static_cast<long>(x & 0xFFFF0000u), y_cell = static_cast<long>(y & 0xFFFF0000u);
-    const auto x_half = static_cast<long>(x + 0x8000u), y_half = static_cast<long>(y + 0x8000u);
+    const auto xl = static_cast<std::int32_t>(x), yl = static_cast<std::int32_t>(y);
+    const auto x_cell = static_cast<std::int32_t>(x & 0xFFFF0000u), y_cell = static_cast<std::int32_t>(y & 0xFFFF0000u);
+    const auto x_half = static_cast<std::int32_t>(x + 0x8000u), y_half = static_cast<std::int32_t>(y + 0x8000u);
     unsigned char sum;
     switch (direction & 0xFF) {
     case 1:
@@ -1058,9 +1058,9 @@ extern "C" unsigned char __cdecl AreaMap_CellBlocked(short x, short y) {
 // original's direction dword carries its caller's ecx above the byte;
 // AreaMap_Slope reads the byte alone (and, the byte being 0..7, never indexes
 // past its four corners).
-extern "C" unsigned char __cdecl AreaMap_TooSteep(long x, long y) {
+extern "C" unsigned char __cdecl AreaMap_TooSteep(std::int32_t x, std::int32_t y) {
     const unsigned d = Sprite_Current[8] & 7;
-    const long slope = field_blocked::gFieldBlocked.slope(x, y, d);
+    const std::int32_t slope = field_blocked::gFieldBlocked.slope(x, y, d);
     if (Scratch()[0] == 0) return 0;
     return static_cast<short>(slope) > 0x40 ? 1 : 0;
 }
@@ -1068,7 +1068,7 @@ extern "C" unsigned char __cdecl AreaMap_TooSteep(long x, long y) {
 // original 0x5187A0 (PSX 0x801A3244, a wrapper there too): AreaMap_TooSteep(x,
 // y), its eax passed through. Called only by AreaMap_BlockedNarrow (ten sites,
 // E8 scan), which adds al.
-extern "C" unsigned char __cdecl AreaMap_TooSteepAt(long x, long y) { return field_misc::g.too_steep(x, y); }
+extern "C" unsigned char __cdecl AreaMap_TooSteepAt(std::int32_t x, std::int32_t y) { return field_misc::g.too_steep(x, y); }
 
 // original 0x5187C0, entries 0..3 (PSX FUN_801A3264). `speed` and `flags` are
 // read as bytes. Speed 0 with flags bit 1 divides by zero, as the original.
@@ -1326,7 +1326,7 @@ extern "C" void __cdecl Party_MoveMember(unsigned char* object, unsigned char di
     if (record[0] & 1) return;
     if (Add(sprite->step_z, sprite->step_x) != 0) {
         const unsigned char* const step = move_script::At(AddressMoveCmds(Field_DirectionSteps) + direction * 8u);
-        const long ground = move_cmds::g.elevation(Add(move_script::Long(step), sprite->x), Add(move_script::Long(step + 4), sprite->z));
+        const std::int32_t ground = move_cmds::g.elevation(Add(move_script::Long(step), sprite->x), Add(move_script::Long(step + 4), sprite->z));
         sprite = rv::Current<records::SpriteHead>();
         const auto rise = static_cast<std::uint16_t>(static_cast<std::uint32_t>(ground) - sprite->height_whole);
         if (direction & 2) {
@@ -1373,7 +1373,7 @@ extern "C" void __cdecl Field_ObjectFollow(unsigned char* object) {
         for (const unsigned at : {0x34u, 0x38u, 0x3Cu}) move_script::SetLong(Sprite_Current + at, move_script::Long(other + at));
         if (rv::Current<records::SpriteObject>()->type != 0x0A)
             for (const unsigned at : {0x64u, 0x68u, 0x6Cu}) move_script::SetLong(Sprite_Current + at, move_script::Long(other + at));
-        long offset[3];
+        std::int32_t offset[3];
         field_objects::g.attach_offset(offset, Sprite_Current[0x1C]);
         rv::Current<records::SpriteObject>()->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->x) + static_cast<std::uint32_t>(offset[0]));
         rv::Current<records::SpriteObject>()->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->z) + static_cast<std::uint32_t>(offset[1]));
@@ -1473,8 +1473,8 @@ extern "C" void __cdecl Field_ObjectLinked() {
 // original 0x519670 (PSX FUN_801A4AD0): the same without the map.
 extern "C" unsigned char __cdecl Field_ObjectBlocked(unsigned char* object) {
     const unsigned d = object[8] & 7;
-    const long x = Ahead(object, 0x34, StepX(d, 1));
-    const long y = Ahead(object, 0x38, StepY(d, 1));
+    const std::int32_t x = Ahead(object, 0x34, StepX(d, 1));
+    const std::int32_t y = Ahead(object, 0x38, StepY(d, 1));
     if (Al(field_blocked::gFieldBlocked.object_at(x, y, Sprite_Current[0x70])) != 0xFF) return 1;
     return Al(field_blocked::gFieldBlocked.member_at(x, y, Sprite_Current[0x70])) != 0xFF ? 1 : 0;
 }

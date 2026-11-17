@@ -40,14 +40,14 @@ constexpr rdata::Const kHalf{0x5C41D8};         // float 0.5: the cell sprite's 
 
 struct Callees {
     void (__cdecl* prim_color)(unsigned r, unsigned g, unsigned b, unsigned code, unsigned mode,
-                               unsigned long* diffuse, unsigned long* specular);   // D3d_PrimColor
-    long (__cdecl* bind_texture)(unsigned tpage, unsigned clut);                    // D3d_BindTexture
+                               std::uint32_t* diffuse, std::uint32_t* specular);   // D3d_PrimColor
+    std::int32_t (__cdecl* bind_texture)(unsigned tpage, unsigned clut);                    // D3d_BindTexture
     void (__cdecl* ret_only)(unsigned);                                             // 0x437CC0
     void (__cdecl* set_blend)(unsigned code, unsigned mode);                        // D3d_SetBlend
     void (__cdecl* set_shade)(unsigned mode);                                       // D3d_SetShadeMode
     int (__cdecl* cell_texture)(unsigned first, unsigned count, unsigned clut, unsigned flags);   // D3d_CellTexture
     int (__cdecl* tex_find)(int page, int clut, int mode);                          // Gfx_TexCacheFind
-    unsigned long (__cdecl* tex_build)(int page, int clut, int mode);               // D3d_BuildPageTexture
+    std::uint32_t (__cdecl* tex_build)(int page, int clut, int mode);               // D3d_BuildPageTexture
     void (__cdecl* tex_refresh)(int page, int slot);                                // D3d_RefreshPageTexture
     void (__cdecl* cell_build)(int slot, unsigned first, unsigned count, unsigned clut, unsigned flip);   // D3d_BuildCellTexture
     void (__cdecl* cell_refresh)(int slot, unsigned first, unsigned count, unsigned clut);               // D3d_RefreshCellTexture

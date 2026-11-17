@@ -202,7 +202,7 @@ const unsigned char* __cdecl StubMsgSystem(unsigned id) {
     Disturb();
     return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(Hash()));
 }
-unsigned long __cdecl StubQueuePush(unsigned a, unsigned b, unsigned long value) {
+std::uint32_t __cdecl StubQueuePush(unsigned a, unsigned b, std::uint32_t value) {
     Record(30, a & 0xFF, b & 0xFF, value);
     Disturb();
     return Hash();

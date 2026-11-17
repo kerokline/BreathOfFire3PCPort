@@ -266,7 +266,7 @@ std::uint32_t NoteSprite(const std::uint32_t*, std::uint32_t answer) {
 // where the real callee writes (group S22's, S31's).
 std::uint32_t RotTransEffect(const std::uint32_t* a, std::uint32_t answer) {
     const auto* v = reinterpret_cast<const short*>(static_cast<std::uintptr_t>(a[0]));
-    auto* t = reinterpret_cast<long*>(static_cast<std::uintptr_t>(a[1]));
+    auto* t = reinterpret_cast<std::int32_t*>(static_cast<std::uintptr_t>(a[1]));
     t[0] = v[0] * 3 + 1;
     t[1] = v[1] * 5 - 2;
     t[2] = v[2] * 7 + 3;
@@ -494,7 +494,7 @@ void Seed(unsigned k) {
     }
     case kWeretiger_ResetMapView:
         SetWord(mh::Mem(0x8CB59E), MH_PICK(0, 0, 0x1FF, 0x200, 0x201, 0xFE00, 0xFDFF, 0xFE01, 0x600, 0xFA00));
-        if (mh::Often()) MapView_Elevation = static_cast<long>(MH_PICK(0, 0xFFFFFF01u, 0xFFFFFF00u, 0xFFFFFEFFu, 0xFF, 0x100, 0x101, 0x300));
+        if (mh::Often()) MapView_Elevation = static_cast<std::int32_t>(MH_PICK(0, 0xFFFFFF01u, 0xFFFFFF00u, 0xFFFFFEFFu, 0xFF, 0x100, 0x101, 0x300));
         break;
     case kTsunamiWave_Grow: NearLong(sc + 0x10, 0x7E); break;
     case kTsunamiWave_Shrink: NearLong(sc + 0x10, 0x22); break;

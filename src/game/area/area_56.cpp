@@ -156,7 +156,7 @@ extern "C" void __cdecl Area56_FallBegin(void) {
     Sprite_Current[0] = static_cast<unsigned char>(Sprite_Current[0] & 0xBF);
     const unsigned char* const cur = Sprite_Current;
     const auto* const tCur = rv::AsConst<records::SpriteObject>(cur);
-    const long ground = AH_CALL(MapView_GroundAt)(tCur->x, tCur->z);
+    const std::int32_t ground = AH_CALL(MapView_GroundAt)(tCur->x, tCur->z);
     rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, static_cast<unsigned>(ground + 0x7D0));
     rv::Current<records::SpriteObject>()->step_x = 0;
     rv::Current<records::SpriteObject>()->step_z = 0;
@@ -179,7 +179,7 @@ extern "C" void __cdecl Area56_FallStep(void) {
     AH_CALL(Field_LeaderStepTick)();
     cur = Sprite_Current;
     tCur = rv::As<records::SpriteObject>(cur);
-    const long ground = AH_CALL(MapView_GroundAt)(tCur->x, tCur->z);
+    const std::int32_t ground = AH_CALL(MapView_GroundAt)(tCur->x, tCur->z);
     if (static_cast<std::int16_t>(ground) > static_cast<std::int16_t>(rv::Current<records::SpriteObject>()->height_whole)) {
         rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, static_cast<unsigned>(ground));
         rv::Current<records::SpriteObject>()->step_y = 0;

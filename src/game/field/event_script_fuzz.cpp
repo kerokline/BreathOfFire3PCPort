@@ -234,10 +234,10 @@ unsigned char __cdecl StubSetBank(unsigned short bank) {   // the ops ignore the
     Disturb(11);
     return 0;
 }
-long __cdecl StubElevation(long x, long z) {
+std::int32_t __cdecl StubElevation(std::int32_t x, std::int32_t z) {
     Record(0x132, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z));
     Disturb(12);
-    return static_cast<long>(Hash(13));
+    return static_cast<std::int32_t>(Hash(13));
 }
 void __cdecl StubSetFlags(const unsigned char* flags) {
     Record(0x133, Address(flags), *flags);

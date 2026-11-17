@@ -39,8 +39,8 @@ void SetControlWord(unsigned short cw) { __asm__("fldcw %0" : : "m"(cw)); }
 // word the game was running under at that moment counted, which is the
 // measurement kGameControlWord rests on.
 
-using RampFn = long (__cdecl*)(long);
-using PerspectiveFn = void (__cdecl*)(float*, float*, long*);
+using RampFn = std::int32_t (__cdecl*)(std::int32_t);
+using PerspectiveFn = void (__cdecl*)(float*, float*, std::int32_t*);
 
 // --- the same switch, once at start-up: a differential fuzz -----------------------
 // One round: randomise the globals these read and a scratch area, run one
@@ -52,11 +52,11 @@ using PerspectiveFn = void (__cdecl*)(float*, float*, long*);
 // standing proof that this fuzz can see a rounding difference at all.
 
 struct State {
-    long transformed[3], near_z, proj, offset_x, offset_y, ramp_near, ramp_far, older[3], depth, near_scale, far_scale, matrix_depth;
-    unsigned long scratch[48];
+    std::int32_t transformed[3], near_z, proj, offset_x, offset_y, ramp_near, ramp_far, older[3], depth, near_scale, far_scale, matrix_depth;
+    std::uint32_t scratch[48];
 };
 
-void Capture(State& s, const unsigned long* scratch) {
+void Capture(State& s, const std::uint32_t* scratch) {
     std::memcpy(s.transformed, Gte_Transformed, sizeof s.transformed);
     s.near_z = Gte_NearZ; s.proj = Gte_ProjDistance;
     s.offset_x = Gte_OffsetX; s.offset_y = Gte_OffsetY;
@@ -67,7 +67,7 @@ void Capture(State& s, const unsigned long* scratch) {
     s.matrix_depth = Gte_MatrixDepth;
     if (scratch) std::memcpy(s.scratch, scratch, sizeof s.scratch);
 }
-void Apply(const State& s, unsigned long* scratch) {
+void Apply(const State& s, std::uint32_t* scratch) {
     std::memcpy(Gte_Transformed, s.transformed, sizeof s.transformed);
     Gte_NearZ = s.near_z; Gte_ProjDistance = s.proj;
     Gte_OffsetX = s.offset_x; Gte_OffsetY = s.offset_y;
@@ -79,7 +79,7 @@ void Apply(const State& s, unsigned long* scratch) {
     if (scratch) std::memcpy(scratch, s.scratch, sizeof s.scratch);
 }
 
-using Fn = long (__cdecl*)(void*, void*, void*, void*);
+using Fn = std::int32_t (__cdecl*)(void*, void*, void*, void*);
 struct Entry {
     const char* name;
     std::uint32_t original, size;
@@ -96,20 +96,20 @@ template <class F> Fn AsFn(F* f) { return reinterpret_cast<Fn>(reinterpret_cast<
 void SelfTest(Entry* entries, unsigned n) {
     constexpr unsigned kRounds = 48000;
     static State saved, input, their_out, our_out;
-    static unsigned long scratch[48];
+    static std::uint32_t scratch[48];
     Capture(saved, nullptr);
     const unsigned short saved_word = GetControlWord();
 
     std::uint32_t rng = 0x9E3779B9u;
     auto next = [&rng] { rng ^= rng << 13; rng ^= rng >> 17; rng ^= rng << 5; return rng; };
     // A number as the game has them - small - or anything at all, or an edge.
-    auto number = [&next]() -> long {
-        static const long kEdge[] = {0, 1, -1, 2, 0x7FFFFFFF, static_cast<long>(0x80000000u), 0x1000, 500, 1000};
+    auto number = [&next]() -> std::int32_t {
+        static const std::int32_t kEdge[] = {0, 1, -1, 2, 0x7FFFFFFF, static_cast<std::int32_t>(0x80000000u), 0x1000, 500, 1000};
         switch (next() % 8) {
-            case 0: return static_cast<long>(next());
+            case 0: return static_cast<std::int32_t>(next());
             case 1: return kEdge[next() % 9];
-            case 2: return static_cast<long>(next() % 0x2000000u) - 0x1000000;
-            default: return static_cast<long>(next() % 0x4000u) - 0x1000;
+            case 2: return static_cast<std::int32_t>(next() % 0x2000000u) - 0x1000000;
+            default: return static_cast<std::int32_t>(next() % 0x4000u) - 0x1000;
         }
     };
 
@@ -119,33 +119,33 @@ void SelfTest(Entry* entries, unsigned n) {
     for (unsigned round = 0; round < kRounds; ++round) {
         auto* bytes = reinterpret_cast<unsigned char*>(&input);
         for (unsigned i = 0; i < sizeof input; ++i) bytes[i] = static_cast<unsigned char>(next());
-        for (long& v : input.transformed) v = number();
+        for (std::int32_t& v : input.transformed) v = number();
         input.near_z = number(); input.proj = number();
         input.offset_x = number(); input.offset_y = number();
         input.ramp_near = number(); input.ramp_far = number();
-        for (long& v : input.older) v = number();
+        for (std::int32_t& v : input.older) v = number();
         input.depth = number();
         input.near_scale = number(); input.far_scale = number();
         // z against the near plane: often right on it or next to it
-        if (next() % 4 == 0) input.transformed[2] = input.near_z + static_cast<long>(next() % 3) - 1;
-        long value = number();
-        const long value2 = number();
+        if (next() % 4 == 0) input.transformed[2] = input.near_z + static_cast<std::int32_t>(next() % 3) - 1;
+        std::int32_t value = number();
+        const std::int32_t value2 = number();
         bool stepped = false;
         if (next() % 2 == 0 && input.ramp_far > input.ramp_near) {   // inside the ramp, and its ends
             const std::uint32_t span = static_cast<std::uint32_t>(input.ramp_far) - static_cast<std::uint32_t>(input.ramp_near);
-            value = static_cast<long>(static_cast<std::uint32_t>(input.ramp_near) + (span == 0xFFFFFFFFu ? next() : next() % (span + 1u)));
+            value = static_cast<std::int32_t>(static_cast<std::uint32_t>(input.ramp_near) + (span == 0xFFFFFFFFu ? next() : next() % (span + 1u)));
         }
         if (next() % 4 == 0) {
             // A wide ramp and a value one either side of a 4096th of it: the
             // only place the quotient's precision reaches the truncated result.
-            input.ramp_near = static_cast<long>(next() % 0x4000u) - 0x1000;
+            input.ramp_near = static_cast<std::int32_t>(next() % 0x4000u) - 0x1000;
             const std::uint32_t span = 0x2000000u + next() % 0x7DFF0000u;
-            input.ramp_far = input.ramp_near + static_cast<long>(span);
+            input.ramp_far = input.ramp_near + static_cast<std::int32_t>(span);
             const std::uint64_t step = static_cast<std::uint64_t>(span) * (next() % 4097u) / 4096u;
-            std::int64_t v = input.ramp_near + static_cast<std::int64_t>(step) + static_cast<long>(next() % 3) - 1;
+            std::int64_t v = input.ramp_near + static_cast<std::int64_t>(step) + static_cast<std::int32_t>(next() % 3) - 1;
             if (v < input.ramp_near) v = input.ramp_near;
             if (v > input.ramp_far) v = input.ramp_far;
-            value = static_cast<long>(v);
+            value = static_cast<std::int32_t>(v);
             stepped = true;
         }
         if (next() % 16 == 0) input.ramp_far = input.ramp_near, value = input.ramp_near;   // 0 / 0
@@ -172,7 +172,7 @@ void SelfTest(Entry* entries, unsigned n) {
         }
 
         const unsigned word_index = round % 3;
-        long result[2] = {0, 0};
+        std::int32_t result[2] = {0, 0};
         for (int pass = 0; pass < 2; ++pass) {
             Apply(input, scratch);
             void* a0 = e.by_value ? reinterpret_cast<void*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(value)))
@@ -191,9 +191,9 @@ void SelfTest(Entry* entries, unsigned n) {
                 if (word_index != 0) ++stores_bad_elsewhere;
                 if (++bad <= 8)
                     bof3::Log("shadow      psx_gte_float self-test MISMATCH: %s, round %u, control word %04X, "
-                              "z %ld near %ld, results %08lX / %08lX", e.name, round, kWords[word_index],
-                              input.transformed[2], input.near_z, static_cast<unsigned long>(result[0]),
-                              static_cast<unsigned long>(result[1]));
+                              "z %d near %d, results %08X / %08X", e.name, round, kWords[word_index],
+                              input.transformed[2], input.near_z, static_cast<std::uint32_t>(result[0]),
+                              static_cast<std::uint32_t>(result[1]));
             }
         } else {
             ++(same ? elsewhere_same : elsewhere_differs);

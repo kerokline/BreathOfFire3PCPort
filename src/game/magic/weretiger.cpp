@@ -261,7 +261,7 @@ S14_EXPORT void __cdecl Weretiger_FocusActor(void) {
         const std::int32_t z = trecord->z;
         Field_Kind2X = x;
         Field_Kind2Z = z;
-        const long ground = MH_CALL(AreaMap_Elevation)(x, z);
+        const std::int32_t ground = MH_CALL(AreaMap_Elevation)(x, z);
         MapView_Elevation = static_cast<short>(ground);
     }
     Call0(bof3::addr::Weretiger_ResetMapView);
@@ -763,7 +763,7 @@ S14_EXPORT void __cdecl Weretiger_DrawSprite(unsigned image, unsigned abr, unsig
     {
         const unsigned char* const s = Sc();
         const records::SpriteHead* const ts = rv::AsConst<records::SpriteHead>(s);
-        MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->z),
+        MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(ts->x), static_cast<std::uint32_t>(ts->z),
                                     0, 0xC);
     }
     unsigned char* const p = Gfx_PacketNext;
@@ -781,7 +781,7 @@ S14_EXPORT void __cdecl Weretiger_DrawSprite(unsigned image, unsigned abr, unsig
     MH_CALL(Gpu_SetSemiTrans)(p, 1);
     const unsigned char* const s = Sc();
     const records::SpriteHead* const ts = rv::AsConst<records::SpriteHead>(s);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->z), 0,
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(ts->x), static_cast<std::uint32_t>(ts->z), 0,
                                 0x1C);
 }
 

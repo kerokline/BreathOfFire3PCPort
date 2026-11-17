@@ -105,7 +105,7 @@ void __cdecl EffectKind56_Arm(void);
 void __cdecl EffectKind56_Markers(void);
 void __cdecl EffectKind56_Place(void);
 // `semi` read as its low byte.
-void __cdecl EffectKind56_DrawCross(long x, long z, long height, unsigned semi);
+void __cdecl EffectKind56_DrawCross(std::int32_t x, std::int32_t z, std::int32_t height, unsigned semi);
 
 }  // extern "C"
 

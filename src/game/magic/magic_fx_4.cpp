@@ -230,7 +230,7 @@ unsigned char* StripWord(unsigned i) { return reinterpret_cast<unsigned char*>(G
 // Sprite_Current moved by `speed` along in[] normalised: x and z by
 // (n * speed) >> 3, the height word +0x3E by (n * speed) >> 11. Sprite_Current
 // is read again after the normalisation (and for each field).
-void StepAlong(const long* in, int speed) {
+void StepAlong(const std::int32_t* in, int speed) {
     short out[4] = {};
     MH_CALL(Gte_VectorNormalS)(in, out);
     const auto s = static_cast<std::uint32_t>(static_cast<short>(speed));
@@ -474,7 +474,7 @@ MLIB_EXPORT void __cdecl MagicFx_LinkByDepth(unsigned x, unsigned z, int* keys, 
         const std::uint32_t prim = prims + sz * best;
         keys[best] = 0;
         unsigned char* const head = Mem(::bof3::Img(DrawLayers_addr) + 0x24 + (Gfx_BufferIndex + row) * 8);
-        MH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(U32(head))), prim);
+        MH_CALL(Gpu_LinkPrim)(reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(U32(head))), prim);
         move_script::SetLong(Mem(::bof3::Img(DrawLayers_addr) + 0x24 + (Gfx_BufferIndex + row) * 8), I32(prim));
     }
 }
@@ -485,7 +485,7 @@ MLIB_EXPORT void __cdecl MagicFx_LinkByDepth(unsigned x, unsigned z, int* keys, 
 // (Gte_VectorNormalS), then StepAlong.
 MLIB_EXPORT void __cdecl MagicFx_StepToward(const unsigned char* to, int speed) {
     const unsigned char* const sc = Sprite_Current;
-    const long in[3] = {I32(U32(to + 0x34) - U32(sc + 0x34)) >> 9, I32(U32(to + 0x38) - U32(sc + 0x38)) >> 9,
+    const std::int32_t in[3] = {I32(U32(to + 0x34) - U32(sc + 0x34)) >> 9, I32(U32(to + 0x38) - U32(sc + 0x38)) >> 9,
                         (static_cast<int>(S16MagicLib(to + 0x3E)) - S16MagicLib(sc + 0x3E)) >> 1};
     StepAlong(in, speed);
 }
@@ -497,7 +497,7 @@ MLIB_EXPORT void __cdecl MagicFx_StepTowardPoint(unsigned x, unsigned z, unsigne
     (void)pad;
     const unsigned char* const sc = Sprite_Current;
     const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
-    const long in[3] = {I32(x - static_cast<std::uint32_t>((tsc->x >> 9) - 0x4000)),
+    const std::int32_t in[3] = {I32(x - static_cast<std::uint32_t>((tsc->x >> 9) - 0x4000)),
                         I32(z - static_cast<std::uint32_t>((tsc->z >> 9) - 0x4000)),
                         I32(y - static_cast<std::uint32_t>(S16MagicLib(sc + 0x3E) >> 1))};
     StepAlong(in, speed);
@@ -570,7 +570,7 @@ extern "C" void __cdecl BattleActor_UpdateScreenXY(void) {
     v[2] = static_cast<short>(-(S16BattleItems(sc + 0x3E) / 2));
     v[3] = 0;
     battle_items::g.set_tile1(p);
-    long depth, flag;
+    std::int32_t depth, flag;
     battle_items::g.rtp(v, reinterpret_cast<float*>(p + 8), &depth, &flag);
     battle_items::g.store_depth(reinterpret_cast<float*>(p + 0x10));
     battle_items::SetWord(Sprite_Current + 0x2E, Ftol16(static_cast<std::uint32_t>(battle_items::Long(p + 8))));

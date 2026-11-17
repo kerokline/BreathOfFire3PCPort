@@ -287,8 +287,8 @@ void ListsSelfTest() {
     const char sep = static_cast<char>(std::filesystem::path::preferred_separator);
     const std::string tmp = tmp_dir.back() == sep ? tmp_dir : tmp_dir + sep;
     char dir_a[bof3::os::kMaxPath], dir_b[bof3::os::kMaxPath];
-    std::snprintf(dir_a, sizeof dir_a, "%sbof3x_qm_a_%lu\\", tmp.c_str(), static_cast<unsigned long>(bof3::os::ProcessId()));
-    std::snprintf(dir_b, sizeof dir_b, "%sbof3x_qm_b_%lu\\", tmp.c_str(), static_cast<unsigned long>(bof3::os::ProcessId()));
+    std::snprintf(dir_a, sizeof dir_a, "%sbof3x_qm_a_%u\\", tmp.c_str(), static_cast<std::uint32_t>(bof3::os::ProcessId()));
+    std::snprintf(dir_b, sizeof dir_b, "%sbof3x_qm_b_%u\\", tmp.c_str(), static_cast<std::uint32_t>(bof3::os::ProcessId()));
     std::filesystem::create_directories(bof3::os::Path(dir_a), ec);
     std::filesystem::create_directories(bof3::os::Path(dir_b), ec);
     std::vector<std::string> made;
@@ -453,7 +453,7 @@ void CursorSelfTest() {
 
 namespace bof3 {
 
-bool QuickMenu_Key(unsigned vk, long lparam) {
+bool QuickMenu_Key(unsigned vk, std::int32_t lparam) {
     const bool repeat = (lparam & (1L << 30)) != 0;
     if (g_open) {
         if (vk == VK_F5 && !repeat) Close("F5");

@@ -27,7 +27,7 @@ std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t
 constexpr unsigned kBuf = 0x100, kLog = 24, kScript = 0x10100;
 unsigned char g_sprite[kBuf], g_context[kBuf];
 unsigned char g_script[kScript];   // the label search's script, the peek's frame script
-long g_out[4], g_alt[4];            // MoveCmd_HandlePosition's out; what its stand-in may return instead
+std::int32_t g_out[4], g_alt[4];            // MoveCmd_HandlePosition's out; what its stand-in may return instead
 std::uint32_t g_flags;              // the dword [0x929ED0] points at
 struct Entry { std::uint32_t what, a, b, c; };
 Entry g_log[kLog];
@@ -58,13 +58,13 @@ void Disturb() {
     if (h % 11 == 0) g_context[7] = static_cast<unsigned char>(h >> 4);
 }
 
-long __cdecl StubElevation(long x, long z) {
+std::int32_t __cdecl StubElevation(std::int32_t x, std::int32_t z) {
     Record(1, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z));
     const std::uint32_t h = Hash();
     switch (h % 3) {   // a high half of 0, sign-extended, or anything
-    case 0: return static_cast<long>((h >> 8) & 0xFFFF);
+    case 0: return static_cast<std::int32_t>((h >> 8) & 0xFFFF);
     case 1: return static_cast<short>(h >> 8);
-    default: return static_cast<long>(h);
+    default: return static_cast<std::int32_t>(h);
     }
 }
 int __cdecl StubRatan2(float y, float x) {
@@ -84,9 +84,9 @@ void __cdecl StubContextReset(unsigned char* context) {
 }
 void __cdecl StubSetElevation(int v) { Record(4, static_cast<std::uint32_t>(v)); }
 // The buffer is a local on both sides: its contents are what the caller uses.
-void __cdecl StubAttachOffset(long* out, unsigned char b) {
+void __cdecl StubAttachOffset(std::int32_t* out, unsigned char b) {
     Record(5, b);
-    for (unsigned i = 0; i < 3; ++i) out[i] = static_cast<long>(Hash() * (2 * i + 3));
+    for (unsigned i = 0; i < 3; ++i) out[i] = static_cast<std::int32_t>(Hash() * (2 * i + 3));
 }
 int __cdecl StubKind() {
     Record(6);
@@ -103,11 +103,11 @@ void __cdecl StubDetach() { Record(7, Sprite_Current[1], Sprite_Current[2]); Dis
 void __cdecl StubAttachMove(unsigned char t) { Record(8, t); Disturb(); }
 // Returns its out, or on one call in four another buffer: the caller must read
 // the position through the pointer it gets back.
-long* __cdecl StubHandlePosition(long* out, unsigned char handle, unsigned char offset) {
+std::int32_t* __cdecl StubHandlePosition(std::int32_t* out, unsigned char handle, unsigned char offset) {
     Record(9, handle, offset);
     const std::uint32_t h = Hash();
-    long* const at = h % 4 == 0 ? g_alt : out;
-    for (unsigned i = 0; i < 4; ++i) at[i] = static_cast<long>(Hash() * (2 * i + 5) + (h >> 7));
+    std::int32_t* const at = h % 4 == 0 ? g_alt : out;
+    for (unsigned i = 0; i < 4; ++i) at[i] = static_cast<std::int32_t>(Hash() * (2 * i + 5) + (h >> 7));
     return at;
 }
 // The two party calls rewrite what the caller writes around them.
@@ -132,7 +132,7 @@ unsigned char __cdecl StubPartyJoin(unsigned member) {
 // original pushes the whole dword). It also rewrites the frame count +9 (never
 // to 0) and the height +0x3E a third of the time each, so that a caller
 // reading them before the call, not after as the original does, shows.
-long __cdecl StubSlope(long x, long z, unsigned long direction) {
+std::int32_t __cdecl StubSlope(std::int32_t x, std::int32_t z, std::uint32_t direction) {
     Record(12, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), direction & 0xFF);
     const std::uint32_t h = Hash();
     switch ((h >> 4) % 3) {
@@ -143,9 +143,9 @@ long __cdecl StubSlope(long x, long z, unsigned long direction) {
     if ((h >> 6) % 3 == 0) Sprite_Current[9] = static_cast<unsigned char>(1 + (h >> 12) % 255);
     if ((h >> 8) % 3 == 0) SetWord(Sprite_Current + 0x3E, h >> 16);
     switch (h % 3) {
-    case 0: return static_cast<long>((h >> 9) & 0xFFFF);
+    case 0: return static_cast<std::int32_t>((h >> 9) & 0xFFFF);
     case 1: return static_cast<short>(h >> 9);
-    default: return static_cast<long>(h * 0x2545F491u);
+    default: return static_cast<std::int32_t>(h * 0x2545F491u);
     }
 }
 
@@ -264,7 +264,7 @@ constexpr unsigned kRegionBytes = sizeof(records::SpriteObject) + (Sprite_Object
 struct State {
     unsigned char memory[kRegionBytes];
     unsigned char sprite[kBuf], context[kBuf];
-    long out[4], alt[4];
+    std::int32_t out[4], alt[4];
     std::uint32_t flags;
     unsigned char* current;
     std::uint32_t flags_ptr;

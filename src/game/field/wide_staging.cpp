@@ -271,8 +271,8 @@ bool StepDisplacement(const unsigned char* context, unsigned dir, std::int32_t& 
     if (speed == 0) return false;
     const unsigned base = (dir == 2 || dir == 6) ? 0x20u : 0x10u;
     const std::int32_t frames = static_cast<std::int32_t>(base / speed);
-    dx = static_cast<std::int32_t>(MoveCmd_F9Steps[dir * 2] * static_cast<long>(speed)) * frames;
-    dz = static_cast<std::int32_t>(MoveCmd_F9Steps[dir * 2 + 1] * static_cast<long>(speed)) * frames;
+    dx = static_cast<std::int32_t>(MoveCmd_F9Steps[dir * 2] * static_cast<std::int32_t>(speed)) * frames;
+    dz = static_cast<std::int32_t>(MoveCmd_F9Steps[dir * 2 + 1] * static_cast<std::int32_t>(speed)) * frames;
     return true;
 }
 
@@ -710,7 +710,7 @@ unsigned EnvUnsigned(const char* name, unsigned fallback, unsigned lo, unsigned 
     if (n == 0) return fallback;
     if (n >= sizeof text) bof3::Fatal("%s: too long", name);
     char* end = nullptr;
-    const unsigned long v = std::strtoul(text, &end, 10);
+    const std::uint32_t v = std::strtoul(text, &end, 10);
     if (end == text || *end != '\0' || v < lo || v > hi) bof3::Fatal("%s=%s: %u..%u", name, text, lo, hi);
     return static_cast<unsigned>(v);
 }

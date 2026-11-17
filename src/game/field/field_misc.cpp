@@ -152,10 +152,10 @@ U TileTest(U x_arg, U z_arg, U want) {
 // tail jump forwards the arguments where they lie (the stack on i686, ecx and
 // edx on x86-64) and the body answers in eax; the symbol's spelling is
 // common/asm_name.h's.
-extern "C" unsigned long __cdecl FieldMisc_TestFB(unsigned long x, unsigned long z) {
+extern "C" std::uint32_t __cdecl FieldMisc_TestFB(std::uint32_t x, std::uint32_t z) {
     return TileTest(static_cast<U>(x), static_cast<U>(z), 0x8000);
 }
-extern "C" unsigned long __cdecl FieldMisc_TestFC(unsigned long x, unsigned long z) {
+extern "C" std::uint32_t __cdecl FieldMisc_TestFC(std::uint32_t x, std::uint32_t z) {
     return TileTest(static_cast<U>(x), static_cast<U>(z), 0x8001);
 }
 

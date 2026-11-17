@@ -142,7 +142,7 @@ unsigned char TrailLeg(unsigned t, unsigned kk, unsigned back, U table1, U table
     const U x = AlongX(dir, n, ox);
     const U oz = static_cast<U>(Long(Mem(::bof3::Img(Sprite_ObjectsExtra_addr) + 0x38 + off)));
     const U z = AlongZ(dir, n, oz);
-    AH_CALL(Area145_SpawnTrail)(static_cast<long>(ox), static_cast<long>(oz), static_cast<long>(x), static_cast<long>(z));
+    AH_CALL(Area145_SpawnTrail)(static_cast<std::int32_t>(ox), static_cast<std::int32_t>(oz), static_cast<std::int32_t>(x), static_cast<std::int32_t>(z));
     const unsigned char len = B(rec + 1);
     if (d < len) return 1;
     if (last) return B(rec + 2);
@@ -236,7 +236,7 @@ extern "C" void __cdecl Area145_RunDrop(void) { StateEntry("Area145_RunDrop", ::
 // the script position - 2. Sprite_Current read again for every store.
 extern "C" void __cdecl Area145_DropStart(void) {
     Sprite_Current[0] = static_cast<unsigned char>(Sprite_Current[0] & 0xBF);
-    const long ground = AH_CALL(MapView_GroundAt)(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
+    const std::int32_t ground = AH_CALL(MapView_GroundAt)(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
     rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, static_cast<U>(ground) + 0x7D0u);
     rv::Current<records::SpriteObject>()->step_x = 0;
     rv::Current<records::SpriteObject>()->step_z = 0;
@@ -258,7 +258,7 @@ extern "C" void __cdecl Area145_DropStart(void) {
 extern "C" void __cdecl Area145_DropFall(void) {
     rv::Current<records::SpriteObject>()->step_y = static_cast<std::int32_t>(static_cast<U>(rv::Current<records::SpriteObject>()->step_y) + static_cast<U>(rv::Current<records::SpriteObject>()->work_20));
     AH_CALL(Field_LeaderStepTick)();
-    const long ground = AH_CALL(MapView_GroundAt)(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
+    const std::int32_t ground = AH_CALL(MapView_GroundAt)(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
     unsigned char* const cur = Sprite_Current;
     if (static_cast<std::int16_t>(ground) <= static_cast<std::int16_t>(rv::As<records::SpriteObject>(cur)->height_whole)) {
         ScriptStep(-2);
@@ -312,7 +312,7 @@ extern "C" unsigned char __cdecl Area145_Trigger40(void) { return ArmTail(0x2C, 
 // Cond_ByteFD 4: story flag 0x2D set, x's high word 9..0xB and z's
 // 0x62..0x64, the leader's pose 0, 7 or 6: counter 0 = 0, Party_DropIn(3),
 // al 1. Else al 0.
-extern "C" unsigned char __cdecl Area145_StepHook(long x, long z) {
+extern "C" unsigned char __cdecl Area145_StepHook(std::int32_t x, std::int32_t z) {
     const unsigned char fd = Cond_ByteFD;
     if (fd == 0) {
         if (static_cast<U>(z) != 0x98000u) return 0;
@@ -336,7 +336,7 @@ extern "C" unsigned char __cdecl Area145_StepHook(long x, long z) {
 // whose low nibble of +2 is the leader's pose (read once, whole): with
 // Cond_Flags row 13's flag 9, ScriptFlags_Set40, the tail's state = the
 // record's +3 and kind 20, al 1. None, or the flag clear: al 0.
-extern "C" unsigned char __cdecl Area145_CellHook(long x, long z) {
+extern "C" unsigned char __cdecl Area145_CellHook(std::int32_t x, std::int32_t z) {
     const auto zb = static_cast<unsigned char>(z);
     const unsigned char pose = B(::bof3::Img(ObjTrio_addr) + 0x8);
     const auto xb = static_cast<unsigned char>(x);
@@ -500,7 +500,7 @@ extern "C" void __cdecl Area145_Tail20(void) {
 extern "C" unsigned char __cdecl Area145_TrailStart(unsigned t) {
     const auto s = static_cast<std::uint16_t>(t);
     const U n = s < 5 ? s : 5;
-    AH_CALL(Area145_SpawnTrail)(0x428000, 0x638000, static_cast<long>(0x428000u - (n << 16)), 0x638000);
+    AH_CALL(Area145_SpawnTrail)(0x428000, 0x638000, static_cast<std::int32_t>(0x428000u - (n << 16)), 0x638000);
     if (s < 5) return 1;
     if (s == 5) AH_CALL(Sound_PlayEffect)(0x206);
     const unsigned char r = AH_CALL(Area145_TrailLeg0)(t);
@@ -520,7 +520,7 @@ extern "C" unsigned char __cdecl Area145_TrailLeg0(unsigned t) {
     const U n = Upto(d, B(rec + 1));
     const U x = AlongX(dir, n, static_cast<U>(Long(Mem(::bof3::Img(Sprite_ObjectsExtra_addr) + 0x34))));
     const U z = AlongZ(dir, n, static_cast<U>(Long(Mem(::bof3::Img(Sprite_ObjectsExtra_addr) + 0x38))));
-    AH_CALL(Area145_SpawnTrail)(0x3D8000, 0x638000, static_cast<long>(x), static_cast<long>(z));
+    AH_CALL(Area145_SpawnTrail)(0x3D8000, 0x638000, static_cast<std::int32_t>(x), static_cast<std::int32_t>(z));
     const unsigned char len = B(rec + 1);
     if (d < len) return 1;
     const unsigned char next = B(rec + 2);
@@ -548,7 +548,7 @@ extern "C" unsigned char __cdecl Area145_TrailLeg2(unsigned t, unsigned k) {
 // original 0x421EA0: Effect_FindFree to SharedScratch; none: al 1. A slot:
 // kind 0x3F from (x0, z0) (+0xC, +0x10) to (x1, z1) (+0x18, +0x1C), +0x20 and
 // +0x14 0x500000; al 0.
-extern "C" unsigned char __cdecl Area145_SpawnTrail(long x0, long z0, long x1, long z1) {
+extern "C" unsigned char __cdecl Area145_SpawnTrail(std::int32_t x0, std::int32_t z0, std::int32_t x1, std::int32_t z1) {
     if (SpawnSlot() == 0xFF) return 1;
     unsigned char* const e = ScratchRecord();
     auto* const tE = rv::As<records::EffectObject>(e);

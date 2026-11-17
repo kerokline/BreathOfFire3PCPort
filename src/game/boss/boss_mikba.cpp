@@ -308,7 +308,7 @@ extern "C" U __cdecl BossMikba_Hook(unsigned word) { return HookTableBossSg("Bos
 
 // original 0x43DEF0: BossKind_Table[48]: jmp [BossSample3_States + 4 * +1] (12:
 // its entrance, then the generic enemy states).
-extern "C" unsigned long __cdecl BossSample3_Dispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl BossSample3_Dispatch(std::uint32_t through) {
     return DispatchBossSh("BossSample3_Dispatch", AddressOf(BossSample3_States), 12, 1, through);
 }
 
@@ -319,7 +319,7 @@ extern "C" unsigned char __cdecl BossSample3_Enter(void) {
 }
 
 // original 0x43DF70: the +0xF4 hook through BossSample3_Hooks (3, all BareRet).
-extern "C" unsigned long __cdecl BossSample3_Hook(unsigned long word) {
+extern "C" std::uint32_t __cdecl BossSample3_Hook(std::uint32_t word) {
     return HookDispatchBossSh("BossSample3_Hook", AddressOf(BossSample3_Hooks), word);
 }
 
@@ -457,10 +457,10 @@ extern "C" void __cdecl BossMikba_DrawQuad(unsigned turn) {
     short vector[4] = {0, 0, static_cast<short>(turn << 4), 0};
     alignas(4) unsigned char matrix[32] = {};
     BH_CALL(Gte_RotMatrixYXZ)(vector, reinterpret_cast<short*>(matrix));
-    BH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(matrix));
-    long out[3] = {0, 0, 0};
-    BH_CALL(Gte_TransMatrix)(reinterpret_cast<unsigned long*>(matrix), reinterpret_cast<const unsigned long*>(out));
-    BH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(matrix));
+    BH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(matrix));
+    std::int32_t out[3] = {0, 0, 0};
+    BH_CALL(Gte_TransMatrix)(reinterpret_cast<std::uint32_t*>(matrix), reinterpret_cast<const std::uint32_t*>(out));
+    BH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(matrix));
     unsigned char* const prim = Gfx_PacketNext;
     rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(prim)->tpage, BH_CALL(Gpu_GetTPage)(2, 0, 0x340, 0x100));  // a POLY_FT4: Gpu_SetPolyFT4 below
     prim[4] = 0x80;

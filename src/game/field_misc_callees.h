@@ -76,17 +76,17 @@ inline U MapView_RowAt() { return Of(&MapView_Row); }
 
 struct Callees {
     unsigned char (__cdecl* cell_blocked)(short, short);                   // AreaMap_CellBlocked 0x518620 (ours)
-    unsigned char (__cdecl* too_steep)(long, long);                        // AreaMap_TooSteep 0x518760 (ours)
-    unsigned char (__cdecl* too_steep_at)(long, long);                     // AreaMap_TooSteepAt 0x5187A0 (this module)
+    unsigned char (__cdecl* too_steep)(std::int32_t, std::int32_t);                        // AreaMap_TooSteep 0x518760 (ours)
+    unsigned char (__cdecl* too_steep_at)(std::int32_t, std::int32_t);                     // AreaMap_TooSteepAt 0x5187A0 (this module)
     unsigned char* (__cdecl* set_poly_f4)(unsigned char*);                 // Gpu_SetPolyF4 0x5A75B0 (this module)
     void (__cdecl* commit_prim)(unsigned, unsigned);                       // Gfx_CommitPrim 0x461E50 (ours)
-    unsigned char (__cdecl* test_condition)(unsigned long);                // Area_TestCondition 0x56FF00 (ours)
-    unsigned long (__cdecl* item_at)(long, long);                          // MapView_ItemAt 0x572ED0 (this module)
-    void (__cdecl* set_texture)(unsigned long, unsigned char*, int);       // Prim_SetTexture 0x572A00 (ours)
+    unsigned char (__cdecl* test_condition)(std::uint32_t);                // Area_TestCondition 0x56FF00 (ours)
+    std::uint32_t (__cdecl* item_at)(std::int32_t, std::int32_t);                          // MapView_ItemAt 0x572ED0 (this module)
+    void (__cdecl* set_texture)(std::uint32_t, unsigned char*, int);       // Prim_SetTexture 0x572A00 (ours)
     void (__cdecl* check_height_scale)();                                  // MapView_CheckHeightScale 0x572590 (ours)
-    long (__cdecl* slope)(long, long, unsigned long);                      // AreaMap_Slope 0x5722D0 (ours)
-    void (__cdecl* prim_color)(unsigned, unsigned, unsigned, unsigned, unsigned, unsigned long*,
-                               unsigned long*);                            // D3d_PrimColor 0x59FBA0 (ours)
+    std::int32_t (__cdecl* slope)(std::int32_t, std::int32_t, std::uint32_t);                      // AreaMap_Slope 0x5722D0 (ours)
+    void (__cdecl* prim_color)(unsigned, unsigned, unsigned, unsigned, unsigned, std::uint32_t*,
+                               std::uint32_t*);                            // D3d_PrimColor 0x59FBA0 (ours)
     void (__cdecl* ret_only)(unsigned);                                    // 0x437CC0, a bare ret
     void (__cdecl* set_blend)(unsigned, unsigned);                         // D3d_SetBlend 0x59FCA0 (ours)
     void (__cdecl* set_shade)(unsigned);                                   // D3d_SetShadeMode 0x59FD80 (ours)

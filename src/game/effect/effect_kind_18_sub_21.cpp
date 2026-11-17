@@ -247,8 +247,8 @@ extern "C" void __cdecl EffectKind18Sub52_Draw(void) {
             SetV(2, static_cast<U>((I(cs) >> 6) * 3 + (rv::As<records::EffectObject>(s)->z >> 9) - 0x4000));
             const U fade = (s[9] - static_cast<unsigned char>(ring * 0x10)) & 0xFF;
             SetV(4, (0xFFFFFF40u - fade) << 1);
-            long depth[2];
-            SH_CALL(Gte_RotTransPers)(Vx(0), reinterpret_cast<unsigned long*>(p + 8), depth);
+            std::int32_t depth[2];
+            SH_CALL(Gte_RotTransPers)(Vx(0), reinterpret_cast<std::uint32_t*>(p + 8), depth);
             p += 0x10;
             SH_CALL(Gte_StoreDepthF)(Fp(p));
             s = S();

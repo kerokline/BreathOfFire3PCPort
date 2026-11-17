@@ -105,7 +105,7 @@ void FollowOwner() {
     rv::Store(rv::Current<records::BattleTask>()->x, Add(rv::As<records::SpriteHead>(Owner())->x, -1));
     rv::Store(rv::Current<records::BattleTask>()->z, Add(rv::As<records::SpriteHead>(Owner())->z, -1));
     const std::int32_t x = rv::Current<records::BattleTask>()->x;
-    const long ground = MH_CALL(AreaMap_Elevation)(x, x);
+    const std::int32_t ground = MH_CALL(AreaMap_Elevation)(x, x);
     rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, static_cast<unsigned>(ground));
 }
 
@@ -268,7 +268,7 @@ C2_EXPORT void __cdecl BoneDanceBone_Fall(void) {
     AddLong(s + 0x14, rv::As<records::BattleTask>(s)->work_20);
     MH_CALL(Sprite_ScriptTick)();
     s = Sc();
-    const long ground = MH_CALL(AreaMap_Elevation)(rv::As<records::BattleTask>(s)->x, rv::As<records::BattleTask>(s)->z);
+    const std::int32_t ground = MH_CALL(AreaMap_Elevation)(rv::As<records::BattleTask>(s)->x, rv::As<records::BattleTask>(s)->z);
     if (static_cast<short>(rv::Current<records::BattleTask>()->height_whole) >= static_cast<short>(ground)) return;
     int r = RandCall() % 6;
     rv::Store(rv::Current<records::BattleTask>()->x, Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(r + 2) << 16), rv::As<records::SpriteHead>(Owner())->x));
@@ -368,7 +368,7 @@ C2_EXPORT void __cdecl BoneDanceShake_Up(void) {
 // original 0x4AEE90 (PSX 0x800C2120): `jmp BattleTask_FreeCurrent` - the state
 // that ends an effect, the running battle task's slot freed. 31 host tables in
 // .text and one .data slot (0x64D474) hold it. eax the callee's.
-extern "C" unsigned long __cdecl BattleFx_FreeTask(void) { return g.free_task(); }
+extern "C" std::uint32_t __cdecl BattleFx_FreeTask(void) { return g.free_task(); }
 
 // original 0x4AEEA0: the follower (+1 = 2; no creator in MAGIC057 sets it): the
 // frame-offset table at 0x8E3580; a three-entry stack table by +2 (start,

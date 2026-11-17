@@ -104,7 +104,7 @@ const short* Vec(std::uint32_t address) { return reinterpret_cast<const short*>(
 float* Xy(unsigned char* prim, unsigned offset) { return reinterpret_cast<float*>(prim + offset); }
 
 void Project3(unsigned char* p) {
-    long depth;
+    std::int32_t depth;
     MH_CALL(Gte_RotTransPers3)(Vec(::bof3::Img(Prim_VertexScratch_addr)), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x8), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x10), Xy(p, 8), Xy(p, 0x18), Xy(p, 0x28), &depth);
     MH_CALL(Gte_PrimDepths3_10B)(p);
 }
@@ -115,11 +115,11 @@ struct Matrix { short m[3][3]; short pad; std::int32_t t[3]; };
 
 void PushMatrix(const short vector[3], const short angles[3]) {
     Matrix m;
-    MH_CALL(Gte_RotTrans)(vector, reinterpret_cast<long*>(m.t));
+    MH_CALL(Gte_RotTrans)(vector, reinterpret_cast<std::int32_t*>(m.t));
     MH_CALL(Gte_RotMatrix)(angles, &m.m[0][0]);
     MH_CALL(Gte_MulMatrix0)(Camera_Matrix, &m.m[0][0], &m.m[0][0]);
-    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&m));
-    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&m));
+    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
+    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
 }
 
 // The effect point as the GTE takes it: (x >> 9) - 0x4000, (z >> 9) - 0x4000,
@@ -350,7 +350,7 @@ S24_EXPORT void __cdecl Fx106_PushMatrix(void) {
 S24_EXPORT void __cdecl Fx106_DrawSpark(void) {
     DrawMode(0x35);
     const unsigned char* k = Spark();
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(Long(k + 0x10)), static_cast<unsigned long>(Long(k + 0x14)), 2,
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(Long(k + 0x10)), static_cast<std::uint32_t>(Long(k + 0x14)), 2,
                                 0xC);
     k = Spark();
     Put16(::bof3::Img(kWA.v), k[5] * k[9]);
@@ -393,7 +393,7 @@ S24_EXPORT void __cdecl Fx106_DrawSpark(void) {
         p[0x25] = Mem(::bof3::Img(Scratch_Swap_addr))[0];
         p[0x26] = Mem(::bof3::Img(kWE.v))[0];
         k = Spark();
-        MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(Long(k + 0x10)), static_cast<unsigned long>(Long(k + 0x14)),
+        MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(Long(k + 0x10)), static_cast<std::uint32_t>(Long(k + 0x14)),
                                     2, 0x34);
     }
 }

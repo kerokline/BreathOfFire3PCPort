@@ -138,15 +138,15 @@ void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
 
 // The projections with the arguments the originals push: Gte_RotTransPers4
 // gets the depth and flag pointers, Gte_RotTransPers the flag pointer too.
-using Rtp1Fn = long (__cdecl*)(const short*, unsigned char*, long*, long*);
+using Rtp1Fn = std::int32_t (__cdecl*)(const short*, unsigned char*, std::int32_t*, std::int32_t*);
 
-using Rtp4Fn = long (__cdecl*)(const short*, const short*, const short*, const short*, unsigned char*, unsigned char*,
-                               unsigned char*, unsigned char*, long*, long*);
+using Rtp4Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, const short*, unsigned char*, unsigned char*,
+                               unsigned char*, unsigned char*, std::int32_t*, std::int32_t*);
 
 #define S30_AS(type, name) ::magic_harness::Call(reinterpret_cast<type>(reinterpret_cast<void*>(&::name)))
 
 void Rtp4(unsigned char* prim) {
-    long depth, flag;
+    std::int32_t depth, flag;
     S30_AS(Rtp4Fn, Gte_RotTransPers4)(VP(0), VP(8), VP(0x10), VP(0x18), prim + 8, prim + 0x18, prim + 0x28, prim + 0x38,
                                      &depth, &flag);
 }
@@ -477,7 +477,7 @@ S30_EXPORT void __cdecl KaiserMote_UpdateScreenXY(void) {
     v[2] = static_cast<short>(-(S16(c + 0x1E) / 2));
     v[3] = 0;
     MH_CALL(Gpu_SetTile1)(p);
-    long depth, flag;
+    std::int32_t depth, flag;
     S30_AS(Rtp1Fn, Gte_RotTransPers)(v, p + 8, &depth, &flag);
     MH_CALL(Gte_StoreDepthF)(reinterpret_cast<float*>(p + 0x10));
     SetWord(Cur() + 0x20, Ftol16(static_cast<std::uint32_t>(Long(p + 8))));

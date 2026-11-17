@@ -541,8 +541,8 @@ void Seed189(unsigned k) {
         break;
     case k189Project: {
         static const U kK[] = {0, 1, 0xFFFFFFFFu, 0x1000000, 0x1000001, 0xFFFFFF, 0x80000000u, 0x200, 0x1FF};
-        if (ah::Half()) Field_Kind2X = static_cast<long>(kK[ah::Next() % 9] + (ah::Half() ? 0 : ah::Next() & 0xFF000000u));
-        if (ah::Half()) Field_Kind2Z = static_cast<long>(kK[ah::Next() % 9] + (ah::Half() ? 0 : ah::Next() & 0xFF000000u));
+        if (ah::Half()) Field_Kind2X = static_cast<std::int32_t>(kK[ah::Next() % 9] + (ah::Half() ? 0 : ah::Next() & 0xFF000000u));
+        if (ah::Half()) Field_Kind2Z = static_cast<std::int32_t>(kK[ah::Next() % 9] + (ah::Half() ? 0 : ah::Next() & 0xFF000000u));
         if (ah::Half()) rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, AH_PICK(0, 1, 0xFFFF, 0x8000, 0x7FFF, 3, 0xFFFD));
         break;
     }
@@ -571,7 +571,7 @@ void Seed189(unsigned k) {
             const U target = ((2u - cur[8]) & 0xF) << 8;
             const U d = static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(cur[0xB])));
             const U base = (target - d + (ah::Half() ? 0 : AH_PICK(1, 0xFFF, 0x1000, 0x100))) & (ah::Half() ? 0xFFFu : 0xFFFFu);
-            Cond_AngleFB = static_cast<unsigned long>(base | (ah::Half() ? 0 : ah::Next() & 0xFFFF0000u));
+            Cond_AngleFB = static_cast<std::uint32_t>(base | (ah::Half() ? 0 : ah::Next() & 0xFFFF0000u));
         }
         break;
     }

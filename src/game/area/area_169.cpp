@@ -208,7 +208,7 @@ extern "C" void __cdecl Area169_TailHealParty(void) {
 // original 0x426B20 (Area_ArriveHook's case for area 169, 0x56E57D):
 // Cond_ByteFD 1 and story flag 0x74 clear: tail kind 47 armed at state 0, al
 // 1; else al 0.
-extern "C" unsigned char __cdecl Area169_ArriveHook(long, long) {
+extern "C" unsigned char __cdecl Area169_ArriveHook(std::int32_t, std::int32_t) {
     if (Cond_ByteFD != 1) return 0;
     if (AH_CALL(Flags_Test)(Story(), 0x74) != 0) return 0;
     ArmTail(0x2F, 0);

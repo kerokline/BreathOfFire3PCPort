@@ -51,7 +51,7 @@ void EffectAtCell(unsigned char kind, std::int32_t x, std::int32_t z, int b1, in
     e[5] = kind;
     if (b1 >= 0) e[1] = static_cast<unsigned char>(b1);
     if (bB >= 0) e[0xB] = static_cast<unsigned char>(bB);
-    const long ground = AH_CALL(AreaMap_Elevation)(xx, zz);
+    const std::int32_t ground = AH_CALL(AreaMap_Elevation)(xx, zz);
     const U y = static_cast<U>(static_cast<std::int32_t>(static_cast<short>(ground)) + lift);
     if (shift != 0) {
         const U moved = static_cast<U>(tE->x) + static_cast<U>(shift);

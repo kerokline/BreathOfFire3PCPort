@@ -165,7 +165,7 @@ extern "C" void __cdecl EffectKind2D_Start(void) {
     Effect2a_LinkZ = 0x180000;
     unsigned char* const q = S() + 0xC;
     SH_CALL(EffectGte_LoadMapCamera)();
-    long point[3] = {Sprite_Objects[0].x, Sprite_Objects[0].z, Sprite_Objects[0].height};
+    std::int32_t point[3] = {Sprite_Objects[0].x, Sprite_Objects[0].z, Sprite_Objects[0].height};
     SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(q));
     point[0] = Sprite_Objects[1].x;
     point[1] = Sprite_Objects[1].z;
@@ -339,7 +339,7 @@ extern "C" void __cdecl EffectKind2D_DrawDisc(const unsigned char* q) {
         std::int32_t i = minus;
         std::int32_t count = static_cast<std::int32_t>(h) - minus + 1;
         do {
-            const U root = SH_AT(U (__cdecl*)(long), at::kRootWord.v)(static_cast<long>(square - i * i));
+            const U root = SH_AT(U (__cdecl*)(std::int32_t), at::kRootWord.v)(static_cast<std::int32_t>(square - i * i));
             const std::int32_t w = static_cast<std::int16_t>(root);
             unsigned char* const p = Gfx_PacketNext;
             SH_CALL(Gpu_SetTile1)(p);

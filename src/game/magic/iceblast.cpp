@@ -94,7 +94,7 @@ void CallCell(std::uint32_t table, unsigned index) {
 void LinkAtTask(int slot, unsigned size) {
     const unsigned char* const sc = Sprite_Current;
     const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tsc->x), static_cast<unsigned long>(tsc->z),
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(tsc->x), static_cast<std::uint32_t>(tsc->z),
                                 slot, size);
 }
 
@@ -270,16 +270,16 @@ MS21_EXPORT void __cdecl Iceblast_DrawSpires(void) {
             SpireColumn(i, s, a, static_cast<unsigned>((k & 7) + i * 8));
             const unsigned char* const sc = Sprite_Current;
             const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
-            const unsigned long x = static_cast<unsigned long>((static_cast<std::uint32_t>(S16(Vtx(0))) << 9) +
+            const std::uint32_t x = static_cast<std::uint32_t>((static_cast<std::uint32_t>(S16(Vtx(0))) << 9) +
                                                                static_cast<std::uint32_t>(tsc->x));
-            const unsigned long z = static_cast<unsigned long>((static_cast<std::uint32_t>(S16(Vtx(2))) << 9) +
+            const std::uint32_t z = static_cast<std::uint32_t>((static_cast<std::uint32_t>(S16(Vtx(2))) << 9) +
                                                                static_cast<std::uint32_t>(tsc->z));
             MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
             MH_CALL(MapView_LinkPrimAt)(x, z, 0, 0xC);
             unsigned char* const p = Gfx_PacketNext;
             MH_AT(PrimFn, kSetPoly5C.v)(p);
             MH_CALL(Gpu_SetSemiTrans)(p, 1);
-            long depth;
+            std::int32_t depth;
             MH_CALL(Gte_RotTransPers4)(VtxP(0), VtxP(8), VtxP(0x10), VtxP(0x18), F(p, 8), F(p, 0x18), F(p, 0x28), F(p, 0x38),
                                        &depth);
             MH_CALL(Gte_PrimDepths4_10C)(p);
@@ -348,16 +348,16 @@ MS21_EXPORT void __cdecl Iceblast_DrawSpiresInner(void) {
             SpireColumn(i, s, a, static_cast<unsigned>((k & 7) + i * 8));
             const unsigned char* const sc = Sprite_Current;
             const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
-            const unsigned long x = static_cast<unsigned long>((static_cast<std::uint32_t>(S16(Vtx(0))) << 9) +
+            const std::uint32_t x = static_cast<std::uint32_t>((static_cast<std::uint32_t>(S16(Vtx(0))) << 9) +
                                                                static_cast<std::uint32_t>(tsc->x));
-            const unsigned long z = static_cast<unsigned long>((static_cast<std::uint32_t>(S16(Vtx(2))) << 9) +
+            const std::uint32_t z = static_cast<std::uint32_t>((static_cast<std::uint32_t>(S16(Vtx(2))) << 9) +
                                                                static_cast<std::uint32_t>(tsc->z));
             MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
             MH_CALL(MapView_LinkPrimAt)(x, z, 0, 0xC);
             unsigned char* const p = Gfx_PacketNext;
             MH_CALL(Gpu_SetPolyG4)(p);
             MH_CALL(Gpu_SetSemiTrans)(p, 1);
-            long depth;
+            std::int32_t depth;
             MH_CALL(Gte_RotTransPers4)(VtxP(0), VtxP(8), VtxP(0x10), VtxP(0x18), F(p, 8), F(p, 0x18), F(p, 0x28), F(p, 0x38),
                                        &depth);
             MH_CALL(Gte_PrimDepths4_10B)(p);
@@ -432,7 +432,7 @@ MS21_EXPORT void __cdecl Iceblast_DrawDisc(void) {
         p[5] = ScrMagicS21(8)[0];
         p[6] = ScrMagicS21(8)[0];
         for (unsigned k : {0x14u, 0x15u, 0x16u, 0x24u, 0x25u, 0x26u}) p[k] = 1;
-        long depth;
+        std::int32_t depth;
         MH_CALL(Gte_RotTransPers3)(VtxP(0), VtxP(8), VtxP(0x10), F(p, 8), F(p, 0x18), F(p, 0x28), &depth);
         MH_CALL(Gte_PrimDepths3_10B)(p);
         LinkAtTask(2, 0x34);
@@ -500,9 +500,9 @@ MS21_EXPORT void __cdecl IceShard_Draw(void) {
         py = static_cast<std::uint16_t>(py + j);
         px = static_cast<std::uint16_t>(px + j);
         pz = static_cast<std::uint16_t>(pz + j);
-        const unsigned long x = static_cast<unsigned long>((static_cast<std::uint32_t>(static_cast<short>(px)) << 9) +
+        const std::uint32_t x = static_cast<std::uint32_t>((static_cast<std::uint32_t>(static_cast<short>(px)) << 9) +
                                                            static_cast<std::uint32_t>(ts2->x));
-        const unsigned long z = static_cast<unsigned long>((static_cast<std::uint32_t>(static_cast<short>(pz)) << 9) +
+        const std::uint32_t z = static_cast<std::uint32_t>((static_cast<std::uint32_t>(static_cast<short>(pz)) << 9) +
                                                            static_cast<std::uint32_t>(ts2->z));
         MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
         MH_CALL(MapView_LinkPrimAt)(x, z, 0, 0xC);
@@ -536,7 +536,7 @@ MS21_EXPORT void __cdecl IceShard_Draw(void) {
         p[4] = 0x40;
         p[5] = 0x40;
         p[6] = U8((MH_CALL(Rand)() & 0x7F) + 0x40);
-        long depth;
+        std::int32_t depth;
         MH_CALL(Gte_RotTransPers3)(VtxP(0), VtxP(8), VtxP(0x10), F(p, 8), F(p, 0x14), F(p, 0x20), &depth);
         MH_CALL(Gte_PrimDepths3_0C)(p);
         MH_CALL(MapView_LinkPrimAt)(x, z, 0, 0x2C);

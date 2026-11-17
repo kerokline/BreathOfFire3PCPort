@@ -357,7 +357,7 @@ void DisturbDraw(U salt) {
     default: At(Gfx_DrawTpage_addr)[(h >> 8) % 2] = value; break;
     }
 }
-void __cdecl StubPrimColor(U r, U gg, U b, U code, U mode, unsigned long* diffuse, unsigned long* specular) {
+void __cdecl StubPrimColor(U r, U gg, U b, U code, U mode, std::uint32_t* diffuse, std::uint32_t* specular) {
     d3d_fuzz::Record(1, r, gg, b, code, mode, specular != nullptr);
     DisturbDraw(30);
     *diffuse = Mix(31);
@@ -377,7 +377,7 @@ void __cdecl StubShade(U mode) {
 }
 
 const Callees kStandIns = {
-    As<void (__cdecl*)(unsigned, unsigned, unsigned, unsigned, unsigned, unsigned long*, unsigned long*)>(
+    As<void (__cdecl*)(unsigned, unsigned, unsigned, unsigned, unsigned, std::uint32_t*, std::uint32_t*)>(
         &StubPrimColor),
     As<void (__cdecl*)(unsigned)>(&StubRet),
     As<void (__cdecl*)(unsigned, unsigned)>(&StubBlend),
@@ -399,7 +399,7 @@ const Callees kStandIns = {
     As<unsigned (__cdecl*)(unsigned)>(&StubSkillIcon),
     As<unsigned (__cdecl*)(unsigned, unsigned, unsigned)>(&StubSkillCost),
     As<const unsigned char* (__cdecl*)(unsigned, unsigned, unsigned)>(&StubSkillList),
-    As<long (__cdecl*)(int, int, int, int, int)>(&StubClutAdjust),
+    As<std::int32_t (__cdecl*)(int, int, int, int, int)>(&StubClutAdjust),
     As<void (__cdecl*)()>(&StubClutCycle),
 };
 

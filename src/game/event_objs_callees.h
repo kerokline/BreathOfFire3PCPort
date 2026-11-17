@@ -48,16 +48,16 @@ struct Callees {
     void (__cdecl* jump_setup)();                                              // Field_JumpSetUp (ours)
     void (__cdecl* jump_camera)();                                             // Field_JumpCamera (ours)
     void (__cdecl* jump_start)();                                              // Field_JumpStart (ours)
-    long (__cdecl* slope_at)(long, long, unsigned);                            // 0x5725C0 (group M)
-    long (__cdecl* ground_at)(long, long);                                     // MapView_GroundAt
+    std::int32_t (__cdecl* slope_at)(std::int32_t, std::int32_t, unsigned);                            // 0x5725C0 (group M)
+    std::int32_t (__cdecl* ground_at)(std::int32_t, std::int32_t);                                     // MapView_GroundAt
     unsigned char (__cdecl* shade_raise)(unsigned);                            // Sprite_ShadeRaise (ours)
     void (__cdecl* load_palette)(unsigned short*, unsigned);                   // Sprite_LoadPalette
-    unsigned char (__cdecl* cells_all)(long, long, unsigned, unsigned, unsigned);   // AreaMap_CellsAll (ours)
-    unsigned char (__cdecl* cells_all4)(long, long, unsigned, unsigned);       // AreaMap_CellsAll4 (ours)
-    unsigned char (__cdecl* cells_all_wide)(long, long, unsigned, unsigned);   // 0x535490
-    unsigned char (__cdecl* cells_none)(long, long, unsigned, unsigned, unsigned);  // AreaMap_CellsNone (ours)
-    unsigned char (__cdecl* cells_none4)(long, long, unsigned, unsigned);      // AreaMap_CellsNone4 (ours)
-    unsigned char (__cdecl* cells_none_wide)(long, long, unsigned, unsigned);  // 0x535D60
+    unsigned char (__cdecl* cells_all)(std::int32_t, std::int32_t, unsigned, unsigned, unsigned);   // AreaMap_CellsAll (ours)
+    unsigned char (__cdecl* cells_all4)(std::int32_t, std::int32_t, unsigned, unsigned);       // AreaMap_CellsAll4 (ours)
+    unsigned char (__cdecl* cells_all_wide)(std::int32_t, std::int32_t, unsigned, unsigned);   // 0x535490
+    unsigned char (__cdecl* cells_none)(std::int32_t, std::int32_t, unsigned, unsigned, unsigned);  // AreaMap_CellsNone (ours)
+    unsigned char (__cdecl* cells_none4)(std::int32_t, std::int32_t, unsigned, unsigned);      // AreaMap_CellsNone4 (ours)
+    unsigned char (__cdecl* cells_none_wide)(std::int32_t, std::int32_t, unsigned, unsigned);  // 0x535D60
     unsigned char (__cdecl* byte_at)(short, short);                            // AreaMap_ByteAt
     void (__cdecl* floor_hurt)(unsigned);                                      // 0x534C20
     void (__cdecl* flash)(unsigned);                                           // 0x534DB0
@@ -66,7 +66,7 @@ struct Callees {
     void (__cdecl* hp_gain)(unsigned, unsigned);                               // 0x5373F0
     unsigned char (__cdecl* effect_free)();                                    // Effect_FindFree
     unsigned char (__cdecl* tile_turn)(unsigned, unsigned, unsigned);          // Field_TileTurn (ours)
-    unsigned char (__cdecl* turn_probe)(long, long, unsigned, unsigned);       // 0x535610
+    unsigned char (__cdecl* turn_probe)(std::int32_t, std::int32_t, unsigned, unsigned);       // 0x535610
     unsigned char (__cdecl* equip_count)(unsigned, unsigned, unsigned);        // Actor_EquipCount (ours)
 };
 extern const Callees kOriginals;

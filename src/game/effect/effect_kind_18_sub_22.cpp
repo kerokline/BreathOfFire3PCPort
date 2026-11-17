@@ -241,7 +241,7 @@ extern "C" void __cdecl EffectKind18Sub22_SetMap(void) {
         U z = Rect(place, 1);
         if (z < Rect(place, 3)) {
             do {
-                const U e = static_cast<U>(SH_CALL(AreaMap_Elevation)(static_cast<long>(x << 16), static_cast<long>(z << 16)));
+                const U e = static_cast<U>(SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(x << 16), static_cast<std::int32_t>(z << 16)));
                 unsigned char* const s = S();
                 const std::int32_t v = -S16(e) - S16(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole)) * 2;
                 const U base = AreaMap_HeightBase;
@@ -283,7 +283,7 @@ extern "C" void __cdecl EffectKind18Sub22_Draw(void) {
             SetV(8 * v + 2, z - (static_cast<U>(S8(B(o + 1))) << 7));
             SetV(8 * v + 4, (static_cast<U>(S8(B(o + 2))) << 7) + static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->height_whole));
         }
-        long depth[2];
+        std::int32_t depth[2];
         SH_CALL(Gte_RotTransPers4)(Vx(0), Vx(1), Vx(2), Vx(3), Fp(p + 8), Fp(p + 0x18), Fp(p + 0x28), Fp(p + 0x38), depth);
         SH_CALL(Gte_PrimDepths4_10)(p);
         SH_CALL(Prim_SetTexture)(ULEffect5d(piece + 4), p, 1);

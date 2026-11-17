@@ -58,16 +58,16 @@ const unsigned char* KindColour(unsigned kind) { return At(AddressOf(BossTorast_
 
 // A table entry as the original's jmp reaches it: the word its caller left on
 // the stack, eax back.
-using Entry = unsigned long (__cdecl*)(unsigned);
+using Entry = std::uint32_t (__cdecl*)(unsigned);
 
-unsigned long CallEntry(U table, unsigned index, unsigned word) {
+std::uint32_t CallEntry(U table, unsigned index, unsigned word) {
     // the entry as read: the fuzz swaps the table's cells for its recorders
     return reinterpret_cast<Entry>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(table + 4 * index)))))(word);
 }
 
 // jmp [table + 4 * Sprite_Current[at]]: the table's `entries` handlers, a
 // Fatal past them (the original jumps through the dword after).
-unsigned long DispatchBossSb(const char* who, U table, unsigned entries, unsigned at, unsigned word) {
+std::uint32_t DispatchBossSb(const char* who, U table, unsigned entries, unsigned at, unsigned word) {
     const unsigned state = Sprite_Current[at];
     if (state >= entries)
         bof3::Fatal("%s: state byte +%u is %u, past the %u entries of 0x%X - the original jumps through the dword after "
@@ -79,7 +79,7 @@ unsigned long DispatchBossSb(const char* who, U table, unsigned entries, unsigne
 // mov eax, [esp + 4]; and eax, 0xFF; jmp [table + 4 * eax]: an enemy's +0xF4
 // hook by its word's low byte (3 entries in every table of the group), the
 // word itself left for the entry.
-unsigned long HookDispatchBossSb(const char* who, U table, unsigned word) {
+std::uint32_t HookDispatchBossSb(const char* who, U table, unsigned word) {
     const unsigned index = word & 0xFF;
     if (index >= 3)
         bof3::Fatal("%s: hook word %u is past the 3 entries of 0x%X - the original jumps through the dword after "
@@ -105,7 +105,7 @@ unsigned char Enter(U fc, U hook, U f8) {
 }  // namespace
 
 // original 0x438E50: BossKind_Table[8]: by +1 through BossTorast_Steps (12).
-extern "C" unsigned long __cdecl BossTorast_Dispatch(unsigned word) {
+extern "C" std::uint32_t __cdecl BossTorast_Dispatch(unsigned word) {
     return DispatchBossSb("BossTorast_Dispatch", AddressOf(BossTorast_Steps), 12, 1, word);
 }
 
@@ -212,7 +212,7 @@ extern "C" void __cdecl BossTorast_DeathFxRingShrink(void) {
 }
 
 // original 0x4390E0: kind 8's +0xF4 hook through BossTorast_Hooks (3, BareRet).
-extern "C" unsigned long __cdecl BossTorast_Hook(unsigned word) {
+extern "C" std::uint32_t __cdecl BossTorast_Hook(unsigned word) {
     return HookDispatchBossSb("BossTorast_Hook", AddressOf(BossTorast_Hooks), word);
 }
 

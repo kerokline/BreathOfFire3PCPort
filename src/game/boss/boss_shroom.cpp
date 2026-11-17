@@ -93,7 +93,7 @@ unsigned char EnterBossSj(U fc, U f4, U f8) {
 }  // namespace
 
 // original 0x43FBB0: BossKind_Table[61]. jmp [BossShroom_States + 4 * +1] (12).
-extern "C" unsigned long __cdecl BossShroom_Dispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl BossShroom_Dispatch(std::uint32_t through) {
     return DispatchBossSj("BossShroom_Dispatch", AddressOf(BossShroom_States), 12, 1, through);
 }
 

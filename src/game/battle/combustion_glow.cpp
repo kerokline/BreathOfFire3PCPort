@@ -95,23 +95,23 @@ void Dispatch(const std::uint32_t* table, unsigned entries, unsigned phase, cons
 
 // The callees with the arguments the originals push: both projections get a
 // flag pointer past the depth, which ours does not read.
-using Rtp3Fn = long (__cdecl*)(const short*, const short*, const short*, unsigned char*, unsigned char*, unsigned char*,
-                               long*, long*);
+using Rtp3Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, unsigned char*, unsigned char*, unsigned char*,
+                               std::int32_t*, std::int32_t*);
 
-using Rtp4Fn = long (__cdecl*)(const short*, const short*, const short*, const short*, unsigned char*, unsigned char*,
-                               unsigned char*, unsigned char*, long*, long*);
+using Rtp4Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, const short*, unsigned char*, unsigned char*,
+                               unsigned char*, unsigned char*, std::int32_t*, std::int32_t*);
 
 #define S37_AS(type, name) ::magic_harness::Call(reinterpret_cast<type>(reinterpret_cast<void*>(&::name)))
 
 // Prim_VertexScratch's first three SVECTORs projected to +8, +0x18, +0x28.
 void Rtp3(unsigned char* prim) {
-    long p, flag;
+    std::int32_t p, flag;
     S37_AS(Rtp3Fn, Gte_RotTransPers3)(VP(0), VP(8), VP(0x10), prim + 8, prim + 0x18, prim + 0x28, &p, &flag);
 }
 
 // All four projected to +8, +0x18, +0x28, +0x38.
 void Rtp4(unsigned char* prim) {
-    long p, flag;
+    std::int32_t p, flag;
     S37_AS(Rtp4Fn, Gte_RotTransPers4)(VP(0), VP(8), VP(0x10), VP(0x18), prim + 8, prim + 0x18, prim + 0x28, prim + 0x38, &p,
                                      &flag);
 }

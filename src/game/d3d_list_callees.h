@@ -28,8 +28,8 @@ constexpr U kCellInUse = 0x7CAE4C, kCellInUseEnd = 0x7CC24C;   // D3d_CellTexCac
 constexpr U kHandlers = 21;            // entries 0..20 of each table call a handler
 
 struct Callees {
-    long (__cdecl* soft[kHandlers])(const unsigned char* prim);   // first table's entries 0..20
-    long (__cdecl* d3d[kHandlers])(const unsigned char* prim);    // second table's
+    std::int32_t (__cdecl* soft[kHandlers])(const unsigned char* prim);   // first table's entries 0..20
+    std::int32_t (__cdecl* d3d[kHandlers])(const unsigned char* prim);    // second table's
     void (__cdecl* move_image)(short* rect, int to_x, int to_y);  // Gfx_MoveImage
     void (__cdecl* alpha_modulate)(unsigned on);                  // D3d_SetAlphaModulate
     void (__cdecl* after_draw)();                                 // D3d_AfterDraw (a tail jump)

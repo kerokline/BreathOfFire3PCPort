@@ -71,7 +71,7 @@ void Step() {
 // Gte_RotTransPers4 of Prim_VertexScratch's four vectors (0x9037A0, A8, B0, B8)
 // into the quad at p; the original's depth and flag are locals of its own.
 void Project4(unsigned char* p) {
-    long depth = 0;
+    std::int32_t depth = 0;
     SH_CALL(Gte_RotTransPers4)(Vector(0), Vector(8), Vector(0x10), Vector(0x18), F(p + 8), F(p + 0x18), F(p + 0x28),
                                F(p + 0x38), &depth);
 }

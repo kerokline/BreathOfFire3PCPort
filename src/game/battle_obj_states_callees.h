@@ -89,18 +89,18 @@ struct Callees {
     unsigned (__cdecl* pick_pose)();                                       // BattleObj_PickPose
     unsigned char (__cdecl* tick)();                                       // BattleObj_ScriptTick
     unsigned char (__cdecl* tick_once)();                                  // BattleObj_ScriptTickOnce
-    long (__cdecl* elevation)(long, long);                                 // AreaMap_Elevation
+    std::int32_t (__cdecl* elevation)(std::int32_t, std::int32_t);                                 // AreaMap_Elevation
     unsigned char (__cdecl* ensure_animation)(unsigned char);              // Sprite_EnsureAnimation
     unsigned char (__cdecl* set_tint)(unsigned char*, unsigned char, unsigned char, unsigned char, unsigned char);  // Sprite_SetTint
     void (__cdecl* tint_release)(unsigned char);                           // Tint_Release
     unsigned char (__cdecl* roll_pending)();                               // Battle_RollPendingFlag
     int (__cdecl* rand_)();                                                // Rand
-    unsigned long (__cdecl* play_cue)(unsigned);                           // Battle_PlayActorCue
+    std::uint32_t (__cdecl* play_cue)(unsigned);                           // Battle_PlayActorCue
     unsigned char (__cdecl* task_create)(unsigned, unsigned);              // BattleTask_Create
     void (__cdecl* set_target_flag)(unsigned);                             // Battle_SetTargetFlag40
     int (__cdecl* load_done)();                                            // File_LoadDone
     unsigned char (__cdecl* load_sound)(unsigned, unsigned);               // Battle_LoadSoundByKey
-    unsigned long (__cdecl* clear_actor_bit)(unsigned);                    // Battle_ClearActorBit
+    std::uint32_t (__cdecl* clear_actor_bit)(unsigned);                    // Battle_ClearActorBit
 };
 
 extern const Callees kOriginals;

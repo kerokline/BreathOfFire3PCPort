@@ -76,7 +76,7 @@ void StoreFloat(unsigned char* at, double v) {
 struct Matrix {
     short m[9];
     short pad;
-    long t[3];
+    std::int32_t t[3];
 };
 
 // jmp / call [table + 4 * index]: the table's `entries` handlers, read in place
@@ -142,7 +142,7 @@ void Copy12Rest3e(unsigned char* to, const unsigned char* from) {
     for (unsigned i = 0; i < 12; i += 4) SetUL(to + i, ULRest3e(from + i));
 }
 
-const long* Point(const unsigned char* p) { return reinterpret_cast<const long*>(p); }
+const std::int32_t* Point(const unsigned char* p) { return reinterpret_cast<const std::int32_t*>(p); }
 
 float* Out(unsigned char* p) { return reinterpret_cast<float*>(p); }
 
@@ -250,7 +250,7 @@ extern "C" void __cdecl EffectKind1E_ShardInit(unsigned char* shard) {
     SetUL(shard + 0x14, (static_cast<U>(SH_CALL(Rand)()) & 0xFFu) - 0x80u);
     SetUL(shard + 0x18, (static_cast<U>(SH_CALL(Rand)()) & 0xFFu) - 0x80u);
     SetUL(shard + 0x1C, static_cast<U>(SH_CALL(Rand)()) & 0x7Fu);
-    SH_CALL(Gte_VectorNormal)(reinterpret_cast<const long*>(shard + 0x14), reinterpret_cast<long*>(shard + 0x14));
+    SH_CALL(Gte_VectorNormal)(reinterpret_cast<const std::int32_t*>(shard + 0x14), reinterpret_cast<std::int32_t*>(shard + 0x14));
     SetUL(shard + 0x1C, UL(shard + 0x1C) << 8);
     shard[0] = 1;
     shard[1] = 0;
@@ -295,7 +295,7 @@ extern "C" void __cdecl EffectKind1E_ShardQuad(unsigned char* shard) {
     unsigned char* const prim = Gfx_PacketNext;
     SH_CALL(Gpu_SetPolyFT4)(prim);
     SH_CALL(Gpu_SetSemiTrans)(prim, 1);
-    const long* const point = reinterpret_cast<const long*>(shard + 4);
+    const std::int32_t* const point = reinterpret_cast<const std::int32_t*>(shard + 4);
     float screen[3];
     SH_CALL(EffectGte_ProjectPoint)(point, screen);
     short wh[2] = {SW(shard + 0x24), SW(shard + 0x24)};
@@ -329,7 +329,7 @@ extern "C" void __cdecl EffectKind1E_ShardQuad(unsigned char* shard) {
     prim[4] = shard[3];
     prim[5] = shard[3];
     prim[6] = shard[3];
-    SH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(Long(shard + 4)), static_cast<unsigned long>(Long(shard + 8)),
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(Long(shard + 4)), static_cast<std::uint32_t>(Long(shard + 8)),
                                 2, 0x48);
 }
 
@@ -402,7 +402,7 @@ extern "C" void __cdecl EffectKind1E_SplitModel(void) {
         SetWord(r + 2, static_cast<U>((SW(d + 0xA) + SW(d + 0x10) + SW(d + 4) + SW(d + 0x16)) >> 2));
         const int z = (SW(d + 0xC) + SW(d + 0x12) + SW(d + 0x18) + SW(d + 6)) >> 2;
         SetWord(r + 4, static_cast<U>(z));
-        const long centre[3] = {SW(r + 0), SW(r + 2), static_cast<short>(z)};
+        const std::int32_t centre[3] = {SW(r + 0), SW(r + 2), static_cast<short>(z)};
         SH_CALL(Gte_VectorNormalS)(centre, reinterpret_cast<short*>(r + 8));
         for (U k = 8; k <= 0xC; k += 2) SetWord(r + k, static_cast<U>(SW(r + k) >> 8));
         SetWord(r + 0x10, 0);
@@ -446,14 +446,14 @@ extern "C" void __cdecl EffectKind1E_TurnPiece(const unsigned char* copy, unsign
     Matrix m;
     SH_CALL(Gte_RotMatrix)(reinterpret_cast<const short*>(piece + 0x10), m.m);
     m.t[0] = m.t[1] = m.t[2] = 0;
-    SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&m));
-    SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&m));
+    SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
+    SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
     for (U v = 2; v <= 0x14; v += 6) {
         short vector[4];
         vector[0] = SW(copy + v);
         vector[1] = SW(copy + v + 2);
         vector[2] = SW(copy + v + 4);
-        long out[3];
+        std::int32_t out[3];
         SH_CALL(Gte_RotTrans)(vector, out);
         SetWord(face + v, Word(piece + 0) + static_cast<U>(out[0]));
         SetWord(face + v + 2, Word(piece + 2) + static_cast<U>(out[1]));
@@ -533,8 +533,8 @@ extern "C" void __cdecl EffectKind1E_DrawModel(unsigned shade) {
     Matrix m1;
     const auto count = static_cast<signed char>(At(Sprite_ObjectsExtra[0].frames)[0]);
     SH_CALL(Sprite_ObjectMatrix)(m1.m);
-    SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&m1));
-    SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&m1));
+    SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(&m1));
+    SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(&m1));
     Matrix m2;
     std::memcpy(&m2, &m1, sizeof m2);
     SH_CALL(Camera_LoadMatrix)(m2.m);
@@ -553,7 +553,7 @@ extern "C" void __cdecl EffectKind1E_DrawModel(unsigned shade) {
         short v[4][4];
         for (U k = 0; k < 4; ++k)
             for (U j = 0; j < 3; ++j) v[k][j] = SW(At(face + 2 + 6 * k + 2 * j));
-        long p;
+        std::int32_t p;
         SH_CALL(Gte_RotTransPers4)(v[0], v[1], v[2], v[3], reinterpret_cast<float*>(prim + 8),
                                    reinterpret_cast<float*>(prim + 0x14), reinterpret_cast<float*>(prim + 0x2C),
                                    reinterpret_cast<float*>(prim + 0x20), &p);

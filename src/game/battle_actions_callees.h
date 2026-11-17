@@ -105,8 +105,8 @@ struct Callees {
     void (__cdecl* clear_acting_flags)();                         // Battle_ClearActingFlags 0x4301B0
     void (__cdecl* open_msg_window)();                            // Battle_OpenMsgWindow 0x444310
     const unsigned char* (__cdecl* msg)(unsigned);                // Msg_SystemPtr 0x497740
-    unsigned long (__cdecl* banner_add)(unsigned, unsigned, unsigned, unsigned, const char*);   // BattleBanner_Add 0x44A650
-    unsigned long (__cdecl* set_actor_bit)(unsigned);             // Battle_SetActorBit 0x446FB0
+    std::uint32_t (__cdecl* banner_add)(unsigned, unsigned, unsigned, unsigned, const char*);   // BattleBanner_Add 0x44A650
+    std::uint32_t (__cdecl* set_actor_bit)(unsigned);             // Battle_SetActorBit 0x446FB0
     unsigned char (__cdecl* action_suits_target)();               // Battle_ActionSuitsTarget 0x453210
     void (__cdecl* remove_from_turn_order)(unsigned);             // Battle_RemoveFromTurnOrder 0x446650
     char* (__cdecl* str_copy_n)(char*, const char*, unsigned);    // Str_CopyN 0x5171A0
@@ -125,7 +125,7 @@ struct Callees {
     void (__cdecl* load_dat)(int);                                // LoadDatFile 0x454590
     void (__cdecl* clut_copy_row)(unsigned);                      // Gfx_ClutStripCopyRow 0x4549F0
     unsigned char (__cdecl* settle_flag8)();                      // Battle_SettleFlag8 0x453B10
-    unsigned long (__cdecl* queue_push)(unsigned, unsigned, unsigned long);   // BattleQueue_Push 0x44A880
+    std::uint32_t (__cdecl* queue_push)(unsigned, unsigned, std::uint32_t);   // BattleQueue_Push 0x44A880
 };
 
 extern const Callees kOriginals;

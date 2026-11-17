@@ -44,12 +44,12 @@ double InversePi() {
 
 const double kInversePi = InversePi();
 
-constexpr long kStackDepth = 20;
+constexpr std::int32_t kStackDepth = 20;
 
 // 2^-14, the float at 0x5C466C: a depth as the primitives' per-vertex float.
 constexpr double kDepthScale = 1.0 / 16384.0;
 
-float DepthAsFloat(long depth) { return static_cast<float>(static_cast<double>(depth) * kDepthScale); }
+float DepthAsFloat(std::int32_t depth) { return static_cast<float>(static_cast<double>(depth) * kDepthScale); }
 
 void StoreAt(void* prim, unsigned offset, float value) {
     std::memcpy(static_cast<unsigned char*>(prim) + offset, &value, sizeof value);
@@ -78,10 +78,10 @@ void PrimDepthFlat4(void* prim, unsigned stride) {
     for (unsigned v = 0; v < 4; ++v) StoreAt(prim, 0x10 + v * stride, depth);
 }
 
-long DepthRamp(long value) {
-    const long lo = Gte_RampNear;
+std::int32_t DepthRamp(std::int32_t value) {
+    const std::int32_t lo = Gte_RampNear;
     if (value < lo) return 0;
-    const long hi = Gte_RampFar;
+    const std::int32_t hi = Gte_RampFar;
     if (value > hi) return 0x1000;
     // Both differences wrap in 32 bits, as the original's do.
     const std::int32_t num = static_cast<std::int32_t>(static_cast<std::uint32_t>(value) - static_cast<std::uint32_t>(lo));
@@ -92,16 +92,16 @@ long DepthRamp(long value) {
     const double scaled = static_cast<double>(num) / static_cast<double>(den) * 4096.0;
     // _ftol 0x5B9550 truncates to 64 bits; eax is the low half. |scaled| is at
     // most 2^43.
-    return static_cast<long>(static_cast<std::uint32_t>(static_cast<std::int64_t>(scaled)));
+    return static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int64_t>(scaled)));
 }
 
-std::int32_t MulWrap(long a, long b) {
+std::int32_t MulWrap(std::int32_t a, std::int32_t b) {
     return static_cast<std::int32_t>(static_cast<std::uint32_t>(a) * static_cast<std::uint32_t>(b));
 }
 
 // The globals are read where the original reads them and not before, so that
 // an out pointer aimed at one of them gives what the original gives.
-void Perspective(float* sx, float* sy, long* sz) {
+void Perspective(float* sx, float* sy, std::int32_t* sz) {
     if (Gte_Transformed[2] >= Gte_NearZ) {
         // In front of the near plane: x * h / z + offset, the product an
         // integer one that wraps.
@@ -188,15 +188,15 @@ short* Premultiply(short r0, short r1, short r2, short r3, short r4, short r5, s
 
 constexpr short kOne = 0x1000;
 
-long AddWrap(long a, unsigned long b) { return static_cast<long>(static_cast<unsigned long>(a) + b); }
+std::int32_t AddWrap(std::int32_t a, std::uint32_t b) { return static_cast<std::int32_t>(static_cast<std::uint32_t>(a) + b); }
 
 // One vertex: rotation, translation, perspective. Gte_Transformed is left
 // holding the vertex in view space, as the original leaves it.
 // Gte_Depth as the `long *` the projections take: the row is the image's
 // 32-bit word (std::int32_t in the generated header), long on Win32.
-long* Depth() { return reinterpret_cast<long*>(&Gte_Depth); }
+std::int32_t* Depth() { return reinterpret_cast<std::int32_t*>(&Gte_Depth); }
 
-void Project(const short* vertex, float* sx, float* sy, long* sz) {
+void Project(const short* vertex, float* sx, float* sy, std::int32_t* sz) {
     Gte_ApplyMatrix(reinterpret_cast<const short*>(Gte_Matrix), vertex, Gte_Transformed);
     Gte_Transformed[0] = AddWrap(Gte_Transformed[0], Gte_Matrix[5]);
     Gte_Transformed[1] = AddWrap(Gte_Transformed[1], Gte_Matrix[6]);
@@ -231,12 +231,12 @@ void ProjectThroughFifos(const short* vertex) {
 // _ftol 0x5B9550: fistp to 64 bits, rounding toward zero, and the caller gets
 // the low half. Out of range - or a NaN - is the integer indefinite,
 // 0x8000000000000000, whose low half is 0.
-long Ftol(double v) {
+std::int32_t Ftol(double v) {
     if (!(v < 9223372036854775808.0 && v >= -9223372036854775808.0)) return 0;
-    return static_cast<long>(static_cast<std::uint32_t>(static_cast<std::int64_t>(v)));
+    return static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int64_t>(v)));
 }
 
-struct Normal { long x, y, z, length_squared; };
+struct Normal { std::int32_t x, y, z, length_squared; };
 
 // x and y pass through 32-bit floats before anything else is done with them;
 // z does not. The returned square is the sum as a 32-bit float. Those three
@@ -244,7 +244,7 @@ struct Normal { long x, y, z, length_squared; };
 // them: the order of the sum (z*z, then y*y, then x*x), and a zero length
 // dividing by 1 - without it the three results are _ftol of a NaN, which is
 // 0 as well.
-Normal Normalise(const long* in) {
+Normal Normalise(const std::int32_t* in) {
     const float xf = static_cast<float>(in[0]);
     const float yf = static_cast<float>(in[1]);
     const double z = static_cast<double>(in[2]);
@@ -318,10 +318,10 @@ extern "C" int __cdecl Math_Ratan2(float y, float x) {
 // above a double's last bit, so the truncation is the integer square root.
 // A negative n gives the NaN, and _ftol of a NaN is the integer indefinite
 // 0x8000000000000000, whose low dword is 0.
-extern "C" long __cdecl Gte_SquareRoot0(long n) {
+extern "C" std::int32_t __cdecl Gte_SquareRoot0(std::int32_t n) {
     if (n < 0) return 0;
     const double root = _mm_cvtsd_f64(_mm_sqrt_sd(_mm_setzero_pd(), _mm_set_sd(static_cast<double>(n))));
-    return static_cast<long>(static_cast<std::uint32_t>(static_cast<std::int64_t>(root)));
+    return static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int64_t>(root)));
 }
 
 // originals 0x5A7AA0, 0x5A7AE0, 0x5A7B00: what the functions above read, set.
@@ -340,29 +340,29 @@ extern "C" void __cdecl Gte_InitGeom(void) {
     Gte_MatrixDepth = 0;
 }
 
-extern "C" void __cdecl Gte_SetGeomOffset(long x, long y) {
+extern "C" void __cdecl Gte_SetGeomOffset(std::int32_t x, std::int32_t y) {
     Gte_OffsetX = x;
     Gte_OffsetY = y;
 }
 
-extern "C" void __cdecl Gte_SetGeomScreen(long h) {
+extern "C" void __cdecl Gte_SetGeomScreen(std::int32_t h) {
     Gte_ProjDistance = h;
     Gte_NearZ = h / 2;
     Gte_RampNear = MulWrap(Gte_RampNearScale, h) / 1000;
     Gte_RampFar = MulWrap(Gte_RampFarScale, h) / 1000;
 }
 
-extern "C" void __cdecl Gte_SetBackColor(long r, long g, long b) {
-    Gte_BackColor[0] = static_cast<short>(static_cast<unsigned long>(r) << 4);
-    Gte_BackColor[1] = static_cast<short>(static_cast<unsigned long>(g) << 4);
-    Gte_BackColor[2] = static_cast<short>(static_cast<unsigned long>(b) << 4);
+extern "C" void __cdecl Gte_SetBackColor(std::int32_t r, std::int32_t g, std::int32_t b) {
+    Gte_BackColor[0] = static_cast<short>(static_cast<std::uint32_t>(r) << 4);
+    Gte_BackColor[1] = static_cast<short>(static_cast<std::uint32_t>(g) << 4);
+    Gte_BackColor[2] = static_cast<short>(static_cast<std::uint32_t>(b) << 4);
 }
 
 // originals 0x5A7B90, 0x5A7BC0: libgte PushMatrix and PopMatrix, with room for
 // twenty where the PSX had one. A push onto a full stack and a pop from an
 // empty one do nothing, silently.
 extern "C" void __cdecl Gte_PushMatrix(void) {
-    const long depth = Gte_MatrixDepth;
+    const std::int32_t depth = Gte_MatrixDepth;
     if (depth >= kStackDepth) return;
     // A negative depth passes the signed test and indexes below the stack, as
     // the original's does.
@@ -372,7 +372,7 @@ extern "C" void __cdecl Gte_PushMatrix(void) {
 }
 
 extern "C" void __cdecl Gte_PopMatrix(void) {
-    long depth = Gte_MatrixDepth;
+    std::int32_t depth = Gte_MatrixDepth;
     if (depth <= 0) return;
     Gte_MatrixDepth = --depth;
     std::memcpy(Gte_Matrix, reinterpret_cast<unsigned char*>(Gte_MatrixStack) + static_cast<std::uint32_t>(depth) * 0x20u,
@@ -385,7 +385,7 @@ extern "C" void __cdecl Gte_PopMatrix(void) {
 //
 // As the original has it: sums in 32 bits, wrapping; arithmetic shifts;
 // everything read before anything is written, so out may be the vector.
-extern "C" void __cdecl Gte_ApplyMatrix(const short* matrix, const short* vector, long* out) {
+extern "C" void __cdecl Gte_ApplyMatrix(const short* matrix, const short* vector, std::int32_t* out) {
     const std::int32_t x = vector[0], y = vector[1], z = vector[2];
     std::int32_t row[3];
     for (int r = 0; r < 3; ++r) {
@@ -437,7 +437,7 @@ std::uint32_t g_lv_exact = 0;
 // arms are 15 units long, folds over the horizon at the frame a product
 // crosses 2^31 (issue #121's second report, known-defects D358). With the
 // switch armed the product is 64-bit; the shift and the stores are the same.
-extern "C" void __cdecl Gte_ApplyMatrixLV(const short* matrix, const long* vector, long* out) {
+extern "C" void __cdecl Gte_ApplyMatrixLV(const short* matrix, const std::int32_t* vector, std::int32_t* out) {
     if (psx_gte::g_lv_exact) {
         const std::int64_t x = vector[0], y = vector[1], z = vector[2];
         std::int32_t row[3];
@@ -522,7 +522,7 @@ extern "C" short* __cdecl Gte_RotMatrixYXZ(const short* angles, short* matrix) {
 }
 
 // original 0x5A8100: libgte TransMatrix - a MATRIX's translation from a VECTOR.
-extern "C" void __cdecl Gte_TransMatrix(unsigned long* matrix, const unsigned long* vector) {
+extern "C" void __cdecl Gte_TransMatrix(std::uint32_t* matrix, const std::uint32_t* vector) {
     matrix[5] = vector[0];
     matrix[6] = vector[1];
     matrix[7] = vector[2];
@@ -530,7 +530,7 @@ extern "C" void __cdecl Gte_TransMatrix(unsigned long* matrix, const unsigned lo
 
 // original 0x5A8120: libgte ScaleMatrix - each column of a rotation matrix
 // times a component of the vector, >> 12, one s16 at a time, in place.
-extern "C" short* __cdecl Gte_ScaleMatrix(short* matrix, const long* scale) {
+extern "C" short* __cdecl Gte_ScaleMatrix(short* matrix, const std::int32_t* scale) {
     for (unsigned i = 0; i < 9; ++i) {
         const std::uint32_t product = static_cast<std::uint32_t>(static_cast<std::int32_t>(matrix[i])) *
                                       static_cast<std::uint32_t>(scale[i % 3]);
@@ -552,17 +552,17 @@ extern "C" void __cdecl Gte_TransposeMatrix(const short* in, short* out) {
 
 // original 0x5A8200: the current matrix applied to an SVECTOR, rotation and
 // then translation. libgte RotTrans, without its flag argument.
-extern "C" void __cdecl Gte_RotTrans(const short* vector, long* out) {
+extern "C" void __cdecl Gte_RotTrans(const short* vector, std::int32_t* out) {
     Gte_ApplyMatrix(reinterpret_cast<const short*>(Gte_Matrix), vector, out);
-    const long rotated[3] = {out[0], out[1], out[2]};
-    out[0] = rotated[0] + static_cast<long>(Gte_Matrix[5]);
-    out[1] = rotated[1] + static_cast<long>(Gte_Matrix[6]);
-    out[2] = rotated[2] + static_cast<long>(Gte_Matrix[7]);
+    const std::int32_t rotated[3] = {out[0], out[1], out[2]};
+    out[0] = rotated[0] + static_cast<std::int32_t>(Gte_Matrix[5]);
+    out[1] = rotated[1] + static_cast<std::int32_t>(Gte_Matrix[6]);
+    out[2] = rotated[2] + static_cast<std::int32_t>(Gte_Matrix[7]);
 }
 
 // original 0x5A8250: libgte RotTransPers, without its flag argument, which
 // the original never reads. The screen point comes back as two floats.
-extern "C" long __cdecl Gte_RotTransPers(const short* vertex, unsigned long* sxy, long* p) {
+extern "C" std::int32_t __cdecl Gte_RotTransPers(const short* vertex, std::uint32_t* sxy, std::int32_t* p) {
     ProjectThroughFifos(vertex);
     *p = Gte_DepthRamp(Gte_Depth);
     sxy[0] = Gte_ScreenXY[4];
@@ -572,8 +572,8 @@ extern "C" long __cdecl Gte_RotTransPers(const short* vertex, unsigned long* sxy
 
 namespace {
 
-using RampFn = long (__cdecl*)(long);
-using PerspectiveFn = void (__cdecl*)(float*, float*, long*);
+using RampFn = std::int32_t (__cdecl*)(std::int32_t);
+using PerspectiveFn = void (__cdecl*)(float*, float*, std::int32_t*);
 
 }  // namespace
 
@@ -582,15 +582,15 @@ namespace psx_gte_float { PerspectiveFn g_perspective_clone = nullptr; }
 
 // original 0x5A8340: where a depth lies between two planes, 0 to 0x1000 - the
 // GTE's depth-cue interpolation factor by its shape. Truncated, not rounded.
-extern "C" long __cdecl Gte_DepthRamp(long value) {
+extern "C" std::int32_t __cdecl Gte_DepthRamp(std::int32_t value) {
     if (!psx_gte_float::g_ramp_clone) return DepthRamp(value);
     LiveCountWord();
-    const long theirs = psx_gte_float::g_ramp_clone(value);
-    const long ours = DepthRamp(value);
+    const std::int32_t theirs = psx_gte_float::g_ramp_clone(value);
+    const std::int32_t ours = DepthRamp(value);
     ++g_live.ramp_calls;
     if (theirs != ours && ++g_live.mismatches <= 8)
-        bof3::Log("shadow      Gte_DepthRamp MISMATCH: value %ld in %ld..%ld, ours %ld, original %ld", value,
-                  static_cast<long>(Gte_RampNear), static_cast<long>(Gte_RampFar), ours, theirs);
+        bof3::Log("shadow      Gte_DepthRamp MISMATCH: value %d in %d..%d, ours %d, original %d", value,
+                  static_cast<std::int32_t>(Gte_RampNear), static_cast<std::int32_t>(Gte_RampFar), ours, theirs);
     LiveTick();
     return ours;
 }
@@ -598,13 +598,13 @@ extern "C" long __cdecl Gte_DepthRamp(long value) {
 // original 0x5A8380: the perspective division. Gte_Transformed, the vertex in
 // view space, to a screen position in FLOATS - where the PSX had two s16 - and
 // a depth. 2.5 million calls an attract run.
-extern "C" void __cdecl Gte_Perspective(float* sx, float* sy, long* sz) {
+extern "C" void __cdecl Gte_Perspective(float* sx, float* sy, std::int32_t* sz) {
     if (!psx_gte_float::g_perspective_clone) { Perspective(sx, sy, sz); return; }
     LiveCountWord();
     ++g_live.branch[Gte_Transformed[2] >= Gte_NearZ ? 0 : Gte_Transformed[2] <= 0 ? 1 : 2];
     std::uint32_t their_bits[3] = {0, 0, 0}, our_bits[3];
     psx_gte_float::g_perspective_clone(reinterpret_cast<float*>(&their_bits[0]), reinterpret_cast<float*>(&their_bits[1]),
-                        reinterpret_cast<long*>(&their_bits[2]));
+                        reinterpret_cast<std::int32_t*>(&their_bits[2]));
     Perspective(sx, sy, sz);
     std::memcpy(&our_bits[0], sx, 4);
     std::memcpy(&our_bits[1], sy, 4);
@@ -613,9 +613,9 @@ extern "C" void __cdecl Gte_Perspective(float* sx, float* sy, long* sz) {
     // Outs that overlap each other would differ here without being wrong; the
     // game's never do, and the start-up fuzz is where overlap is compared.
     if (std::memcmp(their_bits, our_bits, sizeof our_bits) != 0 && ++g_live.mismatches <= 8)
-        bof3::Log("shadow      Gte_Perspective MISMATCH: (%ld, %ld, %ld) near %ld h %ld: ours %08X %08X %08X, "
+        bof3::Log("shadow      Gte_Perspective MISMATCH: (%d, %d, %d) near %d h %d: ours %08X %08X %08X, "
                   "original %08X %08X %08X", Gte_Transformed[0], Gte_Transformed[1], Gte_Transformed[2],
-                  static_cast<long>(Gte_NearZ), static_cast<long>(Gte_ProjDistance), (unsigned)our_bits[0], (unsigned)our_bits[1], (unsigned)our_bits[2],
+                  static_cast<std::int32_t>(Gte_NearZ), static_cast<std::int32_t>(Gte_ProjDistance), (unsigned)our_bits[0], (unsigned)our_bits[1], (unsigned)our_bits[2],
                   (unsigned)their_bits[0], (unsigned)their_bits[1], (unsigned)their_bits[2]);
     LiveTick();
 }
@@ -623,8 +623,8 @@ extern "C" void __cdecl Gte_Perspective(float* sx, float* sy, long* sz) {
 // originals 0x5A84A0, 0x5A85F0: libgte RotTransPers3 and RotTransPers4 by
 // shape. The screen points go to the caller and NOT through the FIFO; the
 // depths do go to the depth registers.
-extern "C" long __cdecl Gte_RotTransPers3(const short* v0, const short* v1, const short* v2, float* sxy0, float* sxy1,
-                                          float* sxy2, long* p) {
+extern "C" std::int32_t __cdecl Gte_RotTransPers3(const short* v0, const short* v1, const short* v2, float* sxy0, float* sxy1,
+                                          float* sxy2, std::int32_t* p) {
     Gte_DepthOlder[2] = Gte_Depth;
     Project(v0, sxy0, sxy0 + 1, &Gte_DepthOlder[1]);
     Project(v1, sxy1, sxy1 + 1, &Gte_DepthOlder[0]);
@@ -633,8 +633,8 @@ extern "C" long __cdecl Gte_RotTransPers3(const short* v0, const short* v1, cons
     return Gte_Depth >> 2;
 }
 
-extern "C" long __cdecl Gte_RotTransPers4(const short* v0, const short* v1, const short* v2, const short* v3,
-                                          float* sxy0, float* sxy1, float* sxy2, float* sxy3, long* p) {
+extern "C" std::int32_t __cdecl Gte_RotTransPers4(const short* v0, const short* v1, const short* v2, const short* v3,
+                                          float* sxy0, float* sxy1, float* sxy2, float* sxy3, std::int32_t* p) {
     Project(v0, sxy0, sxy0 + 1, &Gte_DepthOlder[2]);
     Project(v1, sxy1, sxy1 + 1, &Gte_DepthOlder[1]);
     Project(v2, sxy2, sxy2 + 1, &Gte_DepthOlder[0]);
@@ -647,32 +647,32 @@ extern "C" long __cdecl Gte_RotTransPers4(const short* v0, const short* v1, cons
 // with 12-byte outs - x, y, and the depth / 16384 as a float, once all the
 // vertices are through. The result, and Gte_Otz, is a quarter of the average
 // depth: a sum over 12 toward zero for three, a sum >> 4 for four.
-extern "C" long __cdecl Gte_RotAverage3(const short* v0, const short* v1, const short* v2, float* out0, float* out1,
-                                        float* out2, long* p) {
+extern "C" std::int32_t __cdecl Gte_RotAverage3(const short* v0, const short* v1, const short* v2, float* out0, float* out1,
+                                        float* out2, std::int32_t* p) {
     Gte_DepthOlder[2] = Gte_Depth;
     Project(v0, out0, out0 + 1, &Gte_DepthOlder[1]);
     Project(v1, out1, out1 + 1, &Gte_DepthOlder[0]);
     Project(v2, out2, out2 + 1, Depth());
     Gte_StoreDepthF3(out0 + 2, out1 + 2, out2 + 2);
     *p = Gte_DepthRamp(Gte_Depth);
-    const unsigned long sum = static_cast<unsigned long>(Gte_DepthOlder[0]) +
-                              static_cast<unsigned long>(Gte_DepthOlder[1]) + static_cast<unsigned long>(Gte_Depth);
-    Gte_Otz = static_cast<long>(sum) / 12;
+    const std::uint32_t sum = static_cast<std::uint32_t>(Gte_DepthOlder[0]) +
+                              static_cast<std::uint32_t>(Gte_DepthOlder[1]) + static_cast<std::uint32_t>(Gte_Depth);
+    Gte_Otz = static_cast<std::int32_t>(sum) / 12;
     return Gte_Otz;
 }
 
-extern "C" long __cdecl Gte_RotAverage4(const short* v0, const short* v1, const short* v2, const short* v3, float* out0,
-                                        float* out1, float* out2, float* out3, long* p) {
+extern "C" std::int32_t __cdecl Gte_RotAverage4(const short* v0, const short* v1, const short* v2, const short* v3, float* out0,
+                                        float* out1, float* out2, float* out3, std::int32_t* p) {
     Project(v0, out0, out0 + 1, &Gte_DepthOlder[2]);
     Project(v1, out1, out1 + 1, &Gte_DepthOlder[1]);
     Project(v2, out2, out2 + 1, &Gte_DepthOlder[0]);
     Project(v3, out3, out3 + 1, Depth());
     Gte_StoreDepthF4(out0 + 2, out1 + 2, out2 + 2, out3 + 2);
     *p = Gte_DepthRamp(Gte_Depth);
-    const unsigned long sum = static_cast<unsigned long>(Gte_DepthOlder[0]) + static_cast<unsigned long>(Gte_Depth) +
-                              static_cast<unsigned long>(Gte_DepthOlder[1]) +
-                              static_cast<unsigned long>(Gte_DepthOlder[2]);
-    Gte_Otz = static_cast<long>(sum) >> 4;
+    const std::uint32_t sum = static_cast<std::uint32_t>(Gte_DepthOlder[0]) + static_cast<std::uint32_t>(Gte_Depth) +
+                              static_cast<std::uint32_t>(Gte_DepthOlder[1]) +
+                              static_cast<std::uint32_t>(Gte_DepthOlder[2]);
+    Gte_Otz = static_cast<std::int32_t>(sum) >> 4;
     return Gte_Otz;
 }
 
@@ -680,7 +680,7 @@ extern "C" long __cdecl Gte_RotAverage4(const short* v0, const short* v1, const 
 // shape - a VECTOR to length 4096, out as three s32 or three s16; the result
 // is the square of the length. Everything is read before anything is
 // stored, so out may be in.
-extern "C" long __cdecl Gte_VectorNormal(const long* in, long* out) {
+extern "C" std::int32_t __cdecl Gte_VectorNormal(const std::int32_t* in, std::int32_t* out) {
     const Normal n = Normalise(in);
     out[0] = n.x;
     out[1] = n.y;
@@ -688,7 +688,7 @@ extern "C" long __cdecl Gte_VectorNormal(const long* in, long* out) {
     return n.length_squared;
 }
 
-extern "C" long __cdecl Gte_VectorNormalS(const long* in, short* out) {
+extern "C" std::int32_t __cdecl Gte_VectorNormalS(const std::int32_t* in, short* out) {
     const Normal n = Normalise(in);
     out[0] = static_cast<short>(n.x);
     out[1] = static_cast<short>(n.y);
@@ -704,14 +704,14 @@ extern "C" long __cdecl Gte_VectorNormalS(const long* in, short* out) {
 // stored before the next byte in is read, so an out a byte or two below the
 // in sees it.
 extern "C" void __cdecl Gte_NormalColor(const short* normal, const unsigned char* in, unsigned char* out) {
-    long light[3];
+    std::int32_t light[3];
     Gte_ApplyMatrix(reinterpret_cast<const short*>(Gte_Matrix2), normal, light);
     Gte_VectorNormal(light, light);
     Gte_ApplyMatrixLV(reinterpret_cast<const short*>(Gte_ColorMatrix), light, light);
     Gte_VectorNormal(light, light);
-    const long lit[3] = {AddWrap(light[0], static_cast<unsigned long>(static_cast<long>(Gte_BackColor[0]))),
-                         AddWrap(light[1], static_cast<unsigned long>(static_cast<long>(Gte_BackColor[1]))),
-                         AddWrap(light[2], static_cast<unsigned long>(static_cast<long>(Gte_BackColor[2])))};
+    const std::int32_t lit[3] = {AddWrap(light[0], static_cast<std::uint32_t>(static_cast<std::int32_t>(Gte_BackColor[0]))),
+                         AddWrap(light[1], static_cast<std::uint32_t>(static_cast<std::int32_t>(Gte_BackColor[1]))),
+                         AddWrap(light[2], static_cast<std::uint32_t>(static_cast<std::int32_t>(Gte_BackColor[2])))};
     for (unsigned i = 0; i < 3; ++i) {
         const double scaled = static_cast<double>(lit[i]) * (1.0 / 4096.0) * static_cast<double>(in[i]);
         out[i] = static_cast<unsigned char>(Ftol(scaled));
@@ -722,18 +722,18 @@ extern "C" void __cdecl Gte_NormalColor(const short* normal, const unsigned char
     }
 }
 
-extern "C" void __cdecl Gte_SetMatrix2(const unsigned long* matrix) { std::memmove(Gte_Matrix2, matrix, 8 * 4); }
+extern "C" void __cdecl Gte_SetMatrix2(const std::uint32_t* matrix) { std::memmove(Gte_Matrix2, matrix, 8 * 4); }
 
 // originals 0x5A8DC0, 0x5A7B60: libgte SetColorMatrix and SetBackColor by
 // shape - the second stores each component << 4, as a word.
-extern "C" void __cdecl Gte_SetColorMatrix(const unsigned long* matrix) { std::memmove(Gte_ColorMatrix, matrix, 8 * 4); }
+extern "C" void __cdecl Gte_SetColorMatrix(const std::uint32_t* matrix) { std::memmove(Gte_ColorMatrix, matrix, 8 * 4); }
 
 // originals 0x5A8DE0, 0x5A8E00, 0x5A8DA0: libgte SetRotMatrix and
 // SetTransMatrix - the two halves of Gte_Matrix from a PSX MATRIX - and the
 // same for the second matrix, whole.
-extern "C" void __cdecl Gte_SetRotMatrix(const unsigned long* matrix) { std::memmove(Gte_Matrix, matrix, 5 * 4); }
+extern "C" void __cdecl Gte_SetRotMatrix(const std::uint32_t* matrix) { std::memmove(Gte_Matrix, matrix, 5 * 4); }
 
-extern "C" void __cdecl Gte_SetTransMatrix(const unsigned long* matrix) {
+extern "C" void __cdecl Gte_SetTransMatrix(const std::uint32_t* matrix) {
     Gte_Matrix[5] = matrix[5];
     Gte_Matrix[6] = matrix[6];
     Gte_Matrix[7] = matrix[7];
@@ -742,12 +742,12 @@ extern "C" void __cdecl Gte_SetTransMatrix(const unsigned long* matrix) {
 // originals 0x5A8E30, 0x5A8E50. One vertex into the middle slot; or three,
 // the first into the middle slot, the second into the first, the third into
 // the last.
-extern "C" void __cdecl Gte_LoadVertex(const unsigned long* vertex) {
+extern "C" void __cdecl Gte_LoadVertex(const std::uint32_t* vertex) {
     Gte_Vertices[2] = vertex[0];
     Gte_Vertices[3] = vertex[1];
 }
 
-extern "C" void __cdecl Gte_LoadVertices3(const unsigned long* vertices) {
+extern "C" void __cdecl Gte_LoadVertices3(const std::uint32_t* vertices) {
     Gte_Vertices[2] = vertices[0];
     Gte_Vertices[3] = vertices[1];
     Gte_Vertices[0] = vertices[2];
@@ -779,12 +779,12 @@ extern "C" void __cdecl Gte_Rtpt(void) {
 
 // originals 0x5A90B0, 0x5A90D0: the newest screen point; or all three, oldest
 // first, a dword at a time in this order - which matters if the outs overlap.
-extern "C" void __cdecl Gte_StoreScreenXY(unsigned long* out) {
+extern "C" void __cdecl Gte_StoreScreenXY(std::uint32_t* out) {
     out[0] = Gte_ScreenXY[4];
     out[1] = Gte_ScreenXY[5];
 }
 
-extern "C" void __cdecl Gte_StoreScreenXY3(unsigned long* out0, unsigned long* out1, unsigned long* out2) {
+extern "C" void __cdecl Gte_StoreScreenXY3(std::uint32_t* out0, std::uint32_t* out1, std::uint32_t* out2) {
     out0[0] = Gte_ScreenXY[0];
     out0[1] = Gte_ScreenXY[1];
     out1[0] = Gte_ScreenXY[2];
@@ -839,7 +839,7 @@ extern "C" void __cdecl Gte_PrimDepths3_10C(void* prim) { PrimDepths3(prim, 0x10
 extern "C" void __cdecl Gte_PrimDepths4_10C(void* prim) { PrimDepths4(prim, 0x10); }
 
 // original 0x5A94B0.
-extern "C" void __cdecl Gte_StoreDepthQuarter(long* out) { *out = Gte_Depth >> 2; }
+extern "C" void __cdecl Gte_StoreDepthQuarter(std::int32_t* out) { *out = Gte_Depth >> 2; }
 
 void Gte_Inject() {
     BOF3_INJECT(Math_Sin);

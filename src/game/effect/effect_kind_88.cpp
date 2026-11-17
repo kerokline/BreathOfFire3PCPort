@@ -175,12 +175,12 @@ extern "C" unsigned char __cdecl EffectKind88_MoveParticles(void) {
         any = 1;
         SetUL(r + 0x14, UL(r + 0x14) + UL(r + 0x24));
         unsigned char* const s = S();
-        const int angle = SH_CALL(EffectKind88_ScreenAngle)(reinterpret_cast<const long*>(s + 0x34),
-                                                            reinterpret_cast<const long*>(s + 0xC));
+        const int angle = SH_CALL(EffectKind88_ScreenAngle)(reinterpret_cast<const std::int32_t*>(s + 0x34),
+                                                            reinterpret_cast<const std::int32_t*>(s + 0xC));
         SetWord(r + 6, static_cast<U>(angle));
         r[5] = static_cast<unsigned char>(r[5] - 1);
         if (r[5] == 0 || S32(UL(r + 0xC)) >= S32(static_cast<std::uint32_t>(Sprite_ObjectsExtra[0].x) + 0xFFFF0000u)) r[3] = 0;
-        SH_CALL(EffectKind88_DrawBurst)(reinterpret_cast<const long*>(r + 0xC), Word(r + 8), Word(r + 0xA), Word(r + 6), 0x80,
+        SH_CALL(EffectKind88_DrawBurst)(reinterpret_cast<const std::int32_t*>(r + 0xC), Word(r + 8), Word(r + 0xA), Word(r + 6), 0x80,
                                         0);
     }
     return any;
@@ -195,10 +195,10 @@ extern "C" unsigned char __cdecl EffectKind88_MoveParticles(void) {
 // ((cos, sin) * radius >> 12 and the rotation >> 12, the 32 bits wrapping),
 // the centre `centre` grey and the rim `rim`; each linked at the point (dy 0,
 // 0x34).
-extern "C" void __cdecl EffectKind88_DrawBurst(const long* point, unsigned w, unsigned h, unsigned turn, unsigned centre,
+extern "C" void __cdecl EffectKind88_DrawBurst(const std::int32_t* point, unsigned w, unsigned h, unsigned turn, unsigned centre,
                                                unsigned rim) {
     DrawMode(1, 0x3C0, 0, 1);
-    SH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(point[0]), static_cast<unsigned long>(point[1]), 0, 0xC);
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(point[0]), static_cast<std::uint32_t>(point[1]), 0, 0xC);
     float l[3];
     SH_CALL(EffectGte_ProjectPoint)(point, l);
     short size[2] = {static_cast<short>(w), static_cast<short>(h)};
@@ -248,14 +248,14 @@ extern "C" void __cdecl EffectKind88_DrawBurst(const long* point, unsigned w, un
         q[4] = q[5] = q[6] = static_cast<unsigned char>(centre);
         q[0x14] = q[0x15] = q[0x16] = static_cast<unsigned char>(rim);
         q[0x24] = q[0x25] = q[0x26] = static_cast<unsigned char>(rim);
-        SH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(point[0]), static_cast<unsigned long>(point[1]), 0, 0x34);
+        SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(point[0]), static_cast<std::uint32_t>(point[1]), 0, 0x34);
     }
 }
 
 // original 0x489AF0 (from, to: points of three s32): both projected; the
 // screen angle Math_Ratan2(to.y - from.y, to.x - from.x), the differences
 // taken in the FPU as floats. eax its answer (the callers keep ax).
-extern "C" int __cdecl EffectKind88_ScreenAngle(const long* from, const long* to) {
+extern "C" int __cdecl EffectKind88_ScreenAngle(const std::int32_t* from, const std::int32_t* to) {
     float a[3], b[3];
     SH_CALL(EffectGte_ProjectPoint)(from, a);
     SH_CALL(EffectGte_ProjectPoint)(to, b);
@@ -285,8 +285,8 @@ extern "C" void __cdecl EffectKind88_InitParticle(unsigned char* particle) {
     SetWord(particle + 0xA, 0x20);
     particle[5] = 0x20;
     s = S();
-    const int angle = SH_CALL(EffectKind88_ScreenAngle)(reinterpret_cast<const long*>(s + 0x34),
-                                                        reinterpret_cast<const long*>(s + 0xC));
+    const int angle = SH_CALL(EffectKind88_ScreenAngle)(reinterpret_cast<const std::int32_t*>(s + 0x34),
+                                                        reinterpret_cast<const std::int32_t*>(s + 0xC));
     SetWord(particle + 6, static_cast<U>(angle));
 }
 

@@ -55,7 +55,7 @@ std::int32_t Abs(U v) {
 }
 
 // movsx eax, ax; cdq; sub eax, edx; sar eax, 1: half the height, toward zero
-U Half(long e) { return static_cast<U>(S16(static_cast<U>(e)) / 2); }
+U Half(std::int32_t e) { return static_cast<U>(S16(static_cast<U>(e)) / 2); }
 
 unsigned char* Vertex(U a) { return At(a); }
 
@@ -129,7 +129,7 @@ void Closed() {
 // into the packet's four screen points (the original pushes a tenth word, a
 // local, which Gte_RotTransPers4 does not read).
 void Project(unsigned char* p) {
-    long depth;
+    std::int32_t depth;
     SH_CALL(Gte_RotTransPers4)(reinterpret_cast<const short*>(Vertex(::bof3::Img(Prim_VertexScratch_addr))), reinterpret_cast<const short*>(Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x8)),
                                reinterpret_cast<const short*>(Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x10)), reinterpret_cast<const short*>(Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x18)),
                                reinterpret_cast<float*>(p + 8), reinterpret_cast<float*>(p + 0x18),
@@ -137,7 +137,7 @@ void Project(unsigned char* p) {
     SH_CALL(Gte_PrimDepths4_10)(p);
 }
 
-long Elevation(U x, U z) { return SH_CALL(AreaMap_Elevation)(static_cast<long>(x), static_cast<long>(z)); }
+std::int32_t Elevation(U x, U z) { return SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z)); }
 
 U GroundOf(U word) { return static_cast<U>(S16(word) + 0x4000) << 9; }
 
@@ -148,7 +148,7 @@ void GroundLifted() {
     unsigned char* const v0 = Vertex(::bof3::Img(Prim_VertexScratch_addr));
     unsigned char* const v1 = Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x8);
     U gz = GroundOf(static_cast<std::uint16_t>(rv::As<records::SVector>(v0)->y)), gx = GroundOf(Word(v0));
-    long e = Elevation(gx, gz);
+    std::int32_t e = Elevation(gx, gz);
     rv::Store<std::uint32_t>(rv::As<records::SVector>(v0)->z, 0u - Half(e) - rv::As<records::EffectObject>(S())->height_whole - 0x180u);
     e = Elevation(gx, gz);
     gz = GroundOf(static_cast<std::uint16_t>(rv::As<records::SVector>(v1)->y));
@@ -204,7 +204,7 @@ extern "C" void __cdecl EffectKind18Sub2A_Start(void) {
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, B(::bof3::Img(at::kSub2ACell.v) + 2 * i));
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole, B(::bof3::Img(at::kSub2ACell.v) + 2 * i + 1));
     s = S();
-    const long e = Elevation(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z));
+    const std::int32_t e = Elevation(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z));
     s = S();
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, 0u - Half(e) - W(::bof3::Img(at::kSub2AHeight.v) + 2 * i));
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, 0);
@@ -345,7 +345,7 @@ extern "C" void __cdecl EffectKind18Sub3C_Draw(int edge) {
         rv::Store<std::uint32_t>(rv::As<records::SVector>(v0)->y, near);
         if (edge != 0) {
             U gx = GroundOf(Word(v0)), gz = GroundOf(near);
-            long e = Elevation(gx, gz);
+            std::int32_t e = Elevation(gx, gz);
             rv::Store<std::uint32_t>(rv::As<records::SVector>(v0)->z, 0u - Half(e));
             const U t = k == 0 ? 0x180u : 0u;
             e = Elevation(gx, gz);

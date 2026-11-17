@@ -384,8 +384,8 @@ extern "C" void __cdecl PartyForm_Reload(void) {
             ObjTrio[0].z = static_cast<U>(ObjTrio[0].z) + (static_cast<U>(S16(W(::bof3::Img(field_s::at::kFacingSteps) + 2 + facing))) << 15);
         }
         if ((Field_StatusBits & 0x40) == 0) {
-            Field_Kind2X = static_cast<long>(static_cast<U>(ObjTrio[0].x));
-            Field_Kind2Z = static_cast<long>(static_cast<U>(ObjTrio[0].z));
+            Field_Kind2X = static_cast<std::int32_t>(static_cast<U>(ObjTrio[0].x));
+            Field_Kind2Z = static_cast<std::int32_t>(static_cast<U>(ObjTrio[0].z));
             SH_CALL(Field_ViewReset)();
         }
     }
@@ -402,8 +402,8 @@ extern "C" void __cdecl PartyForm_Reload(void) {
             FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
             return;
         }
-        Field_Kind2X = static_cast<long>(static_cast<U>(ObjTrio[0].x));
-        Field_Kind2Z = static_cast<long>(static_cast<U>(ObjTrio[0].z));
+        Field_Kind2X = static_cast<std::int32_t>(static_cast<U>(ObjTrio[0].x));
+        Field_Kind2Z = static_cast<std::int32_t>(static_cast<U>(ObjTrio[0].z));
         SH_CALL(Field_ViewReset)();
     }
     if (Game_AreaNumber == 0x5C) {
@@ -413,13 +413,13 @@ extern "C" void __cdecl PartyForm_Reload(void) {
                 const U obj = ::bof3::Img(0x802D40) + i * field_s::at::kObjStride;
                 SetL(obj + 0x34, 0x190000);
                 SetL(obj + 0x38, 0x3C0000);
-                const long h = SH_CALL(AreaMap_Elevation)(static_cast<long>(static_cast<U>(ObjTrio[0].x)), static_cast<long>(static_cast<U>(ObjTrio[0].z)));
+                const std::int32_t h = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(static_cast<U>(ObjTrio[0].x)), static_cast<std::int32_t>(static_cast<U>(ObjTrio[0].z)));
                 SetL(obj + 0x3C, static_cast<U>(S16(static_cast<U>(h))) << 16);
                 ++i;
             } while (i < Field_MemberCount);
         }
-        Field_Kind2X = static_cast<long>(static_cast<U>(ObjTrio[0].x));
-        Field_Kind2Z = static_cast<long>(static_cast<U>(ObjTrio[0].z));
+        Field_Kind2X = static_cast<std::int32_t>(static_cast<U>(ObjTrio[0].x));
+        Field_Kind2Z = static_cast<std::int32_t>(static_cast<U>(ObjTrio[0].z));
         SH_CALL(Field_ViewReset)();
     }
     SH_CALL(Transition_Start)(3);

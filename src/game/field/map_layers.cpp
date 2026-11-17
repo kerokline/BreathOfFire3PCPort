@@ -47,7 +47,7 @@ unsigned char* Corners() { return reinterpret_cast<unsigned char*>(&AreaMap_Corn
 }  // namespace
 
 // The inset's arithmetic, the globals it reads passed in (map_layers.h).
-map_layers::InsetPair map_layers::ComputeInset(unsigned long angle, short distance, unsigned char input_flags,
+map_layers::InsetPair map_layers::ComputeInset(std::uint32_t angle, short distance, unsigned char input_flags,
                                                unsigned char byte_fe, unsigned wide_columns) {
     int off_axis = static_cast<short>(angle) - 0x200;
     if (off_axis < 0) off_axis = -off_axis;

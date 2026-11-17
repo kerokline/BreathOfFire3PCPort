@@ -126,8 +126,8 @@ void Dispatch(const std::uint32_t* phases, unsigned n, unsigned phase, const cha
     magic_harness::Phase(phases[phase])();
 }
 
-using Rtp4Fn = long (__cdecl*)(const short*, const short*, const short*, const short*, unsigned char*, unsigned char*,
-                               unsigned char*, unsigned char*, long*, long*);
+using Rtp4Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, const short*, unsigned char*, unsigned char*,
+                               unsigned char*, unsigned char*, std::int32_t*, std::int32_t*);
 
 #define S09_AS(type, name) ::magic_harness::Call(reinterpret_cast<type>(reinterpret_cast<void*>(&::name)))
 
@@ -136,7 +136,7 @@ using Rtp4Fn = long (__cdecl*)(const short*, const short*, const short*, const s
 void LinkAtSprite(unsigned size) {
     const unsigned char* const s = Sc();
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->z), 2,
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(ts->x), static_cast<std::uint32_t>(ts->z), 2,
                                 size);
 }
 
@@ -155,7 +155,7 @@ void FacingAndPositionFromOwner() {
 // then the translation RotTrans writes at +0x14.
 struct Matrix {
     short m[10];
-    long t[3];
+    std::int32_t t[3];
 };
 
 // Camera_Matrix x the rotation of `angles`, translated by RotTrans of `v`,
@@ -163,13 +163,13 @@ struct Matrix {
 // a third argument (a flag pointer) to Gte_RotTrans, which takes two.
 void SetTurnedMatrix(const short* v, const short* angles) {
     Matrix m;
-    long flag;
-    using RotTransFn = void (__cdecl*)(const short*, long*, long*);
+    std::int32_t flag;
+    using RotTransFn = void (__cdecl*)(const short*, std::int32_t*, std::int32_t*);
     S09_AS(RotTransFn, Gte_RotTrans)(v, m.t, &flag);
     MH_CALL(Gte_RotMatrix)(angles, m.m);
     MH_CALL(Gte_MulMatrix0)(Camera_Matrix, m.m, m.m);
-    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&m));
-    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&m));
+    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
+    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
 }
 
 }  // namespace
@@ -357,7 +357,7 @@ S09_EXPORT void __cdecl DreamBreathMote_Draw(void) {
         p[0x34] = SB(6);
         p[0x35] = SB(8);
         p[0x36] = SB(8);
-        long depth, flag;
+        std::int32_t depth, flag;
         S09_AS(Rtp4Fn, Gte_RotTransPers4)(VP(0), VP(8), VP(0x10), VP(0x18), p + 8, p + 0x18, p + 0x28, p + 0x38, &depth,
                                          &flag);
         MH_CALL(Gte_PrimDepths4_10B)(p);

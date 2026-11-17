@@ -77,7 +77,7 @@ U Ftol(LD v) {
     return static_cast<U>(static_cast<std::uint64_t>(static_cast<std::int64_t>(v)));
 }
 
-long* Point(unsigned char* p) { return reinterpret_cast<long*>(p); }
+std::int32_t* Point(unsigned char* p) { return reinterpret_cast<std::int32_t*>(p); }
 
 float* Out(unsigned char* p) { return reinterpret_cast<float*>(p); }
 
@@ -126,7 +126,7 @@ bool CountDown() {
 // (Sprite_Current +0x34, +0xC, the byte +0x5D).
 void Trail9C() {
     unsigned char* const s = S();
-    using Trail = void (__cdecl*)(const long*, const long*, unsigned);
+    using Trail = void (__cdecl*)(const std::int32_t*, const std::int32_t*, unsigned);
     SH_AT(Trail, at::kTrail9C.v)(Point(s + 0x34), Point(s + 0xC), s[0x5D]);
 }
 
@@ -155,7 +155,7 @@ extern "C" void __cdecl EffectKind9C_Start(void) {
     rv::Current<records::EffectObject>()->z = 0x740000;
     unsigned char* s = S();
     auto* const so = rv::As<records::EffectObject>(s);
-    const long elevation = SH_CALL(AreaMap_Elevation)(so->x, so->z);
+    const std::int32_t elevation = SH_CALL(AreaMap_Elevation)(so->x, so->z);
     rv::Store<U>(rv::Current<records::EffectObject>()->height, static_cast<U>(S16(static_cast<U>(elevation))) << 16);
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0x308000);
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_10, 0x718000);
@@ -329,7 +329,7 @@ extern "C" void __cdecl EffectKind9C_DrawBeams(unsigned size) {
 // +0x400 and +0xC00; then the two side quads between them
 // (EffectKind9C_DrawBeamSides). The ends' screen points are the _ftol of the
 // line's packet floats, read again before each use as the original does.
-extern "C" void __cdecl EffectKind9C_DrawBeam(const long* from, const long* to, unsigned size) {
+extern "C" void __cdecl EffectKind9C_DrawBeam(const std::int32_t* from, const std::int32_t* to, unsigned size) {
     DrawMode(1, 0x3C0, 0, 1, 3);
     SH_CALL(EffectGte_LoadMapCamera)();
     unsigned char* const p = Gfx_PacketNext;
@@ -472,7 +472,7 @@ extern "C" void __cdecl EffectKind9C_DrawBeamSides(unsigned x1, unsigned y1, uns
 // eight TILE_1 dots (0, s, 0) from from + (Frame_Counter & 7) * d stepping 8 *
 // d, d = (to - from) sar 6, while the dot's y is not below to's, each at its
 // projection less hx in y, committed 0x14 to slot 2.
-extern "C" void __cdecl EffectKind9C_DrawTrail(const long* from, const long* to, unsigned shade) {
+extern "C" void __cdecl EffectKind9C_DrawTrail(const std::int32_t* from, const std::int32_t* to, unsigned shade) {
     DrawMode(1, 0x2C0, 0x100, 1, 2);
     const unsigned char c = static_cast<unsigned char>(shade);
     const unsigned char* const hx = At(at::kTrailHalfX);
@@ -545,7 +545,7 @@ extern "C" void __cdecl EffectKind9C_DrawTrail(const long* from, const long* to,
     const U fz = static_cast<U>(from[2]);
     const U dz = Sar(static_cast<U>(to[2]) - fz, 6);
     const U f = Frame_Counter & 7u;
-    alignas(4) long q[3] = {static_cast<long>(f * dx + fx), static_cast<long>(f * dy + fy), static_cast<long>(f * dz + fz)};
+    alignas(4) std::int32_t q[3] = {static_cast<std::int32_t>(f * dx + fx), static_cast<std::int32_t>(f * dy + fy), static_cast<std::int32_t>(f * dz + fz)};
     for (unsigned j = 0; j < 8; ++j) {
         if (q[1] < to[1]) break;
         SH_CALL(EffectGte_ProjectPoint)(q, Out(o));
@@ -559,9 +559,9 @@ extern "C" void __cdecl EffectKind9C_DrawTrail(const long* from, const long* to,
         p[5] = c;
         p[6] = 0;
         SH_CALL(Gfx_CommitPrim)(2, 0x14);
-        q[0] = static_cast<long>(static_cast<U>(q[0]) + dx * 8);
-        q[1] = static_cast<long>(static_cast<U>(q[1]) + dy * 8);
-        q[2] = static_cast<long>(static_cast<U>(q[2]) + dz * 8);
+        q[0] = static_cast<std::int32_t>(static_cast<U>(q[0]) + dx * 8);
+        q[1] = static_cast<std::int32_t>(static_cast<U>(q[1]) + dy * 8);
+        q[2] = static_cast<std::int32_t>(static_cast<U>(q[2]) + dz * 8);
     }
 }
 

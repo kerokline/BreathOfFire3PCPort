@@ -208,13 +208,13 @@ extern "C" void __cdecl Area91_DrawGlow(unsigned radius_word, unsigned colour_by
     short vector[4] = {static_cast<short>(0xCFC0), static_cast<short>(0xCD00), 0x80, 0};
     short angles[4] = {0, 0, 0, 0};
     alignas(4) short matrix[16] = {};   // a PSX MATRIX: nine s16, padding, three s32 at +0x14
-    long depth = 0;
+    std::int32_t depth = 0;
     AH_CALL(Gte_PushMatrix)();
-    AH_CALL(Gte_RotTrans)(vector, reinterpret_cast<long*>(matrix + 10));
+    AH_CALL(Gte_RotTrans)(vector, reinterpret_cast<std::int32_t*>(matrix + 10));
     AH_CALL(Gte_RotMatrix)(angles, matrix);
     AH_CALL(Gte_MulMatrix0)(Camera_Matrix, matrix, matrix);
-    AH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(matrix));
-    AH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(matrix));
+    AH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(matrix));
+    AH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(matrix));
     AH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x3E, 0);
     AH_CALL(MapView_LinkPrimAt)(0x1F8000, 0x1A0000, 2, 0xC);
     const U radius = radius_word & 0xFFFF;
@@ -360,8 +360,8 @@ extern "C" void __cdecl Area91_EffectRings(void) {
         Prim_VertexScratch[0].y = static_cast<short>((tObject->z >> 9) - 0x4000);
         Prim_VertexScratch[0].z = 0x80;
     }
-    long depth = 0;
-    AH_CALL(Gte_RotTransPers)(reinterpret_cast<short*>(Prim_VertexScratch), reinterpret_cast<unsigned long*>(MapView_ScreenXY), &depth);
+    std::int32_t depth = 0;
+    AH_CALL(Gte_RotTransPers)(reinterpret_cast<short*>(Prim_VertexScratch), reinterpret_cast<std::uint32_t*>(MapView_ScreenXY), &depth);
     AH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0xB5, 0);
     AH_CALL(MapView_LinkPrimAt)(static_cast<U>(rv::Current<records::EffectObject>()->x), static_cast<U>(rv::Current<records::EffectObject>()->z), 2, 0xC);
     Sprite_Current[9] = static_cast<unsigned char>(Sprite_Current[9] + 4);

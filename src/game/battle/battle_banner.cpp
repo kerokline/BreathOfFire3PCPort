@@ -150,7 +150,7 @@ extern "C" void __cdecl BattleBanner_Dispatch(void) {
 // entry's offset (index * 12), or 0x15 (7 * 3, the last index's lea) when every
 // entry is taken, and nothing is written. Several of the 31 callers only
 // overwrite al before returning, so ours returns the register.
-extern "C" unsigned long __cdecl BattleBanner_Add(unsigned kind, unsigned b2, unsigned layer, unsigned timer,
+extern "C" std::uint32_t __cdecl BattleBanner_Add(unsigned kind, unsigned b2, unsigned layer, unsigned timer,
                                                   const char* text) {
     for (battle_misc::U i = 2; i < 8; ++i) {
         if (Banner(i)[0] != 0) continue;
@@ -162,7 +162,7 @@ extern "C" unsigned long __cdecl BattleBanner_Add(unsigned kind, unsigned b2, un
 
 // original 0x44A6E0 (PSX 0x801DE5D4): entry (slot & 0xFF) filled, no bound. eax
 // the entry's offset.
-extern "C" unsigned long __cdecl BattleBanner_Set(unsigned slot, unsigned kind, unsigned b2, unsigned layer,
+extern "C" std::uint32_t __cdecl BattleBanner_Set(unsigned slot, unsigned kind, unsigned b2, unsigned layer,
                                                   unsigned timer, const char* text) {
     FillBanner(Banner(slot & 0xFF), kind, b2, layer, timer, Addr(text));
     return (slot & 0xFF) * 12;
@@ -178,7 +178,7 @@ extern "C" unsigned long __cdecl BattleBanner_Set(unsigned slot, unsigned kind, 
 // pointer read again, the kinds byte before the kind byte); then
 // BattleBanner_NoneOfKind(1), and when no kind-1 entry is left (al set)
 // window record 4's +3 = 0. eax is the entry pointer, or NoneOfKind's eax.
-extern "C" unsigned long __cdecl BattleBanner_TickKind1(void) {
+extern "C" std::uint32_t __cdecl BattleBanner_TickKind1(void) {
     unsigned char* e = AtBattleOdds(BannerCurrent());
     if (WordBattleOdds(e + 8) != 0xFF) {
         BattleMisc_BannerKinds = static_cast<unsigned char>(BattleMisc_BannerKinds | e[1]);
@@ -206,7 +206,7 @@ extern "C" unsigned long __cdecl BattleBanner_TickKind1(void) {
 // record 0's +0xA gets SharedScratch. The word is decremented through a
 // register (only its low 16 bits stored) and the pointer read again only then;
 // at 0xFF the entry the first read found is tested, which is never 0.
-extern "C" unsigned long __cdecl BattleBanner_TickKind2(void) {
+extern "C" std::uint32_t __cdecl BattleBanner_TickKind2(void) {
     unsigned char* e = AtBattleOdds(BannerCurrent());
     const unsigned char kinds = BattleMisc_BannerKinds;
     BattleMisc_BannerKinds = static_cast<unsigned char>(kinds | e[1]);
@@ -227,7 +227,7 @@ extern "C" unsigned long __cdecl BattleBanner_TickKind2(void) {
 
 // original 0x44A810 (PSX 0x801DE7CC): bytes +0, +1 and +2 of all 8 entries to 0.
 // eax is the walk's pointer past the last entry, 0x93B941.
-extern "C" unsigned long __cdecl BattleBanner_ClearAll(void) {
+extern "C" std::uint32_t __cdecl BattleBanner_ClearAll(void) {
     for (battle_misc::U i = 0; i < 8; ++i) {
         Banner(i)[0] = 0;
         Banner(i)[1] = 0;
@@ -248,7 +248,7 @@ extern "C" unsigned char __cdecl BattleBanner_NoneOfKind(unsigned kind) {
 // original 0x44A880 (PSX 0x801DE888): queue entry kQueueWrite (a byte, no bound
 // on what it indexes) gets +0 = a, +1 = b, dword +4 = value; kQueueWrite =
 // (index + 1) & 0xF. eax the entry's offset, index * 8 (0x42FF2F returns it).
-extern "C" unsigned long __cdecl BattleQueue_Push(unsigned a, unsigned b, unsigned long value) {
+extern "C" std::uint32_t __cdecl BattleQueue_Push(unsigned a, unsigned b, std::uint32_t value) {
     const battle_misc::U index = BattleActorCopies_QueueWrite;
     unsigned char* const entry = AtBattleMisc(::bof3::Img(kQueue.v) + index * 8);
     entry[0] = static_cast<unsigned char>(a);
@@ -269,7 +269,7 @@ extern "C" unsigned char __cdecl BattleQueue_Pending(void) {
 // strings - then banner entry 0's byte +2 = b2. Returns Str_CopyN's eax.
 // DIVERGENCE DIV-0052: 12 bytes, the US release's count, once a language
 // overlay has repointed the table at its longer words (src/game/battle_text.cpp).
-extern "C" unsigned long __cdecl BattleBanner_SetMessage(unsigned msg, unsigned b2) {
+extern "C" std::uint32_t __cdecl BattleBanner_SetMessage(unsigned msg, unsigned b2) {
     const battle_misc::U eax = battle_misc::g.copy_n(::bof3::Img(kBannerText.v), LongBattleMisc(AtBattleMisc(::bof3::Img(kMessages.v) + (msg & 0xFF) * 4)), BattleMessages_CopyRoom());
     Banner(0)[2] = static_cast<unsigned char>(b2);
     return eax;
@@ -297,7 +297,7 @@ extern "C" void __cdecl Battle_EnemyNameToText(unsigned actor) {
 // text's NUL, a dword at a time and the rest by bytes (repne scasb, rep movsd,
 // rep movsb). Then BattleBanner_Set(0, 1, 1, 0, 0xFF, kBannerText), whose eax
 // is returned.
-extern "C" unsigned long __cdecl BattleBanner_ShowName(const unsigned char* actor) {
+extern "C" std::uint32_t __cdecl BattleBanner_ShowName(const unsigned char* actor) {
     battle_misc::g.copy_n(::bof3::Img(kBannerText.v), Addr(actor) + 0x80, 8);
     if (BattlePhases_B7A != 0) {
         const battle_misc::U src = BattleMisc_NameSuffix;

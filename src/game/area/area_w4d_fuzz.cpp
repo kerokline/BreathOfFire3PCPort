@@ -439,7 +439,7 @@ void Seed175(unsigned k) {
     case k175Choice27: case k175Message9F: SeedAnswer(); break;
     case k175Zenny: SeedAnswer(); SeedZenny(); break;
     case k175Clamp:
-        if (ah::Often()) Field_Kind2X = static_cast<long>(AH_PICK(0x2E0000, 0x2E0001, 0x2DFFFF, 0, 0xFFFF0000u, 0x80000000u, 0x7FFFFFFF));
+        if (ah::Often()) Field_Kind2X = static_cast<std::int32_t>(AH_PICK(0x2E0000, 0x2E0001, 0x2DFFFF, 0, 0xFFFF0000u, 0x80000000u, 0x7FFFFFFF));
         break;
     case k175Slide:
         if (ah::Often()) Field_Request = static_cast<unsigned char>(AH_PICK(2, 2, 1, 3, 0x82, 0));

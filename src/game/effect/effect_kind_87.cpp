@@ -210,7 +210,7 @@ extern "C" unsigned char __cdecl EffectKind87_StepPanes(void) {
     unsigned char any = 0;
     SH_CALL(EffectGte_LoadMapCamera)();
     for (unsigned i = 0; i < at::kKind87PointCount; ++i)
-        SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(At(::bof3::Img(at::kKind87Points.v) + at::kKind87PointStride * i)),
+        SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const std::int32_t*>(At(::bof3::Img(at::kKind87Points.v) + at::kKind87PointStride * i)),
                                         reinterpret_cast<float*>(At(PanePoint(i))));
     SH_CALL(EffectGte_LoadMapCamera)();
     for (unsigned i = 0; i < at::kPaneCount; ++i) {

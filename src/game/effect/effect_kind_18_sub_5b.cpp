@@ -262,16 +262,16 @@ bool LeaderAt(const unsigned char* s, bool z_first, std::int32_t first, std::int
 }
 
 // A vertex's ground point: (s16 + 0x4000) << 9, the 16.16 the map reads.
-long Ground(const unsigned char* word) { return static_cast<long>(static_cast<U>(S16(word) + 0x4000) << 9); }
+std::int32_t Ground(const unsigned char* word) { return static_cast<std::int32_t>(static_cast<U>(S16(word) + 0x4000) << 9); }
 
 // movsx eax, ax; cdq; sub eax, edx; sar 1: half a height, toward zero.
-U Half(long height) { return static_cast<U>(static_cast<std::int16_t>(static_cast<U>(height) & 0xFFFFu) / 2); }
+U Half(std::int32_t height) { return static_cast<U>(static_cast<std::int16_t>(static_cast<U>(height) & 0xFFFFu) / 2); }
 
 // The quad's four corners projected into the POLY_FT4 / G4 at p, its depths
 // set. The original also pushes a tenth pointer (a flag local) the projection
 // does not read.
 void Project(unsigned char* p) {
-    long depth;
+    std::int32_t depth;
     SH_CALL(Gte_RotTransPers4)(Vertex(0), Vertex(1), Vertex(2), Vertex(3), reinterpret_cast<float*>(p + 8),
                                reinterpret_cast<float*>(p + 0x18), reinterpret_cast<float*>(p + 0x28),
                                reinterpret_cast<float*>(p + 0x38), &depth);
@@ -542,7 +542,7 @@ extern "C" void __cdecl EffectKind18Sub5B_DrawPart(int part_word) {
             SetV(8 * v + 2, Ftol(Fi(static_cast<U>(c[1]) << 6) + D(::bof3::Img(at::kScreenY.v))));
             SetV(8 * v + 4, Ftol(Fi((6u - c[2]) << 6) + D(::bof3::Img(at::kOffsetY.v))));
         }
-        long depth;
+        std::int32_t depth;
         SH_CALL(Gte_RotTransPers4)(Vx(0), Vx(1), Vx(2), Vx(3), Fp(p + 8), Fp(p + 0x18), Fp(p + 0x28), Fp(p + 0x38), &depth);
         SH_CALL(Gte_PrimDepths4_10)(p);
         SH_CALL(Prim_SetTexture)(ULEffect6c(r + 0x10), p, 1);
@@ -750,18 +750,18 @@ extern "C" void __cdecl EffectKind18Sub5E_Draw(void) {
         SH_CALL(Gpu_SetShadeTex)(p, 0);
         unsigned char* const s = S();
         const U sign = S8U(At(::bof3::Img(at::kSub5ESides.v))[i]);
-        const long y0 = Ground(v + 2);
+        const std::int32_t y0 = Ground(v + 2);
         const U slid = rv::As<records::EffectWork>(s)->work_30 * sign + (static_cast<U>(rv::As<records::EffectObject>(s)->x_whole) << 7);
         rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].x, slid - 0x3F40u);
         SetWord(v, slid - 0x3F40u);
         rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].x, slid - 0x4040u);
         rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].x, slid - 0x4040u);
-        const long x0 = Ground(v);
-        long h = SH_CALL(AreaMap_Elevation)(x0, y0);
+        const std::int32_t x0 = Ground(v);
+        std::int32_t h = SH_CALL(AreaMap_Elevation)(x0, y0);
         rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->z, 0u - Half(h));
         h = SH_CALL(AreaMap_Elevation)(x0, y0);
         rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].z, 0x180u - Half(h));
-        const long y1 = Ground(v + 0xA), x1 = Ground(v + 8);
+        const std::int32_t y1 = Ground(v + 0xA), x1 = Ground(v + 8);
         h = SH_CALL(AreaMap_Elevation)(x1, y1);
         rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].z, 0u - Half(h));
         h = SH_CALL(AreaMap_Elevation)(x1, y1);

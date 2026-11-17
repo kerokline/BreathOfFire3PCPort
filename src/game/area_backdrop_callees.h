@@ -10,13 +10,13 @@ namespace area_backdrop {
 
 struct Callees {
     // AreaMap_DrawBackdrop
-    void (__cdecl* draw_mode)(unsigned char*, int, int, unsigned, unsigned long);
+    void (__cdecl* draw_mode)(unsigned char*, int, int, unsigned, std::uint32_t);
     void (__cdecl* commit)(unsigned, unsigned);
     unsigned char* (__cdecl* set_poly_g4)(unsigned char*);
     void (__cdecl* set_semi)(unsigned char*, unsigned);
     // AreaMap_TextureCycle
-    unsigned char (__cdecl* test)(unsigned long);
-    unsigned char* (__cdecl* set_draw_move)(unsigned char*, const unsigned char*, unsigned long, unsigned long);
+    unsigned char (__cdecl* test)(std::uint32_t);
+    unsigned char* (__cdecl* set_draw_move)(unsigned char*, const unsigned char*, std::uint32_t, std::uint32_t);
     // Gfx_DrawSunsetGlow
     unsigned char* (__cdecl* set_poly_f4)(unsigned char*);
 };

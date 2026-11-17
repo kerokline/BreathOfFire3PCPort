@@ -188,7 +188,7 @@ const short* Vx(unsigned i) { return reinterpret_cast<const short*>(Vertex() + 8
 
 float* Fp(unsigned char* p) { return reinterpret_cast<float*>(p); }
 
-unsigned long* ScreenXY() { return reinterpret_cast<unsigned long*>(MapView_ScreenXY); }
+std::uint32_t* ScreenXY() { return reinterpret_cast<std::uint32_t*>(MapView_ScreenXY); }
 
 // A sub-kind's state table: its address and its own length (symbols.toml [[data]]).
 #define E5D_TABLE(name) AddressOf(name), name##_count
@@ -235,12 +235,12 @@ void Sub19Draw() {
     SetWord(point, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x_frac));
     SetWord(point + 2, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z_frac));
     SetWord(point + 4, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height_frac));
-    SH_CALL(Gte_RotTrans)(reinterpret_cast<const short*>(point), reinterpret_cast<long*>(matrix + 0x14));
+    SH_CALL(Gte_RotTrans)(reinterpret_cast<const short*>(point), reinterpret_cast<std::int32_t*>(matrix + 0x14));
     SH_CALL(Gte_RotMatrix)(reinterpret_cast<const short*>(angles), reinterpret_cast<short*>(matrix));
     SH_CALL(Gte_MulMatrix0)(Camera_Matrix, reinterpret_cast<const short*>(matrix),
                             reinterpret_cast<short*>(matrix));
-    SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(matrix));
-    SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(matrix));
+    SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(matrix));
+    SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(matrix));
     auto shade = [](U angle, U times) {
         const U c = static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(angle)));
         return static_cast<unsigned char>((I(c * times) >> 11) + 0x80);
@@ -296,7 +296,7 @@ void Sub19Draw() {
         SetV(4, 0xFF70);
         SetV(0x1C, 0);
         SetV(0x14, 0);
-        long depth[2];
+        std::int32_t depth[2];
         SH_CALL(Gte_RotTransPers4)(Vx(0), Vx(1), Vx(2), Vx(3), Fp(p + 8), Fp(p + 0x1C), Fp(p + 0x30), Fp(p + 0x44), depth);
         SH_CALL(Gte_PrimDepths4_14)(p);
         SH_CALL(Gfx_CommitPrim)(4, 0x54);
@@ -592,8 +592,8 @@ extern "C" void __cdecl EffectKind18Sub17_DrawPatch(U variant) {
             SetV(8 * k, x);
             const U y = Ftol(sy) & 0xFFFF;
             SetV(8 * k + 2, y);
-            const U e = static_cast<U>(SH_CALL(AreaMap_Elevation)(static_cast<long>((static_cast<U>(S16(x) + 0x4000)) << 9),
-                                                                  static_cast<long>((static_cast<U>(S16(y) + 0x4000)) << 9)));
+            const U e = static_cast<U>(SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>((static_cast<U>(S16(x) + 0x4000)) << 9),
+                                                                  static_cast<std::int32_t>((static_cast<U>(S16(y) + 0x4000)) << 9)));
             const std::int32_t h = S16(static_cast<std::uint32_t>(rv::As<records::EffectWork>(S())->work_32));
             const std::int32_t lift = I(B(height_byte) * static_cast<U>(h)) / 128;
             SetV(8 * k + 4, static_cast<U>(-(S16(e) / 2) - lift));
@@ -603,7 +603,7 @@ extern "C" void __cdecl EffectKind18Sub17_DrawPatch(U variant) {
         corner(2, fx + SX() - half, fy + SY() + half, rec + 2);
         corner(3, fx + SX() + half, fy + SY() + half, rec + 3);
         const unsigned char flag = B(rec + 4);
-        long depth[2];
+        std::int32_t depth[2];
         if (flag != 0) {
             SH_CALL(Gte_RotTransPers4)(Vx(0), Vx(1), Vx(2), Vx(3), Fp(p + 0x18), Fp(p + 8), Fp(p + 0x38), Fp(p + 0x28), depth);
             SH_CALL(Gte_StoreDepthF4)(Fp(p + 0x20), Fp(p + 0x10), Fp(p + 0x40), Fp(p + 0x30));
@@ -726,7 +726,7 @@ extern "C" void __cdecl EffectKind18Sub18_DrawColumn(U grow, U unused) {
         SetV(0x18, x + b);
         SetV(0x1A, z + b);
         SetV(0x1C, y - (odd + level * 8 + 0x10) * grow);
-        long depth[2];
+        std::int32_t depth[2];
         SH_CALL(Gte_RotTransPers4)(Vx(1), Vx(2), Vx(3), Vx(0), Fp(p + 0x18), Fp(p + 0x28), Fp(p + 0x38), Fp(p + 8), depth);
         SH_CALL(Gte_StoreDepthF4)(Fp(p + 0x20), Fp(p + 0x30), Fp(p + 0x40), Fp(p + 0x10));
         SH_CALL(Prim_SetTexture)((static_cast<U>(I(shade - odd) / 4) << 19) | 0xBA009124u, p, 1);
@@ -753,7 +753,7 @@ extern "C" void __cdecl EffectKind18Sub18_DrawRing(U radius) {
     SetV(4, static_cast<U>(-(S16(e) / 2)));
     SetV(0, x);
     SetV(2, z);
-    long depth[2];
+    std::int32_t depth[2];
     SH_CALL(Gte_RotTransPers)(Vx(0), ScreenXY(), depth);
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0xB5, 0);
     s = S();
@@ -855,9 +855,9 @@ extern "C" void __cdecl EffectKind18Sub68_Draw(void) {
             SetV(2, Ftol(static_cast<long double>(dz) + SY()) & 0xFFFF);
             const U lift = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(reach * 5)));
             SetV(4, 0xFFFFFEC0u - static_cast<U>(I(lift) >> 5));
-            SH_CALL(Gte_LoadVertex)(reinterpret_cast<const unsigned long*>(Vertex()));
+            SH_CALL(Gte_LoadVertex)(reinterpret_cast<const std::uint32_t*>(Vertex()));
             SH_CALL(Gte_Rtps)();
-            SH_CALL(Gte_StoreScreenXY)(reinterpret_cast<unsigned long*>(p + 8));
+            SH_CALL(Gte_StoreScreenXY)(reinterpret_cast<std::uint32_t*>(p + 8));
             p += 0x10;
             SH_CALL(Gte_StoreDepthF)(Fp(p));
             unsigned char* const s = S();
@@ -940,7 +940,7 @@ extern "C" void __cdecl EffectKind18Sub43_DrawQuad(U grow, U shade) {
     SetV(0x14, 0xFF80);
     SetV(0xC, 0xFF80);
     SetV(4, 0xFF80);
-    long depth[2];
+    std::int32_t depth[2];
     SH_CALL(Gte_RotTransPers4)(Vx(0), Vx(1), Vx(2), Vx(3), Fp(p + 8), Fp(p + 0x18), Fp(p + 0x28), Fp(p + 0x38), depth);
     SH_CALL(Gte_PrimDepths4_10)(p);
     SH_CALL(Prim_SetTexture)(((shade & 0xF8) << 16) + 0x25100100u, p, 1);

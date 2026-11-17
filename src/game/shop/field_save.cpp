@@ -822,8 +822,8 @@ extern "C" void __cdecl Rest_PlaceParty(void) {
             rv::Current<records::PartyMember>()->state4 = 0;
         } while (i < Field_MemberCount);
     }
-    Field_Kind2X = static_cast<long>(static_cast<U>(ObjTrio[0].x));
-    Field_Kind2Z = static_cast<long>(static_cast<U>(ObjTrio[0].z));
+    Field_Kind2X = static_cast<std::int32_t>(static_cast<U>(ObjTrio[0].x));
+    Field_Kind2Z = static_cast<std::int32_t>(static_cast<U>(ObjTrio[0].z));
     SH_CALL(Field_ViewReset)();
     const U descriptor = L(::bof3::Img(field_s::at::kAreaDescriptors) + 4 * static_cast<std::uint32_t>(Game_AreaNumber));
     SH_CALL(Area_RunPlacement)(reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(L(descriptor))));

@@ -492,7 +492,7 @@ extern "C" void __cdecl Area75_TailPresses(void) {
 // original 0x40E120 (Area_StepHook's case for area 75): unless Cond row 10's
 // flag 2, with x at 0x1B0000 or less (signed) and z's high word in
 // 0x38..0x3B: ScriptFlags_Set40, counter 3 = 0xA, al 1. Else al 0.
-extern "C" int __cdecl Area75_StepHook(long x, long z) {
+extern "C" int __cdecl Area75_StepHook(std::int32_t x, std::int32_t z) {
     if (AH_CALL(Flags_Test)(Mem(::bof3::Img(Cond_Flags_addr) + 0x50), 2) != 0) return 0;
     if (x > 0x1B0000) return 0;
     if (static_cast<std::uint16_t>((static_cast<std::uint32_t>(z) >> 16) - 0x38) >= 4) return 0;

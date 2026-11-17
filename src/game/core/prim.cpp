@@ -46,7 +46,7 @@ void SelfTest(SetShadeFn theirs) {
 // random. Theirs under each of four x87 control words in turn, ours from the
 // same state, the primitives compared - five of them and a guard one.
 
-using SetTextureFn = void (__cdecl*)(unsigned long, unsigned char*, int);
+using SetTextureFn = void (__cdecl*)(std::uint32_t, unsigned char*, int);
 
 constexpr unsigned kTexPrimBytes = 0x48, kTexPrims = 6;
 // What the table sources can reach: a u16 offset plus 0x7FF * 2 + 1, in dwords.
@@ -81,7 +81,7 @@ void SelfTestTexture(SetTextureFn theirs) {
             const auto at = static_cast<unsigned short>(next() % 4 == 0 ? next() : next() % 0x400);
             std::memcpy(AreaMap_Header + 4 + 2 * i, &at, 2);
         }
-        unsigned long texture = next();
+        std::uint32_t texture = next();
         switch (next() % 3) {
             case 0: texture &= ~0xF00ul; ++source[0]; break;
             case 1: texture |= 0x800; ++source[1]; break;
@@ -105,7 +105,7 @@ void SelfTestTexture(SetTextureFn theirs) {
         if (std::memcmp(their_out, ours, sizeof ours) != 0 && ++bad <= 8) {
             unsigned at = 0;
             while (their_out[at] == ours[at]) ++at;
-            bof3::Log("shadow      Prim_SetTexture self-test MISMATCH: round %u, word %04X, texture %08lX, count %d, "
+            bof3::Log("shadow      Prim_SetTexture self-test MISMATCH: round %u, word %04X, texture %08X, count %d, "
                       "first difference at +0x%X (%02X / %02X)", round, kWords[round % 4], texture, limited, at,
                       their_out[at], ours[at]);
         }

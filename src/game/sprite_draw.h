@@ -20,7 +20,7 @@ extern unsigned g_capture_logged;   // defined in sprite_draw.cpp (source-layout
 extern int g_draw_columns;   // defined in sprite_draw.cpp (source-layout B0: promoted for a moved reader)
 extern int g_flag_columns;   // defined in sprite_draw.cpp (source-layout B0: promoted for a moved reader)
 extern std::uint16_t g_canvas[0x140][0x140];   // defined in sprite_draw.cpp (source-layout B0: promoted for a moved reader)
-extern unsigned long g_tails[8];   // defined in sprite_draw.cpp (source-layout B0: promoted for a moved reader)
+extern std::uint32_t g_tails[8];   // defined in sprite_draw.cpp (source-layout B0: promoted for a moved reader)
 struct State;   // the self-test's snapshot, defined in sprite_draw.cpp (its size needs the file's constants)
 extern State g_live;   // defined in sprite_draw.cpp (source-layout B0: promoted for a moved reader)
 }  // namespace sprite_draw

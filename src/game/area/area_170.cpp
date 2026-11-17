@@ -46,7 +46,7 @@ void AddWord(unsigned char* p, int v) { SetWord(p, static_cast<unsigned>(Word(p)
 unsigned char* EffectAt(unsigned slot) { return rv::Bytes(&Effect_Objects[slot]); }
 
 // The high word of a 16.16 position, as the hooks read it (a word at +2).
-std::uint16_t High(long v) { return static_cast<std::uint16_t>(static_cast<U>(v) >> 16); }
+std::uint16_t High(std::int32_t v) { return static_cast<std::uint16_t>(static_cast<U>(v) >> 16); }
 
 // A word in [lo, lo + 3), compared as the originals' `sub; cmp r16, 3; jb`.
 bool In3(std::uint16_t v, unsigned lo) { return static_cast<std::uint16_t>(v - lo) < 3; }
@@ -296,7 +296,7 @@ extern "C" void __cdecl Area170_Tail37(void) {
 // story flag 0x7E clear, z exactly 0x900000 and x exactly 0x208000 with the
 // leader's pose 7: armed at 50, al 1; x exactly 0x218000 with pose 3: kind 37
 // and state 60 written without ScriptFlags_Set40, al 0. Anything else al 0.
-extern "C" unsigned char __cdecl Area170_StepHook(long x, long z) {
+extern "C" unsigned char __cdecl Area170_StepHook(std::int32_t x, std::int32_t z) {
     const auto ux = static_cast<U>(x);
     const auto uz = static_cast<U>(z);
     const unsigned char fd = Cond_ByteFD;

@@ -218,7 +218,7 @@ bool Parse(const char* text, Index* out, char* error, std::size_t cap) {
             while (*p == ' ') ++p;
             bool ok = *p++ == '[' && String(p, &name) && Comma(p);
             char* after = nullptr;
-            const unsigned long slot = ok ? std::strtoul(p, &after, 10) : 0;
+            const std::uint32_t slot = ok ? std::strtoul(p, &after, 10) : 0;
             ok = ok && after && after != p;
             if (ok) p = after;
             ok = ok && Comma(p) && String(p, &layer) && Comma(p) && String(p, &where) && Comma(p) && String(p, &hash) &&
@@ -382,7 +382,7 @@ void Configure() {
         bof3::Fatal("DIV-0089: BOF3X_CACHE_DATA must be 0 or 1");
     char root[bof3::os::kMaxPath];
     const std::uint32_t n = bof3::os::GetEnv("BOF3X_CACHE", root, sizeof root);
-    if (n >= sizeof root) bof3::Fatal("DIV-0089: BOF3X_CACHE is %lu characters", static_cast<unsigned long>(n));
+    if (n >= sizeof root) bof3::Fatal("DIV-0089: BOF3X_CACHE is %u characters", static_cast<std::uint32_t>(n));
     if (n == 0) return;  // no cache: the install's files, as the original's
     std::size_t len = n;
     while (len > 1 && (root[len - 1] == '\\' || root[len - 1] == '/')) root[--len] = 0;

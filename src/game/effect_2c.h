@@ -27,7 +27,7 @@ void __cdecl EffectKind3E_SubSound(void);
 // (x, z, height) toward `to` (x and z; the height stays `from`'s), each joint
 // but the last lifted by a random amount, each segment glowing
 // (EffectKind3E_BoltGlow).
-void __cdecl EffectKind3E_DrawBolt(const long* from, const long* to);
+void __cdecl EffectKind3E_DrawBolt(const std::int32_t* from, const std::int32_t* to);
 // original 0x475240: two Gouraud quads either side of the screen segment p0 ->
 // p1 (x, y, depth as floats), half-bright at the segment and black at the rim.
 void __cdecl EffectKind3E_BoltGlow(const unsigned char* p0, const unsigned char* p1);
@@ -38,7 +38,7 @@ void __cdecl EffectKind3F_Draw(void);
 // original 0x475390: a beam from the world point `from` to `to`: two
 // half-discs (EffectKind3F_DrawCap) sized at each end's depth and the band
 // between them (EffectKind3F_DrawBand).
-void __cdecl EffectKind3F_DrawBeam(const long* from, const long* to);
+void __cdecl EffectKind3F_DrawBeam(const std::int32_t* from, const std::int32_t* to);
 // original 0x4754A0: eight Gouraud triangles of a half-disc round the screen
 // point `centre` (x, y, depth floats); the radius and angle read as words.
 void __cdecl EffectKind3F_DrawCap(const unsigned char* centre, unsigned radius, unsigned angle);

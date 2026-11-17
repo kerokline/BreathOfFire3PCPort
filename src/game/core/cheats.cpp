@@ -102,7 +102,7 @@ bool g_learn = false;
 std::uint32_t g_pilfer_mask = 0xFF;
 std::uint32_t g_steal_mask = 0xFF;
 
-constexpr long kMultiplierMax = 10;   // the owner, 2026-10-02: 50 was humorously large
+constexpr std::int32_t kMultiplierMax = 10;   // the owner, 2026-10-02: 50 was humorously large
 
 // 0..10, 1 when unset. A number above 10 is clamped to 10 and logged (an ini
 // saved while the cap was 50 must not lock its owner out); anything that is
@@ -112,10 +112,10 @@ std::uint32_t Multiplier(const char* var) {
     const std::uint32_t n = bof3::os::GetEnv(var, text, sizeof text);
     if (n == 0) return 1;
     char* end = nullptr;
-    const long v = n < sizeof text ? std::strtol(text, &end, 10) : -1;
-    if (end == nullptr || end == text || *end != '\0' || v < 0) bof3::Fatal("%s must be 0..%ld", var, kMultiplierMax);
+    const std::int32_t v = n < sizeof text ? std::strtol(text, &end, 10) : -1;
+    if (end == nullptr || end == text || *end != '\0' || v < 0) bof3::Fatal("%s must be 0..%d", var, kMultiplierMax);
     if (v > kMultiplierMax) {
-        bof3::Log("DIV-0045    %s=%ld is above the cap, %ld used", var, v, kMultiplierMax);
+        bof3::Log("DIV-0045    %s=%d is above the cap, %d used", var, v, kMultiplierMax);
         return static_cast<std::uint32_t>(kMultiplierMax);
     }
     return static_cast<std::uint32_t>(v);
@@ -142,7 +142,7 @@ constexpr std::uint32_t kStealMaskImm = 0x4F51EF;
 void Cheats_Inject() {
     g_exp = Multiplier("BOF3X_EXP");
     g_zenny = Multiplier("BOF3X_ZENNY");
-    if (g_exp != 1 || g_zenny != 1) bof3::Log("DIV-0045    EXP x%lu, zenny x%lu (BOF3X_EXP, BOF3X_ZENNY)", (unsigned long)g_exp, (unsigned long)g_zenny);
+    if (g_exp != 1 || g_zenny != 1) bof3::Log("DIV-0045    EXP x%u, zenny x%u (BOF3X_EXP, BOF3X_ZENNY)", (std::uint32_t)g_exp, (std::uint32_t)g_zenny);
 
     g_enemy_info = Flag("BOF3X_ENEMY_INFO");
     if (g_enemy_info) bof3::Log("DIV-0187    every enemy shows its HP gauge and its Identify stats, bosses too (BOF3X_ENEMY_INFO)");

@@ -211,8 +211,8 @@ void Place(const unsigned char* op, bool two) {
     rv::Store<std::uint32_t>(rv::Current<records::SpriteHead>()->z, Coordinate(op[8], op[9]));
     rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Object(Count()))->target_z, static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->z));
     rv::As<records::SpriteObject>(Object(Count()))->best_score = 0;
-    const long elevation = event_script::g.elevation(static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->x)),
-                                       static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->z)));
+    const std::int32_t elevation = event_script::g.elevation(static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->x)),
+                                       static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->z)));
     rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(elevation));
     Sprite_Current[1] = op[0xA];
     Sprite_Current[2] = op[0xC];
@@ -290,7 +290,7 @@ void PlaceXZ(std::int32_t x, std::int32_t z) {
 
 void Ground() {
     records::SpriteObject* const sc = rv::As<records::SpriteObject>(Sc());
-    const long e = SH_CALL(AreaMap_Elevation)(sc->x, sc->z);
+    const std::int32_t e = SH_CALL(AreaMap_Elevation)(sc->x, sc->z);
     rv::Store<unsigned>(rv::As<records::SpriteObject>(Sc())->height_whole, static_cast<U>(e));
 }
 
@@ -666,7 +666,7 @@ extern "C" void __cdecl EventObj_Reset(void) {
 // original 0x579F00 (PSX 0x801A5BC8): AreaMap_Bytes[s16 z * width + s16 x] =
 // value (the width the area block's byte 0). eax on the way out is the row
 // offset with the value in its low byte (imul; mov al), returned whole.
-extern "C" unsigned long __cdecl AreaMap_SetByte(unsigned long x, unsigned long z, unsigned value) {
+extern "C" std::uint32_t __cdecl AreaMap_SetByte(std::uint32_t x, std::uint32_t z, unsigned value) {
     const U row = (DwordMapFieldObjects(AtMapFieldObjects(::bof3::Img(AreaMap_Header_addr))) & 0xFFu) * S16(static_cast<U>(z));
     AtMapFieldObjects(S16(static_cast<U>(x)) + DwordMapFieldObjects(AtMapFieldObjects(map_field_objects::at::BytesAt())) + row)[0] = static_cast<unsigned char>(value);
     return (row & 0xFFFFFF00u) | (value & 0xFFu);
@@ -706,7 +706,7 @@ extern "C" void __cdecl EventOp_0x(const unsigned char* op) {
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, static_cast<std::int32_t>(Coordinate(op[8], op[9])));
     rv::Store<std::int32_t>(rv::As<records::SpriteObject>(ObjectScenaSe(CountScenaSe()))->target_z, rv::Current<records::SpriteObject>()->z);
     rv::As<records::SpriteObject>(ObjectScenaSe(CountScenaSe()))->best_score = 0;
-    const long ground = SH_CALL(AreaMap_Elevation)(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
+    const std::int32_t ground = SH_CALL(AreaMap_Elevation)(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
     rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(ground));
     Sprite_Current[1] = op[0xA];
     Sprite_Current[2] = op[0xC];
@@ -772,7 +772,7 @@ extern "C" void __cdecl EventOp_8x(const unsigned char* op) {
         const U n = static_cast<std::uint32_t>(static_cast<std::int16_t>(kScratchX.w_00)) * kObjectStride;
         SetDwordMapFieldObjects(AtMapFieldObjects(::bof3::Img(Sprite_Objects_addr) + 0x90 + n), static_cast<U>(s->z));
         SetDwordMapFieldObjects(AtMapFieldObjects(::bof3::Img(Sprite_Objects_addr) + 0x94 + n), 0);
-        const long elevation = g.elevation(static_cast<long>(static_cast<U>(s->x)), static_cast<long>(static_cast<U>(s->z)));
+        const std::int32_t elevation = g.elevation(static_cast<std::int32_t>(static_cast<U>(s->x)), static_cast<std::int32_t>(static_cast<U>(s->z)));
         rv::Store<U>(rv::As<records::SpriteObject>(Sprite())->height_whole, static_cast<U>(elevation));
     }
     rv::As<records::SpriteObject>(Sprite())->state = op[8];

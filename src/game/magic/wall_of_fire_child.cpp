@@ -279,13 +279,13 @@ int Cos(int a) { return MH_CALL(Math_Cos)(a); }
 
 // The GTE projection as the originals push it: one pointer more than the
 // prototype names (the flag, in the caller's frame).
-using Rtp3Fn = long (__cdecl*)(const short*, const short*, const short*, unsigned char*, unsigned char*, unsigned char*,
-                               long*, long*);
+using Rtp3Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, unsigned char*, unsigned char*, unsigned char*,
+                               std::int32_t*, std::int32_t*);
 
 #define S32_AS(type, name) ::magic_harness::Call(reinterpret_cast<type>(reinterpret_cast<void*>(&::name)))
 
 void Rtp3(unsigned char* prim) {
-    long p, flag;
+    std::int32_t p, flag;
     S32_AS(Rtp3Fn, Gte_RotTransPers3)(VP(0), VP(8), VP(0x10), prim + 8, prim + 0x18, prim + 0x28, &p, &flag);
 }
 
@@ -568,7 +568,7 @@ S32_EXPORT void __cdecl WallOfFireSpark_Draw(void) {
         {
             const unsigned char* const s = Sc();
             const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-            MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->z),
+            MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(ts->x), static_cast<std::uint32_t>(ts->z),
                                         2, 0xC);
         }
         unsigned char* const p = Gfx_PacketNext;
@@ -597,7 +597,7 @@ S32_EXPORT void __cdecl WallOfFireSpark_Draw(void) {
         p[0x26] = 1;
         const unsigned char* const s = Sc();
         const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-        MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->z), 2,
+        MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(ts->x), static_cast<std::uint32_t>(ts->z), 2,
                                     0x34);
     }
 }
@@ -681,7 +681,7 @@ C1_EXPORT void __cdecl InkPuff_Start(void) {
 // position (dy 2).
 C1_EXPORT void __cdecl Ink_DrawPuff(void) {
     DrawMode(0x55);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(rv::Current<records::BattleTask>()->x), static_cast<unsigned long>(rv::Current<records::BattleTask>()->z), 2,
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->x), static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->z), 2,
                                 0xC);
     unsigned char* const p = Gfx_PacketNext;
     SetSW(0, Sc()[9] * 2u);
@@ -708,7 +708,7 @@ C1_EXPORT void __cdecl Ink_DrawPuff(void) {
     p[4] = SB(4);
     p[5] = SB(4);
     p[6] = SB(4);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(rv::Current<records::BattleTask>()->x), static_cast<unsigned long>(rv::Current<records::BattleTask>()->z), 2,
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->x), static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->z), 2,
                                 0x48);
 }
 

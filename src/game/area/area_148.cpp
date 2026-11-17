@@ -51,7 +51,7 @@ unsigned char* PartyRecord(U index) { return At(::bof3::Img(ObjTrio_addr) + inde
 unsigned char* EffectAt(U slot) { return At(::bof3::Img(Effect_Objects_addr) + slot * at::kEffectStride); }
 
 // The high word of a 16.16 position, as the hooks read it (a word at +2).
-std::uint16_t High(long v) { return static_cast<std::uint16_t>(static_cast<U>(v) >> 16); }
+std::uint16_t High(std::int32_t v) { return static_cast<std::uint16_t>(static_cast<U>(v) >> 16); }
 
 void SetMessage(unsigned id) { SetWord(At(::bof3::Img(at::kMessage.v)), id); }
 
@@ -165,9 +165,9 @@ void Kind13(U slot, U x, U y, unsigned char life) {
 // unchecked; the pointer read again for each byte, as the originals do).
 unsigned char BeamColour(unsigned k) { return B(::bof3::Img(Area148_BeamColours_addr) + Cur()[6] * 3u + k); }
 
-using ProjectFn = void (__cdecl*)(const long*, unsigned char*);
+using ProjectFn = void (__cdecl*)(const std::int32_t*, unsigned char*);
 
-using ScreenSizeFn = void (__cdecl*)(const long*, const short*, void*);
+using ScreenSizeFn = void (__cdecl*)(const std::int32_t*, const short*, void*);
 
 // A draw-mode packet (abr 1 on tpage 0x3C0, dtd as given) at Gfx_PacketNext,
 // linked at the running effect's (+0x18, +0x1C) with size 0xC.
@@ -317,7 +317,7 @@ extern "C" void __cdecl Area148_Tail31(void) {
 // original 0x422790 (Area_ArriveHook's case for area 148, 0x56E551): z's high
 // word 0x1C and x's 0x12..0x14 (16-bit): ScriptFlags_Set40, tail kind 31 at
 // state 0, al 1. Else al 0.
-extern "C" unsigned char __cdecl Area148_ArriveHook(long x, long z) {
+extern "C" unsigned char __cdecl Area148_ArriveHook(std::int32_t x, std::int32_t z) {
     if (High(z) != 0x1C) return 0;
     if (static_cast<std::uint16_t>(High(x) - 0x12) >= 3) return 0;
     AH_CALL(ScriptFlags_Set40)();
@@ -339,7 +339,7 @@ extern "C" unsigned char __cdecl Area148_Trigger17(unsigned char*, unsigned char
 // 0x6353F0 (one: x, z, facing in the low nibble, a tail state) whose x and z
 // are the argument bytes and facing the leader's +8 (the whole byte): none al
 // 0; found: ScriptFlags_Set40, tail kind 31 at the record's state (0x14), al 1.
-extern "C" unsigned char __cdecl Area148_SwitchHook(long x, long z) {
+extern "C" unsigned char __cdecl Area148_SwitchHook(std::int32_t x, std::int32_t z) {
     const unsigned char facing = ObjTrio[0].direction;
     const auto bx = static_cast<unsigned char>(x), bz = static_cast<unsigned char>(z);
     U found = 0;
@@ -380,7 +380,7 @@ extern "C" void __cdecl Area148_BeamStart(void) {
 extern "C" void __cdecl Area148_BeamSweep(void) {
     unsigned char* o = Cur();
     if (Field_Request != 0) {
-        AH_CALL(Area148_DrawBeam)(reinterpret_cast<const long*>(o + 0x34), reinterpret_cast<const long*>(o + 0x18));
+        AH_CALL(Area148_DrawBeam)(reinterpret_cast<const std::int32_t*>(o + 0x34), reinterpret_cast<const std::int32_t*>(o + 0x18));
         return;
     }
     rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->work_18, static_cast<std::int32_t>(static_cast<U>(rv::As<records::SpriteHead>(o)->work_18) + static_cast<U>(rv::As<records::SpriteHead>(o)->step_x)));
@@ -388,7 +388,7 @@ extern "C" void __cdecl Area148_BeamSweep(void) {
     rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->work_1c, static_cast<std::int32_t>(static_cast<U>(rv::As<records::SpriteHead>(o)->work_1c) + static_cast<U>(rv::As<records::SpriteHead>(o)->step_z)));
     Cur()[9] = static_cast<unsigned char>(Cur()[9] - 1);
     o = Cur();
-    AH_CALL(Area148_DrawBeam)(reinterpret_cast<const long*>(o + 0x34), reinterpret_cast<const long*>(o + 0x18));
+    AH_CALL(Area148_DrawBeam)(reinterpret_cast<const std::int32_t*>(o + 0x34), reinterpret_cast<const std::int32_t*>(o + 0x18));
     AH_CALL(Area148_BeamTurnMembers)();
     o = Cur();
     if (o[9] != 0) return;
@@ -407,7 +407,7 @@ extern "C" void __cdecl Area148_BeamSweep(void) {
 // +9 + 1 and state 1.
 extern "C" void __cdecl Area148_BeamPause(void) {
     unsigned char* o = Cur();
-    AH_CALL(Area148_DrawBeam)(reinterpret_cast<const long*>(o + 0x34), reinterpret_cast<const long*>(o + 0x18));
+    AH_CALL(Area148_DrawBeam)(reinterpret_cast<const std::int32_t*>(o + 0x34), reinterpret_cast<const std::int32_t*>(o + 0x18));
     AH_CALL(Area148_BeamTurnMembers)();
     o = Cur();
     o[0xA] = static_cast<unsigned char>(o[0xA] - 1);
@@ -426,7 +426,7 @@ extern "C" void __cdecl Area148_BeamAhead(void) {
     o = Cur();
     rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->work_1c, static_cast<std::int32_t>(static_cast<U>(Long(At(::bof3::Img(Field_DirectionSteps_addr) + 4 + o[8] * 8u))) * 5u + static_cast<U>(rv::As<records::SpriteHead>(o)->z)));
     o = Cur();
-    const long h = AH_CALL(AreaMap_Elevation)(rv::As<records::SpriteHead>(o)->work_18, rv::As<records::SpriteHead>(o)->work_1c);
+    const std::int32_t h = AH_CALL(AreaMap_Elevation)(rv::As<records::SpriteHead>(o)->work_18, rv::As<records::SpriteHead>(o)->work_1c);
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->work_20, static_cast<std::int32_t>(static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(h))) << 16));
 }
 
@@ -458,7 +458,7 @@ extern "C" void __cdecl Area148_BeamTurnMembers(void) {
         unsigned char* const c = Cur();
         const U z = (static_cast<U>(dz) << 16) + static_cast<U>(rv::As<records::SpriteHead>(c)->z);
         const U x = (static_cast<U>(dx) << 16) + static_cast<U>(rv::As<records::SpriteHead>(c)->x);
-        const unsigned char member = AH_CALL(Party_MemberAt)(static_cast<long>(x), static_cast<long>(z), 0);
+        const unsigned char member = AH_CALL(Party_MemberAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), 0);
         if (member == 0xFF) continue;
         if ((Field_ScriptFlags2 & 0x1400) != 0) continue;
         if (Field_Request != 0) continue;
@@ -483,7 +483,7 @@ extern "C" void __cdecl Area148_BeamTurnMembers(void) {
 // Area148_DrawBeamBand(from's vertex, r1, angle + 0x400, ahead's vertex, r2,
 // angle + 0xC00); a draw-mode packet (dtd 0). The vertices are read from the
 // line's packet (the pointer taken at the start) and each truncated by _ftol.
-extern "C" void __cdecl Area148_DrawBeam(const long* from, const long* ahead) {
+extern "C" void __cdecl Area148_DrawBeam(const std::int32_t* from, const std::int32_t* ahead) {
     if (Draw_PassFlags == 0) return;
     if (AH_CALL(Flags_Test)(Bank(), 0x6A) == 0) return;
     DrawModeLink(1);

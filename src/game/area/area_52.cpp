@@ -51,7 +51,7 @@ void FlagsToggle(unsigned char* bits, unsigned index) {
 }
 
 void SetLayer(unsigned x, unsigned z, unsigned value) {
-    AH_AT(void (__cdecl*)(unsigned long, unsigned long, unsigned), at::kSetLayerByte.v)(x, z, value);
+    AH_AT(void (__cdecl*)(std::uint32_t, std::uint32_t, unsigned), at::kSetLayerByte.v)(x, z, value);
 }
 
 // The map byte setter, as the originals pass it: x and z words, a value byte.
@@ -98,7 +98,7 @@ void RestoreColumn(unsigned x, unsigned z, unsigned shift) {
 // script position + 6; at 0x14, Area52_ShiftBlockX and, the object's x then
 // 0x858000, the script position + 3 and the tail state 0x2D.
 void MoveBlock(std::int32_t stop) {
-    long x, z;
+    std::int32_t x, z;
     if (!AH_CALL(Area52_BlockCell)(&x, &z)) return;
     const unsigned char counter = B(::bof3::Img(at::kCounter3.v));
     if (counter == 0xA) {
@@ -196,7 +196,7 @@ extern "C" void __cdecl Area52_StashBlock(void) {
 // the object's direction 5 and MoveCmd_Move(the script object, 5), its +7 =
 // 2.
 extern "C" void __cdecl Area52_ShiftBlockZ(void) {
-    long xv, zv;
+    std::int32_t xv, zv;
     if (!AH_CALL(Area52_BlockCell)(&xv, &zv)) return;
     std::uint16_t x = High(xv), z = High(zv);
     SetLayer(x, z, 0);
@@ -252,9 +252,9 @@ extern "C" void __cdecl Area52_MoveBlockB(void) { MoveBlock(0x668000); }
 // object's +0x34 less 0x8000, *z = its +0x38 less 0x8000; with
 // Field_Request 5, Area52_RestoreBlock(*x, z). Counter 3 at 0: the script
 // position back 2 and 0; else 1.
-extern "C" unsigned char __cdecl Area52_BlockCell(long* x, long* z) {
-    *x = static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteHead>()->x) - 0x8000u);
-    const auto zv = static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteHead>()->z) - 0x8000u);
+extern "C" unsigned char __cdecl Area52_BlockCell(std::int32_t* x, std::int32_t* z) {
+    *x = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::SpriteHead>()->x) - 0x8000u);
+    const auto zv = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::SpriteHead>()->z) - 0x8000u);
     *z = zv;
     if (Field_Request == 5) AH_CALL(Area52_RestoreBlock)(*x, zv);
     if (B(::bof3::Img(at::kCounter3.v)) != 0) return 1;
@@ -267,7 +267,7 @@ extern "C" unsigned char __cdecl Area52_BlockCell(long* x, long* z) {
 // given back from the low bytes of +0x18 / +0x1C, both shifted right by 8
 // (arithmetically), column x + 2 taken into their high bytes; the object's
 // direction 3 and MoveCmd_Move(the script object, 3), its +7 = 2.
-extern "C" void __cdecl Area52_ShiftBlockX(long xv, long zv) {
+extern "C" void __cdecl Area52_ShiftBlockX(std::int32_t xv, std::int32_t zv) {
     const std::uint16_t x = High(xv), z = High(zv);
     const auto z1 = static_cast<std::uint16_t>(z + 1);
     SetLayer(x, z, 0);
@@ -297,7 +297,7 @@ extern "C" void __cdecl Area52_ShiftBlockX(long xv, long zv) {
 // original 0x40A450 (called by Area52_MoveBlockA / B, `(x, z)`, their high
 // words read): column x + 1 given back from the high bytes of +0x18 / +0x1C
 // (RestoreColumn at 8), then both shifted left by 8.
-extern "C" void __cdecl Area52_DropColumn(long xv, long zv) {
+extern "C" void __cdecl Area52_DropColumn(std::int32_t xv, std::int32_t zv) {
     RestoreColumn(static_cast<std::uint16_t>(High(xv) + 1), High(zv), 8);
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->work_18, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::SpriteHead>()->work_18) << 8));
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->work_1c, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::SpriteHead>()->work_1c) << 8));
@@ -306,7 +306,7 @@ extern "C" void __cdecl Area52_DropColumn(long xv, long zv) {
 // original 0x40A4C0 (called by Area52_BlockCell, `(x, z)`, their high words
 // read): the whole block given back, columns x and x + 1 (RestoreColumn at 0
 // and 8).
-extern "C" void __cdecl Area52_RestoreBlock(long xv, long zv) {
+extern "C" void __cdecl Area52_RestoreBlock(std::int32_t xv, std::int32_t zv) {
     for (unsigned i = 0; i < 2; ++i) RestoreColumn(static_cast<std::uint16_t>(High(xv) + i), High(zv), i * 8);
 }
 
@@ -317,7 +317,7 @@ extern "C" void __cdecl Area52_RestoreBlock(long xv, long zv) {
 // at the record's state; Area52_PartyInRect answering: state 0xA, answer 1;
 // else the record's story flag toggled (0x57C160), Sound_PlayEffect(0x202),
 // answer 1.
-extern "C" int __cdecl Area52_CellHook(long x, long z) {
+extern "C" int __cdecl Area52_CellHook(std::int32_t x, std::int32_t z) {
     const unsigned char pose = B(::bof3::Img(ObjTrio_addr) + 0x8);
     unsigned i = 0;
     for (; i < at::kArea52CellSwitchCount; ++i) {
@@ -454,7 +454,7 @@ extern "C" void __cdecl Area52_SpawnEffect48B(void) { SpawnEffect48(0x890000, 0x
 // the object's direction 7 and MoveCmd_Move(the script object, 7), its +7 =
 // 2.
 extern "C" void __cdecl Area52_ShiftBlockXBack(void) {
-    long xv, zv;
+    std::int32_t xv, zv;
     AH_CALL(Area52_BlockCell)(&xv, &zv);
     const auto x = static_cast<std::uint16_t>(High(xv) - 1);
     const std::uint16_t z = High(zv);

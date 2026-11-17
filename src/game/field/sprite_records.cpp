@@ -71,7 +71,7 @@ void Apply(const Region* r, const unsigned char* in) {
     for (unsigned i = 0; i < kRegions; in += r[i].size, ++i) std::memcpy(r[i].at, in, r[i].size);
 }
 
-using Fn = unsigned (__cdecl*)(unsigned long*);
+using Fn = unsigned (__cdecl*)(std::uint32_t*);
 
 void SelfTest(Fn theirs) {
     constexpr unsigned kRounds = 12000;
@@ -84,13 +84,13 @@ void SelfTest(Fn theirs) {
 
     std::uint32_t rng = 0x57BAE021u;
     auto next = [&rng] { rng ^= rng << 13; rng ^= rng >> 17; rng ^= rng << 5; return rng; };
-    auto number = [&next]() -> long {
-        static const long kEdge[] = {0, 1, -1, 2, 0x7FFFFFFF, static_cast<long>(0x80000000u), 0x1000, 500, 1000};
+    auto number = [&next]() -> std::int32_t {
+        static const std::int32_t kEdge[] = {0, 1, -1, 2, 0x7FFFFFFF, static_cast<std::int32_t>(0x80000000u), 0x1000, 500, 1000};
         switch (next() % 8) {
-            case 0: return static_cast<long>(next());
+            case 0: return static_cast<std::int32_t>(next());
             case 1: return kEdge[next() % 9];
-            case 2: return static_cast<long>(next() % 0x2000000u) - 0x1000000;
-            default: return static_cast<long>(next() % 0x4000u) - 0x1000;
+            case 2: return static_cast<std::int32_t>(next() % 0x2000000u) - 0x1000000;
+            default: return static_cast<std::int32_t>(next() % 0x4000u) - 0x1000;
         }
     };
     unsigned bad = 0, no_room = 0, empty = 0, negative = 0, lit = 0, unscaled = 0, quads = 0, padding = 0, scenes = 0;
@@ -144,8 +144,8 @@ void SelfTest(Fn theirs) {
         Sprite_Current = scratch.object;
         Gfx_PacketNext = packet;
         Gfx_BufferIndex = static_cast<unsigned char>(buffer);
-        static const long kDepth[] = {0, 1, 17, 18, 19, 20, -1};
-        Gte_MatrixDepth = next() % 4 == 0 ? kDepth[next() % 7] : static_cast<long>(next() % 18);
+        static const std::int32_t kDepth[] = {0, 1, 17, 18, 19, 20, -1};
+        Gte_MatrixDepth = next() % 4 == 0 ? kDepth[next() % 7] : static_cast<std::int32_t>(next() % 18);
         Gte_NearZ = number(); Gte_ProjDistance = number();
         Gte_OffsetX = number(); Gte_OffsetY = number();
         Gte_RampNear = number(); Gte_RampFar = number();
@@ -156,18 +156,18 @@ void SelfTest(Fn theirs) {
         // the u16 the record keeps and the sign of the comparison shows.
         if (next() % 2 == 0) {
             ++scenes;
-            auto small = [&next](unsigned span) { return static_cast<long>(next() % (2 * span + 1)) - static_cast<long>(span); };
+            auto small = [&next](unsigned span) { return static_cast<std::int32_t>(next() % (2 * span + 1)) - static_cast<std::int32_t>(span); };
             auto* rotation = reinterpret_cast<short*>(Gte_Matrix);
             for (unsigned i = 0; i < 9; ++i) rotation[i] = static_cast<short>(small(0x1000));
-            Gte_Matrix[5] = static_cast<unsigned long>(small(0x4000));
-            Gte_Matrix[6] = static_cast<unsigned long>(small(0x4000));
-            Gte_Matrix[7] = static_cast<unsigned long>(small(0x20000));
+            Gte_Matrix[5] = static_cast<std::uint32_t>(small(0x4000));
+            Gte_Matrix[6] = static_cast<std::uint32_t>(small(0x4000));
+            Gte_Matrix[7] = static_cast<std::uint32_t>(small(0x20000));
             for (unsigned i = 0; i < 9; ++i) Camera_Matrix[i] = static_cast<short>(small(0x1000));
             Gte_NearZ = small(0x100);
-            Put<long>(scratch.object, 0x34, (0x4000 + small(0x400)) << 9);
-            Put<long>(scratch.object, 0x38, (0x4000 + small(0x400)) << 9);
+            Put<std::int32_t>(scratch.object, 0x34, (0x4000 + small(0x400)) << 9);
+            Put<std::int32_t>(scratch.object, 0x38, (0x4000 + small(0x400)) << 9);
             Put<short>(scratch.object, 0x3E, static_cast<short>(small(0x4000)));
-            Put<long>(scratch.object, 0x40, 0x1000 + small(0x800));
+            Put<std::int32_t>(scratch.object, 0x40, 0x1000 + small(0x800));
         }
         Capture(regions, input);
 
@@ -183,7 +183,7 @@ void SelfTest(Fn theirs) {
         for (int pass = 0; pass < 2; ++pass) {
             Apply(regions, input);
             if (pass == 0) SetControlWord(kGameControlWord);
-            result[pass] = (pass ? Fn(&Sprite_AddDrawRecords) : theirs)(reinterpret_cast<unsigned long*>(scratch.records));
+            result[pass] = (pass ? Fn(&Sprite_AddDrawRecords) : theirs)(reinterpret_cast<std::uint32_t*>(scratch.records));
             if (pass == 0) SetControlWord(saved_word);
             Capture(regions, pass ? our_out : their_out);
         }

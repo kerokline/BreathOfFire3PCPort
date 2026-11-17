@@ -112,28 +112,28 @@ void ClutCopy(unsigned first, unsigned last, std::uint16_t stp) {
 
 // The GTE projections with the arguments the originals push (the depth and
 // flag outputs in the caller's frame).
-using Rtp1Fn = long (__cdecl*)(const short*, unsigned char*, long*, long*);
+using Rtp1Fn = std::int32_t (__cdecl*)(const short*, unsigned char*, std::int32_t*, std::int32_t*);
 
-using Rtp3Fn = long (__cdecl*)(const short*, const short*, const short*, unsigned char*, unsigned char*, unsigned char*,
-                               long*, long*);
+using Rtp3Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, unsigned char*, unsigned char*, unsigned char*,
+                               std::int32_t*, std::int32_t*);
 
-using Rtp4Fn = long (__cdecl*)(const short*, const short*, const short*, const short*, unsigned char*, unsigned char*,
-                               unsigned char*, unsigned char*, long*, long*);
+using Rtp4Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, const short*, unsigned char*, unsigned char*,
+                               unsigned char*, unsigned char*, std::int32_t*, std::int32_t*);
 
 #define C1_AS(type, name) ::magic_harness::Call(reinterpret_cast<type>(reinterpret_cast<void*>(&::name)))
 
 void Rtp1(unsigned v, unsigned char* sxy) {
-    long p, flag;
+    std::int32_t p, flag;
     C1_AS(Rtp1Fn, Gte_RotTransPers)(VP(v), sxy, &p, &flag);
 }
 
 void Rtp3(unsigned char* prim) {
-    long p, flag;
+    std::int32_t p, flag;
     C1_AS(Rtp3Fn, Gte_RotTransPers3)(VP(0), VP(8), VP(0x10), prim + 8, prim + 0x18, prim + 0x28, &p, &flag);
 }
 
 void Rtp4(unsigned char* prim) {
-    long p, flag;
+    std::int32_t p, flag;
     C1_AS(Rtp4Fn, Gte_RotTransPers4)(VP(0), VP(8), VP(0x10), VP(0x18), prim + 8, prim + 0x18, prim + 0x28, prim + 0x38,
                                      &p, &flag);
 }

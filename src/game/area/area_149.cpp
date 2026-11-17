@@ -93,7 +93,7 @@ void ShiftMap(int sign, U focus, bool effects) {
     const std::int32_t z = Field_Kind2Z;
     MapView_FocusX = static_cast<std::int32_t>(focus);
     Field_Kind2X = x;
-    const long h = AH_CALL(AreaMap_Elevation)(x, z);
+    const std::int32_t h = AH_CALL(AreaMap_Elevation)(x, z);
     Sprite_Kind2.height_whole = static_cast<U>(h);
     AH_CALL(MapView_SetElevation)(static_cast<int>(h));
     AH_AT(void (__cdecl*)(), area_w3g::kViewShift.v)();
@@ -103,13 +103,13 @@ void ShiftMap(int sign, U focus, bool effects) {
             auto* const tE = rv::As<records::EffectObject>(e);
             if ((e[0] & 1) == 0 || e[5] != 0x37) continue;
             tE->x = static_cast<std::int32_t>(static_cast<U>(tE->x) + step);
-            const long eh = AH_CALL(AreaMap_Elevation)(tE->x, tE->z);
+            const std::int32_t eh = AH_CALL(AreaMap_Elevation)(tE->x, tE->z);
             rv::Store<unsigned>(rv::As<records::EffectObject>(e)->height_whole, static_cast<U>(eh));
         }
     }
     const std::int32_t ex = static_cast<std::int32_t>(static_cast<std::uint32_t>(Sprite_ObjectsExtra[0].x) + step);
     Sprite_ObjectsExtra[0].x = ex;
-    const long xh = AH_CALL(AreaMap_Elevation)(ex, Sprite_ObjectsExtra[0].z);
+    const std::int32_t xh = AH_CALL(AreaMap_Elevation)(ex, Sprite_ObjectsExtra[0].z);
     Sprite_ObjectsExtra[0].height_whole = static_cast<U>(xh);
 }
 
@@ -181,7 +181,7 @@ extern "C" void __cdecl Area149_SpawnDust(signed char dx) {
         rv::Store<unsigned>(rv::As<records::EffectObject>(e)->column, 0x2C0);
         tE->x = static_cast<std::int32_t>(x);
         tE->z = static_cast<std::int32_t>(z);
-        const long h = AH_CALL(AreaMap_Elevation)(tE->x, static_cast<long>(z));
+        const std::int32_t h = AH_CALL(AreaMap_Elevation)(tE->x, static_cast<std::int32_t>(z));
         rv::Store<unsigned>(rv::As<records::EffectObject>(e)->height_whole, static_cast<U>(h));
         rv::Store<unsigned>(rv::As<records::EffectObject>(e)->column, 0x2C0);
         e[9] = 1;
@@ -246,7 +246,7 @@ extern "C" void __cdecl Area149_Init(void) {
         const std::int32_t z = tX0->z, x = tX0->x;
         x0[0x83] = 1;
         tX0->script_position = 0;
-        const long h = AH_CALL(AreaMap_Elevation)(x, z);
+        const std::int32_t h = AH_CALL(AreaMap_Elevation)(x, z);
         rv::Store<unsigned>(rv::As<records::SpriteObject>(x0)->height_whole, static_cast<U>(h));
         Cond_ByteFE = 1;
         if (AH_CALL(Flags_Test)(Bank904000(), 0x11) != 0) {

@@ -106,7 +106,7 @@ void HpFloor() {
 }  // namespace
 
 // original 0x439C60: BossKind_Table[14]: by +1 through BossSunder_Steps (12).
-extern "C" unsigned long __cdecl BossSunder_Dispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl BossSunder_Dispatch(std::uint32_t through) {
     return DispatchBossSc("BossSunder_Dispatch", ::bof3::Img(0x64CD0C), 12, 1, through);
 }
 
@@ -116,7 +116,7 @@ extern "C" void __cdecl BossSunder_Enter(void) { BalioSunderEnter(::bof3::Img(0x
 
 // original 0x439D10: the +0xF4 hook: through BossSunder_Hooks (3:
 // BossSunder_HookAct, BossSunder_HookHit, BareRet).
-extern "C" unsigned long __cdecl BossSunder_Hook(unsigned long word) { return HookDispatchBossSc("BossSunder_Hook", ::bof3::Img(0x64CD3C), word); }
+extern "C" std::uint32_t __cdecl BossSunder_Hook(std::uint32_t word) { return HookDispatchBossSc("BossSunder_Hook", ::bof3::Img(0x64CD3C), word); }
 
 // original 0x439D20: hook entry 0: in fight 16 with the fight's bit 0 (the
 // byte read once): without bit 2 - action 0, line 0x25, bit 2 set (read

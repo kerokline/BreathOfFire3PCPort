@@ -98,13 +98,13 @@ void StF(unsigned char* p, LD v) {
     std::memcpy(p, &f, sizeof f);
 }
 
-long* Point(unsigned char* p) { return reinterpret_cast<long*>(p); }
+std::int32_t* Point(unsigned char* p) { return reinterpret_cast<std::int32_t*>(p); }
 
 float* Out(unsigned char* p) { return reinterpret_cast<float*>(p); }
 
-const unsigned char* Bytes(const long* p) { return reinterpret_cast<const unsigned char*>(p); }
+const unsigned char* Bytes(const std::int32_t* p) { return reinterpret_cast<const unsigned char*>(p); }
 
-unsigned char* Bytes(long* p) { return reinterpret_cast<unsigned char*>(p); }
+unsigned char* Bytes(std::int32_t* p) { return reinterpret_cast<unsigned char*>(p); }
 
 // mov ecx, [Sprite_Current]; xor eax, eax; mov al, [ecx + 1]; jmp (or call)
 // [table + eax * 4]: the table's `entries` handlers read in place (the fuzz
@@ -192,7 +192,7 @@ namespace {
 
 unsigned char* P(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 
-long* PointRest3f(unsigned char* p) { return reinterpret_cast<long*>(p); }
+std::int32_t* PointRest3f(unsigned char* p) { return reinterpret_cast<std::int32_t*>(p); }
 
 // The capture record kPixIndex names, checked against the table's three.
 U PixRecord(const char* who) {
@@ -300,7 +300,7 @@ void SplitPixels(const char* who) {
     SH_CALL(EffectGte_LoadMapCamera)();
     alignas(4) unsigned char o[12];
     {
-        alignas(4) long q[3];
+        alignas(4) std::int32_t q[3];
         unsigned char* const sprite = P(rv::As<records::EffectObject>(S())->anim_data);
         q[0] = Long(sprite + 0x34);
         q[1] = Long(sprite + 0x38);
@@ -598,7 +598,7 @@ extern "C" void __cdecl EffectKindA0_Fade(void) {
 // 0x80 (the first rim point o.x + r) - every vertex at o's depth; each
 // committed 0x34 to slot 2. EffectKind64_DrawGlow's form, without its
 // unwritten rim depth (DIV-0068's site is that function, not this one).
-extern "C" void __cdecl EffectKindA0_DrawGlow(const long* point, unsigned size, unsigned colour) {
+extern "C" void __cdecl EffectKindA0_DrawGlow(const std::int32_t* point, unsigned size, unsigned colour) {
     DrawMode(1, 0x2C0, 0x100, 1, 2);
     SH_CALL(EffectGte_LoadMapCamera)();
     alignas(4) unsigned char o[12];
@@ -656,7 +656,7 @@ extern "C" void __cdecl EffectKindA0_DrawGlow(const long* point, unsigned size, 
 // 0xF) * the pull (+0x64..+0x6C, Sprite_Current read afresh), each step the
 // pull << 4, while q.x is above from's (signed) - no count, unlike kind
 // 0x64's eight.
-extern "C" void __cdecl EffectKindA0_DrawTrail(const long* from, const long* to, unsigned shade) {
+extern "C" void __cdecl EffectKindA0_DrawTrail(const std::int32_t* from, const std::int32_t* to, unsigned shade) {
     const unsigned char* const a = Bytes(from);
     const unsigned char* const b = Bytes(to);
     const LD half = F(At(at::kHalf));
@@ -892,7 +892,7 @@ extern "C" void __cdecl EffectKindA0_DrawShard(unsigned char* shard) {
 
 // original 0x490A30: the dwords at `a` and `b` swapped by three xors (a and b
 // the same: both 0, as the xors make it).
-extern "C" void __cdecl EffectKindA0_SwapLong(long* a, long* b) {
+extern "C" void __cdecl EffectKindA0_SwapLong(std::int32_t* a, std::int32_t* b) {
     unsigned char* const pa = Bytes(a);
     unsigned char* const pb = Bytes(b);
     SetUL(pa, UL(pa) ^ UL(pb));
@@ -1127,17 +1127,17 @@ extern "C" void __cdecl EffectKindA3_MovePixels(void) {
 // by 0x80 (the first edge the point + (inner << 4, 0) and (outer << 4, 0)),
 // each corner projected (the point's z); inner corners (0xFF, 0x7F, 0), outer
 // black; each committed 0x44 to slot 2. al 0.
-extern "C" unsigned char __cdecl EffectKindA2_DrawRing(const long* point, long inner, long outer) {
+extern "C" unsigned char __cdecl EffectKindA2_DrawRing(const std::int32_t* point, std::int32_t inner, std::int32_t outer) {
     SetMode(1, 0x2C0, 0x100, 0);
     SH_CALL(Gfx_CommitPrim)(2, 0xC);
     SH_CALL(EffectGte_LoadMapCamera)();
-    alignas(4) long q[3];
+    alignas(4) std::int32_t q[3];
     alignas(4) unsigned char o0[12], o1[12];
-    q[0] = static_cast<long>((static_cast<U>(inner) << 4) + static_cast<U>(point[0]));
+    q[0] = static_cast<std::int32_t>((static_cast<U>(inner) << 4) + static_cast<U>(point[0]));
     q[1] = point[1];
     q[2] = point[2];
     SH_CALL(EffectGte_ProjectPoint)(q, Out(o0));
-    q[0] = static_cast<long>((static_cast<U>(outer) << 4) + static_cast<U>(point[0]));
+    q[0] = static_cast<std::int32_t>((static_cast<U>(outer) << 4) + static_cast<U>(point[0]));
     SH_CALL(EffectGte_ProjectPoint)(q, Out(o1));
     U angle = 0;
     for (unsigned n = 0x20; n != 0; --n) {
@@ -1149,14 +1149,14 @@ extern "C" unsigned char __cdecl EffectKindA2_DrawRing(const long* point, long i
         Copy12(p + 0x18, o1);
         const int t = static_cast<int>(angle & 0xFFFFu);
         const U c1 = static_cast<U>(SH_CALL(Math_Cos)(t));
-        q[0] = static_cast<long>(Sar(c1 * static_cast<U>(inner), 8) + static_cast<U>(point[0]));
+        q[0] = static_cast<std::int32_t>(Sar(c1 * static_cast<U>(inner), 8) + static_cast<U>(point[0]));
         const U s1 = static_cast<U>(SH_CALL(Math_Sin)(t));
-        q[1] = static_cast<long>(Sar(s1 * static_cast<U>(inner), 8) + static_cast<U>(point[1]));
+        q[1] = static_cast<std::int32_t>(Sar(s1 * static_cast<U>(inner), 8) + static_cast<U>(point[1]));
         SH_CALL(EffectGte_ProjectPoint)(q, Out(o0));
         const U c2 = static_cast<U>(SH_CALL(Math_Cos)(t));
-        q[0] = static_cast<long>(Sar(c2 * static_cast<U>(outer), 8) + static_cast<U>(point[0]));
+        q[0] = static_cast<std::int32_t>(Sar(c2 * static_cast<U>(outer), 8) + static_cast<U>(point[0]));
         const U s2 = static_cast<U>(SH_CALL(Math_Sin)(t));
-        q[1] = static_cast<long>(Sar(s2 * static_cast<U>(outer), 8) + static_cast<U>(point[1]));
+        q[1] = static_cast<std::int32_t>(Sar(s2 * static_cast<U>(outer), 8) + static_cast<U>(point[1]));
         SH_CALL(EffectGte_ProjectPoint)(q, Out(o1));
         Copy12(p + 0x28, o0);
         Copy12(p + 0x38, o1);

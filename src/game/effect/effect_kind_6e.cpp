@@ -217,11 +217,11 @@ extern "C" void __cdecl EffectKind6C_DrawSpark(unsigned char* spark) {
     SH_CALL(Gpu_SetPolyFT4)(p);
     SH_CALL(Gpu_SetSemiTrans)(p, 1);
     alignas(4) unsigned char screen[12];
-    SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(spark + 4), reinterpret_cast<float*>(screen));
+    SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const std::int32_t*>(spark + 4), reinterpret_cast<float*>(screen));
     short size[2];
     size[0] = static_cast<short>(Word(spark + 0x24));
     size[1] = size[0];
-    SH_CALL(EffectGte_ProjectSize)(reinterpret_cast<const long*>(spark + 4), size, size);
+    SH_CALL(EffectGte_ProjectSize)(reinterpret_cast<const std::int32_t*>(spark + 4), size, size);
     const U w = S16(static_cast<unsigned short>(size[0])), h = S16(static_cast<unsigned short>(size[1]));
     const U hw = static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(size[0]) >> 1));
     const U hh = static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(size[1]) >> 1));
@@ -472,7 +472,7 @@ extern "C" void __cdecl EffectKind6D_DrawParticle(unsigned char* p) {
     unsigned char* const prim = Gfx_PacketNext;
     SH_AT(RecordFn, at::kPolyF3.v)(prim);
     SH_CALL(Gpu_SetSemiTrans)(prim, 1);
-    SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(p + 0x18), reinterpret_cast<float*>(prim + 8));
+    SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const std::int32_t*>(p + 0x18), reinterpret_cast<float*>(prim + 8));
     const unsigned k = p[4];
     if (k >= at::kParticleShapeCount)
         bof3::Fatal("EffectKind6D_DrawParticle: +4 is %u, past the eight shapes at 0x%X - the original reads what "

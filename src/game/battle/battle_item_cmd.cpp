@@ -87,7 +87,7 @@ unsigned char Low(battle_actor_copies::U eax) { return static_cast<unsigned char
 // so ours reads exactly what the original's jmp would.
 using Handler = void (__cdecl*)();
 
-void Dispatch(const unsigned long* table, unsigned index) { reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))(); }
+void Dispatch(const std::uint32_t* table, unsigned index) { reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))(); }
 
 // The pick states' common head: the cancel buttons against Input_Pressed
 // (sub = 4), then the confirm buttons (sub = 3); else Input_AutoRepeat of its
@@ -292,17 +292,17 @@ unsigned char SideTarget(unsigned char flags) { return (flags & 0x20) ? 0x40 : 0
 // and again after the calls.
 void StepEnemyTarget(unsigned repeat) {
     if (repeat & 0x2000) {
-        const long high = Battle_EnemyCount + 2;
-        const long value = static_cast<long>(static_cast<signed char>(CommandBattleE4()[0])) + 1;
-        const long wrapped = BH_CALL(Battle_WrapIndex)(high, 3, value);
+        const std::int32_t high = Battle_EnemyCount + 2;
+        const std::int32_t value = static_cast<std::int32_t>(static_cast<signed char>(CommandBattleE4()[0])) + 1;
+        const std::int32_t wrapped = BH_CALL(Battle_WrapIndex)(high, 3, value);
         const unsigned char t = BH_CALL(Battle_DefaultTarget)(static_cast<unsigned>(wrapped));
         CommandBattleE4()[0] = t;
         BH_CALL(Sound_PlayEffect)(0x101);
     }
     if (repeat & 0x8000) {
-        const long high = Battle_EnemyCount + 2;
-        const long value = static_cast<long>(static_cast<signed char>(CommandBattleE4()[0])) - 1;
-        const long wrapped = BH_CALL(Battle_WrapIndex)(high, 3, value);
+        const std::int32_t high = Battle_EnemyCount + 2;
+        const std::int32_t value = static_cast<std::int32_t>(static_cast<signed char>(CommandBattleE4()[0])) - 1;
+        const std::int32_t wrapped = BH_CALL(Battle_WrapIndex)(high, 3, value);
         const unsigned char t = BH_CALL(Battle_PrevTarget)(static_cast<unsigned>(wrapped));
         CommandBattleE4()[0] = t;
         BH_CALL(Sound_PlayEffect)(0x101);
@@ -387,17 +387,17 @@ unsigned char ListItemFlags() {
 // second, after the first's sound).
 void StepEnemyTargetBattleMenuStates(unsigned repeat) {
     if (repeat & 0x2000) {
-        const long high = Battle_EnemyCount + 2;
-        const long value = static_cast<long>(static_cast<signed char>(CommandBattleMenuStates()[0])) + 1;
-        const long wrapped = battle_menu_states::g.wrap_index(high, 3, value);
+        const std::int32_t high = Battle_EnemyCount + 2;
+        const std::int32_t value = static_cast<std::int32_t>(static_cast<signed char>(CommandBattleMenuStates()[0])) + 1;
+        const std::int32_t wrapped = battle_menu_states::g.wrap_index(high, 3, value);
         const unsigned char target = battle_menu_states::g.default_target(static_cast<unsigned>(wrapped));
         CommandBattleMenuStates()[0] = target;
         battle_menu_states::g.sound(0x101);
     }
     if (repeat & 0x8000) {
-        const long high = Battle_EnemyCount + 2;
-        const long value = static_cast<long>(static_cast<signed char>(CommandBattleMenuStates()[0])) - 1;
-        const long wrapped = battle_menu_states::g.wrap_index(high, 3, value);
+        const std::int32_t high = Battle_EnemyCount + 2;
+        const std::int32_t value = static_cast<std::int32_t>(static_cast<signed char>(CommandBattleMenuStates()[0])) - 1;
+        const std::int32_t wrapped = battle_menu_states::g.wrap_index(high, 3, value);
         const unsigned char target = battle_menu_states::g.prev_target(static_cast<unsigned>(wrapped));
         CommandBattleMenuStates()[0] = target;
         battle_menu_states::g.sound(0x101);
@@ -567,17 +567,17 @@ extern "C" void __cdecl BattleTarget_PickParty(void) {
         return;
     }
     if (held & 0x2000) {
-        const long value = static_cast<signed char>(PtrRest3b(::bof3::Img(rest_3b::at::kCommand.v))[0]) + 1;
-        const long high = static_cast<long>(B(::bof3::Img(rest_3b::at::kPartyCount.v))) - 1;
-        const long wrapped = BH_CALL(Battle_WrapIndex)(high, 0, value);
+        const std::int32_t value = static_cast<signed char>(PtrRest3b(::bof3::Img(rest_3b::at::kCommand.v))[0]) + 1;
+        const std::int32_t high = static_cast<std::int32_t>(B(::bof3::Img(rest_3b::at::kPartyCount.v))) - 1;
+        const std::int32_t wrapped = BH_CALL(Battle_WrapIndex)(high, 0, value);
         const unsigned char t = BH_CALL(Battle_DefaultTarget)(static_cast<unsigned>(wrapped));
         PtrRest3b(::bof3::Img(rest_3b::at::kCommand.v))[0] = t;
         BH_CALL(Sound_PlayEffect)(0x101);
     }
     if (held & 0x8000) {
-        const long value = static_cast<signed char>(PtrRest3b(::bof3::Img(rest_3b::at::kCommand.v))[0]) - 1;
-        const long high = static_cast<long>(B(::bof3::Img(rest_3b::at::kPartyCount.v))) - 1;
-        const long wrapped = BH_CALL(Battle_WrapIndex)(high, 0, value);
+        const std::int32_t value = static_cast<signed char>(PtrRest3b(::bof3::Img(rest_3b::at::kCommand.v))[0]) - 1;
+        const std::int32_t high = static_cast<std::int32_t>(B(::bof3::Img(rest_3b::at::kPartyCount.v))) - 1;
+        const std::int32_t wrapped = BH_CALL(Battle_WrapIndex)(high, 0, value);
         const unsigned char t = BH_CALL(Battle_PrevTarget)(static_cast<unsigned>(wrapped));
         PtrRest3b(::bof3::Img(rest_3b::at::kCommand.v))[0] = t;
         BH_CALL(Sound_PlayEffect)(0x101);
@@ -1437,17 +1437,17 @@ extern "C" void __cdecl BattleItemCmd_PickMember(void) {
         battle_menu_states::g.sound(0x101);
         return;
     }
-    const auto party_high = [] { return static_cast<long>(static_cast<std::uint32_t>(battle_menu_states::Long(battle_menu_states::At(::bof3::Img(battle_menu_states::at::kPartyCount.v)))) & 0xFF) - 1; };
+    const auto party_high = [] { return static_cast<std::int32_t>(static_cast<std::uint32_t>(battle_menu_states::Long(battle_menu_states::At(::bof3::Img(battle_menu_states::at::kPartyCount.v)))) & 0xFF) - 1; };
     if (repeat & 0x2000) {
         if (battle_menu_states::g.return_true() != 0) {
-            const long high = party_high();
-            const long value = static_cast<long>(static_cast<signed char>(CommandBattleMenuStates()[0])) + 1;
-            const long wrapped = battle_menu_states::g.wrap_index(high, 0, value);
+            const std::int32_t high = party_high();
+            const std::int32_t value = static_cast<std::int32_t>(static_cast<signed char>(CommandBattleMenuStates()[0])) + 1;
+            const std::int32_t wrapped = battle_menu_states::g.wrap_index(high, 0, value);
             CommandBattleMenuStates()[0] = static_cast<unsigned char>(wrapped);
         } else {
-            const long high = party_high();
-            const long value = static_cast<long>(static_cast<signed char>(CommandBattleMenuStates()[0])) + 1;
-            const long wrapped = battle_menu_states::g.wrap_index(high, 0, value);
+            const std::int32_t high = party_high();
+            const std::int32_t value = static_cast<std::int32_t>(static_cast<signed char>(CommandBattleMenuStates()[0])) + 1;
+            const std::int32_t wrapped = battle_menu_states::g.wrap_index(high, 0, value);
             const unsigned char target = battle_menu_states::g.default_target(static_cast<unsigned>(wrapped));
             CommandBattleMenuStates()[0] = target;
         }
@@ -1455,14 +1455,14 @@ extern "C" void __cdecl BattleItemCmd_PickMember(void) {
     }
     if (repeat & 0x8000) {
         if (battle_menu_states::g.return_true() != 0) {
-            const long high = party_high();
-            const long value = static_cast<long>(static_cast<signed char>(CommandBattleMenuStates()[0])) - 1;
-            const long wrapped = battle_menu_states::g.wrap_index(high, 0, value);
+            const std::int32_t high = party_high();
+            const std::int32_t value = static_cast<std::int32_t>(static_cast<signed char>(CommandBattleMenuStates()[0])) - 1;
+            const std::int32_t wrapped = battle_menu_states::g.wrap_index(high, 0, value);
             CommandBattleMenuStates()[0] = static_cast<unsigned char>(wrapped);
         } else {
-            const long high = party_high();
-            const long value = static_cast<long>(static_cast<signed char>(CommandBattleMenuStates()[0])) - 1;
-            const long wrapped = battle_menu_states::g.wrap_index(high, 0, value);
+            const std::int32_t high = party_high();
+            const std::int32_t value = static_cast<std::int32_t>(static_cast<signed char>(CommandBattleMenuStates()[0])) - 1;
+            const std::int32_t wrapped = battle_menu_states::g.wrap_index(high, 0, value);
             const unsigned char target = battle_menu_states::g.prev_target(static_cast<unsigned>(wrapped));
             CommandBattleMenuStates()[0] = target;
         }
@@ -1959,17 +1959,17 @@ extern "C" void __cdecl BattleItemCmd_EquipPickMember(void) {
         BH_CALL(Sound_PlayEffect)(0x101);
         return;
     }
-    auto high = [] { return static_cast<long>(static_cast<U>(move_script::Long(move_script::At(::bof3::Img(battle_e4::at::kPartyCount.v)))) & 0xFF) - 1; };
+    auto high = [] { return static_cast<std::int32_t>(static_cast<U>(move_script::Long(move_script::At(::bof3::Img(battle_e4::at::kPartyCount.v)))) & 0xFF) - 1; };
     if (repeat & 0x2000) {
         if (BH_CALL(Battle_ReturnTrue)() != 0) {
-            const long h = high();
-            const long value = static_cast<long>(static_cast<signed char>(CommandBattleE4()[0])) + 1;
-            const long w = BH_CALL(Battle_WrapIndex)(h, 0, value);
+            const std::int32_t h = high();
+            const std::int32_t value = static_cast<std::int32_t>(static_cast<signed char>(CommandBattleE4()[0])) + 1;
+            const std::int32_t w = BH_CALL(Battle_WrapIndex)(h, 0, value);
             CommandBattleE4()[0] = static_cast<unsigned char>(w);
         } else {
-            const long h = high();
-            const long value = static_cast<long>(static_cast<signed char>(CommandBattleE4()[0])) + 1;
-            const long w = BH_CALL(Battle_WrapIndex)(h, 0, value);
+            const std::int32_t h = high();
+            const std::int32_t value = static_cast<std::int32_t>(static_cast<signed char>(CommandBattleE4()[0])) + 1;
+            const std::int32_t w = BH_CALL(Battle_WrapIndex)(h, 0, value);
             const unsigned char t = BH_CALL(Battle_DefaultTarget)(static_cast<unsigned>(w));
             CommandBattleE4()[0] = t;
         }
@@ -1977,16 +1977,16 @@ extern "C" void __cdecl BattleItemCmd_EquipPickMember(void) {
     }
     if (repeat & 0x8000) {
         if (BH_CALL(Battle_ReturnTrue)() != 0) {
-            const long h = high();
-            const long value = static_cast<long>(static_cast<signed char>(CommandBattleE4()[0])) - 1;
-            const long w = BH_CALL(Battle_WrapIndex)(h, 0, value);
+            const std::int32_t h = high();
+            const std::int32_t value = static_cast<std::int32_t>(static_cast<signed char>(CommandBattleE4()[0])) - 1;
+            const std::int32_t w = BH_CALL(Battle_WrapIndex)(h, 0, value);
             CommandBattleE4()[0] = static_cast<unsigned char>(w);
             BH_CALL(Sound_PlayEffect)(0x101);
             return;
         }
-        const long h = high();
-        const long value = static_cast<long>(static_cast<signed char>(CommandBattleE4()[0])) - 1;
-        const long w = BH_CALL(Battle_WrapIndex)(h, 0, value);
+        const std::int32_t h = high();
+        const std::int32_t value = static_cast<std::int32_t>(static_cast<signed char>(CommandBattleE4()[0])) - 1;
+        const std::int32_t w = BH_CALL(Battle_WrapIndex)(h, 0, value);
         const unsigned char t = BH_CALL(Battle_PrevTarget)(static_cast<unsigned>(w));
         CommandBattleE4()[0] = t;
         BH_CALL(Sound_PlayEffect)(0x101);
@@ -2145,7 +2145,7 @@ extern "C" unsigned char __cdecl Battle_ReturnTrue(void) { return 1; }
 // kPartyPages..+2, +3 = 2, +8 = 2, +1 = 8, +0xD = 0xFF, +9 = 0, word +0x10 = 0,
 // word +4 = 0xFF56, word +6 = 0x3F, 0x80340C = 0, 0x80340D = 8, 0x80340E = 0.
 // eax is 0 at the end (xor eax, eax); ours returns it.
-extern "C" unsigned long __cdecl ItemMenu_SetupForParty(void) {
+extern "C" std::uint32_t __cdecl ItemMenu_SetupForParty(void) {
     unsigned char* const w = AtBattleMisc(::bof3::Img(Window16_addr));
     auto* const window_rec = rv::As<records::WindowRecord>(w);
     const unsigned char a = BattleMisc_PartyPages;
@@ -2234,7 +2234,7 @@ extern "C" void __cdecl BattleEquip_OpenUse(void) {
 // records 16..19 freed - each made kWindowCurrent (the address in a register,
 // not re-read) and Window_FreeCurrent called. Two of the callers tail-jump
 // here, so the last call's eax is returned.
-extern "C" unsigned long __cdecl ItemMenu_FreeWindows(void) {
+extern "C" std::uint32_t __cdecl ItemMenu_FreeWindows(void) {
     battle_misc::U eax = 0;
     for (battle_misc::U k = 0; k < 4; ++k) {
         BattleWinStates_Current = ::bof3::Img(Window16_addr) + k * 0x24;
@@ -2323,7 +2323,7 @@ extern "C" void __cdecl Escape_Begin(void) {
     const unsigned char state = BattleE4_Step3;
     FieldStep(1);
     if (state == 2) {
-        const long e = BH_CALL(AreaMap_Elevation)(Field_Kind2X, Field_Kind2Z);
+        const std::int32_t e = BH_CALL(AreaMap_Elevation)(Field_Kind2X, Field_Kind2Z);
         const auto d = static_cast<short>(static_cast<unsigned short>(static_cast<U>(e) - move_script::Word(move_script::At(::bof3::Img(MapView_Elevation_addr)))));
         MoveScript_FAWord = static_cast<unsigned short>(static_cast<short>(d >> 5));
     } else {
@@ -2421,7 +2421,7 @@ extern "C" void __cdecl Escape_WinDispatch(void) { DispatchStep4("Escape_WinDisp
 // the banner of system message 0x10, sub-state + 1.
 extern "C" void __cdecl Escape_Leave(void) {
     if (Field_Kind2Hold != 0) return;
-    const long e = BH_CALL(AreaMap_Elevation)(Field_Kind2X, Field_Kind2Z);
+    const std::int32_t e = BH_CALL(AreaMap_Elevation)(Field_Kind2X, Field_Kind2Z);
     BH_CALL(MapView_SetElevation)(static_cast<int>(e));
     for (unsigned k = 0; k < 8; ++k) BH_CALL(Sprite_ReleaseTint)(move_script::At(::bof3::Img(Battle_Enemies_addr) + k * battle_e4::at::kEnemyStride));
     BH_AT(VoidFn, battle_e4::at::kEnemiesClear.v)();

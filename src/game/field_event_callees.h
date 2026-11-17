@@ -50,7 +50,7 @@ struct Callees {
     const std::uint32_t* leader_states;
     // Field_LeaderStart
     void (__cdecl* clear_steps)();
-    long (__cdecl* ground_at)(long, long);
+    std::int32_t (__cdecl* ground_at)(std::int32_t, std::int32_t);
     unsigned char (__cdecl* leader_animation)(unsigned);
     // Field_LeaderControl
     const std::uint32_t* control_states;
@@ -75,8 +75,8 @@ struct Callees {
     void (__cdecl* party_load)(unsigned);
     void (__cdecl* release_tint)(unsigned char*);
     void (__cdecl* load_palette)(unsigned short*, unsigned);
-    void (__cdecl* position)(long, long, unsigned);
-    void (__cdecl* position_alt)(long, long, unsigned);   // 0x533690
+    void (__cdecl* position)(std::int32_t, std::int32_t, unsigned);
+    void (__cdecl* position_alt)(std::int32_t, std::int32_t, unsigned);   // 0x533690
     // Field_PartyFirstFrame
     void (__cdecl* clear_active)();
     void (__cdecl* leader_frame)();
@@ -101,7 +101,7 @@ struct Callees {
     void (__cdecl* load_dat)(int);
     // MapView_GroundAt
     void (__cdecl* height_check)();
-    long (__cdecl* elevation)(long, long);
+    std::int32_t (__cdecl* elevation)(std::int32_t, std::int32_t);
     // Sprite_ReleaseTint
     void (__cdecl* tint_release)(unsigned char);
 };

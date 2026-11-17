@@ -136,7 +136,7 @@ int CosSS(int angle, unsigned k) {
 void DrawMode(unsigned tpage) { MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, tpage, 0); }
 
 void Link(std::int32_t x, std::int32_t z, int dy, unsigned size) {
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), dy, size);
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), dy, size);
 }
 
 // Linked at the sprite's +0x34 / +0x38 (the task's or the mote's).

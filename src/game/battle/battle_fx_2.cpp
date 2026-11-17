@@ -95,7 +95,7 @@ void Dispatch(const std::uint32_t* table, unsigned entries, unsigned phase, cons
 // kFlagTarget; pushed in ecx, whose upper bits are the entry's, and the callee
 // reads the low byte), kRoundFlags |= 4, and a tail jump to
 // BattleTask_FreeCurrent, whose eax is returned. Otherwise eax Sprite_Current.
-extern "C" unsigned long __cdecl BattleFx_Finish(void) {
+extern "C" std::uint32_t __cdecl BattleFx_Finish(void) {
     const U s = SpriteCurrent();
     if (AtBattleOdds(s + 0xB)[0] != 0) return s;
     g.set_flag40(AtBattleOdds(::bof3::Img(kFlagTarget.v))[0]);

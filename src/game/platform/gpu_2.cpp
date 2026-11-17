@@ -99,8 +99,8 @@ void PutLong(U address, U v) { std::memcpy(At(address), &v, sizeof v); }
 // +0x10 x and +0x14 y as whole dwords. In this order, the rect read after the
 // code is stored (they may overlap). The PSX packs x and y into one word and
 // makes a zero-sized rect a no-op; the PC does neither.
-extern "C" unsigned char* __cdecl Gpu_SetDrawMove(unsigned char* prim, const unsigned char* rect, unsigned long x,
-                                                  unsigned long y) {
+extern "C" unsigned char* __cdecl Gpu_SetDrawMove(unsigned char* prim, const unsigned char* rect, std::uint32_t x,
+                                                  std::uint32_t y) {
     PutLongFieldMisc(prim + 4, 0xEC000000u);
     PutLongFieldMisc(prim + 8, LongFieldMisc(rect));
     const field_misc::U second = LongFieldMisc(rect + 4);
@@ -192,13 +192,13 @@ unsigned char* Gpu_SetDefDrawEnv(unsigned char* env, int x, int y, int w, int h)
 //
 // As the original has it: for n < 2 the terminator goes to ot[n - 1], which
 // for n < 1 is outside the table.
-extern "C" void __cdecl Gpu_ClearOTagR(unsigned long* ot, int n) {
+extern "C" void __cdecl Gpu_ClearOTagR(std::uint32_t* ot, int n) {
     std::uintptr_t at = reinterpret_cast<std::uintptr_t>(ot) + static_cast<std::uintptr_t>(n) * 4u - 4u;
     for (int k = n - 1; k > 0; --k) {
-        *reinterpret_cast<unsigned long*>(at) = static_cast<unsigned long>(at - 4u) | kLinkFlag;
+        *reinterpret_cast<std::uint32_t*>(at) = static_cast<std::uint32_t>(at - 4u) | kLinkFlag;
         at -= 4u;
     }
-    *reinterpret_cast<unsigned long*>(at) =
+    *reinterpret_cast<std::uint32_t*>(at) =
         Low32(&Gpu_OtTerminator) | kLinkFlag;
 }
 

@@ -265,11 +265,11 @@ static_assert(offsetof(_finddata32_t, size) == 0x10 && sizeof(_finddata32_t::siz
 static_assert(offsetof(_finddata32_t, name) == 0x14 && sizeof(_finddata32_t::name) == 260, "_finddata32_t.name");
 static_assert(sizeof(_finddata32_t) == 0x118, "_finddata32_t is MSVC 6's _finddata_t");
 
-extern "C" long __cdecl Crt_findfirst(const char* pattern, void* found) {
-    return static_cast<long>(_findfirst32(pattern, static_cast<_finddata32_t*>(found)));
+extern "C" std::int32_t __cdecl Crt_findfirst(const char* pattern, void* found) {
+    return static_cast<std::int32_t>(_findfirst32(pattern, static_cast<_finddata32_t*>(found)));
 }
 
-extern "C" int __cdecl Crt_findnext(long handle, void* found) {
+extern "C" int __cdecl Crt_findnext(std::int32_t handle, void* found) {
     return _findnext32(static_cast<intptr_t>(handle), static_cast<_finddata32_t*>(found));
 }
 

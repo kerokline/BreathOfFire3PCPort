@@ -89,7 +89,7 @@ extern "C" void __cdecl Area59_SetCells(void) { SetCells59(0xC0, 0xA1); }
 // in x 0x46..0x48 and z 0x29..0x2B while the leader's byte +8 is 0, 7 or 6:
 // counter 0 = 0, Party_DropIn(0), answer 1. Otherwise 0. Area 36's hook with
 // z 0x29 for 0x23.
-extern "C" int __cdecl Area59_StepHook(long x, long z) {
+extern "C" int __cdecl Area59_StepHook(std::int32_t x, std::int32_t z) {
     if (Cond_ByteFD != 2) return 0;
     if (!AH_CALL(Flags_Test)(Mem(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x33)) return 0;
     if (static_cast<std::uint16_t>((static_cast<std::uint32_t>(x) >> 16) - 0x46) >= 3) return 0;

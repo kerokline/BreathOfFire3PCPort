@@ -111,7 +111,7 @@ void CopyPosition(unsigned char* to, const unsigned char* from) {
 void LinkAtCurrent(unsigned size) {
     const unsigned char* const sc = Sprite_Current;
     const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tsc->x), static_cast<unsigned long>(tsc->z), 2, size);
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(tsc->x), static_cast<std::uint32_t>(tsc->z), 2, size);
 }
 
 }  // namespace
@@ -196,7 +196,7 @@ void CallCell(std::uint32_t table, unsigned index) {
 void LinkAtTask(int slot, unsigned size) {
     const unsigned char* const sc = Sprite_Current;
     const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tsc->x), static_cast<unsigned long>(tsc->z),
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(tsc->x), static_cast<std::uint32_t>(tsc->z),
                                 slot, size);
 }
 
@@ -746,7 +746,7 @@ MS21_EXPORT void __cdecl FlameColumn_DrawDisc(void) {
         SetWord(Vtx(0xA), y);
         SetWord(Vtx(0x10), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(a), S16(ScrMagicS21(0))) >> 12));
         SetWord(Vtx(0x12), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(a), S16(ScrMagicS21(0))) >> 12));
-        long depth;
+        std::int32_t depth;
         MH_CALL(Gte_RotTransPers3)(VtxP(0), VtxP(8), VtxP(0x10), F(p, 8), F(p, 0x18), F(p, 0x28), &depth);
         MH_CALL(Gte_PrimDepths3_10B)(p);
         p[5] = g0;
@@ -802,7 +802,7 @@ MS21_EXPORT void __cdecl FlameColumn_DrawBand(void) {
         SetWord(Vtx(0x12), oy);
         SetWord(Vtx(0x18), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(a), S16(ScrMagicS21(0))) >> 12));
         SetWord(Vtx(0x1A), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(a), S16(ScrMagicS21(0))) >> 12));
-        long depth;
+        std::int32_t depth;
         MH_CALL(Gte_RotTransPers4)(VtxP(0), VtxP(8), VtxP(0x10), VtxP(0x18), F(p, 8), F(p, 0x18), F(p, 0x28), F(p, 0x38),
                                    &depth);
         MH_CALL(Gte_PrimDepths4_10B)(p);

@@ -51,7 +51,7 @@ U Mul(U a, std::int32_t b) { return a * static_cast<U>(b); }
 struct Matrix {
     short m[9];
     short pad;
-    long t[3];
+    std::int32_t t[3];
 };
 
 }  // namespace
@@ -68,7 +68,7 @@ extern "C" void __cdecl EffectDebris_Draw(unsigned char* d) {
     unsigned char* const prim = Gfx_PacketNext;
     SH_CALL(Gpu_SetPolyG3)(prim);
     SH_CALL(Gpu_SetSemiTrans)(prim, 1);
-    SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(d), reinterpret_cast<float*>(prim + 8));
+    SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const std::int32_t*>(d), reinterpret_cast<float*>(prim + 8));
     for (U edge = 0x10, out = 0x18; edge <= 0x18; edge += 8, out += 0x10) {
         const U c1 = static_cast<U>(SH_CALL(Math_Cos)(SW(d + 0x24)));
         U e = Mul(c1, SW(d + edge));
@@ -79,10 +79,10 @@ extern "C" void __cdecl EffectDebris_Draw(unsigned char* d) {
         U f = Mul(s2, SW(d + edge));
         const U c2 = static_cast<U>(SH_CALL(Math_Cos)(SW(d + 0x24)));
         f += Mul(c2, SW(d + edge + 2));
-        long p[3];
-        p[0] = static_cast<long>(e + UL(d + 0));
-        p[2] = static_cast<long>(Mul(static_cast<U>(SW(d + edge + 4)) << 12, scale) + UL(d + 8));
-        p[1] = static_cast<long>(Mul(Sar(f, 8), scale) + UL(d + 4));
+        std::int32_t p[3];
+        p[0] = static_cast<std::int32_t>(e + UL(d + 0));
+        p[2] = static_cast<std::int32_t>(Mul(static_cast<U>(SW(d + edge + 4)) << 12, scale) + UL(d + 8));
+        p[1] = static_cast<std::int32_t>(Mul(Sar(f, 8), scale) + UL(d + 4));
         SH_CALL(EffectGte_ProjectPoint)(p, reinterpret_cast<float*>(prim + out));
     }
     const std::int32_t shade = SW(d + 0x2A);

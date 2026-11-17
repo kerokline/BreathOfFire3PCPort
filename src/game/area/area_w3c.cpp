@@ -78,7 +78,7 @@ void PlaceRandomObject(U cells, U weights) {
         const auto z = static_cast<std::int32_t>(static_cast<U>(B(cells + pick * 2 + 1)) << 16);
         tObject->x = x;
         tObject->z = z;
-        const long ground = AH_CALL(AreaMap_Elevation)(tObject->x, z);
+        const std::int32_t ground = AH_CALL(AreaMap_Elevation)(tObject->x, z);
         rv::Store<unsigned>(rv::As<records::SpriteObject>(object)->height_whole, static_cast<unsigned>(ground));
     }
     Field_StepCount = static_cast<unsigned short>(Long(Mem(::bof3::Img(ObjTrio_addr) + 0x134)) - 5);

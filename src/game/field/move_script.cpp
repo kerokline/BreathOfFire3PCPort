@@ -309,7 +309,7 @@ extern "C" unsigned char __cdecl MoveScript_Flow(unsigned char* object, const un
             } else {
                 PlaceAndGround(Sprite_Current, script + Pos(object));
                 wide_staging::Placed0D(object, script, Pos(object));   // DIV-0122: a site's start moved out (wide only)
-                const long h = move_script::gMoveScript.elevation(rv::Current<records::SpriteHead>()->x, rv::Current<records::SpriteHead>()->z);
+                const std::int32_t h = move_script::gMoveScript.elevation(rv::Current<records::SpriteHead>()->x, rv::Current<records::SpriteHead>()->z);
                 rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(h));
             }
             SetPos(object, Pos(object) + 5u);
@@ -576,8 +576,8 @@ extern "C" unsigned char __cdecl MoveScript_GroupF(unsigned char* object, const 
         SetPos(object, Pos(object) + 1u);
         return value;
     case 0xF7: {
-        const long x = static_cast<long>((static_cast<unsigned>(p[1]) << 8 | p[2]) << 8);
-        const long z = static_cast<long>((static_cast<unsigned>(p[3]) << 8 | p[4]) << 8);
+        const std::int32_t x = static_cast<std::int32_t>((static_cast<unsigned>(p[1]) << 8 | p[2]) << 8);
+        const std::int32_t z = static_cast<std::int32_t>((static_cast<unsigned>(p[3]) << 8 | p[4]) << 8);
         move_script::gMoveScript.op_f7(x, z, p[5], object);
         value = script[Pos(object) + 6u];
         if (move_script::gMoveScript.kind() == 1) object[7] = 1;
@@ -635,7 +635,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupD(unsigned char* object, const 
     const unsigned char* const p = script + pos;
     switch (p[0]) {
     case 0xD0: {   // place Sprite_Kind2 at Field_Kind2X / Z and ground it
-        const long z = Field_Kind2Z, x = Field_Kind2X;
+        const std::int32_t z = Field_Kind2Z, x = Field_Kind2X;
         rv::Store<std::int32_t>(Sprite_Kind2.x, x);
         rv::Store<std::int32_t>(Sprite_Kind2.z, z);
         rv::Store<unsigned>(Sprite_Kind2.height_whole, static_cast<unsigned>(move_groups::g.elevation(x, z)));
@@ -853,9 +853,9 @@ extern "C" unsigned char __cdecl MoveScript_Group8(unsigned char* object, const 
     case 0x82: object[0] |= 2; return value;
     case 0x83: object[0] |= 4; return value;
     case 0x84: {   // 84 h b: to the position of the object handle h names
-        long buffer[4];
-        const long* const at = move_groups::g.handle_position(buffer, p[1], p[2]);
-        const long x = at[0], y = at[1], z = at[2];
+        std::int32_t buffer[4];
+        const std::int32_t* const at = move_groups::g.handle_position(buffer, p[1], p[2]);
+        const std::int32_t x = at[0], y = at[1], z = at[2];
         rv::Current<records::SpriteHead>()->x = x;
         rv::Current<records::SpriteHead>()->z = y;
         rv::Current<records::SpriteHead>()->height = z;
@@ -863,7 +863,7 @@ extern "C" unsigned char __cdecl MoveScript_Group8(unsigned char* object, const 
         return value;
     }
     case 0x85: {   // the kind-2 object toward ObjTrio 0, repeating until it is there
-        const long x = Field_Kind2X, to_x = ObjTrio[0].x, to_z = ObjTrio[0].z, z = Field_Kind2Z;
+        const std::int32_t x = Field_Kind2X, to_x = ObjTrio[0].x, to_z = ObjTrio[0].z, z = Field_Kind2Z;
         if (x == to_x && z == to_z) {
             if (Field_Kind2Hold == 0) {
                 move_groups::g.set_elevation(move_groups::g.elevation(x, z));
@@ -872,7 +872,7 @@ extern "C" unsigned char __cdecl MoveScript_Group8(unsigned char* object, const 
             SetPos(object, pos - 1u);
             return value;
         }
-        const auto away = [](long a, long b) {
+        const auto away = [](std::int32_t a, std::int32_t b) {
             const std::uint32_t d = static_cast<std::uint32_t>(a) - static_cast<std::uint32_t>(b);
             const std::uint32_t magnitude = static_cast<std::int32_t>(d) < 0 ? 0u - d : d;
             return static_cast<unsigned char>(static_cast<std::int32_t>(magnitude) >> 15);
@@ -881,10 +881,10 @@ extern "C" unsigned char __cdecl MoveScript_Group8(unsigned char* object, const 
         const unsigned char steps_z = away(z, to_z);
         if (steps < steps_z) steps = steps_z;
         move_groups::g.elevation(x, z);
-        const long nx = ObjTrio[0].x, nz = ObjTrio[0].z;
+        const std::int32_t nx = ObjTrio[0].x, nz = ObjTrio[0].z;
         Field_Kind2X = nx;
         Field_Kind2Z = nz;
-        const long h = move_groups::g.elevation(nx, nz);
+        const std::int32_t h = move_groups::g.elevation(nx, nz);
         MoveScript_F3Divisor = 0x20;
         if (steps == 0) {
             MoveScript_FAWord = 0;
@@ -1008,7 +1008,7 @@ extern "C" void __cdecl MoveCmd_Move(unsigned char* object, unsigned char direct
     if (speed == 0) bof3::Fatal("MoveCmd_Move: speed index %u is a speed of 0, a divide fault in the original", object[4]);
     records::SpriteHead* sprite = rv::Current<records::SpriteHead>();
     sprite->step_frames = static_cast<unsigned char>(static_cast<std::int32_t>(sprite->step_frames) / static_cast<std::int32_t>(speed));
-    const long* const unit = MoveCmd_F9Steps + direction * 2u;
+    const std::int32_t* const unit = MoveCmd_F9Steps + direction * 2u;
     sprite = rv::Current<records::SpriteHead>();
     sprite->step_x = Mul(unit[0], speed);
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_z, Mul(unit[1], speed));
@@ -1017,7 +1017,7 @@ extern "C" void __cdecl MoveCmd_Move(unsigned char* object, unsigned char direct
     const std::int32_t x = Add(Mul(sprite->step_x, frames), sprite->x);
     const std::int32_t z = Add(Mul(sprite->step_z, frames), sprite->z);
     if (!(object[0] & 0x80)) {
-        long ground = move_cmds::g.slope(x, z, direction);
+        std::int32_t ground = move_cmds::g.slope(x, z, direction);
         if (Scratch()[0] != 0) ground = move_cmds::g.elevation(x, z);
         sprite = rv::Current<records::SpriteHead>();
         const std::int32_t rise = static_cast<short>(static_cast<std::uint16_t>(static_cast<std::uint32_t>(ground))) -
@@ -1038,11 +1038,11 @@ extern "C" void __cdecl MoveCmd_Move(unsigned char* object, unsigned char direct
 // wrap; the rise is 16 bits; +0xA wraps for n = 0xFF; the ground is asked
 // for even when nothing moves. The original returns Sprite_Current[8] as on
 // entry in al; its one caller, MoveScript_GroupF, clears eax at once (0x577AEA).
-extern "C" void __cdecl MoveCmd_OpF7(long x, long z, unsigned char frames, unsigned char* context) {
+extern "C" void __cdecl MoveCmd_OpF7(std::int32_t x, std::int32_t z, unsigned char frames, unsigned char* context) {
     const records::SpriteHead* const sprite = rv::Current<records::SpriteHead>();
     const std::int32_t dz = Sub(z, sprite->z);
     const std::int32_t dx = Sub(x, sprite->x);
-    const long ground = move_cmds::g.elevation(x, z);
+    const std::int32_t ground = move_cmds::g.elevation(x, z);
     const auto rise = static_cast<short>(static_cast<std::uint16_t>(static_cast<std::uint32_t>(ground) - rv::Current<records::SpriteHead>()->height_whole));
     if (context[4] == 0) return;
     const unsigned char n = frames ? frames : 1;
@@ -1069,7 +1069,7 @@ extern "C" void __cdecl MoveCmd_OpF7(long x, long z, unsigned char frames, unsig
 // 16-byte buffer, which MoveCmd_AttachOffset never writes - an uninitialised
 // stack dword there (and on the PSX); 0 here. Neither caller reads it
 // (MoveScript_Group8's op 84 copies three; MoveCmd_AttachMove's copy is dead).
-extern "C" long* __cdecl MoveCmd_HandlePosition(long* out, unsigned char handle, unsigned char offset) {
+extern "C" std::int32_t* __cdecl MoveCmd_HandlePosition(std::int32_t* out, unsigned char handle, unsigned char offset) {
     std::memcpy(At(::bof3::Img(MapView_CornerPtr_addr)), &Sprite_Current, 4);
     unsigned char* object;
     if (handle & 0x80) {
@@ -1084,7 +1084,7 @@ extern "C" long* __cdecl MoveCmd_HandlePosition(long* out, unsigned char handle,
         object = rv::Bytes(Sprite_ObjectsExtra) + handle * 0xA4u;
     }
     Sprite_Current = object;
-    long buffer[4] = {};
+    std::int32_t buffer[4] = {};
     move_cmds::g.attach_offset(buffer, offset);
     const records::SpriteHead* const at = rv::Current<records::SpriteHead>();
     const std::int32_t x = Add(buffer[0], at->x);
@@ -1101,16 +1101,16 @@ extern "C" long* __cdecl MoveCmd_HandlePosition(long* out, unsigned char handle,
 // original 0x578EB0: an attachment's offset (PSX FUN_801AD1DC) - vector
 // `index` of the area descriptor's +0x0C table, turned by Sprite_Current's
 // angles through the GTE; out = (x << 9, y << 9, -z * 2).
-extern "C" void __cdecl MoveCmd_AttachOffset(long* out, unsigned char index) {
+extern "C" void __cdecl MoveCmd_AttachOffset(std::int32_t* out, unsigned char index) {
     field_objects::g.push_matrix();
     const unsigned char* const sprite = Sprite_Current;
     short vector[4];
     vector[0] = static_cast<short>(Word(sprite + 0x64));
     vector[1] = static_cast<short>(Word(sprite + 0x68));
     vector[2] = static_cast<short>(Word(sprite + 0x6C));
-    unsigned long matrix[8];
+    std::uint32_t matrix[8];
     field_objects::g.rot_matrix(vector, reinterpret_cast<short*>(matrix));
-    const unsigned long zero[3] = {0, 0, 0};
+    const std::uint32_t zero[3] = {0, 0, 0};
     field_objects::g.trans_matrix(matrix, zero);
     field_objects::g.set_rot(matrix);
     field_objects::g.set_trans(matrix);
@@ -1119,11 +1119,11 @@ extern "C" void __cdecl MoveCmd_AttachOffset(long* out, unsigned char index) {
     vector[0] = vectors[index * 3u];
     vector[1] = vectors[index * 3u + 1];
     vector[2] = vectors[index * 3u + 2];
-    long turned[3];
+    std::int32_t turned[3];
     field_objects::g.rot_trans(vector, turned);
-    out[0] = static_cast<long>(static_cast<std::uint32_t>(turned[0]) << 9);
-    out[1] = static_cast<long>(static_cast<std::uint32_t>(turned[1]) << 9);
-    out[2] = static_cast<long>((0u - static_cast<std::uint32_t>(turned[2])) << 1);
+    out[0] = static_cast<std::int32_t>(static_cast<std::uint32_t>(turned[0]) << 9);
+    out[1] = static_cast<std::int32_t>(static_cast<std::uint32_t>(turned[1]) << 9);
+    out[2] = static_cast<std::int32_t>((0u - static_cast<std::uint32_t>(turned[2])) << 1);
     field_objects::g.pop_matrix();
 }
 
@@ -1154,7 +1154,7 @@ extern "C" int __cdecl MoveCmd_OpF9(unsigned char toward, unsigned char shift) {
     const unsigned dir = rv::Bytes(sc)[8] & 7u;
     const auto vx = static_cast<std::int32_t>(static_cast<U>(Long(AtFieldO(::bof3::Img(MoveCmd_F9Steps_addr) + 8 * dir))) * speed);
     const auto vz = static_cast<std::int32_t>(static_cast<U>(Long(AtFieldO(::bof3::Img(MoveCmd_F9Steps_addr) + 8 * dir + 4))) * speed);
-    const long ground = SH_CALL(AreaMap_Elevation)(sc->x, sc->z);
+    const std::int32_t ground = SH_CALL(AreaMap_Elevation)(sc->x, sc->z);
     rv::Store<unsigned>(rv::As<records::SpriteHead>(Sc())->height_whole, static_cast<U>(ground));
     sc = rv::As<records::SpriteHead>(Sc());
     const unsigned s = shift & 31u;

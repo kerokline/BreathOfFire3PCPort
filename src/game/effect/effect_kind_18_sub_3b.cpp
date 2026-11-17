@@ -112,7 +112,7 @@ bool LeaderAt(const unsigned char* s, bool z_first, std::int32_t first, std::int
 // The original also pushes a tenth pointer (a flag local) the projection does
 // not read.
 void Project(unsigned char* p) {
-    long depth;
+    std::int32_t depth;
     SH_CALL(Gte_RotTransPers4)(Vertex(0), Vertex(1), Vertex(2), Vertex(3), reinterpret_cast<float*>(p + 8),
                                reinterpret_cast<float*>(p + 0x18), reinterpret_cast<float*>(p + 0x28),
                                reinterpret_cast<float*>(p + 0x38), &depth);
@@ -347,7 +347,7 @@ extern "C" void __cdecl EffectKind18Sub3D_Ripple(void) {
             c[3] = static_cast<unsigned char>(c[3] + b);
         }
     }
-    const long h = SH_CALL(AreaMap_Elevation)(ObjTrio[0].x, ObjTrio[0].z);
+    const std::int32_t h = SH_CALL(AreaMap_Elevation)(ObjTrio[0].x, ObjTrio[0].z);
     ObjTrio[0].height_whole = static_cast<U>(h);
     MapView_Redraw = 2;
 }

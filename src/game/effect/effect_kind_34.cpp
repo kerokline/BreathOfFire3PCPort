@@ -449,7 +449,7 @@ extern "C" void __cdecl EffectKind30_Push(void) {
             const U x = static_cast<U>(s->step_x) * n + static_cast<U>(s->x);
             const U z = static_cast<U>(s->step_z) * n + static_cast<U>(s->z);
             SH_CALL(EffectKind30_FreeCells)();
-            if (SH_CALL(EffectKind30_WayBlocked)(static_cast<long>(x), static_cast<long>(z)) == 0) {
+            if (SH_CALL(EffectKind30_WayBlocked)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z)) == 0) {
                 SH_CALL(EffectKind30_Slide)();
                 s = rv::As<records::EffectObject>(S());
                 s->state = static_cast<unsigned char>(s->state + 1);
@@ -526,22 +526,22 @@ extern "C" void __cdecl EffectKind30_Shatter(void) {
 // else 1. The original writes its argument slots as it goes (x and z's low
 // words 0, then the neighbours); no caller reads them. Called by
 // EffectKind30_Push. PSX 0x8019E05C (gap67).
-extern "C" unsigned char __cdecl EffectKind30_WayBlocked(long x, long z) {
+extern "C" unsigned char __cdecl EffectKind30_WayBlocked(std::int32_t x, std::int32_t z) {
     const unsigned char o = SH_CALL(Sprite_ObjectAt)(x, z, 1);
     if (o != 0xFF) Touch("EffectKind30_WayBlocked", o);
     const U x0 = static_cast<U>(x) & 0xFFFF0000u, z0 = static_cast<U>(z) & 0xFFFF0000u;
     const unsigned xc = static_cast<U>(x) >> 16, zc = static_cast<U>(z) >> 16;
     if (SH_CALL(EffectKind30_CellSolid)(xc, zc) != 0) return 1;
-    const auto h0 = static_cast<std::uint16_t>(SH_CALL(AreaMap_Elevation)(static_cast<long>(x0), static_cast<long>(z0)));
+    const auto h0 = static_cast<std::uint16_t>(SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(x0), static_cast<std::int32_t>(z0)));
     if (SH_CALL(EffectKind30_CellSolid)(xc + 1, zc) != 0) return 1;
     const auto h1 =
-        static_cast<std::uint16_t>(SH_CALL(AreaMap_Elevation)(static_cast<long>(x0 + 0x10000), static_cast<long>(z0)));
+        static_cast<std::uint16_t>(SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(x0 + 0x10000), static_cast<std::int32_t>(z0)));
     if (SH_CALL(EffectKind30_CellSolid)(xc, zc + 1) != 0) return 1;
     const auto h2 =
-        static_cast<std::uint16_t>(SH_CALL(AreaMap_Elevation)(static_cast<long>(x0), static_cast<long>(z0 + 0x10000)));
+        static_cast<std::uint16_t>(SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(x0), static_cast<std::int32_t>(z0 + 0x10000)));
     if (SH_CALL(EffectKind30_CellSolid)(xc + 1, zc + 1) != 0) return 1;
     const auto h3 = static_cast<std::uint16_t>(
-        SH_CALL(AreaMap_Elevation)(static_cast<long>(x0 + 0x10000), static_cast<long>(z0 + 0x10000)));
+        SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(x0 + 0x10000), static_cast<std::int32_t>(z0 + 0x10000)));
     return (h1 != h0 || h2 != h0 || h3 != h0) ? 1 : 0;
 }
 
@@ -656,7 +656,7 @@ extern "C" void __cdecl EffectKind30_ShardsInit(void) {
             SetWord(rel + 2, static_cast<U>(Word(v + 2) - Word(r + 2)));
             SetWord(rel + 4, static_cast<U>(Word(v + 4) - Word(r + 4)));
         }
-        long centre[3] = {SW(r + 0), SW(r + 2), SW(r + 4)};
+        std::int32_t centre[3] = {SW(r + 0), SW(r + 2), SW(r + 4)};
         SH_CALL(Gte_VectorNormalS)(centre, reinterpret_cast<short*>(r + 8));
         SetWord(r + 0xA, static_cast<U>(SW(r + 0xA) >> 6));
         SetWord(r + 0xC, static_cast<U>(SW(r + 0xC) >> 6));
@@ -700,10 +700,10 @@ extern "C" void __cdecl EffectKind30_ShardTumble(unsigned char* shard, unsigned 
     Matrix m{};
     SH_CALL(Gte_RotMatrix)(reinterpret_cast<const short*>(shard + 0x10), m.m);
     m.t[0] = m.t[1] = m.t[2] = 0;
-    SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&m));
-    SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&m));
+    SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
+    SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
     for (unsigned k = 0; k < 4; ++k) {
-        long out[3];
+        std::int32_t out[3];
         SH_CALL(Gte_RotTrans)(reinterpret_cast<const short*>(shard + 0x18 + 8 * k), out);
         unsigned char* const v = face + 2 + 6 * k;
         SetWord(v + 0, Word(shard + 0) + static_cast<U>(out[0]));
@@ -731,7 +731,7 @@ extern "C" void __cdecl EffectKind30_SparksInit(void) {
         SetUL(p + 0x10, (static_cast<U>(SH_CALL(Rand)()) & 0xFFu) - 0x80u);
         SetUL(p + 0x14, (static_cast<U>(SH_CALL(Rand)()) & 0xFFu) - 0x80u);
         SetUL(p + 0x18, static_cast<U>(SH_CALL(Rand)()) & 0x7Fu);
-        SH_CALL(Gte_VectorNormal)(reinterpret_cast<const long*>(p + 0x10), reinterpret_cast<long*>(p + 0x10));
+        SH_CALL(Gte_VectorNormal)(reinterpret_cast<const std::int32_t*>(p + 0x10), reinterpret_cast<std::int32_t*>(p + 0x10));
         SetUL(p + 0x18, UL(p + 0x18) << 9);
     }
 }
@@ -747,7 +747,7 @@ extern "C" void __cdecl EffectKind30_SparksDraw(void) {
     const unsigned char* s = nullptr;
     for (unsigned i = 0; i < field_c2::at::kSparkCount; ++i) {
         unsigned char* const p = At(::bof3::Img(EffectKind30_Sparks_addr) + 0x4 + i * field_c2::at::kSparkStride);
-        SH_CALL(EffectKind30_SparkQuad)(reinterpret_cast<const long*>(p), Word(At(::bof3::Img(field_c2::at::kSparkSize))), EffectKind30_Sparks[0]);
+        SH_CALL(EffectKind30_SparkQuad)(reinterpret_cast<const std::int32_t*>(p), Word(At(::bof3::Img(field_c2::at::kSparkSize))), EffectKind30_Sparks[0]);
         s = S();
         const unsigned shift = s[9] >= 0xC ? 1 : 0;
         SetUL(p + 0, UL(p + 0) + (UL(p + 0x10) << shift));
@@ -772,14 +772,14 @@ extern "C" void __cdecl EffectKind30_SparksDraw(void) {
 // colour bytes +4..+6 the shade (a byte); MapView_LinkPrimAt(x, z of the point,
 // 2, 0x48). The original uses its second argument's slot as a scratch word.
 // EffectKind30_SparksDraw's. No PSX twin paired.
-extern "C" void __cdecl EffectKind30_SparkQuad(const long* point, unsigned size, unsigned shade) {
+extern "C" void __cdecl EffectKind30_SparkQuad(const std::int32_t* point, unsigned size, unsigned shade) {
     unsigned char* const prim = Gfx_PacketNext;
     SH_CALL(Gpu_SetPolyFT4)(prim);
     SH_CALL(Gpu_SetSemiTrans)(prim, 1);
     float screen[3];
-    SH_AT(void (__cdecl*)(const long*, float*), field_c2::at::kProjectPoint.v)(point, screen);
+    SH_AT(void (__cdecl*)(const std::int32_t*, float*), field_c2::at::kProjectPoint.v)(point, screen);
     short wh[2] = {static_cast<short>(size), static_cast<short>(size)};
-    SH_AT(void (__cdecl*)(const long*, const short*, short*), field_c2::at::kProjectSize.v)(point, wh, wh);
+    SH_AT(void (__cdecl*)(const std::int32_t*, const short*, short*), field_c2::at::kProjectSize.v)(point, wh, wh);
     const int w = wh[0], h = wh[1];
     const int hw = static_cast<short>(wh[0]) >> 1, hh = static_cast<short>(wh[1]) >> 1;
     const double left = static_cast<double>(screen[0]) - static_cast<double>(hw);
@@ -809,7 +809,7 @@ extern "C" void __cdecl EffectKind30_SparkQuad(const long* point, unsigned size,
     prim[4] = static_cast<unsigned char>(shade);
     prim[5] = static_cast<unsigned char>(shade);
     prim[6] = static_cast<unsigned char>(shade);
-    SH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(point[0]), static_cast<unsigned long>(point[1]), 2, 0x48);
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(point[0]), static_cast<std::uint32_t>(point[1]), 2, 0x48);
 }
 
 // original 0x46C730: Effect_KindHandlers[0x34] - jmp [EffectKind34_Variants +
@@ -1331,7 +1331,7 @@ extern "C" unsigned char __cdecl EffectKind3A_Hit(void) {
         e->state = 1;
         e->x = static_cast<U>(cur->x);
         e->z = static_cast<U>(cur->z);
-        const long at_ground = SH_CALL(AreaMap_Elevation)(e->x, e->z);
+        const std::int32_t at_ground = SH_CALL(AreaMap_Elevation)(e->x, e->z);
         e->height_whole = static_cast<U>(at_ground) + 0x100u;
         rv::Bytes(e)[0xB] = 0;
     }

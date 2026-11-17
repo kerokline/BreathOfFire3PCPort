@@ -122,15 +122,15 @@ constexpr ::bof3::image::CodeVa kScriptUntilDone{bof3::addr::BattleFx_ScriptUnti
     bof3::Fatal("%s: phase %u, past the %u-entry table", who, phase, entries);
 }
 
-using Rtp4Fn = long (__cdecl*)(const short*, const short*, const short*, const short*, unsigned char*, unsigned char*,
-                               unsigned char*, unsigned char*, long*, long*);
+using Rtp4Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, const short*, unsigned char*, unsigned char*,
+                               unsigned char*, unsigned char*, std::int32_t*, std::int32_t*);
 
 #define S31_AS(type, name) ::magic_harness::Call(reinterpret_cast<type>(reinterpret_cast<void*>(&::name)))
 
 // The four projected points at +8, +8 + step, +8 + 2 step, +8 + 3 step
 // (0x10 a gouraud or flat-textured quad's, 0x14 a gouraud-textured one's).
 void Rtp4(unsigned char* prim, unsigned step) {
-    long p, flag;
+    std::int32_t p, flag;
     S31_AS(Rtp4Fn, Gte_RotTransPers4)(VP(0), VP(8), VP(0x10), VP(0x18), prim + 8, prim + 8 + step, prim + 8 + 2 * step,
                                      prim + 8 + 3 * step, &p, &flag);
 }
@@ -155,7 +155,7 @@ void RestoreRow26Stp() {
 // translation at +0x14; the task is read once, after the push.
 struct Matrix {
     short m[10];
-    long t[3];
+    std::int32_t t[3];
 };
 
 void PushTurnedMatrix(const unsigned char* s, short turn) {
@@ -166,15 +166,15 @@ void PushTurnedMatrix(const unsigned char* s, short turn) {
     v[2] = static_cast<short>(-(S16(s + 0x3E) / 2));
     v[3] = 0;
     Matrix m;
-    long flag;
+    std::int32_t flag;
     // The original pushes a third argument (the flag) to Gte_RotTrans, which
     // takes two (cdecl: the caller pops it).
-    using RotTransFn = void (__cdecl*)(const short*, long*, long*);
+    using RotTransFn = void (__cdecl*)(const short*, std::int32_t*, std::int32_t*);
     S31_AS(RotTransFn, Gte_RotTrans)(v, m.t, &flag);
     MH_CALL(Gte_RotMatrix)(rot, m.m);
     MH_CALL(Gte_MulMatrix0)(Camera_Matrix, m.m, m.m);
-    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&m));
-    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&m));
+    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
+    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
 }
 
 }  // namespace
@@ -317,7 +317,7 @@ S31_EXPORT void __cdecl CoronaRay_Start(void) {
         tt->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(tt->step_z) +
                                                     static_cast<std::uint32_t>(Field_Kind2Z));
     }
-    const long ground = MH_CALL(AreaMap_Elevation)(Field_Kind2X, Field_Kind2Z);
+    const std::int32_t ground = MH_CALL(AreaMap_Elevation)(Field_Kind2X, Field_Kind2Z);
     rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, static_cast<unsigned>(static_cast<std::uint32_t>(ground) + 0x200u) & 0xFFFF);
     MH_CALL(Sound_PlayEffect)(0x100);
     rv::Store(rv::Current<records::BattleTask>()->step_y, 0x2FFF);

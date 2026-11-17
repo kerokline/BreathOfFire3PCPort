@@ -68,7 +68,7 @@ using Handler = void (__cdecl*)();
 
 using DiscFn = void (__cdecl*)(unsigned);
 
-using LinkSortedFn = void (__cdecl*)(unsigned long, unsigned long, long*, unsigned char*, unsigned, unsigned, unsigned);
+using LinkSortedFn = void (__cdecl*)(std::uint32_t, std::uint32_t, std::int32_t*, unsigned char*, unsigned, unsigned, unsigned);
 
 void Bump(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 
@@ -171,7 +171,7 @@ void Lift() {
 // points at angles (step & 0x1F) << 7 and ((step + 8) & 0x1F) << 7, radius
 // 0x903850; its colour from `colours` by (face + 4 * kind) * 3; its depth
 // (Gte_RotAverage3) into depths[face]. Returns the Sprite_Current it read last.
-unsigned char* CrystalFace(std::uint32_t colours, std::int32_t step, unsigned char* cur, std::int16_t height, long* depths) {
+unsigned char* CrystalFace(std::uint32_t colours, std::int32_t step, unsigned char* cur, std::int16_t height, std::int32_t* depths) {
     const std::int16_t face = static_cast<std::int16_t>((step - static_cast<std::int32_t>(cur[9])) / 8);
     Put16(::bof3::Img(kFace.v), static_cast<std::uint16_t>(face));
     const std::int32_t row = (face + static_cast<std::int32_t>(cur[4]) * 4) * 3;
@@ -194,8 +194,8 @@ unsigned char* CrystalFace(std::uint32_t colours, std::int32_t step, unsigned ch
     Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 4, 0);
     MH_CALL(Gpu_SetPolyG3)(prim);
     MH_CALL(Gpu_SetSemiTrans)(prim, 0);
-    long p;
-    const long depth =
+    std::int32_t p;
+    const std::int32_t depth =
         MH_CALL(Gte_RotAverage3)(Vec(::bof3::Img(Prim_VertexScratch_addr)), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x8), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x10), At(prim, 8), At(prim, 0x18), At(prim, 0x28), &p);
     const std::int32_t slot = (step - static_cast<std::int32_t>(Sprite_Current[9])) / 8;
     if (slot < 0 || slot > 3)
@@ -407,7 +407,7 @@ MS19_EXPORT void __cdecl ShieldAura_DrawDisc(void) {
         Put16(::bof3::Img(Prim_VertexScratch_addr) + 4, 0);
         MH_CALL(Gpu_SetPolyG3)(prim);
         MH_CALL(Gpu_SetSemiTrans)(prim, 1);
-        long depth;
+        std::int32_t depth;
         MH_CALL(Gte_RotTransPers3)(Vec(::bof3::Img(Prim_VertexScratch_addr)), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x8), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x10), At(prim, 8), At(prim, 0x18), At(prim, 0x28), &depth);
         MH_CALL(Gte_PrimDepths3_10B)(prim);
         prim[4] = Mem(::bof3::Img(kShade.v))[0];
@@ -453,7 +453,7 @@ MS19_EXPORT void __cdecl ShieldAura_DrawHalo(void) {
         Put16(::bof3::Img(Prim_VertexScratch_addr) + 4, 0);
         MH_CALL(Gpu_SetPolyG4)(prim);
         MH_CALL(Gpu_SetSemiTrans)(prim, 1);
-        long depth;
+        std::int32_t depth;
         MH_CALL(Gte_RotTransPers4)(Vec(::bof3::Img(Prim_VertexScratch_addr)), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x8), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x10), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x18), At(prim, 8), At(prim, 0x18), At(prim, 0x28),
                                    At(prim, 0x38), &depth);
         MH_CALL(Gte_PrimDepths4_10B)(prim);
@@ -611,26 +611,26 @@ MS19_EXPORT void __cdecl ShieldSpark_DrawCrystal(void) {
     {
         const unsigned char* const cur = Sprite_Current;
         const records::BattleTask* const tcur = rv::AsConst<records::BattleTask>(cur);
-        MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tcur->x),
-                                    static_cast<unsigned long>(tcur->z), 0, 0xC);
+        MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(tcur->x),
+                                    static_cast<std::uint32_t>(tcur->z), 0, 0xC);
     }
     unsigned char* cur = Sprite_Current;
     unsigned char* const first = Prim();
-    long depths[4];
+    std::int32_t depths[4];
     for (std::int32_t step = cur[9]; step < static_cast<std::int32_t>(cur[9]) + 0x20; step += 8) {
         Put16(::bof3::Img(kHeight.v), 0x50);
         Put16(::bof3::Img(kRadius.v), 0x30);
         cur = CrystalFace(::bof3::Img(ShieldSpark_TopColours_addr), step, cur, 0x50, depths);
     }
-    MH_AT(LinkSortedFn, bof3::addr::MagicFx_LinkByDepth)(static_cast<unsigned long>(Long(cur + 0x34)),
-                                                         static_cast<unsigned long>(Long(cur + 0x38)), depths, first, 4,
+    MH_AT(LinkSortedFn, bof3::addr::MagicFx_LinkByDepth)(static_cast<std::uint32_t>(Long(cur + 0x34)),
+                                                         static_cast<std::uint32_t>(Long(cur + 0x38)), depths, first, 4,
                                                          0x34, 0);
     cur = Sprite_Current;
     unsigned char* const second = Prim();
     for (std::int32_t step = cur[9]; step < static_cast<std::int32_t>(cur[9]) + 0x20; step += 8)
         cur = CrystalFace(::bof3::Img(ShieldSpark_BottomColours_addr), step, cur, static_cast<std::int16_t>(-S16(::bof3::Img(kHeight.v))), depths);
-    MH_AT(LinkSortedFn, bof3::addr::MagicFx_LinkByDepth)(static_cast<unsigned long>(Long(cur + 0x34)),
-                                                         static_cast<unsigned long>(Long(cur + 0x38)), depths, second,
+    MH_AT(LinkSortedFn, bof3::addr::MagicFx_LinkByDepth)(static_cast<std::uint32_t>(Long(cur + 0x34)),
+                                                         static_cast<std::uint32_t>(Long(cur + 0x38)), depths, second,
                                                          4, 0x34, 0);
 }
 

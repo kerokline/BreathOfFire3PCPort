@@ -25,7 +25,7 @@ struct Callees {
     void (__cdecl* transition)(unsigned char);
     void (__cdecl* fade_music)();
     void (__cdecl* effect)(unsigned short);
-    void (__cdecl* draw_mode)(unsigned char*, int, int, unsigned, unsigned long);
+    void (__cdecl* draw_mode)(unsigned char*, int, int, unsigned, std::uint32_t);
     void (__cdecl* commit)(unsigned, unsigned);
     unsigned char* (__cdecl* sprite)(int, int, unsigned, unsigned, unsigned);
     void (__cdecl* set_sprt)(unsigned char*);

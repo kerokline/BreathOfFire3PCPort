@@ -218,7 +218,7 @@ extern "C" void __cdecl EffectKind53_Beam(void) {
     SH_CALL(EffectKind53_TexWindow)(0, 0xF0, 0x10, 0x10);
     unsigned char* const prim = Gfx_PacketNext;
     SH_CALL(Gpu_SetPolyFT4)(prim);
-    long offset[3] = {0, 0, 0};
+    std::int32_t offset[3] = {0, 0, 0};
     SH_CALL(MoveCmd_AttachOffset)(offset, self[0x1C]);
     s = S();
     short vertex[4] = {0, 0, 0, 0};
@@ -226,8 +226,8 @@ extern "C" void __cdecl EffectKind53_Beam(void) {
     vertex[1] = static_cast<short>(Sar(UL(s + 0x38) + static_cast<U>(offset[1]), 9) - 0x4000u);
     const U height = SW(s + 0x3E) + static_cast<U>(offset[2]);
     vertex[2] = static_cast<short>(0u - Sar(height + (height >> 31), 1));
-    long depth_cue = 0;
-    selfo->depth = static_cast<U>(SH_CALL(Gte_RotTransPers)(vertex, reinterpret_cast<unsigned long*>(prim + 0x38),
+    std::int32_t depth_cue = 0;
+    selfo->depth = static_cast<U>(SH_CALL(Gte_RotTransPers)(vertex, reinterpret_cast<std::uint32_t*>(prim + 0x38),
                                                                 &depth_cue));
     SH_CALL(Gte_PrimDepthFlat4_10)(prim);
     LD t = X(prim + 0x38) - 8.0L;
@@ -334,7 +334,7 @@ extern "C" void __cdecl EffectKind56_Markers(void) {
             bof3::Fatal("EffectKind56_Markers: the ground 0x%X is below every height the walk from 0x%X reaches - the "
                         "original loops for ever (docs/effect_2f.md section 2)",
                         (unsigned)static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->step_y), (unsigned)h);
-        SH_CALL(EffectKind56_DrawCross)(rv::As<records::EffectObject>(s)->x, rv::As<records::EffectObject>(s)->z, static_cast<long>(h), 1);
+        SH_CALL(EffectKind56_DrawCross)(rv::As<records::EffectObject>(s)->x, rv::As<records::EffectObject>(s)->z, static_cast<std::int32_t>(h), 1);
         s = S();
         s[0x5D] = static_cast<unsigned char>(s[0x5D] + 0x2A);
         if (s[0x5D] > 0x80) s[0x5D] = 0x80;
@@ -358,7 +358,7 @@ extern "C" void __cdecl EffectKind56_Place(void) {
     const unsigned char* const s = S();
     auto* const so = rv::AsConst<records::EffectObject>(s);
     MapView_HeightScale = 1;
-    const long ground = SH_CALL(MapView_GroundAt)(so->x, so->z);
+    const std::int32_t ground = SH_CALL(MapView_GroundAt)(so->x, so->z);
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->step_y, S16(static_cast<U>(ground)) << 16);
 }
 
@@ -368,14 +368,14 @@ extern "C" void __cdecl EffectKind56_Place(void) {
 // record's +0x5D, 0, 0), Gpu_SetSemiTrans(`semi`'s low byte), committed 0x20 in
 // slot 3; then from (x, z + 0x4000) to (x, z - 0x4000), coloured likewise,
 // committed, and only then Gpu_SetSemiTrans(`semi`) on it.
-extern "C" void __cdecl EffectKind56_DrawCross(long x, long z, long height, unsigned semi) {
+extern "C" void __cdecl EffectKind56_DrawCross(std::int32_t x, std::int32_t z, std::int32_t height, unsigned semi) {
     const U ux = static_cast<U>(x), uz = static_cast<U>(z);
     const U abe = semi & 0xFFu;
     unsigned char* prim = Gfx_PacketNext;
     SH_CALL(Gpu_SetLineF2)(prim);
-    long point[3] = {static_cast<long>(ux + 0x4000u), z, height};
+    std::int32_t point[3] = {static_cast<std::int32_t>(ux + 0x4000u), z, height};
     SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(prim + 8));
-    point[0] = static_cast<long>(ux - 0x4000u);
+    point[0] = static_cast<std::int32_t>(ux - 0x4000u);
     point[1] = z;
     point[2] = height;
     SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(prim + 0x14));
@@ -387,11 +387,11 @@ extern "C" void __cdecl EffectKind56_DrawCross(long x, long z, long height, unsi
     prim = Gfx_PacketNext;
     SH_CALL(Gpu_SetLineF2)(prim);
     point[0] = x;
-    point[1] = static_cast<long>(uz + 0x4000u);
+    point[1] = static_cast<std::int32_t>(uz + 0x4000u);
     point[2] = height;
     SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(prim + 8));
     point[0] = x;
-    point[1] = static_cast<long>(uz - 0x4000u);
+    point[1] = static_cast<std::int32_t>(uz - 0x4000u);
     point[2] = height;
     SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(prim + 0x14));
     const unsigned char red = S()[0x5D];
@@ -620,7 +620,7 @@ extern "C" void __cdecl EffectKind18Sub20_Draw(void) {
         SetWord(v + 4, Word(s + 0x3C));
         SetWord(v + 0x1C, Word(s + 0x3C) + 0x100u);
         SetWord(v + 0x14, Word(s + 0x3C) + 0x100u);
-        long depth;
+        std::int32_t depth;
         SH_CALL(Gte_RotTransPers4)(vertex(0), vertex(1), vertex(2), vertex(3), reinterpret_cast<float*>(p + 8),
                                    reinterpret_cast<float*>(p + 0x18), reinterpret_cast<float*>(p + 0x28),
                                    reinterpret_cast<float*>(p + 0x38), &depth);

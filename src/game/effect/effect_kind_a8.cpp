@@ -40,7 +40,7 @@ U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 
 U AddressOf(const void* p) { return Low32(p); }
 
-long* Point(unsigned char* p) { return reinterpret_cast<long*>(p); }
+std::int32_t* Point(unsigned char* p) { return reinterpret_cast<std::int32_t*>(p); }
 
 // mov ecx, [Sprite_Current]; xor eax, eax; mov al, [ecx + 1]; jmp (or call)
 // [table + eax * 4]: the table's `entries` handlers read in place (the fuzz
@@ -147,7 +147,7 @@ extern "C" void __cdecl EffectKindA7_Run(void) {
     DispatchEffect4e("EffectKindA7_Run", EffectKindA7_States, EffectKindA7_States_count);
     unsigned char* const s = S();
     if (s[1] == 0) return;
-    using Glow = void (__cdecl*)(const long*, unsigned, unsigned);
+    using Glow = void (__cdecl*)(const std::int32_t*, unsigned, unsigned);
     SH_AT(Glow, at::kGlowA7.v)(Point(s + 0x34), Word(s + 0xC), 7);
 }
 
@@ -323,7 +323,7 @@ extern "C" void __cdecl EffectKindAA_FadeOut(void) {
 // 1); a fan of 32 round o, the centre ((c & 0xFC) << 5, (c & 0xFE) << 6, c <<
 // 7), the rim black at o + (cos, sin) * r sar 12 from the angle 0x80 by 0x80,
 // every vertex at o's depth.
-extern "C" void __cdecl EffectKindA7_DrawGlow(const long* point, unsigned size, unsigned colour) {
+extern "C" void __cdecl EffectKindA7_DrawGlow(const std::int32_t* point, unsigned size, unsigned colour) {
     DrawMode(1, 0x2C0, 0x100, 1, 7);
     SH_CALL(EffectGte_LoadMapCamera)();
     alignas(4) unsigned char o[12];

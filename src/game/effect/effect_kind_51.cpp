@@ -208,7 +208,7 @@ void TrailPlace(U x, U z) {
     rv::Current<records::EffectObject>()->z = z;
     const unsigned char* const s = S();
     auto* const so = rv::AsConst<records::EffectObject>(s);
-    const long ground = SH_CALL(AreaMap_Elevation)(so->x, so->z);
+    const std::int32_t ground = SH_CALL(AreaMap_Elevation)(so->x, so->z);
     rv::Store<U>(rv::Current<records::EffectObject>()->height, S16(static_cast<U>(ground)) << 16);
     S()[9] = 0x20;
     NextSub();
@@ -307,7 +307,7 @@ extern "C" void __cdecl EffectKind51_Burst(void) {
     SH_CALL(EffectGte_LoadMapCamera)();
     unsigned char* const s = S();
     auto* const so = rv::As<records::EffectObject>(s);
-    const long point[4] = {so->x, so->z, so->height, 0};
+    const std::int32_t point[4] = {so->x, so->z, so->height, 0};
     SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(s + 0x74));
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_32, 0x140);
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->frame_word, 0x14);
@@ -499,7 +499,7 @@ extern "C" void __cdecl EffectKind50_SpeckQuad(unsigned char* speck) {
     SH_CALL(Gpu_SetPolyFT4)(prim);
     SH_CALL(Gpu_SetSemiTrans)(prim, 1);
     short size[2] = {static_cast<short>(UL(speck + 0x24) >> 6), 0};
-    const long point[4] = {Long(speck + 4), Long(speck + 8), static_cast<long>(UL(speck + 0xC) << 8), Long(speck + 0x10)};
+    const std::int32_t point[4] = {Long(speck + 4), Long(speck + 8), static_cast<std::int32_t>(UL(speck + 0xC) << 8), Long(speck + 0x10)};
     short out[2] = {0, 0};
     SH_CALL(EffectGte_ProjectSize)(point, size, out);
     unsigned char screen[12];
@@ -607,7 +607,7 @@ extern "C" void __cdecl EffectKind51_DrawFrame(void) {
     SH_CALL(EffectGte_LoadMapCamera)();
     unsigned char* const s = S();
     auto* const so = rv::As<records::EffectObject>(s);
-    const long point[4] = {so->x, so->z, so->height, 0};
+    const std::int32_t point[4] = {so->x, so->z, so->height, 0};
     SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(s + 0x74));
     SH_CALL(EffectKind51_DrawMoves)();
     SH_CALL(EffectKind51_PushAngle)(rv::As<records::EffectObject>(S())->script_pos);
@@ -642,7 +642,7 @@ extern "C" void __cdecl EffectKind51_DrawColumn(unsigned half, unsigned sway) {
     U i = 0;
     do {
         const U kk = S16(k);
-        const U w = static_cast<U>(SH_AT(long (__cdecl*)(long), at::kSqrt.v)(static_cast<long>(hh - kk * kk)));
+        const U w = static_cast<U>(SH_AT(std::int32_t (__cdecl*)(std::int32_t), at::kSqrt.v)(static_cast<std::int32_t>(hh - kk * kk)));
         if (i >= at::kAngles)
             bof3::Fatal("EffectKind51_DrawColumn: row %u of %d, past the %u words of EffectKind51_Angles - the original "
                         "reads past them (docs/effect_2f.md section 2)",
@@ -930,11 +930,11 @@ extern "C" void __cdecl EffectKind52_TrailUpdate(unsigned char* trail) {
     SH_CALL(EffectGte_LoadMapCamera)();
     for (unsigned k = 0; k < 0x20; ++k) {
         unsigned char* const p = trail + 0x20 * k;
-        SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(p), reinterpret_cast<float*>(p + 0x10));
+        SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const std::int32_t*>(p), reinterpret_cast<float*>(p + 0x10));
         const auto width = static_cast<short>(Word(trail + 0x43E));
         short size[2] = {width, width};
         short out[2] = {0, 0};
-        SH_CALL(EffectGte_ProjectSize)(reinterpret_cast<const long*>(p), size, out);
+        SH_CALL(EffectGte_ProjectSize)(reinterpret_cast<const std::int32_t*>(p), size, out);
         SetWord(p + 0x1E, static_cast<unsigned short>(out[0]));
     }
     unsigned char* const angles = trail + 0x400;
@@ -964,7 +964,7 @@ extern "C" void __cdecl EffectKind52_TrailUpdate(unsigned char* trail) {
     SetWord(trail + 0x1C, Word(angles));
     for (unsigned k = 0; k < 0x1E; ++k)
         SetWord(trail + 0x3C + 0x20 * k,
-                static_cast<U>(SH_AT(long (__cdecl*)(unsigned, unsigned), at::kAngleMean.v)(Word(angles + 2 * k),
+                static_cast<U>(SH_AT(std::int32_t (__cdecl*)(unsigned, unsigned), at::kAngleMean.v)(Word(angles + 2 * k),
                                                                                           Word(angles + 2 * k + 2))));
     SetWord(trail + 0x3FC, Word(trail + 0x43C));
 }

@@ -129,7 +129,7 @@ void Dispatch(const std::uint32_t* table, unsigned entries, unsigned phase, cons
 // Linked at the current Transfer record's (+0x14, +0x18), layer 2.
 void LinkAtCur(unsigned size) {
     const unsigned char* const r = Cur();
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(LongMagicS34(r + 0x14)), static_cast<unsigned long>(LongMagicS34(r + 0x18)), 2,
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(LongMagicS34(r + 0x14)), static_cast<std::uint32_t>(LongMagicS34(r + 0x18)), 2,
                                 size);
 }
 
@@ -269,7 +269,7 @@ S34_EXPORT void __cdecl Transfer_Start(void) {
 
 // original 0x4EE8A0: once +0xB is 4 or below (unsigned), +9 = 8 and the next
 // state. eax Sprite_Current.
-extern "C" unsigned long __cdecl BattleFx_WaitStep4(void) {
+extern "C" std::uint32_t __cdecl BattleFx_WaitStep4(void) {
     unsigned char* s = Sprite();
     if (s[0xB] > 4) return Low32(s);
     s[9] = 8;

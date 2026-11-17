@@ -182,46 +182,46 @@ void Disturb() {
     }
 }
 
-long Answer(U salt) {
+std::int32_t Answer(U salt) {
     const U h = Hash(salt);
     switch (h % 8) {
     case 0: case 1: case 2: return kSurfaceLost;
-    case 3: return static_cast<long>(0x887601C1u);
-    case 4: return static_cast<long>(0x887601C3u);
-    case 5: return static_cast<long>(0x087601C2u);
-    case 6: return static_cast<long>(h);
+    case 3: return static_cast<std::int32_t>(0x887601C1u);
+    case 4: return static_cast<std::int32_t>(0x887601C3u);
+    case 5: return static_cast<std::int32_t>(0x087601C2u);
+    case 6: return static_cast<std::int32_t>(h);
     default: return 0;
     }
 }
 
-long __stdcall FakeBlt(void* self, const void* dst, void* src, const void* src_rect, unsigned long flags, void* fx) {
+std::int32_t __stdcall FakeBlt(void* self, const void* dst, void* src, const void* src_rect, std::uint32_t flags, void* fx) {
     Record(0x114, Id(self), Addr(dst), IdOr(src), Addr(src_rect), flags, fx ? Bytes(fx, kBltFxBytes) : 0);
-    const long r = Answer(0xB17);
+    const std::int32_t r = Answer(0xB17);
     Disturb();
     return r;
 }
-long __stdcall FakeFlip(void* self, void* target, unsigned long flags) {
+std::int32_t __stdcall FakeFlip(void* self, void* target, std::uint32_t flags) {
     Record(0x12C, Id(self), IdOr(target), flags);
-    const long r = Answer(0xF11);
+    const std::int32_t r = Answer(0xF11);
     Disturb();
     return r;
 }
-long __stdcall FakeRestore(void* self) {
+std::int32_t __stdcall FakeRestore(void* self) {
     Record(0x16C, Id(self));
     Disturb();
     return Answer(0x4E5);
 }
-long __stdcall FakeSetBackground(void* self, unsigned long handle) {
+std::int32_t __stdcall FakeSetBackground(void* self, std::uint32_t handle) {
     Record(0x120, Id(self), handle);
     Disturb();
     return Answer(0xB4C);
 }
-long __stdcall FakeClear(void* self, unsigned long count, const void* rects, unsigned long flags) {
+std::int32_t __stdcall FakeClear(void* self, std::uint32_t count, const void* rects, std::uint32_t flags) {
     Record(0x130, Id(self), count, Addr(rects), flags);
     Disturb();
     return Answer(0xC1E);
 }
-long __stdcall FakeSetMaterial(void* self, void* material) {
+std::int32_t __stdcall FakeSetMaterial(void* self, void* material) {
     U diffuse_r, ambient_b;
     std::memcpy(&diffuse_r, static_cast<unsigned char*>(material) + 4, 4);
     std::memcpy(&ambient_b, static_cast<unsigned char*>(material) + 0x1C, 4);
@@ -229,7 +229,7 @@ long __stdcall FakeSetMaterial(void* self, void* material) {
     Disturb();
     return Answer(0x3A7);
 }
-template <int S> long __stdcall FakeUnexpected(void* self) {
+template <int S> std::int32_t __stdcall FakeUnexpected(void* self) {
     bof3::Fatal("display_env: self-test reached COM slot %d (+0x%X) of object %u, which nothing fakes", S, S * 4,
                 (unsigned)Id(self));
 }

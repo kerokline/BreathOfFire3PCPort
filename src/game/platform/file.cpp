@@ -100,12 +100,12 @@ extern "C" int __cdecl File_Open(const char* path, int, int) {
             stream = Crt_fopen(prefixed, "rb");
         }
         if (!stream) {
-            bof3::Log("open  t=%lu  FAILED  %s", static_cast<unsigned long>(bof3::os::TickMs32()), path);
+            bof3::Log("open  t=%u  FAILED  %s", static_cast<std::uint32_t>(bof3::os::TickMs32()), path);
             return -1;
         }
     }
     File_Slots[slot] = stream;
-    bof3::Log("open  t=%lu  slot %d  %s", static_cast<unsigned long>(bof3::os::TickMs32()), slot, path);
+    bof3::Log("open  t=%u  slot %d  %s", static_cast<std::uint32_t>(bof3::os::TickMs32()), slot, path);
     return slot;
 }
 
@@ -125,7 +125,7 @@ extern "C" int __cdecl File_OpenWrite(const char* path) {
 
     void* stream = Crt_fopen(path, "wb");
     if (!stream) {  // DIV-0003
-        bof3::Log("openw t=%lu  FAILED  %s", static_cast<unsigned long>(bof3::os::TickMs32()), path);
+        bof3::Log("openw t=%u  FAILED  %s", static_cast<std::uint32_t>(bof3::os::TickMs32()), path);
         return -1;
     }
     File_Slots[slot] = stream;

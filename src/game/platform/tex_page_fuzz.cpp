@@ -240,7 +240,7 @@ constexpr U kRefresh = 0x5A0510, kRefreshBytes = 0x311;         // to the ret at
 using InitFn = void(__cdecl*)(void*);
 using PlainFn = int(__cdecl*)(unsigned, unsigned, void**, unsigned);
 using TextureFn = int(__cdecl*)(unsigned, unsigned, void**, void**, unsigned);
-using BuildFn = unsigned long(__cdecl*)(int, int, int);
+using BuildFn = std::uint32_t(__cdecl*)(int, int, int);
 using RefreshFn = void(__cdecl*)(int, int);
 
 struct Clones {
@@ -609,7 +609,7 @@ void SelfTest() {
     g_source = static_cast<unsigned char*>(bof3::os::MemAlloc(nullptr, kSourceBytes + 0x1000, bof3::os::Prot::ReadWrite));
     g_dst[0] = static_cast<unsigned char*>(bof3::os::MemAlloc(nullptr, kDstBytes, bof3::os::Prot::ReadWrite));
     g_dst[1] = static_cast<unsigned char*>(bof3::os::MemAlloc(nullptr, kDstBytes, bof3::os::Prot::ReadWrite));
-    if (!g_source || !g_dst[0] || !g_dst[1]) bof3::Fatal("tex_page: MemAlloc failed, error %lu", (unsigned long)bof3::os::LastError());
+    if (!g_source || !g_dst[0] || !g_dst[1]) bof3::Fatal("tex_page: MemAlloc failed, error %lu", (std::uint32_t)bof3::os::LastError());
     for (U i = 0; i < kSourceBytes; i += 4) {
         const U v = Next();
         std::memcpy(g_source + i, &v, 4);

@@ -98,13 +98,13 @@ void Copy12(unsigned char* to, const unsigned char* from) {
     for (unsigned i = 0; i < 12; i += 4) SetUL(to + i, UL(from + i));
 }
 
-long* Point(unsigned char* p) { return reinterpret_cast<long*>(p); }
+std::int32_t* Point(unsigned char* p) { return reinterpret_cast<std::int32_t*>(p); }
 
 float* Out(unsigned char* p) { return reinterpret_cast<float*>(p); }
 
-const unsigned char* Bytes(const long* p) { return reinterpret_cast<const unsigned char*>(p); }
+const unsigned char* Bytes(const std::int32_t* p) { return reinterpret_cast<const unsigned char*>(p); }
 
-unsigned char* Bytes(long* p) { return reinterpret_cast<unsigned char*>(p); }
+unsigned char* Bytes(std::int32_t* p) { return reinterpret_cast<unsigned char*>(p); }
 
 // mov ecx, [Sprite_Current]; xor eax, eax; mov al, [ecx + 1]; jmp (or call)
 // [table + eax * 4]: the table's `entries` handlers read in place (the fuzz
@@ -193,7 +193,7 @@ extern "C" void __cdecl EffectKind9B_Run(void) {
 // s16 << 16; the height +0x14 and its speed +0x20 = 0; +1 up.
 extern "C" void __cdecl EffectKind9B_Start(void) {
     unsigned char* s = S();
-    const long elevation = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(s)->x, rv::As<records::EffectObject>(s)->z);
+    const std::int32_t elevation = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(s)->x, rv::As<records::EffectObject>(s)->z);
     s = S();
     rv::As<records::EffectObject>(s)->height = static_cast<U>(S16(static_cast<U>(elevation))) << 16;
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->step_y, 0);
@@ -233,7 +233,7 @@ extern "C" void __cdecl EffectKind9B_Hold(void) {
 // a second draw mode (dtd 0) linked 0xC. The shade starts at ((Frame_Counter
 // & 1) + 8) << 2, the first edge's; each quad's second edge 4 more for quads
 // 0..3 and 12..15, 4 less for 4..11, carried on.
-extern "C" void __cdecl EffectKind9B_DrawRing(const long* point, long height) {
+extern "C" void __cdecl EffectKind9B_DrawRing(const std::int32_t* point, std::int32_t height) {
     SH_CALL(EffectGte_LoadMapCamera)();
     const unsigned char* const o = Bytes(point);
     alignas(4) unsigned char a[12], p0[12], q0[12], p1[12], q1[12];

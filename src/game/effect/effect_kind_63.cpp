@@ -91,7 +91,7 @@ void ScreenTint() { SH_AT(void (__cdecl*)(), at::kScreenTint.v)(); }
 // The point +0x34 projected into the floats +0x74.. (EffectGte_ProjectPoint).
 void ProjectHere() {
     unsigned char* const s = S();
-    SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(s + 0x34), reinterpret_cast<float*>(s + 0x74));
+    SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const std::int32_t*>(s + 0x34), reinterpret_cast<float*>(s + 0x74));
 }
 
 }  // namespace
@@ -109,7 +109,7 @@ extern "C" void __cdecl EffectKind63_Run(void) {
 extern "C" void __cdecl EffectKind63_Start(void) {
     rv::Current<records::EffectObject>()->x = 0x240000;
     rv::Current<records::EffectObject>()->z = 0x418000;
-    const long h = SH_CALL(AreaMap_Elevation)(rv::Current<records::EffectObject>()->x, rv::Current<records::EffectObject>()->z);
+    const std::int32_t h = SH_CALL(AreaMap_Elevation)(rv::Current<records::EffectObject>()->x, rv::Current<records::EffectObject>()->z);
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->height_whole, static_cast<U>(h));
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_18, 0);
     S()[0x5C] = 0x3D;

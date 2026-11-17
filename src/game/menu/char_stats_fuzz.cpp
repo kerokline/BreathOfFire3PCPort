@@ -91,7 +91,7 @@ void Disturb() {
 
 // --- the stand-ins ---------------------------------------------------------
 
-void __cdecl StubDrawMode(unsigned char* prim, int dfe, int dtd, unsigned tpage, unsigned long tw) {
+void __cdecl StubDrawMode(unsigned char* prim, int dfe, int dtd, unsigned tpage, std::uint32_t tw) {
     Record(1, Address(prim), static_cast<std::uint32_t>(dfe), static_cast<std::uint32_t>(dtd), tpage, tw);
     SetLong(prim + 4, static_cast<std::int32_t>(0xE8000000u | (tpage & 0xFFFF)));
     SetLong(prim + 8, static_cast<std::int32_t>(Hash()));

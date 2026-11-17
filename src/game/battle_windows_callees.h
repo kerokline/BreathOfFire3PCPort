@@ -72,7 +72,7 @@ constexpr ::bof3::image::CodeVa kPoseFrom{bof3::addr::Sprite_PoseFromSet};      
 struct Callees {
     // ours already, and Capcom's by name
     unsigned (__cdecl* get_tpage)(unsigned, unsigned, int, int);                        // Gpu_GetTPage
-    void (__cdecl* draw_mode)(unsigned char*, int, int, unsigned, unsigned long);       // Gpu_SetDrawMode
+    void (__cdecl* draw_mode)(unsigned char*, int, int, unsigned, std::uint32_t);       // Gpu_SetDrawMode
     void (__cdecl* commit)(unsigned, unsigned);                                         // Gfx_CommitPrim
     void (__cdecl* set_poly_ft4)(unsigned char*);                                       // Gpu_SetPolyFT4
     const unsigned char* (__cdecl* text_draw_at)(int, int, int, int, const unsigned char*);  // Text_DrawAt

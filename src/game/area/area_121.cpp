@@ -69,7 +69,7 @@ void ScriptAgain() { move_script::SetPos(MoveScript_Object, move_script::Pos(Mov
 
 using ByteFn = unsigned char (__cdecl*)(void);
 
-using StepFn = unsigned char (__cdecl*)(long, long, unsigned);
+using StepFn = unsigned char (__cdecl*)(std::int32_t, std::int32_t, unsigned);
 
 using TurnFn = unsigned char (__cdecl*)(unsigned, unsigned);
 
@@ -82,8 +82,8 @@ using DrawAt = void (__cdecl*)(int, int);
 
 using DrawSpriteAt = void (__cdecl*)(int, int, unsigned);
 
-using Pers4 = long (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*, long*,
-                              long*);
+using Pers4 = std::int32_t (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*, std::int32_t*,
+                              std::int32_t*);
 
 // The region box's leave test the HUD machine's states share: the map's mode
 // byte set while +0xB is, or Field_Request 2, or bit 8 of Field_ScriptFlags.
@@ -540,7 +540,7 @@ void DrawDrift() {
         rv::Store<unsigned>(rv::As<records::SVector>(v)[1].x, static_cast<unsigned>(x + r));
         rv::Store<unsigned>(rv::As<records::SVector>(v)[3].x, static_cast<unsigned>(x + r));
         rv::Store<unsigned>(rv::As<records::SVector>(v)[0].z, height);
-        long depth = 0, flag = 0;
+        std::int32_t depth = 0, flag = 0;
         AH_AT(Pers4, bof3::addr::Gte_RotTransPers4)(sv, sv + 4, sv + 8, sv + 12, reinterpret_cast<float*>(prim + 8),
                                                     reinterpret_cast<float*>(prim + 0x18), reinterpret_cast<float*>(prim + 0x28),
                                                     reinterpret_cast<float*>(prim + 0x38), &depth, &flag);
@@ -848,8 +848,8 @@ extern "C" void __cdecl Area121_PushObject(void) {
     if (Game_AreaNumber != 0x79) return;
     const unsigned char* o = Cur();
     const U d = o[8];
-    const auto x = static_cast<long>(static_cast<U>(rv::As<records::SpriteHead>(o)->x) + StepX(d) * 2u);
-    const auto z = static_cast<long>(static_cast<U>(rv::As<records::SpriteHead>(o)->z) + StepZ(d) * 2u);
+    const auto x = static_cast<std::int32_t>(static_cast<U>(rv::As<records::SpriteHead>(o)->x) + StepX(d) * 2u);
+    const auto z = static_cast<std::int32_t>(static_cast<U>(rv::As<records::SpriteHead>(o)->z) + StepZ(d) * 2u);
     const unsigned char k = AH_CALL(Sprite_ObjectAt)(x, z, 1);
     const bool pressed = (Word(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f002)) & Input_Held & 0xFFFFu) != 0;
     if (pressed) {
@@ -872,7 +872,7 @@ extern "C" void __cdecl Area121_PushObject(void) {
 // Area121_DirectionTo(x, z, k), and up to eight times: Field_LeaderStepTarget 0
 // and Sprite_ObjectAt(x, z, 0) none (0xFF) answer 1; else +8 = (+8 + 1) & 7.
 // Eight turns without: 0.
-extern "C" unsigned char __cdecl Area121_StepAround(long x, long z, unsigned k) {
+extern "C" unsigned char __cdecl Area121_StepAround(std::int32_t x, std::int32_t z, unsigned k) {
     if ((k & 0xFF) == 0xFF) return 0;
     const unsigned char direction = AH_AT(StepFn, area_w3b::kDirectionTo.v)(x, z, k);
     Cur()[8] = direction;
@@ -889,7 +889,7 @@ extern "C" unsigned char __cdecl Area121_StepAround(long x, long z, unsigned k) 
 // Sprite_ObjectsExtra k - 0x1E; k its low byte) toward (x, z), by the signs of
 // dx = x - +0x34 and dz = z - +0x38 (32-bit, wrapping): dx < 0: dz < 0 0, dz >
 // 0 6, dz 0 7; dx > 0: dz > 0 4, dz < 0 2, dz 0 3; dx 0: dz > 0 5, else 1.
-extern "C" unsigned char __cdecl Area121_DirectionTo(long x, long z, unsigned k) {
+extern "C" unsigned char __cdecl Area121_DirectionTo(std::int32_t x, std::int32_t z, unsigned k) {
     const unsigned char* const object = ObjectRecord(k);
     const auto* const tObject = rv::AsConst<records::SpriteObject>(object);
     const auto dx = static_cast<std::int32_t>(static_cast<U>(x) - static_cast<U>(tObject->x));
@@ -1213,11 +1213,11 @@ extern "C" void __cdecl Area121_RingRise(void) {
     position[2] = static_cast<short>(-(S16(o + 0x3E) / 2));
     // a MATRIX: nine shorts, a pad, then the translation's three longs at +0x14
     alignas(4) unsigned char matrix[0x20] = {};
-    AH_CALL(Gte_RotTrans)(position, reinterpret_cast<long*>(matrix + 0x14));
+    AH_CALL(Gte_RotTrans)(position, reinterpret_cast<std::int32_t*>(matrix + 0x14));
     AH_CALL(Gte_RotMatrix)(rotation, reinterpret_cast<short*>(matrix));
     AH_CALL(Gte_MulMatrix0)(Camera_Matrix, reinterpret_cast<short*>(matrix), reinterpret_cast<short*>(matrix));
-    AH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(matrix));
-    AH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(matrix));
+    AH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(matrix));
+    AH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(matrix));
     const std::int32_t radius = (S16(Cur() + 0x3E) >> 7) * 10 + 0x10;
     unsigned char* const v = reinterpret_cast<unsigned char*>(Prim_VertexScratch);
     rv::Store<unsigned>(rv::As<records::SVector>(v)[0].y, 0);
@@ -1246,14 +1246,14 @@ extern "C" void __cdecl Area121_RingRise(void) {
     prim[0x35] = 0x4E;
     prim[0x45] = 0x4E;
     const auto* const sv = reinterpret_cast<const short*>(v);
-    long depth = 0, flag = 0;
+    std::int32_t depth = 0, flag = 0;
     AH_AT(Pers4, bof3::addr::Gte_RotTransPers4)(sv, sv + 4, sv + 8, sv + 12, reinterpret_cast<float*>(prim + 8),
                                                 reinterpret_cast<float*>(prim + 0x18), reinterpret_cast<float*>(prim + 0x28),
                                                 reinterpret_cast<float*>(prim + 0x38), &depth, &flag);
     AH_CALL(Gte_PrimDepths4_10)(prim);
     prim[4] = prim[5] = prim[6] = 0x80;
     o = Cur();
-    AH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(rv::As<records::SpriteHead>(o)->x), static_cast<unsigned long>(rv::As<records::SpriteHead>(o)->z), 1, 0x48);
+    AH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(o)->x), static_cast<std::uint32_t>(rv::As<records::SpriteHead>(o)->z), 1, 0x48);
     AH_CALL(Gte_PopMatrix)();
 }
 

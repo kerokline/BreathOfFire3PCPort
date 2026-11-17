@@ -59,7 +59,7 @@ U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n
 U Mul(U a, U b) { return a * b; }
 
 // movsx eax, ax; shl eax, 0x10: a height word into the high half.
-U High(long h) { return static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(h))) << 16; }
+U High(std::int32_t h) { return static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(h))) << 16; }
 
 // `fild dword [v]; fsubr dword [c]; fstp dword [o]`: c - v
 void FildSubr(std::int32_t v, const void* c, void* o) {
@@ -121,7 +121,7 @@ unsigned char* ShardQuad(unsigned char* r) {
     unsigned char* const prim = Gfx_PacketNext;
     SH_CALL(Gpu_SetPolyFT4)(prim);
     SH_CALL(Gpu_SetSemiTrans)(prim, 1);
-    const long* const point = reinterpret_cast<const long*>(r + 8);
+    const std::int32_t* const point = reinterpret_cast<const std::int32_t*>(r + 8);
     float screen[3];
     SH_CALL(EffectGte_ProjectPoint)(point, screen);
     short wh[2] = {static_cast<short>(Word(r + 4)), static_cast<short>(Word(r + 4))};
@@ -171,20 +171,20 @@ void Column(unsigned char grey) {
     U angle = Word(s + 0x20);
     const U x = rv::As<records::EffectWork>(s)->work_0c, z = rv::As<records::EffectWork>(s)->work_10;
     U y = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->step_y);
-    long pt[3];
+    std::int32_t pt[3];
     float low[3], high[3];
     auto project = [&](U a) {
-        pt[0] = static_cast<long>((static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(a))) << 5) + x);
-        pt[1] = static_cast<long>((static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(a))) << 5) + z);
+        pt[0] = static_cast<std::int32_t>((static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(a))) << 5) + x);
+        pt[1] = static_cast<std::int32_t>((static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(a))) << 5) + z);
         unsigned char* c = S();
         U h = y - UL(c + 0x24);
         if (S32(h) < S32(static_cast<std::uint32_t>(rv::As<records::EffectObject>(c)->step_y))) h = static_cast<std::uint32_t>(rv::As<records::EffectObject>(c)->step_y);
-        pt[2] = static_cast<long>(h);
+        pt[2] = static_cast<std::int32_t>(h);
         SH_CALL(EffectGte_ProjectPoint)(pt, low);
         c = S();
         h = y;
         if (S32(y) > S32(static_cast<std::uint32_t>(rv::As<records::EffectObject>(c)->work_1c))) h = static_cast<std::uint32_t>(rv::As<records::EffectObject>(c)->work_1c);
-        pt[2] = static_cast<long>(h);
+        pt[2] = static_cast<std::int32_t>(h);
         SH_CALL(EffectGte_ProjectPoint)(pt, high);
     };
     project(angle);
@@ -212,7 +212,7 @@ void Column(unsigned char grey) {
         prim[4] = prim[5] = prim[6] = grey;
         rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(prim)->tpage, SH_CALL(Gpu_GetTPage)(1, 0, 0x1C0, 0x100));
         rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(prim)->clut, SH_CALL(Gpu_GetClut)(0, 0x1E5));
-        SH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(pt[0]), static_cast<unsigned long>(pt[1]), 2, 0x48);
+        SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(pt[0]), static_cast<std::uint32_t>(pt[1]), 2, 0x48);
         s = S();
     } while (S32(y) < S32(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_1c) + 0x1000000u));
 }
@@ -405,7 +405,7 @@ extern "C" unsigned char __cdecl EffectKind8F_MoveShards(void) {
         SetWord(r + 4, Word(r + 4) + 8u);
         const U z = UL(r + 0xC) + UL(r + 0x1C);
         SetUL(r + 0xC, z);
-        const long h = SH_CALL(AreaMap_Elevation)(static_cast<long>(x), static_cast<long>(z));
+        const std::int32_t h = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z));
         SetUL(r + 0x10, High(h));
         SH_CALL(EffectKind8F_DrawShard)(r);
     }
@@ -543,7 +543,7 @@ extern "C" void __cdecl EffectKind99_Start(void) {
     const U x = UL(c);
     const U z = static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->z) + 0xFFFF0000u;
     SetUL(c + 4, z);
-    const long h = SH_CALL(AreaMap_Elevation)(static_cast<long>(x), static_cast<long>(z));
+    const std::int32_t h = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z));
     SetUL(c + 8, High(h));
     SetUL(c + 0x10, 0);
     S()[9] = 0xA;
@@ -557,7 +557,7 @@ extern "C" void __cdecl EffectKind99_Spread(void) {
     unsigned char* const s = S();
     const U radius = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_1c);
     unsigned char* const c = s + 0xC;
-    SH_CALL(EffectKind99_DrawDisc)(reinterpret_cast<const long*>(c), static_cast<long>(radius));
+    SH_CALL(EffectKind99_DrawDisc)(reinterpret_cast<const std::int32_t*>(c), static_cast<std::int32_t>(radius));
     SetUL(c + 0x10, UL(c + 0x10) + 0x1199u);
     if (CountDown()) {
         SH_CALL(Sound_PlayEffect)(0x20F);
@@ -646,7 +646,7 @@ extern "C" unsigned char __cdecl EffectKind90_MoveShards(void) {
         const U z = UL(r + 0xC) + UL(r + 0x1C);
         SetUL(r + 8, x);
         SetUL(r + 0xC, z);
-        const long h = SH_CALL(AreaMap_Elevation)(static_cast<long>(x), static_cast<long>(z));
+        const std::int32_t h = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z));
         SetUL(r + 0x10, High(h));
         SH_CALL(EffectKind90_DrawShard)(r);
     }
@@ -671,11 +671,11 @@ extern "C" void __cdecl EffectKind93_Draw(void) { Column(0xC0); }
 // original 0x48C7A0 (point, radius): EffectGte_LoadMapCamera; four fans
 // (EffectKind99_DrawFan) at the angles 0, 0x400, 0x800, 0xC00, each linked at
 // the point offset by kFanDx / kFanDz's dword i.
-extern "C" void __cdecl EffectKind99_DrawDisc(const long* point, long radius) {
+extern "C" void __cdecl EffectKind99_DrawDisc(const std::int32_t* point, std::int32_t radius) {
     SH_CALL(EffectGte_LoadMapCamera)();
     for (unsigned i = 0; i < at::kFanCount; ++i) {
-        const long dz = Long(At(::bof3::Img(at::kFanDz.v) + 4 * i));
-        const long dx = Long(At(::bof3::Img(at::kFanDx.v) + 4 * i));
+        const std::int32_t dz = Long(At(::bof3::Img(at::kFanDz.v) + 4 * i));
+        const std::int32_t dx = Long(At(::bof3::Img(at::kFanDx.v) + 4 * i));
         SH_CALL(EffectKind99_DrawFan)(point, radius, i << 10, dx, dz);
     }
 }
@@ -689,16 +689,16 @@ extern "C" void __cdecl EffectKind99_DrawDisc(const long* point, long radius) {
 // cursor, semi-transparent: the centre (dwords copied), the last edge, the
 // angle up 0x100 and the edge there projected; grey 0x80; linked again at
 // the same cell.
-extern "C" void __cdecl EffectKind99_DrawFan(const long* point, long radius, unsigned angle, long dx, long dz) {
+extern "C" void __cdecl EffectKind99_DrawFan(const std::int32_t* point, std::int32_t radius, unsigned angle, std::int32_t dx, std::int32_t dz) {
     float centre[3], edge[3];
-    long v[3];
+    std::int32_t v[3];
     SH_CALL(EffectGte_ProjectPoint)(point, centre);
     const U r = static_cast<U>(radius);
     U a = angle & 0xFFFFu;
     const U cosine = static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(a)));
-    v[0] = static_cast<long>(Sar(Mul(cosine, r), 12) + static_cast<U>(point[0]));
+    v[0] = static_cast<std::int32_t>(Sar(Mul(cosine, r), 12) + static_cast<U>(point[0]));
     const U sine = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(a)));
-    v[1] = static_cast<long>(Sar(Mul(sine, r), 12) + static_cast<U>(point[1]));
+    v[1] = static_cast<std::int32_t>(Sar(Mul(sine, r), 12) + static_cast<U>(point[1]));
     v[2] = point[2];
     SH_CALL(EffectGte_ProjectPoint)(v, edge);
     U turn = angle;
@@ -715,9 +715,9 @@ extern "C" void __cdecl EffectKind99_DrawFan(const long* point, long radius, uns
         turn += 0x100;
         a = turn & 0xFFFFu;
         const U c = static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(a)));
-        v[0] = static_cast<long>(Sar(Mul(c, r), 12) + static_cast<U>(point[0]));
+        v[0] = static_cast<std::int32_t>(Sar(Mul(c, r), 12) + static_cast<U>(point[0]));
         const U s = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(a)));
-        v[1] = static_cast<long>(Sar(Mul(s, r), 12) + static_cast<U>(point[1]));
+        v[1] = static_cast<std::int32_t>(Sar(Mul(s, r), 12) + static_cast<U>(point[1]));
         SH_CALL(EffectGte_ProjectPoint)(v, edge);
         std::memcpy(prim + 0x20, edge, 12);
         prim[4] = 0x80;

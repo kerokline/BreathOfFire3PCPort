@@ -36,16 +36,16 @@ template <typename T> U AddressOf(T* p) { return Low32(p); }
 
 // A table entry as the original's jmp reaches it: the word its caller left on
 // the stack, eax back.
-using EntryBossSi = unsigned long (__cdecl*)(unsigned);
+using EntryBossSi = std::uint32_t (__cdecl*)(unsigned);
 
-unsigned long CallEntryBossSi(U table, unsigned index, unsigned word) {
+std::uint32_t CallEntryBossSi(U table, unsigned index, unsigned word) {
     // the entry as read: the fuzz swaps the table's cells for its recorders
     return reinterpret_cast<EntryBossSi>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(table + 4 * index)))))(word);
 }
 
 // jmp [table + 4 * Sprite_Current[at]]: the table's `entries` handlers, a
 // Fatal past them (the original jumps through the dword after).
-unsigned long DispatchBossSi(const char* who, U table, unsigned entries, unsigned at, unsigned word) {
+std::uint32_t DispatchBossSi(const char* who, U table, unsigned entries, unsigned at, unsigned word) {
     const unsigned state = Sprite_Current[at];
     if (state >= entries)
         bof3::Fatal("%s: state byte +%u is %u, past the %u entries of 0x%X - the original jumps through the dword after "
@@ -57,7 +57,7 @@ unsigned long DispatchBossSi(const char* who, U table, unsigned entries, unsigne
 // mov eax, [esp + 4]; and eax, 0xFF; jmp [table + 4 * eax]: an enemy's +0xF4
 // hook by its word's low byte (3 entries in every table of the group), the
 // word itself left for the entry.
-unsigned long HookDispatchBossSi(const char* who, U table, unsigned word) {
+std::uint32_t HookDispatchBossSi(const char* who, U table, unsigned word) {
     const unsigned index = word & 0xFF;
     if (index >= 3)
         bof3::Fatal("%s: hook word %u is past the 3 entries of 0x%X - the original jumps through the dword after "
@@ -113,7 +113,7 @@ void EndStepBossSi(unsigned step) {
 }  // namespace
 
 // original 0x43F0A0: BossKind_Table[49]: BossSample4_Steps (12) by +1.
-extern "C" unsigned long __cdecl BossSample4_Dispatch(unsigned word) {
+extern "C" std::uint32_t __cdecl BossSample4_Dispatch(unsigned word) {
     return DispatchBossSi("BossSample4_Dispatch", AddressOf(BossSample4_Steps), 12, 1, word);
 }
 
@@ -124,7 +124,7 @@ extern "C" unsigned char __cdecl BossSample4_Enter(void) {
 }
 
 // original 0x43F120: the +0xF4 hook: BossSample4_Hooks (3, all BareRet).
-extern "C" unsigned long __cdecl BossSample4_Hook(unsigned word) {
+extern "C" std::uint32_t __cdecl BossSample4_Hook(unsigned word) {
     return HookDispatchBossSi("BossSample4_Hook", AddressOf(BossSample4_Hooks), word);
 }
 
@@ -133,7 +133,7 @@ extern "C" unsigned long __cdecl BossSample4_Hook(unsigned word) {
 extern "C" void __cdecl Boss42_Setup(void) { SetupPickWay(); }
 
 // original 0x43F150: BossKind_Table[52]: BossSample7_Steps (12) by +1.
-extern "C" unsigned long __cdecl BossSample7_Dispatch(unsigned word) {
+extern "C" std::uint32_t __cdecl BossSample7_Dispatch(unsigned word) {
     return DispatchBossSi("BossSample7_Dispatch", AddressOf(BossSample7_Steps), 12, 1, word);
 }
 
@@ -144,12 +144,12 @@ extern "C" unsigned char __cdecl BossSample7_Enter(void) {
 }
 
 // original 0x43F1D0: the +0xF4 hook: BossSample7_Hooks (3, all BareRet).
-extern "C" unsigned long __cdecl BossSample7_Hook(unsigned word) {
+extern "C" std::uint32_t __cdecl BossSample7_Hook(unsigned word) {
     return HookDispatchBossSi("BossSample7_Hook", AddressOf(BossSample7_Hooks), word);
 }
 
 // original 0x43F1E0: BossKind_Table[56]: BossManmo_Steps (12) by +1.
-extern "C" unsigned long __cdecl BossManmo_Dispatch(unsigned word) {
+extern "C" std::uint32_t __cdecl BossManmo_Dispatch(unsigned word) {
     return DispatchBossSi("BossManmo_Dispatch", AddressOf(BossManmo_Steps), 12, 1, word);
 }
 
@@ -160,7 +160,7 @@ extern "C" unsigned char __cdecl BossManmo_Enter(void) {
 }
 
 // original 0x43F260: the +0xF4 hook: BossManmo_Hooks (3, all BareRet).
-extern "C" unsigned long __cdecl BossManmo_Hook(unsigned word) {
+extern "C" std::uint32_t __cdecl BossManmo_Hook(unsigned word) {
     return HookDispatchBossSi("BossManmo_Hook", AddressOf(BossManmo_Hooks), word);
 }
 

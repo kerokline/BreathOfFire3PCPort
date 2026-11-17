@@ -428,7 +428,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_SharedMember
 extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_MemberStatusRun(void) {
     StepRest2h("ShopWin_MemberStatusRun", ::bof3::Img(ShopWin_MemberStatusSteps_addr), 3);
     const unsigned char* const w = RecRest2h();
-    using Five = unsigned long (__cdecl*)(int, int, unsigned, unsigned, unsigned);
+    using Five = std::uint32_t (__cdecl*)(int, int, unsigned, unsigned, unsigned);
     reinterpret_cast<Five>(SH_CALL(Menu_DrawMemberStatus))(XRest2h(w), YRest2h(w), w[0xA], 0, 0);
 }
 

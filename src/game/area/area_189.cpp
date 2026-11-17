@@ -76,9 +76,9 @@ void CopyFloatX87(unsigned char* to, const unsigned char* from) {
 }
 
 // 0x511C10 (x, z): the map's height, in ax.
-using HeightFn = short (__cdecl*)(long, long);
+using HeightFn = short (__cdecl*)(std::int32_t, std::int32_t);
 
-short HeightAt(U x, U z) { return AH_AT(HeightFn, at::kHeightAt.v)(static_cast<long>(x), static_cast<long>(z)); }
+short HeightAt(U x, U z) { return AH_AT(HeightFn, at::kHeightAt.v)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z)); }
 
 // Area 189: the pending area change of its walk and exit button:
 // Field_ChangeArea(the area word, x, z, the flags byte) from the four cells.
@@ -214,8 +214,8 @@ extern "C" void __cdecl Area189_LeaderProject(void) {
     Prim_VertexScratch[0].y = scaled(static_cast<U>(Field_Kind2Z));
     const auto y = static_cast<std::int32_t>(static_cast<std::int16_t>(rv::Current<records::SpriteHead>()->height_whole));
     Prim_VertexScratch[0].z = static_cast<short>(-(y / 2));
-    long depth[2];
-    AH_CALL(Gte_RotTransPers)(reinterpret_cast<short*>(Prim_VertexScratch), reinterpret_cast<unsigned long*>(MapView_ScreenXY), &depth[1]);
+    std::int32_t depth[2];
+    AH_CALL(Gte_RotTransPers)(reinterpret_cast<short*>(Prim_VertexScratch), reinterpret_cast<std::uint32_t*>(MapView_ScreenXY), &depth[1]);
     AH_CALL(Gte_StoreDepthF)(reinterpret_cast<float*>(Cur() + 0x7C));
     CopyFloatX87(Cur() + 0x78, Mem(::bof3::Img(MapView_ScreenXY_addr) + 0x4));
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_y, 1);

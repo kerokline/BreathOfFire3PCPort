@@ -103,5 +103,5 @@ void GameClock_Inject() {
     bof3::PatchBytes("Game_Clock", Imp_GetTickCount_addr, expected, replacement, 4);
     g_ours = reinterpret_cast<std::uintptr_t>(Imp_GetTickCount.Native()) == ours;
     if (g_ours)
-        bof3::Log("DIV-0022    game clock: milliseconds since the game started, from %lu", static_cast<unsigned long>(g_base));
+        bof3::Log("DIV-0022    game clock: milliseconds since the game started, from %u", static_cast<std::uint32_t>(g_base));
 }

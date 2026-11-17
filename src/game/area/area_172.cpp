@@ -51,7 +51,7 @@ unsigned char* EffectAt(unsigned slot) { return rv::Bytes(&Effect_Objects[slot])
 unsigned char* PartyRecord(unsigned m) { return Mem(::bof3::Img(ObjTrio_addr) + m * at::kPartyStride); }
 
 // The high word of a 16.16 position, as the hooks read it (a word at +2).
-std::uint16_t High(long v) { return static_cast<std::uint16_t>(static_cast<U>(v) >> 16); }
+std::uint16_t High(std::int32_t v) { return static_cast<std::uint16_t>(static_cast<U>(v) >> 16); }
 
 // A word in [lo, lo + 3), compared as the originals' `sub; cmp r16, 3; jb`.
 bool In3(std::uint16_t v, unsigned lo) { return static_cast<std::uint16_t>(v - lo) < 3; }
@@ -179,7 +179,7 @@ extern "C" void __cdecl Area172_FallStep(void) {
     AH_CALL(Field_LeaderStepTick)();
     o = Sprite_Current;
     tO = rv::As<records::SpriteObject>(o);
-    const long ground = AH_CALL(MapView_GroundAt)(tO->x, tO->z);
+    const std::int32_t ground = AH_CALL(MapView_GroundAt)(tO->x, tO->z);
     o = Sprite_Current;
     tO = rv::As<records::SpriteObject>(o);
     if (static_cast<std::int16_t>(ground) > static_cast<std::int16_t>(rv::As<records::SpriteObject>(o)->height_whole)) {
@@ -356,7 +356,7 @@ extern "C" void __cdecl Area172_Tail35(void) {
 // original 0x4281A0 (Area_StepHook's case for area 172, 0x56E1E2):
 // Cond_ByteFD 0, x exactly 0x248000, z's high word 0x35..0x37 and the
 // leader's pose 6, 7 or 0: tail kind 35 armed at 0, al 1; else al 0.
-extern "C" unsigned char __cdecl Area172_StepHook(long x, long z) {
+extern "C" unsigned char __cdecl Area172_StepHook(std::int32_t x, std::int32_t z) {
     if (Cond_ByteFD != 0) return 0;
     if (static_cast<U>(x) != 0x248000) return 0;
     if (!In3(High(z), 0x35)) return 0;

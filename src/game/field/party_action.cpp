@@ -57,11 +57,11 @@ Handler Entry(std::uint32_t table, unsigned index) {
 
 // Field_DirectionSteps' row for a direction (two longs, x then z), the
 // direction unchecked: the table has 8 rows.
-long StepX(unsigned d) { return Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8)); }
+std::int32_t StepX(unsigned d) { return Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8)); }
 
-long StepZ(unsigned d) { return Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8 + 4)); }
+std::int32_t StepZ(unsigned d) { return Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8 + 4)); }
 
-long Add(long a, long b) { return static_cast<long>(static_cast<std::uint32_t>(a) + static_cast<std::uint32_t>(b)); }
+std::int32_t Add(std::int32_t a, std::int32_t b) { return static_cast<std::int32_t>(static_cast<std::uint32_t>(a) + static_cast<std::uint32_t>(b)); }
 
 // The animation offset of a direction as the original computes it: (d - 1)
 // / 2 as a signed division (cdq, sub, sar), so direction 0 gives 0.
@@ -79,11 +79,11 @@ namespace {
 // there (MapView_GroundAt) is above the sprite's +0x3E, +0x2B = 0.
 void ProbeSide(unsigned d) {
     const records::PartyMember* s = rv::Current<records::PartyMember>();
-    const long x = Add(s->x, StepX(d));
-    const long z = Add(s->z, StepZ(d));
-    const long slope = g.slope_at(x, z, d);
+    const std::int32_t x = Add(s->x, StepX(d));
+    const std::int32_t z = Add(s->z, StepZ(d));
+    const std::int32_t slope = g.slope_at(x, z, d);
     if (field_hidden::at::kScratch == 0 || static_cast<short>(slope) <= 0x40) return;
-    const long ground = g.ground_at(x, z);
+    const std::int32_t ground = g.ground_at(x, z);
     s = rv::Current<records::PartyMember>();
     if (static_cast<short>(s->height_whole) < static_cast<short>(ground)) Sprite_Current[0x2B] = 0;
 }
@@ -149,9 +149,9 @@ void SideProbe(unsigned d) {
     const unsigned char* s = Sprite_Current;
     const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepXRest0a(d);
     const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZRest0a(d);
-    const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
+    const std::int32_t slope = SH_CALL(MapView_SlopeAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), d);
     if (SharedScratch.b_00 == 0 || static_cast<short>(slope) <= 0x40) return;
-    const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
+    const std::int32_t ground = SH_CALL(MapView_GroundAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z));
     s = Sprite_Current;
     if (static_cast<short>(rv::As<records::PartyMember>(s)->height_whole) < static_cast<short>(ground)) Sprite_Current[0x2B] = 0;
 }
@@ -236,9 +236,9 @@ void SideProbeRest1a(URest1a row, unsigned d) {
     const unsigned char* const s = Sc();
     const URest1a x = static_cast<URest1a>(rv::As<records::PartyMember>(s)->x) + static_cast<URest1a>(L(row));
     const URest1a z = static_cast<URest1a>(rv::As<records::PartyMember>(s)->z) + static_cast<URest1a>(L(row + 4));
-    const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
+    const std::int32_t slope = SH_CALL(MapView_SlopeAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), d);
     if (rest_1a::at::kScratchFlag == 0 || static_cast<short>(slope) <= 0x40) return;
-    const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
+    const std::int32_t ground = SH_CALL(MapView_GroundAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z));
     unsigned char* const c = Sc();
     if (static_cast<short>(rv::As<records::PartyMember>(c)->height_whole) < static_cast<short>(ground)) c[0x2B] = 0;
 }
@@ -255,7 +255,7 @@ void Form0Begin() {
     const unsigned d = s[8];
     const URest1a x = static_cast<URest1a>(rv::As<records::PartyMember>(s)->x) + StepXRest1a(d);
     const URest1a z = static_cast<URest1a>(rv::As<records::PartyMember>(s)->z) + StepZRest1a(d);
-    const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
+    const std::int32_t slope = SH_CALL(MapView_SlopeAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), d);
     if (rest_1a::at::kScratchFlag != 0 && static_cast<short>(slope) > 0x40) {
         SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(HalfTurn(Sc()[8]) + 0x46));
         ++Sc()[2];
@@ -287,7 +287,7 @@ void Form0Resolve(CellFn pickup, const char* who) {
         const unsigned d = s[8];
         const URest1a x = static_cast<URest1a>(rv::As<records::PartyMember>(s)->x) + 2u * StepXRest1a(d);
         const URest1a z = static_cast<URest1a>(Long(s + 0x38)) + 2u * StepZRest1a(d);
-        const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 0);
+        const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), 0);
         if (found != 0xFF) MarkObject(found, who);
         const unsigned cx = x >> 16, cz = z >> 16;
         if (pickup(cx, cz) == 0) {
@@ -379,7 +379,7 @@ constexpr ::bof3::image::Va kScriptFlagsHigh{0x9039A3};                // Field_
 unsigned char* S() { return Sprite_Current; }
 
 // A .data table's address (its symbols.toml name is a pointer).
-U TableAt(const unsigned long* table) { return Low32(table); }
+U TableAt(const std::uint32_t* table) { return Low32(table); }
 
 // A .data dispatch table read in place. The original's index is unchecked:
 // past the table it jumps through the next table's cell, or into data. Ours
@@ -458,9 +458,9 @@ void ProbeSideRest1b(unsigned d) {
     const unsigned char* s = S();
     const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepXRest1b(d);
     const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZRest1b(d);
-    const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
+    const std::int32_t slope = SH_CALL(MapView_SlopeAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), d);
     if (SharedScratch.b_00 == 0 || static_cast<short>(slope) <= 0x40) return;
-    const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
+    const std::int32_t ground = SH_CALL(MapView_GroundAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z));
     s = S();
     if (static_cast<short>(rv::As<records::PartyMember>(s)->height_whole) < static_cast<short>(ground)) S()[0x2B] = 0;
 }
@@ -472,7 +472,7 @@ void Begin() {
     const unsigned d = s[8];
     const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepXRest1b(d);
     const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZRest1b(d);
-    const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
+    const std::int32_t slope = SH_CALL(MapView_SlopeAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), d);
     if (SharedScratch.b_00 != 0 && static_cast<short>(slope) > 0x40) {
         SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(HalfTurn(S()[8]) + 0x46));
         ++S()[2];
@@ -516,7 +516,7 @@ template <typename C> void Resolve(C cell, const char* who) {
     --S()[0xA];
     if (S()[0xA] == 0) {
         const Ahead p = TwoAheadRest1b();
-        const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(p.x), static_cast<long>(p.z), 0);
+        const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<std::int32_t>(p.x), static_cast<std::int32_t>(p.z), 0);
         if (found != 0xFF) MarkObjectRest1b(found, true, who);
         Cells(p, cell);
         ++S()[2];
@@ -587,7 +587,7 @@ void Form1Begin(const char* who) {
     }
     const Ahead p = TwoAheadRest1b();
     if ((Field_State[0x138] & 1) == 0) {
-        const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(p.x), static_cast<long>(p.z), 1);
+        const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<std::int32_t>(p.x), static_cast<std::int32_t>(p.z), 1);
         if (found != 0xFF) MarkObjectRest1b(found, false, who);
     }
     Field_State[0x137] = 0;
@@ -621,7 +621,7 @@ template <typename C> void Hit(C cell, bool sounds_first, const char* who) {
                 ++S()[3];
             } else {
                 const Ahead p = TwoAheadRest1b();
-                const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(p.x), static_cast<long>(p.z), 0);
+                const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<std::int32_t>(p.x), static_cast<std::int32_t>(p.z), 0);
                 if (found != 0xFF) {
                     MarkObjectRest1b(found, true, who);
                     SH_CALL(Sound_PlayEffect)(0x10B);
@@ -685,7 +685,7 @@ inline auto& kSloped = SharedScratch.b_00;  // SharedScratch's first byte: AreaM
 constexpr U kObjectStride = 0xA4;
 
 // The count of each of the 28 dispatch tables, by its symbols.toml entry.
-struct TableCount { const unsigned long* table; unsigned count; };
+struct TableCount { const std::uint32_t* table; unsigned count; };
 
 unsigned CountOf(U table, const char* who) {
 #define R1C_T(t) {t, t##_count}
@@ -777,9 +777,9 @@ void ProbeSideRest1c(U row, unsigned d) {
     const unsigned char* s = Sprite_Current;
     const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + static_cast<U>(Long(At(row)));
     const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + static_cast<U>(Long(At(row + 4)));
-    const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
+    const std::int32_t slope = SH_CALL(MapView_SlopeAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), d);
     if (Sloped() == 0 || static_cast<short>(slope) <= 0x40) return;
-    const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
+    const std::int32_t ground = SH_CALL(MapView_GroundAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z));
     s = Sprite_Current;
     if (static_cast<short>(rv::As<records::PartyMember>(s)->height_whole) < static_cast<short>(ground)) Sprite_Current[0x2B] = 0;
 }
@@ -833,7 +833,7 @@ void Form0BeginRest1c() {
     const unsigned d = s[8];
     const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepXRest1c(d);
     const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZRest1c(d);
-    const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
+    const std::int32_t slope = SH_CALL(MapView_SlopeAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), d);
     if (Sloped() != 0 && static_cast<short>(slope) > 0x40) BeginSteep();
     else BeginLevel();
     BeginEnd();
@@ -850,10 +850,10 @@ void Form2Begin() {
     const unsigned d = s[8];
     const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepXRest1c(d);
     const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZRest1c(d);
-    const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
+    const std::int32_t ground = SH_CALL(MapView_GroundAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z));
     s = Sprite_Current;
     const auto rise = static_cast<short>(static_cast<std::uint16_t>(static_cast<U>(ground) - Word(s + 0x3E)));
-    SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), s[8]);
+    SH_CALL(MapView_SlopeAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), s[8]);
     if (Sloped() != 0 && rise > 0x40) BeginSteep();
     else BeginLevel();
     BeginEnd();
@@ -873,7 +873,7 @@ void Form0ResolveRest1c(CellFn pickup, const char* who) {
         const unsigned d = s[8];
         const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + 2u * StepXRest1c(d);
         const U z = static_cast<U>(Long(s + 0x38)) + 2u * StepZRest1c(d);
-        const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 0);
+        const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), 0);
         if (found != 0xFF) MarkObjectRest1c(found, who);
         const unsigned cx = x >> 16, cz = z >> 16;
         if (pickup(cx, cz) == 0) {
@@ -971,7 +971,7 @@ void BlockedResolve(CellFn hit, const char* who) {
                 const unsigned d = c[8];
                 const U x = static_cast<U>(rv::As<records::PartyMember>(c)->x) + 2u * StepXRest1c(d);
                 const U z = static_cast<U>(Long(c + 0x38)) + 2u * StepZRest1c(d);
-                const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 0);
+                const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), 0);
                 if (found != 0xFF) {
                     MarkObjectRest1c(found, who);
                     SH_CALL(Sound_PlayEffect)(0x10B);
@@ -1071,7 +1071,7 @@ void Kind30Begin(const char* who) {
     const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + 2u * StepXRest1c(d);
     const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + 2u * StepZRest1c(d);
     if ((Field_State[0x138] & 1) == 0) {
-        const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 1);
+        const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), 1);
         if (found != 0xFF) MarkObjectRest1c(found, who);
     }
     Field_State[0x137] = 0;
@@ -1162,9 +1162,9 @@ void SideProbeRest1d(unsigned d) {
     const unsigned char* s = Sprite_Current;
     const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepXRest1d(d);
     const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZRest1d(d);
-    const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
+    const std::int32_t slope = SH_CALL(MapView_SlopeAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), d);
     if (SharedScratch.b_00 == 0 || static_cast<short>(slope) <= 0x40) return;
-    const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
+    const std::int32_t ground = SH_CALL(MapView_GroundAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z));
     s = Sprite_Current;
     if (static_cast<short>(rv::As<records::PartyMember>(s)->height_whole) < static_cast<short>(ground)) Sprite_Current[0x2B] = 0;
 }
@@ -1194,10 +1194,10 @@ void FormBegin() {
     const unsigned d = s[8];
     const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepXRest1d(d);
     const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZRest1d(d);
-    const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
+    const std::int32_t ground = SH_CALL(MapView_GroundAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z));
     const auto rise = static_cast<short>(static_cast<std::uint16_t>(static_cast<U>(ground) - Word(Sprite_Current + 0x3E)));
     const unsigned direction = Sprite_Current[8];
-    SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), direction);
+    SH_CALL(MapView_SlopeAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), direction);
     if (SharedScratch.b_00 != 0 && rise > 0x40) {
         SH_CALL(Sprite_EnsureAnimation)(Pose(Sprite_Current[8], 0x46));
         ++Sprite_Current[2];
@@ -1223,7 +1223,7 @@ void FormResolve(CellProbe pickup, const char* who) {
     if (Sprite_Current[0xA] == 0) {
         U x, z;
         TwoAheadRest1d(x, z);
-        const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 0);
+        const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), 0);
         if (found != 0xFF) MarkObjectRest1d(found, true, who);
         TryCells(pickup, x, z);
         ++Sprite_Current[2];
@@ -1310,7 +1310,7 @@ void Kind30BeginRest1d(const char* who) {
     U x, z;
     TwoAheadRest1d(x, z);
     if ((Field_State[0x138] & 1) == 0) {
-        const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 1);
+        const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), 1);
         if (found != 0xFF) MarkObjectRest1d(found, false, who);
     }
     Field_State[0x137] = 0;
@@ -1336,7 +1336,7 @@ void Dispatch(const char* who, const char* by, U table, unsigned index, unsigned
 
 // A state table's address (symbols.toml [[data]]: the name is a pointer to its
 // first dword).
-U Table(const unsigned long* t) { return Low32(t); }
+U Table(const std::uint32_t* t) { return Low32(t); }
 
 void ByState2(const char* who, U table, unsigned entries) { Dispatch(who, "the state byte +2", table, S()[2], entries); }
 
@@ -1378,9 +1378,9 @@ void SideProbeRest1e(unsigned d, U row) {
     const unsigned char* const s = S();
     const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + static_cast<U>(Long(At(row)));
     const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + static_cast<U>(Long(At(row + 4)));
-    const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
+    const std::int32_t slope = SH_CALL(MapView_SlopeAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), d);
     if (SharedScratch.b_00 == 0 || static_cast<short>(slope) <= 0x40) return;
-    const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
+    const std::int32_t ground = SH_CALL(MapView_GroundAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z));
     unsigned char* const c = S();
     if (static_cast<short>(rv::As<records::PartyMember>(c)->height_whole) < static_cast<short>(ground)) c[0x2B] = 0;
 }
@@ -1446,7 +1446,7 @@ void Form2BeginRest1e() {
     const unsigned d = s[8];
     const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepXRest1e(d);
     const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZRest1e(d);
-    const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
+    const std::int32_t ground = SH_CALL(MapView_GroundAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z));
     s = S();
     const auto rise = static_cast<short>(static_cast<std::uint16_t>(static_cast<U>(ground) - Word(s + 0x3E)));
     // push eax with al the direction and the rest of eax Sprite_Current itself.
@@ -1456,7 +1456,7 @@ void Form2BeginRest1e() {
     U upper = Low32(s) & 0xFFFFFF00u;
     asm volatile("" : "+r"(upper));
     const U direction = upper | s[8];
-    SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), direction);   // its answer unused
+    SH_CALL(MapView_SlopeAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), direction);   // its answer unused
     if (SharedScratch.b_00 != 0 && rise > 0x40) {
         SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(HalfTurnRest1e(S()[8]) + 0x46));
         ++S()[2];
@@ -1477,7 +1477,7 @@ void Form2Resolve(const char* who, CellHelper pickup) {
     if (S()[0xA] == 0) {
         U x, z;
         TwoAheadRest1e(x, z);
-        const unsigned char found = AlRest1e(SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 0));
+        const unsigned char found = AlRest1e(SH_CALL(Sprite_ObjectAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), 0));
         if (found != 0xFF) FlagObject(who, found);
         CellsAhead(pickup, x, z);
         ++S()[2];
@@ -1549,7 +1549,7 @@ void Strike(const char* who, CellHelper strike) {
             } else {
                 U x, z;
                 TwoAheadRest1e(x, z);
-                const unsigned char found = AlRest1e(SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 0));
+                const unsigned char found = AlRest1e(SH_CALL(Sprite_ObjectAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), 0));
                 if (found != 0xFF) {
                     FlagObject(who, found);
                     SH_CALL(Sound_PlayEffect)(rest_1e::at::kSoundStrike);
@@ -1621,7 +1621,7 @@ std::uint16_t W16(unsigned v) { return static_cast<std::uint16_t>(v); }
 // A dispatcher: the table's entry by `index`, called as the original jumps
 // to it - a Fatal past the table's own entries, where the original jumps
 // through the dword after (docs/rest_1f.md section 7).
-void DispatchRest1f(const char* who, const char* by, const unsigned long* table, unsigned count, unsigned index) {
+void DispatchRest1f(const char* who, const char* by, const std::uint32_t* table, unsigned count, unsigned index) {
     if (index >= count)
         bof3::Fatal("%s: %s is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/rest_1f.md section 7)",
@@ -1629,15 +1629,15 @@ void DispatchRest1f(const char* who, const char* by, const unsigned long* table,
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
 }
 
-void ByStateRest1f(const char* who, const unsigned long* table, unsigned count) {
+void ByStateRest1f(const char* who, const std::uint32_t* table, unsigned count) {
     DispatchRest1f(who, "Sprite_Current +2", table, count, Sc()[2]);
 }
 
-void ByStepRest1f(const char* who, const unsigned long* table, unsigned count) {
+void ByStepRest1f(const char* who, const std::uint32_t* table, unsigned count) {
     DispatchRest1f(who, "Sprite_Current +3", table, count, Sc()[3]);
 }
 
-void ByFormRest1f(const char* who, const unsigned long* table, unsigned count) {
+void ByFormRest1f(const char* who, const std::uint32_t* table, unsigned count) {
     DispatchRest1f(who, "Sprite_Current's word +0x2C", table, count, rv::As<records::PartyMember>(Sc())->column);
 }
 
@@ -1686,9 +1686,9 @@ void SideProbeRest1f(unsigned d) {
     const unsigned char* const s = Sc();
     const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepXRest1f(d);
     const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZRest1f(d);
-    const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
+    const std::int32_t slope = SH_CALL(MapView_SlopeAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), d);
     if (SharedScratch.b_00 == 0 || static_cast<short>(slope) <= 0x40) return;
-    const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
+    const std::int32_t ground = SH_CALL(MapView_GroundAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z));
     if (static_cast<short>(rv::As<records::PartyMember>(Sc())->height_whole) < static_cast<short>(ground)) Sc()[0x2B] = 0;
 }
 
@@ -1707,9 +1707,9 @@ void BeginShape() {
     const unsigned d = s[8];
     const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepXRest1f(d);
     const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZRest1f(d);
-    const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
+    const std::int32_t ground = SH_CALL(MapView_GroundAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z));
     const auto rise = static_cast<short>(static_cast<std::uint16_t>(static_cast<U>(ground) - Word(Sc() + 0x3E)));
-    SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), Sc()[8]);
+    SH_CALL(MapView_SlopeAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), Sc()[8]);
     if (SharedScratch.b_00 != 0 && rise > 0x40) {
         SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(HalfTurn(Sc()[8]) + 0x46));
         ++Sc()[2];
@@ -1735,7 +1735,7 @@ void ResolveShape(Pickup pickup, const char* who) {
         const unsigned d = s[8];
         const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + 2u * StepXRest1f(d);
         const U z = static_cast<U>(Long(s + 0x38)) + 2u * StepZRest1f(d);
-        const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 0);
+        const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), 0);
         if (found != 0xFF) MarkObjectRest1f(found, who);
         const unsigned cx = x >> 16, cz = z >> 16;
         if (scenario_harness::Call(pickup)(cx, cz) == 0) {
@@ -1867,7 +1867,7 @@ extern "C" unsigned char __cdecl PartyAction_TargetAhead(void) {
     U x, z;
     TwoAhead(x, z);
     unsigned char found = 0;
-    if (SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 0) != 0xFF) found = 1;
+    if (SH_CALL(Sprite_ObjectAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), 0) != 0xFF) found = 1;
     if (MapTarget(SH_CALL(AreaMap_ByteAt)(Cell(x), Cell(z)))) found = 1;
     if ((x & 0xFFFF) != 0 && MapTarget(SH_CALL(AreaMap_ByteAt)(CellPlusOne(x), Cell(z)))) found = 1;
     if ((z & 0xFFFF) != 0 && MapTarget(SH_CALL(AreaMap_ByteAt)(Cell(x), CellPlusOne(z)))) found = 1;
@@ -1925,7 +1925,7 @@ extern "C" void __cdecl PartyAction0_Form2Begin(void) {
     const URest1a x = static_cast<URest1a>(rv::As<records::PartyMember>(s)->x) + 2u * StepXRest1a(d);
     const URest1a z = static_cast<URest1a>(rv::As<records::PartyMember>(s)->z) + 2u * StepZRest1a(d);
     if ((Fs()[0x138] & 1) == 0) {
-        const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 1);
+        const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), 1);
         if (found != 0xFF) MarkObject(found, "PartyAction0_Form2Begin (0x51C530)");
     }
     Fs()[0x137] = 0;
@@ -2106,7 +2106,7 @@ extern "C" void __cdecl PartyAction2_Form2Strike(void) {
                 const unsigned d = s[8];
                 const URest1a x = static_cast<URest1a>(rv::As<records::PartyMember>(s)->x) + 2u * StepXRest1a(d);
                 const URest1a z = static_cast<URest1a>(Long(s + 0x38)) + 2u * StepZRest1a(d);
-                const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 0);
+                const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), 0);
                 if (found != 0xFF) {
                     MarkObject(found, "PartyAction2_Form2Strike (0x51D2F0)");
                     SH_CALL(Sound_PlayEffect)(0x10B);
@@ -2422,9 +2422,9 @@ FH_EXPORT void __cdecl PartyAction5_Form0Begin(void) {
         s = rv::Current<records::PartyMember>();
     }
     const unsigned d = s->direction;
-    const long x = Add(s->x, StepX(d));
-    const long z = Add(s->z, StepZ(d));
-    const long slope = g.slope_at(x, z, d);
+    const std::int32_t x = Add(s->x, StepX(d));
+    const std::int32_t z = Add(s->z, StepZ(d));
+    const std::int32_t slope = g.slope_at(x, z, d);
     if (field_hidden::at::kScratch != 0 && static_cast<short>(slope) > 0x40) {
         g.ensure_animation(static_cast<unsigned char>(HalfTurn(rv::Current<records::PartyMember>()->direction) + 0x46));
         ++rv::Current<records::PartyMember>()->step;
@@ -2458,7 +2458,7 @@ FH_EXPORT void __cdecl PartyAction5_Form0Resolve(void) {
         const unsigned d = s->direction;
         const std::uint32_t x = static_cast<std::uint32_t>(s->x) + 2u * static_cast<std::uint32_t>(StepX(d));
         const std::uint32_t z = static_cast<std::uint32_t>(s->z) + 2u * static_cast<std::uint32_t>(StepZ(d));
-        const unsigned char found = Al(g.object_at(static_cast<long>(x), static_cast<long>(z), 0));
+        const unsigned char found = Al(g.object_at(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), 0));
         if (found != 0xFF) {
             const int i = static_cast<signed char>(found);
             if (i < 0x1E)
@@ -3052,7 +3052,7 @@ extern "C" void __cdecl PartyAction12_Form0Resolve(void) {
             } else {
                 U x, z;
                 TwoAheadRest1d(x, z);
-                const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 0);
+                const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), 0);
                 if (found != 0xFF) {
                     MarkObjectRest1d(found, true, "PartyAction12_Form0Resolve (0x5221E0)");
                     SH_CALL(Sound_PlayEffect)(0x10B);
@@ -3155,7 +3155,7 @@ extern "C" unsigned char __cdecl PartyAction_BlockedAhead(void) {
     U x, z;
     TwoAhead(x, z);
     unsigned char blocked = 0;
-    if (SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 0) != 0xFF) blocked = 1;
+    if (SH_CALL(Sprite_ObjectAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), 0) != 0xFF) blocked = 1;
     if (SH_CALL(Field_EffectAhead)() != 0xFF) blocked = 1;
     if (MapBlocked(SH_CALL(AreaMap_ByteAt)(Cell(x), Cell(z)))) blocked = 1;
     if ((x & 0xFFFF) != 0 && MapBlocked(SH_CALL(AreaMap_ByteAt)(CellPlusOne(x), Cell(z)))) blocked = 1;
@@ -3249,7 +3249,7 @@ extern "C" void __cdecl Effect_SpawnAtCellHigh(unsigned state, unsigned x, unsig
     rv::As<records::EffectObject>(e)->x = static_cast<std::int32_t>(static_cast<U>(static_cast<std::int32_t>(static_cast<short>(x))) << 16);
     const auto zz = static_cast<std::int32_t>(static_cast<U>(static_cast<std::int32_t>(static_cast<short>(z))) << 16);
     rv::As<records::EffectObject>(e)->z = zz;
-    const long ground = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(e)->x, zz);
+    const std::int32_t ground = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(e)->x, zz);
     rv::As<records::EffectObject>(e)->height_whole = static_cast<unsigned>(ground) + 0x200;
     e[0xB] = 1;
 }
@@ -3469,7 +3469,7 @@ extern "C" void __cdecl Effect_SpawnAtCell(unsigned state, unsigned x, unsigned 
     rv::As<records::EffectObject>(e)->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(static_cast<short>(x))) << 16);
     const auto zz = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(static_cast<short>(z))) << 16);
     rv::As<records::EffectObject>(e)->z = zz;
-    const long ground = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(e)->x, zz);
+    const std::int32_t ground = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(e)->x, zz);
     rv::Store<unsigned>(rv::As<records::SpriteHead>(e)->height_whole, static_cast<unsigned>(ground) + 0x100);
     e[0xB] = 0;
 }
@@ -3564,7 +3564,7 @@ extern "C" void __cdecl PartyAction18_Form0Sub0Strike(void) {
                 const unsigned d = c[8];
                 const U x = static_cast<U>(rv::As<records::PartyMember>(c)->x) + 2u * StepXRest1f(d);
                 const U z = static_cast<U>(Long(c + 0x38)) + 2u * StepZRest1f(d);
-                const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 0);
+                const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), 0);
                 if (found != 0xFF) {
                     MarkObjectRest1f(found, who);
                     SH_CALL(Sound_PlayEffect)(0x10B);

@@ -105,7 +105,7 @@ MENGINE_EXPORT void __cdecl HeadCrackerRock_Fall(void) {
     records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
     rv::Store<unsigned>(tsc->height_whole, tsc->height_whole + Word(sc + 0x14));
     rv::Store(tsc->step_y, tsc->step_y + tsc->work_20);
-    const long ground = MH_CALL(AreaMap_Elevation)(tsc->x, tsc->z);
+    const std::int32_t ground = MH_CALL(AreaMap_Elevation)(tsc->x, tsc->z);
     const int limit = static_cast<short>(static_cast<std::uint32_t>(ground) & 0xFFFF) + 0x180;
     unsigned char* const now = Sprite_Current;
     if (static_cast<short>(rv::As<records::BattleTask>(now)->height_whole) < limit) Bump(now[2]);

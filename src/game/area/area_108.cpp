@@ -324,7 +324,7 @@ extern "C" void __cdecl Area108_SpawnEffect51(void) {
     e[0] = 1;
     e[5] = 0x51;
     e[1] = 0xA;
-    const long ground = AH_CALL(AreaMap_Elevation)(tE->x, tE->z);
+    const std::int32_t ground = AH_CALL(AreaMap_Elevation)(tE->x, tE->z);
     tE->height = static_cast<std::int32_t>(static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(ground))) << 16);
 }
 
@@ -344,7 +344,7 @@ extern "C" void __cdecl Area108_CellsIfRequest5(void) {
 // 0. Else the entry's flag toggled, Sound_PlayEffect(0x206), and a free
 // effect slot (if any): flag 0x1C set, the record +0 = 1, kind +5 = 0x18,
 // +0xB = 0x1B, +1 = 0, words +0x36 / +0x3A the cell's x and z; al 1.
-extern "C" unsigned char __cdecl Area108_CellHook(long x, long z) {
+extern "C" unsigned char __cdecl Area108_CellHook(std::int32_t x, std::int32_t z) {
     const auto cx = static_cast<unsigned char>(x);
     const auto cz = static_cast<unsigned char>(z);
     const unsigned char pose = B(::bof3::Img(ObjTrio_addr) + 0x8);
@@ -442,7 +442,7 @@ extern "C" void __cdecl Area108_TailPlace(void) {
             tE->x = 0x218000;
             e[0] = 1;
             e[5] = 0x35;
-            const long ground = AH_CALL(AreaMap_Elevation)(tE->x, tE->z);
+            const std::int32_t ground = AH_CALL(AreaMap_Elevation)(tE->x, tE->z);
             tE->height = static_cast<std::int16_t>(ground);
         }
         B(::bof3::Img(Area108_Model_addr) + 0x3) = static_cast<unsigned char>((B(::bof3::Img(Area108_Model_addr) + 0x3) & 0xF1) | 0x41);

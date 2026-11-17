@@ -171,7 +171,7 @@ int save_menu::ListFiles(const char* pattern, unsigned char* table, bool bounded
     const U base = AddrSaveMenu(table);
     for (U i = 0; i < 0x60; ++i) PutLongSaveMenu(base + i * 4, 0);
     unsigned char found[0x118];
-    const long handle = g.find_first(pattern, found);
+    const std::int32_t handle = g.find_first(pattern, found);
     if (handle == -1) return 0;
     int count = 0;
     U entry = base;
@@ -248,7 +248,7 @@ extern "C" int __cdecl SaveMenu_MusicPlayingBody(U ecx) {
     U status = ecx;
     void* const* vtable;
     std::memcpy(&vtable, buffer, sizeof vtable);
-    reinterpret_cast<long (__stdcall*)(void*, U*)>(vtable[0x24 / 4])(buffer, &status);
+    reinterpret_cast<std::int32_t (__stdcall*)(void*, U*)>(vtable[0x24 / 4])(buffer, &status);
     return (status & 1) ? 1 : 0;
 }
 

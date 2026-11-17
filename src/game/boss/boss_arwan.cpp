@@ -40,16 +40,16 @@ template <typename T> U AddressOf(T* p) { return Low32(p); }
 
 // A table entry as the original's jmp reaches it: the word its caller left on
 // the stack, eax back.
-using EntryBossSi = unsigned long (__cdecl*)(unsigned);
+using EntryBossSi = std::uint32_t (__cdecl*)(unsigned);
 
-unsigned long CallEntryBossSi(U table, unsigned index, unsigned word) {
+std::uint32_t CallEntryBossSi(U table, unsigned index, unsigned word) {
     // the entry as read: the fuzz swaps the table's cells for its recorders
     return reinterpret_cast<EntryBossSi>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(table + 4 * index)))))(word);
 }
 
 // jmp [table + 4 * Sprite_Current[at]]: the table's `entries` handlers, a
 // Fatal past them (the original jumps through the dword after).
-unsigned long DispatchBossSi(const char* who, U table, unsigned entries, unsigned at, unsigned word) {
+std::uint32_t DispatchBossSi(const char* who, U table, unsigned entries, unsigned at, unsigned word) {
     const unsigned state = Sprite_Current[at];
     if (state >= entries)
         bof3::Fatal("%s: state byte +%u is %u, past the %u entries of 0x%X - the original jumps through the dword after "
@@ -61,7 +61,7 @@ unsigned long DispatchBossSi(const char* who, U table, unsigned entries, unsigne
 // mov eax, [esp + 4]; and eax, 0xFF; jmp [table + 4 * eax]: an enemy's +0xF4
 // hook by its word's low byte (3 entries in every table of the group), the
 // word itself left for the entry.
-unsigned long HookDispatchBossSi(const char* who, U table, unsigned word) {
+std::uint32_t HookDispatchBossSi(const char* who, U table, unsigned word) {
     const unsigned index = word & 0xFF;
     if (index >= 3)
         bof3::Fatal("%s: hook word %u is past the 3 entries of 0x%X - the original jumps through the dword after "
@@ -115,7 +115,7 @@ void EndStepBossSi(unsigned step) {
 // original 0x43F480: BossKind_Table[58]: BossArwan_Steps (12) by +1 (its entry
 // at 0, BossArwan_State4Dispatch at 4, BossArwan_State5Await at 5, the generic
 // states elsewhere).
-extern "C" unsigned long __cdecl BossArwan_Dispatch(unsigned word) {
+extern "C" std::uint32_t __cdecl BossArwan_Dispatch(unsigned word) {
     return DispatchBossSi("BossArwan_Dispatch", AddressOf(BossArwan_Steps), 12, 1, word);
 }
 
@@ -128,7 +128,7 @@ extern "C" unsigned char __cdecl BossArwan_Enter(void) {
 // original 0x43F500: state 4 (the generic table's turn start EnemyOp_TurnStart 0x4365D0): jmp
 // [BossArwan_State4Steps + 4 * Sprite_Current +2] (2: BossArwan_State4Fx,
 // BareRet).
-extern "C" unsigned long __cdecl BossArwan_State4Dispatch(unsigned word) {
+extern "C" std::uint32_t __cdecl BossArwan_State4Dispatch(unsigned word) {
     return DispatchBossSi("BossArwan_State4Dispatch", AddressOf(BossArwan_State4Steps), 2, 2, word);
 }
 
@@ -161,7 +161,7 @@ extern "C" void __cdecl BossArwan_State5Await(void) {
 }
 
 // original 0x43F5A0: the +0xF4 hook: BossArwan_Hooks (3, all BareRet).
-extern "C" unsigned long __cdecl BossArwan_Hook(unsigned word) {
+extern "C" std::uint32_t __cdecl BossArwan_Hook(unsigned word) {
     return HookDispatchBossSi("BossArwan_Hook", AddressOf(BossArwan_Hooks), word);
 }
 

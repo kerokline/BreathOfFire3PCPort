@@ -116,10 +116,10 @@ void __cdecl StubRelease() {
 }
 
 using Raw = const void*;
-template <std::size_t... K> void FillKinds(unsigned long* table, std::index_sequence<K...>) {
+template <std::size_t... K> void FillKinds(std::uint32_t* table, std::index_sequence<K...>) {
     ((table[K] = Address(reinterpret_cast<Raw>(&StubKind<K>))), ...);
 }
-template <std::size_t... S> void FillStates(unsigned long* table, std::index_sequence<S...>) {
+template <std::size_t... S> void FillStates(std::uint32_t* table, std::index_sequence<S...>) {
     ((table[S] = Address(reinterpret_cast<Raw>(&StubState<S>))), ...);
 }
 const frame_callees::CalleesFrameCallees kStubs = {
@@ -214,8 +214,8 @@ void SeedCamera() {
     for (unsigned i = 0; i < 3; ++i) Camera_Angles[i] = static_cast<short>(Half() ? Pick(kAngles) : Next());
     static const std::uint32_t kLongs[] = {0x7FFF0000u, 0x80000000u, 0xFFFF0000u, 0x00010000u, 0x7FFFFFFFu, 0xFFFFFFFFu, 0};
     for (unsigned i = 0; i < 3; ++i) {
-        CameraTurn_Angles[i] = static_cast<long>(Half() ? Pick(kLongs) : Next());
-        CameraTurn_Steps[i] = static_cast<long>(Half() ? Pick(kLongs) : Next() >> (Next() % 32));
+        CameraTurn_Angles[i] = static_cast<std::int32_t>(Half() ? Pick(kLongs) : Next());
+        CameraTurn_Steps[i] = static_cast<std::int32_t>(Half() ? Pick(kLongs) : Next() >> (Next() % 32));
     }
 }
 void SeedEffect(unsigned char* o) {
@@ -281,7 +281,7 @@ void SelfTest(void* const (&theirs)[kCount]) {
     static State saved, input, their_out, our_out;
     Capture(saved);
     std::memcpy(g_strip_saved, Gfx_ClutStrip, sizeof g_strip_saved);
-    unsigned long saved_kinds[kKinds], saved_states[kStates];
+    std::uint32_t saved_kinds[kKinds], saved_states[kStates];
     std::memcpy(saved_kinds, Effect_KindHandlers, sizeof saved_kinds);
     std::memcpy(saved_states, CameraTurn_States, sizeof saved_states);
     FillKinds(Effect_KindHandlers, std::make_index_sequence<kKinds>());

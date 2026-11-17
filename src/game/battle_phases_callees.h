@@ -138,7 +138,7 @@ struct Callees {
     Handler start_steps[2];
     Handler intro_steps[4];
     // Battle_Init's
-    unsigned long (__cdecl* banner_clear_all)();
+    std::uint32_t (__cdecl* banner_clear_all)();
     unsigned char (__cdecl* actor_is_out)(unsigned);
     void (__cdecl* init_encounter_kind)();
     void (__cdecl* task_clear_all)();
@@ -150,7 +150,7 @@ struct Callees {
     // the intro's
     unsigned (__cdecl* window_alloc)(unsigned, unsigned);
     const unsigned char* (__cdecl* msg_system_ptr)(unsigned);
-    unsigned long (__cdecl* queue_push)(unsigned, unsigned, unsigned long);
+    std::uint32_t (__cdecl* queue_push)(unsigned, unsigned, std::uint32_t);
     void (__cdecl* open_status)(unsigned);
     void (__cdecl* open_enemy_names)();
     void (__cdecl* open_sub1)(unsigned);
@@ -162,8 +162,8 @@ struct Callees {
     void (__cdecl* clear_commands)();
     void (__cdecl* build_entry_order)();
     void (__cdecl* auto_fill_commands)();
-    unsigned long (__cdecl* spawn_actor_copies)();
-    unsigned long (__cdecl* banner_show_name)(const unsigned char*);
+    std::uint32_t (__cdecl* spawn_actor_copies)();
+    std::uint32_t (__cdecl* banner_show_name)(const unsigned char*);
     void (__cdecl* play_effect)(unsigned short);
     unsigned char (__cdecl* return_item)(unsigned, unsigned);
     void (__cdecl* draw_command_cross)(int, int);

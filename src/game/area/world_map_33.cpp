@@ -729,7 +729,7 @@ extern "C" void __cdecl WorldMap33_DrawDrift(void) {
     rv::As<records::SVector>(v)[1].z = 0xFD00;
     rv::As<records::SVector>(v)[2].z = 0xFD00;
     rv::As<records::SVector>(v)[3].z = 0xFD00;
-    long depth = 0, flag = 0;
+    std::int32_t depth = 0, flag = 0;
     const auto* const sv = reinterpret_cast<const short*>(v);
     worldmap_area::g.rot_trans_pers4(sv, sv + 4, sv + 8, sv + 12, reinterpret_cast<float*>(prim + 8), reinterpret_cast<float*>(prim + 0x18),
                       reinterpret_cast<float*>(prim + 0x28), reinterpret_cast<float*>(prim + 0x38), &depth, &flag);

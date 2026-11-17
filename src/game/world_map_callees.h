@@ -90,7 +90,7 @@ inline U DrawItemsAt() { return Low32(draw_pool::Items()); }   // DIV-0062
 struct Callees {
     void (__cdecl* state0)();                                                  // 0x411310, Capcom's shared block
     void (__cdecl* draw_frame)(int, int);                                      // WorldMap_DrawFrame 0x404390 (this module)
-    void (__cdecl* set_draw_mode)(unsigned char*, int, int, unsigned, unsigned long);   // Gpu_SetDrawMode 0x5A77C0 (ours)
+    void (__cdecl* set_draw_mode)(unsigned char*, int, int, unsigned, std::uint32_t);   // Gpu_SetDrawMode 0x5A77C0 (ours)
     void (__cdecl* commit_prim)(unsigned, unsigned);                           // Gfx_CommitPrim 0x461E50 (ours)
     void (__cdecl* draw_sprite)(int, int, unsigned);                           // WorldMap_DrawSprite 0x404560 (this module)
     unsigned char (__cdecl* byte_at)(short, short);                            // AreaMap_ByteAt 0x536700 (ours)
@@ -101,18 +101,18 @@ struct Callees {
     const unsigned char* (__cdecl* text_draw_at)(int, int, int, int, const unsigned char*);   // Text_DrawAt 0x516B30 (ours)
     void (__cdecl* push_matrix)();                                             // Gte_PushMatrix 0x5A7B90 (ours)
     short* (__cdecl* rot_matrix)(const short*, short*);                        // Gte_RotMatrix 0x5A8060 (ours)
-    void (__cdecl* set_rot_matrix)(const unsigned long*);                      // Gte_SetRotMatrix 0x5A8DE0 (ours)
-    void (__cdecl* set_trans_matrix)(const unsigned long*);                    // Gte_SetTransMatrix 0x5A8E00 (ours)
+    void (__cdecl* set_rot_matrix)(const std::uint32_t*);                      // Gte_SetRotMatrix 0x5A8DE0 (ours)
+    void (__cdecl* set_trans_matrix)(const std::uint32_t*);                    // Gte_SetTransMatrix 0x5A8E00 (ours)
     unsigned char* (__cdecl* set_poly_g4)(unsigned char*);                     // Gpu_SetPolyG4 0x5A7610 (ours)
     // Gte_RotTransPers4 0x5A85F0 (ours): the original pushes TEN arguments -
     // libgte's (v0..v3, sxy0..sxy3, p, flag) - and ours reads nine (cdecl: the
     // tenth is harmless); the needle hands both locals as the original does.
-    long (__cdecl* rot_trans_pers4)(const short*, const short*, const short*, const short*, float*, float*, float*,
-                                    float*, long*, long*);
+    std::int32_t (__cdecl* rot_trans_pers4)(const short*, const short*, const short*, const short*, float*, float*, float*,
+                                    float*, std::int32_t*, std::int32_t*);
     void (__cdecl* prim_depths)(void*);                                        // Gte_PrimDepths4_10B 0x5A9350 (ours)
     void (__cdecl* pop_matrix)();                                              // Gte_PopMatrix 0x5A7BC0 (ours)
-    unsigned long (__cdecl* item_at)(long, long);                              // MapView_ItemAt 0x572ED0 (ours)
-    void (__cdecl* link_prim)(unsigned long*, unsigned long);                  // Gpu_LinkPrim 0x5A7560 (ours)
+    std::uint32_t (__cdecl* item_at)(std::int32_t, std::int32_t);                              // MapView_ItemAt 0x572ED0 (ours)
+    void (__cdecl* link_prim)(std::uint32_t*, std::uint32_t);                  // Gpu_LinkPrim 0x5A7560 (ours)
 };
 extern const Callees kOriginals;
 extern Callees g;

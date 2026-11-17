@@ -67,7 +67,7 @@ void ArmTail(unsigned char kind, unsigned char state) {
 // x's low byte, whose z byte is z's, and whose direction (the third byte's low
 // nibble) is the leader's direction byte (the whole byte: 0x10 or more matches
 // none); `count` when none - the search the three cell hooks open with.
-unsigned FindCell(U table, unsigned count, unsigned stride, long x, long z) {
+unsigned FindCell(U table, unsigned count, unsigned stride, std::int32_t x, std::int32_t z) {
     const unsigned char pose = B(::bof3::Img(ObjTrio_addr) + 0x8);
     for (unsigned i = 0; i < count; ++i) {
         const unsigned char* const e = Mem(table + i * stride);
@@ -152,7 +152,7 @@ extern "C" void __cdecl Area140_FollowAndAct(void) {
 // original 0x41F790 (called by Area140_FollowAndAct only): 0 unless
 // Field_ObjectBlockedAhead(Field_ActiveMember); blocked: 1 unless the map
 // byte at (x, z) is 0x89.
-extern "C" unsigned char __cdecl Area140_BlockedAhead(long x, long z) {
+extern "C" unsigned char __cdecl Area140_BlockedAhead(std::int32_t x, std::int32_t z) {
     if (AH_CALL(Field_ObjectBlockedAhead)(Field_ActiveMember) == 0) return 0;
     if (AH_CALL(AreaMap_ByteAt)(static_cast<short>(x), static_cast<short>(z)) == 0x89) return 0;
     return 1;
@@ -242,7 +242,7 @@ extern "C" void __cdecl Area140_Tail41(void) {
 // story flag 0x66 set, x exactly 0x558000, z's high word 0xA or 0xB (16-bit):
 // ScriptFlags_Set40 and state 5 (the kind left as it is: tail 41's state 2
 // idles under it). al 0 always.
-extern "C" unsigned char __cdecl Area140_StepHook(long x, long z) {
+extern "C" unsigned char __cdecl Area140_StepHook(std::int32_t x, std::int32_t z) {
     if (Cond_ByteFD != 0) return 0;
     if (AH_CALL(Flags_Test)(StoryFlags(), 0x66) == 0) return 0;
     if (static_cast<U>(x) != 0x558000) return 0;
@@ -262,7 +262,7 @@ extern "C" unsigned char __cdecl Area140_StepHook(long x, long z) {
 // +3 set, MoveCmd_TestFB(+0, +1); with +4, an effect record (Effect_FindFree)
 // of kind 0x71 at (+0 << 16, +1 << 16) holding the flag in +0xB;
 // Sound_PlayEffect(0x204); al 1.
-extern "C" unsigned char __cdecl Area140_CellHook(long x, long z) {
+extern "C" unsigned char __cdecl Area140_CellHook(std::int32_t x, std::int32_t z) {
     const unsigned i = FindCell(::bof3::Img(Area140_CellEntries_addr), at::kArea140CellCount, at::kArea140CellStride, x, z);
     if (i == at::kArea140CellCount) return 0;
     const unsigned char* const e = Mem(::bof3::Img(Area140_CellEntries_addr) + i * at::kArea140CellStride);

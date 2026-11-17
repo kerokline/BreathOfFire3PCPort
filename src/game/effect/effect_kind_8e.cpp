@@ -112,7 +112,7 @@ void Fall(unsigned char* p, unsigned char* v) {
 // (truncated, its sign the dividend's: never negative here); lo read before
 // the call, hi after it, as the original reads them. hi - lo 0 is idiv's
 // fault in the original; ours aborts.
-U Spread(const char* who, U lo, const long* hi_at, unsigned shift) {
+U Spread(const char* who, U lo, const std::int32_t* hi_at, unsigned shift) {
     const U r = static_cast<U>(SH_CALL(Rand)());
     const U hi = static_cast<U>(*hi_at);
     const std::int32_t d = S32(hi - lo);
@@ -144,12 +144,12 @@ extern "C" void __cdecl EffectKind8E_Start(void) {
     SH_CALL(EffectKind8E_ClearDots)();
     static const U kBoxes[3][4] = {
         {0, 0x20, 0x20000, 0x50000}, {0x20, 0x60, 0x50000, 0xA0000}, {0x60, 0x80, 0xA0000, 0xD0000}};
-    long lo[3], hi[3];
+    std::int32_t lo[3], hi[3];
     for (const U* b : kBoxes) {
-        lo[0] = static_cast<long>(b[2]);
+        lo[0] = static_cast<std::int32_t>(b[2]);
         lo[1] = 0x770000;
-        lo[2] = static_cast<long>(0xFF000000u);
-        hi[0] = static_cast<long>(b[3]);
+        lo[2] = static_cast<std::int32_t>(0xFF000000u);
+        hi[0] = static_cast<std::int32_t>(b[3]);
         hi[1] = 0x770000;
         hi[2] = 0x2000000;
         SH_CALL(EffectKind8E_InitChips)(b[0], b[1], lo, hi);
@@ -210,7 +210,7 @@ extern "C" void __cdecl EffectKind8E_DrawChip(unsigned char* p) {
     unsigned char* const prim = Gfx_PacketNext;
     SH_AT(RecordFn, at::kPolyF3.v)(prim);
     SH_CALL(Gpu_SetSemiTrans)(prim, 1);
-    SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(p + 0x18), reinterpret_cast<float*>(prim + 8));
+    SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const std::int32_t*>(p + 0x18), reinterpret_cast<float*>(prim + 8));
     const unsigned k = p[4];
     if (k >= at::kChipShapeCount)
         bof3::Fatal("EffectKind8E_DrawChip: +4 is %u, past the eight shapes at 0x%X - the original reads what "
@@ -241,7 +241,7 @@ extern "C" void __cdecl EffectKind8E_ClearChips(void) {
 // +0 1, +1 0, +0xC (Rand & 0xFFF) * 4 + 0x1000 (its z speed), +3 0x48, +2
 // (Rand & 7) + 0x18 (its life), +4 Rand & 7 (its shape). A last past the 128
 // chips: ours aborts (the original writes on past the pool).
-extern "C" void __cdecl EffectKind8E_InitChips(unsigned first, unsigned last, const long* lo, const long* hi) {
+extern "C" void __cdecl EffectKind8E_InitChips(unsigned first, unsigned last, const std::int32_t* lo, const std::int32_t* hi) {
     const U f = first & 0xFFFFu, l = last & 0xFFFFu;
     if (f >= l) return;
     if (l > at::kChipCount)
@@ -296,7 +296,7 @@ extern "C" void __cdecl EffectKind8E_DrawDot(unsigned char* p) {
     unsigned char* const prim = Gfx_PacketNext;
     SH_CALL(Gpu_SetTile1)(prim);
     SH_CALL(Gpu_SetSemiTrans)(prim, 1);
-    SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(p + 0x14), reinterpret_cast<float*>(prim + 8));
+    SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const std::int32_t*>(p + 0x14), reinterpret_cast<float*>(prim + 8));
     prim[4] = 0;
     prim[5] = p[3];
     prim[6] = p[3];
@@ -313,7 +313,7 @@ extern "C" void __cdecl EffectKind8E_ClearDots(void) {
 // first..last - 1 set up in the box: x (+0x14) and height (+0x1C) Spread, z
 // (+0x18) lo's; +4 0, +0xC 0, +0 1, +1 0, +8 (Rand & 0xFFF) * 4 + 0x2000, +3
 // 0x48, +2 (Rand & 7) + 0x18. A last past the 128 dots: ours aborts.
-extern "C" void __cdecl EffectKind8E_InitDots(unsigned first, unsigned last, const long* lo, const long* hi) {
+extern "C" void __cdecl EffectKind8E_InitDots(unsigned first, unsigned last, const std::int32_t* lo, const std::int32_t* hi) {
     const U f = first & 0xFFFFu, l = last & 0xFFFFu;
     if (f >= l) return;
     if (l > at::kDotCount)

@@ -108,8 +108,8 @@ void Shift(std::uint32_t h) {
     const std::uint32_t by_x = Hash(h), by_z = Hash(h + 1);
     rv::As<records::SpriteObject>(k)->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteObject>(k)->x) + by_x);
     rv::As<records::SpriteObject>(k)->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteObject>(k)->z) + by_z);
-    Field_Kind2X = static_cast<long>(static_cast<std::uint32_t>(Field_Kind2X) + by_x);
-    Field_Kind2Z = static_cast<long>(static_cast<std::uint32_t>(Field_Kind2Z) + by_z);
+    Field_Kind2X = static_cast<std::int32_t>(static_cast<std::uint32_t>(Field_Kind2X) + by_x);
+    Field_Kind2Z = static_cast<std::int32_t>(static_cast<std::uint32_t>(Field_Kind2Z) + by_z);
 }
 
 // The step: the result (0xFF often), and what the caller reads after it - the
@@ -135,17 +135,17 @@ unsigned char __cdecl StubStep(unsigned char* context, const unsigned char* scri
 }
 // The ground: what the callers read after it - the elevation long, the view's
 // elevation, the divisor (kept to 1..0x80), the context flags, the position.
-long __cdecl StubElevation(long x, long z) {
+std::int32_t __cdecl StubElevation(std::int32_t x, std::int32_t z) {
     Record(2, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z));
     unsigned char* const k = rv::Bytes(&Sprite_Kind2);
     const std::uint32_t h = Hash();
     if (h % 3 == 0) rv::As<records::SpriteObject>(k)->height = static_cast<std::int32_t>(Hash(1));
-    if (h % 4 == 0) MapView_Elevation = static_cast<long>(Hash(2));
+    if (h % 4 == 0) MapView_Elevation = static_cast<std::int32_t>(Hash(2));
     if (h % 5 == 0) MoveScript_F3Divisor = static_cast<short>(1 + Hash(3) % 0x80);
     if (h % 7 == 0) k[0x80] = static_cast<unsigned char>(Hash(4));
     if (h % 11 == 0) Shift(5);
     if (h % 13 == 0) { k[8] = static_cast<unsigned char>(Hash(7)); k[2] = static_cast<unsigned char>(Hash(8)); k[0x87] = static_cast<unsigned char>(Hash(9)); }
-    return static_cast<long>(Hash(10));
+    return static_cast<std::int32_t>(Hash(10));
 }
 // MapView_SetElevation uses the low 16 bits of its argument only (its
 // symbols.toml entry), and the original pushes words with whatever high half
@@ -271,8 +271,8 @@ void SeedDistance() {
     if (Next() % 2) { dx = minor; dz = major; }
     if (Next() % 2) dx = 0u - dx;
     if (Next() % 2) dz = 0u - dz;
-    Field_Kind2X = static_cast<long>(static_cast<std::uint32_t>(rv::As<records::SpriteObject>(k)->x) + dx);
-    Field_Kind2Z = static_cast<long>(static_cast<std::uint32_t>(rv::As<records::SpriteObject>(k)->z) + dz);
+    Field_Kind2X = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteObject>(k)->x) + dx);
+    Field_Kind2Z = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteObject>(k)->z) + dz);
 }
 
 // A dispatcher's copy: its `jmp [eax*4 + table]` re-aimed at `table`.

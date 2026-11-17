@@ -211,7 +211,7 @@ template <std::uint32_t A> void __cdecl RecSpritePhase() {
 // inputs, written where the real callee writes.
 std::uint32_t RotTransEffect(const std::uint32_t* a, std::uint32_t answer) {
     const auto* v = reinterpret_cast<const short*>(static_cast<std::uintptr_t>(a[0]));
-    auto* t = reinterpret_cast<long*>(static_cast<std::uintptr_t>(a[1]));
+    auto* t = reinterpret_cast<std::int32_t*>(static_cast<std::uintptr_t>(a[1]));
     t[0] = v[0] * 3 + 1;
     t[1] = v[1] * 5 - 2;
     t[2] = v[2] * 7 + 3;

@@ -70,11 +70,11 @@ void StF(unsigned char* p, LD v) {
     std::memcpy(p, &f, sizeof f);
 }
 
-long* Point(unsigned char* p) { return reinterpret_cast<long*>(p); }
+std::int32_t* Point(unsigned char* p) { return reinterpret_cast<std::int32_t*>(p); }
 
 float* Out(unsigned char* p) { return reinterpret_cast<float*>(p); }
 
-const unsigned char* Bytes(const long* p) { return reinterpret_cast<const unsigned char*>(p); }
+const unsigned char* Bytes(const std::int32_t* p) { return reinterpret_cast<const unsigned char*>(p); }
 
 using Handler = scenario_harness::Handler;
 
@@ -124,7 +124,7 @@ unsigned char* Shard(U i) { return At(::bof3::Img(EffectKind30_Shards_addr) + 0x
 // kind 0xB9's glow: group E4E's 0x4901D0 (point, size word, colour byte), raw
 // until it merges.
 void Glow(unsigned char* s) {
-    using Draw = void (__cdecl*)(const long*, unsigned, unsigned);
+    using Draw = void (__cdecl*)(const std::int32_t*, unsigned, unsigned);
     SH_AT(Draw, at::kGlowDraw.v)(Point(s + 0x64), Word(s + 0x2E), 6);
 }
 
@@ -281,7 +281,7 @@ extern "C" void __cdecl EffectKindB9_FlyWait(void) {
 // 0x44 to slot 2; then up to eight TILE_1 dots, (shade, shade, 0), from `to` less
 // (Frame_Counter & 0xF) << 12 on x and << 10 on z, stepping 0x10000 and 0x4000
 // back, while x is not below from's.
-extern "C" void __cdecl EffectKindB9_DrawTrail(const long* from, const long* to, unsigned shade) {
+extern "C" void __cdecl EffectKindB9_DrawTrail(const std::int32_t* from, const std::int32_t* to, unsigned shade) {
     const unsigned char* const a = Bytes(from);
     const unsigned char* const b = Bytes(to);
     const LD half = F(At(at::kOne));

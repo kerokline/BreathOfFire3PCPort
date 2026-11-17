@@ -90,14 +90,14 @@ constexpr ::bof3::image::CodeVa kItemFlags{bof3::addr::Item_UseFlags};   // grou
 struct Callees {
     unsigned char (__cdecl* default_target)(unsigned);
     unsigned char (__cdecl* prev_target)(unsigned);
-    long (__cdecl* wrap_index)(long, long, long);
-    unsigned long (__cdecl* banner_message)(unsigned, unsigned);
+    std::int32_t (__cdecl* wrap_index)(std::int32_t, std::int32_t, std::int32_t);
+    std::uint32_t (__cdecl* banner_message)(unsigned, unsigned);
     unsigned (__cdecl* auto_repeat)(unsigned);
     void (__cdecl* sound)(unsigned short);
     const unsigned char* (__cdecl* system_ptr)(unsigned);
-    unsigned long (__cdecl* queue_push)(unsigned, unsigned, unsigned long);
-    unsigned long (__cdecl* setup_for_party)();
-    unsigned long (__cdecl* free_windows)();
+    std::uint32_t (__cdecl* queue_push)(unsigned, unsigned, std::uint32_t);
+    std::uint32_t (__cdecl* setup_for_party)();
+    std::uint32_t (__cdecl* free_windows)();
     unsigned (__cdecl* item_price)(unsigned, unsigned);
     unsigned char (__cdecl* item_can_use)(unsigned, unsigned, unsigned, unsigned);
     unsigned char (__cdecl* item_flags)(unsigned, unsigned);

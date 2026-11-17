@@ -37,7 +37,7 @@ constexpr ::bof3::image::Va kScratchA{SharedScratch_addr}; // SharedScratch (the
 
 constexpr ::bof3::image::Va kScratchB{0x903854};
 
-using SortFn = void (__cdecl*)(std::uint32_t, std::uint32_t, long*, unsigned char*, unsigned, unsigned, unsigned);
+using SortFn = void (__cdecl*)(std::uint32_t, std::uint32_t, std::int32_t*, unsigned char*, unsigned, unsigned, unsigned);
 
 void Bump(unsigned char& b, int by = 1) { b = static_cast<unsigned char>(b + by); }
 
@@ -84,7 +84,7 @@ void DrawMode(unsigned tpage) { MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, t
 void LinkAtActor(int dy, unsigned size) {
     const unsigned char* const sc = Sprite_Current;
     const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tsc->x), static_cast<unsigned long>(tsc->z), dy,
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(tsc->x), static_cast<std::uint32_t>(tsc->z), dy,
                                 size);
 }
 
@@ -296,9 +296,9 @@ MS17_EXPORT void __cdecl LeechShell_Draw(void) {
     unsigned char* const first = Gfx_PacketNext;
     unsigned char* const line_base = first + 0x380;
     unsigned char* lines = line_base;
-    long depths[16];
-    long line_depths[12];
-    long projected;
+    std::int32_t depths[16];
+    std::int32_t line_depths[12];
+    std::int32_t projected;
     unsigned d = 0;
     for (std::uint32_t lat = ::bof3::Img(LeechShell_Angles_addr) + 0x20; lat < ::bof3::Img(LeechShell_Angles_addr) + 0x28; lat += 4) {
         // the band's first edge, at longitude 0x180
@@ -395,17 +395,17 @@ MS17_EXPORT void __cdecl LeechShell_Draw(void) {
 // its depth (Gte_RotAverage4's result) to *out. The original also passes the
 // address of its own first argument as a tenth, which Gte_RotAverage4 does
 // not read.
-MS17_EXPORT void __cdecl LeechShell_Edge(unsigned char* prim, long* out, unsigned long a0, unsigned long a1,
-                                         unsigned long a2, unsigned long a3, unsigned long a4, unsigned long a5,
-                                         unsigned long a6, unsigned long a7) {
+MS17_EXPORT void __cdecl LeechShell_Edge(unsigned char* prim, std::int32_t* out, std::uint32_t a0, std::uint32_t a1,
+                                         std::uint32_t a2, std::uint32_t a3, std::uint32_t a4, std::uint32_t a5,
+                                         std::uint32_t a6, std::uint32_t a7) {
     MH_CALL(Gpu_SetLineF4)(prim);
     MH_CALL(Gpu_SetSemiTrans)(prim, 1);
     prim[4] = 0x40;
     prim[5] = 0x40;
     prim[6] = 0xC0;
-    const unsigned long v[8] = {a0, a1, a2, a3, a4, a5, a6, a7};
+    const std::uint32_t v[8] = {a0, a1, a2, a3, a4, a5, a6, a7};
     const short* const s = reinterpret_cast<const short*>(v);
-    long projected;
+    std::int32_t projected;
     *out = MH_CALL(Gte_RotAverage4)(s, s + 4, s + 8, s + 12, F(prim + 8), F(prim + 0x14), F(prim + 0x20), F(prim + 0x2C),
                                     &projected);
 }
@@ -427,14 +427,14 @@ MS17_EXPORT void __cdecl LeechShell_PushMatrix(void) {
     v[3] = 0;
     struct Matrix {
         short m[10];
-        long t[3];
+        std::int32_t t[3];
     } m;
     static_assert(sizeof(Matrix) == 0x20, "MATRIX layout");
     MH_CALL(Gte_RotTrans)(v, m.t);
     MH_CALL(Gte_RotMatrix)(rot, m.m);
     MH_CALL(Gte_MulMatrix0)(Camera_Matrix, m.m, m.m);
-    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&m));
-    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&m));
+    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
+    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
 }
 
 // original 0x4BE660: the orb. Between two draw modes (tpage 0x35, slot 4):
@@ -572,7 +572,7 @@ MS17_EXPORT void __cdecl LeechOrb_DrawRings(void) {
             unsigned char* const p = Gfx_PacketNext;
             MH_CALL(Gpu_SetPolyF4)(p);
             MH_CALL(Gpu_SetSemiTrans)(p, 1);
-            long depth;
+            std::int32_t depth;
             MH_CALL(Gte_RotTransPers4)(V(0), V(8), V(0x10), V(0x18), F(p + 8), F(p + 0x14), F(p + 0x20), F(p + 0x2C),
                                        &depth);
             MH_CALL(Gte_PrimDepths4_0C)(p);

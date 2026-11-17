@@ -261,7 +261,7 @@ extern "C" void __cdecl MagicFx_DrawRing(void) {
         battle_items::SetWord(Scr(0xA), 0x68u - Sprite_Current[0xB] * 3u);
         for (unsigned k : {4u, 5u, 6u, 0x18u, 0x19u, 0x1Au}) p[k] = 1;
         for (unsigned k : {0x2Cu, 0x2Du, 0x2Eu, 0x40u, 0x41u, 0x42u}) p[k] = Scr(0xA)[0];
-        long depth, flag;
+        std::int32_t depth, flag;
         battle_items::g.rtp4(VtxP(0), VtxP(8), VtxP(0x10), VtxP(0x18), reinterpret_cast<float*>(p + 8),
                reinterpret_cast<float*>(p + 0x1C), reinterpret_cast<float*>(p + 0x30), reinterpret_cast<float*>(p + 0x44),
                &depth, &flag);

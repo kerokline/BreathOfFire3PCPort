@@ -21,7 +21,7 @@ struct CalleesMoveGroups {
     void (__cdecl* tint_release)(unsigned char*);
     void (__cdecl* set_animation)(unsigned char);
     unsigned char (__cdecl* animation_bank)(unsigned short);
-    long (__cdecl* elevation)(long, long);
+    std::int32_t (__cdecl* elevation)(std::int32_t, std::int32_t);
     void (__cdecl* set_elevation)(int);
     unsigned short (__cdecl* peek)();
     void (__cdecl* play_by_id)(unsigned short);
@@ -35,8 +35,8 @@ struct CalleesMoveGroups {
     unsigned char (__cdecl* test_fb)(short, short);
     unsigned char (__cdecl* test_fc)(short, short);
     unsigned char (__cdecl* effect_spawn)(unsigned char, signed char, signed char, short, short);
-    unsigned char (__cdecl* effect_spawn_at)(unsigned char, signed char, signed char, long, long, long);
-    long* (__cdecl* handle_position)(long*, unsigned char, unsigned char);
+    unsigned char (__cdecl* effect_spawn_at)(unsigned char, signed char, signed char, std::int32_t, std::int32_t, std::int32_t);
+    std::int32_t* (__cdecl* handle_position)(std::int32_t*, unsigned char, unsigned char);
     void (__cdecl* op_87)();
     void (__cdecl* op_88)();
     void (__cdecl* load_stream)(unsigned);   // Sound_LoadStream reads the whole dword (save_menu.cpp)

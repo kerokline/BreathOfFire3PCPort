@@ -121,21 +121,21 @@ void __cdecl StubJumpSetUp() { Record(1); Disturb(); }
 void __cdecl StubJumpCamera() { Record(2); }
 void __cdecl StubJumpStart() { Record(3); }
 // 0x5725C0: the slope byte in SharedScratch is what its callers test.
-long __cdecl StubSlope(long x, long z, unsigned direction) {
+std::int32_t __cdecl StubSlope(std::int32_t x, std::int32_t z, unsigned direction) {
     Record(4, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), direction & 0xFF);
     const std::uint32_t h = Hash();
     At(SharedScratch_addr)[0] = static_cast<unsigned char>(h % 3 == 0 ? 0 : h % 3 == 1 ? 1 : h >> 24);
     Disturb();
-    return static_cast<long>(Hash(1));
+    return static_cast<std::int32_t>(Hash(1));
 }
 // The ground near the object's height, either side of the 0x80 its callers test.
-long __cdecl StubGround(long x, long z) {
+std::int32_t __cdecl StubGround(std::int32_t x, std::int32_t z) {
     Record(5, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z));
     const std::uint32_t h = Hash();
     const int deltas[] = {0x7F, 0x80, 0x81, 0, -1, -0x80, 0x7FFF, static_cast<short>(h >> 16)};
     const unsigned height = Word(Sprite_Current + 0x3E);
     Disturb();
-    return static_cast<long>((h & 0xFFFF0000u) | ((height + static_cast<unsigned>(deltas[h % 8])) & 0xFFFFu));
+    return static_cast<std::int32_t>((h & 0xFFFF0000u) | ((height + static_cast<unsigned>(deltas[h % 8])) & 0xFFFFu));
 }
 unsigned char __cdecl StubShadeRaise(unsigned step) {
     Record(6, step & 0xFF);
@@ -153,31 +153,31 @@ unsigned char CellsAnswer(unsigned out_of) {
     if (h % out_of != 0) return 0;
     return static_cast<unsigned char>((h >> 8) % 2 ? 1 : ((h >> 16) | 1));
 }
-unsigned char __cdecl StubCellsAll(long x, long z, unsigned wide, unsigned code, unsigned mask) {
+unsigned char __cdecl StubCellsAll(std::int32_t x, std::int32_t z, unsigned wide, unsigned code, unsigned mask) {
     Record(8, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), wide, (code & 0xFF) | (mask & 0xFF) << 8);
     const unsigned char r = CellsAnswer(5);
     Disturb();
     return r;
 }
-unsigned char __cdecl StubCellsAll4(long x, long z, unsigned code, unsigned mask) {
+unsigned char __cdecl StubCellsAll4(std::int32_t x, std::int32_t z, unsigned code, unsigned mask) {
     Record(9, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), code & 0xFF, mask & 0xFF);
     return CellsAnswer(2);
 }
-unsigned char __cdecl StubCellsAllWide(long x, long z, unsigned code, unsigned mask) {
+unsigned char __cdecl StubCellsAllWide(std::int32_t x, std::int32_t z, unsigned code, unsigned mask) {
     Record(10, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), code & 0xFF, mask & 0xFF);
     return CellsAnswer(2);
 }
-unsigned char __cdecl StubCellsNone(long x, long z, unsigned wide, unsigned code, unsigned mask) {
+unsigned char __cdecl StubCellsNone(std::int32_t x, std::int32_t z, unsigned wide, unsigned code, unsigned mask) {
     Record(11, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), wide, (code & 0xFF) | (mask & 0xFF) << 8);
     const unsigned char r = CellsAnswer(3);
     Disturb();
     return r;
 }
-unsigned char __cdecl StubCellsNone4(long x, long z, unsigned code, unsigned mask) {
+unsigned char __cdecl StubCellsNone4(std::int32_t x, std::int32_t z, unsigned code, unsigned mask) {
     Record(12, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), code & 0xFF, mask & 0xFF);
     return CellsAnswer(2);
 }
-unsigned char __cdecl StubCellsNoneWide(long x, long z, unsigned code, unsigned mask) {
+unsigned char __cdecl StubCellsNoneWide(std::int32_t x, std::int32_t z, unsigned code, unsigned mask) {
     Record(13, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), code & 0xFF, mask & 0xFF);
     return CellsAnswer(2);
 }
@@ -233,7 +233,7 @@ unsigned char __cdecl StubTileTurn(unsigned code, unsigned value, unsigned turn)
     return static_cast<unsigned char>(h % 2 ? 0 : h >> 24);
 }
 // 0x535610 reads its fourth argument as a word.
-unsigned char __cdecl StubTurnProbe(long x, long z, unsigned zero, unsigned height) {
+unsigned char __cdecl StubTurnProbe(std::int32_t x, std::int32_t z, unsigned zero, unsigned height) {
     Record(22, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), zero, height & 0xFFFF);
     const std::uint32_t h = Hash();
     Disturb();
@@ -482,8 +482,8 @@ Args Generate(unsigned k, State& input) {
     Field_ScriptFlags2 = static_cast<unsigned short>(Next() & (OneIn(2) ? 0xFFF7u : 0xFFFFu));
     Field_InputFlags = static_cast<unsigned char>(Next());
     MoveScript_F3Divisor = static_cast<short>(Next());
-    Field_Kind2X = static_cast<long>(Next());
-    Field_Kind2Z = static_cast<long>(Next());
+    Field_Kind2X = static_cast<std::int32_t>(Next());
+    Field_Kind2Z = static_cast<std::int32_t>(Next());
     MoveScript_FAWord = static_cast<unsigned short>(Next());
     Gfx_ClutStripDirty = static_cast<unsigned char>(Next());
     // The records' state and equipment bytes, the codes the tests look for

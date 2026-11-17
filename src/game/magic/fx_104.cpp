@@ -101,13 +101,13 @@ float* Xy(unsigned char* prim, unsigned offset) { return reinterpret_cast<float*
 // The four-vertex projection every POLY_G4 of the group makes: a b c d into
 // the primitive's four points, then its depth.
 void Project4(unsigned char* p) {
-    long depth;
+    std::int32_t depth;
     MH_CALL(Gte_RotTransPers4)(Vec(::bof3::Img(Prim_VertexScratch_addr)), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x8), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x10), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x18), Xy(p, 8), Xy(p, 0x18), Xy(p, 0x28), Xy(p, 0x38), &depth);
     MH_CALL(Gte_PrimDepths4_10B)(p);
 }
 
 void Project3(unsigned char* p) {
-    long depth;
+    std::int32_t depth;
     MH_CALL(Gte_RotTransPers3)(Vec(::bof3::Img(Prim_VertexScratch_addr)), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x8), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x10), Xy(p, 8), Xy(p, 0x18), Xy(p, 0x28), &depth);
     MH_CALL(Gte_PrimDepths3_10B)(p);
 }
@@ -118,11 +118,11 @@ struct Matrix { short m[3][3]; short pad; std::int32_t t[3]; };
 
 void PushMatrix(const short vector[3], const short angles[3]) {
     Matrix m;
-    MH_CALL(Gte_RotTrans)(vector, reinterpret_cast<long*>(m.t));
+    MH_CALL(Gte_RotTrans)(vector, reinterpret_cast<std::int32_t*>(m.t));
     MH_CALL(Gte_RotMatrix)(angles, &m.m[0][0]);
     MH_CALL(Gte_MulMatrix0)(Camera_Matrix, &m.m[0][0], &m.m[0][0]);
-    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&m));
-    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&m));
+    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
+    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
 }
 
 // The effect point as the GTE takes it: (x >> 9) - 0x4000, (z >> 9) - 0x4000,
@@ -367,7 +367,7 @@ S24_EXPORT void __cdecl Fx104_DrawFunnel(void) {
             const std::int32_t x = Add(Shl(dx, 9), ts->x);
             const std::int32_t z = Add(Shl(static_cast<short>(t), 9), ts->z);
             MH_CALL(Gpu_SetDrawMode)(mode, 0, 1, 0xB5, 0);
-            MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), 0, 0xC);
+            MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), 0, 0xC);
             unsigned char* const p = Gfx_PacketNext;
             MH_CALL(Gpu_SetPolyG4)(p);
             MH_CALL(Gpu_SetSemiTrans)(p, 1);
@@ -435,7 +435,7 @@ S24_EXPORT void __cdecl Fx104_DrawFunnel(void) {
             default:
                 break;
             }
-            MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), 0, 0x44);
+            MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), 0, 0x44);
         }
         --count;
         top -= 0x80;
@@ -493,7 +493,7 @@ S24_EXPORT void __cdecl Fx104_DrawDisc(void) {
         const std::int32_t x = Add(c0 >> 9, ts->x);
         const std::int32_t z = Add(static_cast<short>(t) >> 9, ts->z);
         DrawMode(0x35);
-        MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), 2, 0xC);
+        MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), 2, 0xC);
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyG3)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
@@ -511,7 +511,7 @@ S24_EXPORT void __cdecl Fx104_DrawDisc(void) {
         p[0x14] = p[0x15] = p[0x16] = 1;
         p[0x24] = p[0x25] = p[0x26] = 1;
         Project3(p);
-        MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), 2, 0x34);
+        MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), 2, 0x34);
     }
     DrawMode(0x15);
     MH_CALL(Gfx_CommitPrim)(5, 0xC);
@@ -695,7 +695,7 @@ S24_EXPORT void __cdecl Fx104_DrawSphere(void) {
             const std::int32_t x = Add(Shl(dx, 9), ts->x);
             const std::int32_t z = Add(Shl(dz, 9), ts->z);
             DrawMode(0xB5);
-            MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), 0, 0xC);
+            MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), 0, 0xC);
             unsigned char* const p = Gfx_PacketNext;
             MH_CALL(Gpu_SetPolyG4)(p);
             MH_CALL(Gpu_SetSemiTrans)(p, 1);
@@ -715,7 +715,7 @@ S24_EXPORT void __cdecl Fx104_DrawSphere(void) {
             p[0x34] = r;
             p[0x35] = g;
             p[0x36] = bl;
-            MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), 0, 0x44);
+            MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), 0, 0x44);
         }
         lat = next;
     } while (next < 0xC00);

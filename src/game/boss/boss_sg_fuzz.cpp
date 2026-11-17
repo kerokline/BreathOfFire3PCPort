@@ -94,9 +94,9 @@ std::uint32_t RotMatrixEffect(const std::uint32_t* a, std::uint32_t answer) {
 }
 std::uint32_t TransMatrixEffect(const std::uint32_t* a, std::uint32_t answer) {
     auto* m = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a[0]));
-    const auto* v = reinterpret_cast<const long*>(static_cast<std::uintptr_t>(a[1]));
+    const auto* v = reinterpret_cast<const std::int32_t*>(static_cast<std::uintptr_t>(a[1]));
     for (unsigned i = 0; i < 3; ++i) {
-        const long t = v[i] + static_cast<long>(bh::Noise() & 0xFFF);
+        const std::int32_t t = v[i] + static_cast<std::int32_t>(bh::Noise() & 0xFFF);
         std::memcpy(m + 0x14 + 4 * i, &t, 4);
     }
     return answer;
@@ -107,11 +107,11 @@ std::uint32_t SetTransEffect(const std::uint32_t* a, std::uint32_t answer) {
 }
 std::uint32_t RotTransEffect(const std::uint32_t* a, std::uint32_t answer) {
     const auto* v = reinterpret_cast<const short*>(static_cast<std::uintptr_t>(a[0]));
-    auto* t = reinterpret_cast<long*>(static_cast<std::uintptr_t>(a[1]));
+    auto* t = reinterpret_cast<std::int32_t*>(static_cast<std::uintptr_t>(a[1]));
     const U n = bh::Noise();
-    t[0] = v[0] * 3 + static_cast<long>(n & 0x3FF) - 0x200;
-    t[1] = v[1] * 5 - static_cast<long>((n >> 10) & 0x3FF);
-    t[2] = v[2] * 7 + static_cast<long>(n >> 20);
+    t[0] = v[0] * 3 + static_cast<std::int32_t>(n & 0x3FF) - 0x200;
+    t[1] = v[1] * 5 - static_cast<std::int32_t>((n >> 10) & 0x3FF);
+    t[2] = v[2] * 7 + static_cast<std::int32_t>(n >> 20);
     return answer;
 }
 

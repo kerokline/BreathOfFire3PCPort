@@ -89,7 +89,7 @@ void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
 
 // Gte_RotTransPers3 as the original pushes it: one pointer more than
 // symbols.toml's prototype carries (a flag word the callee may write).
-using Rtp3Fn = long (__cdecl*)(const short*, const short*, const short*, float*, float*, float*, long*, long*);
+using Rtp3Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, float*, float*, float*, std::int32_t*, std::int32_t*);
 
 template <typename T, typename F> T As(F* f) { return reinterpret_cast<T>(reinterpret_cast<void*>(f)); }
 
@@ -138,7 +138,7 @@ void FadeHome(bool shrink) {
 // writing its translation at +0x14 (DIV-0021's padding word at +0x12).
 struct Matrix {
     short m[10];
-    long t[3];
+    std::int32_t t[3];
 };
 
 }  // namespace
@@ -284,15 +284,15 @@ S01_EXPORT void __cdecl JumpChild_PushMatrix(void) {
     v[2] = static_cast<short>(-(height / 2));
     v[3] = 0;
     Matrix m;
-    long flag;
+    std::int32_t flag;
     // The original pushes a third argument (the flag) to Gte_RotTrans, which
     // takes two (cdecl: the caller pops it).
-    using RotTransFn = void (__cdecl*)(const short*, long*, long*);
+    using RotTransFn = void (__cdecl*)(const short*, std::int32_t*, std::int32_t*);
     MH_CALL(As<RotTransFn>(&::Gte_RotTrans))(v, m.t, &flag);
     MH_CALL(Gte_RotMatrix)(angles, m.m);
     MH_CALL(Gte_MulMatrix0)(Camera_Matrix, m.m, m.m);
-    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&m));
-    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&m));
+    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
+    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
 }
 
 // original 0x499BD0: the shadow, a disc of sixteen gouraud triangles in the
@@ -340,7 +340,7 @@ S01_EXPORT void __cdecl JumpChild_DrawShadow(void) {
         SetVW(0x14, 0);
         SetVW(0xC, 0);
         SetVW(4, 0);
-        long depth, flag;
+        std::int32_t depth, flag;
         MH_CALL(As<Rtp3Fn>(&::Gte_RotTransPers3))(VP(0), VP(8), VP(0x10), reinterpret_cast<float*>(p + 8),
                                                   reinterpret_cast<float*>(p + 0x18), reinterpret_cast<float*>(p + 0x28),
                                                   &depth, &flag);

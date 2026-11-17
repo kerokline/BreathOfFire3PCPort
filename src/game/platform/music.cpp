@@ -70,7 +70,7 @@ template <typename F> F MethodBattleItems(void* object, unsigned offset) {
 
 ::bof3::Slot32<void>& StreamBuffer() { return SndStream_Buffer; }   // the 4-byte slot, read and written as one
 
-constexpr long kBufferLostBattleItems = static_cast<long>(0x88780096u);   // DSERR_BUFFERLOST
+constexpr std::int32_t kBufferLostBattleItems = static_cast<std::int32_t>(0x88780096u);   // DSERR_BUFFERLOST
 
 }  // namespace
 
@@ -134,7 +134,7 @@ namespace {
 
 // GetStatus's bit 0, DSBSTATUS_PLAYING, into `status` - which holds on entry
 // what the original's slot held, for a GetStatus that did not write it.
-bool Playing(void* buffer, unsigned long status) {
+bool Playing(void* buffer, std::uint32_t status) {
     Method<ComStatus>(buffer, kGetStatus)(buffer, &status);
     return (status & 1) != 0;
 }
@@ -330,12 +330,12 @@ extern "C" unsigned __cdecl Wave_FindData(const unsigned char* wave, const unsig
 // outputs start as what the original's argument slots held (the buffer, the
 // offset, the size) - its first pointer as 0, where the original's slot is
 // the caller's ecx - for a Lock that reports success without writing them.
-extern "C" long __cdecl SndBuf_Write(void* buffer, const void* src, unsigned offset, unsigned size) {
+extern "C" std::int32_t __cdecl SndBuf_Write(void* buffer, const void* src, unsigned offset, unsigned size) {
     void* first = nullptr;
-    unsigned long first_bytes = sound::Address(buffer);
+    std::uint32_t first_bytes = sound::Address(buffer);
     void* second = reinterpret_cast<void*>(static_cast<std::uintptr_t>(offset));
-    unsigned long second_bytes = size;
-    long result = sound::Method<ComLock>(buffer, kLock)(buffer, offset, size, &first, &first_bytes, &second, &second_bytes, 0);
+    std::uint32_t second_bytes = size;
+    std::int32_t result = sound::Method<ComLock>(buffer, kLock)(buffer, offset, size, &first, &first_bytes, &second, &second_bytes, 0);
     if (result == kBufferLost) {
         sound::Method<sound::ComCall>(buffer, kRestore)(buffer);
         result = sound::Method<ComLock>(buffer, kLock)(buffer, offset, size, &first, &first_bytes, &second, &second_bytes, 0);
@@ -356,7 +356,7 @@ extern "C" long __cdecl SndBuf_Write(void* buffer, const void* src, unsigned off
 extern "C" void __cdecl SndBuf_Play(unsigned sample, void* buffer, unsigned frequency) {
     const std::uint32_t wave = sample & 0x7FFFFFFFu;
     if (!buffer) return;
-    const unsigned long loops = (sample & 0x80000000u) ? 1 : 0;
+    const std::uint32_t loops = (sample & 0x80000000u) ? 1 : 0;
     sound::Method<ComValue>(buffer, kSetCurrentPosition)(buffer, 0);
     sound::Method<ComValue>(buffer, kSetFrequency)(buffer, frequency);
     if (sound::Method<ComPlay>(buffer, kPlay)(buffer, 0, 0, loops) != kBufferLost) return;
@@ -402,7 +402,7 @@ extern "C" void __cdecl SndBuf_SetVolume(void* buffer, int level) {
         : [level] "m"(level), [inverse] "m"(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(sound::kInverse127At))),
           [scale] "m"(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(sound::k10000At)))
         : "eax", "st");
-    sound::Method<ComValue>(buffer, sound::kSetVolume)(buffer, static_cast<unsigned long>(static_cast<std::uint64_t>(value)));
+    sound::Method<ComValue>(buffer, sound::kSetVolume)(buffer, static_cast<std::uint32_t>(static_cast<std::uint64_t>(value)));
 }
 
 // original 0x5A6C90: SndBuf_Stop, then Release.
@@ -494,14 +494,14 @@ extern "C" void* __cdecl Music_OpenDecoder(const void* file, unsigned size) {
 // As the original has it: QueryInterface's result is not looked at; the first
 // event is read back from Music_Events after the second is made, the second
 // used as CreateEventA returned it. Returns SetNotificationPositions' result.
-extern "C" long __cdecl Music_SetNotify(void* buffer) {
+extern "C" std::int32_t __cdecl Music_SetNotify(void* buffer) {
     // The slot as QueryInterface's out parameter (void**): the 32-bit spelling,
     // as Snd_Init's (sound_rest.cpp); B5's sound layer replaces it.
     sound::Method<ComQuery>(buffer, kQueryInterface)(buffer, sound::At(kIidNotify), reinterpret_cast<void**>(&Music_Notify));
     Music_Events[0] = sound::g.create_event(nullptr, 0, 0, nullptr);
     void* const second = sound::g.create_event(nullptr, 0, 0, nullptr);
     Music_Events[1] = second;
-    struct Position { unsigned long offset; void* event; };
+    struct Position { std::uint32_t offset; void* event; };
     const Position positions[2] = {{0, Music_Events[0]}, {kHalf, second}};
     void* const notify = Music_Notify;
     return sound::Method<ComPositions>(notify, kSetNotificationPositions)(notify, 2, positions);
@@ -587,7 +587,7 @@ extern "C" void __cdecl Music_SetVolume(float volume) {
     void* const buffer = Music_Buffer;
     if (!buffer) return;
     if (music_seq::Active()) {  // DIV-0087
-        sound::Method<ComValue>(buffer, kSetVolume)(buffer, static_cast<unsigned long>(music_seq::Level(volume)));
+        sound::Method<ComValue>(buffer, kSetVolume)(buffer, static_cast<std::uint32_t>(music_seq::Level(volume)));
         return;
     }
     std::int64_t level;
@@ -608,7 +608,7 @@ extern "C" void __cdecl Music_SetVolume(float volume) {
         : [volume] "m"(volume), [inverse] "m"(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(kInverse127At))),
           [scale] "m"(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k10000At)))
         : "eax", "st");
-    sound::Method<ComValue>(buffer, kSetVolume)(buffer, static_cast<unsigned long>(static_cast<std::uint64_t>(level)));
+    sound::Method<ComValue>(buffer, kSetVolume)(buffer, static_cast<std::uint32_t>(static_cast<std::uint64_t>(level)));
 }
 
 // The two entries whose originals read the ecx their caller left: each passes
@@ -731,15 +731,15 @@ extern "C" void __cdecl SndStream_Play(const unsigned char* wave) {
     void* const buffer = battle_items::g.create_from_wave(wave);
     StreamBuffer() = buffer;
     if (buffer == nullptr) return;
-    MethodBattleItems<long (__stdcall*)(void*, unsigned long)>(buffer, 0x34)(buffer, 0);
+    MethodBattleItems<std::int32_t (__stdcall*)(void*, std::uint32_t)>(buffer, 0x34)(buffer, 0);
     void* b = StreamBuffer();
-    if (MethodBattleItems<long (__stdcall*)(void*, unsigned long, unsigned long, unsigned long)>(b, 0x30)(b, 0, 0, 0) != kBufferLostBattleItems)
+    if (MethodBattleItems<std::int32_t (__stdcall*)(void*, std::uint32_t, std::uint32_t, std::uint32_t)>(b, 0x30)(b, 0, 0, 0) != kBufferLostBattleItems)
         return;
     const unsigned char* data = nullptr;
     const unsigned size = battle_items::g.find_data(wave, &data);
     battle_items::g.buffer_write(StreamBuffer(), data, 0, size);
     b = StreamBuffer();
-    MethodBattleItems<long (__stdcall*)(void*, unsigned long, unsigned long, unsigned long)>(b, 0x30)(b, 0, 0, 0);
+    MethodBattleItems<std::int32_t (__stdcall*)(void*, std::uint32_t, std::uint32_t, std::uint32_t)>(b, 0x30)(b, 0, 0, 0);
 }
 
 // original 0x5A71C0: the stream's buffer, if any, stopped when GetStatus says
@@ -748,14 +748,14 @@ extern "C" void __cdecl SndStream_Play(const unsigned char* wave) {
 extern "C" void __cdecl SndStream_Stop(void) {
     void* b = StreamBuffer();
     if (b == nullptr) return;
-    unsigned long status = 0;
-    MethodBattleItems<long (__stdcall*)(void*, unsigned long*)>(b, 0x24)(b, &status);
+    std::uint32_t status = 0;
+    MethodBattleItems<std::int32_t (__stdcall*)(void*, std::uint32_t*)>(b, 0x24)(b, &status);
     if (status & 1) {
         b = StreamBuffer();
-        MethodBattleItems<long (__stdcall*)(void*)>(b, 0x48)(b);
+        MethodBattleItems<std::int32_t (__stdcall*)(void*)>(b, 0x48)(b);
     }
     b = StreamBuffer();
-    MethodBattleItems<unsigned long (__stdcall*)(void*)>(b, 8)(b);
+    MethodBattleItems<std::uint32_t (__stdcall*)(void*)>(b, 8)(b);
     StreamBuffer() = nullptr;
 }
 

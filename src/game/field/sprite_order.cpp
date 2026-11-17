@@ -20,7 +20,7 @@ std::uint32_t Rng() {
 }
 
 using ListSwapFn = void (__cdecl*)(unsigned, unsigned);
-using RecordSwapFn = void (__cdecl*)(unsigned long*, unsigned long*);
+using RecordSwapFn = void (__cdecl*)(std::uint32_t*, std::uint32_t*);
 
 // The byte mask lets an index reach 255 of a 40-entry list, so the fuzz owns
 // the 256 dwords from Sprite_DrawList for its duration and puts them back.
@@ -57,7 +57,7 @@ void SelfTestListSwap(ListSwapFn theirs) {
 void SelfTestRecordSwap(RecordSwapFn theirs) {
     constexpr unsigned kRounds = 4000;
     constexpr unsigned kWords = 16;
-    unsigned long input[kWords], their_out[kWords], ours[kWords];
+    std::uint32_t input[kWords], their_out[kWords], ours[kWords];
     unsigned bad = 0, overlapping = 0;
     for (unsigned round = 0; round < kRounds; ++round) {
         for (auto& w : input) w = Rng();

@@ -584,7 +584,7 @@ extern "C" void __cdecl EffectKind5A_Place(void) {
     rv::Current<records::EffectObject>()->z = 0x630000;
     unsigned char* const s = S();
     auto* const so = rv::As<records::EffectObject>(s);
-    const long ground = SH_CALL(AreaMap_Elevation)(so->x, so->z);
+    const std::int32_t ground = SH_CALL(AreaMap_Elevation)(so->x, so->z);
     rv::Store<U>(rv::Current<records::EffectObject>()->height, static_cast<U>(S16Effect2g(static_cast<U>(ground))) << 16);
     S()[1] = static_cast<unsigned char>(S()[1] + 1);
 }
@@ -594,7 +594,7 @@ extern "C" void __cdecl EffectKind5A_Place(void) {
 extern "C" void __cdecl EffectKind5A_Draw(void) {
     unsigned char* const s = S();
     auto* const so = rv::As<records::EffectObject>(s);
-    const long point[3] = {so->x, so->z, so->height};
+    const std::int32_t point[3] = {so->x, so->z, so->height};
     SH_CALL(Area146_DrawGlowCylinder)(point);
 }
 
@@ -673,30 +673,30 @@ extern "C" void __cdecl EffectKind5B_DrawBeam(unsigned length, unsigned abr) {
     SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z), 1, 0xC);
     const U d = (length & 0xFFFF) << 15;
     s = S();
-    const long ground = SH_CALL(AreaMap_Elevation)(static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x) - d), rv::As<records::EffectObject>(s)->z);
+    const std::int32_t ground = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x) - d), rv::As<records::EffectObject>(s)->z);
     unsigned char* const p = Gfx_PacketNext;
     const U low = (static_cast<U>(S16Effect2g(static_cast<U>(ground))) << 16) + 0xE00000u;
     SH_CALL(Gpu_SetPolyFT4)(p);
-    long point[3];
+    std::int32_t point[3];
     s = S();
-    point[0] = static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x) - d);
-    point[1] = static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z) - 0x8000u);
-    point[2] = static_cast<long>(low);
+    point[0] = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x) - d);
+    point[1] = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z) - 0x8000u);
+    point[2] = static_cast<std::int32_t>(low);
     SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(p + 8));
     s = S();
     point[0] = rv::As<records::EffectObject>(s)->x;
-    point[1] = static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z) - 0x8000u);
-    point[2] = static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height) + 0xE00000u);
+    point[1] = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z) - 0x8000u);
+    point[2] = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height) + 0xE00000u);
     SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(p + 0x18));
     s = S();
-    point[0] = static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x) - d);
-    point[1] = static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z) + 0x8000u);
-    point[2] = static_cast<long>(low);
+    point[0] = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x) - d);
+    point[1] = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z) + 0x8000u);
+    point[2] = static_cast<std::int32_t>(low);
     SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(p + 0x28));
     s = S();
     point[0] = rv::As<records::EffectObject>(s)->x;
-    point[1] = static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z) + 0x8000u);
-    point[2] = static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height) + 0xE00000u);
+    point[1] = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z) + 0x8000u);
+    point[2] = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height) + 0xE00000u);
     SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(p + 0x38));
     rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->clut, SH_CALL(Gpu_GetClut)(0xD0, 0x1E3));
     rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->tpage, SH_CALL(Gpu_GetTPage)(0, 1, 0x2C0, 0x100));

@@ -89,7 +89,7 @@ void Mode(unsigned abr, int x, int y, int dtd) {
 // 0x80 (the first angle whole, the second & 0xFFF), the centre `centre`'s
 // shade and the two rim points `rim`'s, the depth at every vertex; each
 // committed at slot 1 (0x34 bytes).
-void GlowFan(const long* point, U size, U centre, U rim, unsigned parity) {
+void GlowFan(const std::int32_t* point, U size, U centre, U rim, unsigned parity) {
     SH_CALL(EffectGte_LoadMapCamera)();
     float p[3];
     SH_CALL(EffectGte_ProjectPoint)(point, p);
@@ -210,9 +210,9 @@ void NextState() {
     s[1] = static_cast<unsigned char>(s[1] + 1);
 }
 
-long* Point(unsigned char* p) { return reinterpret_cast<long*>(p); }
+std::int32_t* Point(unsigned char* p) { return reinterpret_cast<std::int32_t*>(p); }
 
-const long* Point(const unsigned char* p) { return reinterpret_cast<const long*>(p); }
+const std::int32_t* Point(const unsigned char* p) { return reinterpret_cast<const std::int32_t*>(p); }
 
 float* Out(unsigned char* p) { return reinterpret_cast<float*>(p); }
 
@@ -285,13 +285,13 @@ extern "C" void __cdecl EffectKind3D_DrawGlow(unsigned size) {
     Mode(1, 0x380, 0x100, 1);
     SH_CALL(Gfx_CommitPrim)(1, 0xC);
     const unsigned char* const leader = At(::bof3::Img(ObjTrio_addr) + 0x34);
-    const long point[3] = {Long(leader), Long(leader + 4), static_cast<long>(UL(leader + 8) + 0x800000u)};
+    const std::int32_t point[3] = {Long(leader), Long(leader + 4), static_cast<std::int32_t>(UL(leader + 8) + 0x800000u)};
     SH_CALL(EffectKind3D_DrawFan)(point, size, 0x60, 0);
 }
 
 // original 0x474AC0: EffectKind3B_DrawGlow with the frame's parity doubled in
 // the radius (GlowFan).
-extern "C" void __cdecl EffectKind3D_DrawFan(const long* point, unsigned size, unsigned centre, unsigned rim) {
+extern "C" void __cdecl EffectKind3D_DrawFan(const std::int32_t* point, unsigned size, unsigned centre, unsigned rim) {
     GlowFan(point, size, centre, rim, 1);
 }
 
@@ -357,7 +357,7 @@ extern "C" unsigned char __cdecl EffectKind3D_RingsStep(void) {
 // outer two corners at w +- h black, the inner two at w the shade +0x17, the
 // depth at every corner; each committed at slot 1 (0x44 bytes).
 extern "C" void __cdecl EffectKind3D_DrawRing(unsigned char* ring) {
-    const long* const point = reinterpret_cast<const long*>(ring);
+    const std::int32_t* const point = reinterpret_cast<const std::int32_t*>(ring);
     float p[3];
     SH_CALL(EffectGte_ProjectPoint)(point, p);
     for (unsigned pass = 0; pass < 2; ++pass) {
@@ -463,7 +463,7 @@ extern "C" void __cdecl EffectKind3F_Draw(void) {
 // the next (L's x and z stepped by (to - from) / 16, its height from's plus
 // ((Rand & 0xFFF) - 0x800) << 12 on all but the last), committed 0x20, and
 // EffectKind3E_BoltGlow of its two ends.
-extern "C" void __cdecl EffectKind3E_DrawBolt(const long* from, const long* to) {
+extern "C" void __cdecl EffectKind3E_DrawBolt(const std::int32_t* from, const std::int32_t* to) {
     SH_CALL(EffectGte_LoadMapCamera)();
     DrawMode(1, 1, 1);
     const auto* const a = reinterpret_cast<const unsigned char*>(from);
@@ -498,9 +498,9 @@ extern "C" void __cdecl EffectKind3E_DrawBolt(const long* from, const long* to) 
 // n (black), the depths p0's and p1's, committed 0x44; the same quad copied to
 // the next packet with p0 - n, p1 - n, committed 0x44.
 extern "C" void __cdecl EffectKind3E_BoltGlow(const unsigned char* p0, const unsigned char* p1) {
-    alignas(4) long v[3];
-    v[0] = static_cast<long>(Ftol(-(F(p1 + 4) - F(p0 + 4))));
-    v[1] = static_cast<long>(Ftol(F(p1) - F(p0)));
+    alignas(4) std::int32_t v[3];
+    v[0] = static_cast<std::int32_t>(Ftol(-(F(p1 + 4) - F(p0 + 4))));
+    v[1] = static_cast<std::int32_t>(Ftol(F(p1) - F(p0)));
     v[2] = 0;
     SH_CALL(Gte_VectorNormal)(v, v);
     unsigned char* const prim = Gfx_PacketNext;
@@ -542,7 +542,7 @@ extern "C" void __cdecl EffectKind3E_BoltGlow(const unsigned char* p0, const uns
 // (EffectGte_ProjectSize) plus Frame_Counter & 1; a cap at `from` at angle +
 // 0x400 and one at `to` at angle + 0xC00 (EffectKind3F_DrawCap), and the band
 // between (EffectKind3F_DrawBand).
-extern "C" void __cdecl EffectKind3F_DrawBeam(const long* from, const long* to) {
+extern "C" void __cdecl EffectKind3F_DrawBeam(const std::int32_t* from, const std::int32_t* to) {
     DrawMode(1, 1, 1);
     SH_CALL(EffectGte_LoadMapCamera)();
     alignas(4) unsigned char p0[12];
@@ -878,7 +878,7 @@ extern "C" void __cdecl EffectKind42_Run(void) {
 extern "C" void __cdecl EffectKind42_Glow(void) {
     const unsigned char* const s = S();
     auto* const so = rv::AsConst<records::EffectObject>(s);
-    alignas(4) long point[4];
+    alignas(4) std::int32_t point[4];
     point[0] = so->x;
     point[1] = so->z;
     point[2] = so->height;

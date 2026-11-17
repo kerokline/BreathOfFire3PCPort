@@ -128,7 +128,7 @@ void ViewReset() { SH_CALL(Field_ViewReset)(); }
 
 void SetElevation(int v) { SH_CALL(MapView_SetElevation)(v); }
 
-long Elevation(long x, long z) { return SH_CALL(AreaMap_Elevation)(x, z); }
+std::int32_t Elevation(std::int32_t x, std::int32_t z) { return SH_CALL(AreaMap_Elevation)(x, z); }
 
 bool LoadDone() { return SH_CALL(File_LoadDone)() != 0; }   // test eax, eax
 

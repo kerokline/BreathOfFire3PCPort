@@ -70,15 +70,15 @@ constexpr ::bof3::image::CodeVa kSetAnimFrom{bof3::addr::Sprite_AnimFromSet};
 
 struct Callees {
     int (__cdecl* party_count)(unsigned);                                         // Party_Count (field_event.cpp)
-    long (__cdecl* elevation)(long, long);                                        // AreaMap_Elevation (map_cells.cpp)
-    unsigned char (__cdecl* object_at)(long, long, unsigned);                     // Sprite_ObjectAt (field_blocked.cpp)
-    long (__cdecl* rot_trans_pers)(const short*, unsigned long*, long*);          // Gte_RotTransPers
+    std::int32_t (__cdecl* elevation)(std::int32_t, std::int32_t);                                        // AreaMap_Elevation (map_cells.cpp)
+    unsigned char (__cdecl* object_at)(std::int32_t, std::int32_t, unsigned);                     // Sprite_ObjectAt (field_blocked.cpp)
+    std::int32_t (__cdecl* rot_trans_pers)(const short*, std::uint32_t*, std::int32_t*);          // Gte_RotTransPers
     short* (__cdecl* rot_matrix)(const short*, short*);                           // Gte_RotMatrix
-    void (__cdecl* apply_matrix)(const short*, const short*, long*);              // Gte_ApplyMatrix
-    void (__cdecl* set_rot_matrix)(const unsigned long*);                         // Gte_SetRotMatrix
-    void (__cdecl* set_trans_matrix)(const unsigned long*);                       // Gte_SetTransMatrix
+    void (__cdecl* apply_matrix)(const short*, const short*, std::int32_t*);              // Gte_ApplyMatrix
+    void (__cdecl* set_rot_matrix)(const std::uint32_t*);                         // Gte_SetRotMatrix
+    void (__cdecl* set_trans_matrix)(const std::uint32_t*);                       // Gte_SetTransMatrix
     int (__cdecl* rand)();                                                        // Rand (the CRT's)
-    long (__cdecl* ground_at)(long, long);                                        // MapView_GroundAt
+    std::int32_t (__cdecl* ground_at)(std::int32_t, std::int32_t);                                        // MapView_GroundAt
     unsigned char (__cdecl* effect_free)();                                       // Effect_FindFree
     void (__cdecl* set_anim_from)(unsigned, unsigned, unsigned char*, unsigned);  // 0x5891C0 (next round)
     unsigned char (__cdecl* script_tick)();                                       // Sprite_ScriptTick
@@ -90,11 +90,11 @@ struct Callees {
     unsigned char (__cdecl* place_member)(unsigned, unsigned, unsigned, unsigned);   // Encounter_PlaceMember
     unsigned char (__cdecl* member_clear)(unsigned);                                 // Encounter_MemberClear
     unsigned char (__cdecl* member_stands)(unsigned);                                // Encounter_MemberStands
-    unsigned char (__cdecl* enemy_clear)(unsigned, long, long, unsigned);            // Encounter_EnemyClear
+    unsigned char (__cdecl* enemy_clear)(unsigned, std::int32_t, std::int32_t, unsigned);            // Encounter_EnemyClear
     unsigned char (__cdecl* cell_nibble)(unsigned, unsigned);                        // AreaMap_CellNibble
-    long (__cdecl* project)(long, long, long, unsigned long*);                       // Encounter_Project
-    unsigned char (__cdecl* apart)(long, long, long, long, unsigned, unsigned);      // Encounter_Apart
-    unsigned char (__cdecl* cell_fits)(long, long, unsigned);                        // Encounter_CellFits
+    std::int32_t (__cdecl* project)(std::int32_t, std::int32_t, std::int32_t, std::uint32_t*);                       // Encounter_Project
+    unsigned char (__cdecl* apart)(std::int32_t, std::int32_t, std::int32_t, std::int32_t, unsigned, unsigned);      // Encounter_Apart
+    unsigned char (__cdecl* cell_fits)(std::int32_t, std::int32_t, unsigned);                        // Encounter_CellFits
     unsigned char (__cdecl* path_clear)(unsigned, unsigned, unsigned, unsigned);     // Encounter_PathClear
     unsigned (__cdecl* short_abs)(unsigned);                                         // Short_Abs
     short (__cdecl* short_sign)(unsigned);                                           // Short_Sign

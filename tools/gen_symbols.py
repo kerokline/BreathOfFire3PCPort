@@ -155,21 +155,27 @@ SCALAR_SIZES = {'char': 1, 'signed char': 1, 'unsigned char': 1, 'short': 2, 'un
                 'std::uint32_t': 4, 'std::int32_t': 4}
 
 
-def slot_type(ct, scalar=True):
+LONG_RE = re.compile(r'(?<![\w:.])(?:(unsigned|signed)\s+)?long(?:\s+int\b)?\b(?!\s*(?:long|double)\b)')
+
+
+def fixed_width(text):
+    """A ctype, `ret` or `params` of symbols.toml as the generated header
+    spells it: `long` / `unsigned long` - the 32-bit image's word, Win32's
+    long - as `std::int32_t` / `std::uint32_t`, so an LP64 target (x86-64
+    Linux, where `long` is 8 bytes) reads the same widths (docs/linux-round.md,
+    unit LB0). symbols.toml keeps the spelling it has: `long` there means the
+    image's 4-byte word, and the tools that read its ctypes are unchanged."""
+    return LONG_RE.sub(lambda m: 'std::uint32_t' if m.group(1) == 'unsigned' else 'std::int32_t', text)
+
+
+def slot_type(ct):
     """The C++ type a ctype is spelled as: a pointer ctype `T *` as the 4-byte
-    slot `::bof3::Slot32<T>` (the module docstring); a scalar row's `long` /
-    `unsigned long` - the 32-bit image's word, Win32's long - as the
-    fixed-width type, so an LP64 target reads it right (the 64-bit build
-    round, B2 item 5; 0 differ on Win32, where the two are the same width);
-    anything else itself. A `count` row keeps its element spelling: its name
-    decays to a pointer, and the hand-written helpers and the generated
-    prototypes that take it still say `unsigned long *` (the census's `long`
-    rows, a later pass)."""
-    c = ct.strip()
+    slot `::bof3::Slot32<T>` (the module docstring); `long` / `unsigned long`
+    as the fixed-width type (fixed_width above; 0 differ on Win32, where the
+    two are the same width); anything else itself."""
+    c = fixed_width(ct.strip())
     if c.endswith('*'):
         return f'::bof3::Slot32<{c[:-1].strip()}>'
-    if scalar:
-        return {'unsigned long': 'std::uint32_t', 'long': 'std::int32_t'}.get(c, c)
     return c
 
 
@@ -231,7 +237,7 @@ def emit_game_data(w, start, end, members):
             w(f"    unsigned char pad_{cur:x}[{pc - cur:#x}];")
         packed = " __attribute__((packed, aligned(1)))" if pc % al else ""
         dim = f"[{n}]" if n is not None else ""
-        w(f"    using {name}_type = {slot_type(ct, n is None)};")
+        w(f"    using {name}_type = {slot_type(ct)};")
         w(f"    {name}_type {name}{dim}{packed};")
         cur = pc + size
     if end > cur:
@@ -447,12 +453,12 @@ def main():
 
     w('// --- Functions still Capcom\'s: the name is the original address. ---')
     for e, cc in theirs:
-        w(f'#define {e["name"]} (reinterpret_cast<{e["ret"]} ({cc} *)({e["params"]})>(::bof3::Code({e["pc"]:#x})))')
+        w(f'#define {e["name"]} (reinterpret_cast<{fixed_width(e["ret"])} ({cc} *)({fixed_width(e["params"])})>(::bof3::Code({e["pc"]:#x})))')
     w('')
     w('// --- Functions that are ours: the name is our implementation. ---')
     for e, cc in ours:
         w(f'// {e["impl"]}')
-        w(f'extern "C" {e["ret"]} {cc} {e["name"]}({e["params"]});')
+        w(f'extern "C" {fixed_width(e["ret"])} {cc} {e["name"]}({fixed_width(e["params"])});')
     w('')
     w('// The address each of ours displaced. After BOF3_INJECT its first five')
     w('// bytes are a jmp to ours, so this is for the detour layer, not for calling.')
@@ -470,7 +476,7 @@ def main():
     w('}  // namespace bof3::detail')
     w('namespace bof3::orig {')
     for e, cc in ours:
-        w(f'inline constexpr ::bof3::detail::Original<{e["ret"]} ({cc} *)({e["params"]}), {e["pc"]:#x}> {e["name"]}{{}};')
+        w(f'inline constexpr ::bof3::detail::Original<{fixed_width(e["ret"])} ({cc} *)({fixed_width(e["params"])}), {e["pc"]:#x}> {e["name"]}{{}};')
     w('}  // namespace bof3::orig')
     w('')
 
@@ -493,7 +499,7 @@ def main():
         # typed entry its literal pc
         at = f'{e["name"]}_addr' if e['name'] in in_gd else f'{e["pc"]:#x}'
         at = f'::bof3::Img({at})'
-        ty = slot_type(ty, 'count' not in e)
+        ty = slot_type(ty)
         if 'count' in e:
             return f'#define {e["name"]} (reinterpret_cast<{ty} *>({at}))'
         return f'#define {e["name"]} (*reinterpret_cast<{ty} *>({at}))'

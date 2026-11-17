@@ -504,7 +504,7 @@ void FuzzFind() {
         HANDLE h = FindFirstFileA(pattern, &w);
         unsigned char found[0x118];
         std::memset(found, 0xCC, sizeof found);
-        const long handle = ::Crt_findfirst(pattern, found);
+        const std::int32_t handle = ::Crt_findfirst(pattern, found);
         if ((h == INVALID_HANDLE_VALUE) != (handle == -1)) {
             Mismatch(pattern, 0, h == INVALID_HANDLE_VALUE, handle == -1);
             if (h != INVALID_HANDLE_VALUE) FindClose(h);
@@ -694,7 +694,7 @@ int __cdecl PlantedScanSaturate(const char* s, const char* fmt, ...) {   // the 
     void* const a = va_arg(args, void*);
     void* const b = va_arg(args, void*);
     va_end(args);
-    unsigned long x = 0, y = 0;
+    std::uint32_t x = 0, y = 0;
     const int r = std::strcmp(fmt, "%d %d") == 0 ? std::sscanf(s, "%d %d", reinterpret_cast<int*>(&x), reinterpret_cast<int*>(&y))
                                                  : std::sscanf(s, "%lx@%lx", &x, &y);
     if (r >= 1) std::memcpy(a, &x, 4);

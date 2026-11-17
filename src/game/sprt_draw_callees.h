@@ -51,8 +51,8 @@ extern U g_far_base;
 
 struct Callees {
     void (__cdecl* prim_color)(unsigned r, unsigned g, unsigned b, unsigned code, unsigned mode,
-                               unsigned long* diffuse, unsigned long* specular);   // D3d_PrimColor
-    long (__cdecl* bind_texture)(unsigned tpage, unsigned clut);                    // D3d_BindTexture
+                               std::uint32_t* diffuse, std::uint32_t* specular);   // D3d_PrimColor
+    std::int32_t (__cdecl* bind_texture)(unsigned tpage, unsigned clut);                    // D3d_BindTexture
     void (__cdecl* ret_only)(unsigned);                                             // 0x437CC0
     void (__cdecl* set_blend)(unsigned code, unsigned mode);                        // D3d_SetBlend
     void (__cdecl* set_shade)(unsigned mode);                                       // D3d_SetShadeMode

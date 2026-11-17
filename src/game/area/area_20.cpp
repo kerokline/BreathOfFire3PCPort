@@ -58,7 +58,7 @@ extern "C" void __cdecl Area20_PickFieldObject(void) {
         const U z = static_cast<U>(At(::bof3::Img(Area20_Cells_addr) + cell * 2 + 1)[0]) << 16;
         tO->x = static_cast<std::int32_t>(x);
         tO->z = static_cast<std::int32_t>(z);
-        const long height = AH_CALL(AreaMap_Elevation)(tO->x, static_cast<long>(z));
+        const std::int32_t height = AH_CALL(AreaMap_Elevation)(tO->x, static_cast<std::int32_t>(z));
         rv::Store<unsigned>(rv::As<records::SpriteObject>(o)->height_whole, static_cast<unsigned>(height));
     }
     Field_StepCount = static_cast<unsigned short>(Long(At(::bof3::Img(ObjTrio_addr) + 0x134)) - 5);

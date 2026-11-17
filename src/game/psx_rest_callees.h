@@ -63,10 +63,10 @@ constexpr unsigned kRelease = 0x08, kRestoreDisplayMode = 0x4C, kSetCooperativeL
 constexpr unsigned kGetDC = 0x44, kReleaseDC = 0x68;
 constexpr unsigned kDdsclNormal = 8;                          // DDSCL_NORMAL
 
-using ComCall = long (__stdcall*)(void*);
-using ComCoop = long (__stdcall*)(void*, void* hwnd, unsigned long flags);
-using ComGetDC = long (__stdcall*)(void*, void** hdc);
-using ComReleaseDC = long (__stdcall*)(void*, void* hdc);
+using ComCall = std::int32_t (__stdcall*)(void*);
+using ComCoop = std::int32_t (__stdcall*)(void*, void* hwnd, std::uint32_t flags);
+using ComGetDC = std::int32_t (__stdcall*)(void*, void** hdc);
+using ComReleaseDC = std::int32_t (__stdcall*)(void*, void* hdc);
 
 template <class Fn>
 inline Fn Method(void* object, unsigned offset) {
@@ -99,7 +99,7 @@ struct Callees {
     void (__cdecl* stream_stop)();                        // SndStream_Stop
     void (__cdecl* music_release)();                      // Music_Release
     // Win32, through the game's own import slots
-    unsigned long (__stdcall* set_text_color)(void* hdc, unsigned long color);
+    std::uint32_t (__stdcall* set_text_color)(void* hdc, std::uint32_t color);
     int (__stdcall* set_bk_mode)(void* hdc, int mode);
     int (__stdcall* text_out)(void* hdc, int x, int y, const char* text, int n);
     int (__stdcall* message_box)(void* hwnd, const char* text, const char* caption, unsigned type);

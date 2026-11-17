@@ -33,13 +33,13 @@ unsigned short GetControlWord() {
 void SetControlWord(unsigned short cw) { __asm__("fldcw %0" : : "m"(cw)); }
 
 struct State {
-    unsigned long matrix[8], matrix2[8], color_matrix[8], vertices[6], screen[6];
+    std::uint32_t matrix[8], matrix2[8], color_matrix[8], vertices[6], screen[6];
     short back_color[4];
-    long transformed[3], near_z, proj, offset_x, offset_y, ramp_near, ramp_far, older[3], depth, ir0, otz;
-    unsigned long scratch[40];
+    std::int32_t transformed[3], near_z, proj, offset_x, offset_y, ramp_near, ramp_far, older[3], depth, ir0, otz;
+    std::uint32_t scratch[40];
 };
 
-void Capture(State& s, const unsigned long* scratch) {
+void Capture(State& s, const std::uint32_t* scratch) {
     std::memcpy(s.matrix, Gte_Matrix, sizeof s.matrix);
     std::memcpy(s.matrix2, Gte_Matrix2, sizeof s.matrix2);
     std::memcpy(s.color_matrix, Gte_ColorMatrix, sizeof s.color_matrix);
@@ -55,7 +55,7 @@ void Capture(State& s, const unsigned long* scratch) {
     s.depth = Gte_Depth; s.ir0 = Gte_Ir0; s.otz = Gte_Otz;
     if (scratch) std::memcpy(s.scratch, scratch, sizeof s.scratch);
 }
-void Apply(const State& s, unsigned long* scratch) {
+void Apply(const State& s, std::uint32_t* scratch) {
     std::memcpy(Gte_Matrix, s.matrix, sizeof s.matrix);
     std::memcpy(Gte_Matrix2, s.matrix2, sizeof s.matrix2);
     std::memcpy(Gte_ColorMatrix, s.color_matrix, sizeof s.color_matrix);
@@ -71,7 +71,7 @@ void Apply(const State& s, unsigned long* scratch) {
     if (scratch) std::memcpy(scratch, s.scratch, sizeof s.scratch);
 }
 
-using Fn = long (__cdecl*)(void*, void*, void*, void*, void*, void*, void*, void*, void*);
+using Fn = std::int32_t (__cdecl*)(void*, void*, void*, void*, void*, void*, void*, void*, void*);
 template <class F> Fn AsFn(F* f) { return reinterpret_cast<Fn>(reinterpret_cast<void*>(f)); }
 
 enum Callee { kApply, kApplyLV, kPerspective, kRamp, kSin, kFtol, kNormal, kCallees };
@@ -89,19 +89,19 @@ struct Entry {
 void SelfTest(Entry* entries, unsigned n) {
     constexpr unsigned kRounds = 36000;
     static State saved, input, their_out, our_out;
-    static unsigned long scratch[40];
+    static std::uint32_t scratch[40];
     Capture(saved, nullptr);
     const unsigned short saved_word = GetControlWord();
 
     std::uint32_t rng = 0x7F4A7C15u;
     auto next = [&rng] { rng ^= rng << 13; rng ^= rng >> 17; rng ^= rng << 5; return rng; };
-    auto number = [&next]() -> long {
-        static const long kEdge[] = {0, 1, -1, 2, 0x7FFFFFFF, static_cast<long>(0x80000000u), 0x1000, 500, 1000};
+    auto number = [&next]() -> std::int32_t {
+        static const std::int32_t kEdge[] = {0, 1, -1, 2, 0x7FFFFFFF, static_cast<std::int32_t>(0x80000000u), 0x1000, 500, 1000};
         switch (next() % 8) {
-            case 0: return static_cast<long>(next());
+            case 0: return static_cast<std::int32_t>(next());
             case 1: return kEdge[next() % 9];
-            case 2: return static_cast<long>(next() % 0x2000000u) - 0x1000000;
-            default: return static_cast<long>(next() % 0x4000u) - 0x1000;
+            case 2: return static_cast<std::int32_t>(next() % 0x2000000u) - 0x1000000;
+            default: return static_cast<std::int32_t>(next() % 0x4000u) - 0x1000;
         }
     };
 
@@ -109,18 +109,18 @@ void SelfTest(Entry* entries, unsigned n) {
     for (unsigned round = 0; round < kRounds; ++round) {
         auto* bytes = reinterpret_cast<unsigned char*>(&input);
         for (unsigned i = 0; i < sizeof input; ++i) bytes[i] = static_cast<unsigned char>(next());
-        input.matrix[5] = static_cast<unsigned long>(number());
-        input.matrix[6] = static_cast<unsigned long>(number());
-        input.matrix[7] = static_cast<unsigned long>(number());
+        input.matrix[5] = static_cast<std::uint32_t>(number());
+        input.matrix[6] = static_cast<std::uint32_t>(number());
+        input.matrix[7] = static_cast<std::uint32_t>(number());
         input.near_z = number(); input.proj = number();
         input.offset_x = number(); input.offset_y = number();
         input.ramp_near = number(); input.ramp_far = number();
-        for (long& v : input.older) v = number();
+        for (std::int32_t& v : input.older) v = number();
         input.depth = number();
         // Half the time the scratch holds numbers rather than noise: a vector
         // to normalise is three of them, and all zero now and then.
         if (next() % 2 == 0)
-            for (unsigned long& v : input.scratch) v = static_cast<unsigned long>(number());
+            for (std::uint32_t& v : input.scratch) v = static_cast<std::uint32_t>(number());
         const bool zero = next() % 16 == 0;
         if (zero) { std::memset(input.scratch, 0, sizeof input.scratch); ++zero_vectors; }
 
@@ -129,7 +129,7 @@ void SelfTest(Entry* entries, unsigned n) {
         // more. One round in eight they land anywhere, overlapping.
         unsigned at[9] = {0, 2, 4, 6, 8, 11, 14, 17, 20};
         if (next() % 8 == 0) { for (unsigned& a : at) a = next() % 22; ++overlapping; }
-        const long value = number(), value2 = number(), value3 = number();
+        const std::int32_t value = number(), value2 = number(), value3 = number();
         // The colours are bytes: when cells overlap, in and out a few bytes apart.
         unsigned char* color_out = nullptr;
         if (e.original == bof3::addr::Gte_NormalColor && next() % 4 == 0) {
@@ -137,7 +137,7 @@ void SelfTest(Entry* entries, unsigned n) {
             if (color_out < reinterpret_cast<unsigned char*>(scratch)) color_out = nullptr; else ++byte_overlaps;
         }
 
-        long result[2] = {0, 0};
+        std::int32_t result[2] = {0, 0};
         for (int pass = 0; pass < 2; ++pass) {
             Apply(input, scratch);
             void* a[9];
@@ -157,8 +157,8 @@ void SelfTest(Entry* entries, unsigned n) {
                           (!e.returns || result[0] == result[1]);
         if (!same && ++bad <= 8)
             bof3::Log("shadow      psx_gte_transform self-test MISMATCH: %s, round %u, cells %u %u %u %u %u %u %u %u %u, "
-                      "results %08lX / %08lX", e.name, round, at[0], at[1], at[2], at[3], at[4], at[5], at[6], at[7],
-                      at[8], static_cast<unsigned long>(result[0]), static_cast<unsigned long>(result[1]));
+                      "results %08X / %08X", e.name, round, at[0], at[1], at[2], at[3], at[4], at[5], at[6], at[7],
+                      at[8], static_cast<std::uint32_t>(result[0]), static_cast<std::uint32_t>(result[1]));
     }
     Apply(saved, nullptr);
     SetControlWord(saved_word);

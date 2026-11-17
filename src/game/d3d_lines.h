@@ -7,6 +7,7 @@
 // handler set them. docs/DIVERGENCE.md DIV-0079; the switch is armed after
 // every module's self-test (BOF3X_LINES=0 leaves the strip).
 #pragma once
+#include <cstdint>
 
 namespace d3d_lines {
 
@@ -17,7 +18,7 @@ extern unsigned char g_wide;
 // D3d_Vertices (0..corners - 1: scaled x, y; z; rhw; diffuse; the rest as the
 // last draw left it), each as a TRIANGLESTRIP of four through the device. The
 // vertex block is overwritten. Returns the last DrawPrimitive's answer.
-long DrawWide(unsigned corners);
+std::int32_t DrawWide(unsigned corners);
 
 // After every module's self-test: reads BOF3X_LINES and sets g_wide.
 void Arm();

@@ -80,7 +80,7 @@ void SetV(unsigned offset, U v) { SetWord(Vertex() + offset, v); }
 
 const short* Vx(unsigned i) { return reinterpret_cast<const short*>(Vertex() + 8 * i); }
 
-unsigned long* ScreenXY() { return reinterpret_cast<unsigned long*>(MapView_ScreenXY); }
+std::uint32_t* ScreenXY() { return reinterpret_cast<std::uint32_t*>(MapView_ScreenXY); }
 
 using Handler = scenario_harness::Handler;
 
@@ -165,7 +165,7 @@ void Column(const char* who, U rise, U row, Place place) {
         SH_CALL(Gpu_SetPolyFT4)(p);
         SH_CALL(Gpu_SetShadeTex)(p, 0);
         place(level, x0, z0, y0, odd);
-        long depth[2];
+        std::int32_t depth[2];
         SH_CALL(Gte_RotTransPers)(Vx(0), ScreenXY(), depth);
         SH_CALL(Gte_PrimDepthFlat4_10)(p);
         const U m = c < 0x1380000 ? 4 : level;
@@ -288,7 +288,7 @@ extern "C" U __cdecl EffectKind18Sub1C_OnScreen(void) {
     SetV(4, static_cast<U>(-(S16(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole)) / 2)));
     SetV(2, static_cast<U>(S16(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole)) - 0x80) << 7);
     SetV(0, (static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole) - 0x80) << 7);
-    long depth[2];
+    std::int32_t depth[2];
     SH_CALL(Gte_RotTransPers)(Vx(0), ScreenXY(), depth);
     const float low = Fl(at::kScreenLow), high = Fl(at::kScreenHigh);
     const float sx = Fl(AddressOf(MapView_ScreenXY)), sy = Fl(::bof3::Img(at::kScreenY.v));
@@ -320,7 +320,7 @@ extern "C" void __cdecl EffectKind18Sub1D_Start(void) {
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->height_whole, e);
     s = S();
     const U e2 = static_cast<U>(
-        SH_CALL(AreaMap_Elevation)(static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x) + 0x8000), static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z) - 0x8000)));
+        SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x) + 0x8000), static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z) - 0x8000)));
     s = S();
     if (S16(e2) > S16(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole))) {
         rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, 0);
@@ -361,7 +361,7 @@ extern "C" void __cdecl EffectKind18Sub1D_Hurt(void) {
     for (U step = 1; step < 3; ++step) {
         const U x = ((ULEffect5d(s + 0xC) * step) << 16) + ULEffect5d(s + 0x34);
         const U z = ((ULEffect5d(s + 0x10) * step) << 16) + ULEffect5d(s + 0x38);
-        const unsigned char who = SH_CALL(Party_MemberAt)(static_cast<long>(x), static_cast<long>(z), 0);
+        const unsigned char who = SH_CALL(Party_MemberAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), 0);
         if (S8(who) < 0) {
             s = S();
             continue;
@@ -525,7 +525,7 @@ extern "C" void __cdecl EffectKind18Sub14_DrawTiles(U shade, U unused) {
                     SetV(0, (column << 7) - 0x3FC0);
                     SetV(2, (row << 7) - 0x3FC0);
                     SetV(4, 0xFCC0);
-                    long depth[2];
+                    std::int32_t depth[2];
                     SH_CALL(Gte_RotTransPers)(Vx(0), ScreenXY(), depth);
                     const U swing = ((FC() / 3) + column + row) & 7;
                     const U half = Abs(3 - static_cast<std::int32_t>(swing)) + 0x18;

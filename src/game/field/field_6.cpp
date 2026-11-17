@@ -156,9 +156,9 @@ unsigned char ScratchByte() { return SharedScratch.b_00; }
 unsigned char& ActorState(unsigned n) { return AtEventObjs(::bof3::Img(0x903A80u) + n * kRecordSize)[0]; }
 
 // The landing point of a jump: the step times the frames, from the position.
-long LandingX(const unsigned char* s) { return Add(Mul(rv::As<records::SpriteObject>(s)->step_x, s[9]), rv::As<records::SpriteObject>(s)->x); }
+std::int32_t LandingX(const unsigned char* s) { return Add(Mul(rv::As<records::SpriteObject>(s)->step_x, s[9]), rv::As<records::SpriteObject>(s)->x); }
 
-long LandingZ(const unsigned char* s) { return Add(Mul(rv::As<records::SpriteObject>(s)->step_z, s[9]), rv::As<records::SpriteObject>(s)->z); }
+std::int32_t LandingZ(const unsigned char* s) { return Add(Mul(rv::As<records::SpriteObject>(s)->step_z, s[9]), rv::As<records::SpriteObject>(s)->z); }
 
 // Field_TileD0 and Field_TileA4.
 unsigned char TileState(unsigned code, unsigned char state) {
@@ -181,7 +181,7 @@ unsigned char TileTurn(unsigned code, unsigned value, unsigned turn) {
 
 // AreaMap_CellsAll4 / AreaMap_CellsNone4: the four cells of the 2 x 2
 // footprint at (x >> 16, z >> 16), in the original's call order.
-void Cells(long x, long z, unsigned char c[4]) {
+void Cells(std::int32_t x, std::int32_t z, unsigned char c[4]) {
     const auto cx = static_cast<short>(static_cast<std::uint32_t>(x) >> 16);
     const auto cz = static_cast<short>(static_cast<std::uint32_t>(z) >> 16);
     const auto cx1 = static_cast<short>(cx + 1), cz1 = static_cast<short>(cz + 1);
@@ -239,7 +239,7 @@ unsigned char Al(std::uint32_t eax) { return static_cast<unsigned char>(eax); }
 // which Sprite_PointInReach says (x, y, h) is within `margin` of it. The count
 // is re-read after each object; `count_at` null means a fixed count.
 unsigned char FirstInReach(unsigned char* first, unsigned size, unsigned count, const unsigned char* count_at, bool skip_flag7,
-                           long x, long y, long h, unsigned margin, unsigned char base) {
+                           std::int32_t x, std::int32_t y, std::int32_t h, unsigned margin, unsigned char base) {
     for (unsigned i = 0; i < (count_at ? *count_at : count); ++i) {
         const unsigned char* const object = first + i * size;
         if (object == Sprite_Current) continue;
@@ -510,16 +510,16 @@ const Callees kOriginals = {
     Field_JumpSetUp,
     Field_JumpCamera,
     Field_JumpStart,
-    Fn<long (__cdecl*)(long, long, unsigned)>(::bof3::Code(kSlopeAt.v)),
+    Fn<std::int32_t (__cdecl*)(std::int32_t, std::int32_t, unsigned)>(::bof3::Code(kSlopeAt.v)),
     MapView_GroundAt,
     Sprite_ShadeRaise,
     Sprite_LoadPalette,
     AreaMap_CellsAll,
     AreaMap_CellsAll4,
-    Fn<unsigned char (__cdecl*)(long, long, unsigned, unsigned)>(::bof3::Code(kCellsAllWide.v)),
+    Fn<unsigned char (__cdecl*)(std::int32_t, std::int32_t, unsigned, unsigned)>(::bof3::Code(kCellsAllWide.v)),
     AreaMap_CellsNone,
     AreaMap_CellsNone4,
-    Fn<unsigned char (__cdecl*)(long, long, unsigned, unsigned)>(::bof3::Code(kCellsNoneWide.v)),
+    Fn<unsigned char (__cdecl*)(std::int32_t, std::int32_t, unsigned, unsigned)>(::bof3::Code(kCellsNoneWide.v)),
     AreaMap_ByteAt,
     Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kFloorHurt.v)),
     Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kFlash.v)),
@@ -528,7 +528,7 @@ const Callees kOriginals = {
     Fn<void (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kHpGain.v)),
     Effect_FindFree,
     Field_TileTurn,
-    Fn<unsigned char (__cdecl*)(long, long, unsigned, unsigned)>(::bof3::Code(kTurnProbe.v)),
+    Fn<unsigned char (__cdecl*)(std::int32_t, std::int32_t, unsigned, unsigned)>(::bof3::Code(kTurnProbe.v)),
     Actor_EquipCount,
 };
 Callees g = kOriginals;
@@ -794,7 +794,7 @@ extern "C" unsigned char __cdecl Field_GatewayExit(void) {
 // original 0x531920: whether the cell (x, z) has an event - its code
 // (AreaMap_ByteAt) in the 0xFF-ended list at 0x660B10. Called by the world
 // map's frame (eleven sites) and Field_LeaderCellEvent.
-extern "C" unsigned char __cdecl Field_CellHasEvent(long x, long z) {
+extern "C" unsigned char __cdecl Field_CellHasEvent(std::int32_t x, std::int32_t z) {
     const unsigned char code = event_leader::g.byte_at(static_cast<short>(x), static_cast<short>(z));
     for (const unsigned char* p = event_leader::At(::bof3::Img(Field_EventCells_addr)); *p != 0xFF; ++p)
         if (code == *p) return 1;
@@ -826,8 +826,8 @@ extern "C" unsigned char __cdecl Field_LeaderCellEvent(void) {
         if (!(flags & 0x20)) event_ops::g.leader_animation(Sprite_Current[8]);
         event_ops::g.exit_from_cell();
         const unsigned kind = AreaEntry_PendingFlags;
-        const long z = static_cast<std::int32_t>(AreaEntry_PendingZ);
-        const long x = event_ops::at::kExitX;
+        const std::int32_t z = static_cast<std::int32_t>(AreaEntry_PendingZ);
+        const std::int32_t x = event_ops::at::kExitX;
         Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & 0xEFFF);
         event_ops::g.change_area(AreaW0b_Place, x, z, kind);
         return 1;
@@ -845,15 +845,15 @@ extern "C" unsigned char __cdecl Field_LeaderCellEvent(void) {
         unsigned char* const back = event_ops::At(::bof3::Img(AreaW2d_ReturnPoint_addr));
         event_ops::SetLong(back, rv::As<records::SpriteObject>(sc)->x);
         const auto count = static_cast<unsigned char>(back[0xA] + 1);
-        const long z = rv::As<records::SpriteObject>(sc)->z;
+        const std::int32_t z = rv::As<records::SpriteObject>(sc)->z;
         const unsigned short area = Game_AreaNumber;
         Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & 0xEFFF);
         back[0xA] = count;
         const unsigned kind = AreaEntry_PendingFlags;
         event_ops::SetLong(back + 4, z);
-        const long exit_z = static_cast<std::int32_t>(AreaEntry_PendingZ);
+        const std::int32_t exit_z = static_cast<std::int32_t>(AreaEntry_PendingZ);
         event_ops::SetWord(back + 8, area);
-        const long exit_x = event_ops::at::kExitX;
+        const std::int32_t exit_x = event_ops::at::kExitX;
         event_ops::g.change_area(AreaW0b_Place, exit_x, exit_z, kind);
         return 1;
     }
@@ -964,8 +964,8 @@ extern "C" unsigned char __cdecl Sprite_PointInReach(int x, int y, short z, int 
 // original stores the height over its own y argument slot (the calls take y
 // from a register); cdecl gives the caller no claim on that slot and no
 // caller reads it back (docs/field-blocked.md section 2), so ours does not.
-extern "C" unsigned char __cdecl Sprite_ObjectAt(long x, long y, unsigned margin) {
-    const long h = field_blocked::gFieldBlocked.probe(x, y);
+extern "C" unsigned char __cdecl Sprite_ObjectAt(std::int32_t x, std::int32_t y, unsigned margin) {
+    const std::int32_t h = field_blocked::gFieldBlocked.probe(x, y);
     const unsigned char found = FirstInReach(rv::Bytes(Sprite_Objects), kObjectSize, kObjects, nullptr, true, x, y, h, margin, 0);
     if (found != 0xFF) return found;
     return FirstInReach(rv::Bytes(Sprite_ObjectsExtra), kObjectSize, kExtra, nullptr, true, x, y, h, margin, 0x1E);
@@ -975,13 +975,13 @@ extern "C" unsigned char __cdecl Sprite_ObjectAt(long x, long y, unsigned margin
 // ground's there, unless it is more than 0x100 above or below Sprite_Current's
 // own (s16 +0x3E, read after the call), then Sprite_Current's. 16 bits,
 // zero-extended as the original's eax is.
-extern "C" long __cdecl Field_ProbeHeight(long x, long y) {
-    const long ground = field_blocked::gFieldBlocked.elevation(x, y);
+extern "C" std::int32_t __cdecl Field_ProbeHeight(std::int32_t x, std::int32_t y) {
+    const std::int32_t ground = field_blocked::gFieldBlocked.elevation(x, y);
     const auto own = static_cast<short>(rv::Current<records::SpriteHead>()->height_whole);
     const auto there = static_cast<short>(ground);
     int distance = own - there;
     if (distance < 0) distance = -distance;
-    return static_cast<long>(static_cast<std::uint16_t>(distance > 0x100 ? own : there));
+    return static_cast<std::int32_t>(static_cast<std::uint16_t>(distance > 0x100 ? own : there));
 }
 
 // original 0x531DF0: the objects the leader walks into (PSX FUN_801BEF00) -
@@ -1001,7 +1001,7 @@ extern "C" unsigned char __cdecl Field_LeaderPushObjects(void) {
         x += dx;
         z += dz;
     }
-    auto height = static_cast<short>(event_ops::g.ground_at(static_cast<long>(x), static_cast<long>(z)));
+    auto height = static_cast<short>(event_ops::g.ground_at(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z)));
     const auto own = static_cast<short>(rv::Current<records::SpriteHead>()->height_whole);
     if (std::abs(static_cast<int>(own) - height) > 0x100) height = own;
     for (int i = 0; i < 30; ++i) {
@@ -1029,8 +1029,8 @@ extern "C" unsigned char __cdecl Field_LeaderPushObjects(void) {
 
 // original 0x531F10 (PSX 0x801BF0B8): the same over the party's records -
 // Field_MemberCount of ObjTrio's, re-read after each - without the +7 test.
-extern "C" unsigned char __cdecl Party_MemberAt(long x, long y, unsigned margin) {
-    const long h = field_blocked::gFieldBlocked.probe(x, y);
+extern "C" unsigned char __cdecl Party_MemberAt(std::int32_t x, std::int32_t y, unsigned margin) {
+    const std::int32_t h = field_blocked::gFieldBlocked.probe(x, y);
     return FirstInReach(rv::Bytes(ObjTrio), kMemberSize, 0, &Field_MemberCount, false, x, y, h, margin, 0);
 }
 
@@ -1377,7 +1377,7 @@ extern "C" unsigned char __cdecl Encounter_PartyToPlaces(void) {
                     Sprite_Current[0x29] = Draw_OtSlot;
                     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, move_script::Long(PosX(k)));
                     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, move_script::Long(PosZ(k)));
-                    const long ground = inventory_ops::g.ground_at(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
+                    const std::int32_t ground = inventory_ops::g.ground_at(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
                     rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(ground));
                     Sprite_Current[0x48] = 0;
                     Sprite_Current[0xB] = 1;
@@ -1422,7 +1422,7 @@ extern "C" void __cdecl Encounter_PartyAtPlaces(void) {
         Sprite_Current = obj;
         rv::As<records::PartyMember>(obj)->x = move_script::Long(PosX(i));
         rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, move_script::Long(PosZ(i)));
-        const long ground = inventory_ops::g.ground_at(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
+        const std::int32_t ground = inventory_ops::g.ground_at(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
         rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(ground));
         Sprite_Current[0xB] = 0;
         const u32 record = Field_State[0x148];
@@ -1481,7 +1481,7 @@ extern "C" void __cdecl Party_PlaceAtSlots(void) {
     Field_Kind2Z = z;
     const std::int32_t far = dx < dz ? dz : dx;
     const auto frames = static_cast<unsigned char>(far >> 13);
-    const long elevation = SH_CALL(AreaMap_Elevation)(x, z);
+    const std::int32_t elevation = SH_CALL(AreaMap_Elevation)(x, z);
     if (frames == 0) {
         MoveScript_FAWord = 0;
         return;
@@ -1523,7 +1523,7 @@ extern "C" void __cdecl Party_PlacesByList(void) {
             records::PartyMember* const m = rv::As<records::PartyMember>(MemberFieldE1(j));
             const std::int32_t z = L(::bof3::Img(field_e1::at::kCellX_addr) + 4 * ListSlot(m->char_id, members));
             m->z = z;
-            const long ground = SH_CALL(MapView_GroundAt)(m->x, z);
+            const std::int32_t ground = SH_CALL(MapView_GroundAt)(m->x, z);
             count = Field_MemberCount;
             m->height_whole = static_cast<std::uint32_t>(ground);
             members = count;
@@ -1630,7 +1630,7 @@ extern "C" void __cdecl Party_PlaceInFormation(int x, int z, unsigned slot) {
     }
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, static_cast<std::int32_t>(zd + UScenaSx2(z)));
     unsigned char* const s = Sprite_Current;
-    const long ground = SH_CALL(MapView_GroundAt)(rv::As<records::SpriteObject>(s)->x, rv::As<records::SpriteObject>(s)->z);
+    const std::int32_t ground = SH_CALL(MapView_GroundAt)(rv::As<records::SpriteObject>(s)->x, rv::As<records::SpriteObject>(s)->z);
     rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<std::uint32_t>(ground));
 }
 
@@ -1644,7 +1644,7 @@ extern "C" void __cdecl Party_PlaceInFormation(int x, int z, unsigned slot) {
 // again for each use; Field_MemberCount bounds the member-by-member loop and
 // is read again at each turn; Party_Count's count is stored first as the
 // member count, and the loop's first test is on that count, not re-read.
-extern "C" void __cdecl Field_PartySetUp(long x, long z, unsigned flags) {
+extern "C" void __cdecl Field_PartySetUp(std::int32_t x, std::int32_t z, unsigned flags) {
     Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags & 0xEFFF);
     bool whole_party = (Field_ScriptFlags2 & 0x8000) != 0;
     if (!whole_party) {
@@ -1749,7 +1749,7 @@ extern "C" void __cdecl Field_PartySetUp(long x, long z, unsigned flags) {
         field_event::g.position_alt(x, z, flags);
     else
         field_event::g.position(x, z, flags);
-    const long leader_x = ObjTrio[0].x, leader_z = ObjTrio[0].z;
+    const std::int32_t leader_x = ObjTrio[0].x, leader_z = ObjTrio[0].z;
     Field_Kind2X = leader_x;
     Field_Kind2Z = leader_z;
 }
@@ -1803,7 +1803,7 @@ extern "C" void __cdecl Field_PartyFirstFrame(void) {
 // As the original has it: only the low byte of direction is used, the offset
 // index is unchecked (directions above 7 read past the four pairs), the
 // arithmetic wraps, and the ground is read with the position just stored.
-extern "C" void __cdecl Field_PartyPosition(long x, long z, unsigned direction) {
+extern "C" void __cdecl Field_PartyPosition(std::int32_t x, std::int32_t z, unsigned direction) {
     if (Field_MemberCount == 0) return;
     const auto d = static_cast<unsigned char>(direction);
     for (unsigned i = 0;;) {
@@ -1823,7 +1823,7 @@ extern "C" void __cdecl Field_PartyPosition(long x, long z, unsigned direction) 
             }
         }
         m->direction = d;
-        const long ground = field_event::g.ground_at(m->x, m->z);
+        const std::int32_t ground = field_event::g.ground_at(m->x, m->z);
         m->height_whole = static_cast<std::uint16_t>(ground);
         if (i != 0)
             m->flags = static_cast<unsigned char>(m->flags | 0x40);
@@ -1838,7 +1838,7 @@ extern "C" void __cdecl Field_PartyPosition(long x, long z, unsigned direction) 
 // there; with others, set off by twice the step of 0x660B40 for direction >>
 // 1 (thrice when its +0x70), and once more when any member after it has its
 // +0x70. Called by Field_PartySetUp with Field_ScriptFlags bit 11.
-extern "C" void __cdecl Field_LeaderPlaceOffset(long x, long z, unsigned direction) {
+extern "C" void __cdecl Field_LeaderPlaceOffset(std::int32_t x, std::int32_t z, unsigned direction) {
     const unsigned char n = Field_MemberCount;
     records::PartyMember* const leader = ObjTrio;
     if (n <= 1) {
@@ -1954,7 +1954,7 @@ extern "C" void __cdecl Field_PendingDrop(void) {
     if (!SH_CALL(Field_PendingNext)()) return;
     SH_CALL(Sprite_EnsureAnimation)(rv::As<records::PartyMember>(Sc())->direction == 3 ? 0x3A : 0x3B);
     rv::As<records::PartyMember>(Sc())->flags = static_cast<unsigned char>(rv::As<records::PartyMember>(Sc())->flags & 0xBF);
-    const long ground = SH_CALL(MapView_GroundAt)(rv::As<records::PartyMember>(Sc())->x, rv::As<records::PartyMember>(Sc())->z);
+    const std::int32_t ground = SH_CALL(MapView_GroundAt)(rv::As<records::PartyMember>(Sc())->x, rv::As<records::PartyMember>(Sc())->z);
     rv::Store<unsigned>(rv::As<records::PartyMember>(Sc())->height_whole, static_cast<std::uint32_t>(ground) + 0x7D0);
     SH_CALL(Sprite_ClearSteps)();
     rv::Store<std::int32_t>(rv::As<records::PartyMember>(Sc())->work_20, -8);
@@ -2494,8 +2494,8 @@ extern "C" void __cdecl Field_JumpSetUp(void) {
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_x, Mul(LongEventObjs(AtEventObjs(::bof3::Img(MoveCmd_F9Steps_addr) + Sprite_Current[8] * 8u)), static_cast<std::int32_t>(speed)));
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_z, Mul(LongEventObjs(AtEventObjs(::bof3::Img(MoveCmd_F9Steps_addr) + Sprite_Current[8] * 8u + 4)), static_cast<std::int32_t>(speed)));
     const unsigned char* const s = Sprite_Current;
-    const long x = LandingX(s), z = LandingZ(s);
-    long ground = event_objs::g.slope_at(x, z, s[8]);
+    const std::int32_t x = LandingX(s), z = LandingZ(s);
+    std::int32_t ground = event_objs::g.slope_at(x, z, s[8]);
     if (ScratchByte() != 0) ground = event_objs::g.ground_at(x, z);
     unsigned char* const t = Sprite_Current;
     rv::As<records::SpriteObject>(t)->step_y = Idiv(static_cast<short>(ground) - static_cast<short>(rv::As<records::SpriteHead>(t)->height_whole), t[9]);
@@ -2750,8 +2750,8 @@ extern "C" unsigned char __cdecl Field_TileTurn(unsigned code, unsigned value, u
         for (unsigned i = 0;;) {
             const unsigned char* const s = Sprite_Current;
             direction = static_cast<unsigned char>(((s[8] ^ 0xFC) + i) & 7);
-            const long x = Add(rv::As<records::SpriteObject>(s)->x, Mul(Field_DirectionSteps[direction * 2], 2));
-            const long z = Add(rv::As<records::SpriteObject>(s)->z, Mul(Field_DirectionSteps[direction * 2 + 1], 2));
+            const std::int32_t x = Add(rv::As<records::SpriteObject>(s)->x, Mul(Field_DirectionSteps[direction * 2], 2));
+            const std::int32_t z = Add(rv::As<records::SpriteObject>(s)->z, Mul(Field_DirectionSteps[direction * 2 + 1], 2));
             if (!event_objs::g.turn_probe(x, z, 0, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(s)->height_whole))) break;
             if (++i >= 8) break;
         }
@@ -2792,7 +2792,7 @@ extern "C" unsigned char __cdecl Actor_EquipCount(unsigned member, unsigned kind
 
 // original 0x535390 (PSX 0x801C49D0): the 2 x 2 footprint when `wide` - the
 // whole dword - is 0, else 0x535490's. The callee's eax is the answer.
-extern "C" unsigned char __cdecl AreaMap_CellsAll(long x, long z, unsigned wide, unsigned code, unsigned mask) {
+extern "C" unsigned char __cdecl AreaMap_CellsAll(std::int32_t x, std::int32_t z, unsigned wide, unsigned code, unsigned mask) {
     return wide == 0 ? event_objs::g.cells_all4(x, z, code, mask) : event_objs::g.cells_all_wide(x, z, code, mask);
 }
 
@@ -2800,7 +2800,7 @@ extern "C" unsigned char __cdecl AreaMap_CellsAll(long x, long z, unsigned wide,
 // code - the cell right of it only if x has a fraction, below only if z has
 // one, the diagonal only if both. With the mask byte, the cells' low nibbles
 // are dropped first (the code's are not).
-extern "C" unsigned char __cdecl AreaMap_CellsAll4(long x, long z, unsigned code, unsigned mask) {
+extern "C" unsigned char __cdecl AreaMap_CellsAll4(std::int32_t x, std::int32_t z, unsigned code, unsigned mask) {
     unsigned char c[4];
     Cells(x, z, c);
     if (static_cast<unsigned char>(mask) != 0)
@@ -2820,7 +2820,7 @@ extern "C" unsigned char __cdecl AreaMap_CellsAll4(long x, long z, unsigned code
 // with no z fraction the two at z - 1, with neither (x - 1, z - 1) - each and
 // 0xF0 when `mask` is set; else 0. PSX twin 0x801C4B70 by the body (psx_pair
 // has it and AreaMap_CellsAll4 swapped; a hypothesis).
-extern "C" unsigned char __cdecl AreaMap_CellsAllWide(long x, long z, unsigned code, unsigned mask) {
+extern "C" unsigned char __cdecl AreaMap_CellsAllWide(std::int32_t x, std::int32_t z, unsigned code, unsigned mask) {
     const U xi = static_cast<U>(x) >> 16, zi = static_cast<U>(z) >> 16;
     const auto c = static_cast<unsigned char>(code);
     unsigned char b[4] = {Cell(xi, zi), Cell(xi + 1, zi), Cell(xi, zi + 1), Cell(xi + 1, zi + 1)};
@@ -2841,7 +2841,7 @@ extern "C" unsigned char __cdecl AreaMap_CellsAllWide(long x, long z, unsigned c
 // original 0x535610 (PSX 0x801C4E38): whether the way to (x, z) is blocked for a sprite of
 // ground height `ground` - 0x535830 (a raised sprite's) when the byte
 // `raised` is set, else Field_WayBlocked4. Their al.
-extern "C" unsigned char __cdecl Field_WayBlocked(long x, long z, unsigned raised, long ground) {
+extern "C" unsigned char __cdecl Field_WayBlocked(std::int32_t x, std::int32_t z, unsigned raised, std::int32_t ground) {
     if (raised & 0xFF) return event_leader::g.way_blocked_wide(x, z, ground);
     return event_leader::g.way_blocked4(x, z, ground);
 }
@@ -2852,13 +2852,13 @@ extern "C" unsigned char __cdecl Field_WayBlocked(long x, long z, unsigned raise
 // diagonally when both (4); the ground more than 0xC0 from `ground` (words);
 // or an object there (Sprite_ObjectAt, with Sprite_Current's height +0x3E
 // set to `ground` for the call and put back into Sprite_Current read again).
-extern "C" unsigned char __cdecl Field_WayBlocked4(long x, long z, long ground) {
+extern "C" unsigned char __cdecl Field_WayBlocked4(std::int32_t x, std::int32_t z, std::int32_t ground) {
     if (event_leader::g.cells_block(x, z, 0)) return 1;
     const bool fx = (x & 0xFFFF) != 0, fz = (z & 0xFFFF) != 0;
     if (fx && static_cast<short>(event_leader::g.slope_at(x, z, 3)) > 0x40 && event_leader::at::kScratch != 0) return 1;
     if (fz && static_cast<short>(event_leader::g.slope_at(x, z, 5)) > 0x40 && event_leader::at::kScratch != 0) return 1;
     if (fx && fz && static_cast<short>(event_leader::g.slope_at(x, z, 4)) > 0x40 && event_leader::at::kScratch != 0) return 1;
-    const long here = event_leader::g.ground_at(x, z);
+    const std::int32_t here = event_leader::g.ground_at(x, z);
     const int rise = static_cast<short>(here) - static_cast<short>(ground);
     if (std::abs(rise) > 0xC0) return 1;
     unsigned char* const sc = Sprite_Current;
@@ -2873,7 +2873,7 @@ extern "C" unsigned char __cdecl Field_WayBlocked4(long x, long z, long ground) 
 // AreaMap_CellsNone takes it) touches a blocking cell - any of the codes at
 // 0x660C24 with the low nibble dropped; 0x10; 0x11 unless Field_State +0x138
 // bit 0; 0x20 and 0x21 both; 0xC0 and 0xA0 (nibble dropped) both; 0xA2.
-extern "C" unsigned char __cdecl Field_CellsBlock(long x, long z, unsigned wide) {
+extern "C" unsigned char __cdecl Field_CellsBlock(std::int32_t x, std::int32_t z, unsigned wide) {
     for (const unsigned char* p = event_leader::At(::bof3::Img(Field_BlockingCells_addr)); *p != 0xFF; ++p)
         if (!event_leader::g.cells_none(x, z, wide, *p, 1)) return 1;
     if (!event_leader::g.cells_none(x, z, wide, 0x10, 0)) return 1;
@@ -2897,14 +2897,14 @@ extern "C" unsigned char __cdecl Field_CellsBlock(long x, long z, unsigned wide)
 // unless it answers 0xFF. The probe points are built as the original builds
 // them, word by word into two dwords. PSX twin 0x801C5038 (call, a
 // hypothesis).
-extern "C" unsigned char __cdecl Field_WayBlockedWide(long x, long z, unsigned ground) {
+extern "C" unsigned char __cdecl Field_WayBlockedWide(std::int32_t x, std::int32_t z, unsigned ground) {
     if (SH_CALL(Field_CellsBlock)(x, z, 1) != 0) return 1;
     const U xi = static_cast<U>(x) >> 16, zi = static_cast<U>(z) >> 16;
     // The probe's two dwords: y (lo, hi) and x (lo, hi), words as the stack holds them.
     struct { std::uint16_t ylo, yhi, xlo, xhi; } q;
     auto probe = [&](unsigned direction) {
         const U px = q.xlo | static_cast<U>(q.xhi) << 16, py = q.ylo | static_cast<U>(q.yhi) << 16;
-        const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(px), static_cast<long>(py), direction);
+        const std::int32_t slope = SH_CALL(MapView_SlopeAt)(static_cast<std::int32_t>(px), static_cast<std::int32_t>(py), direction);
         return S16FieldE2(static_cast<U>(slope)) > 0x40 && field_e2::at::kEffectSlot != 0;
     };
     q.yhi = static_cast<std::uint16_t>(zi);
@@ -2960,7 +2960,7 @@ extern "C" unsigned char __cdecl Field_WayBlockedWide(long x, long z, unsigned g
         q.xlo = 0x8000;
         if (probe(0)) return 1;
     }
-    const long g = SH_CALL(MapView_GroundAt)(x, z);
+    const std::int32_t g = SH_CALL(MapView_GroundAt)(x, z);
     int d = S16FieldE2(static_cast<U>(g)) - S16FieldE2(ground);
     if (d < 0) d = -d;
     if (d > 0xC0) return 1;
@@ -2973,13 +2973,13 @@ extern "C" unsigned char __cdecl Field_WayBlockedWide(long x, long z, unsigned g
 }
 
 // original 0x535C50 (PSX 0x801C5724): the same over the "none" tests.
-extern "C" unsigned char __cdecl AreaMap_CellsNone(long x, long z, unsigned wide, unsigned code, unsigned mask) {
+extern "C" unsigned char __cdecl AreaMap_CellsNone(std::int32_t x, std::int32_t z, unsigned wide, unsigned code, unsigned mask) {
     return wide == 0 ? event_objs::g.cells_none4(x, z, code, mask) : event_objs::g.cells_none_wide(x, z, code, mask);
 }
 
 // original 0x535CA0 (PSX 0x801C5764): no cell the footprint covers is the
 // code. Each cell 0x20..0x2F is first cut to its bits 0x21, then the mask.
-extern "C" unsigned char __cdecl AreaMap_CellsNone4(long x, long z, unsigned code, unsigned mask) {
+extern "C" unsigned char __cdecl AreaMap_CellsNone4(std::int32_t x, std::int32_t z, unsigned code, unsigned mask) {
     unsigned char c[4];
     Cells(x, z, c);
     for (unsigned char& v : c)
@@ -2999,7 +2999,7 @@ extern "C" unsigned char __cdecl AreaMap_CellsNone4(long x, long z, unsigned cod
 // under the point equals `code` - the same cells as AreaMap_CellsAllWide,
 // each 0x2n made 0x2n & 0x21 first (not the corner (x - 1, z - 1)), then and
 // 0xF0 with `mask`; else 1. PSX twin 0x801C58F4 by the body (a hypothesis).
-extern "C" unsigned char __cdecl AreaMap_CellsNoneWide(long x, long z, unsigned code, unsigned mask) {
+extern "C" unsigned char __cdecl AreaMap_CellsNoneWide(std::int32_t x, std::int32_t z, unsigned code, unsigned mask) {
     const U xi = static_cast<U>(x) >> 16, zi = static_cast<U>(z) >> 16;
     const auto c = static_cast<unsigned char>(code);
     unsigned char b[4] = {Cell(xi, zi), Cell(xi + 1, zi), Cell(xi, zi + 1), Cell(xi + 1, zi + 1)};
@@ -3024,10 +3024,10 @@ extern "C" unsigned char __cdecl AreaMap_CellsNoneWide(long x, long z, unsigned 
 // speed slower and the jump set up again.
 extern "C" void __cdecl Field_JumpCheckHeight(void) {
     const unsigned char* const s = Sprite_Current;
-    const long x = LandingX(s), z = LandingZ(s);
+    const std::int32_t x = LandingX(s), z = LandingZ(s);
     event_objs::g.slope_at(x, z, s[8]);
     if (ScratchByte() != 0) return;
-    const long ground = event_objs::g.ground_at(x, z);
+    const std::int32_t ground = event_objs::g.ground_at(x, z);
     if (static_cast<short>(ground) - static_cast<short>(rv::Current<records::SpriteHead>()->height_whole) < 0x80) return;
     Field_State[0x128] = static_cast<unsigned char>(Field_State[0x128] - 1);
     event_objs::g.jump_start();
@@ -3107,11 +3107,11 @@ extern "C" unsigned char __cdecl Leader_StepUp(void) {
     const std::uint16_t height = rv::As<records::PartyMember>(s)->height_whole;
     const U actor = rv::As<records::PartyMember>(Field_State)->char_id;
     unsigned char result = 0;
-    const long ground = SH_CALL(MapView_GroundAt)(x, z);
+    const std::int32_t ground = SH_CALL(MapView_GroundAt)(x, z);
     if (S16FieldE2(height) > S16FieldE2(static_cast<U>(ground)) - S16FieldE2(WFieldE2(::bof3::Img(field_e2::at::kPaceHeights) + actor * 2u))) {
         rv::Store<unsigned>(rv::As<records::PartyMember>(s)->height_whole, static_cast<unsigned>(height) - BFieldE2(::bof3::Img(field_e2::at::kPaceRises) + actor));
     } else {
-        const long again = SH_CALL(MapView_GroundAt)(x, z);
+        const std::int32_t again = SH_CALL(MapView_GroundAt)(x, z);
         const std::uint16_t offset = WFieldE2(::bof3::Img(field_e2::at::kPaceHeights) + rv::As<records::PartyMember>(Field_State)->char_id * 2u);
         rv::Store<unsigned>(rv::Current<records::PartyMember>()->height_whole, static_cast<U>(again) - offset);
         Ensure(rv::Current<records::PartyMember>()->direction == 7 ? 0x3C : 0x3D);
@@ -3142,11 +3142,11 @@ extern "C" unsigned char __cdecl Leader_StepDown(void) {
     Ahead(s, x, z);
     const std::uint16_t height = rv::As<records::PartyMember>(s)->height_whole;
     unsigned char result = 0;
-    const long ground = SH_CALL(MapView_GroundAt)(x, z);
+    const std::int32_t ground = SH_CALL(MapView_GroundAt)(x, z);
     if (S16FieldE2(height) < S16FieldE2(static_cast<U>(ground))) {
         rv::Store<unsigned>(rv::As<records::PartyMember>(s)->height_whole, BFieldE2(::bof3::Img(field_e2::at::kPaceRises) + rv::As<records::PartyMember>(Field_State)->char_id) + static_cast<unsigned>(height));
     } else {
-        const long again = SH_CALL(MapView_GroundAt)(x, z);
+        const std::int32_t again = SH_CALL(MapView_GroundAt)(x, z);
         rv::Store<unsigned>(rv::Current<records::PartyMember>()->height_whole, static_cast<U>(again));
         Ensure(rv::Current<records::PartyMember>()->direction == 7 ? 0x3E : 0x3F);
         result = 1;
@@ -3197,7 +3197,7 @@ extern "C" unsigned char __cdecl Leader_Rise(void) {
     rv::Store<unsigned>(rv::Current<records::PartyMember>()->height_whole, rv::Current<records::PartyMember>()->height_whole + 0x10u);
     std::int32_t x, z;
     Ahead(Sprite_Current, x, z);
-    const long ground = SH_CALL(MapView_GroundAt)(x, z);
+    const std::int32_t ground = SH_CALL(MapView_GroundAt)(x, z);
     const int floor = S16FieldE2(static_cast<U>(ground)) - S16FieldE2(WFieldE2(::bof3::Img(field_e2::at::kPaceHeights) + rv::As<records::PartyMember>(Field_State)->char_id * 2u));
     records::PartyMember* const s = rv::Current<records::PartyMember>();
     if (S16FieldE2(s->height_whole) >= floor) s->step = 3;
@@ -3211,7 +3211,7 @@ extern "C" unsigned char __cdecl Leader_Rise(void) {
 extern "C" unsigned char __cdecl Leader_Sink(void) {
     rv::Store<unsigned>(rv::Current<records::PartyMember>()->height_whole, rv::Current<records::PartyMember>()->height_whole - 0x10u);
     unsigned char* s = Sprite_Current;
-    const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(LongAt(s + 0x34)), static_cast<long>(LongAt(s + 0x38)));
+    const std::int32_t ground = SH_CALL(MapView_GroundAt)(static_cast<std::int32_t>(LongAt(s + 0x34)), static_cast<std::int32_t>(LongAt(s + 0x38)));
     s = Sprite_Current;
     if (S16FieldE2(static_cast<U>(ground)) > S16FieldE2(rv::As<records::PartyMember>(s)->height_whole)) {
         rv::Store<unsigned>(rv::As<records::PartyMember>(s)->height_whole, static_cast<U>(ground));

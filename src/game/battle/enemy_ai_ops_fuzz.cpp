@@ -162,7 +162,7 @@ unsigned char __cdecl StubSpriteTickOnce() {
     Disturb();
     return static_cast<unsigned char>(Hash() >> 5);
 }
-unsigned long __cdecl StubStatusTint(unsigned status) { Record(7, status & 0xFFFF, Sc(), En()); Disturb(); return Hash(); }
+std::uint32_t __cdecl StubStatusTint(unsigned status) { Record(7, status & 0xFFFF, Sc(), En()); Disturb(); return Hash(); }
 unsigned char __cdecl StubSetTint(unsigned char* sprite, unsigned char r, unsigned char g_, unsigned char b, unsigned char a) {
     Record(8, Address(sprite), static_cast<std::uint32_t>(r) | g_ << 8 | b << 16, a);
     if (Hash() % 2) Sprite_Current = EnemyObj(Hash() >> 8);
@@ -209,7 +209,7 @@ void __cdecl StubApPopup(unsigned amount, unsigned actor) {
     Disturb();
 }
 // The turn check may change what the op tests next: the deltas, the HP.
-unsigned long __cdecl StubTurnCheck() {
+std::uint32_t __cdecl StubTurnCheck() {
     Record(16, Sc(), En());
     const std::uint32_t h = Hash();
     if (h % 2) SetPtr(BattleE3_CurrentEnemy_addr, EnemyObj(h >> 8));
@@ -221,7 +221,7 @@ void __cdecl StubPlayCue(unsigned id) { Record(17, id & 0xFFFF, Sc()); Disturb()
 void __cdecl StubPlayEffect(unsigned short id) { Record(18, id, Sc()); Disturb(); }
 void __cdecl StubHitSound() { Record(19, Sc(), En()); Disturb(); }
 void __cdecl StubHitPopup() { Record(20, Sc(), En()); Disturb(); }
-unsigned long __cdecl StubClearActorBit(unsigned actor) {
+std::uint32_t __cdecl StubClearActorBit(unsigned actor) {
     Record(21, actor & 0xFF, Sc());
     const std::uint32_t h = Hash();
     if (h % 2) SetPtr(BattleE3_CurrentEnemy_addr, EnemyObj(h >> 8));

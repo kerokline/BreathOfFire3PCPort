@@ -157,7 +157,7 @@ void Kind6FSegments() {
         s = S();
         rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->step_y, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_20));
         s = S();
-        SH_CALL(EffectKind6F_DrawSegment)(reinterpret_cast<const long*>(s + 0xC), reinterpret_cast<const long*>(s + 0x18));
+        SH_CALL(EffectKind6F_DrawSegment)(reinterpret_cast<const std::int32_t*>(s + 0xC), reinterpret_cast<const std::int32_t*>(s + 0x18));
     }
     SH_CALL(BareRet)();
 }
@@ -197,7 +197,7 @@ extern "C" void __cdecl EffectKind6F_AlongZ(void) {
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0x5C0000);
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_10, 0x98000);
     unsigned char* s = S();
-    const long e = SH_CALL(AreaMap_Elevation)(static_cast<long>(rv::As<records::EffectWork>(s)->work_0c), static_cast<long>(Half(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_1c) + rv::As<records::EffectWork>(s)->work_10)));
+    const std::int32_t e = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c), static_cast<std::int32_t>(Half(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_1c) + rv::As<records::EffectWork>(s)->work_10)));
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->height_whole, static_cast<U>(e));
     SH_CALL(EffectKind6F_PushParty)(0);
     for (int i = 2; i != 0; --i) {
@@ -229,7 +229,7 @@ extern "C" void __cdecl EffectKind6F_AlongX(void) {
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_1c, 0x440000);
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_10, 0x440000);
     unsigned char* s = S();
-    const long e = SH_CALL(AreaMap_Elevation)(static_cast<long>(Half(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_18) + rv::As<records::EffectWork>(s)->work_0c)), static_cast<long>(rv::As<records::EffectWork>(s)->work_10));
+    const std::int32_t e = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(Half(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_18) + rv::As<records::EffectWork>(s)->work_0c)), static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_10));
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->height_whole, static_cast<U>(e));
     SH_CALL(EffectKind6F_PushParty)(1);
     for (int i = 2; i != 0; --i) {
@@ -312,7 +312,7 @@ extern "C" void __cdecl EffectKind6F_PushParty(unsigned which) {
 // Frame_Counter & 1 (read after each); EffectKind6F_DrawRibbon(the four screen
 // words through _ftol, the sizes, the angle + 0x400 and + 0xC00); a closing
 // draw mode (dtd 0) linked at the point.
-extern "C" void __cdecl EffectKind6F_DrawSegment(const long* a, const long* b) {
+extern "C" void __cdecl EffectKind6F_DrawSegment(const std::int32_t* a, const std::int32_t* b) {
     DrawMode(1, 0x3C0, 0, 1);
     unsigned char* s = S();
     SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z), 1, 0xC);

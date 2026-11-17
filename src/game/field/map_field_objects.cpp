@@ -100,7 +100,7 @@ unsigned char* PacketNext() { return reinterpret_cast<unsigned char*>(static_cas
 // byte is read first and stored last. eax on the way out is the caller's own
 // with the new byte in al - two callers tail-jump here (0x417D49, 0x543A5D), so
 // the entry passes eax to the body and the body returns it so.
-extern "C" unsigned long __cdecl MapFieldObjects_Clear40Body(unsigned long eax) {
+extern "C" std::uint32_t __cdecl MapFieldObjects_Clear40Body(std::uint32_t eax) {
     const U bits = Byte(at::StatusBitsAt());
     SetWordMapFieldObjects(AtMapFieldObjects(at::ScriptFlagsAt()), WordMapFieldObjects(AtMapFieldObjects(at::ScriptFlagsAt())) & 0xFEFFu);
     const auto cleared = static_cast<unsigned char>(bits & 0xBFu);

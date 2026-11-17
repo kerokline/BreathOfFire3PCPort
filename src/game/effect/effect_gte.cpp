@@ -49,7 +49,7 @@ short Low(U v) { return static_cast<short>(static_cast<std::uint16_t>(v)); }
 struct Matrix {
     short m[9];
     short pad;
-    long t[3];
+    std::int32_t t[3];
 };
 
 // A world point (x, z, height) to the camera's s16 vector, as 0x494110 and
@@ -58,10 +58,10 @@ struct Matrix {
 // arithmetically by 9 less 0x4000, the height's integer part (>> 16) halved
 // toward zero (cdq; sub eax, edx; sar eax, 1) and negated. The fourth s16 is
 // not written; no callee reads it.
-void CameraVector(const long* point, short* v) {
-    const long z = point[1];
-    const long x = point[0];
-    const long height = point[2];
+void CameraVector(const std::int32_t* point, short* v) {
+    const std::int32_t z = point[1];
+    const std::int32_t x = point[0];
+    const std::int32_t height = point[2];
     v[1] = Low(static_cast<U>(z >> 9) - 0x4000u);
     v[2] = Low(static_cast<U>(-((height >> 16) / 2)));
     v[0] = Low(static_cast<U>(x >> 9) - 0x4000u);
@@ -69,7 +69,7 @@ void CameraVector(const long* point, short* v) {
 
 using Fn = void (__cdecl*)();
 
-Fn HandlerFrameCallees(unsigned long entry) { return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(entry)); }
+Fn HandlerFrameCallees(std::uint32_t entry) { return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(entry)); }
 
 constexpr unsigned kEffects = 20, kEffectBytes = 0x80;
 
@@ -98,8 +98,8 @@ extern "C" void __cdecl Effect_RunObjects(void) {
     for (unsigned n = kEffects; n != 0; --n, object += kEffectBytes) {
         if (object[0] == 0) continue;
         if (log_on == 1 && object[1] == 0)
-            bof3::Log("effect      run slot %u handler 0x%02X param 0x%02X +9 %u frame %lu", kEffects - n, object[5],
-                      object[6], object[9], static_cast<unsigned long>(Frame_Counter));
+            bof3::Log("effect      run slot %u handler 0x%02X param 0x%02X +9 %u frame %u", kEffects - n, object[5],
+                      object[6], object[9], static_cast<std::uint32_t>(Frame_Counter));
         Sprite_Current = object;
         HandlerFrameCallees(Effect_KindHandlers[object[5]])();
     }
@@ -115,22 +115,22 @@ extern "C" void __cdecl Effect_RunObjects(void) {
 // Camera_Angles (the original's second Gte_RotMatrix, the angles re-read) and
 // both halves loaded. eax at the original's ret is Gte_SetTransMatrix's last
 // load, the translation's z.
-extern "C" long __cdecl EffectGte_LoadMapCamera(void) {
+extern "C" std::int32_t __cdecl EffectGte_LoadMapCamera(void) {
     Matrix matrix;
     SH_CALL(Gte_RotMatrix)(Camera_Angles, matrix.m);
     short focus[4];
     focus[0] = Low(static_cast<U>(MapView_FocusX) >> 1);
     focus[1] = Low(static_cast<U>(MapView_FocusZ) >> 1);
     focus[2] = Low(static_cast<U>(MapView_Elevation) >> 1);
-    long turned[4];
+    std::int32_t turned[4];
     SH_CALL(Gte_ApplyMatrix)(matrix.m, focus, turned);
-    matrix.t[0] = static_cast<long>(static_cast<U>(static_cast<long>(Camera_ShiftX)) + static_cast<U>(turned[0]));
-    matrix.t[1] = static_cast<long>(static_cast<U>(static_cast<long>(Camera_ShiftY)) + static_cast<U>(turned[1]));
-    matrix.t[2] = static_cast<long>(static_cast<U>(static_cast<long>(Camera_Distance)) + static_cast<U>(turned[2]) +
+    matrix.t[0] = static_cast<std::int32_t>(static_cast<U>(static_cast<std::int32_t>(Camera_ShiftX)) + static_cast<U>(turned[0]));
+    matrix.t[1] = static_cast<std::int32_t>(static_cast<U>(static_cast<std::int32_t>(Camera_ShiftY)) + static_cast<U>(turned[1]));
+    matrix.t[2] = static_cast<std::int32_t>(static_cast<U>(static_cast<std::int32_t>(Camera_Distance)) + static_cast<U>(turned[2]) +
                                     0x1194u);
     SH_CALL(Gte_RotMatrix)(Camera_Angles, matrix.m);
-    SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&matrix));
-    SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&matrix));
+    SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(&matrix));
+    SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(&matrix));
     return matrix.t[2];
 }
 
@@ -142,11 +142,11 @@ extern "C" long __cdecl EffectGte_LoadMapCamera(void) {
 // touches, is the slot of `point`. Ours hands the same slot for p; our
 // Gte_RotTransPers has no flag argument. Then Gte_StoreDepthF(out + 2). eax at
 // the original's ret is Gte_StoreDepthF's argument.
-extern "C" float* __cdecl EffectGte_ProjectPoint(const long* point, float* out) {
+extern "C" float* __cdecl EffectGte_ProjectPoint(const std::int32_t* point, float* out) {
     short vector[4];
     CameraVector(point, vector);
     float* const screen = out;
-    SH_CALL(Gte_RotTransPers)(vector, reinterpret_cast<unsigned long*>(screen), reinterpret_cast<long*>(&out));
+    SH_CALL(Gte_RotTransPers)(vector, reinterpret_cast<std::uint32_t*>(screen), reinterpret_cast<std::int32_t*>(&out));
     SH_CALL(Gte_StoreDepthF)(screen + 2);
     return screen + 2;
 }
@@ -199,18 +199,18 @@ extern "C" int __cdecl Screen_TriangleWinding(const float* a, const float* b, co
 // eax at the original's ret is the second quotient. A depth of 0 is a divide
 // fault in the original (no handler: the process ends); ours aborts with a
 // message (docs/effect_gte.md section 5 on whether play reaches it).
-extern "C" long __cdecl EffectGte_ProjectSize(const long* point, const short* size, short* out) {
+extern "C" std::int32_t __cdecl EffectGte_ProjectSize(const std::int32_t* point, const short* size, short* out) {
     short vector[4];
     CameraVector(point, vector);
-    long turned[4];
+    std::int32_t turned[4];
     SH_CALL(Gte_RotTrans)(vector, turned);
-    const long depth = turned[2];
+    const std::int32_t depth = turned[2];
     if (depth == 0)
-        bof3::Fatal("EffectGte_ProjectSize (0x4941E0): the point (%ld, %ld, %ld) is at depth 0 in the camera; the "
+        bof3::Fatal("EffectGte_ProjectSize (0x4941E0): the point (%d, %d, %d) is at depth 0 in the camera; the "
                     "original divides by it (a divide fault)",
                     point[0], point[1], point[2]);
-    out[0] = Low(static_cast<U>(static_cast<long>(size[0]) * 1000 / depth));
-    const long second = static_cast<long>(size[1]) * 1000 / depth;
+    out[0] = Low(static_cast<U>(static_cast<std::int32_t>(size[0]) * 1000 / depth));
+    const std::int32_t second = static_cast<std::int32_t>(size[1]) * 1000 / depth;
     out[1] = Low(static_cast<U>(second));
     return second;
 }

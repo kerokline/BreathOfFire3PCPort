@@ -36,16 +36,16 @@ template <typename T> U AddressOf(T* p) { return Low32(p); }
 
 // A table entry as the original's jmp reaches it: the word its caller left on
 // the stack, eax back.
-using Entry = unsigned long (__cdecl*)(unsigned);
+using Entry = std::uint32_t (__cdecl*)(unsigned);
 
-unsigned long CallEntry(U table, unsigned index, unsigned word) {
+std::uint32_t CallEntry(U table, unsigned index, unsigned word) {
     // the entry as read: the fuzz swaps the table's cells for its recorders
     return reinterpret_cast<Entry>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(table + 4 * index)))))(word);
 }
 
 // jmp [table + 4 * Sprite_Current[at]]: the table's `entries` handlers, a
 // Fatal past them (the original jumps through the dword after).
-unsigned long DispatchBossSb(const char* who, U table, unsigned entries, unsigned at, unsigned word) {
+std::uint32_t DispatchBossSb(const char* who, U table, unsigned entries, unsigned at, unsigned word) {
     const unsigned state = Sprite_Current[at];
     if (state >= entries)
         bof3::Fatal("%s: state byte +%u is %u, past the %u entries of 0x%X - the original jumps through the dword after "
@@ -57,7 +57,7 @@ unsigned long DispatchBossSb(const char* who, U table, unsigned entries, unsigne
 // mov eax, [esp + 4]; and eax, 0xFF; jmp [table + 4 * eax]: an enemy's +0xF4
 // hook by its word's low byte (3 entries in every table of the group), the
 // word itself left for the entry.
-unsigned long HookDispatchBossSb(const char* who, U table, unsigned word) {
+std::uint32_t HookDispatchBossSb(const char* who, U table, unsigned word) {
     const unsigned index = word & 0xFF;
     if (index >= 3)
         bof3::Fatal("%s: hook word %u is past the 3 entries of 0x%X - the original jumps through the dword after "
@@ -77,7 +77,7 @@ void StoreTables(U fc, U hook, U f8) {
 }  // namespace
 
 // original 0x438BA0: BossKind_Table[5]: by +1 through BossOperator_Steps (12).
-extern "C" unsigned long __cdecl BossOperator_Dispatch(unsigned word) {
+extern "C" std::uint32_t __cdecl BossOperator_Dispatch(unsigned word) {
     return DispatchBossSb("BossOperator_Dispatch", AddressOf(BossOperator_Steps), 12, 1, word);
 }
 
@@ -93,7 +93,7 @@ extern "C" unsigned char __cdecl BossOperator_Enter(void) {
 
 // original 0x438C10: kind 5's +0xF4 hook through BossOperator_Hooks (3:
 // BareRet, BossOperator_HookHit, BareRet).
-extern "C" unsigned long __cdecl BossOperator_Hook(unsigned word) {
+extern "C" std::uint32_t __cdecl BossOperator_Hook(unsigned word) {
     return HookDispatchBossSb("BossOperator_Hook", AddressOf(BossOperator_Hooks), word);
 }
 

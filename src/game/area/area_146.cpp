@@ -146,10 +146,10 @@ void GlowCylinder(const std::int32_t* p) {
 
 // The effect state that hands the running record's point (+0x34, +0x38,
 // +0x3C) to a cylinder (0x420B20, 0x4220A0).
-void CylinderAtCurrent(void (__cdecl* cylinder)(const long*)) {
+void CylinderAtCurrent(void (__cdecl* cylinder)(const std::int32_t*)) {
     const unsigned char* const cur = Sprite_Current;
     const auto* const tCur = rv::AsConst<records::EffectObject>(cur);
-    const long point[3] = {tCur->x, tCur->z, tCur->height};
+    const std::int32_t point[3] = {tCur->x, tCur->z, tCur->height};
     cylinder(point);
 }
 
@@ -166,7 +166,7 @@ extern "C" void __cdecl Area146_LeaderBit138OtSlot(void) {
 // original 0x422000 (Area_StepHook's case for area 0x92): Cond_ByteFD 1,
 // story flag 0x33 set, x's high word 0x44..0x46 and z's 0x2A..0x2C, the
 // leader's pose 0, 7 or 6: counter 0 = 0, Party_DropIn(0), al 1. Else al 0.
-extern "C" unsigned char __cdecl Area146_StepHook(long x, long z) {
+extern "C" unsigned char __cdecl Area146_StepHook(std::int32_t x, std::int32_t z) {
     if (Cond_ByteFD != 1) return 0;
     if (AH_CALL(Flags_Test)(StoryFlags(), 0x33) == 0) return 0;
     if (static_cast<std::uint16_t>(High(static_cast<U>(x)) - 0x44) >= 3) return 0;
@@ -193,7 +193,7 @@ extern "C" void __cdecl Area146_EffectB4Cylinder(void) { CylinderAtCurrent(AH_CA
 // original 0x4220D0 (called by Area146_EffectB4Cylinder, by the effect states
 // of areas 36, 59, 100, 112 and 116 - 0x405022, 0x40B542, 0x4144D2, ... - and
 // by engine effect states at 0x475CE2 and 0x47EF32): GlowCylinder.
-extern "C" void __cdecl Area146_DrawGlowCylinder(const long* point) { GlowCylinder(reinterpret_cast<const std::int32_t*>(point)); }
+extern "C" void __cdecl Area146_DrawGlowCylinder(const std::int32_t* point) { GlowCylinder(reinterpret_cast<const std::int32_t*>(point)); }
 
 void Area146_Inject() {
     BOF3_INJECT(Area146_LeaderBit138OtSlot);

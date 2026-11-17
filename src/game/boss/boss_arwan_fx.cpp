@@ -41,14 +41,14 @@ unsigned char* Owner() { return At(BattleE2_Owner); }
 // Sprite_Current +1] through a stack table of four - BossArwanFx_Start,
 // BossArwanFx_Count, BossArwanFx_Finish, MagicFx_DoneAndFree -, a Fatal past
 // them (the original calls through its caller's frame); the entry's eax back.
-extern "C" unsigned long __cdecl BossArwanFx_Dispatch(void) {
+extern "C" std::uint32_t __cdecl BossArwanFx_Dispatch(void) {
     static const U kSteps[] = {at::kFxStart.v, at::kFxCount.v, at::kFxFinish.v, at::kFxDone.v};
     const unsigned step = rv::Current<records::BattleTask>()->state;
     if (step >= 4)
         bof3::Fatal("BossArwanFx_Dispatch: step +1 is %u, past the 4 of its stack table - the original calls through its "
                     "caller's frame (docs/boss_si.md section 6)",
                     step);
-    return BH_WORD(unsigned long (__cdecl*)(), kSteps[step])();
+    return BH_WORD(std::uint32_t (__cdecl*)(), kSteps[step])();
 }
 
 // original 0x43F630: the task's step 0. +1 up by one; +9 = the +0x8A byte of

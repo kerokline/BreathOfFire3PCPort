@@ -151,7 +151,7 @@ bool CountDown9(unsigned char** out) {
 void Ground(U lift) {
     const unsigned char* const s = S();
     auto* const so = rv::AsConst<records::EffectObject>(s);
-    const long g = SH_CALL(AreaMap_Elevation)(so->x, so->z);
+    const std::int32_t g = SH_CALL(AreaMap_Elevation)(so->x, so->z);
     rv::Store<U>(rv::Current<records::EffectObject>()->height, (SW(reinterpret_cast<const unsigned char*>(&g)) + lift) << 16);
 }
 
@@ -254,7 +254,7 @@ bool EqualOrUnordered(const unsigned char* a, const unsigned char* b) {
     return !(x < y) && !(x > y);
 }
 
-const long* Point(const unsigned char* p) { return reinterpret_cast<const long*>(p); }
+const std::int32_t* Point(const unsigned char* p) { return reinterpret_cast<const std::int32_t*>(p); }
 
 float* Out(unsigned char* p) { return reinterpret_cast<float*>(p); }
 
@@ -291,7 +291,7 @@ void SpiralPoint(unsigned char* spiral, unsigned i, unsigned char dark, unsigned
     if (static_cast<std::int32_t>(dot) <= 0) {
         *shade = dark;
     } else {
-        std::int32_t root = static_cast<std::int32_t>(SH_AT(long (__cdecl*)(long), rest_3e::at::kSqrt.v)(static_cast<long>(dot)));
+        std::int32_t root = static_cast<std::int32_t>(SH_AT(std::int32_t (__cdecl*)(std::int32_t), rest_3e::at::kSqrt.v)(static_cast<std::int32_t>(dot)));
         if (root > 0xFFF) root = 0xFFF;
         *shade = static_cast<unsigned char>(((static_cast<U>(root) >> 5) & 0x78u) + 7u);
     }
@@ -437,7 +437,7 @@ extern "C" void __cdecl EffectKind48_DrawSpark(const unsigned char* spark) {
     SH_CALL(Gpu_SetPolyFT4)(prim);
     SH_CALL(Gpu_SetSemiTrans)(prim, 1);
     short size[2] = {static_cast<short>(UL(spark + 0x10) >> 6), 0};
-    const long point[3] = {Long(spark), Long(spark + 4), static_cast<long>(UL(spark + 8) << 8)};
+    const std::int32_t point[3] = {Long(spark), Long(spark + 4), static_cast<std::int32_t>(UL(spark + 8) << 8)};
     short scaled[2] = {0, 0};
     SH_CALL(EffectGte_ProjectSize)(point, size, scaled);
     float screen[3];
@@ -620,7 +620,7 @@ extern "C" void __cdecl EffectKind49_V3Run(void) {
 extern "C" void __cdecl EffectKind49_V3Start(void) {
     const unsigned char* const s = S();
     auto* const so = rv::AsConst<records::EffectObject>(s);
-    const long ground = SH_CALL(AreaMap_Elevation)(so->x, so->z);
+    const std::int32_t ground = SH_CALL(AreaMap_Elevation)(so->x, so->z);
     rv::Store<U>(rv::Current<records::EffectObject>()->height, static_cast<U>(static_cast<std::int32_t>(static_cast<short>(ground))) << 16);
     SH_AT(void (__cdecl*)(), at::kDustClear.v)();
     S()[9] = 0;
@@ -1107,7 +1107,7 @@ extern "C" void __cdecl EffectGlowTrail_Draw(unsigned char* trail) {
 
 // original 0x479970 (0x44 bytes): a & 0xFFF and b & 0xFFF ordered (lo, hi);
 // (lo + hi) >> 1, plus 0x800 when hi - lo is 0x800 or more. eax.
-extern "C" long __cdecl EffectAngle_Mean(unsigned a, unsigned b) {
+extern "C" std::int32_t __cdecl EffectAngle_Mean(unsigned a, unsigned b) {
     U lo = a & 0xFFFu;
     U hi = b & 0xFFFu;
     if (lo > hi) {
@@ -1116,7 +1116,7 @@ extern "C" long __cdecl EffectAngle_Mean(unsigned a, unsigned b) {
         hi = t;
     }
     const U mean = (lo + hi) >> 1;
-    return static_cast<long>(hi - lo < 0x800u ? mean : mean + 0x800u);
+    return static_cast<std::int32_t>(hi - lo < 0x800u ? mean : mean + 0x800u);
 }
 
 // original 0x4799C0 (E2E's kind 0x48 states 8 and 10 call it): set up.
@@ -1129,7 +1129,7 @@ extern "C" void __cdecl EffectSpiral_Init(unsigned char* spiral) {
     SetUL(spiral + 0xD18, 0x1000);
     SetUL(spiral + 0xD14, 0);
     SetUL(spiral + 0xD1C, 0x1000);
-    SH_CALL(Gte_VectorNormal)(Point(spiral + 0xD14), reinterpret_cast<long*>(spiral + 0xD14));
+    SH_CALL(Gte_VectorNormal)(Point(spiral + 0xD14), reinterpret_cast<std::int32_t*>(spiral + 0xD14));
     for (unsigned i = 0; i < 0x20; ++i) {
         unsigned char* const shade = spiral + 0xC10 + i;
         unsigned char* const screen = spiral + 0x10 + 12 * i;
@@ -1251,7 +1251,7 @@ extern "C" void __cdecl EffectDust_Start(unsigned char* dust) {
     const U sin = static_cast<U>(SH_CALL(Math_Sin)(angle));
     const U z = Sar(Mul(sin, radius), 12) + static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->z);
     SetUL(dust + 8, z);
-    const U ground = static_cast<U>(static_cast<std::int16_t>(SH_CALL(AreaMap_Elevation)(static_cast<long>(ULRest3e(dust + 4)), static_cast<long>(z)))) << 16;
+    const U ground = static_cast<U>(static_cast<std::int16_t>(SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(ULRest3e(dust + 4)), static_cast<std::int32_t>(z)))) << 16;
     SetUL(dust + 0x1C, ground);
     SetUL(dust + 0xC, ground);
 }
@@ -1337,7 +1337,7 @@ extern "C" void __cdecl EffectDust_DrawFan(const unsigned char* dust) {
     SetUL(pt, ULRest3e(dust + 4));
     SetUL(pt + 4, ULRest3e(dust + 8));
     SetUL(pt + 8, static_cast<U>(static_cast<std::int16_t>(
-                      SH_CALL(AreaMap_Elevation)(static_cast<long>(ULRest3e(dust + 4)), static_cast<long>(ULRest3e(dust + 8)))))
+                      SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(ULRest3e(dust + 4)), static_cast<std::int32_t>(ULRest3e(dust + 8)))))
                       << 16);
     SH_CALL(EffectGte_ProjectPoint)(Point(pt), Out(centre));
     U angle = 0;
@@ -1348,7 +1348,7 @@ extern "C" void __cdecl EffectDust_DrawFan(const unsigned char* dust) {
         const U sin = static_cast<U>(SH_CALL(Math_Sin)(t));
         SetUL(pt + 4, ULRest3e(dust + 8) + (sin << 2));
         SetUL(pt + 8, static_cast<U>(static_cast<std::int16_t>(
-                          SH_CALL(AreaMap_Elevation)(static_cast<long>(ULRest3e(dust + 4)), static_cast<long>(ULRest3e(dust + 8)))))
+                          SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(ULRest3e(dust + 4)), static_cast<std::int32_t>(ULRest3e(dust + 8)))))
                           << 16);
         SH_CALL(EffectGte_ProjectPoint)(Point(pt), Out(rim));
     };
@@ -1425,7 +1425,7 @@ extern "C" unsigned char __cdecl EffectSphere_Build(void) {
     SetUL(light, 0);
     SetUL(light + 4, 0x1000);
     SetUL(light + 8, 0x1000);
-    SH_CALL(Gte_VectorNormal)(reinterpret_cast<const long*>(light), reinterpret_cast<long*>(light));
+    SH_CALL(Gte_VectorNormal)(reinterpret_cast<const std::int32_t*>(light), reinterpret_cast<std::int32_t*>(light));
     const unsigned char* vert = At(::bof3::Img(Effect2e_SphereVerts_addr));
     unsigned char* shade = At(::bof3::Img(at::kSphereShades.v));
     for (unsigned i = 0; i < at::kSphereVertCount; ++i, vert += 8, ++shade) {
@@ -1434,7 +1434,7 @@ extern "C" unsigned char __cdecl EffectSphere_Build(void) {
             *shade = 0;
             continue;
         }
-        U root = static_cast<U>(SH_AT(long (__cdecl*)(long), effect_2e::at::kSqrt.v)(static_cast<long>(dot)));
+        U root = static_cast<U>(SH_AT(std::int32_t (__cdecl*)(std::int32_t), effect_2e::at::kSqrt.v)(static_cast<std::int32_t>(dot)));
         if (static_cast<std::int32_t>(root) > 0xFFF) root = 0xFFF;
         *shade = static_cast<unsigned char>(Sar(root, 7));
     }
@@ -1453,10 +1453,10 @@ extern "C" unsigned char __cdecl EffectSphere_Draw(void) {
     const unsigned char* v = At(::bof3::Img(Effect2e_SphereVerts_addr));
     for (unsigned i = 0; i < at::kSphereVertCount; ++i, v += 8) {
         const unsigned char* const s = S();
-        long point[3];
-        point[0] = static_cast<long>((SW(v) << 5) + UL(s + 0x34));
-        point[1] = static_cast<long>((SW(v + 2) << 5) + UL(s + 0x38));
-        point[2] = static_cast<long>(((SW(v + 4) + 0x1000u) << 13) + UL(s + 0x3C));
+        std::int32_t point[3];
+        point[0] = static_cast<std::int32_t>((SW(v) << 5) + UL(s + 0x34));
+        point[1] = static_cast<std::int32_t>((SW(v + 2) << 5) + UL(s + 0x38));
+        point[2] = static_cast<std::int32_t>(((SW(v + 4) + 0x1000u) << 13) + UL(s + 0x3C));
         SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(At(::bof3::Img(at::kSphereScreen.v) + 0xC * i)));
     }
     DrawMode(0x3C0, 0, 1);
@@ -1509,7 +1509,7 @@ extern "C" void __cdecl EffectKind4A_Follow(void) {
     }
     SH_CALL(EffectKind4A_TrailStep)();
     SH_CALL(EffectKind4A_TrailDraw)();
-    SH_CALL(EffectKind4A_DrawGlow)(reinterpret_cast<const long*>(At(::bof3::Img(EffectKind30_Shards_addr))), 0x80, 0x80, 0);
+    SH_CALL(EffectKind4A_DrawGlow)(reinterpret_cast<const std::int32_t*>(At(::bof3::Img(EffectKind30_Shards_addr))), 0x80, 0x80, 0);
     SH_CALL(Gte_PopMatrix)();
     unsigned char* t;
     if (!CountDownC(&t)) return;

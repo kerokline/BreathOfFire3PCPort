@@ -192,7 +192,7 @@ extern "C" void __cdecl EffectKind18Sub45_DrawRing(int outer_word, int inner_wor
             const U cosine = Sar(static_cast<U>(SH_CALL(Math_Cos)(I(q))) * radius, 13);
             SetV(8 * v + 4, Ftol(Fi(cosine) + D(::bof3::Img(at::kScreenZ.v))));
         }
-        long depth;
+        std::int32_t depth;
         SH_CALL(Gte_RotTransPers4)(Vx(0), Vx(1), Vx(2), Vx(3), Fp(p + 8), Fp(p + 0x18), Fp(p + 0x28), Fp(p + 0x38), &depth);
         SH_CALL(Gte_PrimDepths4_10)(p);
         SH_CALL(Gpu_SetSemiTrans)(p, 0);

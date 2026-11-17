@@ -136,8 +136,8 @@ extern "C" void __cdecl EffectKind18Sub55_Draw(int shade_word, int lift_word) {
             SetV(0, (x - 0x80u) << 7);
             SetV(2, (((z - 0x80u) << 6) - lift) << 1);
             SetV(4, (z - 0x77u) << 4);
-            long a;
-            SH_CALL(Gte_RotTransPers)(Vx(0), reinterpret_cast<unsigned long*>(MapView_ScreenXY), &a);
+            std::int32_t a;
+            SH_CALL(Gte_RotTransPers)(Vx(0), reinterpret_cast<std::uint32_t*>(MapView_ScreenXY), &a);
             const U half = Abs(3u - (((Frame_Counter / 3) + x + z) & 7)) + 0x18;
             unsigned char* const p = Gfx_PacketNext;
             SH_CALL(Gpu_SetPolyFT4)(p);

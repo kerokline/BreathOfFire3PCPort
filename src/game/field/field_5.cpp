@@ -74,24 +74,24 @@ extern "C" unsigned char __cdecl Field_FacingObject(void) {
     const unsigned char d = sc[8];
     if (!(d & 1)) {
         const unsigned left = (d - 1u) & 7;
-        unsigned char r = g.object_ahead(static_cast<long>(StepX(left) + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->x)),
-                                         static_cast<long>(StepZ(left) + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->z)), left);
+        unsigned char r = g.object_ahead(static_cast<std::int32_t>(StepX(left) + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->x)),
+                                         static_cast<std::int32_t>(StepZ(left) + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->z)), left);
         if (r != 0xFF) {
             Sprite_Current[8] = (Sprite_Current[8] - 1) & 7;
             return r;
         }
         sc = Sprite_Current;
         const unsigned right = (sc[8] + 1u) & 7;
-        r = g.object_ahead(static_cast<long>(StepX(right) + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->x)),
-                           static_cast<long>(StepZ(right) + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->z)), right);
+        r = g.object_ahead(static_cast<std::int32_t>(StepX(right) + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->x)),
+                           static_cast<std::int32_t>(StepZ(right) + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->z)), right);
         if (r != 0xFF) {
             Sprite_Current[8] = (Sprite_Current[8] + 1) & 7;
             return r;
         }
         sc = Sprite_Current;
         const unsigned ahead = sc[8];
-        return g.object_ahead(static_cast<long>(StepX(ahead) + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->x)),
-                              static_cast<long>(StepZ(ahead) + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->z)), ahead);
+        return g.object_ahead(static_cast<std::int32_t>(StepX(ahead) + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->x)),
+                              static_cast<std::int32_t>(StepZ(ahead) + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->z)), ahead);
     }
     const std::uint32_t reach = sc[0x70] + 2u;
     std::uint32_t x = StepX(d) * reach + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->x);
@@ -107,7 +107,7 @@ extern "C" unsigned char __cdecl Field_FacingObject(void) {
         x += StepX(e);
         z += StepZ(e);
     }
-    return g.object_ahead(static_cast<long>(x), static_cast<long>(z), sc[8]);
+    return g.object_ahead(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), sc[8]);
 }
 
 // original 0x530BF0: the object at (x, z) the leader could reach (PSX
@@ -116,7 +116,7 @@ extern "C" unsigned char __cdecl Field_FacingObject(void) {
 // above or below. The third argument is not read.
 // As the original has it: the index is compared SIGNED with 30, so an
 // answer of 0x80 or more reads an object before Sprite_Objects.
-extern "C" unsigned char __cdecl Field_ObjectInPath(long x, long z, unsigned) {
+extern "C" unsigned char __cdecl Field_ObjectInPath(std::int32_t x, std::int32_t z, unsigned) {
     const unsigned char r = g.object_at(x, z, Sprite_Current[0x70]);
     if (r == 0xFF) return 0xFF;
     const auto s = static_cast<signed char>(r);

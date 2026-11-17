@@ -24,6 +24,7 @@
 // It arms after InjectAll's self-tests, as DIV-0069's and DIV-0041's fills do,
 // so every fuzz compared the original's order.
 #pragma once
+#include <cstdint>
 
 namespace layering {
 
@@ -57,7 +58,7 @@ void AfterSprite(const unsigned char* sprite);
 // model took a sprite-sized box round its point, and Garr's arm reached past
 // it round Angel Tower's pushed block - drawn over the block for a frame at a
 // time, and for good once a narrower walking frame slipped past).
-void AfterModel(const unsigned char* object, const unsigned long* records, unsigned count);
+void AfterModel(const unsigned char* object, const std::uint32_t* records, unsigned count);
 
 // What each map cell's record run drew (docs/campfire-and-crystal.md section
 // 4). DrawLayer_Open's, mode kFloor: RunBegin before a run's first record is

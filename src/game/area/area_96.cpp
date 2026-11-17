@@ -35,7 +35,7 @@ unsigned char& B(U address) { return *Mem(address); }
 void AddWord(unsigned char* p, int v) { SetWord(p, static_cast<unsigned>(Word(p) + v)); }
 
 // The high word of a 16.16 position, as the hooks read it (a word at +2).
-std::uint16_t High(long v) { return static_cast<std::uint16_t>(static_cast<U>(v) >> 16); }
+std::uint16_t High(std::int32_t v) { return static_cast<std::uint16_t>(static_cast<U>(v) >> 16); }
 
 // The map byte setter, as the originals pass it: x and z words, a value byte.
 void SetByte(unsigned x, unsigned z, unsigned value) { AH_CALL(AreaMap_SetByte)(x, z, value); }
@@ -87,8 +87,8 @@ extern "C" void __cdecl Area96_FaceBack(void) {
 // the ground at the leader's (x, z), sign-extended; MapView_Elevation already
 // there: 0x20 lower, else set to it; MapView_Redraw + 2 either way.
 extern "C" void __cdecl Area96_SnapElevation(void) {
-    const long ground = static_cast<std::int16_t>(AH_CALL(AreaMap_Elevation)(Long(Mem(::bof3::Img(ObjTrio_addr) + 0x34)), Long(Mem(::bof3::Img(ObjTrio_addr) + 0x38))));
-    const long now = MapView_Elevation;
+    const std::int32_t ground = static_cast<std::int16_t>(AH_CALL(AreaMap_Elevation)(Long(Mem(::bof3::Img(ObjTrio_addr) + 0x34)), Long(Mem(::bof3::Img(ObjTrio_addr) + 0x38))));
+    const std::int32_t now = MapView_Elevation;
     MapView_Elevation = now == ground ? now - 0x20 : ground;
     MapView_Redraw = static_cast<unsigned char>(MapView_Redraw + 2);
 }
@@ -114,7 +114,7 @@ extern "C" void __cdecl Area97_TailWaitCounter3(void) {
 // (signed), x's high word 0x30..0x32 (a 16-bit compare), the leader's pose 0,
 // 1 or 2, and key item 5 not held: tail kind 13 armed (state 0, counter 3 =
 // 1), al 1. Else al 0.
-extern "C" unsigned char __cdecl Area97_StepHook(long x, long z) {
+extern "C" unsigned char __cdecl Area97_StepHook(std::int32_t x, std::int32_t z) {
     const unsigned char pose = B(::bof3::Img(ObjTrio_addr) + 0x8);
     if (z > 0x3A0000) return 0;
     if (static_cast<std::uint16_t>(High(x) - 0x30) >= 3) return 0;

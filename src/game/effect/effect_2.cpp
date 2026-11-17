@@ -89,7 +89,7 @@ FH_EXPORT void __cdecl EventOp_Ex(const unsigned char* op) {
     e->x_frac = op[2] != 0 ? 0x8000 : 0;
     e->z_whole = op[5];
     e->z_frac = op[4] != 0 ? 0x8000 : 0;
-    const long h = field_hidden::g.elevation(e->x, e->z);
+    const std::int32_t h = field_hidden::g.elevation(e->x, e->z);
     e->height_whole = static_cast<std::uint16_t>(h);
     rv::Bytes(e)[0xB] = op[6];
 }

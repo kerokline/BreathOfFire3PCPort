@@ -155,7 +155,7 @@ template <unsigned N> void __cdecl StubV() {
     Disturb();
 }
 unsigned __cdecl StubRunStates() { Record(2); if (Nudging(H2())) FlipEvent(H2()); Disturb(); return Hash(); }
-unsigned long __cdecl StubBannerClearAll() { Record(20); Disturb(); return Hash(); }
+std::uint32_t __cdecl StubBannerClearAll() { Record(20); Disturb(); return Hash(); }
 // Battle_Init re-reads the count, the member bits and 0x904AAA after it;
 // Battle_CommitRound the member's command fields.
 unsigned char __cdecl StubActorIsOut(unsigned a) {
@@ -232,7 +232,7 @@ const unsigned char* __cdecl StubMsgPtr(unsigned id) {
     return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(Hash() | 1));
 }
 // Also the message count, which BattleCommit_QueueMessages re-reads.
-unsigned long __cdecl StubQueuePush(unsigned a, unsigned b, unsigned long value) {
+std::uint32_t __cdecl StubQueuePush(unsigned a, unsigned b, std::uint32_t value) {
     Record(32, a, b, static_cast<std::uint32_t>(value));
     const std::uint32_t h = H2();
     if (Nudging(h)) {
@@ -265,8 +265,8 @@ int __cdecl StubLoadDone() {
 }
 void __cdecl StubOpenSub2(unsigned s) { Record(38, s); Disturb(); }
 void __cdecl StubOpenSub3(unsigned s) { Record(39, s); if (Nudging(H2())) B(::bof3::Img(at::kPhase.v)) = static_cast<unsigned char>(H2() >> 8); Disturb(); }
-unsigned long __cdecl StubSpawnCopies() { Record(43); if (Nudging(H2())) B(BattleActions_Step_addr) = static_cast<unsigned char>(H2() >> 8); Disturb(); return Hash(); }
-unsigned long __cdecl StubShowName(const unsigned char* actor) {
+std::uint32_t __cdecl StubSpawnCopies() { Record(43); if (Nudging(H2())) B(BattleActions_Step_addr) = static_cast<unsigned char>(H2() >> 8); Disturb(); return Hash(); }
+std::uint32_t __cdecl StubShowName(const unsigned char* actor) {
     Record(44, Address(actor));
     if (Nudging(H2())) B(BattleActions_Step_addr) = static_cast<unsigned char>(H2() >> 8);
     Disturb();

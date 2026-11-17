@@ -84,8 +84,8 @@ extern "C" void __cdecl EventOp_Bx(const unsigned char* op) {
     event_script::g.init_entry(entry);
     rv::Store<std::uint32_t>(rv::Current<records::SpriteHead>()->x, Coordinate(op[1], op[2]));
     rv::Store<std::uint32_t>(rv::Current<records::SpriteHead>()->z, Coordinate(op[3], op[4]));
-    const long elevation = event_script::g.elevation(static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->x)),
-                                       static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->z)));
+    const std::int32_t elevation = event_script::g.elevation(static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->x)),
+                                       static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->z)));
     rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(elevation));
     Sprite_Current[1] = op[5];
     Sprite_Current[2] = op[7];
@@ -137,7 +137,7 @@ extern "C" void __cdecl EventOp_5x(const unsigned char* op) {
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, static_cast<std::int32_t>(Coordinate(op[7], op[8])));
     rv::Store<std::int32_t>(rv::As<records::SpriteObject>(Object(Count()))->target_z, rv::Current<records::SpriteObject>()->z);
     rv::As<records::SpriteObject>(Object(Count()))->best_score = 0;
-    const long elevation = g.elevation(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
+    const std::int32_t elevation = g.elevation(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
     rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(elevation));
     Sprite_Current[1] = op[9];
     Sprite_Current[2] = op[0xB];
@@ -204,7 +204,7 @@ extern "C" void __cdecl EventOp_9x(const unsigned char* op) {
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, static_cast<std::int32_t>(Coordinate(op[6], op[7])));
     rv::Store<std::int32_t>(rv::As<records::SpriteObject>(Object(Count()))->target_z, rv::Current<records::SpriteObject>()->z);
     rv::As<records::SpriteObject>(Object(Count()))->best_score = 0;
-    const long elevation = g.elevation(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
+    const std::int32_t elevation = g.elevation(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
     rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(elevation));
     Sprite_Current[1] = 6;
     Sprite_Current[2] = 0;

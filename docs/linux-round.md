@@ -571,6 +571,103 @@ one header each with a backend in `win32/` and `posix/`.
 log flush runs on the crash path and the snapshot owns the fibers. The LP64
 `static_assert` failures LA found are not L1's.
 
+### LB0 as run: the width of `long` (2026-11-17, branch `linux/long-pass`)
+
+Stage LA found that every file fails the generated header's layout asserts on
+Linux, because `long` is 8 bytes there (LP64) and 4 on both Windows widths.
+This unit removes that. It was run on Windows, at the owner's word of
+2026-11-17 to move towards a Linux build; frost's fork held nothing past
+`main` `1eda5a70` on that day.
+
+**The measure before.** `tools/linux_probe/linux_tree.py` compiles every
+`.cpp` under `src/` but the launcher's and the Win32 backend's
+`-fsyntax-only` for `x86_64-linux-gnu`, with no stub for a Windows header and
+`__cdecl` as `ms_abi` (LA3's road). On `main` `7999aa1a`, over the 64-bit
+build's 813 files: 40 compile, 697 fail on the layout asserts alone, 76 on
+something else. (On this machine the compiler is the build's own clang with
+`--sysroot=//wsl.localhost/Ubuntu` for the Linux headers; the WSL has g++ and
+no clang.)
+
+**The change.**
+
+- `src/game`: `long` and `unsigned long` in code, not in comments or
+  literals, are `std::int32_t` and `std::uint32_t`: 5,077 sites in 544 files,
+  by a script (a lexer that skips comments, strings, raw strings and character
+  literals; `long long` and `long double` untouched). Four headers took
+  `#include <cstdint>`.
+- `tools/gen_symbols.py` spells every `long` of a `ctype`, `ret` or `params`
+  as the fixed-width type in the generated header (`fixed_width`). Until now
+  it did so for scalar rows only. `symbols.toml` keeps its spelling: `long`
+  there means the image's 4-byte word, and the tools that read its ctypes
+  (`band_rows.py`, `magic_rows.py`, `remaining_catalog.py`, `data_widths.py`)
+  are unchanged.
+- Formats: 84 `%l` conversions whose argument is now `std::int32_t` or
+  `std::uint32_t` lost the `l` (25 the 32-bit build's `-Wformat` named, 59
+  more the 64-bit build's), and the `fscanf` of `magic_080.cpp:287`
+  (`BOF3.CFG`'s four numbers) reads `%d`. Left as they were, each would have
+  been wrong on Linux and a warning on Windows.
+- `src/hook/draw_order.h`: `LogWalk` takes `const std::uint32_t*`.
+
+**Not changed:** `long` in `src/hook` (256 sites), `src/render` (111),
+`src/audio` (85) and the launcher. Most are a cast for a `%lu` or `%ld`,
+right on both systems as written; the ones in `src/render` and `src/audio`
+are not read yet. Three casts of that kind stay in `src/game`
+(`psp_code.cpp:54`, `magic_080.cpp:426` and `:428`). The 41 literals in
+`src/game` with an `L` or `UL` suffix are not read either.
+
+**Proof on Windows.** Both presets build with no error and no `-Wformat`
+warning. Against a build of `main` `7999aa1a` made in the same folder (the
+folder's name is in `__FILE__` strings, so a build elsewhere differs in
+every object), object by object, code with relocations and every initialised
+data section, a C++ symbol's name read with `long` as `int`:
+
+| Width | Objects | Differ in code | Differ in data |
+|---|---:|---:|---:|
+| 32-bit | 1,074 | 28 | 29 |
+| 64-bit | 818 | 20 | 20 |
+
+Every code difference is an immediate or a displacement: the offset of a
+string that follows a format one or more characters shorter. Every data
+difference is such a format. All of them are in files whose formats changed.
+No instruction differs otherwise. `tools/codegen_same.py` as it is counts a
+mangled name that changed (`l` to `i`, `m` to `j`) as a difference, so the
+comparison was made with a variant of its file mode that demangles first; it
+is not committed.
+
+The census files that key on a line's text are regenerated:
+`analysis/width_census.tsv` (the `long` class in `src/game` is the
+`long long` rows and the three casts), `analysis/reloc_bare.tsv` (9 keys, the
+same lines respelled), `analysis/typed_left.tsv` (7 rows of
+`drain_orb_a.cpp`, whose function column read `long`). The other checks of
+`checks.yml` that read `src/` pass unchanged.
+
+**Not run:** the hosted self-tests and the state-hash routes. The machine
+code is the proof made. No ledger entry: nothing a player sees changes.
+
+**The measure after.** `python tools/linux_probe/linux_tree.py`: 1,055 files
+(the fuzz files too), **991 compile for x86-64 Linux, 64 do not**.
+`analysis/linux_tree.tsv` lists the 64 with a reason each, and `--check`
+fails on a file that is not listed (and on a listed file that now compiles,
+so the list only shrinks). It is not a CI job yet: the runner's clang against
+this source is not tried.
+
+| Reason | Files | What they are |
+|---|---:|---|
+| `windows.h` | 28 | the files of `BOUNDARY_WAITING` (L2, L3 and the PE host), the harness watchers of `src/hook`, four harness files of `src/game` |
+| `io.h` | 10 | `_findfirst`, `_filelength`: the save and music files, `crt_rest.cpp` |
+| `dinput.h` | 9 | DirectInput's key codes (call 4: retired for SDL3) |
+| `va_start` | 8 | a variadic function is `__cdecl`, so `ms_abi` here: seven fuzz files and `music_seq.cpp:629` |
+| `type` | 5 | `size_t` narrowed in a brace list, overloads that differ by `long` and `int` (`effect_1a.cpp`, `party_action.cpp`, three fuzz files) |
+| `name` | 2 | `_strnicmp` (`mp3.cpp`), `_msize` (`sound_ours.cpp`) |
+| `d3d11.h` | 2 | `render_d3d11.cpp`, `satpixie.cpp`: DXVK-native's headers (call 1) |
+
+So what stands between the source and a Linux compile is small and named.
+The `io.h` ten, the two names, the five type sites and the eight `va_start`
+files are one more unit of this kind (25 files, no decision to make). The
+rest is L2 (the window, the key codes) and L3 (the fibers, the crash
+catcher), as section 6 orders them. A compile is not a link: stage LC's
+items (the ELF preset, the low-memory image, DXVK-native) are untouched.
+
 ### Stage LC - link and run on Linux
 
 - A CMake preset for the ELF, clang, SDL3 from source as today.

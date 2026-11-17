@@ -128,26 +128,26 @@ std::uint32_t __cdecl StubTargetAhead() {
 }
 // The slope: at the steepness test's edge (0x40 / 0x41 as a short, with and
 // without upper bits), and anything; the scratch flag zero a third of the time.
-long __cdecl StubSlope(long x, long z, unsigned long d) {
+std::int32_t __cdecl StubSlope(std::int32_t x, std::int32_t z, std::uint32_t d) {
     Record(7, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), d & 0xFF);
     const std::uint32_t h = Hash();
     At(at::kScratch_addr)[0] = static_cast<unsigned char>(h % 3 == 0 ? 0 : (h >> 4) | 1);
     Disturb();
     static const std::uint32_t kEdges[] = {0x40, 0x41, 0x3F, 0, 0x7FFF, 0x8000, 0x10040, 0xFFFF0041u, 0xFFFFFFFFu, 0x8041};
     const std::uint32_t k = Hash();
-    return static_cast<long>(k % 5 == 0 ? k : kEdges[(k >> 8) % 10]);
+    return static_cast<std::int32_t>(k % 5 == 0 ? k : kEdges[(k >> 8) % 10]);
 }
 // The ground: at Sprite_Current's +0x3E, one either side, or anything.
-long __cdecl StubGround(long x, long z) {
+std::int32_t __cdecl StubGround(std::int32_t x, std::int32_t z) {
     Record(8, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z));
     const unsigned here = Word(Sc() + 0x3E);
     Disturb();
     const std::uint32_t h = Hash();
     const unsigned low = h % 4 == 0 ? h : here + (h >> 8) % 3 - 1;
-    return static_cast<long>((h & 0xFFFF0000u) | (low & 0xFFFF));
+    return static_cast<std::int32_t>((h & 0xFFFF0000u) | (low & 0xFFFF));
 }
 void __cdecl StubPlay(unsigned id) { Record(9, id & 0xFFFF); Disturb(); }
-std::uint32_t __cdecl StubObjectAt(long x, long z, unsigned margin) {
+std::uint32_t __cdecl StubObjectAt(std::int32_t x, std::int32_t z, unsigned margin) {
     Record(10, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), margin);
     Disturb();
     const std::uint32_t h = Hash();
@@ -213,12 +213,12 @@ void __cdecl StubCopyFrames(unsigned frame, unsigned char* buffer, unsigned size
 }
 // The elevation scribbles on every effect object's +0x38 half the time: a
 // position word stored after the call instead of before shows.
-long __cdecl StubElevation(long x, long z) {
+std::int32_t __cdecl StubElevation(std::int32_t x, std::int32_t z) {
     Record(23, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z));
     if (Hash() % 2)
         for (unsigned i = 0; i < 20; ++i) SetWord(rv::Bytes(&Effect_Objects[i]) + 0x38, Hash() >> 16);
     Disturb();
-    return static_cast<long>(Hash());
+    return static_cast<std::int32_t>(Hash());
 }
 std::uint32_t __cdecl StubPickRow() {
     Record(24);
@@ -243,7 +243,7 @@ std::uint32_t __cdecl StubPartyCount(unsigned slot) {
     Disturb();
     return AlOf((Hash() >> 8) % 4);
 }
-std::uint32_t __cdecl StubOnScreen(long x, long z, unsigned size, unsigned margin) {
+std::uint32_t __cdecl StubOnScreen(std::int32_t x, std::int32_t z, unsigned size, unsigned margin) {
     Record(33, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), size & 0xFF, margin & 0xFF);
     Disturb();
     const std::uint32_t h = Hash();

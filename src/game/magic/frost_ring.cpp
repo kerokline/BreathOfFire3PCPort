@@ -86,7 +86,7 @@ void CallCell(std::uint32_t table, unsigned index) {
 void LinkAtTask(int slot, unsigned size) {
     const unsigned char* const sc = Sprite_Current;
     const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tsc->x), static_cast<unsigned long>(tsc->z),
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(tsc->x), static_cast<std::uint32_t>(tsc->z),
                                 slot, size);
 }
 
@@ -254,9 +254,9 @@ MS21_EXPORT void __cdecl FrostRing_DrawShards(void) {
             SetWord(Vtx(0x14), 0);
             const std::int32_t oz = Mul(s2, L(::bof3::Img(kScratch.v))) >> 12;
             SetWord(Vtx(0x12), static_cast<unsigned>(oz));
-            const unsigned long x = static_cast<unsigned long>((static_cast<std::uint32_t>(ox) << 9) +
+            const std::uint32_t x = static_cast<std::uint32_t>((static_cast<std::uint32_t>(ox) << 9) +
                                                                static_cast<std::uint32_t>(ts->x));
-            const unsigned long z = static_cast<unsigned long>((static_cast<std::uint32_t>(static_cast<short>(oz)) << 9) +
+            const std::uint32_t z = static_cast<std::uint32_t>((static_cast<std::uint32_t>(static_cast<short>(oz)) << 9) +
                                                                static_cast<std::uint32_t>(ts->z));
             MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
             MH_CALL(MapView_LinkPrimAt)(x, z, 2, 0xC);
@@ -292,7 +292,7 @@ MS21_EXPORT void __cdecl FrostRing_DrawShards(void) {
                 p[0x25] = ScrMagicS21(0xC)[0];
                 p[0x26] = 0xC0;
             }
-            long depth;
+            std::int32_t depth;
             MH_CALL(Gte_RotTransPers3)(VtxP(0), VtxP(8), VtxP(0x10), F(p, 8), F(p, 0x18), F(p, 0x28), &depth);
             MH_CALL(Gte_PrimDepths3_10B)(p);
             MH_CALL(MapView_LinkPrimAt)(x, z, 2, 0x34);
@@ -322,14 +322,14 @@ MS21_EXPORT void __cdecl FrostRing_PushMatrix(void) {
     v[3] = 0;
     struct Matrix {
         short m[10];
-        long t[3];
+        std::int32_t t[3];
     } m;
     static_assert(sizeof(Matrix) == 0x20, "MATRIX layout");
     MH_CALL(Gte_RotTrans)(v, m.t);
     MH_CALL(Gte_RotMatrix)(rot, m.m);
     MH_CALL(Gte_MulMatrix0)(Camera_Matrix, m.m, m.m);
-    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&m));
-    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&m));
+    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
+    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
 }
 
 // original 0x4C7B30: 32 gouraud triangles in a disc at the owner's screen

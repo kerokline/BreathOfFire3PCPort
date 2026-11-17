@@ -11,7 +11,7 @@ namespace sprite_screen {
 // functions in for them.
 struct Callees {
     void (__cdecl* inherit_key)();
-    long (__cdecl* project)(const short*, unsigned long*, long*);
+    std::int32_t (__cdecl* project)(const short*, std::uint32_t*, std::int32_t*);
     void (__cdecl* dropped)(unsigned char);
     void (__cdecl* overlay)();
 };

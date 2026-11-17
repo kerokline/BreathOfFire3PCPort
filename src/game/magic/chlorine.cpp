@@ -120,7 +120,7 @@ void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset.v)(task); }
 void LinkAtSprite(int dy, unsigned size) {
     const unsigned char* const s = Sc();
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->z), dy,
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(ts->x), static_cast<std::uint32_t>(ts->z), dy,
                                 size);
 }
 

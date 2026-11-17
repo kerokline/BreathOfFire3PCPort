@@ -205,7 +205,7 @@ extern "C" void __cdecl Area197_Tail51(void) {
 // or 0x72 and key item 0xD not held. A with key item 0xD held:
 // ScriptFlags_Set40, tail kind 0x33 at state 0, al 1; A without it, and B:
 // ScriptFlags_Set40, MoveScript_Var7 5, its step 0x14, al 1. Else al 0.
-extern "C" unsigned char __cdecl Area197_StepHook(long x, long z) {
+extern "C" unsigned char __cdecl Area197_StepHook(std::int32_t x, std::int32_t z) {
     if (Cond_ByteFD != 4) return 0;
     const U ux = static_cast<U>(x), uz = static_cast<U>(z);
     const auto xh = static_cast<std::uint16_t>(ux >> 16), zh = static_cast<std::uint16_t>(uz >> 16);

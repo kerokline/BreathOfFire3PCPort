@@ -214,8 +214,8 @@ void Panel(unsigned level) { SH_CALL(Scena17_DrawPanel)(0xE0, 0xBE, level, 1); }
 
 // The ground elevation under the kind-2 sprite handed to MapView_SetElevation.
 void ElevationToView() {
-    const long z = Field_Kind2Z;
-    const long x = Field_Kind2X;
+    const std::int32_t z = Field_Kind2Z;
+    const std::int32_t x = Field_Kind2X;
     SH_CALL(MapView_SetElevation)(static_cast<int>(SH_CALL(AreaMap_Elevation)(x, z)));
 }
 
@@ -421,9 +421,9 @@ SC15_EXPORT void __cdecl Scena17_Intro09(void) {
         return;
     }
     ElevationToView();
-    const long z = Field_Kind2Z;
+    const std::int32_t z = Field_Kind2Z;
     Field_Kind2X = 0x260000;
-    const long e = SH_CALL(AreaMap_Elevation)(0x260000, z);
+    const std::int32_t e = SH_CALL(AreaMap_Elevation)(0x260000, z);
     const int32_t d = static_cast<int32_t>(static_cast<uint32_t>(static_cast<int32_t>(static_cast<short>(e))) - static_cast<std::uint32_t>(MapView_Elevation));
     Cond_ByteFE = 1;
     MoveScript_FAWord = static_cast<unsigned>(d / 128);
@@ -822,8 +822,8 @@ SC15_EXPORT void __cdecl Scena17_DrawRays(unsigned radius, unsigned level) {
     SH_CALL(Gte_PushMatrix)();
     short vec[4];
     short angles[4];
-    struct { short m[9]; short pad; long t[3]; } mat;
-    long flag;
+    struct { short m[9]; short pad; std::int32_t t[3]; } mat;
+    std::int32_t flag;
     const int32_t x = Field_Kind2X;
     angles[0] = 0;
     angles[1] = 0;
@@ -831,14 +831,14 @@ SC15_EXPORT void __cdecl Scena17_DrawRays(unsigned radius, unsigned level) {
     const int32_t z = Field_Kind2Z;
     angles[2] = 0;
     vec[1] = static_cast<short>((z >> 9) - 0x4000);
-    const long e = SH_CALL(AreaMap_Elevation)(x, z);
+    const std::int32_t e = SH_CALL(AreaMap_Elevation)(x, z);
     vec[2] = static_cast<short>(-(static_cast<int32_t>(static_cast<short>(e)) / 2));
     SH_CALL(Gte_RotTrans)(vec, mat.t);
     (void)flag;
     SH_CALL(Gte_RotMatrix)(angles, mat.m);
     SH_CALL(Gte_MulMatrix0)(reinterpret_cast<const short*>(AtScenaSc15(::bof3::Img(Camera_Matrix_addr))), mat.m, mat.m);
-    SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&mat));
-    SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&mat));
+    SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(&mat));
+    SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(&mat));
     SH_CALL(Gpu_SetDrawMode)(Packet(), 0, 1, 0x40, 0);
     Commit(2, 0xC);
     const int32_t r = static_cast<int32_t>(radius & 0xFFFFu);
@@ -852,7 +852,7 @@ SC15_EXPORT void __cdecl Scena17_DrawRays(unsigned radius, unsigned level) {
     const int32_t outer = 1600 + 10 * static_cast<int32_t>(Widescreen_Fill());
     unsigned char* const v = AtScenaSc15(::bof3::Img(Prim_VertexScratch_addr));
     auto* const sv = rv::As<records::SVector>(v);   // Prim_VertexScratch: four SVECTORs (records_gpu.h SVector)
-    long depth, flags;
+    std::int32_t depth, flags;
     for (int32_t a = 0; a < 0x1000; a += 0x80) {
         rv::Store<unsigned>(sv[0].x, 0);
         rv::Store<unsigned>(sv[0].y, 0);

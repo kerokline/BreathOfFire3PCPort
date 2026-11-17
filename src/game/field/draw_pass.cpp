@@ -26,7 +26,7 @@ std::uint16_t Key(const unsigned char* object) {
 // fuzz can stand recording functions in for them - for the original's copy
 // and for ours alike.
 using OpenFn = void (__cdecl*)(int);
-using AddRecordsFn = unsigned (__cdecl*)(unsigned long*);
+using AddRecordsFn = unsigned (__cdecl*)(std::uint32_t*);
 using DrawFn = void (__cdecl*)();
 }  // namespace
 // draw_pass::g_open, g_add_records and g_draw are defined in field/sprite_2.cpp,
@@ -54,23 +54,23 @@ constexpr unsigned kWindow = 0x300;   // a draw mode per layer: 0x38 * 0xC bytes
 constexpr unsigned kPrims = 64;
 
 unsigned char g_objects[kObjects][kObjectBytes];
-unsigned long g_tails[8];
-unsigned long g_prims[kPrims];   // stand-ins for primitives: a link is a store through one of these
-struct LogEntry { unsigned long what, arg, current; };
+std::uint32_t g_tails[8];
+std::uint32_t g_prims[kPrims];   // stand-ins for primitives: a link is a store through one of these
+struct LogEntry { std::uint32_t what, arg, current; };
 LogEntry g_log[kLog];
 unsigned g_log_n, g_stub_seed;
 
-void Record(unsigned long what, unsigned long arg) {
+void Record(std::uint32_t what, std::uint32_t arg) {
     if (g_log_n < kLog) g_log[g_log_n] = {what, arg, Low32(Sprite_Current.Native())};
     ++g_log_n;
 }
-void __cdecl StubOpen(int layer) { Record(1, static_cast<unsigned long>(layer)); }
+void __cdecl StubOpen(int layer) { Record(1, static_cast<std::uint32_t>(layer)); }
 void __cdecl StubDraw() { Record(3, 0); }
 // Adds none, one or two records, by a hash of the round and the call; each
 // either a sprite to draw (bit 31) or a primitive to link, whose third dword
 // must then be an object - the pass reads its byte +0x29. Only al of the
 // result counts, so the rest of eax is noise.
-unsigned __cdecl StubAddRecords(unsigned long* record) {
+unsigned __cdecl StubAddRecords(std::uint32_t* record) {
     const unsigned index = static_cast<unsigned>(record - Sprite_DrawRecords) / 3u;
     Record(2, index);
     std::uint32_t h = (g_stub_seed + g_log_n) * 0x9E3779B1u;
@@ -89,12 +89,12 @@ struct State {
     unsigned char objects[kObjects][kObjectBytes];
     unsigned char* list[kObjects];
     unsigned char list_count, table_count, flags, slot, buffer_index;
-    unsigned long table[256];
-    unsigned long records[kRecords * 3];
+    std::uint32_t table[256];
+    std::uint32_t records[kRecords * 3];
     unsigned char layers[kLayerBytes];
     unsigned char* packet_next;
-    unsigned long* ot[8];
-    unsigned long tails[8], prims[kPrims];
+    std::uint32_t* ot[8];
+    std::uint32_t tails[8], prims[kPrims];
     unsigned char items[DrawItems_count];
     unsigned char* current;
     unsigned char window[kWindow];
@@ -183,7 +183,7 @@ void SelfTest(DrawFn theirs) {
         for (unsigned k = 0; k < 8; ++k) input.ot[k] = &g_tails[k];
         // Every list's "last" is somewhere a link may be stored; a "first" is
         // only ever stored, and is zero - no list - a third of the time.
-        auto* const pairs = reinterpret_cast<unsigned long*>(input.layers);
+        auto* const pairs = reinterpret_cast<std::uint32_t*>(input.layers);
         for (unsigned d = 0; d + 1 < 0x38 * 12; d += 2) {
             if (next() % 3 == 0) pairs[d] = 0;
             pairs[d + 1] = Low32(&g_prims[next() % kPrims]);

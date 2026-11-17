@@ -83,7 +83,7 @@ bool FastForward(std::uint32_t frames);
 // hundredths of a decibel by libsnd's sequence-volume law - the volume
 // truncated toward zero, below 1 taken as 1 (_SsVmSetSeqVol), above 127 as
 // 127; amplitude (v / 127)^2, i.e. 4000 * log10(v / 127), rounded.
-long Level(float volume);
+std::int32_t Level(float volume);
 
 // Music_Stop: the synth's song stopped (SsSepStop) with the buffer; the
 // stream stays the synth's until it is released.

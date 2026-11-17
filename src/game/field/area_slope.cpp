@@ -19,7 +19,7 @@ using namespace move_script;
 // BOF3X_SHADOW=area_slope: the start-up fuzz, area_slope_fuzz.cpp (an i686
 // TU, as every *_fuzz.cpp: its framed call lays out an i686 stack).
 namespace area_slope {
-using SlopeFn = long (__cdecl*)(long, long, unsigned long);
+using SlopeFn = std::int32_t (__cdecl*)(std::int32_t, std::int32_t, std::uint32_t);
 void SelfTest(SlopeFn theirs);
 }  // namespace area_slope
 

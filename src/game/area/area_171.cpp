@@ -43,7 +43,7 @@ unsigned char* EffectAt(unsigned slot) { return rv::Bytes(&Effect_Objects[slot])
 unsigned char* PartyRecord(unsigned m) { return Mem(::bof3::Img(ObjTrio_addr) + m * at::kPartyStride); }
 
 // The high word of a 16.16 position, as the hooks read it (a word at +2).
-std::uint16_t High(long v) { return static_cast<std::uint16_t>(static_cast<U>(v) >> 16); }
+std::uint16_t High(std::int32_t v) { return static_cast<std::uint16_t>(static_cast<U>(v) >> 16); }
 
 void SetMessage(unsigned id) { SetWord(Mem(::bof3::Img(at::kMessage.v)), id); }
 
@@ -325,7 +325,7 @@ extern "C" void __cdecl Area171_TailHealParty(void) {
 // words), at (x + 1, z) when x has a fraction, at (x, z + 1) when z has one,
 // at (x + 1, z + 1) when both; any counted: tail kind 48 armed at 20. al 0
 // always.
-extern "C" unsigned char __cdecl Area171_StepHook(long x, long z) {
+extern "C" unsigned char __cdecl Area171_StepHook(std::int32_t x, std::int32_t z) {
     if (Cond_ByteFD != 2) return 0;
     const unsigned char flag = AH_CALL(Flags_Test)(Story(), 0x73);
     if (flag != 0) return 0;
@@ -345,7 +345,7 @@ extern "C" unsigned char __cdecl Area171_StepHook(long x, long z) {
 // original 0x427B50 (Area_ArriveHook's case for area 171, 0x56E593):
 // Cond_ByteFD 3 and story flag 0x74 clear: tail kind 48 armed at 0, al 1;
 // else al 0.
-extern "C" unsigned char __cdecl Area171_ArriveHook(long, long) {
+extern "C" unsigned char __cdecl Area171_ArriveHook(std::int32_t, std::int32_t) {
     if (Cond_ByteFD != 3) return 0;
     if (AH_CALL(Flags_Test)(Story(), 0x74) != 0) return 0;
     ArmTail(0x30, 0);

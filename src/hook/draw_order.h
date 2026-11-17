@@ -68,6 +68,6 @@ void TagList(std::uint32_t first, std::uint32_t last, Kind kind, unsigned layer,
 void TagOne(std::uint32_t prim, Kind kind, unsigned layer, unsigned slot, unsigned a, unsigned b);
 
 // Gfx_DrawOTag's, before the walk: logs the walk of `ot` when in the window.
-void LogWalk(const unsigned long* ot);
+void LogWalk(const std::uint32_t* ot);
 
 }  // namespace draw_order

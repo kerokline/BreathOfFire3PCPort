@@ -145,17 +145,17 @@ void** DeviceBattleDraw() { return reinterpret_cast<void**>(static_cast<std::uin
 
 void* MethodBattleDraw(void** device, U offset) { return (*reinterpret_cast<void***>(device))[offset / 4]; }
 
-using Com3 = long(__stdcall*)(void*, U, U);
+using Com3 = std::int32_t(__stdcall*)(void*, U, U);
 
-using Com6 = long(__stdcall*)(void*, U, U, U, U, U);
+using Com6 = std::int32_t(__stdcall*)(void*, U, U, U, U, U);
 
-long SetTextureBattleDraw(battle_draw::U stage, battle_draw::U texture) {
+std::int32_t SetTextureBattleDraw(battle_draw::U stage, battle_draw::U texture) {
     void** device = DeviceBattleDraw();
     return reinterpret_cast<Com3>(MethodBattleDraw(device, 0x98))(device, stage, texture);
 }
 
 // DrawPrimitive(type, D3DFVF_TLVERTEX, D3d_Vertices, count, 0).
-long DrawVerticesBattleDraw(battle_draw::U type, battle_draw::U count) {
+std::int32_t DrawVerticesBattleDraw(battle_draw::U type, battle_draw::U count) {
     void** device = DeviceBattleDraw();
     return reinterpret_cast<Com6>(MethodBattleDraw(device, 0x70))(device, type, 0x1C4, ::bof3::Img(D3d_Vertices_addr), count, 0);
 }
@@ -178,7 +178,7 @@ void PutCorner(unsigned char* out, const unsigned char* xyz, battle_draw::U diff
 // code byte +7 and the mode read again for each), all before any corner; then
 // n corners of 0x10 bytes from +8 (float x, y, z).
 void GouraudCorners(const unsigned char* prim, battle_draw::U n) {
-    unsigned long diffuse[3];
+    std::uint32_t diffuse[3];
     for (battle_draw::U i = 0; i < n; ++i) {
         const unsigned char* const rgb = prim + 4 + i * 0x10;
         battle_draw::g.prim_color(rgb[0], rgb[1], rgb[2], prim[7], DrawModeBattleDraw(), &diffuse[i], nullptr);
@@ -293,29 +293,29 @@ void** Device() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*r
 
 void* Method(void** device, U offset) { return (*reinterpret_cast<void***>(device))[offset / 4]; }
 
-using Com1 = long(__stdcall*)(void*);
+using Com1 = std::int32_t(__stdcall*)(void*);
 
-using Com3 = long(__stdcall*)(void*, U, U);
+using Com3 = std::int32_t(__stdcall*)(void*, U, U);
 
-using Com6 = long(__stdcall*)(void*, U, U, U, U, U);
+using Com6 = std::int32_t(__stdcall*)(void*, U, U, U, U, U);
 
-long SetRenderState(U state, U value) {
+std::int32_t SetRenderState(U state, U value) {
     void** device = Device();
     return reinterpret_cast<Com3>(Method(device, 0x58))(device, state, value);
 }
 
-long SetTexture(U stage, U texture) {
+std::int32_t SetTexture(U stage, U texture) {
     void** device = Device();
     return reinterpret_cast<Com3>(Method(device, 0x98))(device, stage, texture);
 }
 
-long Scene(U offset) {   // 0x24 BeginScene, 0x28 EndScene
+std::int32_t Scene(U offset) {   // 0x24 BeginScene, 0x28 EndScene
     void** device = Device();
     return reinterpret_cast<Com1>(Method(device, offset))(device);
 }
 
 // DrawPrimitive(type, D3DFVF_TLVERTEX, D3d_Vertices, count, 0).
-long DrawVertices(U type, U count) {
+std::int32_t DrawVertices(U type, U count) {
     void** device = Device();
     return reinterpret_cast<Com6>(Method(device, 0x70))(device, type, 0x1C4, ::bof3::Img(D3d_Vertices_addr), count, 0);
 }
@@ -369,9 +369,9 @@ namespace {
 // mode from Gfx_DrawTpage - read before the colour and read again for the
 // blend - and no specular: the colour helper is handed a null pointer, so the
 // vertices' specular, tu and tv are left as the last draw left them.
-long DrawLines(const unsigned char* prim, d3d_draw::U corners) {
+std::int32_t DrawLines(const unsigned char* prim, d3d_draw::U corners) {
     const d3d_draw::U mode = d3d_draw::Long(d3d_draw::At(::bof3::Img(Gfx_DrawTpage_addr))) & 0xFFFF;
-    unsigned long diffuse;
+    std::uint32_t diffuse;
     d3d_draw::g.prim_color(prim[4], prim[5], prim[6], prim[7], mode, &diffuse, nullptr);
     for (d3d_draw::U i = 0; i < corners; ++i) {
         unsigned char* out = d3d_draw::Vertex(i);
@@ -406,7 +406,7 @@ void NoteCellFoot(d3d_draw::U slot, unsigned first, unsigned count) {
     }
     d3d_draw::g_cell_foot[slot] = f;
     if (d3d_draw::PoseLogOn() && f.valid)
-        bof3::Log("poselog     frame %lu cell build entry %u cells %u..+%u foot %d,%d..%d,%d", static_cast<unsigned long>(Frame_Counter),
+        bof3::Log("poselog     frame %u cell build entry %u cells %u..+%u foot %d,%d..%d,%d", static_cast<std::uint32_t>(Frame_Counter),
                   static_cast<unsigned>(slot), first, count, f.x0, f.y0, f.x1, f.y1);
 }
 
@@ -437,7 +437,7 @@ void PutWord(U address, U v) {
 
 void Scene(U offset) {   // 0x24 BeginScene, 0x28 EndScene; the device re-read each time
     void** device = reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))));
-    reinterpret_cast<long(__stdcall*)(void*)>((*reinterpret_cast<void***>(device))[offset / 4])(device);
+    reinterpret_cast<std::int32_t(__stdcall*)(void*)>((*reinterpret_cast<void***>(device))[offset / 4])(device);
 }
 
 // Codes 0xE0..0xE3 and 0xE8..0xEB, both tables: the PSX draw mode. Byte +6 bit
@@ -669,29 +669,29 @@ void** Device() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*r
 
 void* Method(void** object, U offset) { return (*reinterpret_cast<void***>(object))[offset / 4]; }
 
-using Com2 = long(__stdcall*)(void*, U);
+using Com2 = std::int32_t(__stdcall*)(void*, U);
 
-using Com3 = long(__stdcall*)(void*, U, U);
+using Com3 = std::int32_t(__stdcall*)(void*, U, U);
 
-using Com4 = long(__stdcall*)(void*, U, U, U);
+using Com4 = std::int32_t(__stdcall*)(void*, U, U, U);
 
-using Com5 = long(__stdcall*)(void*, U, U, U, U);
+using Com5 = std::int32_t(__stdcall*)(void*, U, U, U, U);
 
-using Com6 = long(__stdcall*)(void*, U, U, U, U, U);
+using Com6 = std::int32_t(__stdcall*)(void*, U, U, U, U, U);
 
-long SetTexture(U stage, U texture) {
+std::int32_t SetTexture(U stage, U texture) {
     void** device = Device();
     return reinterpret_cast<Com3>(Method(device, 0x98))(device, stage, texture);
 }
 
 // IDirect3DDevice3::SetTextureStageState(stage, type, value).
-long SetStageState(U stage, U type, U value) {
+std::int32_t SetStageState(U stage, U type, U value) {
     void** device = Device();
     return reinterpret_cast<Com4>(Method(device, 0xA0))(device, stage, type, value);
 }
 
 // DrawPrimitive(type, D3DFVF_TLVERTEX, D3d_Vertices, count, 0).
-long DrawVertices(U type, U count) {
+std::int32_t DrawVertices(U type, U count) {
     void** device = Device();
     return reinterpret_cast<Com6>(Method(device, 0x70))(device, type, 0x1C4, ::bof3::Img(D3d_Vertices_addr), count, 0);
 }
@@ -700,11 +700,11 @@ long DrawVertices(U type, U count) {
 void** SurfaceAt(U address) { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(address)))); }   // the slot's 32-bit word
 
 // IDirectDrawSurface4::Lock(rect, desc, flags, event), Unlock(rect), Blt(dst rect, src, src rect, flags, fx).
-long Lock(void** surface, void* desc) {
+std::int32_t Lock(void** surface, void* desc) {
     return reinterpret_cast<Com5>(Method(surface, 0x64))(surface, 0, Addr(desc), 1, 0);   // DDLOCK_WAIT
 }
 
-long Unlock(void** surface) { return reinterpret_cast<Com2>(Method(surface, 0x80))(surface, 0); }
+std::int32_t Unlock(void** surface) { return reinterpret_cast<Com2>(Method(surface, 0x80))(surface, 0); }
 
 unsigned char* Vertex(U i) { return At(::bof3::Img(D3d_Vertices_addr) + i * 0x20); }
 
@@ -1000,13 +1000,13 @@ void** DeviceFieldMisc() { return reinterpret_cast<void**>(static_cast<std::uint
 
 void* MethodFieldMisc(void** device, U offset) { return (*reinterpret_cast<void***>(device))[offset / 4]; }
 
-long SetTextureFieldMisc(field_misc::U stage, field_misc::U texture) {
+std::int32_t SetTextureFieldMisc(field_misc::U stage, field_misc::U texture) {
     void** device = DeviceFieldMisc();
     return reinterpret_cast<Com3>(MethodFieldMisc(device, 0x98))(device, stage, texture);
 }
 
 // DrawPrimitive(type, D3DFVF_TLVERTEX, D3d_Vertices, count, 0).
-long DrawVerticesFieldMisc(field_misc::U type, field_misc::U count) {
+std::int32_t DrawVerticesFieldMisc(field_misc::U type, field_misc::U count) {
     void** device = DeviceFieldMisc();
     return reinterpret_cast<Com6>(MethodFieldMisc(device, 0x70))(device, type, 0x1C4, ::bof3::Img(D3d_Vertices_addr), count, 0);
 }
@@ -1053,7 +1053,7 @@ struct ComObject {
     struct Vtbl {
         void* query_interface;
         void* add_ref;
-        unsigned long (__stdcall* release)(ComObject*);
+        std::uint32_t (__stdcall* release)(ComObject*);
     }* vtbl;
 };
 
@@ -1232,11 +1232,11 @@ void** Device() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*r
 
 void* Method(void** device, U offset) { return (*reinterpret_cast<void***>(device))[offset / 4]; }
 
-using Com1 = long(__stdcall*)(void*);
+using Com1 = std::int32_t(__stdcall*)(void*);
 
-using Com3 = long(__stdcall*)(void*, U, U);
+using Com3 = std::int32_t(__stdcall*)(void*, U, U);
 
-using Com6 = long(__stdcall*)(void*, U, U, U, U, U);
+using Com6 = std::int32_t(__stdcall*)(void*, U, U, U, U, U);
 
 // kVertices: now D3d_Vertices (symbols.toml). D3d_Vertices: 4 x D3DTLVERTEX
 // kScaleX: now D3d_ScaleX (symbols.toml).
@@ -1393,7 +1393,7 @@ void** Device() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*r
 
 void* Method(void** device, U offset) { return (*reinterpret_cast<void***>(device))[offset / 4]; }
 
-using Com6 = long(__stdcall*)(void*, U, U, U, U, U);
+using Com6 = std::int32_t(__stdcall*)(void*, U, U, U, U, U);
 
 unsigned char* Vertex(U i) { return At(::bof3::Img(D3d_Vertices_addr) + i * 0x20); }
 
@@ -1416,8 +1416,8 @@ unsigned char* Vertex(U i) { return At(::bof3::Img(D3d_Vertices_addr) + i * 0x20
 // colour helper and the texture bind, as in the original; the code byte and
 // Gfx_DrawTpage are read again for the blend after the texture and the two
 // bare rets - kept, since a callee could change either.
-long DrawSprite(const unsigned char* prim, U size_at, U extent) {
-    unsigned long diffuse, specular;
+std::int32_t DrawSprite(const unsigned char* prim, U size_at, U extent) {
+    std::uint32_t diffuse, specular;
     g.prim_color(prim[4], prim[5], prim[6], prim[7], Long(At(::bof3::Img(Gfx_DrawTpage_addr))) & 0xFFFF, &diffuse, &specular);
 
     const float x = Float(prim + 8), y = Float(prim + 0xC), z = Float(prim + 0x10);
@@ -1533,9 +1533,9 @@ void PutWord(unsigned char* p, U v) {
 }
 
 // One COM call: slot `offset` of the object's vtable, stdcall, `this` first.
-template <typename... A> long Com(U object, U offset, A... args) {
+template <typename... A> std::int32_t Com(U object, U offset, A... args) {
     void* o = Ptr(object);
-    auto fn = reinterpret_cast<long(__stdcall*)(void*, A...)>((*reinterpret_cast<void***>(o))[offset / 4]);
+    auto fn = reinterpret_cast<std::int32_t(__stdcall*)(void*, A...)>((*reinterpret_cast<void***>(o))[offset / 4]);
     return fn(o, args...);
 }
 
@@ -1682,9 +1682,9 @@ void PutWord(unsigned char* p, U v) {
 }
 
 // One COM call: slot `offset` of the object's vtable, stdcall, `this` first.
-template <typename... A> long Com(U object, U offset, A... args) {
+template <typename... A> std::int32_t Com(U object, U offset, A... args) {
     void* o = reinterpret_cast<void*>(static_cast<std::uintptr_t>(object));
-    auto fn = reinterpret_cast<long(__stdcall*)(void*, A...)>((*reinterpret_cast<void***>(o))[offset / 4]);
+    auto fn = reinterpret_cast<std::int32_t(__stdcall*)(void*, A...)>((*reinterpret_cast<void***>(o))[offset / 4]);
     return fn(o, args...);
 }
 
@@ -1749,8 +1749,8 @@ Fn Import(U slot) {
     std::memcpy(&word, At(slot), sizeof word);
     return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(word));
 }
-unsigned long __stdcall ImportSetTextColor(void* hdc, unsigned long color) {
-    return Import<unsigned long (__stdcall*)(void*, unsigned long)>(::bof3::Img(PsxRest_ImportSetTextColor_addr))(hdc, color);
+std::uint32_t __stdcall ImportSetTextColor(void* hdc, std::uint32_t color) {
+    return Import<std::uint32_t (__stdcall*)(void*, std::uint32_t)>(::bof3::Img(PsxRest_ImportSetTextColor_addr))(hdc, color);
 }
 int __stdcall ImportSetBkMode(void* hdc, int mode) {
     return Import<int (__stdcall*)(void*, int)>(::bof3::Img(PsxRest_ImportSetBkMode_addr))(hdc, mode);
@@ -1812,7 +1812,7 @@ Callees g = kOriginals;
 namespace d3d_list {
 namespace {
 
-using Handler = long(__cdecl*)(const unsigned char*);
+using Handler = std::int32_t(__cdecl*)(const unsigned char*);
 Handler H(U address) { return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(::bof3::CodePlace(address))); }
 
 }  // namespace
@@ -2145,7 +2145,7 @@ void Gfx_ClearPresent(unsigned flags) {
 void Gfx_Present(void) {
     const display_env::U flags = display_env::Long(::bof3::Img(display_env::kRenderFlags.v));
     void* const primary = DDraw_Primary;
-    long result;
+    std::int32_t result;
     if (flags & 0x200)
         result = display_env::Method<ComBlt>(primary, display_env::kBlt)(primary, display_env::At(::bof3::Img(Gfx_WindowRect_addr)), DDraw_BackBuffer, display_env::At(::bof3::Img(Gfx_ScreenRect_addr)), display_env::kBltWait,
                                                nullptr);
@@ -2169,7 +2169,7 @@ void Gfx_Present(void) {
 // anything set the word 0x7CADEA during the draw (it is cleared on entry),
 // D3d_AfterDraw 0x59F580 runs (a tail jump in the original; it reads no
 // argument).
-void Gfx_DrawOTag(unsigned long* ot) {
+void Gfx_DrawOTag(std::uint32_t* ot) {
     if (Gfx_DrawEnable == 0) return;
     if (draw_order::g_on) draw_order::LogWalk(ot);   // BOF3X_DRAWORDER, diagnostic only: reads the table, draws nothing
     if (D3d_AfterDrawRequest != 0) {
@@ -2391,8 +2391,8 @@ void D3d_FitTextureSize(unsigned w, unsigned h, unsigned* out_w, unsigned* out_h
 // with a null specular - so the vertices' specular, tu and tv stay as the last
 // draw left them; SetTexture(0, NULL); 0x437CC0(0) twice; the blend with
 // Gfx_DrawTpage read again; flat; a triangle list of 3.
-long D3d_DrawPolyF3(const unsigned char* prim) {
-    unsigned long diffuse;
+std::int32_t D3d_DrawPolyF3(const unsigned char* prim) {
+    std::uint32_t diffuse;
     d3d_rest::g.prim_color(prim[4], prim[5], prim[6], prim[7], d3d_rest::DrawMode(), &diffuse, nullptr);
     for (d3d_rest::U i = 0; i < 3; ++i) {
         unsigned char* out = d3d_rest::Vertex(i);
@@ -2416,8 +2416,8 @@ long D3d_DrawPolyF3(const unsigned char* prim) {
 // (texture modulated) - each doubled (32-bit, so it wraps), and a doubled value
 // above 0xFF becomes 0xFF with its low byte going to the specular. The specular
 // is written only through a non-null pointer, after the diffuse.
-void D3d_PrimColor(unsigned r, unsigned g, unsigned b, unsigned code, unsigned mode, unsigned long* diffuse,
-                   unsigned long* specular) {
+void D3d_PrimColor(unsigned r, unsigned g, unsigned b, unsigned code, unsigned mode, std::uint32_t* diffuse,
+                   std::uint32_t* specular) {
     const unsigned char c = static_cast<unsigned char>(code);
     d3d_draw::U alpha = 0xFF;
     if (c & 2) {
@@ -2481,14 +2481,14 @@ void D3d_SetShadeMode(unsigned mode) {
 // D3d_BindTexture(tpage, clut). 0x437CC0 with the tpage's bits 0x400 and 0x800,
 // the blend, flat, a triangle list of 3 - the tpage word re-read after each
 // call.
-long D3d_DrawPolyFT3(unsigned char* prim) {
+std::int32_t D3d_DrawPolyFT3(unsigned char* prim) {
     bool flattened = false;
     const d3d_rest::U uv = d3d_rest::Word(prim + 0x14);
     if (uv == d3d_rest::Word(prim + 0x24) && uv == d3d_rest::Word(prim + 0x34)) {
         D3d_FlattenFT3(prim, uv);
         flattened = true;
     }
-    unsigned long diffuse, specular;
+    std::uint32_t diffuse, specular;
     d3d_rest::g.prim_color(prim[4], prim[5], prim[6], prim[7], d3d_rest::Word(prim + 0x26), &diffuse, &specular);
     for (d3d_rest::U i = 0; i < 3; ++i) {
         unsigned char* out = d3d_rest::Vertex(i);
@@ -2516,7 +2516,7 @@ long D3d_DrawPolyFT3(unsigned char* prim) {
 // what the builder returns; a hit sets the entry's texture, and an entry in
 // state 2 (its CLUT changed) is refreshed outside the scene first. Kept: the
 // texture handed to SetTexture on that path is the one read BEFORE the refresh.
-long D3d_BindTexture(unsigned tpage, unsigned clut) {
+std::int32_t D3d_BindTexture(unsigned tpage, unsigned clut) {
     const int page = static_cast<int>(tpage & 0x1F);
     const int mode = static_cast<int>((tpage >> 7) & 3);
     const int slot = d3d_draw::g.tex_find(page, static_cast<int>(clut), mode);
@@ -2572,7 +2572,7 @@ long D3d_BindTexture(unsigned tpage, unsigned clut) {
 // x offset and the direct test (`test al, 2`) read the low bits, but 4-bit
 // against 8-bit is the whole dword against 0. The callers pass 0..3 (tpage
 // bits 7..8).
-unsigned long D3d_BuildPageTexture(int page, int clut, int mode) {
+std::uint32_t D3d_BuildPageTexture(int page, int clut, int mode) {
     const tex_page::U p = static_cast<tex_page::U>(page);
     const tex_page::U m = static_cast<tex_page::U>(mode);
     tex_page::U slot = 0;
@@ -2799,8 +2799,8 @@ d3d_rest::U D3d_PageTexel4(d3d_rest::U clut, d3d_rest::U page, d3d_rest::U uv) {
 
 // original 0x5A0AB0, code 0x28 (Gpu_SetPolyF4): a flat quad, four corners of
 // 0xC bytes from +8 (float x, y, z), one colour from +4..+6.
-extern "C" long __cdecl D3d_DrawPolyF4(const unsigned char* prim) {
-    unsigned long diffuse;
+extern "C" std::int32_t __cdecl D3d_DrawPolyF4(const unsigned char* prim) {
+    std::uint32_t diffuse;
     field_misc::g.prim_color(prim[4], prim[5], prim[6], prim[7], DrawModeFieldMisc(), &diffuse, nullptr);
     for (field_misc::U i = 0; i < 4; ++i) PutFlatCorner(VertexFieldMisc(i), prim + 8 + i * 0xC, static_cast<field_misc::U>(diffuse));
     SetTextureFieldMisc(0, 0);
@@ -2814,8 +2814,8 @@ extern "C" long __cdecl D3d_DrawPolyF4(const unsigned char* prim) {
 // 0x5A0C40, code 0x2C (Gpu_SetPolyFT4): a textured flat quad. Four corners of
 // 0x10 bytes from +8: float x, y, z, u, v, and the CLUT (+0x16) / tpage (+0x26)
 // words in the first two. One colour for all four, in the tpage's blend mode.
-long D3d_DrawPolyFT4(const unsigned char* prim) {
-    unsigned long diffuse, specular;
+std::int32_t D3d_DrawPolyFT4(const unsigned char* prim) {
+    std::uint32_t diffuse, specular;
     d3d_draw::g.prim_color(prim[4], prim[5], prim[6], prim[7], d3d_draw::Word(prim + 0x26), &diffuse, &specular);
     for (d3d_draw::U i = 0; i < 4; ++i) {
         unsigned char* out = d3d_draw::Vertex(i);
@@ -2837,7 +2837,7 @@ long D3d_DrawPolyFT4(const unsigned char* prim) {
 // triangle - three corners, a triangle list of 3. And, as the original has it,
 // the fourth vertex's z (0x7CA9C0) set to 0 - a store no draw of this handler
 // reads (three vertices), which the next four-vertex handler overwrites.
-extern "C" long __cdecl D3d_DrawPolyG3(const unsigned char* prim) {
+extern "C" std::int32_t __cdecl D3d_DrawPolyG3(const unsigned char* prim) {
     GouraudCorners(prim, 3);
     PutLongBattleDraw(VertexBattleDraw(3) + 8, 0);
     SetTextureBattleDraw(0, 0);
@@ -2855,8 +2855,8 @@ extern "C" long __cdecl D3d_DrawPolyG3(const unsigned char* prim) {
 // (re-read), all three before any vertex; per corner the position, the pair
 // and the texel; D3d_BindTexture(tpage, clut); 0x437CC0(0) twice; the blend;
 // Gouraud; a triangle list of 3.
-long D3d_DrawPolyGT3(const unsigned char* prim) {
-    unsigned long diffuse[3], specular[3];
+std::int32_t D3d_DrawPolyGT3(const unsigned char* prim) {
+    std::uint32_t diffuse[3], specular[3];
     for (d3d_rest::U i = 0; i < 3; ++i) {
         const unsigned char* rgb = prim + 4 + i * 0x14;
         d3d_rest::g.prim_color(rgb[0], rgb[1], rgb[2], prim[7], d3d_rest::Word(prim + 0x2A), &diffuse[i], &specular[i]);
@@ -2880,8 +2880,8 @@ long D3d_DrawPolyGT3(const unsigned char* prim) {
 // original 0x5A1290, code 0x38 (Gpu_SetPolyG4): a Gouraud quad, four corners of
 // 0x10 bytes from +4: r, g, b, (code or pad), float x, y, z. The four colours
 // first, each with the code byte and the mode read again; then the corners.
-extern "C" long __cdecl D3d_DrawPolyG4(const unsigned char* prim) {
-    unsigned long diffuse[4];
+extern "C" std::int32_t __cdecl D3d_DrawPolyG4(const unsigned char* prim) {
+    std::uint32_t diffuse[4];
     for (field_misc::U i = 0; i < 4; ++i) {
         const unsigned char* rgb = prim + 4 + i * 0x10;
         field_misc::g.prim_color(rgb[0], rgb[1], rgb[2], prim[7], DrawModeFieldMisc(), &diffuse[i], nullptr);
@@ -2899,8 +2899,8 @@ extern "C" long __cdecl D3d_DrawPolyG4(const unsigned char* prim) {
 // of 0x14 bytes from +4: r, g, b, (code or pad), float x, y, z, u, v, and the
 // CLUT (+0x16) / tpage (+0x2A) words. A colour per corner, each in the tpage's
 // blend mode, all four computed before any vertex is written.
-long D3d_DrawPolyGT4(const unsigned char* prim) {
-    unsigned long diffuse[4], specular[4];
+std::int32_t D3d_DrawPolyGT4(const unsigned char* prim) {
+    std::uint32_t diffuse[4], specular[4];
     for (d3d_draw::U i = 0; i < 4; ++i) {
         const unsigned char* rgb = prim + 4 + i * 0x14;
         d3d_draw::g.prim_color(rgb[0], rgb[1], rgb[2], prim[7], d3d_draw::Word(prim + 0x2A), &diffuse[i], &specular[i]);
@@ -2924,12 +2924,12 @@ long D3d_DrawPolyGT4(const unsigned char* prim) {
 
 // 0x5A17A0, code 0x40 (Gpu_SetLineF2): one flat line, two corners of 0xC bytes
 // from +8 (float x, y, z).
-long D3d_DrawLineF2(const unsigned char* prim) { return DrawLines(prim, 2); }
+std::int32_t D3d_DrawLineF2(const unsigned char* prim) { return DrawLines(prim, 2); }
 
 // original 0x5A18B0, table entry 11 (code 0x50, called at 0x59F144): a Gouraud
 // line - two corners, a line strip of 2. The bare-ret calls get 0 and 1, as
 // the other lines' do.
-extern "C" long __cdecl D3d_DrawLineG2(const unsigned char* prim) {
+extern "C" std::int32_t __cdecl D3d_DrawLineG2(const unsigned char* prim) {
     GouraudCorners(prim, 2);
     SetTextureBattleDraw(0, 0);
     battle_draw::g.ret_only(0);
@@ -2942,8 +2942,8 @@ extern "C" long __cdecl D3d_DrawLineG2(const unsigned char* prim) {
 // original 0x5A1A00, code 0x48 (Gpu_SetLineF3): a flat two-segment polyline,
 // three corners of 0xC bytes from +8. The two bare-ret calls get 0 and 1, as
 // the other lines' do.
-extern "C" long __cdecl D3d_DrawLineF3(const unsigned char* prim) {
-    unsigned long diffuse;
+extern "C" std::int32_t __cdecl D3d_DrawLineF3(const unsigned char* prim) {
+    std::uint32_t diffuse;
     field_misc::g.prim_color(prim[4], prim[5], prim[6], prim[7], DrawModeFieldMisc(), &diffuse, nullptr);
     for (field_misc::U i = 0; i < 3; ++i) PutFlatCorner(VertexFieldMisc(i), prim + 8 + i * 0xC, static_cast<field_misc::U>(diffuse));
     SetTextureFieldMisc(0, 0);
@@ -2956,7 +2956,7 @@ extern "C" long __cdecl D3d_DrawLineF3(const unsigned char* prim) {
 
 // original 0x5A1B50, table entry 12 (code 0x58, called at 0x59F152): a Gouraud
 // two-segment polyline - three corners, a line strip of 3.
-extern "C" long __cdecl D3d_DrawLineG3(const unsigned char* prim) {
+extern "C" std::int32_t __cdecl D3d_DrawLineG3(const unsigned char* prim) {
     GouraudCorners(prim, 3);
     SetTextureBattleDraw(0, 0);
     battle_draw::g.ret_only(0);
@@ -2968,7 +2968,7 @@ extern "C" long __cdecl D3d_DrawLineG3(const unsigned char* prim) {
 
 // 0x5A1D10, code 0x4C (Gpu_SetLineF4): a flat three-segment polyline, four
 // corners of 0xC bytes from +8.
-long D3d_DrawLineF4(const unsigned char* prim) { return DrawLines(prim, 4); }
+std::int32_t D3d_DrawLineF4(const unsigned char* prim) { return DrawLines(prim, 4); }
 
 // 0x5A1EA0, table entry 13 (code 0x5C, called at 0x59F160): a Gouraud
 // three-segment polyline - D3d_DrawLineG3 (battle_draw.cpp) with four corners.
@@ -2976,8 +2976,8 @@ long D3d_DrawLineF4(const unsigned char* prim) { return DrawLines(prim, 4); }
 // word read again for each, a null specular) before any vertex; four corners of
 // 0x10 from +8 (float x, y, z); SetTexture(0, NULL); 0x437CC0(0), (1); the
 // blend; Gouraud; a line strip of 4.
-long D3d_DrawLineG4(const unsigned char* prim) {
-    unsigned long diffuse[4];
+std::int32_t D3d_DrawLineG4(const unsigned char* prim) {
+    std::uint32_t diffuse[4];
     for (d3d_rest::U i = 0; i < 4; ++i) {
         const unsigned char* rgb = prim + 4 + i * 0x10;
         d3d_rest::g.prim_color(rgb[0], rgb[1], rgb[2], prim[7], d3d_rest::DrawMode(), &diffuse[i], nullptr);
@@ -3000,9 +3000,9 @@ long D3d_DrawLineG4(const unsigned char* prim) {
 // times the scale, summed and multiplied on the x87 as the original does; z goes
 // through fld / fst to all four corners (a signalling NaN comes out quiet, unlike
 // the other handlers' mov).
-long D3d_DrawTile(const unsigned char* prim) {
+std::int32_t D3d_DrawTile(const unsigned char* prim) {
     const d3d_draw::U mode = d3d_draw::Long(d3d_draw::At(::bof3::Img(Gfx_DrawTpage_addr))) & 0xFFFF;
-    unsigned long diffuse;
+    std::uint32_t diffuse;
     d3d_draw::g.prim_color(prim[4], prim[5], prim[6], prim[7], mode, &diffuse, nullptr);
     const float x = d3d_draw::Float(prim + 8), y = d3d_draw::Float(prim + 0xC), z = d3d_draw::Float(prim + 0x10);
     const float left = d3d_draw::X87Mul(D3d_ScaleX, x);
@@ -3042,8 +3042,8 @@ long D3d_DrawTile(const unsigned char* prim) {
 // point; BOF3X_TILE1=0 leaves it off (the original's point).
 unsigned char g_tile1_quad = 0;
 
-long D3d_DrawTile1(const unsigned char* prim) {
-    unsigned long diffuse;
+std::int32_t D3d_DrawTile1(const unsigned char* prim) {
+    std::uint32_t diffuse;
     d3d_rest::g.prim_color(prim[4], prim[5], prim[6], prim[7], d3d_rest::DrawMode(), &diffuse, nullptr);
     if (g_tile1_quad != 0) {
         const float x = d3d_rest::Float(prim + 8), y = d3d_rest::Float(prim + 0xC), z = d3d_rest::Float(prim + 0x10);
@@ -3080,23 +3080,23 @@ long D3d_DrawTile1(const unsigned char* prim) {
 }
 
 // 0x5A2300, code 0x64 (SPRT): a sprite of any size, w and h from the primitive.
-long D3d_DrawSprt(const unsigned char* prim) { return sprt_draw::DrawSprite(prim, 0, 0); }
+std::int32_t D3d_DrawSprt(const unsigned char* prim) { return sprt_draw::DrawSprite(prim, 0, 0); }
 
 // 0x5A2520, code 0x74 (SPRT_8): an 8 x 8 sprite - x + 8.0 from 0x5C41CC.
-long D3d_DrawSprt8(const unsigned char* prim) { return sprt_draw::DrawSprite(prim, sprt_draw::kEight, 8); }
+std::int32_t D3d_DrawSprt8(const unsigned char* prim) { return sprt_draw::DrawSprite(prim, sprt_draw::kEight, 8); }
 
 // 0x5A2710, code 0x7C (SPRT_16): a 16 x 16 sprite - x + 16.0 from 0x5C41D0.
-long D3d_DrawSprt16(const unsigned char* prim) { return sprt_draw::DrawSprite(prim, sprt_draw::kSixteen, 16); }
+std::int32_t D3d_DrawSprt16(const unsigned char* prim) { return sprt_draw::DrawSprite(prim, sprt_draw::kSixteen, 16); }
 
 // 0x5A2900. The primitive is POLY_FT4-shaped (Text_EmitGlyph 0x516D50 and
 // four other builders of code 0x6C): r, g, b, code at +4..+7; corner i's
 // s16 x, y at +8 + 8i / +0xA + 8i and its u, v bytes at +0xC + 8i / +0xD + 8i;
 // the CLUT id at +0xE and the glyph index at +0x16.
-long D3d_DrawGlyph(const unsigned char* prim) {
+std::int32_t D3d_DrawGlyph(const unsigned char* prim) {
     using namespace glyph_draw;
     // Two locals the colour helper fills; it always writes both (it is handed
     // a non-null specular pointer).
-    unsigned long diffuse, specular;
+    std::uint32_t diffuse, specular;
     glyph_draw::g.prim_color(prim[4], prim[5], prim[6], prim[7], 0, &diffuse, &specular);
 
     // The four corners: sx, sy = the primitive's x, y times the scale, no
@@ -3267,7 +3267,7 @@ void Font_BuildGlyphTexture(int slot, unsigned glyph, unsigned clut) {
 // its dwSize set. Returns what the Blt returned; no caller reads it (0x5A2D38,
 // 0x5A3339, 0x5A37E3, and the two in the Direct3D set-up, 0x5A55FF and
 // 0x5A56F4, each `add esp, 4` and move on).
-long Dd_ClearSurface(void* surface) {
+std::int32_t Dd_ClearSurface(void* surface) {
     alignas(4) unsigned char fx[0x64] = {};
     tex_cells::PutLong(fx, 0x64);
     return tex_cells::Com(tex_cells::Addr(surface), tex_cells::kBlt, tex_cells::kNoRect, tex_cells::kNoRect, tex_cells::kNoRect, kBltColorFillWait, static_cast<void*>(fx));
@@ -3283,8 +3283,8 @@ long Dd_ClearSurface(void* surface) {
 // coordinates run from half a texel in to half a texel short of the used size.
 // sz 0.99 and rhw 0.1 as immediates. The entry index is not checked: an index
 // out of the table reads past it, as the original does.
-long D3d_DrawCellSprite(const unsigned char* prim) {
-    unsigned long diffuse, specular;
+std::int32_t D3d_DrawCellSprite(const unsigned char* prim) {
+    std::uint32_t diffuse, specular;
     d3d_draw::g.prim_color(prim[4], prim[5], prim[6], prim[7], d3d_draw::Word(prim + 0x1E), &diffuse, &specular);
     const int index = d3d_draw::g.cell_texture(d3d_draw::Word(prim + 0x18), d3d_draw::Word(prim + 0x1A), d3d_draw::Word(prim + 0x1C), d3d_draw::Word(prim + 0x1E));
     const unsigned char* e = d3d_draw::At(::bof3::Img(D3d_CellTexCache_addr) + static_cast<d3d_draw::U>(index) * kCellEntry);
@@ -3830,9 +3830,9 @@ extern "C" void __cdecl SpriteCell_Reset() { SpriteCell_Count = 0; }
 // byte - so a height of 128 or more loses its top bit, as the original has it.
 // No bound on the count, as the original has it; SpriteCell_Reset is the only
 // thing that lowers it.
-extern "C" unsigned long __cdecl SpriteCell_Add(unsigned x, unsigned y, unsigned flags, unsigned u, unsigned v,
+extern "C" std::uint32_t __cdecl SpriteCell_Add(unsigned x, unsigned y, unsigned flags, unsigned u, unsigned v,
                                                 unsigned w, unsigned h) {
-    const unsigned long index = SpriteCell_Count;
+    const std::uint32_t index = SpriteCell_Count;
     unsigned char* cell = SpriteCell_Table + index * kCellBytes;
     Put<std::uint16_t>(cell, 0, static_cast<std::uint16_t>(x));
     cell[2] = static_cast<unsigned char>(y);

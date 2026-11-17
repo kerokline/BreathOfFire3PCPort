@@ -11,7 +11,7 @@ namespace bof3 {
 // F9 does) or closes it; while it is open every other key is the menu's and
 // does nothing (the pad drives it, not WM_KEYDOWN). True when the key was
 // taken; false leaves it to the rest of WndProc.
-bool QuickMenu_Key(unsigned vk, long lparam);
+bool QuickMenu_Key(unsigned vk, std::int32_t lparam);
 
 // WinMain's loop, in the paused branch, once a frame: the menu's input and
 // draw when it is open (true), nothing otherwise (false: the pause lines are

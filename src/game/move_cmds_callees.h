@@ -39,18 +39,18 @@ constexpr unsigned kK2Rise = 0x14, kK2X = 0x34, kK2Z = 0x38, kK2Height = 0x3E;
 constexpr unsigned kK2Context = 0x80, kK2Script = 0x83, kK2Speed = 0x84, kK2Flags = 0x85, kK2Steps = 0x87;
 
 struct Callees {
-    long (__cdecl* elevation)(long, long);                                  // AreaMap_Elevation
+    std::int32_t (__cdecl* elevation)(std::int32_t, std::int32_t);                                  // AreaMap_Elevation
     int (__cdecl* ratan2)(float, float);                                    // Math_Ratan2 (ours)
     void (__cdecl* context_reset)(unsigned char*);                          // ScriptContext_Reset
     void (__cdecl* set_elevation)(int);                                     // MapView_SetElevation
-    void (__cdecl* attach_offset)(long*, unsigned char);                    // MoveCmd_AttachOffset
+    void (__cdecl* attach_offset)(std::int32_t*, unsigned char);                    // MoveCmd_AttachOffset
     int (__cdecl* object_kind)();                                           // MoveScript_ObjectKind (ours)
     void (__cdecl* detach)();                                               // MoveCmd_Detach (ours)
     void (__cdecl* attach_move)(unsigned char);                             // MoveCmd_AttachMove (ours)
-    long* (__cdecl* handle_position)(long*, unsigned char, unsigned char);  // MoveCmd_HandlePosition (ours)
+    std::int32_t* (__cdecl* handle_position)(std::int32_t*, unsigned char, unsigned char);  // MoveCmd_HandlePosition (ours)
     void (__cdecl* partyset_load)(unsigned, unsigned, unsigned, unsigned);  // PartySet_Load
     unsigned char (__cdecl* party_join)(unsigned);                          // Party_Join
-    long (__cdecl* slope)(long, long, unsigned long);                       // AreaMap_Slope (ours)
+    std::int32_t (__cdecl* slope)(std::int32_t, std::int32_t, std::uint32_t);                       // AreaMap_Slope (ours)
 };
 extern const Callees kOriginals;
 extern Callees g;

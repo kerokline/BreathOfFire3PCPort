@@ -164,10 +164,10 @@ LONG CALLBACK TracedUnhandled(EXCEPTION_POINTERS* info) {
     // The context's registers by width (hook/cpu_context.h: read and printed
     // as wide as the register, so a system DLL's address above 4 GB on x86-64
     // shows whole; no #if here, a game file).
-    bof3::Log("exittrace   exception 0x%08lX at 0x%s, esp 0x%s, eflags 0x%08lX, thread %lu, passed on by every handler",
+    bof3::Log("exittrace   exception 0x%08lX at 0x%s, esp 0x%s, eflags 0x%08X, thread %u, passed on by every handler",
               code, bof3::CtxHex(bof3::CtxIp(*info->ContextRecord)).text,
               bof3::CtxHex(bof3::CtxSp(*info->ContextRecord)).text,
-              static_cast<unsigned long>(info->ContextRecord->EFlags), static_cast<unsigned long>(bof3::os::ThreadId()));
+              static_cast<std::uint32_t>(info->ContextRecord->EFlags), static_cast<std::uint32_t>(bof3::os::ThreadId()));
     LogStack("the exception", reinterpret_cast<const void*>(bof3::CtxSp(*info->ContextRecord)));
     return EXCEPTION_CONTINUE_SEARCH;
 }

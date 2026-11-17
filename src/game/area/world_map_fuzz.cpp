@@ -224,11 +224,11 @@ short* __cdecl StubRotMatrix(const short* angles, short* matrix) {
     for (U i = 0; i < 0x20; i += 4) PutLong(m + i, Mix(130 + i));
     return matrix;
 }
-void __cdecl StubSetRotMatrix(const unsigned long* matrix) {
+void __cdecl StubSetRotMatrix(const std::uint32_t* matrix) {
     const auto* m = reinterpret_cast<const unsigned char*>(matrix);
     Record(14, GetLong(m), GetLong(m + 4), GetLong(m + 8), GetLong(m + 12), GetLong(m + 16));
 }
-void __cdecl StubSetTransMatrix(const unsigned long* matrix) {
+void __cdecl StubSetTransMatrix(const std::uint32_t* matrix) {
     const auto* m = reinterpret_cast<const unsigned char*>(matrix);
     Record(15, GetLong(m + 0x14), GetLong(m + 0x18), GetLong(m + 0x1C));
 }
@@ -264,8 +264,8 @@ U MixFloat(U salt) {
 // vectors' words and the corner pointers, writes float corners (the seeds'
 // values, so the subtraction after it is exercised at the edges), and the
 // depth and flag through the two locals.
-long __cdecl StubRotTransPers4(const short* v0, const short* v1, const short* v2, const short* v3, float* s0,
-                               float* s1, float* s2, float* s3, long* p, long* flag) {
+std::int32_t __cdecl StubRotTransPers4(const short* v0, const short* v1, const short* v2, const short* v3, float* s0,
+                               float* s1, float* s2, float* s3, std::int32_t* p, std::int32_t* flag) {
     const auto w = [](const short* v, U i) { return GetWord(reinterpret_cast<const unsigned char*>(v) + i * 2); };
     Record(17, Addr(v0), w(v0, 0), w(v0, 1), w(v0, 2), Addr(v1), w(v1, 0) | (w(v1, 1) << 16), w(v1, 2));
     Record(18, Addr(v2), w(v2, 0), w(v2, 1), w(v2, 2), Addr(v3), w(v3, 0) | (w(v3, 1) << 16), w(v3, 2));
@@ -276,9 +276,9 @@ long __cdecl StubRotTransPers4(const short* v0, const short* v1, const short* v2
         PutLong(reinterpret_cast<unsigned char*>(c), MixFloat(salt++));
         PutLong(reinterpret_cast<unsigned char*>(c) + 4, MixFloat(salt++));
     }
-    *p = static_cast<long>(Mix(170));
-    *flag = static_cast<long>(Mix(171));
-    return static_cast<long>(Mix(172));
+    *p = static_cast<std::int32_t>(Mix(170));
+    *flag = static_cast<std::int32_t>(Mix(171));
+    return static_cast<std::int32_t>(Mix(172));
 }
 void __cdecl StubPrimDepths(void* prim) {
     Record(20, Addr(prim));
@@ -297,7 +297,7 @@ U __cdecl StubItemAt(U x, U y) {
 }
 // Gpu_LinkPrim: records the tail and the item; one round in four it moves
 // Gfx_PacketNext or flips Gfx_BufferIndex, both read again by the caller.
-void __cdecl StubLinkPrim(unsigned long* tail, U item) {
+void __cdecl StubLinkPrim(std::uint32_t* tail, U item) {
     Record(23, Addr(tail), item);
     const U h = Mix(23);
     switch (h % 8) {
@@ -310,7 +310,7 @@ void __cdecl StubLinkPrim(unsigned long* tail, U item) {
 const Callees kStandIns = {
     StubState0,
     As<void (__cdecl*)(int, int)>(&StubDrawFrame),
-    As<void (__cdecl*)(unsigned char*, int, int, unsigned, unsigned long)>(&StubSetDrawMode),
+    As<void (__cdecl*)(unsigned char*, int, int, unsigned, std::uint32_t)>(&StubSetDrawMode),
     As<void (__cdecl*)(unsigned, unsigned)>(&StubCommit),
     As<void (__cdecl*)(int, int, unsigned)>(&StubDrawSprite),
     As<unsigned char (__cdecl*)(short, short)>(&StubByteAt),
@@ -327,8 +327,8 @@ const Callees kStandIns = {
     StubRotTransPers4,
     StubPrimDepths,
     StubPopMatrix,
-    As<unsigned long (__cdecl*)(long, long)>(&StubItemAt),
-    As<void (__cdecl*)(unsigned long*, unsigned long)>(&StubLinkPrim),
+    As<std::uint32_t (__cdecl*)(std::int32_t, std::int32_t)>(&StubItemAt),
+    As<void (__cdecl*)(std::uint32_t*, std::uint32_t)>(&StubLinkPrim),
 };
 
 // --- the copies --------------------------------------------------------------------

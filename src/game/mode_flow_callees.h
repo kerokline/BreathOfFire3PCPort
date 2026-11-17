@@ -116,7 +116,7 @@ struct Callees {
     void (__cdecl* clear_rect)(int, int, int, int);
     // other modules' and Capcom's
     unsigned (__cdecl* get_tpage)(unsigned, unsigned, int, int);
-    void (__cdecl* draw_mode)(unsigned char*, int, int, unsigned, unsigned long);
+    void (__cdecl* draw_mode)(unsigned char*, int, int, unsigned, std::uint32_t);
     void (__cdecl* commit)(unsigned, unsigned);
     void (__cdecl* set_tile)(unsigned char*);
     void (__cdecl* set_semi)(unsigned char*, unsigned);
@@ -128,10 +128,10 @@ struct Callees {
     void (__cdecl* effect_clear)();
     void (__cdecl* music_play)(unsigned, int);
     void (__cdecl* load_dat)(int);
-    void (__cdecl* party_set_up)(long, long, unsigned);
+    void (__cdecl* party_set_up)(std::int32_t, std::int32_t, unsigned);
     unsigned char (__cdecl* zone_id)(unsigned, unsigned);
     void (__cdecl* view_reset)();
-    void (__cdecl* colour_matrix)(const unsigned long*);
+    void (__cdecl* colour_matrix)(const std::uint32_t*);
     void (__cdecl* scenario_start)(int);
     void (__cdecl* run_placement)(const unsigned char*);
     void (__cdecl* flags_clear)(unsigned char*, unsigned);

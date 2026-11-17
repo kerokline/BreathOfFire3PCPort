@@ -17,7 +17,7 @@ struct ComObject {
     struct Vtbl {
         void* query_interface;
         void* add_ref;
-        unsigned long (__stdcall* release)(ComObject*);
+        std::uint32_t (__stdcall* release)(ComObject*);
     }* vtbl;
 };
 
@@ -144,7 +144,7 @@ struct FakeObject {
 unsigned g_release_log[2 * kEntries];
 unsigned g_release_n;
 
-unsigned long __stdcall FakeRelease(ComObject* o) {
+std::uint32_t __stdcall FakeRelease(ComObject* o) {
     if (g_release_n < 2 * kEntries) g_release_log[g_release_n] = reinterpret_cast<FakeObject*>(o)->id;
     ++g_release_n;
     return 0;
@@ -260,8 +260,8 @@ void SelfTestFind(FindFn theirs) {
                 }
             for (int y = 480; y < 484; ++y) rows[y].generation = static_cast<std::uint32_t>(RngIn(0, 1));
         }
-        Gfx_TexCacheKey[0] = static_cast<unsigned long>(RngIn(0, 2));
-        Gfx_TexCacheKey[1] = static_cast<unsigned long>(RngIn(0, 1));
+        Gfx_TexCacheKey[0] = static_cast<std::uint32_t>(RngIn(0, 2));
+        Gfx_TexCacheKey[1] = static_cast<std::uint32_t>(RngIn(0, 1));
         const int page = RngIn(0, 31), mode = Rng() % 8 == 0 ? RngIn(3, 255) : RngIn(0, 2);
         // one in ten with high bits set, which the original compares too
         const int clut = ((RngIn(480, 483) << 6) | RngIn(0, 3)) | (Rng() % 10 == 0 ? 0x10000 : 0);

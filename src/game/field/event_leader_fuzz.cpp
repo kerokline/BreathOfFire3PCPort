@@ -130,7 +130,7 @@ void Disturb() {
         else SetWord(sc + 0x3E, h >> 16);
         break;
     }
-    case 16: Field_Kind2X = static_cast<long>(h * 0x2545F491u); break;
+    case 16: Field_Kind2X = static_cast<std::int32_t>(h * 0x2545F491u); break;
     case 17: Field_InputHeld = static_cast<unsigned short>(h >> 16); break;
     case 18: Member(w % 3)[0x5D] = static_cast<unsigned char>(v); break;
     case 19: Effect_Objects[w % 32].flags = static_cast<unsigned char>(v % 2 ? 0 : v); break;
@@ -181,13 +181,13 @@ void __cdecl StubChangeArea(unsigned area, int x, int z, unsigned flags) {
     Disturb();
 }
 unsigned char __cdecl StubLinkAt(unsigned x, unsigned z) { Record(14, x & 0xFFFF, z & 0xFFFF); Disturb(); return Answer(4); }
-unsigned char __cdecl StubCellsAll(long x, long z, unsigned wide, unsigned code, unsigned mask) {
+unsigned char __cdecl StubCellsAll(std::int32_t x, std::int32_t z, unsigned wide, unsigned code, unsigned mask) {
     Record(15, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), wide, (code & 0xFF) | (mask & 0xFF) << 8);
     Disturb();
     return Answer(6);
 }
 bool g_cells_mostly_none;
-unsigned char __cdecl StubCellsNone(long x, long z, unsigned wide, unsigned code, unsigned mask) {
+unsigned char __cdecl StubCellsNone(std::int32_t x, std::int32_t z, unsigned wide, unsigned code, unsigned mask) {
     Record(16, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), wide, (code & 0xFF) | (mask & 0xFF) << 8);
     Disturb();
     return g_cells_mostly_none ? static_cast<unsigned char>(Hash() % 9 != 0) : Answer(3);
@@ -202,7 +202,7 @@ void __cdecl StubClearSteps() {
 unsigned char __cdecl StubEncounterDue() { Record(20); Disturb(); return Answer(4); }
 unsigned char __cdecl StubEffectTest(unsigned pace) { Record(21, pace & 0xFF); Disturb(); return Answer(6); }
 // The whole dword is tested: now and then only its upper bytes are set.
-int __cdecl StubArriveHook(long x, long z) {
+int __cdecl StubArriveHook(std::int32_t x, std::int32_t z) {
     Record(22, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z));
     Disturb();
     const std::uint32_t h = Hash();
@@ -213,14 +213,14 @@ void __cdecl StubLeaderWalk() { Record(24, Sc()); Disturb(); }
 void __cdecl StubClearState(unsigned m) { Record(25, m & 0xFF); Disturb(); }
 void __cdecl StubShadeBegin() { Record(26, Sc()); Disturb(); }
 // Near the leader's height half the time: the 0x40 and 0xC0 edges.
-long __cdecl StubGroundAt(long x, long z) {
+std::int32_t __cdecl StubGroundAt(std::int32_t x, std::int32_t z) {
     Record(27, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z));
     if (Hash() % 2) Sprite_Current = Member((Hash() >> 8) % 3);
     Disturb();
     const std::uint32_t h = Hash();
     static const int kEdges[] = {0, 0x3F, 0x40, 0x41, -0x40, -0x41, 0xBF, 0xC0, 0xC1, -0xC0, -0xC1, 0x7FFF};
-    if (h % 2) return static_cast<long>(h);
-    return static_cast<long>((h & 0xFFFF0000u) | static_cast<std::uint16_t>(Word(At(ObjTrio_addr + 0x3e)) + kEdges[(h >> 4) % 12]));
+    if (h % 2) return static_cast<std::int32_t>(h);
+    return static_cast<std::int32_t>((h & 0xFFFF0000u) | static_cast<std::uint16_t>(Word(At(ObjTrio_addr + 0x3e)) + kEdges[(h >> 4) % 12]));
 }
 void __cdecl StubSetAnimation(unsigned char a) { Record(28, a, Sc()); Disturb(); }
 void __cdecl StubSwapFields(unsigned a, unsigned b, unsigned keep) { Record(29, a & 0xFF, b & 0xFF, keep & 0xFF); Disturb(); }
@@ -262,21 +262,21 @@ unsigned char __cdecl StubInventoryAdd(unsigned cat, unsigned item, unsigned cou
 }
 unsigned char __cdecl StubTestFC(short x, short z) { Record(44, static_cast<std::uint16_t>(x), static_cast<std::uint16_t>(z)); Disturb(); return Answer(4); }
 // Above and below 0x40 in the low word, whatever the upper.
-long __cdecl StubSlopeAt(long x, long z, unsigned long d) {
+std::int32_t __cdecl StubSlopeAt(std::int32_t x, std::int32_t z, std::uint32_t d) {
     Record(45, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), static_cast<std::uint32_t>(d));
     At(at::kScratch_addr)[0] = static_cast<unsigned char>(Hash() % 2 ? 0 : 1 + (Hash() >> 9) % 0xFF);
     Disturb();
     static const std::uint16_t kSlopes[] = {0x3F, 0x40, 0x41, 0, 0x8000, 0x7FFF, 0xFFC0};
     const std::uint32_t h = Hash();
-    return static_cast<long>((h & 0xFFFF0000u) | kSlopes[(h >> 4) % 7]);
+    return static_cast<std::int32_t>((h & 0xFFFF0000u) | kSlopes[(h >> 4) % 7]);
 }
-unsigned char __cdecl StubObjectAt(long x, long z, unsigned margin) {
+unsigned char __cdecl StubObjectAt(std::int32_t x, std::int32_t z, unsigned margin) {
     Record(46, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), margin, Word(Sprite_Current + 0x3E));
     if (Hash() % 2) Sprite_Current = Member((Hash() >> 8) % 3);
     Disturb();
     return Hash() % 2 ? 0xFF : static_cast<unsigned char>(Hash() >> 7);
 }
-unsigned char __cdecl StubPathClear(long x, long z, unsigned raised) {
+unsigned char __cdecl StubPathClear(std::int32_t x, std::int32_t z, unsigned raised) {
     Record(47, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), raised & 0xFF);
     Disturb();
     return Answer(3);
@@ -299,27 +299,27 @@ const unsigned char* __cdecl StubAreaExits() {
     g_exits[k * 4 + 1] = sc[0x3A];
     return g_exits;
 }
-unsigned char __cdecl StubWayBlockedWide(long x, long z, long ground) {
+unsigned char __cdecl StubWayBlockedWide(std::int32_t x, std::int32_t z, std::int32_t ground) {
     Record(50, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), static_cast<std::uint32_t>(ground));
     Disturb();
     return Answer(4);
 }
-unsigned char __cdecl StubSpotFree(long x, long z, unsigned, unsigned raised) {
+unsigned char __cdecl StubSpotFree(std::int32_t x, std::int32_t z, unsigned, unsigned raised) {
     Record(51, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), raised & 0xFF, Sc());
     Disturb();
     return Answer(4);
 }
-unsigned char __cdecl StubWayBlocked4(long x, long z, long ground) {
+unsigned char __cdecl StubWayBlocked4(std::int32_t x, std::int32_t z, std::int32_t ground) {
     Record(52, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), static_cast<std::uint32_t>(ground));
     Disturb();
     return Answer(4);
 }
-unsigned char __cdecl StubCellsBlock(long x, long z, unsigned wide) {
+unsigned char __cdecl StubCellsBlock(std::int32_t x, std::int32_t z, unsigned wide) {
     Record(53, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), wide);
     Disturb();
     return Answer(6);
 }
-unsigned char __cdecl StubWayBlocked(long x, long z, unsigned raised, long ground) {
+unsigned char __cdecl StubWayBlocked(std::int32_t x, std::int32_t z, unsigned raised, std::int32_t ground) {
     Record(54, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), raised & 0xFF, static_cast<std::uint32_t>(ground));
     Disturb();
     return Answer(5);
@@ -631,8 +631,8 @@ Args Seed(unsigned k) {
             const std::uint32_t lx = static_cast<std::uint32_t>(Long(At(ObjTrio_addr + 0x34)));
             const std::uint32_t lz = static_cast<std::uint32_t>(Long(At(ObjTrio_addr + 0x38)));
             static const std::int32_t kMoved[] = {0, 0x1FFF, 0x2000, -0x2000, -0x1FFF, 0x1FFFFF, 0x7FFFFFFF, 0};
-            if (Often()) Field_Kind2X = static_cast<long>(lx + static_cast<std::uint32_t>(kMoved[Next() % 8]));
-            if (Often()) Field_Kind2Z = static_cast<long>(lz + static_cast<std::uint32_t>(kMoved[Next() % 8]));
+            if (Often()) Field_Kind2X = static_cast<std::int32_t>(lx + static_cast<std::uint32_t>(kMoved[Next() % 8]));
+            if (Often()) Field_Kind2Z = static_cast<std::int32_t>(lz + static_cast<std::uint32_t>(kMoved[Next() % 8]));
         }
         break;
     case kSpotFree:

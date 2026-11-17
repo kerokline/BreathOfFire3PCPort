@@ -110,7 +110,7 @@ void SetVolumeBits(std::uint32_t bits) {
 
 // GetStatus's bit 0, DSBSTATUS_PLAYING, into `status` - which holds on entry
 // what the original's slot held, for a GetStatus that did not write it.
-bool Playing(void* buffer, unsigned long status) {
+bool Playing(void* buffer, std::uint32_t status) {
     Method<ComStatus>(buffer, kGetStatus)(buffer, &status);
     return (status & 1) != 0;
 }
@@ -356,7 +356,7 @@ std::uint32_t FoldMp3(std::uint32_t heard, const music_loops::Row* row, bool loo
 // Music_Data (a rewinding MP3's period is counted from them). False when the
 // cursor is in a half not yet written: no position to trust.
 bool HeardFolded(void* buffer, std::uint32_t size, std::uint32_t* heard_out, std::uint32_t* folded) {
-    unsigned long play = 0, cursor_w = 0;
+    std::uint32_t play = 0, cursor_w = 0;
     if (Method<ComPosition>(buffer, kGetCurrentPosition)(buffer, &play, &cursor_w) != 0 || play >= 2 * kHalf) return false;
     const std::uint32_t heard = sound::g_ring.half_base[play / kHalf] + static_cast<std::uint32_t>(play % kHalf) / 4;
     if (heard > sound::g_ring.written) return false;  // a cursor in a half not yet written: no position to trust
@@ -671,12 +671,12 @@ void LoopTable_SelfTest() {
 // buffer, nothing remembered with DIV-0092 off, the position remembered with
 // it on, used once and only for its own track. Everything put back.
 std::uint32_t g_rt_cursor;
-long __stdcall RtPosition(void*, unsigned long* play, unsigned long* cursor_w) {
+std::int32_t __stdcall RtPosition(void*, std::uint32_t* play, std::uint32_t* cursor_w) {
     *play = g_rt_cursor;
     *cursor_w = 0;
     return 0;
 }
-long __stdcall RtUnexpected(void*) { bof3::Fatal("DIV-0092 resume self-test: a DirectSound method other than GetCurrentPosition"); }
+std::int32_t __stdcall RtUnexpected(void*) { bof3::Fatal("DIV-0092 resume self-test: a DirectSound method other than GetCurrentPosition"); }
 
 // `samples` of the stream as Music_Decode makes it, from the decoder's state
 // now, in 0x12000-byte calls (a whole number of frames, as the game asks).
@@ -960,7 +960,7 @@ void SnapSave(bof3::SnapshotWriter& w) {
     for (unsigned c = 0; c < kSnapChannels; ++c) {
         const std::uint32_t buffer = Sound_Channels[c];
         unsigned char bank = kNoEntry, entry = 0, playing = 0;
-        unsigned long frequency = 0, position = 0, write = 0;
+        std::uint32_t frequency = 0, position = 0, write = 0;
         for (unsigned b = 0; buffer && b < kSnapBanks && bank == kNoEntry; ++b)
             for (unsigned e = 0; e < kSnapEntries; ++e)
                 // the buffer word raw: ->buffer compiles otherwise (the typed-data gate), here and below
@@ -992,7 +992,7 @@ void SnapSave(bof3::SnapshotWriter& w) {
     if (stream_bytes) w.Put(At(stream), stream_bytes);
     {
         void* const voice = SndStream_Buffer;
-        unsigned long position = 0, write = 0;
+        std::uint32_t position = 0, write = 0;
         const unsigned char has = voice != nullptr;
         const unsigned char playing = voice && Playing(voice, 0) ? 1 : 0;
         if (voice) Method<ComPosition>(voice, kGetCurrentPosition)(voice, &position, &write);
@@ -1329,7 +1329,7 @@ struct FakeBuf {
     const void* const* vtable;
     int releases, plays;
     bool playing;
-    unsigned long frequency, position, play_flags;
+    std::uint32_t frequency, position, play_flags;
     const unsigned char* wave;
     std::uint32_t hash;
 };
@@ -1339,25 +1339,25 @@ const void* g_fake_vtable[0x54 / 4];
 FakeBuf g_fake_device;
 
 FakeBuf* Self(void* p) { return static_cast<FakeBuf*>(p); }
-long __stdcall FkUnexpected(void*) { bof3::Fatal("SOUND self-test: a DirectSound method the stand-in buffer lacks"); }
-long __stdcall FkRelease(void* p) { return ++Self(p)->releases, 0; }
-long __stdcall FkPosition(void* p, unsigned long* play, unsigned long* write) {
+std::int32_t __stdcall FkUnexpected(void*) { bof3::Fatal("SOUND self-test: a DirectSound method the stand-in buffer lacks"); }
+std::int32_t __stdcall FkRelease(void* p) { return ++Self(p)->releases, 0; }
+std::int32_t __stdcall FkPosition(void* p, std::uint32_t* play, std::uint32_t* write) {
     *play = Self(p)->position;
     if (write) *write = 0;
     return 0;
 }
-long __stdcall FkFrequency(void* p, unsigned long* f) { return *f = Self(p)->frequency, 0; }
-long __stdcall FkStatus(void* p, unsigned long* s) { return *s = Self(p)->playing ? 1 : 0, 0; }
-long __stdcall FkPlay(void* p, unsigned long, unsigned long, unsigned long flags) {
+std::int32_t __stdcall FkFrequency(void* p, std::uint32_t* f) { return *f = Self(p)->frequency, 0; }
+std::int32_t __stdcall FkStatus(void* p, std::uint32_t* s) { return *s = Self(p)->playing ? 1 : 0, 0; }
+std::int32_t __stdcall FkPlay(void* p, std::uint32_t, std::uint32_t, std::uint32_t flags) {
     Self(p)->playing = true;
     Self(p)->play_flags = flags;
     ++Self(p)->plays;
     return 0;
 }
-long __stdcall FkSetPosition(void* p, unsigned long v) { return Self(p)->position = v, 0; }
-long __stdcall FkSetFrequency(void* p, unsigned long v) { return Self(p)->frequency = v, 0; }
-long __stdcall FkSetVolume(void*, unsigned long) { return 0; }
-long __stdcall FkStop(void* p) { return Self(p)->playing = false, 0; }
+std::int32_t __stdcall FkSetPosition(void* p, std::uint32_t v) { return Self(p)->position = v, 0; }
+std::int32_t __stdcall FkSetFrequency(void* p, std::uint32_t v) { return Self(p)->frequency = v, 0; }
+std::int32_t __stdcall FkSetVolume(void*, std::uint32_t) { return 0; }
+std::int32_t __stdcall FkStop(void* p) { return Self(p)->playing = false, 0; }
 
 std::uint32_t WaveHash(const unsigned char* wave) {
     if (!wave) return 0;

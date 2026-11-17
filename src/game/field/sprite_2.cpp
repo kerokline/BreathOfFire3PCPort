@@ -46,7 +46,7 @@ std::int32_t Long(const unsigned char* object, unsigned offset) {
 
 // A layer's 0x30 bytes are three (first, last) pairs per buffer; the pass
 // appends the third, which Gfx_FrameNodes names.
-unsigned long* FrameNode(unsigned layer) { return reinterpret_cast<unsigned long*>(&Gfx_FrameNodes) + (Gfx_BufferIndex + layer * 6u) * 2u; }
+std::uint32_t* FrameNode(unsigned layer) { return reinterpret_cast<std::uint32_t*>(&Gfx_FrameNodes) + (Gfx_BufferIndex + layer * 6u) * 2u; }
 
 // Pass 1 of Sprite_DrawPass, below.
 void SortDrawList() {
@@ -86,7 +86,7 @@ void SortDrawList() {
 void LinkTableItem(unsigned index) {
     const auto at = Low32(draw_pool::Items() + (Gfx_BufferIndex + index * 2u) * 0x48u);
     Gpu_LinkPrim(Gfx_OtPointers[Draw_OtSlot], at);
-    Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(at));
+    Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(at));
 }
 
 void GrownLayerAbove() {
@@ -100,11 +100,11 @@ void GrownLayerBelow(unsigned char item) {
     constexpr unsigned kLayer = 0x37;
     if (Draw_PassFlags & 4) DrawLayer_Open(static_cast<int>(kLayer));
     if (Draw_PassFlags & 0x10) {
-        const unsigned long first = FrameNode(kLayer)[0];
+        const std::uint32_t first = FrameNode(kLayer)[0];
         if (first != 0) {
             if (draw_order::g_on) draw_order::TagList(first, FrameNode(kLayer)[1], draw_order::kFrameNode, kLayer, Draw_OtSlot);
             Gpu_LinkPrim(Gfx_OtPointers[Draw_OtSlot], first);
-            Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(FrameNode(kLayer)[1]));
+            Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(FrameNode(kLayer)[1]));
         }
     }
     for (; item < DrawTable_Count && (DrawTable[item] >> 24) == kLayer; ++item)
@@ -204,15 +204,15 @@ void Draw() {
     unsigned char* object = Sprite_Current;
     if (object[0] & 0x40) return;
     if (!(object[0x24] & 0x80) && object[0x48] == 1) {
-        const long depth = Get<long>(object, 0x60);
+        const std::int32_t depth = Get<std::int32_t>(object, 0x60);
         if (depth == 0) {
-            Put<long>(object, 0x40, 0);
-            Put<long>(object, 0x44, 0);
+            Put<std::int32_t>(object, 0x40, 0);
+            Put<std::int32_t>(object, 0x44, 0);
             return;
         }
-        const long scale = (0x4650000L / depth) & ~0xFFL;
-        Put<long>(object, 0x40, scale);
-        Put<long>(object, 0x44, scale);
+        const std::int32_t scale = (0x4650000L / depth) & ~0xFFL;
+        Put<std::int32_t>(object, 0x40, scale);
+        Put<std::int32_t>(object, 0x44, scale);
     }
     const short x = Get<short>(object, 0x2E), y = Get<short>(object, 0x30);
     const int draw = sprite_draw::g_draw_columns >= 0 ? sprite_draw::g_draw_columns : static_cast<int>(Widescreen_Fill());
@@ -236,15 +236,15 @@ void Draw() {
     Sprite_ClutWord(reinterpret_cast<unsigned short*>(prim + 0x1C));
     float scale_x = 1.0f, scale_y = 1.0f;
     if (object[0x48] != 0) {
-        scale_x = static_cast<float>(static_cast<double>(Get<long>(object, 0x40)) * (1.0 / 65536));
-        scale_y = static_cast<float>(static_cast<double>(Get<long>(object, 0x44)) * (1.0 / 65536));
+        scale_x = static_cast<float>(static_cast<double>(Get<std::int32_t>(object, 0x40)) * (1.0 / 65536));
+        scale_y = static_cast<float>(static_cast<double>(Get<std::int32_t>(object, 0x44)) * (1.0 / 65536));
     }
     const unsigned wide = object[0x28] != 0 ? 1u : 0u;
     const unsigned char* piece = frame + 1;
     for (unsigned i = 0; i < count; ++i, piece += kPartBytes) {
         const unsigned size = (piece[0] & 0xFu) * 2;
         const unsigned flags = ((((piece[0] & 0x80u) | (wide << 5)) << 2) | object[0x25]);
-        const unsigned long index = SpriteCell_Add(
+        const std::uint32_t index = SpriteCell_Add(
             static_cast<unsigned>(static_cast<signed char>(piece[1])),
             static_cast<unsigned>(static_cast<signed char>(piece[2])), flags, piece[3],
             static_cast<unsigned>(object[0x26]) + piece[4], SpriteCell_Sizes[size], SpriteCell_Sizes[size + 1]);
@@ -273,17 +273,17 @@ struct LiveState {
     unsigned char object[0x80];
     unsigned char prim[kPrimBytes];
     unsigned char* packet_next;
-    unsigned long count;
+    std::uint32_t count;
     unsigned char cells[256 * kCellBytes];
-    unsigned long slot_word, tail_word;
+    std::uint32_t slot_word, tail_word;
 };
 
 struct LivePlace {
     unsigned char* object;
     unsigned char* prim;
     unsigned char* cells;
-    unsigned long* slot;
-    unsigned long* tail;
+    std::uint32_t* slot;
+    std::uint32_t* tail;
 };
 
 void LiveCapture(LiveState& s, const LivePlace& at) {
@@ -317,8 +317,8 @@ void LiveDraw() {
     at.object = object;
     at.prim = Gfx_PacketNext;
     at.cells = SpriteCell_Table + SpriteCell_Count * kCellBytes;
-    at.slot = reinterpret_cast<unsigned long*>(&Gfx_OtPointers[object[0x29]]);
-    at.tail = *at.slot ? reinterpret_cast<unsigned long*>(*at.slot) : nullptr;
+    at.slot = reinterpret_cast<std::uint32_t*>(&Gfx_OtPointers[object[0x29]]);
+    at.tail = *at.slot ? reinterpret_cast<std::uint32_t*>(*at.slot) : nullptr;
     LiveCapture(input, at);
     sprite_draw::g_draw_clone();
     LiveCapture(theirs, at);
@@ -359,10 +359,10 @@ struct State {
     alignas(4) unsigned char object[0x80];
     alignas(4) unsigned char frame[kFrameBytes];
     unsigned char cells[kCellWindow];
-    unsigned long cell_count;
+    std::uint32_t cell_count;
     unsigned char* packet_next;
-    unsigned long* ot[8];
-    unsigned long tails[8];
+    std::uint32_t* ot[8];
+    std::uint32_t tails[8];
     unsigned char buffer_index;
     unsigned char* current;
     unsigned char window[kWindow];   // the pool, from packet_next as it was on the way in
@@ -441,7 +441,7 @@ extern "C" void __cdecl Sprite_DrawOverlays(void) {
 
 // original 0x593020: exchanges two overlay list entries. The caller pushes
 // whole registers with stale upper bytes; the original masks them, so do we.
-extern "C" void __cdecl Sprite_SwapOverlays(unsigned long a, unsigned long b) {
+extern "C" void __cdecl Sprite_SwapOverlays(std::uint32_t a, std::uint32_t b) {
     unsigned char* const first = Sprite_OverlayList[a & 0xFF];
     unsigned char* const second = Sprite_OverlayList[b & 0xFF];
     Sprite_OverlayList[b & 0xFF] = first;
@@ -453,7 +453,7 @@ namespace {
 // fuzz can stand recording functions in for them - for the original's copy
 // and for ours alike.
 using OpenFn = void (__cdecl*)(int);
-using AddRecordsFn = unsigned (__cdecl*)(unsigned long*);
+using AddRecordsFn = unsigned (__cdecl*)(std::uint32_t*);
 using DrawFn = void (__cdecl*)();
 }  // namespace
 namespace draw_pass { OpenFn g_open = DrawLayer_Open; }
@@ -490,12 +490,12 @@ extern "C" void __cdecl Sprite_DrawPass(void) {
     for (unsigned layer = 0; layer < 0x37; ++layer) {
         if (Draw_PassFlags & 4) draw_pass::g_open(static_cast<int>(layer));
         if (Draw_PassFlags & 0x10) {
-            const unsigned long first = FrameNode(layer)[0];
+            const std::uint32_t first = FrameNode(layer)[0];
             if (first != 0) {
                 if (draw_order::g_on)
                     draw_order::TagList(first, FrameNode(layer)[1], draw_order::kFrameNode, layer, Draw_OtSlot);
                 Gpu_LinkPrim(Gfx_OtPointers[Draw_OtSlot], first);
-                Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(FrameNode(layer)[1]));
+                Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(FrameNode(layer)[1]));
             }
         }
 
@@ -506,7 +506,7 @@ extern "C" void __cdecl Sprite_DrawPass(void) {
 
             bool table_first = sprite == count;
             if (!table_first) {
-                const unsigned long entry = DrawTable[item];
+                const std::uint32_t entry = DrawTable[item];
                 table_first = (entry >> 24) == layer && item < DrawTable_Count &&
                               static_cast<std::uint16_t>(entry >> 16) <= Key(Sprite_DrawList[sprite]);
             }
@@ -519,7 +519,7 @@ extern "C" void __cdecl Sprite_DrawPass(void) {
                         draw_order::TagOne(at(), draw_order::kTable, layer, Draw_OtSlot, DrawTable[item] >> 16,
                                            DrawTable[item] & 0xFFFu);
                     Gpu_LinkPrim(Gfx_OtPointers[Draw_OtSlot], at());
-                    Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(at()));
+                    Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(at()));
                     count = Sprite_DrawListCount;
                 }
                 ++item;
@@ -537,7 +537,7 @@ extern "C" void __cdecl Sprite_DrawPass(void) {
                     const unsigned char slot = Draw_OtSlot;
                     if (slot != 6 && (slot != 4 || first_key != key)) break;
                     Sprite_Current = object;
-                    unsigned long* const record = Sprite_DrawRecords + 3 * static_cast<int>(static_cast<signed char>(records));
+                    std::uint32_t* const record = Sprite_DrawRecords + 3 * static_cast<int>(static_cast<signed char>(records));
                     if (object[0x24] & 0x40) {
                         // DIV-0041 (2026-11-15): a model from the wide picture's band draws only
                         // with room to spare for the original's own (field_frame.h).
@@ -548,7 +548,7 @@ extern "C" void __cdecl Sprite_DrawPass(void) {
                         if (layering::g_mode == layering::kFloor && added != 0) layering::AfterModel(object, record, added);
                     } else {
                         record[0] = Low32(object);
-                        record[1] = static_cast<unsigned long>(Long(object, 0x60)) | 0x80000000u;
+                        record[1] = static_cast<std::uint32_t>(Long(object, 0x60)) | 0x80000000u;
                         ++records;
                     }
                     ++sprite;
@@ -564,7 +564,7 @@ extern "C" void __cdecl Sprite_DrawPass(void) {
                     const int lowest = k + 1;
                     unsigned char j = static_cast<unsigned char>(records - 1);
                     for (int jj = static_cast<signed char>(j); jj >= lowest; jj = static_cast<signed char>(--j)) {
-                        unsigned long* const here = Sprite_DrawRecords + 3 * jj;
+                        std::uint32_t* const here = Sprite_DrawRecords + 3 * jj;
                         if (static_cast<std::int16_t>(here[1]) > static_cast<std::int16_t>(here[-2]))
                             Sprite_DrawRecordSwap(here, here - 3);
                     }
@@ -573,7 +573,7 @@ extern "C" void __cdecl Sprite_DrawPass(void) {
             }
 
             if (n <= 0) continue;
-            unsigned long* record = Sprite_DrawRecords;
+            std::uint32_t* record = Sprite_DrawRecords;
             for (int left = n; left != 0; --left, record += 3) {
                 const unsigned char flags = Draw_PassFlags;
                 if (record[1] & 0x80000000u) {
@@ -590,12 +590,12 @@ extern "C" void __cdecl Sprite_DrawPass(void) {
                     }
                 } else if (flags & 8) {
                     unsigned char* const owner = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(record[2]));
-                    const unsigned long prim = record[0];
+                    const std::uint32_t prim = record[0];
                     if (draw_order::g_on)
                         draw_order::TagOne(prim, draw_order::kRecord, layer, owner[0x29], static_cast<unsigned>(record[2]), 0);
                     Sprite_Current = owner;
                     Gpu_LinkPrim(Gfx_OtPointers[owner[0x29]], prim);
-                    Gfx_OtPointers[Sprite_Current[0x29]] = reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(record[0]));
+                    Gfx_OtPointers[Sprite_Current[0x29]] = reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(record[0]));
                 }
             }
         }
@@ -629,8 +629,8 @@ extern "C" void __cdecl Sprite_DrawListSwap(unsigned i, unsigned j) {
 // b a dword at a time; then what was read goes to a. The game passes
 // neighbouring records, which do not overlap; for records that do, this order
 // is the result.
-extern "C" void __cdecl Sprite_DrawRecordSwap(unsigned long* a, unsigned long* b) {
-    const unsigned long b0 = b[0], b1 = b[1], b2 = b[2];
+extern "C" void __cdecl Sprite_DrawRecordSwap(std::uint32_t* a, std::uint32_t* b) {
+    const std::uint32_t b0 = b[0], b1 = b[1], b2 = b[2];
     b[0] = a[0];
     b[1] = a[1];
     b[2] = a[2];

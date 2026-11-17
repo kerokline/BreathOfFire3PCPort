@@ -40,7 +40,7 @@ struct Callees {
     // the placements
     void (__cdecl* reset)();                        // EventObj_Reset
     unsigned char (__cdecl* set_bank)(unsigned short);   // Sprite_SetAnimationBank
-    long (__cdecl* elevation)(long, long);          // AreaMap_Elevation
+    std::int32_t (__cdecl* elevation)(std::int32_t, std::int32_t);          // AreaMap_Elevation
     void (__cdecl* set_flags)(const unsigned char*);  // EventObj_SetFlags
     void (__cdecl* face)();                         // EventObj_Face (Capcom's)
     void (__cdecl* clear_record)(unsigned);         // PartyRecord_Clear

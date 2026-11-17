@@ -252,7 +252,7 @@ extern "C" void __cdecl Field_SetStatus80(void) { Field_StatusBits = static_cast
 // record's +8 (by Cond_ByteFA, signed), and if that declines, Area_StepHook.
 // Sprite_Current is put back after. The answer is the hook's al,
 // sign-extended, or Area_StepHook's.
-extern "C" int __cdecl Scenario_StepHook(long x, long z) {
+extern "C" int __cdecl Scenario_StepHook(std::int32_t x, std::int32_t z) {
     const ChapterHooks* const record = event_ops::g.chapter_hooks[Cond_ByteFA];
     unsigned char* const saved = Sprite_Current;
     int r = static_cast<signed char>(reinterpret_cast<Hook>(static_cast<std::uintptr_t>(record->step))(x, z));
@@ -263,7 +263,7 @@ extern "C" int __cdecl Scenario_StepHook(long x, long z) {
 
 // original 0x56D750: the same with the record's +0xC and Area_ArriveHook -
 // called when a walk lands (0x52E580's path; nothing in this file).
-extern "C" int __cdecl Scenario_ArriveHook(long x, long z) {
+extern "C" int __cdecl Scenario_ArriveHook(std::int32_t x, std::int32_t z) {
     const ChapterHooks* const record = event_ops::g.chapter_hooks[Cond_ByteFA];
     unsigned char* const saved = Sprite_Current;
     int r = static_cast<signed char>(reinterpret_cast<Hook>(static_cast<std::uintptr_t>(record->arrive))(x, z));
@@ -1279,7 +1279,7 @@ extern "C" unsigned char __cdecl Field_TriggerCounterF0(unsigned char* object, u
     return 0;
 }
 
-extern "C" int __cdecl Area_StepHook(long x, long z) {
+extern "C" int __cdecl Area_StepHook(std::int32_t x, std::int32_t z) {
     if (event_ops::g.return_gate(x, z)) return 1;
     if (g_mountain_passes) MountainPasses_StepArm(Game_AreaNumber, Whole(static_cast<std::uint32_t>(x)), Whole(static_cast<std::uint32_t>(z)));
     static const unsigned short kAreas[kStepCases] = {
@@ -1300,7 +1300,7 @@ extern "C" int __cdecl Area_StepHook(long x, long z) {
 // cell at z 0x10.8 or more while story flag 0x77 is set: the flag cleared,
 // the return point's counter byte 0, Field_ChangeArea to the return point
 // 0x904148 with 4.
-extern "C" unsigned char __cdecl Area_ReturnGate(long x, long z) {
+extern "C" unsigned char __cdecl Area_ReturnGate(std::int32_t x, std::int32_t z) {
     if (Game_AreaNumber == 0xBB) return 0;
     if (Field_InputFlags != 0x40) return 0;
     if (Cond_ByteFD != 1) return 0;
@@ -1317,7 +1317,7 @@ extern "C" unsigned char __cdecl Area_ReturnGate(long x, long z) {
 
 // original 0x56E4E0: the area's arrive hook - the handler of 8 areas, its al
 // sign-extended; 0 for any other area.
-extern "C" int __cdecl Area_ArriveHook(long x, long z) {
+extern "C" int __cdecl Area_ArriveHook(std::int32_t x, std::int32_t z) {
     static const unsigned short kAreas[kArriveCases] = {0x28, 0x30, 0x6F, 0x94, 0xA7, 0xA9, 0xAB, 0xAD};
     const unsigned short area = Game_AreaNumber;
     for (unsigned c = 0; c < kArriveCases; ++c)

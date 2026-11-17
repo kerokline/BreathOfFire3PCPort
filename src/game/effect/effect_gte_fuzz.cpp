@@ -73,21 +73,21 @@ template <typename... T> U PickOf(T... v) {
 
 U FxRotMatrix(const U* a, U) { return Key(::Gte_RotMatrix(P<const short>(a[0]), P<short>(a[1]))); }
 U FxApplyMatrix(const U* a, U answer) {
-    ::Gte_ApplyMatrix(P<const short>(a[0]), P<const short>(a[1]), P<long>(a[2]));
+    ::Gte_ApplyMatrix(P<const short>(a[0]), P<const short>(a[1]), P<std::int32_t>(a[2]));
     return answer;
 }
 U FxSetRotMatrix(const U* a, U answer) {
-    ::Gte_SetRotMatrix(P<const unsigned long>(a[0]));
+    ::Gte_SetRotMatrix(P<const std::uint32_t>(a[0]));
     return answer;
 }
 // Capcom's 0x5A8E00 leaves eax the translation's z, its last load; the callers'
 // own eax at their ret is that (0x494060), so the stand-in answers it.
 U FxSetTransMatrix(const U* a, U) {
-    ::Gte_SetTransMatrix(P<const unsigned long>(a[0]));
+    ::Gte_SetTransMatrix(P<const std::uint32_t>(a[0]));
     return P<const U>(a[0])[7];
 }
 U FxRotTransPers(const U* a, U) {
-    return static_cast<U>(::Gte_RotTransPers(P<const short>(a[0]), P<unsigned long>(a[1]), P<long>(a[2])));
+    return static_cast<U>(::Gte_RotTransPers(P<const short>(a[0]), P<std::uint32_t>(a[1]), P<std::int32_t>(a[2])));
 }
 // Capcom's 0x5A9110 leaves eax its argument (0x494110 answers it).
 U FxStoreDepthF(const U* a, U) {
@@ -95,7 +95,7 @@ U FxStoreDepthF(const U* a, U) {
     return a[0];
 }
 U FxRotTrans(const U* a, U answer) {
-    ::Gte_RotTrans(P<const short>(a[0]), P<long>(a[1]));
+    ::Gte_RotTrans(P<const short>(a[0]), P<std::int32_t>(a[1]));
     return answer;
 }
 
@@ -199,7 +199,7 @@ void Gte() {
 void SteerDepth(const unsigned char* point) {
     short v[4];
     CameraVectorOf(point, v);
-    long turned[3];
+    std::int32_t turned[3];
     ::Gte_ApplyMatrix(reinterpret_cast<const short*>(Gte_Matrix), v, turned);
     if (sh::Half()) {
         const U want = PickOf(1, 0xFFFFFFFFu, 2, 0xFFFFFFFEu, 7, 1000, 0xFFFFFC18u, 0x3E8u * 0x40u, 0x7FFF, 0x10000,

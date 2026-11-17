@@ -30,7 +30,7 @@ struct CalleesTitleStates {
     void (__cdecl* music_fade_stop)(int);
     void (__cdecl* badge)();
     void (__cdecl* task_exit)();
-    void (__cdecl* draw_mode)(unsigned char*, int, int, unsigned, unsigned long);
+    void (__cdecl* draw_mode)(unsigned char*, int, int, unsigned, std::uint32_t);
     void (__cdecl* commit)(unsigned, unsigned);
     unsigned char* (__cdecl* sprite)(int, int, unsigned, unsigned, unsigned);
     void (__cdecl* shade)(unsigned char*, unsigned char);

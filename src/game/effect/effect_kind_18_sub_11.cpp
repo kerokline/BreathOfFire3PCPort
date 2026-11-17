@@ -70,7 +70,7 @@ void SetCell(U offset, unsigned char v) { const_cast<unsigned char*>(AreaMap_Byt
 // The four vertices in Prim_VertexScratch projected into a quad's four screen
 // points at the given offsets (the depth out a local nothing reads).
 void Project4Effect5c(unsigned char* prim, unsigned o0, unsigned o1, unsigned o2, unsigned o3) {
-    long depth = 0;
+    std::int32_t depth = 0;
     SH_CALL(Gte_RotTransPers4)(VX(0), VX(8), VX(0x10), VX(0x18), F(prim + o0), F(prim + o1), F(prim + o2), F(prim + o3),
                                &depth);
 }

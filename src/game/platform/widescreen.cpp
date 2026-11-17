@@ -431,7 +431,7 @@ void Widescreen_Inject() {
         const std::uint32_t n = bof3::os::GetEnv("BOF3X_WIDE_TERRAIN", text, sizeof text);
         if (n != 0) {
             char* end = nullptr;
-            const long v = n < sizeof text ? std::strtol(text, &end, 10) : -1;
+            const std::int32_t v = n < sizeof text ? std::strtol(text, &end, 10) : -1;
             if (end == nullptr || end == text || *end != 0 || v < 0 || v > 400)
                 bof3::Fatal("BOF3X_WIDE_TERRAIN=%s: 0..400", n < sizeof text ? text : "...");
             terrain_margin = static_cast<U>(v);
@@ -446,7 +446,7 @@ void Widescreen_Inject() {
         const std::uint32_t n = bof3::os::GetEnv("BOF3X_WIDE_INSET", text, sizeof text);
         if (n != 0) {
             char* end = nullptr;
-            const long v = n < sizeof text ? std::strtol(text, &end, 10) : -1;
+            const std::int32_t v = n < sizeof text ? std::strtol(text, &end, 10) : -1;
             if (end == nullptr || end == text || *end != 0 || v < 0 || v > 14)
                 bof3::Fatal("BOF3X_WIDE_INSET=%s: 0..14", n < sizeof text ? text : "...");
             g_inset_columns = static_cast<U>(v);

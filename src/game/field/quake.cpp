@@ -92,10 +92,10 @@ std::int16_t Field10(U v) {
     return static_cast<std::int16_t>(v);
 }
 
-using Pers4 = long (__cdecl*)(const SVec*, const SVec*, const SVec*, const SVec*, unsigned char*, unsigned char*, unsigned char*,
-                              unsigned char*, long*, long*);
+using Pers4 = std::int32_t (__cdecl*)(const SVec*, const SVec*, const SVec*, const SVec*, unsigned char*, unsigned char*, unsigned char*,
+                              unsigned char*, std::int32_t*, std::int32_t*);
 
-using Pers = long (__cdecl*)(const void*, void*, long*);
+using Pers = std::int32_t (__cdecl*)(const void*, void*, std::int32_t*);
 
 // The loop over a record's entries ends when the counter meets byte +2; one
 // that never can runs past the record in the original (reading on until it
@@ -199,7 +199,7 @@ void Opaque(unsigned char* e) {
     Recode(e, 0x2B000000u, 0x27000000u, true);
 }
 
-long Ground(const unsigned char* at_position) {
+std::int32_t Ground(const unsigned char* at_position) {
     return MH_CALL(AreaMap_Elevation)(rv::As<records::SpriteHead>(at_position)->x, rv::As<records::SpriteHead>(at_position)->z);
 }
 
@@ -258,7 +258,7 @@ S23_EXPORT void __cdecl Quake_Start(void) {
     Sc()[9] = 0;
     for (unsigned i = 0; i < 3; ++i) {
         if (PartyOf(static_cast<unsigned char>(i))[0] == 0) continue;
-        const long ground = Ground(Slot(i));
+        const std::int32_t ground = Ground(Slot(i));
         Put(::bof3::Img(at::kQuakePartyZ) + 2 * i, rv::As<records::PartyMember>(PartyOf(static_cast<unsigned char>(i)))->height_whole - static_cast<short>(ground));
     }
     for (unsigned i = 0; i < 8; ++i) {
@@ -267,26 +267,26 @@ S23_EXPORT void __cdecl Quake_Start(void) {
         const records::BattleTask* const tslot = rv::AsConst<records::BattleTask>(slot);
         const std::int32_t x = tslot->x, z = tslot->z;
         const std::uint16_t height = rv::As<records::BattleEnemy>(EnemyOf(static_cast<unsigned char>(i + 3)))->height_whole;
-        const long ground = MH_CALL(AreaMap_Elevation)(x, z);
+        const std::int32_t ground = MH_CALL(AreaMap_Elevation)(x, z);
         Put(::bof3::Img(at::kQuakeEnemyZ) + 2 * i, height);
         Put(::bof3::Img(at::kQuakeEnemyUp) + 2 * i, height - static_cast<short>(ground));
     }
     for (unsigned i = 0; i < 30; ++i) {
         const unsigned char* const o = Mem(::bof3::Img(Sprite_Objects_addr) + 0xA4 * i);
         if (o[0] == 0) continue;
-        const long ground = Ground(o);
+        const std::int32_t ground = Ground(o);
         Put(::bof3::Img(at::kQuakeSpriteZ) + 2 * i, rv::As<records::SpriteObject>(o)->height_whole - static_cast<short>(ground));
     }
     for (unsigned i = 0; i < 4; ++i) {
         const unsigned char* const o = Mem(::bof3::Img(Sprite_ObjectsExtra_addr) + 0xA4 * i);
         if (o[0] == 0) continue;
-        const long ground = Ground(o);
+        const std::int32_t ground = Ground(o);
         Put(::bof3::Img(at::kQuakeExtraZ) + 2 * i, rv::As<records::SpriteObject>(o)->height_whole - static_cast<short>(ground));
     }
     for (unsigned i = 0; i < 20; ++i) {
         const unsigned char* const o = Mem(::bof3::Img(Effect_Objects_addr) + 0x80 * i);
         if (o[0] == 0 || o[5] != 0x17) continue;
-        const long ground = Ground(o);
+        const std::int32_t ground = Ground(o);
         Put(::bof3::Img(at::kQuakeEffectZ) + 2 * i, rv::As<records::EffectObject>(o)->height_whole - static_cast<short>(ground));
     }
     Walk(&Semi);
@@ -364,7 +364,7 @@ S23_EXPORT void __cdecl Quake_Heave(void) {
     if (Mem(::bof3::Img(hat::kTarget))[0] & 0x80) {
         for (unsigned i = 0; i < 3; ++i) {
             if (PartyOf(static_cast<unsigned char>(i))[0] == 0) continue;
-            const long ground = Ground(Slot(i));
+            const std::int32_t ground = Ground(Slot(i));
             rv::Store<unsigned>(rv::As<records::PartyMember>(PartyOf(static_cast<unsigned char>(i)))->height_whole,
                                 static_cast<unsigned>(static_cast<short>(ground) + Get(::bof3::Img(at::kQuakePartyZ) + 2 * i)));
         }
@@ -380,7 +380,7 @@ S23_EXPORT void __cdecl Quake_Heave(void) {
                     continue;
                 }
             }
-            const long ground = Ground(slot);
+            const std::int32_t ground = Ground(slot);
             rv::Store<unsigned>(rv::As<records::BattleEnemy>(EnemyOf(static_cast<unsigned char>(i + 3)))->height_whole,
                                 static_cast<unsigned>(static_cast<short>(ground) + Get(::bof3::Img(at::kQuakeEnemyUp) + 2 * i)));
         }
@@ -388,19 +388,19 @@ S23_EXPORT void __cdecl Quake_Heave(void) {
     for (unsigned i = 0; i < 30; ++i) {
         unsigned char* const o = Mem(::bof3::Img(Sprite_Objects_addr) + 0xA4 * i);
         if (o[0] == 0) continue;
-        const long ground = Ground(o);
+        const std::int32_t ground = Ground(o);
         rv::Store<unsigned>(rv::As<records::SpriteObject>(o)->height_whole, static_cast<unsigned>(static_cast<short>(ground) + Get(::bof3::Img(at::kQuakeSpriteZ) + 2 * i)));
     }
     for (unsigned i = 0; i < 4; ++i) {
         unsigned char* const o = Mem(::bof3::Img(Sprite_ObjectsExtra_addr) + 0xA4 * i);
         if (o[0] == 0) continue;
-        const long ground = Ground(o);
+        const std::int32_t ground = Ground(o);
         rv::Store<unsigned>(rv::As<records::SpriteObject>(o)->height_whole, static_cast<unsigned>(static_cast<short>(ground) + Get(::bof3::Img(at::kQuakeExtraZ) + 2 * i)));
     }
     for (unsigned i = 0; i < 20; ++i) {
         unsigned char* const o = Mem(::bof3::Img(Effect_Objects_addr) + 0x80 * i);
         if (o[0] == 0 || o[5] != 0x17) continue;
-        const long ground = Ground(o);
+        const std::int32_t ground = Ground(o);
         rv::Store<unsigned>(rv::As<records::EffectObject>(o)->height_whole, static_cast<unsigned>(static_cast<short>(ground) + Get(::bof3::Img(at::kQuakeEffectZ) + 2 * i)));
     }
     const int odd = static_cast<int>(Frame_Counter & 1);
@@ -444,10 +444,10 @@ extern "C" void __cdecl MapCell_DrawTexQuads(const unsigned char* record, unsign
     const unsigned char* p = record + 0x14;
     for (U counter = 1; counter != record[2]; counter += 5, p += 0x14) {
         const SVec first = CellVertex(x0, z0, p - 0x10);
-        BH_CALL(Gte_LoadVertex)(reinterpret_cast<const unsigned long*>(&first));
+        BH_CALL(Gte_LoadVertex)(reinterpret_cast<const std::uint32_t*>(&first));
         BH_CALL(Gte_Rtps)();
         unsigned char* const prim = Gfx_PacketNext;
-        BH_CALL(Gte_StoreScreenXY)(reinterpret_cast<unsigned long*>(prim + 8));
+        BH_CALL(Gte_StoreScreenXY)(reinterpret_cast<std::uint32_t*>(prim + 8));
         // DIV-0041 (UC2): the x bounds moved out by the columns; .rdata's
         // floats stay Capcom's (their code reads them too).
         const float fill = static_cast<float>(Widescreen_Fill());
@@ -459,7 +459,7 @@ extern "C" void __cdecl MapCell_DrawTexQuads(const unsigned char* record, unsign
         BH_CALL(Gpu_SetShadeTex)(prim, 0);
         SVec v[3];
         for (unsigned k = 0; k < 3; ++k) v[k] = CellVertex(x0, z0, p - 0xC + 4 * k);
-        BH_CALL(Gte_LoadVertices3)(reinterpret_cast<const unsigned long*>(v));
+        BH_CALL(Gte_LoadVertices3)(reinterpret_cast<const std::uint32_t*>(v));
         BH_CALL(Prim_SetTexture)(LBattleE6(p), prim, 1);
         BH_CALL(Gte_Rtpt)();
         const U texture = LBattleE6(p);
@@ -467,8 +467,8 @@ extern "C" void __cdecl MapCell_DrawTexQuads(const unsigned char* record, unsign
         if (texture & 0x4000) slot = texture & 0x40000000 ? 7 : 4;
         else slot = texture & 0x40000000 ? 6 : Draw_OtSlot;
         BH_CALL(Gfx_CommitPrim)(slot, 0x48);
-        BH_CALL(Gte_StoreScreenXY3)(reinterpret_cast<unsigned long*>(prim + 0x18), reinterpret_cast<unsigned long*>(prim + 0x28),
-                                    reinterpret_cast<unsigned long*>(prim + 0x38));
+        BH_CALL(Gte_StoreScreenXY3)(reinterpret_cast<std::uint32_t*>(prim + 0x18), reinterpret_cast<std::uint32_t*>(prim + 0x28),
+                                    reinterpret_cast<std::uint32_t*>(prim + 0x38));
         BH_CALL(Gte_PrimDepths4_10)(prim);
     }
 }
@@ -495,7 +495,7 @@ extern "C" void __cdecl MapCell_DrawShadedQuads(const unsigned char* record, uns
             SVec v[4];
             for (unsigned k = 0; k < 4; ++k) v[k] = CellVertex(x0, z0, vertex + 4 * k);
             vertex += 0x10;
-            long depth = 0, flag = 0;
+            std::int32_t depth = 0, flag = 0;
             BH_AT(Pers4, bof3::addr::Gte_RotTransPers4)(&v[1], &v[2], &v[3], &v[0], prim + 0x18, prim + 0x28, prim + 0x38, prim + 8,
                                                         &depth, &flag);
             BH_CALL(Gte_StoreDepthF4)(reinterpret_cast<float*>(prim + 0x20), reinterpret_cast<float*>(prim + 0x30),
@@ -544,11 +544,11 @@ extern "C" void __cdecl MapCell_DrawSpinQuads(const unsigned char* record, unsig
                                         static_cast<std::int16_t>((spin[1] + ((e >> 10) & 0x3FF) * 4) & 0xFFF),
                                         static_cast<std::int16_t>((spin[2] + (e & 0x3FF) * 4) & 0xFFF), 0};
         Matrix m{};
-        BH_CALL(Gte_RotTrans)(&centre.x, reinterpret_cast<long*>(m.t));
+        BH_CALL(Gte_RotTrans)(&centre.x, reinterpret_cast<std::int32_t*>(m.t));
         BH_CALL(Gte_RotMatrix)(angles, m.m);
         BH_CALL(Gte_MulMatrix0)(reinterpret_cast<const short*>(At(::bof3::Img(Camera_Matrix_addr))), m.m, m.m);
-        BH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&m));
-        BH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&m));
+        BH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
+        BH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
         unsigned char* const prim = Gfx_PacketNext;
         BH_CALL(Gpu_SetPolyFT4)(prim);
         BH_CALL(Gpu_SetShadeTex)(prim, 0);
@@ -560,7 +560,7 @@ extern "C" void __cdecl MapCell_DrawSpinQuads(const unsigned char* record, unsig
             q[k].z = Field10(v & 0x3FF);
             q[k].pad = 0;
         }
-        long depth = 0, flag = 0;
+        std::int32_t depth = 0, flag = 0;
         BH_AT(Pers4, bof3::addr::Gte_RotTransPers4)(&q[1], &q[2], &q[3], &q[0], prim + 0x18, prim + 0x28, prim + 0x38, prim + 8,
                                                     &depth, &flag);
         BH_CALL(Gte_StoreDepthF4)(reinterpret_cast<float*>(prim + 0x20), reinterpret_cast<float*>(prim + 0x30),
@@ -587,12 +587,12 @@ extern "C" void __cdecl MapCell_DrawGroundSprite(const unsigned char* record, un
     unsigned char* const point = At(::bof3::Img(Prim_VertexScratch_addr));
     SetWord(point, (static_cast<U>(S8(static_cast<unsigned char>(LBattleE6(record + 4) >> 24))) + ((b1 - 0x80) << 6)) << 1);
     SetWord(point + 2, (static_cast<U>(S8(static_cast<unsigned char>(LBattleE6(record + 4) >> 16))) + ((b0 - 0x80) << 6)) << 1);
-    const long height = BH_CALL(AreaMap_Elevation)(static_cast<long>(static_cast<U>(S16BattleE6(Word(point)) + 0x4000) << 9),
-                                                   static_cast<long>(static_cast<U>(S16BattleE6(Word(point + 2)) + 0x4000) << 9));
+    const std::int32_t height = BH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(static_cast<U>(S16BattleE6(Word(point)) + 0x4000) << 9),
+                                                   static_cast<std::int32_t>(static_cast<U>(S16BattleE6(Word(point + 2)) + 0x4000) << 9));
     SetWord(point + 4, static_cast<U>(-(S16BattleE6(static_cast<U>(height)) / 2)));
-    long p = 0;
+    std::int32_t p = 0;
     unsigned char* const screen = At(::bof3::Img(MapView_ScreenXY_addr));
-    const long z = BH_AT(Pers, bof3::addr::Gte_RotTransPers)(point, screen, &p);
+    const std::int32_t z = BH_AT(Pers, bof3::addr::Gte_RotTransPers)(point, screen, &p);
     const float fill = static_cast<float>(Widescreen_Fill());   // DIV-0041 (UC2): x out by the columns
     if (!(F(screen) >= F(At(at::kSpriteXLo)) - fill)) return;
     if (F(screen) > F(At(at::kSpriteXHi)) + fill) return;
@@ -638,7 +638,7 @@ extern "C" void __cdecl MapCell_DrawGroundSprite(const unsigned char* record, un
 // (index i = (a >> 1) * 15 + (b >> 1)): both even -(s8 [i+1] + s8 [i+0xF]) << 3;
 // b odd a even -(s8 [i+0x10] + s8 [i+1]) << 3; b even a odd -(s8 [i+0x10] + s8
 // [i+0xF]) << 3; both odd -s8 [i+0x10] << 4.
-extern "C" unsigned __cdecl Quake_VertexLift(long x, long z) {
+extern "C" unsigned __cdecl Quake_VertexLift(std::int32_t x, std::int32_t z) {
     const U fx = SarRest3g(static_cast<U>(x) + 0x4000u, 6) - (static_cast<std::uint32_t>(MagicS23_QuakeX) << 1);
     const U fz = SarRest3g(static_cast<U>(z) + 0x4000u, 6) - (static_cast<std::uint32_t>(MagicS23_QuakeY) << 1);
     U a, b;   // eax and esi

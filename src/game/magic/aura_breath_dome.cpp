@@ -100,8 +100,8 @@ void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
 
 // Gte_RotTransPers4 with the depth and flag pointers the original passes (ours
 // reads the first).
-using Rtp4Fn = long (__cdecl*)(const short*, const short*, const short*, const short*, unsigned char*, unsigned char*,
-                               unsigned char*, unsigned char*, long*, long*);
+using Rtp4Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, const short*, unsigned char*, unsigned char*,
+                               unsigned char*, unsigned char*, std::int32_t*, std::int32_t*);
 
 #define S36_AS(type, name) ::magic_harness::Call(reinterpret_cast<type>(reinterpret_cast<void*>(&::name)))
 
@@ -301,7 +301,7 @@ S36_EXPORT void __cdecl AuraBreathDome_Draw(void) {
             const int px = Add(static_cast<int>(static_cast<std::uint32_t>(corner_x) << 9), ts->x);
             const int pz = Add(static_cast<int>(static_cast<std::uint32_t>(static_cast<short>(zv)) << 9), ts->z);
             MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0xB5, 0);
-            MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(px), static_cast<unsigned long>(pz), 1, 0xC);
+            MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(px), static_cast<std::uint32_t>(pz), 1, 0xC);
             unsigned char* const p = Gfx_PacketNext;
             MH_CALL(Gpu_SetPolyFT4)(p);
             MH_CALL(Gpu_SetSemiTrans)(p, 1);
@@ -319,7 +319,7 @@ S36_EXPORT void __cdecl AuraBreathDome_Draw(void) {
             p[0x44] = static_cast<unsigned char>(u + 0x3F);
             p[0x45] = bottom;
             {
-                long depth, flag;
+                std::int32_t depth, flag;
                 S36_AS(Rtp4Fn, Gte_RotTransPers4)(VP(0), VP(8), VP(0x10), VP(0x18), p + 8, p + 0x18, p + 0x28, p + 0x38,
                                                  &depth, &flag);
             }
@@ -327,7 +327,7 @@ S36_EXPORT void __cdecl AuraBreathDome_Draw(void) {
             p[4] = SB(8);
             p[5] = SB(0xA);
             p[6] = SB(0xC);
-            MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(px), static_cast<unsigned long>(pz), 1, 0x48);
+            MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(px), static_cast<std::uint32_t>(pz), 1, 0x48);
             ++j;
         } while (j < 0x21);
     }

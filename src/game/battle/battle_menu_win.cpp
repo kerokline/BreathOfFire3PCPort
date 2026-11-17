@@ -1182,7 +1182,7 @@ extern "C" void __cdecl Fmv_Play(const char* filename, void* hwnd_, int fullscre
 // (Pause) in place of the MCI strings; the video's end is the loop's own,
 // so MM_MCINOTIFY never arrives (the case is kept, harmless); WM_PAINT
 // draws the current frame again, which MCI's window did for itself.
-extern "C" long __stdcall Fmv_WndProc(void* hwnd_, unsigned msg, unsigned wparam, long lparam) {
+extern "C" std::int32_t __stdcall Fmv_WndProc(void* hwnd_, unsigned msg, unsigned wparam, std::int32_t lparam) {
     HWND hwnd = static_cast<HWND>(hwnd_);
     switch (msg) {
     case WM_KEYDOWN:
@@ -1211,12 +1211,12 @@ extern "C" long __stdcall Fmv_WndProc(void* hwnd_, unsigned msg, unsigned wparam
             EndPaint(hwnd, &ps);
             return 0;
         }
-        return static_cast<long>(DefWindowProcA(hwnd, msg, wparam, static_cast<LPARAM>(lparam)));
+        return static_cast<std::int32_t>(DefWindowProcA(hwnd, msg, wparam, static_cast<LPARAM>(lparam)));
     case MM_MCINOTIFY:
         if (wparam == MCI_NOTIFY_SUCCESSFUL) Fmv_Playing = 0;
         return 0;
     default:
-        return static_cast<long>(DefWindowProcA(hwnd, msg, wparam, static_cast<LPARAM>(lparam)));
+        return static_cast<std::int32_t>(DefWindowProcA(hwnd, msg, wparam, static_cast<LPARAM>(lparam)));
     }
 }
 

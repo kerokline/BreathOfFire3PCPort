@@ -627,7 +627,7 @@ extern "C" void __cdecl Scena00_Run5(void) {
             e[5] = 0x1E;
             rv::As<records::EffectObject>(e)->x = static_cast<uint32_t>(member0->x);
             rv::As<records::EffectObject>(e)->z = static_cast<uint32_t>(member0->z);
-            const long y = SH_CALL(AreaMap_Elevation)(static_cast<long>(static_cast<uint32_t>(rv::As<records::EffectObject>(e)->x)), static_cast<long>(static_cast<uint32_t>(rv::As<records::EffectObject>(e)->z)));
+            const std::int32_t y = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(static_cast<uint32_t>(rv::As<records::EffectObject>(e)->x)), static_cast<std::int32_t>(static_cast<uint32_t>(rv::As<records::EffectObject>(e)->z)));
             rv::As<records::EffectObject>(e)->height = static_cast<uint32_t>(static_cast<int32_t>(static_cast<short>(y))) << 16;
             e[0x29] = 0;
         }
@@ -1161,7 +1161,7 @@ extern "C" void __cdecl Scena00_ObjectHook(unsigned char* object) {
 // Cond_ByteFD 0, cell 0x14, not flag 7: script flag 0x40, run 6 step 0, al 1.
 // Else al 0. Game_AreaNumber is read again after the flag test, as the
 // original reads it.
-extern "C" unsigned char __cdecl Scena00_StepHook(long x, long z) {
+extern "C" unsigned char __cdecl Scena00_StepHook(std::int32_t x, std::int32_t z) {
     (void)z;
     const auto cell = static_cast<short>(static_cast<std::uint32_t>(x) >> 16);
     if (Game_AreaNumber == 2) {
@@ -1184,7 +1184,7 @@ extern "C" unsigned char __cdecl Scena00_StepHook(long x, long z) {
 // original 0x539AC0: a chapter hook that declines - `xor al, al`. Thirteen
 // .data references (chapter records and hook tables) and Area_StepHook's case
 // for area 0xAE.
-extern "C" unsigned char __cdecl Scenario_NoHook(long, long) { return 0; }
+extern "C" unsigned char __cdecl Scenario_NoHook(std::int32_t, std::int32_t) { return 0; }
 
 void Scena00_Inject() {
     BOF3_INJECT(Scena00_Frame);

@@ -148,16 +148,16 @@ void Disturb(U salt) {
 }
 
 void __cdecl StubPrimColor(unsigned r, unsigned gg, unsigned b, unsigned code, unsigned mode,
-                           unsigned long* diffuse, unsigned long* specular) {
+                           std::uint32_t* diffuse, std::uint32_t* specular) {
     Record(1, r, gg, b, code, mode, diffuse != nullptr, specular != nullptr);
     Disturb(1);
     *diffuse = Mix(2);
     if (specular) *specular = Mix(3);
 }
-long __cdecl StubBind(unsigned tpage, unsigned clut) {
+std::int32_t __cdecl StubBind(unsigned tpage, unsigned clut) {
     Record(2, tpage, clut);
     Disturb(4);
-    return static_cast<long>(Mix(5));
+    return static_cast<std::int32_t>(Mix(5));
 }
 void __cdecl StubRet(unsigned a) {
     Record(3, a);
@@ -190,7 +190,7 @@ int __cdecl StubFind(int page, int clut, int mode) {
     }
     return slot;
 }
-unsigned long __cdecl StubBuild(int page, int clut, int mode) {
+std::uint32_t __cdecl StubBuild(int page, int clut, int mode) {
     Record(8, static_cast<U>(page), static_cast<U>(clut), static_cast<U>(mode));
     return Mix(13);
 }
@@ -266,11 +266,11 @@ template <typename Fn> Fn Clone(const char* name, U original, U size, const bof3
     return reinterpret_cast<Fn>(code);
 }
 
-using ColorFn = void(__cdecl*)(unsigned, unsigned, unsigned, unsigned, unsigned, unsigned long*, unsigned long*);
+using ColorFn = void(__cdecl*)(unsigned, unsigned, unsigned, unsigned, unsigned, std::uint32_t*, std::uint32_t*);
 using BlendFn = void(__cdecl*)(unsigned, unsigned);
 using ShadeFn = void(__cdecl*)(unsigned);
-using BindFn = long(__cdecl*)(unsigned, unsigned);
-using DrawFn = long(__cdecl*)(const unsigned char*);
+using BindFn = std::int32_t(__cdecl*)(unsigned, unsigned);
+using DrawFn = std::int32_t(__cdecl*)(const unsigned char*);
 using CellFn = int(__cdecl*)(unsigned, unsigned, unsigned, unsigned);
 
 // The handlers: every E8 of each body, from the disassembly (docs/d3d-draw.md
@@ -420,7 +420,7 @@ void RandomCellCache() {
 d3d_fuzz::Log g_theirs, g_ours;
 
 // Compares one pass's results. Returns false and fills `why`.
-bool Same(long ret_ours, long ret_theirs, char* why) {
+bool Same(std::int32_t ret_ours, std::int32_t ret_theirs, char* why) {
     if (!d3d_fuzz::SameLog(g_ours, g_theirs, why)) return false;
     if (ret_ours != ret_theirs) {
         std::strcpy(why, "the return value");
@@ -455,7 +455,7 @@ unsigned FuzzHandler(const Handler& h, DrawFn theirs, unsigned rounds) {
         g_theirs.Clear();
         d3d_fuzz::g_log = &g_theirs;
         SetControlWord(cw);
-        const long ret_theirs = theirs(prim);
+        const std::int32_t ret_theirs = theirs(prim);
         SetControlWord(saved_cw);
         Capture(g_theirs_state);
         std::memcpy(prim_theirs, prim, sizeof prim);
@@ -465,7 +465,7 @@ unsigned FuzzHandler(const Handler& h, DrawFn theirs, unsigned rounds) {
         g_ours.Clear();
         d3d_fuzz::g_log = &g_ours;
         SetControlWord(cw);
-        const long ret_ours = h.ours(prim);
+        const std::int32_t ret_ours = h.ours(prim);
         SetControlWord(saved_cw);
         d3d_fuzz::g_log = nullptr;
         g_prim = nullptr;
@@ -506,7 +506,7 @@ unsigned FuzzColour(ColorFn theirs, unsigned rounds) {
         const U mode = ModeArg();
         const U shape = Next() % 4;   // 0 null specular, 1 aliased, else two
         const U fill_d = Next(), fill_s = Next();
-        unsigned long td = fill_d, ts = fill_s, od = fill_d, os = fill_s;
+        std::uint32_t td = fill_d, ts = fill_s, od = fill_d, os = fill_s;
         theirs(red, green, blue, code, mode, &td, shape == 0 ? nullptr : shape == 1 ? &td : &ts);
         D3d_PrimColor(red, green, blue, code, mode, &od, shape == 0 ? nullptr : shape == 1 ? &od : &os);
         if (td != od || ts != os) {
@@ -581,13 +581,13 @@ unsigned FuzzBind(BindFn theirs, unsigned rounds, BindCover& cover) {
 
         g_theirs.Clear();
         d3d_fuzz::g_log = &g_theirs;
-        const long ret_theirs = theirs(tpage, clut);
+        const std::int32_t ret_theirs = theirs(tpage, clut);
         Capture(g_theirs_state);
 
         Restore(g_start);
         g_ours.Clear();
         d3d_fuzz::g_log = &g_ours;
-        const long ret_ours = D3d_BindTexture(tpage, clut);
+        const std::int32_t ret_ours = D3d_BindTexture(tpage, clut);
         d3d_fuzz::g_log = nullptr;
 
         if (g_theirs.n > 1 && g_theirs.calls[2].what == 8) ++cover.built;

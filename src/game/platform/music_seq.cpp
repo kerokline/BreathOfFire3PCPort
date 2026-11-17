@@ -345,7 +345,7 @@ bool FastForward(std::uint32_t frames) {
     return g_s.synth->FastForward(frames);
 }
 
-long Level(float volume) {
+std::int32_t Level(float volume) {
     int v;
     if (!(volume >= 1.0f)) v = 1;  // NaN too: the original's _ftol gives 0 for it, which libsnd makes 1
     else if (volume >= 127.0f) v = 127;
@@ -441,7 +441,7 @@ void Arm() {
                                                                                                       : 0;
     char root[bof3::os::kMaxPath];
     const std::uint32_t n = bof3::os::GetEnv("BOF3X_CACHE", root, sizeof root);
-    if (n >= sizeof root) bof3::Fatal("DIV-0087: BOF3X_CACHE is %lu characters", static_cast<unsigned long>(n));
+    if (n >= sizeof root) bof3::Fatal("DIV-0087: BOF3X_CACHE is %u characters", static_cast<std::uint32_t>(n));
     if (n == 0) {
         bof3::Log("DIV-0087    no cache (BOF3X_CACHE unset): every track plays its MP3");
         return;
@@ -616,7 +616,7 @@ const std::vector<std::uint8_t>* g_handles[4];
 std::vector<std::string>* g_names;   // every path file_open was asked for
 int g_decoders_opened;
 std::vector<std::uint8_t>* g_capture; // what Music_CreateBuffer's stand-in decoded
-std::vector<long>* g_levels;          // what SetVolume was given
+std::vector<std::int32_t>* g_levels;          // what SetVolume was given
 
 TestFile* Lookup(const char* path) {
     for (TestFile& f : *g_files)
@@ -665,11 +665,11 @@ void* __cdecl TestCreateBuffer() {
     g.music_decode(g_capture->data() + at, static_cast<int>(kHalf));
     return nullptr;
 }
-long __stdcall TestSetVolume(void*, unsigned long level) {
-    g_levels->push_back(static_cast<long>(level));
+std::int32_t __stdcall TestSetVolume(void*, std::uint32_t level) {
+    g_levels->push_back(static_cast<std::int32_t>(level));
     return 0;
 }
-long __stdcall TestUnexpected(void*) { bof3::Fatal("DIV-0087 self-test: a DirectSound method other than SetVolume"); }
+std::int32_t __stdcall TestUnexpected(void*) { bof3::Fatal("DIV-0087 self-test: a DirectSound method other than SetVolume"); }
 const void* g_vtable[0x54 / 4];
 struct FakeBuffer { const void* const* vtable; } g_buffer = {g_vtable};
 
@@ -741,7 +741,7 @@ void SelfTest() {
                                    {std::string(kTestRoot) + "\\base\\bgm\\bank\\SELFTST2.DAT", &big_bytes, 0}};
     std::vector<std::string> names;
     std::vector<std::uint8_t> capture;
-    std::vector<long> levels;
+    std::vector<std::int32_t> levels;
     g_files = &files;
     g_names = &names;
     g_capture = &capture;

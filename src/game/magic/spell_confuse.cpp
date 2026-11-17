@@ -74,12 +74,12 @@ template <typename T, typename F> T As(F* f) { return reinterpret_cast<T>(reinte
 
 #define S25_AS(type, name) ::magic_harness::Call(As<type>(&::name))
 
-using Rtp4Fn = long (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*,
-                               long*, long*);
+using Rtp4Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*,
+                               std::int32_t*, std::int32_t*);
 
-using RtpFn = long (__cdecl*)(const short*, unsigned char*, long*, long*);
+using RtpFn = std::int32_t (__cdecl*)(const short*, unsigned char*, std::int32_t*, std::int32_t*);
 
-using RotTransFn = void (__cdecl*)(const short*, long*, long*);
+using RotTransFn = void (__cdecl*)(const short*, std::int32_t*, std::int32_t*);
 
 // The effect library (group L), by name: MagicFx_CenterOnSide (the effect's
 // sprite to the middle of the target side), MagicFx_StepTowardPoint (one step
@@ -88,7 +88,7 @@ using RotTransFn = void (__cdecl*)(const short*, long*, long*);
 constexpr ::bof3::image::CodeVa kTurnByFacing{bof3::addr::Battle_TurnVectorC};
 
 void Rtp4(unsigned char* p, unsigned a, unsigned b, unsigned c, unsigned d) {
-    long depth, flag;
+    std::int32_t depth, flag;
     S25_AS(Rtp4Fn, Gte_RotTransPers4)(VP(0), VP(8), VP(0x10), VP(0x18), reinterpret_cast<float*>(p + a),
                                       reinterpret_cast<float*>(p + b), reinterpret_cast<float*>(p + c),
                                       reinterpret_cast<float*>(p + d), &depth, &flag);
@@ -97,7 +97,7 @@ void Rtp4(unsigned char* p, unsigned a, unsigned b, unsigned c, unsigned d) {
 void LinkAtSprite(int dy, unsigned size) {
     const unsigned char* const sc = Sprite_Current;
     const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tsc->x), static_cast<unsigned long>(tsc->z),
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(tsc->x), static_cast<std::uint32_t>(tsc->z),
                                 dy, size);
 }
 
@@ -114,15 +114,15 @@ void LoadActorMatrix(const unsigned char* sc, const short* angles) {
     v[3] = 0;
     struct Matrix {
         short m[10];
-        long t[3];
+        std::int32_t t[3];
     } m;
     static_assert(sizeof(Matrix) == 0x20, "MATRIX layout");
-    long flag;
+    std::int32_t flag;
     S25_AS(RotTransFn, Gte_RotTrans)(v, m.t, &flag);
     MH_CALL(Gte_RotMatrix)(angles, m.m);
     MH_CALL(Gte_MulMatrix0)(Camera_Matrix, m.m, m.m);
-    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&m));
-    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&m));
+    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
+    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
 }
 
 // A .data phase table read in place: the original's `call` / `jmp
@@ -329,7 +329,7 @@ S25_EXPORT void __cdecl SpellConfuse_DrawRays(void) {
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetLineF2)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, semi);
-        long depth, flag;
+        std::int32_t depth, flag;
         S25_AS(RtpFn, Gte_RotTransPers)(VP(0), p + 8, &depth, &flag);
         MH_CALL(Gte_StoreDepthF)(reinterpret_cast<float*>(p + 0x10));
         const unsigned char a = Sprite_Current[0xA];

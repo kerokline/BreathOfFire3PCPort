@@ -168,7 +168,7 @@ constexpr unsigned kBannerColour = 0xA, kBlue = 3;
 // the party has not learnt it (Battle_ActionBitSet 0x453A90, the set 0x904088
 // that Examine and the masters fill, by the id's low byte, as
 // Battle_MemberRollByAction asks it).
-void UnlearnedBlue(unsigned long entry, unsigned actor, unsigned id) {
+void UnlearnedBlue(std::uint32_t entry, unsigned actor, unsigned id) {
     if (!battle_actions::g_unlearned_blue || entry % 0xC != 0) return;
     if (actor <= 2) return;
     if ((battle_actions::Word(battle_actions::At(::bof3::Img(battle_actions::at::kAbilityRecords.v) + id * 24 + 0x14)) & 0x200) == 0) return;
@@ -216,9 +216,9 @@ unsigned char* Member(U index) { return move_script::At(::bof3::Img(ObjTrio_addr
 // through the dword after: docs/battle_e1.md section 7). The jmp leaves the
 // caller's stack word and the entry's eax in place: ours hands the word on
 // and answers the entry's eax (round 11 doc section 5.1).
-using Entry = unsigned long (__cdecl*)(unsigned long);
+using Entry = std::uint32_t (__cdecl*)(std::uint32_t);
 
-unsigned long Dispatch(const char* who, U table, unsigned index, unsigned entries, unsigned long through) {
+std::uint32_t Dispatch(const char* who, U table, unsigned index, unsigned entries, std::uint32_t through) {
     if (index >= entries)
         bof3::Fatal("%s: the step byte is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/battle_e1.md section 7)",
@@ -355,7 +355,7 @@ Step EntryBattleTurnSteps(std::uint32_t table, unsigned index) {
 
 U LRest3a(U address) { return static_cast<U>(move_script::Long(move_script::At(address))); }
 
-unsigned long DispatchRest3a(const char* who, U table, unsigned index, unsigned entries, unsigned long through) {
+std::uint32_t DispatchRest3a(const char* who, U table, unsigned index, unsigned entries, std::uint32_t through) {
     if (index >= entries)
         bof3::Fatal("%s: the step byte is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/rest_3a.md section 7)",
@@ -672,7 +672,7 @@ extern "C" void __cdecl BattleMenu_CommandSelect(void) {
 
 // original 0x42ED90 (Battle_InputSteps[3]; PSX 0x801D22A4): by 0x904AA2 through
 // BattleHold_Steps 0x64AE48 (3).
-extern "C" unsigned long __cdecl BattleHold_Dispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl BattleHold_Dispatch(std::uint32_t through) {
     return Dispatch("BattleHold_Dispatch", ::bof3::Img(BattleHold_Steps_addr), BattleE4_Step2, 3, through);
 }
 
@@ -993,7 +993,7 @@ extern "C" void __cdecl BattleAction_KindOne(void) {
 // original 0x42F5E0 (BattleAction_KindSteps[3]; PSX 0x801D31B8): by 0x904AA3 through
 // BattleAction_Kind3Steps 0x64AEB4 (5: the two below, then
 // BattleAction_AbilitySteps' three).
-extern "C" unsigned long __cdecl BattleAction_Kind3Dispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl BattleAction_Kind3Dispatch(std::uint32_t through) {
     return Dispatch("BattleAction_Kind3Dispatch", ::bof3::Img(BattleAction_Kind3Steps_addr), BattleE4_Step3, 5, through);
 }
 
@@ -1059,7 +1059,7 @@ extern "C" void __cdecl BattleAction_AbilityCheck(void) {
         BattleE4_Step2 = 0;
         return;
     }
-    unsigned long banner = 0x15;   // DIV-0179: no banner, as BattleBanner_Add's "every entry taken"
+    std::uint32_t banner = 0x15;   // DIV-0179: no banner, as BattleBanner_Add's "every entry taken"
     unsigned named = 0;
     if (battle_actions::Word(battle_actions::At(::bof3::Img(battle_actions::at::kAbility.v))) != 0x97) {
         const unsigned id = battle_actions::Word(battle_actions::At(::bof3::Img(battle_actions::at::kAbility.v)));
@@ -2089,7 +2089,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_WinAwaitIn
 // original 0x431540 (BattleEnd_Steps[2], 0x904AE8 bit 0's way): jmp
 // [BattleEnd_LossSteps + 4 * byte 0x904AA2], 3 (BattleEnd_LossBanner,
 // BattleEnd_LossAwaitLoad, BattleLoss_Dispatch).
-extern "C" unsigned long __cdecl BattleEnd_LossDispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl BattleEnd_LossDispatch(std::uint32_t through) {
     return DispatchRest3a("BattleEnd_LossDispatch", ::bof3::Img(BattleEnd_LossSteps_addr), BattleE4_Step2, 3, through);
 }
 
@@ -2117,7 +2117,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_LossAwaitL
 // original 0x4315B0 (BattleEnd_Steps[3]): jmp [BattleEnd_RestoreSteps + 4 *
 // byte 0x904AA2], 5 (BattleEnd_TasksBegin, BattleEnd_StartMemberTask,
 // BattleEnd_AwaitRestore, BattleEnd_RestoreLoadBank, BattleEnd_RestoreAwaitBank).
-extern "C" unsigned long __cdecl BattleEnd_RestoreDispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl BattleEnd_RestoreDispatch(std::uint32_t through) {
     return DispatchRest3a("BattleEnd_RestoreDispatch", ::bof3::Img(BattleEnd_RestoreSteps_addr), BattleE4_Step2, 5, through);
 }
 

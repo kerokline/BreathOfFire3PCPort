@@ -391,7 +391,7 @@ SC15_EXPORT void __cdecl Scena15_BattleSetup(unsigned n) {
     const int32_t x = static_cast<int32_t>(static_cast<short>(W(rec + 4))) << 8;
     const unsigned kind = B(rec + 9);
     Field_ScriptFlags2 = Field_ScriptFlags2 & 0xFFEFu;
-    SH_AT(void (__cdecl*)(long, long, unsigned), kPartyPlace.v)(x, z, kind);
+    SH_AT(void (__cdecl*)(std::int32_t, std::int32_t, unsigned), kPartyPlace.v)(x, z, kind);
     Draw_OtSlot = 4;
     MoveScript_Var7 = 2;
     Step(0);
@@ -400,7 +400,7 @@ SC15_EXPORT void __cdecl Scena15_BattleSetup(unsigned n) {
 // original 0x5685D0: an effect placed: Effect_FindFree into 0x6BC743; with a
 // slot, +0 = 1, +5 = kind, +0x64 / +0x68 / +0x6C the three s16 x, y, z, +0xC
 // the dword, +9 the byte; al 1. No slot: al 0.
-SC15_EXPORT unsigned char __cdecl Scena15_PlaceEffect(unsigned kind, int x, int y, int z, unsigned nine, unsigned long twelve) {
+SC15_EXPORT unsigned char __cdecl Scena15_PlaceEffect(unsigned kind, int x, int y, int z, unsigned nine, std::uint32_t twelve) {
     const unsigned char s = SH_CALL(Effect_FindFree)();
     Scena15_Bytes[3] = s;
     if (s == 0xFF) return 0;
@@ -1006,9 +1006,9 @@ SC15_EXPORT void __cdecl Scena15_Run5(void) {
             e[5] = 0x1D;
             rv::As<records::EffectObject>(e)->x = 0x2F8000;
             rv::As<records::EffectObject>(e)->z = 0x278000;
-            const long z = static_cast<long>(static_cast<uint32_t>(rv::As<records::EffectObject>(e)->z));
-            const long x = static_cast<long>(static_cast<uint32_t>(rv::As<records::EffectObject>(e)->x));
-            const long elev = SH_CALL(AreaMap_Elevation)(x, z);
+            const std::int32_t z = static_cast<std::int32_t>(static_cast<uint32_t>(rv::As<records::EffectObject>(e)->z));
+            const std::int32_t x = static_cast<std::int32_t>(static_cast<uint32_t>(rv::As<records::EffectObject>(e)->x));
+            const std::int32_t elev = SH_CALL(AreaMap_Elevation)(x, z);
             rv::As<records::EffectObject>(e)->height = static_cast<uint32_t>(static_cast<int32_t>(static_cast<short>(elev)) << 16);
         }
         SH_CALL(Music_Play)(0x82, 8);
@@ -1232,7 +1232,7 @@ SC15_EXPORT void __cdecl Scena15_Run6(void) {
         if (!TimerDone()) break;
         NewEffect(0xA8);
         Draw_PassFlags = 0x1F;
-        SH_AT(void (__cdecl*)(long, long, unsigned), kPartyPlace.v)(0x170000, 0x120000, 0x22);
+        SH_AT(void (__cdecl*)(std::int32_t, std::int32_t, unsigned), kPartyPlace.v)(0x170000, 0x120000, 0x22);
         Step(8);
         break;
     case 8:
@@ -1521,7 +1521,7 @@ SC15_EXPORT void __cdecl Scena15_Shake(unsigned shift) {
 // original 0x56ADF0: a marker effect of kind 0x9E at (x, z) on the ground:
 // +0x34 = x, +0x38 = z, +0x3C = (AreaMap_Elevation(+0x34, z) + 0x200) << 16,
 // then +6, +7 and +0xB the three bytes; al 1. No slot: al 0.
-SC15_EXPORT unsigned char __cdecl Scena15_SpawnMarker(long x, long z, unsigned six, unsigned seven, unsigned eleven) {
+SC15_EXPORT unsigned char __cdecl Scena15_SpawnMarker(std::int32_t x, std::int32_t z, unsigned six, unsigned seven, unsigned eleven) {
     const unsigned char s = SH_CALL(Effect_FindFree)();
     if (s == 0xFF) return 0;
     unsigned char* const e = Effect(s);
@@ -1529,7 +1529,7 @@ SC15_EXPORT unsigned char __cdecl Scena15_SpawnMarker(long x, long z, unsigned s
     e[5] = 0x9E;
     rv::As<records::EffectObject>(e)->x = static_cast<uint32_t>(x);
     rv::As<records::EffectObject>(e)->z = static_cast<uint32_t>(z);
-    const long elev = SH_CALL(AreaMap_Elevation)(static_cast<long>(static_cast<uint32_t>(rv::As<records::EffectObject>(e)->x)), z);
+    const std::int32_t elev = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(static_cast<uint32_t>(rv::As<records::EffectObject>(e)->x)), z);
     rv::As<records::EffectObject>(e)->height = static_cast<uint32_t>(static_cast<int32_t>(static_cast<short>(elev)) + 0x200) << 16;
     e[6] = static_cast<unsigned char>(six);
     e[7] = static_cast<unsigned char>(seven);
@@ -1594,7 +1594,7 @@ SC15_EXPORT void __cdecl Scena15_Object11(unsigned char* object, unsigned char*)
 // 0x78..0x7F run 3 at step 0 - neither answers. In area 0xAE with Cond_ByteFD
 // 0, x exactly 0x418000 and z's cell 0x22..0x24: run 4 at step 0, al 1. Else
 // al 0. The cells are the high words (x's signed, z's as a u16 compare).
-SC15_EXPORT unsigned char __cdecl Scena15_StepHook(long x, long z) {
+SC15_EXPORT unsigned char __cdecl Scena15_StepHook(std::int32_t x, std::int32_t z) {
     const unsigned zcell = static_cast<uint32_t>(z) >> 16;
     if (Area() == 0xAD) {
         if (Cond_ByteFD == 1 && !Test(1) && z > 0x470000) {
@@ -1626,7 +1626,7 @@ SC15_EXPORT unsigned char __cdecl Scena15_StepHook(long x, long z) {
 // 0x23..0x26: run 3 step 0x28; all three set - x exactly 0x310000 and z's
 // cell 0x27..0x28: run 5 at step 5 when flags 0xC, 0xE, 0xD, 0xF and 0x10 are
 // all set, else at step 0. Each with the script flags' bit 0x40.
-SC15_EXPORT unsigned char __cdecl Scena15_ArriveHook(long x, long z) {
+SC15_EXPORT unsigned char __cdecl Scena15_ArriveHook(std::int32_t x, std::int32_t z) {
     if (Area() != 0xAE) return 0;
     const std::uint16_t xcell = static_cast<std::uint16_t>(static_cast<uint32_t>(x) >> 16);
     const std::uint16_t zcell = static_cast<std::uint16_t>(static_cast<uint32_t>(z) >> 16);

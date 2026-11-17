@@ -91,10 +91,10 @@ using Handler = void (__cdecl*)();
 struct Callees {
     // this file's, each through here so each is tested alone
     void (__cdecl* step_lands)();                                       // Field_LeaderStepLands
-    unsigned char (__cdecl* spot_free)(long, long, unsigned, unsigned); // Field_SpotFree
-    unsigned char (__cdecl* way_blocked4)(long, long, long);            // Field_WayBlocked4
-    unsigned char (__cdecl* cells_block)(long, long, unsigned);         // Field_CellsBlock
-    unsigned char (__cdecl* way_blocked)(long, long, unsigned, long);   // Field_WayBlocked
+    unsigned char (__cdecl* spot_free)(std::int32_t, std::int32_t, unsigned, unsigned); // Field_SpotFree
+    unsigned char (__cdecl* way_blocked4)(std::int32_t, std::int32_t, std::int32_t);            // Field_WayBlocked4
+    unsigned char (__cdecl* cells_block)(std::int32_t, std::int32_t, unsigned);         // Field_CellsBlock
+    unsigned char (__cdecl* way_blocked)(std::int32_t, std::int32_t, unsigned, std::int32_t);   // Field_WayBlocked
     // other files' functions
     unsigned char (__cdecl* step_tick)();                               // Field_LeaderStepTick
     void (__cdecl* equip_tick)();                                       // Field_EquipTick
@@ -109,19 +109,19 @@ struct Callees {
     unsigned char (__cdecl* leader_animation)(unsigned);                // Field_LeaderAnimation
     void (__cdecl* change_area)(unsigned, int, int, unsigned);          // Field_ChangeArea
     unsigned char (__cdecl* link_at)(unsigned, unsigned);               // Area_LinkAt
-    unsigned char (__cdecl* cells_all)(long, long, unsigned, unsigned, unsigned);   // AreaMap_CellsAll
-    unsigned char (__cdecl* cells_none)(long, long, unsigned, unsigned, unsigned);  // AreaMap_CellsNone
+    unsigned char (__cdecl* cells_all)(std::int32_t, std::int32_t, unsigned, unsigned, unsigned);   // AreaMap_CellsAll
+    unsigned char (__cdecl* cells_none)(std::int32_t, std::int32_t, unsigned, unsigned, unsigned);  // AreaMap_CellsNone
     unsigned char (__cdecl* ensure_animation)(unsigned char);           // Sprite_EnsureAnimation
     void (__cdecl* jump_start)();                                       // Field_JumpStart
     void (__cdecl* clear_steps)();                                      // Sprite_ClearSteps
     unsigned char (__cdecl* encounter_due)();                           // Field_EncounterDue
     unsigned char (__cdecl* effect_test)(unsigned);                     // Field_LeaderEffectTest
-    int (__cdecl* arrive_hook)(long, long);                             // Scenario_ArriveHook
+    int (__cdecl* arrive_hook)(std::int32_t, std::int32_t);                             // Scenario_ArriveHook
     void (__cdecl* bit80_tick)();                                       // Field_Bit80Tick
     void (__cdecl* leader_walk)();                                      // Field_LeaderWalk
     void (__cdecl* clear_state)(unsigned);                              // Member_ClearState
     void (__cdecl* shade_begin)();                                      // Sprite_ShadeFadeBegin
-    long (__cdecl* ground_at)(long, long);                              // MapView_GroundAt
+    std::int32_t (__cdecl* ground_at)(std::int32_t, std::int32_t);                              // MapView_GroundAt
     void (__cdecl* set_animation)(unsigned char);                       // Sprite_SetAnimation
     void (__cdecl* swap_fields)(unsigned, unsigned, unsigned);          // ObjTrio_SwapFields
     void (__cdecl* member_sprite)(unsigned, unsigned);                  // Field_MemberSprite
@@ -139,13 +139,13 @@ struct Callees {
     unsigned char* (__cdecl* item_name)(unsigned, unsigned);            // Item_NamePtr
     unsigned char (__cdecl* inventory_add)(unsigned, unsigned, unsigned);  // Inventory_Add (the original pushes a fourth 0, unread)
     unsigned char (__cdecl* test_fc)(short, short);                     // MoveCmd_TestFC
-    long (__cdecl* slope_at)(long, long, unsigned long);                // MapView_SlopeAt
-    unsigned char (__cdecl* object_at)(long, long, unsigned);           // Sprite_ObjectAt
+    std::int32_t (__cdecl* slope_at)(std::int32_t, std::int32_t, std::uint32_t);                // MapView_SlopeAt
+    unsigned char (__cdecl* object_at)(std::int32_t, std::int32_t, unsigned);           // Sprite_ObjectAt
     // raw addresses (namespace fn)
-    unsigned char (__cdecl* path_clear)(long, long, unsigned);
+    unsigned char (__cdecl* path_clear)(std::int32_t, std::int32_t, unsigned);
     void (__cdecl* give_zenny)(int);
     const unsigned char* (__cdecl* area_exits)();
-    unsigned char (__cdecl* way_blocked_wide)(long, long, long);
+    unsigned char (__cdecl* way_blocked_wide)(std::int32_t, std::int32_t, std::int32_t);
 };
 
 extern const Callees kOriginals;

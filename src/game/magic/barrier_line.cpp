@@ -125,13 +125,13 @@ MS19_EXPORT void __cdecl BarrierLine_Draw(void) {
     {
         const unsigned char* const cur = Sprite_Current;
         const records::BattleTask* const tcur = rv::AsConst<records::BattleTask>(cur);
-        MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tcur->x),
-                                    static_cast<unsigned long>(tcur->z), 2, 0xC);
+        MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(tcur->x),
+                                    static_cast<std::uint32_t>(tcur->z), 2, 0xC);
     }
     unsigned char* const prim = Prim();
     MH_CALL(Gpu_SetLineG3)(prim);
     MH_CALL(Gpu_SetSemiTrans)(prim, 1);
-    long depth;
+    std::int32_t depth;
     MH_CALL(Gte_RotTransPers3)(Vec(::bof3::Img(Prim_VertexScratch_addr)), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x8), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x10), At(prim, 8), At(prim, 0x18), At(prim, 0x28), &depth);
     MH_CALL(Gte_PrimDepths3_10C)(prim);
     prim[0x14] = 0xC0;
@@ -145,8 +145,8 @@ MS19_EXPORT void __cdecl BarrierLine_Draw(void) {
     prim[0x26] = 1;
     const unsigned char* const cur = Sprite_Current;
     const records::BattleTask* const tcur = rv::AsConst<records::BattleTask>(cur);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tcur->x),
-                                static_cast<unsigned long>(tcur->z), 2, 0x34);
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(tcur->x),
+                                static_cast<std::uint32_t>(tcur->z), 2, 0x34);
 }
 
 void BarrierLine_Inject() {

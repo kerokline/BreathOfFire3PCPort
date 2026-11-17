@@ -91,7 +91,7 @@ unsigned char EnterBossSh(U fc, U hook, U f8) {
 }  // namespace
 
 // original 0x43E540: BossKind_Table[41]: jmp [BossGaist_States + 4 * +1] (12).
-extern "C" unsigned long __cdecl BossGaist_Dispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl BossGaist_Dispatch(std::uint32_t through) {
     return DispatchBossSh("BossGaist_Dispatch", AddressOf(BossGaist_States), 12, 1, through);
 }
 
@@ -103,7 +103,7 @@ extern "C" unsigned char __cdecl BossGaist_Enter(void) {
 
 // original 0x43E5C0: the +0xF4 hook through BossGaist_Hooks (BareRet, BareRet,
 // BossGaist_HookClearBit1).
-extern "C" unsigned long __cdecl BossGaist_Hook(unsigned long word) {
+extern "C" std::uint32_t __cdecl BossGaist_Hook(std::uint32_t word) {
     return HookDispatchBossSh("BossGaist_Hook", AddressOf(BossGaist_Hooks), word);
 }
 
@@ -118,7 +118,7 @@ extern "C" void __cdecl BossGaist_HookClearBit1(unsigned) {
 }
 
 // original 0x43E600: BossKind_Table[42]: jmp [BossTorch_States + 4 * +1] (12).
-extern "C" unsigned long __cdecl BossTorch_Dispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl BossTorch_Dispatch(std::uint32_t through) {
     return DispatchBossSh("BossTorch_Dispatch", AddressOf(BossTorch_States), 12, 1, through);
 }
 
@@ -130,7 +130,7 @@ extern "C" unsigned char __cdecl BossTorch_Enter(void) {
 
 // original 0x43E680: the +0xF4 hook through BossTorch_Hooks
 // (BossTorch_HookTarget3, BareRet, BareRet).
-extern "C" unsigned long __cdecl BossTorch_Hook(unsigned long word) {
+extern "C" std::uint32_t __cdecl BossTorch_Hook(std::uint32_t word) {
     return HookDispatchBossSh("BossTorch_Hook", AddressOf(BossTorch_Hooks), word);
 }
 
@@ -139,7 +139,7 @@ extern "C" unsigned long __cdecl BossTorch_Hook(unsigned long word) {
 extern "C" void __cdecl BossTorch_HookTarget3(unsigned) { B(::bof3::Img(at::kTarget.v)) = 3; }
 
 // original 0x43E6A0: BossKind_Table[54]: jmp [BossSample9_States + 4 * +1] (12).
-extern "C" unsigned long __cdecl BossSample9_Dispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl BossSample9_Dispatch(std::uint32_t through) {
     return DispatchBossSh("BossSample9_Dispatch", AddressOf(BossSample9_States), 12, 1, through);
 }
 
@@ -150,7 +150,7 @@ extern "C" unsigned char __cdecl BossSample9_Enter(void) {
 }
 
 // original 0x43E720: the +0xF4 hook through BossSample9_Hooks (3, all BareRet).
-extern "C" unsigned long __cdecl BossSample9_Hook(unsigned long word) {
+extern "C" std::uint32_t __cdecl BossSample9_Hook(std::uint32_t word) {
     return HookDispatchBossSh("BossSample9_Hook", AddressOf(BossSample9_Hooks), word);
 }
 

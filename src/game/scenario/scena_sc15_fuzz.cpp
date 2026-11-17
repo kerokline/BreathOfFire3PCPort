@@ -96,13 +96,13 @@ template <typename F> F StubAt(std::uint32_t a) { return reinterpret_cast<F>(con
 
 unsigned char __cdecl TFlagsTest(const unsigned char* b, unsigned i) { return Stub(Flags_Test)(b, i); }
 void __cdecl TFlagsSet(unsigned char* b, unsigned i) { Stub(Flags_Set)(b, i); }
-unsigned char __cdecl TPlace(unsigned k, int x, int y, int z, unsigned n, unsigned long t) {
+unsigned char __cdecl TPlace(unsigned k, int x, int y, int z, unsigned n, std::uint32_t t) {
     return Stub(Scena15_PlaceEffect)(k, x, y, z, n, t);
 }
 void __cdecl TBattle(unsigned n) { Stub(Scena15_BattleSetup)(n); }
 unsigned __cdecl TDropIn(unsigned e) { return Stub(Party_DropIn)(e); }
 unsigned char __cdecl TFindFree() { return Stub(Effect_FindFree)(); }
-unsigned char __cdecl TSpawn(long x, long z, unsigned a, unsigned b, unsigned c) { return Stub(Scena15_SpawnMarker)(x, z, a, b, c); }
+unsigned char __cdecl TSpawn(std::int32_t x, std::int32_t z, unsigned a, unsigned b, unsigned c) { return Stub(Scena15_SpawnMarker)(x, z, a, b, c); }
 void __cdecl TCallA(unsigned n) { Stub(Scenario_CallA)(n); }
 int __cdecl TLoadFile(unsigned t) { return Stub(Music_LoadFile)(t); }
 void __cdecl TTransition(unsigned char k) { Stub(Transition_Start)(k); }
@@ -110,7 +110,7 @@ void __cdecl TLoadDat(int i) { Stub(LoadDatFile)(i); }
 void __cdecl TShake(unsigned s) { Stub(Scena15_Shake)(s); }
 int __cdecl TLoadDone() { return Stub(File_LoadDone)(); }
 void __cdecl TMusicPlay(unsigned t, int f) { Stub(Music_Play)(t, f); }
-void __cdecl TPartyPlace(long x, long z, unsigned k) { StubAt<void (__cdecl*)(long, long, unsigned)>(kPartyPlace.v)(x, z, k); }
+void __cdecl TPartyPlace(std::int32_t x, std::int32_t z, unsigned k) { StubAt<void (__cdecl*)(std::int32_t, std::int32_t, unsigned)>(kPartyPlace.v)(x, z, k); }
 void __cdecl TFadeOut(int f) { Stub(Music_FadeOut)(f); }
 void __cdecl TFadeOutStop(int f) { Stub(Music_FadeOutStop)(f); }
 void __cdecl TStartBattle(unsigned id) { Stub(Field_StartEventBattle)(id); }

@@ -93,7 +93,7 @@ unsigned char EnterBossSh(U fc, U hook, U f8) {
 // original 0x43E7C0: BossKind_Table[43]: jmp [BossAngler_States + 4 * +1] (12:
 // the entrance, the generic states, BossAngler_AdvanceDispatch at 4 and
 // BossAngler_RetreatDispatch at 5).
-extern "C" unsigned long __cdecl BossAngler_Dispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl BossAngler_Dispatch(std::uint32_t through) {
     return DispatchBossSh("BossAngler_Dispatch", AddressOf(BossAngler_States), 12, 1, through);
 }
 
@@ -105,7 +105,7 @@ extern "C" unsigned char __cdecl BossAngler_Enter(void) {
 
 // original 0x43E840: state 4 (kinds 43 and 50): jmp [BossAngler_AdvanceSteps +
 // 4 * +2] (2).
-extern "C" unsigned long __cdecl BossAngler_AdvanceDispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl BossAngler_AdvanceDispatch(std::uint32_t through) {
     return DispatchBossSh("BossAngler_AdvanceDispatch", AddressOf(BossAngler_AdvanceSteps), 2, 2, through);
 }
 
@@ -159,7 +159,7 @@ extern "C" unsigned char __cdecl BossAngler_Advance(void) {
 
 // original 0x43E950: state 5 (kinds 43 and 50): jmp [BossAngler_RetreatSteps +
 // 4 * +2] (2).
-extern "C" unsigned long __cdecl BossAngler_RetreatDispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl BossAngler_RetreatDispatch(std::uint32_t through) {
     return DispatchBossSh("BossAngler_RetreatDispatch", AddressOf(BossAngler_RetreatSteps), 2, 2, through);
 }
 
@@ -187,7 +187,7 @@ extern "C" void __cdecl BossAngler_RetreatEnd(void) {
 
 // original 0x43E9C0: the +0xF4 hook through BossAngler_Hooks (BareRet, BareRet,
 // BossAngler_HookSpawnFx).
-extern "C" unsigned long __cdecl BossAngler_Hook(unsigned long word) {
+extern "C" std::uint32_t __cdecl BossAngler_Hook(std::uint32_t word) {
     return HookDispatchBossSh("BossAngler_Hook", AddressOf(BossAngler_Hooks), word);
 }
 
@@ -225,7 +225,7 @@ extern "C" void __cdecl BossAngler_HookSpawnFx(unsigned) {
 
 // original 0x43EA70: BossKind_Table[50]: jmp [BossSample5_States + 4 * +1]
 // (12: its entrance, the Angler's states 4 and 5).
-extern "C" unsigned long __cdecl BossSample5_Dispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl BossSample5_Dispatch(std::uint32_t through) {
     return DispatchBossSh("BossSample5_Dispatch", AddressOf(BossSample5_States), 12, 1, through);
 }
 
@@ -237,7 +237,7 @@ extern "C" unsigned char __cdecl BossSample5_Enter(void) {
 
 // original 0x43EAF0: the +0xF4 hook through BossSample5_Hooks (BareRet,
 // BareRet, BossAngler_HookSpawnFx).
-extern "C" unsigned long __cdecl BossSample5_Hook(unsigned long word) {
+extern "C" std::uint32_t __cdecl BossSample5_Hook(std::uint32_t word) {
     return HookDispatchBossSh("BossSample5_Hook", AddressOf(BossSample5_Hooks), word);
 }
 

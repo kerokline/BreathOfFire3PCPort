@@ -80,12 +80,12 @@ unsigned char ClampUnsigned(U v) { return static_cast<unsigned char>((v & 0xFFFF
 // radius +0x10 round its centre (+0, +4), the height +8 << 8; the map camera
 // loaded; projected into the first of the trail's points (+0x18).
 void TrailHead(unsigned char* r) {
-    long point[3];
+    std::int32_t point[3];
     const int c = SH_CALL(Math_Cos)(static_cast<int>(Word(r + 0x14)));
-    point[0] = static_cast<long>(static_cast<U>(MulSar(c, UL(r + 0x10), 12)) + UL(r + 0));
+    point[0] = static_cast<std::int32_t>(static_cast<U>(MulSar(c, UL(r + 0x10), 12)) + UL(r + 0));
     const int n = SH_CALL(Math_Sin)(static_cast<int>(Word(r + 0x14)));
-    point[1] = static_cast<long>(static_cast<U>(MulSar(n, UL(r + 0x10), 12)) + UL(r + 4));
-    point[2] = static_cast<long>(UL(r + 8) << 8);
+    point[1] = static_cast<std::int32_t>(static_cast<U>(MulSar(n, UL(r + 0x10), 12)) + UL(r + 4));
+    point[2] = static_cast<std::int32_t>(UL(r + 8) << 8);
     SH_CALL(EffectGte_LoadMapCamera)();
     SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(r + 0x18));
 }

@@ -86,7 +86,7 @@ using Handler = void (__cdecl*)();
 
 struct Callees {
     int (__cdecl* rand)();                                          // Rand 0x5B93D2 (the CRT's)
-    long (__cdecl* elevation)(long, long);                          // AreaMap_Elevation 0x5720C0 (ours)
+    std::int32_t (__cdecl* elevation)(std::int32_t, std::int32_t);                          // AreaMap_Elevation 0x5720C0 (ours)
     void (__cdecl* set_cell)(int, int, int);                        // 0x579F00 (DD's)
     void (__cdecl* flags_set40)();                                  // ScriptFlags_Set40 0x57C7C0 (ours)
     void (__cdecl* flags_clear40)();                                // 0x57C7A0 (DD's)
@@ -110,13 +110,13 @@ struct Callees {
     // Gte_RotTransPers4 0x5A85F0 (ours): the original pushes TEN arguments -
     // libgte's (v0..v3, sxy0..sxy3, p, flag) - and ours reads nine (cdecl: the
     // tenth is harmless); handed both locals as the original does.
-    long (__cdecl* rot_trans_pers4)(const short*, const short*, const short*, const short*, float*, float*, float*,
-                                    float*, long*, long*);
+    std::int32_t (__cdecl* rot_trans_pers4)(const short*, const short*, const short*, const short*, float*, float*, float*,
+                                    float*, std::int32_t*, std::int32_t*);
     void (__cdecl* prim_depths)(void*);                             // Gte_PrimDepths4_10 0x5A9290 (ours)
-    void (__cdecl* set_texture)(unsigned long, unsigned char*, int);   // Prim_SetTexture 0x572A00 (ours)
+    void (__cdecl* set_texture)(std::uint32_t, unsigned char*, int);   // Prim_SetTexture 0x572A00 (ours)
     void (__cdecl* commit_prim)(unsigned, unsigned);                // Gfx_CommitPrim 0x461E50 (ours)
-    unsigned char* (__cdecl* item_half_at)(long, long);             // MapView_ItemHalfAt 0x572F70 (ours)
-    void (__cdecl* link_prim_at)(unsigned long, unsigned long, int, unsigned);   // MapView_LinkPrimAt 0x572FA0 (ours)
+    unsigned char* (__cdecl* item_half_at)(std::int32_t, std::int32_t);             // MapView_ItemHalfAt 0x572F70 (ours)
+    void (__cdecl* link_prim_at)(std::uint32_t, std::uint32_t, int, unsigned);   // MapView_LinkPrimAt 0x572FA0 (ours)
 };
 
 extern const Callees kOriginals;

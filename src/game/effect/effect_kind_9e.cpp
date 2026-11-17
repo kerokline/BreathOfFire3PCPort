@@ -45,13 +45,13 @@ std::int32_t SW(const unsigned char* p) { return static_cast<std::int16_t>(Word(
 
 U AddressOf(const void* p) { return Low32(p); }
 
-long* Point(unsigned char* p) { return reinterpret_cast<long*>(p); }
+std::int32_t* Point(unsigned char* p) { return reinterpret_cast<std::int32_t*>(p); }
 
 float* Out(unsigned char* p) { return reinterpret_cast<float*>(p); }
 
-const unsigned char* Bytes(const long* p) { return reinterpret_cast<const unsigned char*>(p); }
+const unsigned char* Bytes(const std::int32_t* p) { return reinterpret_cast<const unsigned char*>(p); }
 
-unsigned char* Bytes(long* p) { return reinterpret_cast<unsigned char*>(p); }
+unsigned char* Bytes(std::int32_t* p) { return reinterpret_cast<unsigned char*>(p); }
 
 // mov ecx, [Sprite_Current]; xor eax, eax; mov al, [ecx + 1]; jmp (or call)
 // [table + eax * 4]: the table's `entries` handlers read in place (the fuzz
@@ -133,7 +133,7 @@ void Copy12(unsigned char* to, const unsigned char* from) {
     for (unsigned i = 0; i < 12; i += 4) SetUL(to + i, UL(from + i));
 }
 
-long* PointRest3f(unsigned char* p) { return reinterpret_cast<long*>(p); }
+std::int32_t* PointRest3f(unsigned char* p) { return reinterpret_cast<std::int32_t*>(p); }
 
 // +1 up, Sprite_Current read afresh.
 void NextState() {
@@ -253,7 +253,7 @@ extern "C" void __cdecl EffectKind9E_Hold(void) {
             rv::As<records::EffectObject>(s)->z = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z) + 0xFFFFC000u;
     } else {
         unsigned char* const s = S();
-        SH_CALL(EffectKind9E_DrawWall)(PointRest3f(s + 0x34), reinterpret_cast<const long*>(At(::bof3::Img(Rest3f_9EWall_addr))));
+        SH_CALL(EffectKind9E_DrawWall)(PointRest3f(s + 0x34), reinterpret_cast<const std::int32_t*>(At(::bof3::Img(Rest3f_9EWall_addr))));
     }
     unsigned char* const s = S();
     if (At(::bof3::Img(rest_3f::at::kCounter.v))[0] == s[7]) s[1] = static_cast<unsigned char>(s[1] + 1);
@@ -283,34 +283,34 @@ extern "C" void __cdecl EffectKind9E_Shrink(void) { Step9E(-1); }
 // four (a + b, the first crossed, a - b, the second) linked 0x38 at a's x, y,
 // and an opaque white LINE_F2 from a + b to the second crossed corner linked
 // 0x20.
-extern "C" void __cdecl EffectKind9E_DrawOutline(const long* a, const long* b) {
-    alignas(4) long q[3];
+extern "C" void __cdecl EffectKind9E_DrawOutline(const std::int32_t* a, const std::int32_t* b) {
+    alignas(4) std::int32_t q[3];
     alignas(4) unsigned char o0[12], o1[12], o2[12], o3[12];
-    q[0] = static_cast<long>(static_cast<U>(a[0]) + static_cast<U>(b[0]));
-    q[1] = static_cast<long>(static_cast<U>(b[1]) + static_cast<U>(a[1]));
-    q[2] = static_cast<long>(static_cast<U>(b[2]) + static_cast<U>(a[2]));
+    q[0] = static_cast<std::int32_t>(static_cast<U>(a[0]) + static_cast<U>(b[0]));
+    q[1] = static_cast<std::int32_t>(static_cast<U>(b[1]) + static_cast<U>(a[1]));
+    q[2] = static_cast<std::int32_t>(static_cast<U>(b[2]) + static_cast<U>(a[2]));
     SH_CALL(EffectGte_ProjectPoint)(q, Out(o0));
     if ((S()[6] & 1) == 0) {
-        q[0] = static_cast<long>(static_cast<U>(a[0]) - static_cast<U>(b[0]));
-        q[1] = static_cast<long>(static_cast<U>(b[1]) + static_cast<U>(a[1]));
+        q[0] = static_cast<std::int32_t>(static_cast<U>(a[0]) - static_cast<U>(b[0]));
+        q[1] = static_cast<std::int32_t>(static_cast<U>(b[1]) + static_cast<U>(a[1]));
     } else {
-        q[0] = static_cast<long>(static_cast<U>(a[0]) + static_cast<U>(b[0]));
-        q[1] = static_cast<long>(static_cast<U>(a[1]) - static_cast<U>(b[1]));
+        q[0] = static_cast<std::int32_t>(static_cast<U>(a[0]) + static_cast<U>(b[0]));
+        q[1] = static_cast<std::int32_t>(static_cast<U>(a[1]) - static_cast<U>(b[1]));
     }
-    q[2] = static_cast<long>(static_cast<U>(b[2]) + static_cast<U>(a[2]));
+    q[2] = static_cast<std::int32_t>(static_cast<U>(b[2]) + static_cast<U>(a[2]));
     SH_CALL(EffectGte_ProjectPoint)(q, Out(o1));
     if ((S()[6] & 1) == 0) {
-        q[0] = static_cast<long>(static_cast<U>(a[0]) + static_cast<U>(b[0]));
-        q[1] = static_cast<long>(static_cast<U>(a[1]) - static_cast<U>(b[1]));
+        q[0] = static_cast<std::int32_t>(static_cast<U>(a[0]) + static_cast<U>(b[0]));
+        q[1] = static_cast<std::int32_t>(static_cast<U>(a[1]) - static_cast<U>(b[1]));
     } else {
-        q[0] = static_cast<long>(static_cast<U>(a[0]) - static_cast<U>(b[0]));
-        q[1] = static_cast<long>(static_cast<U>(b[1]) + static_cast<U>(a[1]));
+        q[0] = static_cast<std::int32_t>(static_cast<U>(a[0]) - static_cast<U>(b[0]));
+        q[1] = static_cast<std::int32_t>(static_cast<U>(b[1]) + static_cast<U>(a[1]));
     }
-    q[2] = static_cast<long>(static_cast<U>(a[2]) - static_cast<U>(b[2]));
+    q[2] = static_cast<std::int32_t>(static_cast<U>(a[2]) - static_cast<U>(b[2]));
     SH_CALL(EffectGte_ProjectPoint)(q, Out(o2));
-    q[1] = static_cast<long>(static_cast<U>(a[1]) - static_cast<U>(b[1]));
-    q[0] = static_cast<long>(static_cast<U>(a[0]) - static_cast<U>(b[0]));
-    q[2] = static_cast<long>(static_cast<U>(a[2]) - static_cast<U>(b[2]));
+    q[1] = static_cast<std::int32_t>(static_cast<U>(a[1]) - static_cast<U>(b[1]));
+    q[0] = static_cast<std::int32_t>(static_cast<U>(a[0]) - static_cast<U>(b[0]));
+    q[2] = static_cast<std::int32_t>(static_cast<U>(a[2]) - static_cast<U>(b[2]));
     SH_CALL(EffectGte_ProjectPoint)(q, Out(o3));
     unsigned char* p = Gfx_PacketNext;
     SH_CALL(Gpu_SetLineF4)(p);
@@ -322,7 +322,7 @@ extern "C" void __cdecl EffectKind9E_DrawOutline(const long* a, const long* b) {
     p[4] = 0xFF;
     p[5] = 0xFF;
     p[6] = 0xFF;
-    SH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(a[0]), static_cast<unsigned long>(a[1]), 0, 0x38);
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(a[0]), static_cast<std::uint32_t>(a[1]), 0, 0x38);
     p = Gfx_PacketNext;
     SH_CALL(Gpu_SetLineF2)(p);
     SH_CALL(Gpu_SetSemiTrans)(p, 0);
@@ -331,12 +331,12 @@ extern "C" void __cdecl EffectKind9E_DrawOutline(const long* a, const long* b) {
     p[4] = 0xFF;
     p[5] = 0xFF;
     p[6] = 0xFF;
-    SH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(a[0]), static_cast<unsigned long>(a[1]), 0, 0x20);
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(a[0]), static_cast<std::uint32_t>(a[1]), 0, 0x20);
 }
 
 // original 0x48F5D0: an opaque white POLY_F4 (0xFF, 0xFF, 0xFF), its corners
 // FlatCorners(a, b) projected; linked 0x38 at (a.x, a.z) (MapView_LinkPrimAt).
-extern "C" void __cdecl EffectKind9E_DrawPlate(const long* a, const long* b) {
+extern "C" void __cdecl EffectKind9E_DrawPlate(const std::int32_t* a, const std::int32_t* b) {
     unsigned char* const p = Gfx_PacketNext;
     SH_CALL(Gpu_SetPolyF4)(p);
     SH_CALL(Gpu_SetSemiTrans)(p, 0);
@@ -353,7 +353,7 @@ extern "C" void __cdecl EffectKind9E_DrawPlate(const long* a, const long* b) {
 // EffectKind9E_Pages' record 0 or (+6 bit 2) record 1 - (s16 x, s16 y, u, v):
 // u / v and u + 0x18 / v + 0x10 at the corners, the page Gpu_GetTPage(1, 1, x,
 // y), the CLUT Gpu_GetClut(0xA0, 0x1F0); linked 0x48 at (a.x, a.z).
-extern "C" void __cdecl EffectKind9E_DrawTexPlate(const long* a, const long* b) {
+extern "C" void __cdecl EffectKind9E_DrawTexPlate(const std::int32_t* a, const std::int32_t* b) {
     const unsigned char* const page = EffectKind9E_Pages + ((S()[6] & 4) != 0 ? 6 : 0);
     unsigned char* const p = Gfx_PacketNext;
     SH_CALL(Gpu_SetPolyFT4)(p);
@@ -392,7 +392,7 @@ extern "C" void __cdecl EffectKind9E_DrawTexPlate(const long* a, const long* b) 
 // original 0x48F8F0: an opaque POLY_F4 wall: its bottom corners a + b and the
 // one of +6 bit 0 (at a.y + b.y), its top the same two 0x100000 higher; the
 // shade ShadeBy6; linked 0x38 at (a.x, a.z).
-extern "C" void __cdecl EffectKind9E_DrawWall(const long* a, const long* b) {
+extern "C" void __cdecl EffectKind9E_DrawWall(const std::int32_t* a, const std::int32_t* b) {
     unsigned char* const p = Gfx_PacketNext;
     SH_CALL(Gpu_SetPolyF4)(p);
     SH_CALL(Gpu_SetSemiTrans)(p, 0);
@@ -416,7 +416,7 @@ extern "C" void __cdecl EffectKind9E_DrawWall(const long* a, const long* b) {
 // original 0x48FA80: a draw mode (Gpu_GetTPage(0, 0, 0x3C0, 0), dtd 1) linked
 // 0xC at (a.x, a.z); a semi-transparent POLY_F4, its corners FlatCorners(a,
 // b), the shade ShadeBy6; linked 0x38 at (a.x, a.z).
-extern "C" void __cdecl EffectKind9E_DrawShadePlate(const long* a, const long* b) {
+extern "C" void __cdecl EffectKind9E_DrawShadePlate(const std::int32_t* a, const std::int32_t* b) {
     SetMode(0, 0x3C0, 0, 1);
     const unsigned char* const pa = Bytes(a);
     SH_CALL(MapView_LinkPrimAt)(UL(pa), UL(pa + 4), 0, 0xC);

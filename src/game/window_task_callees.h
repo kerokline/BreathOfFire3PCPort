@@ -94,7 +94,7 @@ struct Callees {
     // other modules' and Capcom's
     unsigned char (__cdecl* flags_test)(const unsigned char*, unsigned);  // Flags_Test (event_script.cpp)
     unsigned char (__cdecl* msgbox_frame)();                           // MsgBox_FrameTask, group H's
-    void (__cdecl* draw_mode)(unsigned char*, int, int, unsigned, unsigned long);  // Gpu_SetDrawMode
+    void (__cdecl* draw_mode)(unsigned char*, int, int, unsigned, std::uint32_t);  // Gpu_SetDrawMode
     void (__cdecl* commit)(unsigned, unsigned);                        // Gfx_CommitPrim
     void (__cdecl* set_tile)(unsigned char*);                          // Gpu_SetTile
     void (__cdecl* set_poly_gt4)(unsigned char*);                      // Gpu_SetPolyGT4

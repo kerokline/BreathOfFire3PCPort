@@ -259,7 +259,7 @@ void TagOne(std::uint32_t prim, Kind kind, unsigned layer, unsigned slot, unsign
 // kPacketPools: now Gfx_PacketPools (symbols.toml).
 #pragma pop_macro("Gfx_PacketPools")
 
-void LogWalk(const unsigned long* ot) {
+void LogWalk(const std::uint32_t* ot) {
     if (!g_on) return;
     const unsigned f = Now();
     if (f < g_f0 || f > g_f1) return;

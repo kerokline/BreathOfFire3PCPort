@@ -869,19 +869,19 @@ extern "C" void __cdecl BattleForm_ApplyStats(void) {
 // where the original jumps through what follows (DragonCmd_LoadSteps' cells).
 // The jmp leaves the caller's word and the part's eax in place: ours hands
 // the word on and answers the part's eax.
-extern "C" unsigned long __cdecl DragonCmd_PartDispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl DragonCmd_PartDispatch(std::uint32_t through) {
     const unsigned part = BattleE4_Step3;
     if (part >= DragonCmd_Parts_count)
         bof3::Fatal("DragonCmd_PartDispatch: 0x904AA3 is %u, past the %u parts of DragonCmd_Parts - the original jumps "
                     "through the dword after (docs/rest_3d.md section 7)",
                     part, DragonCmd_Parts_count);
-    using Part = unsigned long (__cdecl*)(unsigned long);
+    using Part = std::uint32_t (__cdecl*)(std::uint32_t);
     const auto entry = reinterpret_cast<Part>(static_cast<std::uintptr_t>(DragonCmd_Parts[part]));
     return entry(through);   // as read: the fuzz swaps the table's cells for its recorders
 }
 
 // original 0x44FF10 (0x64ECCC[0]; PSX 0x800A162C): jmp [0x64ECE8 + 4 * 0x904AA4], two steps.
-extern "C" unsigned long __cdecl DragonCmd_LoadDispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl DragonCmd_LoadDispatch(std::uint32_t through) {
     return Dispatch("DragonCmd_LoadDispatch", ::bof3::Img(DragonCmd_LoadSteps_addr), 2, through);
 }
 
@@ -940,7 +940,7 @@ extern "C" void __cdecl DragonCmd_Open(void) {
 }
 
 // original 0x450070 (0x64ECCC[2]; PSX 0x800A1868): jmp [0x64ECF0 + 4 * 0x904AA4], five steps.
-extern "C" unsigned long __cdecl DragonCmd_MenuDispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl DragonCmd_MenuDispatch(std::uint32_t through) {
     return Dispatch("DragonCmd_MenuDispatch", ::bof3::Img(DragonCmd_MenuSteps_addr), 5, through);
 }
 
@@ -1026,7 +1026,7 @@ extern "C" void __cdecl DragonCmd_MenuCancelLoad(void) {
 }
 
 // original 0x450280 (0x64ECCC[3]; PSX 0x800A1B70): jmp [0x64ED04 + 4 * 0x904AA4], seven steps.
-extern "C" unsigned long __cdecl DragonCmd_SlotsDispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl DragonCmd_SlotsDispatch(std::uint32_t through) {
     return Dispatch("DragonCmd_SlotsDispatch", ::bof3::Img(DragonCmd_SlotsSteps_addr), 7, through);
 }
 
@@ -1124,7 +1124,7 @@ extern "C" void __cdecl DragonCmd_SlotsClose(void) {
 }
 
 // original 0x4506C0 (0x64ECCC[4]; PSX 0x800A222C): jmp [0x64ED20 + 4 * 0x904AA4], five steps.
-extern "C" unsigned long __cdecl DragonCmd_GenesDispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl DragonCmd_GenesDispatch(std::uint32_t through) {
     return Dispatch("DragonCmd_GenesDispatch", ::bof3::Img(DragonCmd_GenesSteps_addr), 5, through);
 }
 
@@ -1296,7 +1296,7 @@ extern "C" void __cdecl DragonCmd_Commit(void) {
 }
 
 // original 0x450B20 (0x64ECCC[5]; PSX 0x800A2914): jmp [0x64ED34 + 4 * 0x904AA4], seven steps.
-extern "C" unsigned long __cdecl DragonCmd_Slots2Dispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl DragonCmd_Slots2Dispatch(std::uint32_t through) {
     return Dispatch("DragonCmd_Slots2Dispatch", ::bof3::Img(DragonCmd_Slots2Steps_addr), 7, through);
 }
 
@@ -1383,7 +1383,7 @@ extern "C" void __cdecl DragonCmd_Slots2Close(void) {
 
 // original 0x450F30 (0x64ECCC[6]; PSX 0x800A2F58): jmp [0x64ED50 + 4 * 0x904AA4], seven steps
 // (the last, 0x451480, BE6's).
-extern "C" unsigned long __cdecl DragonCmd_StoreDispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl DragonCmd_StoreDispatch(std::uint32_t through) {
     return Dispatch("DragonCmd_StoreDispatch", ::bof3::Img(DragonCmd_StoreSteps_addr), 7, through);
 }
 
