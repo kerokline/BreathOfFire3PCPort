@@ -678,7 +678,7 @@ The files the list gave under `io.h`, `name`, `type` and `va_start`.
   is an error and the list cannot go to the C library's `v*` calls.
   `tools/gen_symbols.py` writes no convention for a `params` that ends in
   `...` (`Crt_sprintf`, `Crt_sscanf`), and the definitions, the stand-ins and
-  the callee tables' pointer types (28 lines) follow.
+  the callee tables' pointer types (25 lines) follow.
 - **Two pointer types say `__cdecl`** where they take one of ours
   (`effect_1a.cpp:190`, three lambdas of `party_action.cpp`).
 - **Six `#include <io.h>` were dead** and are gone.
