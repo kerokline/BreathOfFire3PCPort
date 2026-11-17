@@ -9758,6 +9758,15 @@ designed in rather than bolted on.
   logged. 14 of the scan's 16:9 rows cannot take this shape (a point the
   scene ends on, a stationary actor, a walk whose end is itself in the band)
   and are left for the owner ([`wide-staging.md`](wide-staging.md) 3).
+  **A 19th row, 2026-11-16** ([`wide-staging.md`](wide-staging.md) 11): area
+  28's party scene script `+0x18[7]`, an actor the static scan has no row
+  for. The original places it at the script's `0D` and it waits for clock 3
+  with its drawn rectangle at x -81.6 .. -30.6 (the band census on the
+  owner's save), in view at 21:9 for about 380 frames before it runs in. The
+  row starts it 14 steps farther back at 21:9 (4 at 16:9), at its own
+  speed: the run begins on the original's frame and reaches the original's
+  start 28 frames later (8 at 16:9), so the scene's next beat is that much
+  later.
 - **Rationale:** the owner's call of 2026-10-13
   ([`ultrawide-round.md`](ultrawide-round.md) 4): fix properly at 16:9, park
   farther. It is the shape Capcom used on the PSP for its 32 columns (9 of the
@@ -9777,6 +9786,11 @@ designed in rather than bolted on.
   15..17 in `dolphinBoss`), and `Rand` stays narrow's on both routes
   ([`ultrawide-census-4.md`](ultrawide-census-4.md) 1). 20 of the 24 armed
   rows are not reached by any route. **Not played by the owner.**
+  The 19th row (2026-11-16), replayed from the owner's save: `25 of 25 rows
+  armed`; at 21:9 and 16:9 the census has no row for the actor through the
+  wait, and its rectangle is the original's again when the added steps end;
+  narrow's `Rand` equals the build before the row on all 1,182 frames.
+  Owed: the owner's eye in play.
 - **Reversible?** `BOF3X_WIDE_STAGING=0`, or narrow.
 - **Switch:** env:BOF3X_WIDE_STAGING=0
 - **Default:** on
@@ -17125,7 +17139,12 @@ designed in rather than bolted on.
   shown, so it is as strong on each picture as with the in-between off and
   lasts half as long (2026-11-15; frame-interpolation.md section 6, item
   10: a fade split over the two pictures showed a second copy of every
-  moving edge).
+  moving edge). The look's scan lines roll, on a picture half a frame on,
+  by half of the roll the eye sees in a frame (0.2832 radians back, the
+  preset's 6 less a turn) and not by half of 6 (2026-11-16;
+  frame-interpolation.md section 6, item 10: at 3 radians the lines changed
+  places on every picture). On a whole frame the roll is the preset's
+  arithmetic.
 - **Rationale:** the owner's ask (2026-11-13): the logic runs at 29.97
   frames a second and the machine has headroom for twice that; show one
   interpolated frame between each two, no more. The game counts frames and

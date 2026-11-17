@@ -1763,85 +1763,85 @@ site	src/game/battle/battle_3.cpp	574	at_global	-	battle_windows::at::kPartyCoun
 site	src/game/battle/battle_3.cpp	576	at_global	-	battle_windows::at::kPartyCount	0x904ab0	data	game	battle	base_helper	-	-	battle_windows::g.draw_edge(x, y + 0x18, static_cast<unsigned char>((battle_windows::At(::bof3::Img(battle_windows::at::kPartyCount.v))[0] << 1) + 0xB), 1);
 site	src/game/battle/battle_3.cpp	577	at_global	-	battle_windows::at::kPartyCount	0x904ab0	data	game	battle	base_helper	-	-	battle_windows::g.draw_tile(x, y + 2, static_cast<unsigned char>(battle_windows::At(::bof3::Img(battle_windows::at::kPartyCount.v))[0] + 0xD), 1);
 site	src/game/battle/battle_3.cpp	579	at_global	-	battle_windows::at::kPartyCount	0x904ab0	data	game	battle	base_helper	-	-	if (battle_windows::At(::bof3::Img(battle_windows::at::kPartyCount.v))[0] == 0) return;
-site	src/game/battle/battle_3.cpp	614	at_global	-	battle_windows::at::kPartyCount	0x904ab0	data	game	battle	base_helper	-	-	} while (i < battle_windows::At(::bof3::Img(battle_windows::at::kPartyCount.v))[0]);
-site	src/game/battle/battle_3.cpp	625	at_global	-	battle_windows::at::kCrossSel	0x904ab4	data	game	battle	base_helper	-	-	std::uint32_t sel = static_cast<std::uint32_t>(move_script::Long(battle_windows::At(::bof3::Img(battle_windows::at::kCrossSel.v))));
-site	src/game/battle/battle_3.cpp	630	at_global	-	battle_windows::at::kCrossGrow	0x904abc	data	game	battle	base_helper	-	-	const unsigned char grow = battle_windows::At(::bof3::Img(battle_windows::at::kCrossGrow.v) + j)[0];
-site	src/game/battle/battle_3.cpp	632	at_global	-	battle_windows::at::kCrossArms	0x64e2ac	data	game	battle	base_helper	-	-	const unsigned char* const arm = battle_windows::At(::bof3::Img(battle_windows::at::kCrossArms.v) + 2 * j);
-site	src/game/battle/battle_3.cpp	636	at_global	-	battle_windows::at::kCrossSel	0x904ab4	data	game	battle	base_helper	-	-	sel = static_cast<std::uint32_t>(move_script::Long(battle_windows::At(::bof3::Img(battle_windows::at::kCrossSel.v))));
-site	src/game/battle/battle_3.cpp	640	at_global	-	battle_windows::at::kCrossGrow	0x904abc	data	game	battle	base_helper	-	-	const unsigned char grow = battle_windows::At(::bof3::Img(battle_windows::at::kCrossGrow.v) + k)[0];
-site	src/game/battle/battle_3.cpp	641	at_global	-	battle_windows::at::kCrossArms	0x64e2ac	data	game	battle	base_helper	-	-	const unsigned char* const arm = battle_windows::At(::bof3::Img(battle_windows::at::kCrossArms.v) + 2 * k);
-site	src/game/battle/battle_3.cpp	651	at_global	-	battle_windows::at::kCrossExtra5	0x904ac1	data	game	battle	base_helper	-	-	const unsigned char grow2 = battle_windows::At(e == 5 ? ::bof3::Img(battle_windows::at::kCrossExtra5.v) : ::bof3::Img(battle_windows::at::kCrossExtra6.v))[0];
-site	src/game/battle/battle_3.cpp	651	at_global	-	battle_windows::at::kCrossExtra6	0x904ac2	data	game	battle	base_helper	-	-	const unsigned char grow2 = battle_windows::At(e == 5 ? ::bof3::Img(battle_windows::at::kCrossExtra5.v) : ::bof3::Img(battle_windows::at::kCrossExtra6.v))[0];
-site	src/game/battle/battle_3.cpp	654	at_global	-	battle_windows::at::kCrossArms	0x64e2ac	data	game	battle	base_helper	-	-	const unsigned char* const arm2 = battle_windows::At(::bof3::Img(battle_windows::at::kCrossArms.v) + 2 * e);
-site	src/game/battle/battle_3.cpp	808	at_global	-	battle_windows::at::kPrintBuf	0x904ba0	data	game	battle	base_helper	-	-	char* const buf = reinterpret_cast<char*>(battle_windows::At(::bof3::Img(battle_windows::at::kPrintBuf.v)));
-site	src/game/battle/battle_3.cpp	809	at_global	-	battle_windows::at::kSlash	0x64e31c	data	game	battle	base_helper	-	-	battle_windows::g.sprintf_(buf, reinterpret_cast<const char*>(battle_windows::At(::bof3::Img(battle_windows::at::kSlash.v))));
-site	src/game/battle/battle_3.cpp	830	at_global	-	battle_window_draw::at::kPartyCount	0x904ab0	data	game	battle	base_helper	-	-	const unsigned size = move_script::At(::bof3::Img(battle_window_draw::at::kPartyCount.v))[0];
-site	src/game/battle/battle_3.cpp	833	at_global	-	battle_window_draw::at::kStatusX	0x64e307	data	game	battle	base_helper	-	-	win->x = move_script::At(::bof3::Img(battle_window_draw::at::kStatusX.v) + size)[0];
-site	src/game/battle/battle_3.cpp	893	at_global	-	battle_window_draw::at::kFmtNone	0x64e320	data	game	battle	base_helper	-	-	battle_window_draw::g.sprintf_(PrintBuf(), Format(::bof3::Img(battle_window_draw::at::kFmtNone.v)));
-site	src/game/battle/battle_3.cpp	895	at_global	-	battle_window_draw::at::kFmtNumber	0x64add8	data	game	battle	base_helper	-	-	battle_window_draw::g.sprintf_(PrintBuf(), Format(::bof3::Img(battle_window_draw::at::kFmtNumber.v)), static_cast<std::uint32_t>(value) & 0xFFFF);
-site	src/game/battle/battle_3.cpp	937	at_global	-	battle_flow::at::kNumberFormat	0x64e324	data	game	battle	base_helper	-	-	battle_flow::g.crt_sprintf(reinterpret_cast<char*>(battle_flow::At(::bof3::Img(battle_flow::at::kNumberText.v))), reinterpret_cast<const char*>(battle_flow::At(
-site	src/game/battle/battle_3.cpp	937	at_global	-	battle_flow::at::kNumberText	0x904ba0	data	game	battle	base_helper	-	-	battle_flow::g.crt_sprintf(reinterpret_cast<char*>(battle_flow::At(::bof3::Img(battle_flow::at::kNumberText.v))), reinterpret_cast<const char*>(battle_flow::At(
-site	src/game/battle/battle_3.cpp	944	at_global	-	battle_flow::at::kNumberText	0x904ba0	data	game	battle	base_helper	-	-	unsigned char* c = battle_flow::At(::bof3::Img(battle_flow::at::kNumberText.v));
-site	src/game/battle/battle_3.cpp	966	at_global	-	battle_flow::at::kNumberText	0x904ba0	data	game	battle	base_helper	-	-	c = battle_flow::At(::bof3::Img(battle_flow::at::kNumberText.v) + i);
-site	src/game/battle/battle_3.cpp	1020	at_global	-	battle_e4::at::kTileSizes	0x64e268	data	game	battle	base_helper	-	-	const unsigned char* const t = move_script::At(::bof3::Img(battle_e4::at::kTileSizes.v) + (Low(static_cast<U>(size)) << 2));
-site	src/game/battle/battle_3.cpp	1042	at_global	-	battle_window_draw::at::kQuadShapes	0x64e148	data	game	battle	base_helper	-	-	const unsigned char* const t = move_script::At(::bof3::Img(battle_window_draw::at::kQuadShapes.v) + ((static_cast<unsigned>(shape) & 0xFF) << 4));
-site	src/game/battle/battle_3.cpp	1065	at_global	-	battle_window_draw::at::kTileSizes	0x64e268	data	game	battle	base_helper	-	-	const unsigned char* const t = move_script::At(::bof3::Img(battle_window_draw::at::kTileSizes.v) + ((static_cast<unsigned>(size) & 0xFF) << 2));
-site	src/game/battle/battle_3.cpp	1084	at_global	-	battle_window_draw::at::kTileSizes	0x64e268	data	game	battle	base_helper	-	-	const unsigned char* const t = move_script::At(::bof3::Img(battle_window_draw::at::kTileSizes.v) + ((static_cast<unsigned>(size) & 0xFF) << 2));
-site	src/game/battle/battle_3.cpp	1275	at_global	-	battle_damage::at::kEntryOrder	0x904ab6	data	game	battle	base_helper	-	-	move_script::SetWord(move_script::At(::bof3::Img(battle_damage::at::kEntryOrder.v)), 0xFFFF);
-site	src/game/battle/battle_3.cpp	1276	at_global	-	battle_damage::at::kEntryOrder	0x904ab6	data	game	battle	base_helper	-	-	move_script::At(::bof3::Img(battle_damage::at::kEntryOrder.v) + 2)[0] = 0xFF;
-site	src/game/battle/battle_3.cpp	1281	at_global	-	battle_damage::at::kEntryOrder	0x904ab6	data	game	battle	base_helper	-	-	move_script::At(::bof3::Img(battle_damage::at::kEntryOrder.v) + index)[0] = actor;
-site	src/game/battle/battle_3.cpp	1315	at_global	-	battle_damage::at::kTurnWork	0x939a80	data	game	battle	base_helper	-	-	unsigned char* const slot = move_script::At(::bof3::Img(battle_damage::at::kTurnWork.v) + 4 * n);
-site	src/game/battle/battle_3.cpp	1326	at_global	-	battle_damage::at::kTurnPercent	0x64e328	data	game	battle	base_helper	-	-	const unsigned percent = move_script::Word(move_script::At(::bof3::Img(battle_damage::at::kTurnPercent.v) + 2 * level_class));
-site	src/game/battle/battle_3.cpp	1336	at_global	-	battle_damage::at::kTurnWork	0x939a80	data	game	battle	base_helper	-	-	unsigned char* const slot = move_script::At(::bof3::Img(battle_damage::at::kTurnWork.v) + 4 * n);
-site	src/game/battle/battle_3.cpp	1339	at_global	-	battle_damage::at::kTurnJitter	0x64e334	data	game	battle	base_helper	-	-	const int jitter = static_cast<signed char>(Byte(::bof3::Img(battle_damage::at::kTurnJitter.v) + 16 * level_class + roll));
-site	src/game/battle/battle_3.cpp	1345	at_global	-	battle_damage::at::kTurnWork	0x939a80	data	game	battle	base_helper	-	-	SortDescending(move_script::At(::bof3::Img(battle_damage::at::kTurnWork.v)), n);
-site	src/game/battle/battle_3.cpp	1346	at_global	-	battle_damage::at::kTurnOrder	0x904acc	data	game	battle	base_helper	-	-	move_script::SetLong(move_script::At(::bof3::Img(battle_damage::at::kTurnOrder.v)), -1);
-site	src/game/battle/battle_3.cpp	1347	at_global	-	battle_damage::at::kTurnOrder	0x904acc	data	game	battle	base_helper	-	-	move_script::SetLong(move_script::At(::bof3::Img(battle_damage::at::kTurnOrder.v) + 4), -1);
-site	src/game/battle/battle_3.cpp	1348	at_global	-	battle_damage::at::kTurnOrder	0x904acc	data	game	battle	base_helper	-	-	move_script::SetWord(move_script::At(::bof3::Img(battle_damage::at::kTurnOrder.v) + 8), 0xFFFF);
-site	src/game/battle/battle_3.cpp	1349	at_global	-	battle_damage::at::kTurnOrder	0x904acc	data	game	battle	base_helper	-	-	move_script::At(::bof3::Img(battle_damage::at::kTurnOrder.v) + 10)[0] = 0xFF;
-site	src/game/battle/battle_3.cpp	1350	at_global	-	battle_damage::at::kTurnOrder	0x904acc	data	game	battle	base_helper	-	-	for (unsigned k = 0; k < BattleDamage_TurnCount; ++k) move_script::At(::bof3::Img(battle_damage::at::kTurnOrder.v) + k)[0] = Byte(::bof3::Img(battle_damage::at:
-site	src/game/battle/battle_3.cpp	1350	at_global	-	battle_damage::at::kTurnWork	0x939a80	data	game	battle	base_helper	-	-	for (unsigned k = 0; k < BattleDamage_TurnCount; ++k) move_script::At(::bof3::Img(battle_damage::at::kTurnOrder.v) + k)[0] = Byte(::bof3::Img(battle_damage::at:
-site	src/game/battle/battle_3.cpp	1450	at_global	-	battle_damage::at::kLevelRows	0x64e374	data	game	battle	base_helper	-	-	const unsigned char* const thresholds = move_script::At(::bof3::Img(battle_damage::at::kLevelRows.v) + (row & 0xFF) * 6);
-site	src/game/battle/battle_3.cpp	1721	at_global	-	battle_damage::at::kAttackerAtk	0x939fe4	data	game	battle	base_helper	-	-	unsigned char* const atk = move_script::At(::bof3::Img(battle_damage::at::kAttackerAtk.v));
-site	src/game/battle/battle_3.cpp	1759	at_global	-	battle_damage::at::kCuredBits	0x904b9a	data	game	battle	base_helper	-	-	move_script::At(::bof3::Img(battle_damage::at::kCuredBits.v))[0] = static_cast<unsigned char>(Byte(::bof3::Img(battle_damage::at::kCuredBits.v)) | 0x40);
-site	src/game/battle/battle_3.cpp	1759	at_global	-	battle_damage::at::kCuredBits	0x904b9a	data	game	battle	base_helper	-	-	move_script::At(::bof3::Img(battle_damage::at::kCuredBits.v))[0] = static_cast<unsigned char>(Byte(::bof3::Img(battle_damage::at::kCuredBits.v)) | 0x40);
-site	src/game/battle/battle_3.cpp	1770	at_global	-	battle_damage::at::kCuredBits	0x904b9a	data	game	battle	base_helper	-	-	move_script::SetWord(move_script::At(::bof3::Img(battle_damage::at::kCuredBits.v)), move_script::Word(move_script::At(::bof3::Img(battle_damage::at::kCuredBits.
-site	src/game/battle/battle_3.cpp	1770	at_global	-	battle_damage::at::kCuredBits	0x904b9a	data	game	battle	base_helper	-	-	move_script::SetWord(move_script::At(::bof3::Img(battle_damage::at::kCuredBits.v)), move_script::Word(move_script::At(::bof3::Img(battle_damage::at::kCuredBits.
-site	src/game/battle/battle_3.cpp	1787	at_global	-	battle_damage::at::kBattleFlags	0x904aa8	data	game	battle	base_helper	-	-	if (Byte(::bof3::Img(battle_damage::at::kBattleFlags.v)) & 0x80) {
-site	src/game/battle/battle_3.cpp	1795	at_global	-	battle_damage::at::kBattleFlags	0x904aa8	data	game	battle	base_helper	-	-	if ((Byte(::bof3::Img(battle_damage::at::kBattleFlags.v)) & 0x80) && d == 0) d = 1;
-site	src/game/battle/battle_3.cpp	1809	at_global	-	battle_e4::at::kFlags	0x904aa8	data	game	battle	base_helper	-	-	if (B(::bof3::Img(battle_e4::at::kFlags.v)) & 0x80) return hit;
-site	src/game/battle/battle_3.cpp	1828	at_global	-	battle_e4::at::kFlags	0x904aa8	data	game	battle	base_helper	-	-	if (B(::bof3::Img(battle_e4::at::kFlags.v)) & 0x80) return hit;
-site	src/game/battle/battle_3.cpp	1864	at_global	-	battle_damage::at::kAttackerAtk	0x939fe4	data	game	battle	base_helper	-	-	v = static_cast<std::int32_t>(U32(move_script::Long(move_script::At(::bof3::Img(battle_damage::at::kAttackerAtk.v)))) & 0xFFFF) - def;
-site	src/game/battle/battle_3.cpp	1868	at_global	-	battle_damage::at::kAttackerAtk	0x939fe4	data	game	battle	base_helper	-	-	std::int32_t x = static_cast<std::int32_t>(U32(move_script::Long(move_script::At(::bof3::Img(battle_damage::at::kAttackerAtk.v)))) & 0xFFFF) - def;
-site	src/game/battle/battle_3.cpp	1875	at_global	-	battle_damage::at::kBonusDivisor	0x64e380	data	game	battle	base_helper	-	-	const std::int32_t divisor = static_cast<std::int32_t>(Byte(::bof3::Img(battle_damage::at::kBonusDivisor.v) + index)) << 8;
-site	src/game/battle/battle_3.cpp	1888	at_global	-	battle_e4::at::kPartyCount	0x904ab0	data	game	battle	base_helper	-	-	const unsigned n = static_cast<U>(move_script::Long(move_script::At(::bof3::Img(battle_e4::at::kPartyCount.v)))) & 0xFF;
-site	src/game/battle/battle_3.cpp	1956	at_global	-	battle_e4::at::kPartyCount	0x904ab0	data	game	battle	base_helper	-	-	const unsigned n = static_cast<U>(move_script::Long(move_script::At(::bof3::Img(battle_e4::at::kPartyCount.v)))) & 0xFF;
-site	src/game/battle/battle_3.cpp	1981	at_global	-	battle_damage::at::kTurnOrder	0x904acc	data	game	battle	base_helper	-	-	if (Byte(::bof3::Img(battle_damage::at::kTurnOrder.v) + k) == b) move_script::At(::bof3::Img(battle_damage::at::kTurnOrder.v) + k)[0] = 0xFF;
-site	src/game/battle/battle_3.cpp	1981	at_global	-	battle_damage::at::kTurnOrder	0x904acc	data	game	battle	base_helper	-	-	if (Byte(::bof3::Img(battle_damage::at::kTurnOrder.v) + k) == b) move_script::At(::bof3::Img(battle_damage::at::kTurnOrder.v) + k)[0] = 0xFF;
-site	src/game/battle/battle_3.cpp	1990	at_global	-	battle_e4::at::kOrder	0x904acc	data	game	battle	base_helper	-	-	B(::bof3::Img(battle_e4::at::kOrder.v) + front) = static_cast<unsigned char>(actor);
-site	src/game/battle/battle_3.cpp	2002	at_global	-	battle_e4::at::kEntryOrder	0x904ab6	data	game	battle	base_helper	-	-	const unsigned char m = B(::bof3::Img(battle_e4::at::kEntryOrder.v) + static_cast<U>(static_cast<std::int32_t>(c)));
-site	src/game/battle/battle_3.cpp	2029	at_global	-	battle_e4::at::kFlags	0x904aa8	data	game	battle	base_helper	-	-	if (B(::bof3::Img(battle_e4::at::kFlags.v)) & 0x40) {
-site	src/game/battle/battle_3.cpp	2030	at_global	-	battle_e4::at::kFlags	0x904aa8	data	game	battle	base_helper	-	-	move_script::SetWord(move_script::At(::bof3::Img(battle_e4::at::kFlags.v)), move_script::Word(move_script::At(::bof3::Img(battle_e4::at::kFlags.v))) & 0xFFBF);
-site	src/game/battle/battle_3.cpp	2030	at_global	-	battle_e4::at::kFlags	0x904aa8	data	game	battle	base_helper	-	-	move_script::SetWord(move_script::At(::bof3::Img(battle_e4::at::kFlags.v)), move_script::Word(move_script::At(::bof3::Img(battle_e4::at::kFlags.v))) & 0xFFBF);
-site	src/game/battle/battle_3.cpp	2037	at_global	-	battle_e4::at::kActor	0x904b34	data	game	battle	base_helper	-	-	if (B(::bof3::Img(battle_e4::at::kActor.v)) < 3) return 0;
-site	src/game/battle/battle_3.cpp	2039	at_global	-	battle_e4::at::kAbility	0x904b80	data	game	battle	base_helper	-	-	if (B(::bof3::Img(battle_e4::at::kActionKind.v)) == 4 && move_script::Word(move_script::At(::bof3::Img(battle_e4::at::kAbility.v))) == 0xA1) return 0;
-site	src/game/battle/battle_3.cpp	2039	at_global	-	battle_e4::at::kActionKind	0x904b35	data	game	battle	base_helper	-	-	if (B(::bof3::Img(battle_e4::at::kActionKind.v)) == 4 && move_script::Word(move_script::At(::bof3::Img(battle_e4::at::kAbility.v))) == 0xA1) return 0;
-site	src/game/battle/battle_3.cpp	2056	at_global	-	rest_3b::at::kPartyCount	0x904ab0	data	game	battle	base_helper	-	-	for (unsigned slot = 0; (slot & 0xFF) < B(::bof3::Img(rest_3b::at::kPartyCount.v)); slot = (slot + 1) & 0xFF) {
-site	src/game/battle/battle_3.cpp	2086	at_global	-	rest_3b::at::kRosterOf	0x66972c	data	game	battle	base_helper	Character_IndexById	-	const unsigned r = B(::bof3::Img(rest_3b::at::kRosterOf.v) + (id & 0xFF));
-site	src/game/battle/battle_3.cpp	2106	module_const	-	kPulse	0x904ac8	data	game	battle	base_helper	-	include	const unsigned char c = AtBattleMisc(::bof3::Img(kPulse.v))[0];
-site	src/game/battle/battle_3.cpp	2110	module_const	-	kPulse	0x904ac8	data	game	battle	base_helper	-	include	AtBattleMisc(::bof3::Img(kPulse.v))[0] = static_cast<unsigned char>(c + 2);
-site	src/game/battle/battle_3.cpp	2113	module_const	-	kPulse	0x904ac8	data	game	battle	base_helper	-	include	AtBattleMisc(::bof3::Img(kPulse.v))[0] = static_cast<unsigned char>(BattleMisc_PulseDown == 1 ? c - 2 : c + 2);
-site	src/game/battle/battle_3.cpp	2125	module_const	-	kCueTable	0x64e3bc	data	game	battle	base_helper	-	include	const battle_misc::U id = (record & 0xFFFF0000u) | WordBattleMisc(AtBattleMisc(::bof3::Img(kCueTable.v) + index * 2));
-site	src/game/battle/battle_3.cpp	2173	at_global	-	battle_e4::at::kTarget	0x904b44	data	game	battle	base_helper	-	-	B(::bof3::Img(battle_e4::at::kTarget.v)) = pick;
-site	src/game/battle/battle_3.cpp	2242	at_global	-	battle_e4::at::kWakeChance	0x64e3e8	data	game	battle	base_helper	-	-	const int chance = count >= 3 ? 0x4B : B(::bof3::Img(battle_e4::at::kWakeChance.v) + count);
-site	src/game/battle/battle_3.cpp	2246	at_global	-	battle_e4::at::kWakeResist	0x64e3e0	data	game	battle	base_helper	-	-	return (200 - static_cast<int>(B(::bof3::Img(battle_e4::at::kWakeResist.v) + level))) * 50 >= roll ? 1 : 0;
-site	src/game/battle/battle_3.cpp	2256	at_global	-	battle_e4::at::kInventoryCounts	0x656b14	data	game	battle	base_helper	Inventory_CountLists	-	unsigned char* const counts = Ptr(::bof3::Img(battle_e4::at::kInventoryCounts.v) + 4 * category);
-site	src/game/battle/battle_3.cpp	2260	at_global	-	battle_e4::at::kInventoryIds	0x656b00	data	game	battle	base_helper	Inventory_IdLists	-	Ptr(::bof3::Img(battle_e4::at::kInventoryIds.v) + 4 * category)[s] = static_cast<unsigned char>(item);
-site	src/game/battle/battle_3.cpp	2268	at_global	-	battle_e4::at::kPhase	0x904aa0	data	game	battle	base_helper	-	-	B(::bof3::Img(battle_e4::at::kPhase.v)) = 5;
-site	src/game/battle/battle_3.cpp	2275	at_global	-	battle_e4::at::kPhase	0x904aa0	data	game	battle	base_helper	-	-	B(::bof3::Img(battle_e4::at::kPhase.v)) = 5;
-site	src/game/battle/battle_3.cpp	2282	at_global	-	battle_e4::at::kPhase	0x904aa0	data	game	battle	base_helper	-	-	B(::bof3::Img(battle_e4::at::kPhase.v)) = 5;
-site	src/game/battle/battle_3.cpp	2293	module_const	-	kSoundLists	0x6565bc	data	game	battle	base_helper	-	include	battle_misc::U p = LongBattleMisc(AtBattleMisc(::bof3::Img(kSoundLists.v) + (set & 0xFF) * 4));
-site	src/game/battle/battle_3.cpp	2325	at_global	-	battle_setup::at::kItemQueue	0x904acc	data	game	battle	base_helper	-	-	if (move_script::At(::bof3::Img(battle_setup::at::kItemQueue.v) + i)[0] == a) break;
+site	src/game/battle/battle_3.cpp	617	at_global	-	battle_windows::at::kPartyCount	0x904ab0	data	game	battle	base_helper	-	-	} while (i < battle_windows::At(::bof3::Img(battle_windows::at::kPartyCount.v))[0]);
+site	src/game/battle/battle_3.cpp	628	at_global	-	battle_windows::at::kCrossSel	0x904ab4	data	game	battle	base_helper	-	-	std::uint32_t sel = static_cast<std::uint32_t>(move_script::Long(battle_windows::At(::bof3::Img(battle_windows::at::kCrossSel.v))));
+site	src/game/battle/battle_3.cpp	633	at_global	-	battle_windows::at::kCrossGrow	0x904abc	data	game	battle	base_helper	-	-	const unsigned char grow = battle_windows::At(::bof3::Img(battle_windows::at::kCrossGrow.v) + j)[0];
+site	src/game/battle/battle_3.cpp	635	at_global	-	battle_windows::at::kCrossArms	0x64e2ac	data	game	battle	base_helper	-	-	const unsigned char* const arm = battle_windows::At(::bof3::Img(battle_windows::at::kCrossArms.v) + 2 * j);
+site	src/game/battle/battle_3.cpp	639	at_global	-	battle_windows::at::kCrossSel	0x904ab4	data	game	battle	base_helper	-	-	sel = static_cast<std::uint32_t>(move_script::Long(battle_windows::At(::bof3::Img(battle_windows::at::kCrossSel.v))));
+site	src/game/battle/battle_3.cpp	643	at_global	-	battle_windows::at::kCrossGrow	0x904abc	data	game	battle	base_helper	-	-	const unsigned char grow = battle_windows::At(::bof3::Img(battle_windows::at::kCrossGrow.v) + k)[0];
+site	src/game/battle/battle_3.cpp	644	at_global	-	battle_windows::at::kCrossArms	0x64e2ac	data	game	battle	base_helper	-	-	const unsigned char* const arm = battle_windows::At(::bof3::Img(battle_windows::at::kCrossArms.v) + 2 * k);
+site	src/game/battle/battle_3.cpp	654	at_global	-	battle_windows::at::kCrossExtra5	0x904ac1	data	game	battle	base_helper	-	-	const unsigned char grow2 = battle_windows::At(e == 5 ? ::bof3::Img(battle_windows::at::kCrossExtra5.v) : ::bof3::Img(battle_windows::at::kCrossExtra6.v))[0];
+site	src/game/battle/battle_3.cpp	654	at_global	-	battle_windows::at::kCrossExtra6	0x904ac2	data	game	battle	base_helper	-	-	const unsigned char grow2 = battle_windows::At(e == 5 ? ::bof3::Img(battle_windows::at::kCrossExtra5.v) : ::bof3::Img(battle_windows::at::kCrossExtra6.v))[0];
+site	src/game/battle/battle_3.cpp	657	at_global	-	battle_windows::at::kCrossArms	0x64e2ac	data	game	battle	base_helper	-	-	const unsigned char* const arm2 = battle_windows::At(::bof3::Img(battle_windows::at::kCrossArms.v) + 2 * e);
+site	src/game/battle/battle_3.cpp	813	at_global	-	battle_windows::at::kPrintBuf	0x904ba0	data	game	battle	base_helper	-	-	char* const buf = reinterpret_cast<char*>(battle_windows::At(::bof3::Img(battle_windows::at::kPrintBuf.v)));
+site	src/game/battle/battle_3.cpp	814	at_global	-	battle_windows::at::kSlash	0x64e31c	data	game	battle	base_helper	-	-	battle_windows::g.sprintf_(buf, reinterpret_cast<const char*>(battle_windows::At(::bof3::Img(battle_windows::at::kSlash.v))));
+site	src/game/battle/battle_3.cpp	835	at_global	-	battle_window_draw::at::kPartyCount	0x904ab0	data	game	battle	base_helper	-	-	const unsigned size = move_script::At(::bof3::Img(battle_window_draw::at::kPartyCount.v))[0];
+site	src/game/battle/battle_3.cpp	838	at_global	-	battle_window_draw::at::kStatusX	0x64e307	data	game	battle	base_helper	-	-	win->x = move_script::At(::bof3::Img(battle_window_draw::at::kStatusX.v) + size)[0];
+site	src/game/battle/battle_3.cpp	898	at_global	-	battle_window_draw::at::kFmtNone	0x64e320	data	game	battle	base_helper	-	-	battle_window_draw::g.sprintf_(PrintBuf(), Format(::bof3::Img(battle_window_draw::at::kFmtNone.v)));
+site	src/game/battle/battle_3.cpp	900	at_global	-	battle_window_draw::at::kFmtNumber	0x64add8	data	game	battle	base_helper	-	-	battle_window_draw::g.sprintf_(PrintBuf(), Format(::bof3::Img(battle_window_draw::at::kFmtNumber.v)), static_cast<std::uint32_t>(value) & 0xFFFF);
+site	src/game/battle/battle_3.cpp	942	at_global	-	battle_flow::at::kNumberFormat	0x64e324	data	game	battle	base_helper	-	-	battle_flow::g.crt_sprintf(reinterpret_cast<char*>(battle_flow::At(::bof3::Img(battle_flow::at::kNumberText.v))), reinterpret_cast<const char*>(battle_flow::At(
+site	src/game/battle/battle_3.cpp	942	at_global	-	battle_flow::at::kNumberText	0x904ba0	data	game	battle	base_helper	-	-	battle_flow::g.crt_sprintf(reinterpret_cast<char*>(battle_flow::At(::bof3::Img(battle_flow::at::kNumberText.v))), reinterpret_cast<const char*>(battle_flow::At(
+site	src/game/battle/battle_3.cpp	949	at_global	-	battle_flow::at::kNumberText	0x904ba0	data	game	battle	base_helper	-	-	unsigned char* c = battle_flow::At(::bof3::Img(battle_flow::at::kNumberText.v));
+site	src/game/battle/battle_3.cpp	971	at_global	-	battle_flow::at::kNumberText	0x904ba0	data	game	battle	base_helper	-	-	c = battle_flow::At(::bof3::Img(battle_flow::at::kNumberText.v) + i);
+site	src/game/battle/battle_3.cpp	1025	at_global	-	battle_e4::at::kTileSizes	0x64e268	data	game	battle	base_helper	-	-	const unsigned char* const t = move_script::At(::bof3::Img(battle_e4::at::kTileSizes.v) + (Low(static_cast<U>(size)) << 2));
+site	src/game/battle/battle_3.cpp	1047	at_global	-	battle_window_draw::at::kQuadShapes	0x64e148	data	game	battle	base_helper	-	-	const unsigned char* const t = move_script::At(::bof3::Img(battle_window_draw::at::kQuadShapes.v) + ((static_cast<unsigned>(shape) & 0xFF) << 4));
+site	src/game/battle/battle_3.cpp	1070	at_global	-	battle_window_draw::at::kTileSizes	0x64e268	data	game	battle	base_helper	-	-	const unsigned char* const t = move_script::At(::bof3::Img(battle_window_draw::at::kTileSizes.v) + ((static_cast<unsigned>(size) & 0xFF) << 2));
+site	src/game/battle/battle_3.cpp	1089	at_global	-	battle_window_draw::at::kTileSizes	0x64e268	data	game	battle	base_helper	-	-	const unsigned char* const t = move_script::At(::bof3::Img(battle_window_draw::at::kTileSizes.v) + ((static_cast<unsigned>(size) & 0xFF) << 2));
+site	src/game/battle/battle_3.cpp	1280	at_global	-	battle_damage::at::kEntryOrder	0x904ab6	data	game	battle	base_helper	-	-	move_script::SetWord(move_script::At(::bof3::Img(battle_damage::at::kEntryOrder.v)), 0xFFFF);
+site	src/game/battle/battle_3.cpp	1281	at_global	-	battle_damage::at::kEntryOrder	0x904ab6	data	game	battle	base_helper	-	-	move_script::At(::bof3::Img(battle_damage::at::kEntryOrder.v) + 2)[0] = 0xFF;
+site	src/game/battle/battle_3.cpp	1286	at_global	-	battle_damage::at::kEntryOrder	0x904ab6	data	game	battle	base_helper	-	-	move_script::At(::bof3::Img(battle_damage::at::kEntryOrder.v) + index)[0] = actor;
+site	src/game/battle/battle_3.cpp	1320	at_global	-	battle_damage::at::kTurnWork	0x939a80	data	game	battle	base_helper	-	-	unsigned char* const slot = move_script::At(::bof3::Img(battle_damage::at::kTurnWork.v) + 4 * n);
+site	src/game/battle/battle_3.cpp	1331	at_global	-	battle_damage::at::kTurnPercent	0x64e328	data	game	battle	base_helper	-	-	const unsigned percent = move_script::Word(move_script::At(::bof3::Img(battle_damage::at::kTurnPercent.v) + 2 * level_class));
+site	src/game/battle/battle_3.cpp	1341	at_global	-	battle_damage::at::kTurnWork	0x939a80	data	game	battle	base_helper	-	-	unsigned char* const slot = move_script::At(::bof3::Img(battle_damage::at::kTurnWork.v) + 4 * n);
+site	src/game/battle/battle_3.cpp	1344	at_global	-	battle_damage::at::kTurnJitter	0x64e334	data	game	battle	base_helper	-	-	const int jitter = static_cast<signed char>(Byte(::bof3::Img(battle_damage::at::kTurnJitter.v) + 16 * level_class + roll));
+site	src/game/battle/battle_3.cpp	1350	at_global	-	battle_damage::at::kTurnWork	0x939a80	data	game	battle	base_helper	-	-	SortDescending(move_script::At(::bof3::Img(battle_damage::at::kTurnWork.v)), n);
+site	src/game/battle/battle_3.cpp	1351	at_global	-	battle_damage::at::kTurnOrder	0x904acc	data	game	battle	base_helper	-	-	move_script::SetLong(move_script::At(::bof3::Img(battle_damage::at::kTurnOrder.v)), -1);
+site	src/game/battle/battle_3.cpp	1352	at_global	-	battle_damage::at::kTurnOrder	0x904acc	data	game	battle	base_helper	-	-	move_script::SetLong(move_script::At(::bof3::Img(battle_damage::at::kTurnOrder.v) + 4), -1);
+site	src/game/battle/battle_3.cpp	1353	at_global	-	battle_damage::at::kTurnOrder	0x904acc	data	game	battle	base_helper	-	-	move_script::SetWord(move_script::At(::bof3::Img(battle_damage::at::kTurnOrder.v) + 8), 0xFFFF);
+site	src/game/battle/battle_3.cpp	1354	at_global	-	battle_damage::at::kTurnOrder	0x904acc	data	game	battle	base_helper	-	-	move_script::At(::bof3::Img(battle_damage::at::kTurnOrder.v) + 10)[0] = 0xFF;
+site	src/game/battle/battle_3.cpp	1355	at_global	-	battle_damage::at::kTurnOrder	0x904acc	data	game	battle	base_helper	-	-	for (unsigned k = 0; k < BattleDamage_TurnCount; ++k) move_script::At(::bof3::Img(battle_damage::at::kTurnOrder.v) + k)[0] = Byte(::bof3::Img(battle_damage::at:
+site	src/game/battle/battle_3.cpp	1355	at_global	-	battle_damage::at::kTurnWork	0x939a80	data	game	battle	base_helper	-	-	for (unsigned k = 0; k < BattleDamage_TurnCount; ++k) move_script::At(::bof3::Img(battle_damage::at::kTurnOrder.v) + k)[0] = Byte(::bof3::Img(battle_damage::at:
+site	src/game/battle/battle_3.cpp	1455	at_global	-	battle_damage::at::kLevelRows	0x64e374	data	game	battle	base_helper	-	-	const unsigned char* const thresholds = move_script::At(::bof3::Img(battle_damage::at::kLevelRows.v) + (row & 0xFF) * 6);
+site	src/game/battle/battle_3.cpp	1726	at_global	-	battle_damage::at::kAttackerAtk	0x939fe4	data	game	battle	base_helper	-	-	unsigned char* const atk = move_script::At(::bof3::Img(battle_damage::at::kAttackerAtk.v));
+site	src/game/battle/battle_3.cpp	1764	at_global	-	battle_damage::at::kCuredBits	0x904b9a	data	game	battle	base_helper	-	-	move_script::At(::bof3::Img(battle_damage::at::kCuredBits.v))[0] = static_cast<unsigned char>(Byte(::bof3::Img(battle_damage::at::kCuredBits.v)) | 0x40);
+site	src/game/battle/battle_3.cpp	1764	at_global	-	battle_damage::at::kCuredBits	0x904b9a	data	game	battle	base_helper	-	-	move_script::At(::bof3::Img(battle_damage::at::kCuredBits.v))[0] = static_cast<unsigned char>(Byte(::bof3::Img(battle_damage::at::kCuredBits.v)) | 0x40);
+site	src/game/battle/battle_3.cpp	1775	at_global	-	battle_damage::at::kCuredBits	0x904b9a	data	game	battle	base_helper	-	-	move_script::SetWord(move_script::At(::bof3::Img(battle_damage::at::kCuredBits.v)), move_script::Word(move_script::At(::bof3::Img(battle_damage::at::kCuredBits.
+site	src/game/battle/battle_3.cpp	1775	at_global	-	battle_damage::at::kCuredBits	0x904b9a	data	game	battle	base_helper	-	-	move_script::SetWord(move_script::At(::bof3::Img(battle_damage::at::kCuredBits.v)), move_script::Word(move_script::At(::bof3::Img(battle_damage::at::kCuredBits.
+site	src/game/battle/battle_3.cpp	1792	at_global	-	battle_damage::at::kBattleFlags	0x904aa8	data	game	battle	base_helper	-	-	if (Byte(::bof3::Img(battle_damage::at::kBattleFlags.v)) & 0x80) {
+site	src/game/battle/battle_3.cpp	1800	at_global	-	battle_damage::at::kBattleFlags	0x904aa8	data	game	battle	base_helper	-	-	if ((Byte(::bof3::Img(battle_damage::at::kBattleFlags.v)) & 0x80) && d == 0) d = 1;
+site	src/game/battle/battle_3.cpp	1814	at_global	-	battle_e4::at::kFlags	0x904aa8	data	game	battle	base_helper	-	-	if (B(::bof3::Img(battle_e4::at::kFlags.v)) & 0x80) return hit;
+site	src/game/battle/battle_3.cpp	1833	at_global	-	battle_e4::at::kFlags	0x904aa8	data	game	battle	base_helper	-	-	if (B(::bof3::Img(battle_e4::at::kFlags.v)) & 0x80) return hit;
+site	src/game/battle/battle_3.cpp	1869	at_global	-	battle_damage::at::kAttackerAtk	0x939fe4	data	game	battle	base_helper	-	-	v = static_cast<std::int32_t>(U32(move_script::Long(move_script::At(::bof3::Img(battle_damage::at::kAttackerAtk.v)))) & 0xFFFF) - def;
+site	src/game/battle/battle_3.cpp	1873	at_global	-	battle_damage::at::kAttackerAtk	0x939fe4	data	game	battle	base_helper	-	-	std::int32_t x = static_cast<std::int32_t>(U32(move_script::Long(move_script::At(::bof3::Img(battle_damage::at::kAttackerAtk.v)))) & 0xFFFF) - def;
+site	src/game/battle/battle_3.cpp	1880	at_global	-	battle_damage::at::kBonusDivisor	0x64e380	data	game	battle	base_helper	-	-	const std::int32_t divisor = static_cast<std::int32_t>(Byte(::bof3::Img(battle_damage::at::kBonusDivisor.v) + index)) << 8;
+site	src/game/battle/battle_3.cpp	1893	at_global	-	battle_e4::at::kPartyCount	0x904ab0	data	game	battle	base_helper	-	-	const unsigned n = static_cast<U>(move_script::Long(move_script::At(::bof3::Img(battle_e4::at::kPartyCount.v)))) & 0xFF;
+site	src/game/battle/battle_3.cpp	1961	at_global	-	battle_e4::at::kPartyCount	0x904ab0	data	game	battle	base_helper	-	-	const unsigned n = static_cast<U>(move_script::Long(move_script::At(::bof3::Img(battle_e4::at::kPartyCount.v)))) & 0xFF;
+site	src/game/battle/battle_3.cpp	1986	at_global	-	battle_damage::at::kTurnOrder	0x904acc	data	game	battle	base_helper	-	-	if (Byte(::bof3::Img(battle_damage::at::kTurnOrder.v) + k) == b) move_script::At(::bof3::Img(battle_damage::at::kTurnOrder.v) + k)[0] = 0xFF;
+site	src/game/battle/battle_3.cpp	1986	at_global	-	battle_damage::at::kTurnOrder	0x904acc	data	game	battle	base_helper	-	-	if (Byte(::bof3::Img(battle_damage::at::kTurnOrder.v) + k) == b) move_script::At(::bof3::Img(battle_damage::at::kTurnOrder.v) + k)[0] = 0xFF;
+site	src/game/battle/battle_3.cpp	1995	at_global	-	battle_e4::at::kOrder	0x904acc	data	game	battle	base_helper	-	-	B(::bof3::Img(battle_e4::at::kOrder.v) + front) = static_cast<unsigned char>(actor);
+site	src/game/battle/battle_3.cpp	2007	at_global	-	battle_e4::at::kEntryOrder	0x904ab6	data	game	battle	base_helper	-	-	const unsigned char m = B(::bof3::Img(battle_e4::at::kEntryOrder.v) + static_cast<U>(static_cast<std::int32_t>(c)));
+site	src/game/battle/battle_3.cpp	2034	at_global	-	battle_e4::at::kFlags	0x904aa8	data	game	battle	base_helper	-	-	if (B(::bof3::Img(battle_e4::at::kFlags.v)) & 0x40) {
+site	src/game/battle/battle_3.cpp	2035	at_global	-	battle_e4::at::kFlags	0x904aa8	data	game	battle	base_helper	-	-	move_script::SetWord(move_script::At(::bof3::Img(battle_e4::at::kFlags.v)), move_script::Word(move_script::At(::bof3::Img(battle_e4::at::kFlags.v))) & 0xFFBF);
+site	src/game/battle/battle_3.cpp	2035	at_global	-	battle_e4::at::kFlags	0x904aa8	data	game	battle	base_helper	-	-	move_script::SetWord(move_script::At(::bof3::Img(battle_e4::at::kFlags.v)), move_script::Word(move_script::At(::bof3::Img(battle_e4::at::kFlags.v))) & 0xFFBF);
+site	src/game/battle/battle_3.cpp	2042	at_global	-	battle_e4::at::kActor	0x904b34	data	game	battle	base_helper	-	-	if (B(::bof3::Img(battle_e4::at::kActor.v)) < 3) return 0;
+site	src/game/battle/battle_3.cpp	2044	at_global	-	battle_e4::at::kAbility	0x904b80	data	game	battle	base_helper	-	-	if (B(::bof3::Img(battle_e4::at::kActionKind.v)) == 4 && move_script::Word(move_script::At(::bof3::Img(battle_e4::at::kAbility.v))) == 0xA1) return 0;
+site	src/game/battle/battle_3.cpp	2044	at_global	-	battle_e4::at::kActionKind	0x904b35	data	game	battle	base_helper	-	-	if (B(::bof3::Img(battle_e4::at::kActionKind.v)) == 4 && move_script::Word(move_script::At(::bof3::Img(battle_e4::at::kAbility.v))) == 0xA1) return 0;
+site	src/game/battle/battle_3.cpp	2061	at_global	-	rest_3b::at::kPartyCount	0x904ab0	data	game	battle	base_helper	-	-	for (unsigned slot = 0; (slot & 0xFF) < B(::bof3::Img(rest_3b::at::kPartyCount.v)); slot = (slot + 1) & 0xFF) {
+site	src/game/battle/battle_3.cpp	2091	at_global	-	rest_3b::at::kRosterOf	0x66972c	data	game	battle	base_helper	Character_IndexById	-	const unsigned r = B(::bof3::Img(rest_3b::at::kRosterOf.v) + (id & 0xFF));
+site	src/game/battle/battle_3.cpp	2111	module_const	-	kPulse	0x904ac8	data	game	battle	base_helper	-	include	const unsigned char c = AtBattleMisc(::bof3::Img(kPulse.v))[0];
+site	src/game/battle/battle_3.cpp	2115	module_const	-	kPulse	0x904ac8	data	game	battle	base_helper	-	include	AtBattleMisc(::bof3::Img(kPulse.v))[0] = static_cast<unsigned char>(c + 2);
+site	src/game/battle/battle_3.cpp	2118	module_const	-	kPulse	0x904ac8	data	game	battle	base_helper	-	include	AtBattleMisc(::bof3::Img(kPulse.v))[0] = static_cast<unsigned char>(BattleMisc_PulseDown == 1 ? c - 2 : c + 2);
+site	src/game/battle/battle_3.cpp	2130	module_const	-	kCueTable	0x64e3bc	data	game	battle	base_helper	-	include	const battle_misc::U id = (record & 0xFFFF0000u) | WordBattleMisc(AtBattleMisc(::bof3::Img(kCueTable.v) + index * 2));
+site	src/game/battle/battle_3.cpp	2178	at_global	-	battle_e4::at::kTarget	0x904b44	data	game	battle	base_helper	-	-	B(::bof3::Img(battle_e4::at::kTarget.v)) = pick;
+site	src/game/battle/battle_3.cpp	2247	at_global	-	battle_e4::at::kWakeChance	0x64e3e8	data	game	battle	base_helper	-	-	const int chance = count >= 3 ? 0x4B : B(::bof3::Img(battle_e4::at::kWakeChance.v) + count);
+site	src/game/battle/battle_3.cpp	2251	at_global	-	battle_e4::at::kWakeResist	0x64e3e0	data	game	battle	base_helper	-	-	return (200 - static_cast<int>(B(::bof3::Img(battle_e4::at::kWakeResist.v) + level))) * 50 >= roll ? 1 : 0;
+site	src/game/battle/battle_3.cpp	2261	at_global	-	battle_e4::at::kInventoryCounts	0x656b14	data	game	battle	base_helper	Inventory_CountLists	-	unsigned char* const counts = Ptr(::bof3::Img(battle_e4::at::kInventoryCounts.v) + 4 * category);
+site	src/game/battle/battle_3.cpp	2265	at_global	-	battle_e4::at::kInventoryIds	0x656b00	data	game	battle	base_helper	Inventory_IdLists	-	Ptr(::bof3::Img(battle_e4::at::kInventoryIds.v) + 4 * category)[s] = static_cast<unsigned char>(item);
+site	src/game/battle/battle_3.cpp	2273	at_global	-	battle_e4::at::kPhase	0x904aa0	data	game	battle	base_helper	-	-	B(::bof3::Img(battle_e4::at::kPhase.v)) = 5;
+site	src/game/battle/battle_3.cpp	2280	at_global	-	battle_e4::at::kPhase	0x904aa0	data	game	battle	base_helper	-	-	B(::bof3::Img(battle_e4::at::kPhase.v)) = 5;
+site	src/game/battle/battle_3.cpp	2287	at_global	-	battle_e4::at::kPhase	0x904aa0	data	game	battle	base_helper	-	-	B(::bof3::Img(battle_e4::at::kPhase.v)) = 5;
+site	src/game/battle/battle_3.cpp	2298	module_const	-	kSoundLists	0x6565bc	data	game	battle	base_helper	-	include	battle_misc::U p = LongBattleMisc(AtBattleMisc(::bof3::Img(kSoundLists.v) + (set & 0xFF) * 4));
+site	src/game/battle/battle_3.cpp	2330	at_global	-	battle_setup::at::kItemQueue	0x904acc	data	game	battle	base_helper	-	-	if (move_script::At(::bof3::Img(battle_setup::at::kItemQueue.v) + i)[0] == a) break;
 site	src/game/battle/battle_4.cpp	48	at_global	-	battle_sprites::at::kEnemyData	0x8c55c8	data	game	battle	base_helper	-	-	unsigned char* EnemyData(std::uint32_t id) { return At(::bof3::Img(battle_sprites::at::kEnemyData.v) + id * battle_sprites::at::kEnemyDataStride); }
 site	src/game/battle/battle_4.cpp	69	const_def	literal	kEnemyData	0x8c55c8	data	game	battle	module	-	-	constexpr ::bof3::image::Va kEnemyData{0x8C55C8};
 site	src/game/battle/battle_4.cpp	184	at_global	-	battle_sprites::at::kLayout	0x904aac	data	game	battle	base_helper	-	-	const unsigned char layout = static_cast<unsigned char>(At(::bof3::Img(battle_sprites::at::kLayout.v))[0] ^ 2);
@@ -6483,11 +6483,11 @@ site	src/game/effect/effect_kind_18_sub_10.cpp	196	ptr_sub	runtime_left	0x428000
 site	src/game/effect/effect_kind_18_sub_10.cpp	323	code_literal	literal	0x418000	0x418000	code	game	effect	-	-	aligned_8000	long ground = SH_CALL(AreaMap_Elevation)(0x418000, static_cast<long>(ez));
 site	src/game/effect/effect_kind_18_sub_10.cpp	325	code_literal	literal	0x418000	0x418000	code	game	effect	-	-	aligned_8000	ground = SH_CALL(AreaMap_Elevation)(0x418000, static_cast<long>(ez));
 site	src/game/effect/effect_kind_18_sub_10.cpp	600	ptr_sub	runtime_left	0x400000u	0x400000	base	game	effect	-	-	aligned_8000	y -= 0x400000u;
-site	src/game/effect/effect_kind_18_sub_12.cpp	415	at_global	-	at::kPoolLimit	0x7f1bac	data	game	effect	base_helper	Gfx_PacketPools+0xffac	-	const bool bands_fit = wide && (static_cast<U>(Gfx_BufferIndex) << 16) + ::bof3::Img(at::kPoolLimit) > AddressOf(quad) + bands;
-site	src/game/effect/effect_kind_18_sub_12.cpp	441	at_global	-	at::kKind2ZCell	0x905e62	data	game	effect	base_helper	Field_Kind2Z+0x2	-	const U flat = static_cast<U>(SWEffect5c(Word(At(::bof3::Img(at::kKind2ZCell.v))))) + 3u;
-site	src/game/effect/effect_kind_18_sub_12.cpp	445	at_global	-	at::kKind2ZCell	0x905e62	data	game	effect	base_helper	Field_Kind2Z+0x2	-	const U row = static_cast<U>(SWEffect5c(Word(At(::bof3::Img(at::kKind2ZCell.v))))) + i + 4u;
-site	src/game/effect/effect_kind_18_sub_12.cpp	452	at_global	-	at::kKind2ZCell	0x905e62	data	game	effect	base_helper	Field_Kind2Z+0x2	-	const U centre = static_cast<U>(SWEffect5c(Word(At(::bof3::Img(at::kKind2ZCell.v)))));
-site	src/game/effect/effect_kind_18_sub_12.cpp	475	at_global	-	at::kPoolLimit	0x7f1bac	data	game	effect	base_helper	Gfx_PacketPools+0xffac	-	const U limit = (static_cast<U>(buffer) << 16) + ::bof3::Img(at::kPoolLimit);
+site	src/game/effect/effect_kind_18_sub_12.cpp	444	at_global	-	at::kPoolLimit	0x7f1bac	data	game	effect	base_helper	Gfx_PacketPools+0xffac	-	const bool bands_fit = wide && (static_cast<U>(Gfx_BufferIndex) << 16) + ::bof3::Img(at::kPoolLimit) > AddressOf(quad) + bands;
+site	src/game/effect/effect_kind_18_sub_12.cpp	479	at_global	-	at::kKind2ZCell	0x905e62	data	game	effect	base_helper	Field_Kind2Z+0x2	-	const U flat = static_cast<U>(SWEffect5c(Word(At(::bof3::Img(at::kKind2ZCell.v))))) + 3u;
+site	src/game/effect/effect_kind_18_sub_12.cpp	483	at_global	-	at::kKind2ZCell	0x905e62	data	game	effect	base_helper	Field_Kind2Z+0x2	-	const U row = static_cast<U>(SWEffect5c(Word(At(::bof3::Img(at::kKind2ZCell.v))))) + i + 4u;
+site	src/game/effect/effect_kind_18_sub_12.cpp	491	at_global	-	at::kKind2ZCell	0x905e62	data	game	effect	base_helper	Field_Kind2Z+0x2	-	const U centre = static_cast<U>(SWEffect5c(Word(At(::bof3::Img(at::kKind2ZCell.v)))));
+site	src/game/effect/effect_kind_18_sub_12.cpp	514	at_global	-	at::kPoolLimit	0x7f1bac	data	game	effect	base_helper	Gfx_PacketPools+0xffac	-	const U limit = (static_cast<U>(buffer) << 16) + ::bof3::Img(at::kPoolLimit);
 site	src/game/effect/effect_kind_18_sub_17.cpp	76	abs_call	via=SH_AT	at::kDrawMoveStep	0x5043b0	code	game	effect	call	EffectKind18Sub17_CopyFrame	-	void Step(unsigned step) { SH_AT(StepFn, at::kDrawMoveStep.v)(step); }
 site	src/game/effect/effect_kind_18_sub_17.cpp	78	abs_call	via=SH_AT	at::kDrawQuads	0x503fa0	code	game	effect	call	EffectKind18Sub17_DrawPatch	-	void Quads(unsigned variant) { SH_AT(QuadsFn, at::kDrawQuads.v)(variant); }
 site	src/game/effect/effect_kind_18_sub_17.cpp	80	abs_call	via=SH_AT	at::kDrawMoves	0x503e50	code	game	effect	call	EffectKind18Sub17_ScrollTexture	-	void Moves() { SH_AT(MovesFn, at::kDrawMoves.v)(); }
@@ -8323,16 +8323,17 @@ site	src/game/field/encounter.cpp	503	at_global	-	inventory_ops::at::kCameraOffs
 site	src/game/field/event_cond.cpp	102	value_literal	&	0x007FFFFFu	0x7fffff	data	game	field	-	Gfx_PacketPools+0x1e3ff	-	const bool nan = (bits & 0x7F800000u) == 0x7F800000u && (bits & 0x007FFFFFu) != 0;
 site	src/game/field/event_cond.cpp	103	value_literal	|	0x00400000u	0x400000	base	game	field	-	-	-	return nan ? bits | 0x00400000u : bits;
 site	src/game/field/event_cond.cpp	279	const_def	literal	kPoolLimit	0x7f1bac	data	game	field	module	Gfx_PacketPools+0xffac	-	constexpr std::uint32_t kPoolLimit = 0x7F1BAC;
-site	src/game/field/event_cond.cpp	468	module_const	-	kPoolLimit	0x7f1bac	data	game	field	base_helper	Gfx_PacketPools+0xffac	file	const std::uint32_t limit = (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16) + ::bof3::Img(kPoolLimit);
-site	src/game/field/event_cond.cpp	663	base_offset	-	0x904030	0x904030	data	game	field	base_helper	Cond_Flags+0xa0	-	return SH_CALL(Flags_Test)(AtFieldO(::bof3::Img(0x904030)), **at);
-site	src/game/field/event_cond.cpp	693	module_const	-	kCounters	0x903848	data	game	field	base_helper	-	include	case 3: case 4: case 5: case 6: return At(::bof3::Img(kCounters))[index - 3];
-site	src/game/field/event_cond.cpp	706	base_offset	-	0x903848	0x903848	data	game	field	base_helper	-	-	extern " " unsigned char __cdecl EventCond_Counter0(const unsigned char** at) { return AtFieldO(::bof3::Img(0x903848))[0] == **at; }
-site	src/game/field/event_cond.cpp	709	base_offset	-	0x903849	0x903849	data	game	field	base_helper	-	-	extern " " unsigned char __cdecl EventCond_Counter1(const unsigned char** at) { return AtFieldO(::bof3::Img(0x903849))[0] == **at; }
-site	src/game/field/event_cond.cpp	711	base_offset	-	0x90384A	0x90384a	data	game	field	base_helper	-	-	extern " " unsigned char __cdecl EventCond_Counter2(const unsigned char** at) { return AtFieldO(::bof3::Img(0x90384A))[0] == **at; }
-site	src/game/field/event_cond.cpp	713	base_offset	-	0x90384B	0x90384b	data	game	field	base_helper	-	-	extern " " unsigned char __cdecl EventCond_Counter3(const unsigned char** at) { return AtFieldO(::bof3::Img(0x90384B))[0] == **at; }
-site	src/game/field/event_cond.cpp	749	at_global	-	sprite_pose::at::kDirectionAnimations	0x65f5bc	data	game	field	base_helper	-	-	rv::Current<records::SpriteObject>()->flip = At(::bof3::Img(sprite_pose::at::kDirectionAnimations))[pair + 1];
-site	src/game/field/event_cond.cpp	751	at_global	-	sprite_pose::at::kDirectionAnimations	0x65f5bc	data	game	field	base_helper	-	-	const unsigned char animation = At(::bof3::Img(sprite_pose::at::kDirectionAnimations))[pair];
-site	src/game/field/event_cond.cpp	771	abs_call	via=SH_AT	scena_sx::at::kCameraTurnYaw	0x57c5a0	code	game	field	call	Camera_TurnStep	-	return SH_AT(std::uint32_t (__cdecl*)(std::int32_t, std::int32_t), scena_sx::at::kCameraTurnYaw.v)(angle, step);
+site	src/game/field/event_cond.cpp	311	module_const	-	kPoolLimit	0x7f1bac	data	game	field	base_helper	Gfx_PacketPools+0xffac	file	const std::uint32_t limit = (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16) + ::bof3::Img(kPoolLimit);
+site	src/game/field/event_cond.cpp	497	module_const	-	kPoolLimit	0x7f1bac	data	game	field	base_helper	Gfx_PacketPools+0xffac	file	const std::uint32_t limit = (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16) + ::bof3::Img(kPoolLimit);
+site	src/game/field/event_cond.cpp	692	base_offset	-	0x904030	0x904030	data	game	field	base_helper	Cond_Flags+0xa0	-	return SH_CALL(Flags_Test)(AtFieldO(::bof3::Img(0x904030)), **at);
+site	src/game/field/event_cond.cpp	722	module_const	-	kCounters	0x903848	data	game	field	base_helper	-	include	case 3: case 4: case 5: case 6: return At(::bof3::Img(kCounters))[index - 3];
+site	src/game/field/event_cond.cpp	735	base_offset	-	0x903848	0x903848	data	game	field	base_helper	-	-	extern " " unsigned char __cdecl EventCond_Counter0(const unsigned char** at) { return AtFieldO(::bof3::Img(0x903848))[0] == **at; }
+site	src/game/field/event_cond.cpp	738	base_offset	-	0x903849	0x903849	data	game	field	base_helper	-	-	extern " " unsigned char __cdecl EventCond_Counter1(const unsigned char** at) { return AtFieldO(::bof3::Img(0x903849))[0] == **at; }
+site	src/game/field/event_cond.cpp	740	base_offset	-	0x90384A	0x90384a	data	game	field	base_helper	-	-	extern " " unsigned char __cdecl EventCond_Counter2(const unsigned char** at) { return AtFieldO(::bof3::Img(0x90384A))[0] == **at; }
+site	src/game/field/event_cond.cpp	742	base_offset	-	0x90384B	0x90384b	data	game	field	base_helper	-	-	extern " " unsigned char __cdecl EventCond_Counter3(const unsigned char** at) { return AtFieldO(::bof3::Img(0x90384B))[0] == **at; }
+site	src/game/field/event_cond.cpp	778	at_global	-	sprite_pose::at::kDirectionAnimations	0x65f5bc	data	game	field	base_helper	-	-	rv::Current<records::SpriteObject>()->flip = At(::bof3::Img(sprite_pose::at::kDirectionAnimations))[pair + 1];
+site	src/game/field/event_cond.cpp	780	at_global	-	sprite_pose::at::kDirectionAnimations	0x65f5bc	data	game	field	base_helper	-	-	const unsigned char animation = At(::bof3::Img(sprite_pose::at::kDirectionAnimations))[pair];
+site	src/game/field/event_cond.cpp	800	abs_call	via=SH_AT	scena_sx::at::kCameraTurnYaw	0x57c5a0	code	game	field	call	Camera_TurnStep	-	return SH_AT(std::uint32_t (__cdecl*)(std::int32_t, std::int32_t), scena_sx::at::kCameraTurnYaw.v)(angle, step);
 site	src/game/field/event_op.cpp	36	at_global	-	event_ops::at::kScratch_addr	0x903850	data	game	field	base_helper	SharedScratch	-	std::memcpy(&v, At(::bof3::Img(event_ops::at::kScratch_addr)), sizeof v);
 site	src/game/field/event_op.cpp	235	at_global	-	event_ops::at::kPlacedFlags	0x9040cc	data	game	field	base_helper	-	-	if (At(::bof3::Img(event_ops::at::kPlacedFlags))[bit >> 3] & (1u << (bit & 7))) {
 site	src/game/field/event_script_ours.cpp	157	code_const	gen_func	bof3::addr::Area_RunPlacement	0x579740	code	game	field	call	Area_RunPlacement	-	if (g_desert_faerie && !bof3::IsEnabled(bof3::addr::Area_RunPlacement))
@@ -9560,114 +9561,114 @@ site	src/game/field/field_core.cpp	996	at_global	-	field_c3::at::kScriptFlags2Hi
 site	src/game/field/field_core.cpp	1047	abs_call	via=SH_AT	field_c3::at::kRecoilFace	0x534c20	code	game	field	call	Field_FloorHurt	-	SH_AT(void (__cdecl*)(unsigned char), field_c3::at::kRecoilFace.v)(S()[0xB]);
 site	src/game/field/field_core.cpp	1103	at_global	-	member_sprites::at::kCellOffsets	0x66971c	data	game	field	base_helper	-	-	const unsigned char* const offsets = move_script::At(::bof3::Img(member_sprites::at::kCellOffsets.v)) + facing * 2u;
 site	src/game/field/field_core.cpp	1335	module_const	-	kCellOffsets	0x66971c	data	game	field	base_helper	-	file	const unsigned char* const offsets = move_script::At(::bof3::Img(kCellOffsets.v)) + static_cast<unsigned>(facing) * 2u;
-site	src/game/field/field_frame.cpp	274	addr_eq	case	0x573080	0x573080	code	hosted	field	-	Kind2_Run	symbol	case 0x573080: return f(&StubVoid<1>);
-site	src/game/field/field_frame.cpp	275	addr_eq	case	0x57B7B0	0x57b7b0	code	hosted	field	-	Party_ExtraFrame	symbol	case 0x57B7B0: return f(&StubVoid<2>);
-site	src/game/field/field_frame.cpp	276	addr_eq	case	0x517350	0x517350	code	hosted	field	-	Field_MembersFrame	symbol	case 0x517350: return f(&StubVoid<3>);
-site	src/game/field/field_frame.cpp	277	addr_eq	case	0x517490	0x517490	code	hosted	field	-	Field_ObjectsFrame	symbol	case 0x517490: return f(&StubVoid<4>);
-site	src/game/field/field_frame.cpp	278	addr_eq	case	0x56E6C0	0x56e6c0	code	hosted	field	-	AreaMap_Frame	symbol	case 0x56E6C0: return f(&StubVoid<5>);
-site	src/game/field/field_frame.cpp	279	addr_eq	case	0x57B780	0x57b780	code	hosted	field	-	Party_ExtraScreens	symbol	case 0x57B780: return f(&StubVoid<6>);
-site	src/game/field/field_frame.cpp	280	addr_eq	case	0x531B60	0x531b60	code	hosted	field	-	Party_UpdateScreens	symbol	case 0x531B60: return f(&StubVoid<7>);
-site	src/game/field/field_frame.cpp	281	addr_eq	case	0x5173E0	0x5173e0	code	hosted	field	-	Field_ObjectsScreen	symbol	case 0x5173E0: return f(&StubVoid<8>);
-site	src/game/field/field_frame.cpp	282	addr_eq	case	0x494030	0x494030	code	hosted	field	-	Effect_RunObjects	symbol	case 0x494030: return f(&StubVoid<9>);
-site	src/game/field/field_frame.cpp	283	addr_eq	case	0x455250	0x455250	code	hosted	field	-	Field_RunSlots	symbol	case 0x455250: return f(&StubVoid<10>);
-site	src/game/field/field_frame.cpp	284	addr_eq	case	0x454AD0	0x454ad0	code	hosted	field	-	MoveScript_TintFrame	symbol	case 0x454AD0: return f(&StubVoid<11>);
-site	src/game/field/field_frame.cpp	285	addr_eq	case	0x592F00	0x592f00	code	hosted	field	-	Field_DrawFrame	symbol	case 0x592F00: return f(&StubVoid<12>);
-site	src/game/field/field_frame.cpp	286	addr_eq	case	0x56D690	0x56d690	code	hosted	field	-	Field_ModeDispatch	symbol	case 0x56D690: return f(&StubVoid<13>);
-site	src/game/field/field_frame.cpp	287	addr_eq	case	0x59E230	0x59e230	code	hosted	field	-	Field_RunTaskRecords	symbol	case 0x59E230: return f(&StubVoid<14>);
-site	src/game/field/field_frame.cpp	288	addr_eq	case	0x533760	0x533760	code	hosted	field	-	Field_PendingJump	symbol	case 0x533760: return f(&StubVoid<15>);
-site	src/game/field/field_frame.cpp	289	addr_eq	case	0x52D8F0	0x52d8f0	code	hosted	field	-	Field_LeaderFrame	symbol	case 0x52D8F0: return f(&StubVoid<16>);
-site	src/game/field/field_frame.cpp	290	addr_eq	case	0x51AC50	0x51ac50	code	hosted	field	-	Field_MemberFrame	symbol	case 0x51AC50: return f(&StubVoid<17>);
-site	src/game/field/field_frame.cpp	291	addr_eq	case	0x57B830	0x57b830	code	hosted	field	-	Sprite_UpdateScreenA	symbol	case 0x57B830: return f(&StubVoid<18>);
-site	src/game/field/field_frame.cpp	292	addr_eq	case	0x588F20	0x588f20	code	hosted	field	-	Sprite_UpdateScreen	symbol	case 0x588F20: return f(&StubVoid<19>);
-site	src/game/field/field_frame.cpp	293	addr_eq	case	0x517E90	0x517e90	code	hosted	field	-	Field_ObjectTalk	symbol	case 0x517E90: return f(&StubTurnTarget);
-site	src/game/field/field_frame.cpp	294	addr_eq	case	0x57C4C0	0x57c4c0	code	hosted	field	-	Sprite_FaceDirection	symbol	case 0x57C4C0: return f(&StubFace);
-site	src/game/field/field_frame.cpp	295	addr_eq	case	0x517F30	0x517f30	code	hosted	field	-	Field_ObjectIdle	symbol	case 0x517F30: return f(&StubObject<22>);
-site	src/game/field/field_frame.cpp	296	addr_eq	case	0x519600	0x519600	code	hosted	field	-	Field_ObjectLinked	symbol	case 0x519600: return f(&StubVoid<23>);
-site	src/game/field/field_frame.cpp	297	addr_eq	case	0x518B40	0x518b40	code	hosted	field	-	Field_ObjectIdleLong	symbol	case 0x518B40: return f(&StubObject<24>);
-site	src/game/field/field_frame.cpp	298	addr_eq	case	0x5893A0	0x5893a0	code	hosted	field	-	Sprite_ScriptTick	symbol	case 0x5893A0: return f(&StubTick<25>);
-site	src/game/field/field_frame.cpp	299	addr_eq	case	0x589410	0x589410	code	hosted	field	-	Sprite_ScriptTickOnce	symbol	case 0x589410: return f(&StubTick<26>);
-site	src/game/field/field_frame.cpp	300	addr_eq	case	0x57B860	0x57b860	code	hosted	field	-	Sprite_ProjectA	symbol	case 0x57B860: return f(&StubVoid<27>);
-site	src/game/field/field_frame.cpp	301	addr_eq	case	0x589770	0x589770	code	hosted	field	-	Sprite_InheritDrawKey	symbol	case 0x589770: return f(&StubInheritKey);
-site	src/game/field/field_frame.cpp	302	addr_eq	case	0x5A8E30	0x5a8e30	code	hosted	field	-	Gte_LoadVertex	symbol	case 0x5A8E30: return f(&StubLoadVertex);
-site	src/game/field/field_frame.cpp	303	addr_eq	case	0x5A8E90	0x5a8e90	code	hosted	field	-	Gte_Rtps	symbol	case 0x5A8E90: return f(&StubVoid<30>);
-site	src/game/field/field_frame.cpp	304	addr_eq	case	0x5A90B0	0x5a90b0	code	hosted	field	-	Gte_StoreScreenXY	symbol	case 0x5A90B0: return f(&StubStoreXY);
-site	src/game/field/field_frame.cpp	305	addr_eq	case	0x5A94B0	0x5a94b0	code	hosted	field	-	Gte_StoreDepthQuarter	symbol	case 0x5A94B0: return f(&StubStoreDepth);
-site	src/game/field/field_frame.cpp	306	addr_eq	case	0x5B9550	0x5b9550	code	hosted	field	-	Crt_ftol	symbol	case 0x5B9550: return nullptr;
-site	src/game/field/field_frame.cpp	307	addr_eq	case	0x571AF0	0x571af0	code	hosted	field	-	AreaMap_HeaderPass	symbol	case 0x571AF0: return f(&StubVoid<33>);
-site	src/game/field/field_frame.cpp	308	addr_eq	case	0x592F20	0x592f20	code	hosted	field	-	Sprite_DrawOverlays	symbol	case 0x592F20: return f(&StubVoid<34>);
-site	src/game/field/field_frame.cpp	309	addr_eq	case	0x593060	0x593060	code	hosted	field	-	Sprite_DrawPass	symbol	case 0x593060: return f(&StubVoid<35>);
-site	src/game/field/field_frame.cpp	310	addr_eq	case	0x593020	0x593020	code	hosted	field	-	Sprite_SwapOverlays	symbol	case 0x593020: return f(&StubSwap);
-site	src/game/field/field_frame.cpp	311	addr_eq	case	0x5935B0	0x5935b0	code	hosted	field	-	Sprite_Draw	symbol	case 0x5935B0: return f(&StubSpriteDraw);
-site	src/game/field/field_frame.cpp	321	code_literal	literal	0x517350	0x517350	code	game	field	init	Field_MembersFrame	symbol	constexpr Call kFrameCalls[] = {{0x0, 0x573080}, {0x5, 0x57b7b0}, {0xa, 0x517350}, {0xf, 0x517490}, {0x14, 0x56e6c0},
-site	src/game/field/field_frame.cpp	321	code_literal	literal	0x517490	0x517490	code	game	field	init	Field_ObjectsFrame	symbol	constexpr Call kFrameCalls[] = {{0x0, 0x573080}, {0x5, 0x57b7b0}, {0xa, 0x517350}, {0xf, 0x517490}, {0x14, 0x56e6c0},
-site	src/game/field/field_frame.cpp	321	code_literal	literal	0x56e6c0	0x56e6c0	code	game	field	init	AreaMap_Frame	symbol	constexpr Call kFrameCalls[] = {{0x0, 0x573080}, {0x5, 0x57b7b0}, {0xa, 0x517350}, {0xf, 0x517490}, {0x14, 0x56e6c0},
-site	src/game/field/field_frame.cpp	321	code_literal	literal	0x573080	0x573080	code	game	field	init	Kind2_Run	symbol	constexpr Call kFrameCalls[] = {{0x0, 0x573080}, {0x5, 0x57b7b0}, {0xa, 0x517350}, {0xf, 0x517490}, {0x14, 0x56e6c0},
-site	src/game/field/field_frame.cpp	321	code_literal	literal	0x57b7b0	0x57b7b0	code	game	field	init	Party_ExtraFrame	symbol	constexpr Call kFrameCalls[] = {{0x0, 0x573080}, {0x5, 0x57b7b0}, {0xa, 0x517350}, {0xf, 0x517490}, {0x14, 0x56e6c0},
-site	src/game/field/field_frame.cpp	322	code_literal	literal	0x455250	0x455250	code	game	field	init	Field_RunSlots	symbol	{0x19, 0x57b780}, {0x1e, 0x531b60}, {0x23, 0x5173e0}, {0x28, 0x494030}, {0x2d, 0x455250},
-site	src/game/field/field_frame.cpp	322	code_literal	literal	0x494030	0x494030	code	game	field	init	Effect_RunObjects	symbol	{0x19, 0x57b780}, {0x1e, 0x531b60}, {0x23, 0x5173e0}, {0x28, 0x494030}, {0x2d, 0x455250},
-site	src/game/field/field_frame.cpp	322	code_literal	literal	0x5173e0	0x5173e0	code	game	field	init	Field_ObjectsScreen	symbol	{0x19, 0x57b780}, {0x1e, 0x531b60}, {0x23, 0x5173e0}, {0x28, 0x494030}, {0x2d, 0x455250},
-site	src/game/field/field_frame.cpp	322	code_literal	literal	0x531b60	0x531b60	code	game	field	init	Party_UpdateScreens	symbol	{0x19, 0x57b780}, {0x1e, 0x531b60}, {0x23, 0x5173e0}, {0x28, 0x494030}, {0x2d, 0x455250},
-site	src/game/field/field_frame.cpp	322	code_literal	literal	0x57b780	0x57b780	code	game	field	init	Party_ExtraScreens	symbol	{0x19, 0x57b780}, {0x1e, 0x531b60}, {0x23, 0x5173e0}, {0x28, 0x494030}, {0x2d, 0x455250},
-site	src/game/field/field_frame.cpp	323	code_literal	literal	0x454ad0	0x454ad0	code	game	field	init	MoveScript_TintFrame	symbol	{0x32, 0x454ad0}, {0x37, 0x592f00}};
-site	src/game/field/field_frame.cpp	323	code_literal	literal	0x592f00	0x592f00	code	game	field	init	Field_DrawFrame	symbol	{0x32, 0x454ad0}, {0x37, 0x592f00}};
-site	src/game/field/field_frame.cpp	324	code_literal	literal	0x517350	0x517350	code	game	field	init	Field_MembersFrame	symbol	constexpr Call kScriptedCalls[] = {{0x0, 0x56d690}, {0x5, 0x59e230}, {0xa, 0x573080}, {0xf, 0x57b7b0}, {0x14, 0x517350},
-site	src/game/field/field_frame.cpp	324	code_literal	literal	0x56d690	0x56d690	code	game	field	init	Field_ModeDispatch	symbol	constexpr Call kScriptedCalls[] = {{0x0, 0x56d690}, {0x5, 0x59e230}, {0xa, 0x573080}, {0xf, 0x57b7b0}, {0x14, 0x517350},
-site	src/game/field/field_frame.cpp	324	code_literal	literal	0x573080	0x573080	code	game	field	init	Kind2_Run	symbol	constexpr Call kScriptedCalls[] = {{0x0, 0x56d690}, {0x5, 0x59e230}, {0xa, 0x573080}, {0xf, 0x57b7b0}, {0x14, 0x517350},
-site	src/game/field/field_frame.cpp	324	code_literal	literal	0x57b7b0	0x57b7b0	code	game	field	init	Party_ExtraFrame	symbol	constexpr Call kScriptedCalls[] = {{0x0, 0x56d690}, {0x5, 0x59e230}, {0xa, 0x573080}, {0xf, 0x57b7b0}, {0x14, 0x517350},
-site	src/game/field/field_frame.cpp	324	code_literal	literal	0x59e230	0x59e230	code	game	field	init	Field_RunTaskRecords	symbol	constexpr Call kScriptedCalls[] = {{0x0, 0x56d690}, {0x5, 0x59e230}, {0xa, 0x573080}, {0xf, 0x57b7b0}, {0x14, 0x517350},
-site	src/game/field/field_frame.cpp	325	code_literal	literal	0x5173e0	0x5173e0	code	game	field	init	Field_ObjectsScreen	symbol	{0x19, 0x517490}, {0x1e, 0x56e6c0}, {0x23, 0x57b780}, {0x28, 0x531b60}, {0x2d, 0x5173e0},
-site	src/game/field/field_frame.cpp	325	code_literal	literal	0x517490	0x517490	code	game	field	init	Field_ObjectsFrame	symbol	{0x19, 0x517490}, {0x1e, 0x56e6c0}, {0x23, 0x57b780}, {0x28, 0x531b60}, {0x2d, 0x5173e0},
-site	src/game/field/field_frame.cpp	325	code_literal	literal	0x531b60	0x531b60	code	game	field	init	Party_UpdateScreens	symbol	{0x19, 0x517490}, {0x1e, 0x56e6c0}, {0x23, 0x57b780}, {0x28, 0x531b60}, {0x2d, 0x5173e0},
-site	src/game/field/field_frame.cpp	325	code_literal	literal	0x56e6c0	0x56e6c0	code	game	field	init	AreaMap_Frame	symbol	{0x19, 0x517490}, {0x1e, 0x56e6c0}, {0x23, 0x57b780}, {0x28, 0x531b60}, {0x2d, 0x5173e0},
-site	src/game/field/field_frame.cpp	325	code_literal	literal	0x57b780	0x57b780	code	game	field	init	Party_ExtraScreens	symbol	{0x19, 0x517490}, {0x1e, 0x56e6c0}, {0x23, 0x57b780}, {0x28, 0x531b60}, {0x2d, 0x5173e0},
-site	src/game/field/field_frame.cpp	326	code_literal	literal	0x454ad0	0x454ad0	code	game	field	init	MoveScript_TintFrame	symbol	{0x32, 0x494030}, {0x37, 0x455250}, {0x3c, 0x454ad0}, {0x41, 0x592f00}};
-site	src/game/field/field_frame.cpp	326	code_literal	literal	0x455250	0x455250	code	game	field	init	Field_RunSlots	symbol	{0x32, 0x494030}, {0x37, 0x455250}, {0x3c, 0x454ad0}, {0x41, 0x592f00}};
-site	src/game/field/field_frame.cpp	326	code_literal	literal	0x494030	0x494030	code	game	field	init	Effect_RunObjects	symbol	{0x32, 0x494030}, {0x37, 0x455250}, {0x3c, 0x454ad0}, {0x41, 0x592f00}};
-site	src/game/field/field_frame.cpp	326	code_literal	literal	0x592f00	0x592f00	code	game	field	init	Field_DrawFrame	symbol	{0x32, 0x494030}, {0x37, 0x455250}, {0x3c, 0x454ad0}, {0x41, 0x592f00}};
-site	src/game/field/field_frame.cpp	327	code_literal	literal	0x51ac50	0x51ac50	code	game	field	init	Field_MemberFrame	symbol	constexpr Call kMembersCalls[] = {{0x0, 0x533760}, {0x28, 0x52d8f0}, {0x59, 0x51ac50}, {0x85, 0x51ac50}};
-site	src/game/field/field_frame.cpp	327	code_literal	literal	0x51ac50	0x51ac50	code	game	field	init	Field_MemberFrame	symbol	constexpr Call kMembersCalls[] = {{0x0, 0x533760}, {0x28, 0x52d8f0}, {0x59, 0x51ac50}, {0x85, 0x51ac50}};
-site	src/game/field/field_frame.cpp	327	code_literal	literal	0x52d8f0	0x52d8f0	code	game	field	init	Field_LeaderFrame	symbol	constexpr Call kMembersCalls[] = {{0x0, 0x533760}, {0x28, 0x52d8f0}, {0x59, 0x51ac50}, {0x85, 0x51ac50}};
-site	src/game/field/field_frame.cpp	327	code_literal	literal	0x533760	0x533760	code	game	field	init	Field_PendingJump	symbol	constexpr Call kMembersCalls[] = {{0x0, 0x533760}, {0x28, 0x52d8f0}, {0x59, 0x51ac50}, {0x85, 0x51ac50}};
-site	src/game/field/field_frame.cpp	328	code_literal	literal	0x57b830	0x57b830	code	game	field	init	Sprite_UpdateScreenA	symbol	constexpr Call kScreenCalls[] = {{0x48, 0x57b830}, {0x4f, 0x588f20}};
-site	src/game/field/field_frame.cpp	328	code_literal	literal	0x588f20	0x588f20	code	game	field	init	Sprite_UpdateScreen	symbol	constexpr Call kScreenCalls[] = {{0x48, 0x57b830}, {0x4f, 0x588f20}};
-site	src/game/field/field_frame.cpp	329	code_literal	literal	0x517e90	0x517e90	code	game	field	init	Field_ObjectTalk	symbol	constexpr Call kObjectsCalls[] = {{0x58, 0x517e90}, {0xb6, 0x57c4c0}, {0xd0, 0x517f30}, {0xe2, 0x519600}, {0xfb, 0x518b40},
-site	src/game/field/field_frame.cpp	329	code_literal	literal	0x517f30	0x517f30	code	game	field	init	Field_ObjectIdle	symbol	constexpr Call kObjectsCalls[] = {{0x58, 0x517e90}, {0xb6, 0x57c4c0}, {0xd0, 0x517f30}, {0xe2, 0x519600}, {0xfb, 0x518b40},
-site	src/game/field/field_frame.cpp	329	code_literal	literal	0x518b40	0x518b40	code	game	field	init	Field_ObjectIdleLong	symbol	constexpr Call kObjectsCalls[] = {{0x58, 0x517e90}, {0xb6, 0x57c4c0}, {0xd0, 0x517f30}, {0xe2, 0x519600}, {0xfb, 0x518b40},
-site	src/game/field/field_frame.cpp	329	code_literal	literal	0x519600	0x519600	code	game	field	init	Field_ObjectLinked	symbol	constexpr Call kObjectsCalls[] = {{0x58, 0x517e90}, {0xb6, 0x57c4c0}, {0xd0, 0x517f30}, {0xe2, 0x519600}, {0xfb, 0x518b40},
-site	src/game/field/field_frame.cpp	329	code_literal	literal	0x57c4c0	0x57c4c0	code	game	field	init	Sprite_FaceDirection	symbol	constexpr Call kObjectsCalls[] = {{0x58, 0x517e90}, {0xb6, 0x57c4c0}, {0xd0, 0x517f30}, {0xe2, 0x519600}, {0xfb, 0x518b40},
-site	src/game/field/field_frame.cpp	330	code_literal	literal	0x57c4c0	0x57c4c0	code	game	field	init	Sprite_FaceDirection	symbol	{0x12d, 0x57c4c0}, {0x162, 0x5893a0}, {0x177, 0x5893a0}, {0x17e, 0x589410}};
-site	src/game/field/field_frame.cpp	330	code_literal	literal	0x5893a0	0x5893a0	code	game	field	init	Sprite_ScriptTick	symbol	{0x12d, 0x57c4c0}, {0x162, 0x5893a0}, {0x177, 0x5893a0}, {0x17e, 0x589410}};
-site	src/game/field/field_frame.cpp	330	code_literal	literal	0x5893a0	0x5893a0	code	game	field	init	Sprite_ScriptTick	symbol	{0x12d, 0x57c4c0}, {0x162, 0x5893a0}, {0x177, 0x5893a0}, {0x17e, 0x589410}};
-site	src/game/field/field_frame.cpp	330	code_literal	literal	0x589410	0x589410	code	game	field	init	Sprite_ScriptTickOnce	symbol	{0x12d, 0x57c4c0}, {0x162, 0x5893a0}, {0x177, 0x5893a0}, {0x17e, 0x589410}};
-site	src/game/field/field_frame.cpp	331	code_literal	literal	0x57b830	0x57b830	code	game	field	init	Sprite_UpdateScreenA	symbol	constexpr Call kExtraScreensCalls[] = {{0x1c, 0x57b830}};
-site	src/game/field/field_frame.cpp	332	code_literal	literal	0x517e90	0x517e90	code	game	field	init	Field_ObjectTalk	symbol	constexpr Call kExtraFrameCalls[] = {{0x2f, 0x517e90}, {0x3a, 0x517f30}, {0x4a, 0x519600}};
-site	src/game/field/field_frame.cpp	332	code_literal	literal	0x517f30	0x517f30	code	game	field	init	Field_ObjectIdle	symbol	constexpr Call kExtraFrameCalls[] = {{0x2f, 0x517e90}, {0x3a, 0x517f30}, {0x4a, 0x519600}};
-site	src/game/field/field_frame.cpp	332	code_literal	literal	0x519600	0x519600	code	game	field	init	Field_ObjectLinked	symbol	constexpr Call kExtraFrameCalls[] = {{0x2f, 0x517e90}, {0x3a, 0x517f30}, {0x4a, 0x519600}};
-site	src/game/field/field_frame.cpp	333	code_literal	literal	0x57b860	0x57b860	code	game	field	init	Sprite_ProjectA	symbol	constexpr Call kScreenACalls[] = {{0x29, 0x57b860}};
-site	src/game/field/field_frame.cpp	334	code_literal	literal	0x589770	0x589770	code	game	field	init	Sprite_InheritDrawKey	symbol	constexpr Call kProjectCalls[] = {{0xb5, 0x589770}, {0xf7, 0x5a8e30}, {0xfc, 0x5a8e90}, {0x106, 0x5a90b0},
-site	src/game/field/field_frame.cpp	334	code_literal	literal	0x5a8e30	0x5a8e30	code	game	field	init	Gte_LoadVertex	symbol	constexpr Call kProjectCalls[] = {{0xb5, 0x589770}, {0xf7, 0x5a8e30}, {0xfc, 0x5a8e90}, {0x106, 0x5a90b0},
-site	src/game/field/field_frame.cpp	334	code_literal	literal	0x5a8e90	0x5a8e90	code	game	field	init	Gte_Rtps	symbol	constexpr Call kProjectCalls[] = {{0xb5, 0x589770}, {0xf7, 0x5a8e30}, {0xfc, 0x5a8e90}, {0x106, 0x5a90b0},
-site	src/game/field/field_frame.cpp	334	code_literal	literal	0x5a90b0	0x5a90b0	code	game	field	init	Gte_StoreScreenXY	symbol	constexpr Call kProjectCalls[] = {{0xb5, 0x589770}, {0xf7, 0x5a8e30}, {0xfc, 0x5a8e90}, {0x106, 0x5a90b0},
-site	src/game/field/field_frame.cpp	335	code_literal	literal	0x5a94b0	0x5a94b0	code	game	field	init	Gte_StoreDepthQuarter	symbol	{0x115, 0x5a94b0}, {0x12d, 0x5b9550}, {0x14d, 0x5b9550}};
-site	src/game/field/field_frame.cpp	335	code_literal	literal	0x5b9550	0x5b9550	code	game	field	init	Crt_ftol	symbol	{0x115, 0x5a94b0}, {0x12d, 0x5b9550}, {0x14d, 0x5b9550}};
-site	src/game/field/field_frame.cpp	335	code_literal	literal	0x5b9550	0x5b9550	code	game	field	init	Crt_ftol	symbol	{0x115, 0x5a94b0}, {0x12d, 0x5b9550}, {0x14d, 0x5b9550}};
-site	src/game/field/field_frame.cpp	336	code_literal	literal	0x571af0	0x571af0	code	game	field	init	AreaMap_HeaderPass	symbol	constexpr Call kDrawCalls[] = {{0x0, 0x571af0}, {0x5, 0x592f20}, {0xa, 0x593060}};
-site	src/game/field/field_frame.cpp	336	code_literal	literal	0x592f20	0x592f20	code	game	field	init	Sprite_DrawOverlays	symbol	constexpr Call kDrawCalls[] = {{0x0, 0x571af0}, {0x5, 0x592f20}, {0xa, 0x593060}};
-site	src/game/field/field_frame.cpp	336	code_literal	literal	0x593060	0x593060	code	game	field	init	Sprite_DrawPass	symbol	constexpr Call kDrawCalls[] = {{0x0, 0x571af0}, {0x5, 0x592f20}, {0xa, 0x593060}};
-site	src/game/field/field_frame.cpp	337	code_literal	literal	0x593020	0x593020	code	game	field	init	Sprite_SwapOverlays	symbol	constexpr Call kOverlayCalls[] = {{0x61, 0x593020}, {0xe5, 0x5935b0}};
-site	src/game/field/field_frame.cpp	337	code_literal	literal	0x5935b0	0x5935b0	code	game	field	init	Sprite_Draw	symbol	constexpr Call kOverlayCalls[] = {{0x61, 0x593020}, {0xe5, 0x5935b0}};
-site	src/game/field/field_frame.cpp	340	code_literal	literal	0x517200	0x517200	code	game	field	init	Field_Frame	symbol	{" ", 0x517200, 0x3C, kFrameCalls, 12},
-site	src/game/field/field_frame.cpp	341	code_literal	literal	0x517240	0x517240	code	game	field	init	Field_FrameScripted	symbol	{" ", 0x517240, 0x46, kScriptedCalls, 14},
-site	src/game/field/field_frame.cpp	342	code_literal	literal	0x517350	0x517350	code	game	field	init	Field_MembersFrame	symbol	{" ", 0x517350, 0x8B, kMembersCalls, 4},
-site	src/game/field/field_frame.cpp	343	code_literal	literal	0x5173E0	0x5173e0	code	game	field	init	Field_ObjectsScreen	symbol	{" ", 0x5173E0, 0x60, kScreenCalls, 2},
-site	src/game/field/field_frame.cpp	344	code_literal	literal	0x517490	0x517490	code	game	field	init	Field_ObjectsFrame	symbol	{" ", 0x517490, 0x1A3, kObjectsCalls, 9},
-site	src/game/field/field_frame.cpp	345	code_literal	literal	0x57B780	0x57b780	code	game	field	init	Party_ExtraScreens	symbol	{" ", 0x57B780, 0x2D, kExtraScreensCalls, 1},
-site	src/game/field/field_frame.cpp	346	code_literal	literal	0x57B7B0	0x57b7b0	code	game	field	init	Party_ExtraFrame	symbol	{" ", 0x57B7B0, 0x7B, kExtraFrameCalls, 3},
-site	src/game/field/field_frame.cpp	347	code_literal	literal	0x57B830	0x57b830	code	game	field	init	Sprite_UpdateScreenA	symbol	{" ", 0x57B830, 0x2E, kScreenACalls, 1},
-site	src/game/field/field_frame.cpp	348	code_literal	literal	0x57B860	0x57b860	code	game	field	init	Sprite_ProjectA	symbol	{" ", 0x57B860, 0x1FA, kProjectCalls, 7},
-site	src/game/field/field_frame.cpp	349	code_literal	literal	0x592F00	0x592f00	code	game	field	init	Field_DrawFrame	symbol	{" ", 0x592F00, 0x1C, kDrawCalls, 3},
-site	src/game/field/field_frame.cpp	350	code_literal	literal	0x592F20	0x592f20	code	game	field	init	Sprite_DrawOverlays	symbol	{" ", 0x592F20, 0xFE, kOverlayCalls, 2},
-site	src/game/field/field_frame.cpp	351	code_literal	literal	0x593020	0x593020	code	game	field	init	Sprite_SwapOverlays	symbol	{" ", 0x593020, 0x36, nullptr, 0},
+site	src/game/field/field_frame.cpp	276	addr_eq	case	0x573080	0x573080	code	hosted	field	-	Kind2_Run	symbol	case 0x573080: return f(&StubVoid<1>);
+site	src/game/field/field_frame.cpp	277	addr_eq	case	0x57B7B0	0x57b7b0	code	hosted	field	-	Party_ExtraFrame	symbol	case 0x57B7B0: return f(&StubVoid<2>);
+site	src/game/field/field_frame.cpp	278	addr_eq	case	0x517350	0x517350	code	hosted	field	-	Field_MembersFrame	symbol	case 0x517350: return f(&StubVoid<3>);
+site	src/game/field/field_frame.cpp	279	addr_eq	case	0x517490	0x517490	code	hosted	field	-	Field_ObjectsFrame	symbol	case 0x517490: return f(&StubVoid<4>);
+site	src/game/field/field_frame.cpp	280	addr_eq	case	0x56E6C0	0x56e6c0	code	hosted	field	-	AreaMap_Frame	symbol	case 0x56E6C0: return f(&StubVoid<5>);
+site	src/game/field/field_frame.cpp	281	addr_eq	case	0x57B780	0x57b780	code	hosted	field	-	Party_ExtraScreens	symbol	case 0x57B780: return f(&StubVoid<6>);
+site	src/game/field/field_frame.cpp	282	addr_eq	case	0x531B60	0x531b60	code	hosted	field	-	Party_UpdateScreens	symbol	case 0x531B60: return f(&StubVoid<7>);
+site	src/game/field/field_frame.cpp	283	addr_eq	case	0x5173E0	0x5173e0	code	hosted	field	-	Field_ObjectsScreen	symbol	case 0x5173E0: return f(&StubVoid<8>);
+site	src/game/field/field_frame.cpp	284	addr_eq	case	0x494030	0x494030	code	hosted	field	-	Effect_RunObjects	symbol	case 0x494030: return f(&StubVoid<9>);
+site	src/game/field/field_frame.cpp	285	addr_eq	case	0x455250	0x455250	code	hosted	field	-	Field_RunSlots	symbol	case 0x455250: return f(&StubVoid<10>);
+site	src/game/field/field_frame.cpp	286	addr_eq	case	0x454AD0	0x454ad0	code	hosted	field	-	MoveScript_TintFrame	symbol	case 0x454AD0: return f(&StubVoid<11>);
+site	src/game/field/field_frame.cpp	287	addr_eq	case	0x592F00	0x592f00	code	hosted	field	-	Field_DrawFrame	symbol	case 0x592F00: return f(&StubVoid<12>);
+site	src/game/field/field_frame.cpp	288	addr_eq	case	0x56D690	0x56d690	code	hosted	field	-	Field_ModeDispatch	symbol	case 0x56D690: return f(&StubVoid<13>);
+site	src/game/field/field_frame.cpp	289	addr_eq	case	0x59E230	0x59e230	code	hosted	field	-	Field_RunTaskRecords	symbol	case 0x59E230: return f(&StubVoid<14>);
+site	src/game/field/field_frame.cpp	290	addr_eq	case	0x533760	0x533760	code	hosted	field	-	Field_PendingJump	symbol	case 0x533760: return f(&StubVoid<15>);
+site	src/game/field/field_frame.cpp	291	addr_eq	case	0x52D8F0	0x52d8f0	code	hosted	field	-	Field_LeaderFrame	symbol	case 0x52D8F0: return f(&StubVoid<16>);
+site	src/game/field/field_frame.cpp	292	addr_eq	case	0x51AC50	0x51ac50	code	hosted	field	-	Field_MemberFrame	symbol	case 0x51AC50: return f(&StubVoid<17>);
+site	src/game/field/field_frame.cpp	293	addr_eq	case	0x57B830	0x57b830	code	hosted	field	-	Sprite_UpdateScreenA	symbol	case 0x57B830: return f(&StubVoid<18>);
+site	src/game/field/field_frame.cpp	294	addr_eq	case	0x588F20	0x588f20	code	hosted	field	-	Sprite_UpdateScreen	symbol	case 0x588F20: return f(&StubVoid<19>);
+site	src/game/field/field_frame.cpp	295	addr_eq	case	0x517E90	0x517e90	code	hosted	field	-	Field_ObjectTalk	symbol	case 0x517E90: return f(&StubTurnTarget);
+site	src/game/field/field_frame.cpp	296	addr_eq	case	0x57C4C0	0x57c4c0	code	hosted	field	-	Sprite_FaceDirection	symbol	case 0x57C4C0: return f(&StubFace);
+site	src/game/field/field_frame.cpp	297	addr_eq	case	0x517F30	0x517f30	code	hosted	field	-	Field_ObjectIdle	symbol	case 0x517F30: return f(&StubObject<22>);
+site	src/game/field/field_frame.cpp	298	addr_eq	case	0x519600	0x519600	code	hosted	field	-	Field_ObjectLinked	symbol	case 0x519600: return f(&StubVoid<23>);
+site	src/game/field/field_frame.cpp	299	addr_eq	case	0x518B40	0x518b40	code	hosted	field	-	Field_ObjectIdleLong	symbol	case 0x518B40: return f(&StubObject<24>);
+site	src/game/field/field_frame.cpp	300	addr_eq	case	0x5893A0	0x5893a0	code	hosted	field	-	Sprite_ScriptTick	symbol	case 0x5893A0: return f(&StubTick<25>);
+site	src/game/field/field_frame.cpp	301	addr_eq	case	0x589410	0x589410	code	hosted	field	-	Sprite_ScriptTickOnce	symbol	case 0x589410: return f(&StubTick<26>);
+site	src/game/field/field_frame.cpp	302	addr_eq	case	0x57B860	0x57b860	code	hosted	field	-	Sprite_ProjectA	symbol	case 0x57B860: return f(&StubVoid<27>);
+site	src/game/field/field_frame.cpp	303	addr_eq	case	0x589770	0x589770	code	hosted	field	-	Sprite_InheritDrawKey	symbol	case 0x589770: return f(&StubInheritKey);
+site	src/game/field/field_frame.cpp	304	addr_eq	case	0x5A8E30	0x5a8e30	code	hosted	field	-	Gte_LoadVertex	symbol	case 0x5A8E30: return f(&StubLoadVertex);
+site	src/game/field/field_frame.cpp	305	addr_eq	case	0x5A8E90	0x5a8e90	code	hosted	field	-	Gte_Rtps	symbol	case 0x5A8E90: return f(&StubVoid<30>);
+site	src/game/field/field_frame.cpp	306	addr_eq	case	0x5A90B0	0x5a90b0	code	hosted	field	-	Gte_StoreScreenXY	symbol	case 0x5A90B0: return f(&StubStoreXY);
+site	src/game/field/field_frame.cpp	307	addr_eq	case	0x5A94B0	0x5a94b0	code	hosted	field	-	Gte_StoreDepthQuarter	symbol	case 0x5A94B0: return f(&StubStoreDepth);
+site	src/game/field/field_frame.cpp	308	addr_eq	case	0x5B9550	0x5b9550	code	hosted	field	-	Crt_ftol	symbol	case 0x5B9550: return nullptr;
+site	src/game/field/field_frame.cpp	309	addr_eq	case	0x571AF0	0x571af0	code	hosted	field	-	AreaMap_HeaderPass	symbol	case 0x571AF0: return f(&StubVoid<33>);
+site	src/game/field/field_frame.cpp	310	addr_eq	case	0x592F20	0x592f20	code	hosted	field	-	Sprite_DrawOverlays	symbol	case 0x592F20: return f(&StubVoid<34>);
+site	src/game/field/field_frame.cpp	311	addr_eq	case	0x593060	0x593060	code	hosted	field	-	Sprite_DrawPass	symbol	case 0x593060: return f(&StubVoid<35>);
+site	src/game/field/field_frame.cpp	312	addr_eq	case	0x593020	0x593020	code	hosted	field	-	Sprite_SwapOverlays	symbol	case 0x593020: return f(&StubSwap);
+site	src/game/field/field_frame.cpp	313	addr_eq	case	0x5935B0	0x5935b0	code	hosted	field	-	Sprite_Draw	symbol	case 0x5935B0: return f(&StubSpriteDraw);
+site	src/game/field/field_frame.cpp	323	code_literal	literal	0x517350	0x517350	code	game	field	init	Field_MembersFrame	symbol	constexpr Call kFrameCalls[] = {{0x0, 0x573080}, {0x5, 0x57b7b0}, {0xa, 0x517350}, {0xf, 0x517490}, {0x14, 0x56e6c0},
+site	src/game/field/field_frame.cpp	323	code_literal	literal	0x517490	0x517490	code	game	field	init	Field_ObjectsFrame	symbol	constexpr Call kFrameCalls[] = {{0x0, 0x573080}, {0x5, 0x57b7b0}, {0xa, 0x517350}, {0xf, 0x517490}, {0x14, 0x56e6c0},
+site	src/game/field/field_frame.cpp	323	code_literal	literal	0x56e6c0	0x56e6c0	code	game	field	init	AreaMap_Frame	symbol	constexpr Call kFrameCalls[] = {{0x0, 0x573080}, {0x5, 0x57b7b0}, {0xa, 0x517350}, {0xf, 0x517490}, {0x14, 0x56e6c0},
+site	src/game/field/field_frame.cpp	323	code_literal	literal	0x573080	0x573080	code	game	field	init	Kind2_Run	symbol	constexpr Call kFrameCalls[] = {{0x0, 0x573080}, {0x5, 0x57b7b0}, {0xa, 0x517350}, {0xf, 0x517490}, {0x14, 0x56e6c0},
+site	src/game/field/field_frame.cpp	323	code_literal	literal	0x57b7b0	0x57b7b0	code	game	field	init	Party_ExtraFrame	symbol	constexpr Call kFrameCalls[] = {{0x0, 0x573080}, {0x5, 0x57b7b0}, {0xa, 0x517350}, {0xf, 0x517490}, {0x14, 0x56e6c0},
+site	src/game/field/field_frame.cpp	324	code_literal	literal	0x455250	0x455250	code	game	field	init	Field_RunSlots	symbol	{0x19, 0x57b780}, {0x1e, 0x531b60}, {0x23, 0x5173e0}, {0x28, 0x494030}, {0x2d, 0x455250},
+site	src/game/field/field_frame.cpp	324	code_literal	literal	0x494030	0x494030	code	game	field	init	Effect_RunObjects	symbol	{0x19, 0x57b780}, {0x1e, 0x531b60}, {0x23, 0x5173e0}, {0x28, 0x494030}, {0x2d, 0x455250},
+site	src/game/field/field_frame.cpp	324	code_literal	literal	0x5173e0	0x5173e0	code	game	field	init	Field_ObjectsScreen	symbol	{0x19, 0x57b780}, {0x1e, 0x531b60}, {0x23, 0x5173e0}, {0x28, 0x494030}, {0x2d, 0x455250},
+site	src/game/field/field_frame.cpp	324	code_literal	literal	0x531b60	0x531b60	code	game	field	init	Party_UpdateScreens	symbol	{0x19, 0x57b780}, {0x1e, 0x531b60}, {0x23, 0x5173e0}, {0x28, 0x494030}, {0x2d, 0x455250},
+site	src/game/field/field_frame.cpp	324	code_literal	literal	0x57b780	0x57b780	code	game	field	init	Party_ExtraScreens	symbol	{0x19, 0x57b780}, {0x1e, 0x531b60}, {0x23, 0x5173e0}, {0x28, 0x494030}, {0x2d, 0x455250},
+site	src/game/field/field_frame.cpp	325	code_literal	literal	0x454ad0	0x454ad0	code	game	field	init	MoveScript_TintFrame	symbol	{0x32, 0x454ad0}, {0x37, 0x592f00}};
+site	src/game/field/field_frame.cpp	325	code_literal	literal	0x592f00	0x592f00	code	game	field	init	Field_DrawFrame	symbol	{0x32, 0x454ad0}, {0x37, 0x592f00}};
+site	src/game/field/field_frame.cpp	326	code_literal	literal	0x517350	0x517350	code	game	field	init	Field_MembersFrame	symbol	constexpr Call kScriptedCalls[] = {{0x0, 0x56d690}, {0x5, 0x59e230}, {0xa, 0x573080}, {0xf, 0x57b7b0}, {0x14, 0x517350},
+site	src/game/field/field_frame.cpp	326	code_literal	literal	0x56d690	0x56d690	code	game	field	init	Field_ModeDispatch	symbol	constexpr Call kScriptedCalls[] = {{0x0, 0x56d690}, {0x5, 0x59e230}, {0xa, 0x573080}, {0xf, 0x57b7b0}, {0x14, 0x517350},
+site	src/game/field/field_frame.cpp	326	code_literal	literal	0x573080	0x573080	code	game	field	init	Kind2_Run	symbol	constexpr Call kScriptedCalls[] = {{0x0, 0x56d690}, {0x5, 0x59e230}, {0xa, 0x573080}, {0xf, 0x57b7b0}, {0x14, 0x517350},
+site	src/game/field/field_frame.cpp	326	code_literal	literal	0x57b7b0	0x57b7b0	code	game	field	init	Party_ExtraFrame	symbol	constexpr Call kScriptedCalls[] = {{0x0, 0x56d690}, {0x5, 0x59e230}, {0xa, 0x573080}, {0xf, 0x57b7b0}, {0x14, 0x517350},
+site	src/game/field/field_frame.cpp	326	code_literal	literal	0x59e230	0x59e230	code	game	field	init	Field_RunTaskRecords	symbol	constexpr Call kScriptedCalls[] = {{0x0, 0x56d690}, {0x5, 0x59e230}, {0xa, 0x573080}, {0xf, 0x57b7b0}, {0x14, 0x517350},
+site	src/game/field/field_frame.cpp	327	code_literal	literal	0x5173e0	0x5173e0	code	game	field	init	Field_ObjectsScreen	symbol	{0x19, 0x517490}, {0x1e, 0x56e6c0}, {0x23, 0x57b780}, {0x28, 0x531b60}, {0x2d, 0x5173e0},
+site	src/game/field/field_frame.cpp	327	code_literal	literal	0x517490	0x517490	code	game	field	init	Field_ObjectsFrame	symbol	{0x19, 0x517490}, {0x1e, 0x56e6c0}, {0x23, 0x57b780}, {0x28, 0x531b60}, {0x2d, 0x5173e0},
+site	src/game/field/field_frame.cpp	327	code_literal	literal	0x531b60	0x531b60	code	game	field	init	Party_UpdateScreens	symbol	{0x19, 0x517490}, {0x1e, 0x56e6c0}, {0x23, 0x57b780}, {0x28, 0x531b60}, {0x2d, 0x5173e0},
+site	src/game/field/field_frame.cpp	327	code_literal	literal	0x56e6c0	0x56e6c0	code	game	field	init	AreaMap_Frame	symbol	{0x19, 0x517490}, {0x1e, 0x56e6c0}, {0x23, 0x57b780}, {0x28, 0x531b60}, {0x2d, 0x5173e0},
+site	src/game/field/field_frame.cpp	327	code_literal	literal	0x57b780	0x57b780	code	game	field	init	Party_ExtraScreens	symbol	{0x19, 0x517490}, {0x1e, 0x56e6c0}, {0x23, 0x57b780}, {0x28, 0x531b60}, {0x2d, 0x5173e0},
+site	src/game/field/field_frame.cpp	328	code_literal	literal	0x454ad0	0x454ad0	code	game	field	init	MoveScript_TintFrame	symbol	{0x32, 0x494030}, {0x37, 0x455250}, {0x3c, 0x454ad0}, {0x41, 0x592f00}};
+site	src/game/field/field_frame.cpp	328	code_literal	literal	0x455250	0x455250	code	game	field	init	Field_RunSlots	symbol	{0x32, 0x494030}, {0x37, 0x455250}, {0x3c, 0x454ad0}, {0x41, 0x592f00}};
+site	src/game/field/field_frame.cpp	328	code_literal	literal	0x494030	0x494030	code	game	field	init	Effect_RunObjects	symbol	{0x32, 0x494030}, {0x37, 0x455250}, {0x3c, 0x454ad0}, {0x41, 0x592f00}};
+site	src/game/field/field_frame.cpp	328	code_literal	literal	0x592f00	0x592f00	code	game	field	init	Field_DrawFrame	symbol	{0x32, 0x494030}, {0x37, 0x455250}, {0x3c, 0x454ad0}, {0x41, 0x592f00}};
+site	src/game/field/field_frame.cpp	329	code_literal	literal	0x51ac50	0x51ac50	code	game	field	init	Field_MemberFrame	symbol	constexpr Call kMembersCalls[] = {{0x0, 0x533760}, {0x28, 0x52d8f0}, {0x59, 0x51ac50}, {0x85, 0x51ac50}};
+site	src/game/field/field_frame.cpp	329	code_literal	literal	0x51ac50	0x51ac50	code	game	field	init	Field_MemberFrame	symbol	constexpr Call kMembersCalls[] = {{0x0, 0x533760}, {0x28, 0x52d8f0}, {0x59, 0x51ac50}, {0x85, 0x51ac50}};
+site	src/game/field/field_frame.cpp	329	code_literal	literal	0x52d8f0	0x52d8f0	code	game	field	init	Field_LeaderFrame	symbol	constexpr Call kMembersCalls[] = {{0x0, 0x533760}, {0x28, 0x52d8f0}, {0x59, 0x51ac50}, {0x85, 0x51ac50}};
+site	src/game/field/field_frame.cpp	329	code_literal	literal	0x533760	0x533760	code	game	field	init	Field_PendingJump	symbol	constexpr Call kMembersCalls[] = {{0x0, 0x533760}, {0x28, 0x52d8f0}, {0x59, 0x51ac50}, {0x85, 0x51ac50}};
+site	src/game/field/field_frame.cpp	330	code_literal	literal	0x57b830	0x57b830	code	game	field	init	Sprite_UpdateScreenA	symbol	constexpr Call kScreenCalls[] = {{0x48, 0x57b830}, {0x4f, 0x588f20}};
+site	src/game/field/field_frame.cpp	330	code_literal	literal	0x588f20	0x588f20	code	game	field	init	Sprite_UpdateScreen	symbol	constexpr Call kScreenCalls[] = {{0x48, 0x57b830}, {0x4f, 0x588f20}};
+site	src/game/field/field_frame.cpp	331	code_literal	literal	0x517e90	0x517e90	code	game	field	init	Field_ObjectTalk	symbol	constexpr Call kObjectsCalls[] = {{0x58, 0x517e90}, {0xb6, 0x57c4c0}, {0xd0, 0x517f30}, {0xe2, 0x519600}, {0xfb, 0x518b40},
+site	src/game/field/field_frame.cpp	331	code_literal	literal	0x517f30	0x517f30	code	game	field	init	Field_ObjectIdle	symbol	constexpr Call kObjectsCalls[] = {{0x58, 0x517e90}, {0xb6, 0x57c4c0}, {0xd0, 0x517f30}, {0xe2, 0x519600}, {0xfb, 0x518b40},
+site	src/game/field/field_frame.cpp	331	code_literal	literal	0x518b40	0x518b40	code	game	field	init	Field_ObjectIdleLong	symbol	constexpr Call kObjectsCalls[] = {{0x58, 0x517e90}, {0xb6, 0x57c4c0}, {0xd0, 0x517f30}, {0xe2, 0x519600}, {0xfb, 0x518b40},
+site	src/game/field/field_frame.cpp	331	code_literal	literal	0x519600	0x519600	code	game	field	init	Field_ObjectLinked	symbol	constexpr Call kObjectsCalls[] = {{0x58, 0x517e90}, {0xb6, 0x57c4c0}, {0xd0, 0x517f30}, {0xe2, 0x519600}, {0xfb, 0x518b40},
+site	src/game/field/field_frame.cpp	331	code_literal	literal	0x57c4c0	0x57c4c0	code	game	field	init	Sprite_FaceDirection	symbol	constexpr Call kObjectsCalls[] = {{0x58, 0x517e90}, {0xb6, 0x57c4c0}, {0xd0, 0x517f30}, {0xe2, 0x519600}, {0xfb, 0x518b40},
+site	src/game/field/field_frame.cpp	332	code_literal	literal	0x57c4c0	0x57c4c0	code	game	field	init	Sprite_FaceDirection	symbol	{0x12d, 0x57c4c0}, {0x162, 0x5893a0}, {0x177, 0x5893a0}, {0x17e, 0x589410}};
+site	src/game/field/field_frame.cpp	332	code_literal	literal	0x5893a0	0x5893a0	code	game	field	init	Sprite_ScriptTick	symbol	{0x12d, 0x57c4c0}, {0x162, 0x5893a0}, {0x177, 0x5893a0}, {0x17e, 0x589410}};
+site	src/game/field/field_frame.cpp	332	code_literal	literal	0x5893a0	0x5893a0	code	game	field	init	Sprite_ScriptTick	symbol	{0x12d, 0x57c4c0}, {0x162, 0x5893a0}, {0x177, 0x5893a0}, {0x17e, 0x589410}};
+site	src/game/field/field_frame.cpp	332	code_literal	literal	0x589410	0x589410	code	game	field	init	Sprite_ScriptTickOnce	symbol	{0x12d, 0x57c4c0}, {0x162, 0x5893a0}, {0x177, 0x5893a0}, {0x17e, 0x589410}};
+site	src/game/field/field_frame.cpp	333	code_literal	literal	0x57b830	0x57b830	code	game	field	init	Sprite_UpdateScreenA	symbol	constexpr Call kExtraScreensCalls[] = {{0x1c, 0x57b830}};
+site	src/game/field/field_frame.cpp	334	code_literal	literal	0x517e90	0x517e90	code	game	field	init	Field_ObjectTalk	symbol	constexpr Call kExtraFrameCalls[] = {{0x2f, 0x517e90}, {0x3a, 0x517f30}, {0x4a, 0x519600}};
+site	src/game/field/field_frame.cpp	334	code_literal	literal	0x517f30	0x517f30	code	game	field	init	Field_ObjectIdle	symbol	constexpr Call kExtraFrameCalls[] = {{0x2f, 0x517e90}, {0x3a, 0x517f30}, {0x4a, 0x519600}};
+site	src/game/field/field_frame.cpp	334	code_literal	literal	0x519600	0x519600	code	game	field	init	Field_ObjectLinked	symbol	constexpr Call kExtraFrameCalls[] = {{0x2f, 0x517e90}, {0x3a, 0x517f30}, {0x4a, 0x519600}};
+site	src/game/field/field_frame.cpp	335	code_literal	literal	0x57b860	0x57b860	code	game	field	init	Sprite_ProjectA	symbol	constexpr Call kScreenACalls[] = {{0x29, 0x57b860}};
+site	src/game/field/field_frame.cpp	336	code_literal	literal	0x589770	0x589770	code	game	field	init	Sprite_InheritDrawKey	symbol	constexpr Call kProjectCalls[] = {{0xb5, 0x589770}, {0xf7, 0x5a8e30}, {0xfc, 0x5a8e90}, {0x106, 0x5a90b0},
+site	src/game/field/field_frame.cpp	336	code_literal	literal	0x5a8e30	0x5a8e30	code	game	field	init	Gte_LoadVertex	symbol	constexpr Call kProjectCalls[] = {{0xb5, 0x589770}, {0xf7, 0x5a8e30}, {0xfc, 0x5a8e90}, {0x106, 0x5a90b0},
+site	src/game/field/field_frame.cpp	336	code_literal	literal	0x5a8e90	0x5a8e90	code	game	field	init	Gte_Rtps	symbol	constexpr Call kProjectCalls[] = {{0xb5, 0x589770}, {0xf7, 0x5a8e30}, {0xfc, 0x5a8e90}, {0x106, 0x5a90b0},
+site	src/game/field/field_frame.cpp	336	code_literal	literal	0x5a90b0	0x5a90b0	code	game	field	init	Gte_StoreScreenXY	symbol	constexpr Call kProjectCalls[] = {{0xb5, 0x589770}, {0xf7, 0x5a8e30}, {0xfc, 0x5a8e90}, {0x106, 0x5a90b0},
+site	src/game/field/field_frame.cpp	337	code_literal	literal	0x5a94b0	0x5a94b0	code	game	field	init	Gte_StoreDepthQuarter	symbol	{0x115, 0x5a94b0}, {0x12d, 0x5b9550}, {0x14d, 0x5b9550}};
+site	src/game/field/field_frame.cpp	337	code_literal	literal	0x5b9550	0x5b9550	code	game	field	init	Crt_ftol	symbol	{0x115, 0x5a94b0}, {0x12d, 0x5b9550}, {0x14d, 0x5b9550}};
+site	src/game/field/field_frame.cpp	337	code_literal	literal	0x5b9550	0x5b9550	code	game	field	init	Crt_ftol	symbol	{0x115, 0x5a94b0}, {0x12d, 0x5b9550}, {0x14d, 0x5b9550}};
+site	src/game/field/field_frame.cpp	338	code_literal	literal	0x571af0	0x571af0	code	game	field	init	AreaMap_HeaderPass	symbol	constexpr Call kDrawCalls[] = {{0x0, 0x571af0}, {0x5, 0x592f20}, {0xa, 0x593060}};
+site	src/game/field/field_frame.cpp	338	code_literal	literal	0x592f20	0x592f20	code	game	field	init	Sprite_DrawOverlays	symbol	constexpr Call kDrawCalls[] = {{0x0, 0x571af0}, {0x5, 0x592f20}, {0xa, 0x593060}};
+site	src/game/field/field_frame.cpp	338	code_literal	literal	0x593060	0x593060	code	game	field	init	Sprite_DrawPass	symbol	constexpr Call kDrawCalls[] = {{0x0, 0x571af0}, {0x5, 0x592f20}, {0xa, 0x593060}};
+site	src/game/field/field_frame.cpp	339	code_literal	literal	0x593020	0x593020	code	game	field	init	Sprite_SwapOverlays	symbol	constexpr Call kOverlayCalls[] = {{0x61, 0x593020}, {0xe5, 0x5935b0}};
+site	src/game/field/field_frame.cpp	339	code_literal	literal	0x5935b0	0x5935b0	code	game	field	init	Sprite_Draw	symbol	constexpr Call kOverlayCalls[] = {{0x61, 0x593020}, {0xe5, 0x5935b0}};
+site	src/game/field/field_frame.cpp	342	code_literal	literal	0x517200	0x517200	code	game	field	init	Field_Frame	symbol	{" ", 0x517200, 0x3C, kFrameCalls, 12},
+site	src/game/field/field_frame.cpp	343	code_literal	literal	0x517240	0x517240	code	game	field	init	Field_FrameScripted	symbol	{" ", 0x517240, 0x46, kScriptedCalls, 14},
+site	src/game/field/field_frame.cpp	344	code_literal	literal	0x517350	0x517350	code	game	field	init	Field_MembersFrame	symbol	{" ", 0x517350, 0x8B, kMembersCalls, 4},
+site	src/game/field/field_frame.cpp	345	code_literal	literal	0x5173E0	0x5173e0	code	game	field	init	Field_ObjectsScreen	symbol	{" ", 0x5173E0, 0x60, kScreenCalls, 2},
+site	src/game/field/field_frame.cpp	346	code_literal	literal	0x517490	0x517490	code	game	field	init	Field_ObjectsFrame	symbol	{" ", 0x517490, 0x1A3, kObjectsCalls, 9},
+site	src/game/field/field_frame.cpp	347	code_literal	literal	0x57B780	0x57b780	code	game	field	init	Party_ExtraScreens	symbol	{" ", 0x57B780, 0x2D, kExtraScreensCalls, 1},
+site	src/game/field/field_frame.cpp	348	code_literal	literal	0x57B7B0	0x57b7b0	code	game	field	init	Party_ExtraFrame	symbol	{" ", 0x57B7B0, 0x7B, kExtraFrameCalls, 3},
+site	src/game/field/field_frame.cpp	349	code_literal	literal	0x57B830	0x57b830	code	game	field	init	Sprite_UpdateScreenA	symbol	{" ", 0x57B830, 0x2E, kScreenACalls, 1},
+site	src/game/field/field_frame.cpp	350	code_literal	literal	0x57B860	0x57b860	code	game	field	init	Sprite_ProjectA	symbol	{" ", 0x57B860, 0x1FA, kProjectCalls, 7},
+site	src/game/field/field_frame.cpp	351	code_literal	literal	0x592F00	0x592f00	code	game	field	init	Field_DrawFrame	symbol	{" ", 0x592F00, 0x1C, kDrawCalls, 3},
+site	src/game/field/field_frame.cpp	352	code_literal	literal	0x592F20	0x592f20	code	game	field	init	Sprite_DrawOverlays	symbol	{" ", 0x592F20, 0xFE, kOverlayCalls, 2},
+site	src/game/field/field_frame.cpp	353	code_literal	literal	0x593020	0x593020	code	game	field	init	Sprite_SwapOverlays	symbol	{" ", 0x593020, 0x36, nullptr, 0},
 site	src/game/field/field_input.cpp	87	abs_call	fnptr	bof3::addr::Field_CopyInput	0x531bd0	code	hosted	field	call	Field_CopyInput	-	bof3::CloneOriginal(" ", bof3::addr::Field_CopyInput, 0x9A)));
 site	src/game/field/field_menu.cpp	83	code_const	module	kExitGateway	0x531820	code	game	field	base_helper	Field_GatewayExit	include	Fn<unsigned char (__cdecl*)()>(::bof3::Code(kExitGateway.v)),
 site	src/game/field/field_menu.cpp	84	code_const	module	kCampCell	0x589fb0	code	game	field	base_helper	FieldMenu_CampAllowedCell	include	Fn<unsigned char (__cdecl*)()>(::bof3::Code(kCampCell.v)),
@@ -10497,28 +10498,29 @@ site	src/game/field/wide_staging.cpp	112	raw_literal	-	0x5DAAEC	0x5daaec	data	ga
 site	src/game/field/wide_staging.cpp	113	raw_literal	-	0x005DA20D	0x5da20d	data	game	engine	init	-	-	{0, 0x10, 6, 0x5DAB1C, 0xBD4799D4, 0x0008, 0x005DA20D, kNone, 0x007, kNone, kIn, 40, 83, 9, false},
 site	src/game/field/wide_staging.cpp	113	raw_literal	-	0x5DAB1C	0x5dab1c	data	game	engine	init	-	-	{0, 0x10, 6, 0x5DAB1C, 0xBD4799D4, 0x0008, 0x005DA20D, kNone, 0x007, kNone, kIn, 40, 83, 9, false},
 site	src/game/field/wide_staging.cpp	114	raw_literal	-	0x5E6890	0x5e6890	data	game	engine	init	-	-	{19, 0x18, 3, 0x5E6890, 0x4FEBFC09, 0x0109, 0x00000000, 0x103, 0x108, kNone, kIn, 16, 144, 0, false},
-site	src/game/field/wide_staging.cpp	115	raw_literal	-	0x5ECB30	0x5ecb30	data	game	engine	init	-	-	{27, 0x10, 2, 0x5ECB30, 0x4997E8F8, 0x000D, 0x00000000, kNone, 0x00C, kNone, kOut, 46, 94, 8, false},
-site	src/game/field/wide_staging.cpp	116	raw_literal	-	0x5EEAEC	0x5eeaec	data	game	engine	init	-	-	{32, 0x10, 4, 0x5EEAEC, 0x86FDB743, 0x001A, 0x00000000, 0x010, 0x017, kNone, kIn, 46, 171, 0, false},
-site	src/game/field/wide_staging.cpp	117	raw_literal	-	0x005F2AC8	0x5f2ac8	data	game	engine	init	-	-	{39, 0x10, 34, 0x5F31EC, 0x3AEC2712, 0x0005, 0x005F2AC8, kNone, 0x004, kNone, kIn, 46, 171, 0, false},
-site	src/game/field/wide_staging.cpp	117	raw_literal	-	0x5F31EC	0x5f31ec	data	game	engine	init	-	-	{39, 0x10, 34, 0x5F31EC, 0x3AEC2712, 0x0005, 0x005F2AC8, kNone, 0x004, kNone, kIn, 46, 171, 0, false},
-site	src/game/field/wide_staging.cpp	118	raw_literal	-	0x5F35F4	0x5f35f4	data	game	engine	init	-	-	{39, 0x18, 14, 0x5F35F4, 0x41AFD7C7, 0x0114, 0x00000000, 0x10E, 0x113, kNone, kIn, 38, 134, 0, false},
-site	src/game/field/wide_staging.cpp	119	raw_literal	-	0x5F6680	0x5f6680	data	game	engine	init	-	-	{43, 0x18, 3, 0x5F6680, 0x7C02C57B, 0x0011, 0x00000000, 0x008, 0x00E, kNone, kIn, 14, 168, 0, true},
-site	src/game/field/wide_staging.cpp	120	raw_literal	-	0x5FC858	0x5fc858	data	game	engine	init	-	-	{50, 0x18, 2, 0x5FC858, 0x7EDD120E, 0x000F, 0x00000000, 0x000, 0x00E, kNone, kIn, 27, 149, 0, true},
-site	src/game/field/wide_staging.cpp	121	raw_literal	-	0x603D90	0x603d90	data	game	engine	init	-	-	{60, 0x18, 2, 0x603D90, 0xA02E9306, 0x0032, 0x00000000, kNone, 0x02C, 0x031, kOutBefore, 31, 169, 3, false},
-site	src/game/field/wide_staging.cpp	122	raw_literal	-	0x006049BD	0x6049bd	data	game	engine	init	-	-	{66, 0x10, 1, 0x604A30, 0xBBCC151D, 0x0007, 0x006049BD, kNone, 0x004, kNone, kIn, 45, 173, 0, false},
-site	src/game/field/wide_staging.cpp	122	raw_literal	-	0x604A30	0x604a30	data	game	engine	init	-	-	{66, 0x10, 1, 0x604A30, 0xBBCC151D, 0x0007, 0x006049BD, kNone, 0x004, kNone, kIn, 45, 173, 0, false},
-site	src/game/field/wide_staging.cpp	123	raw_literal	-	0x607F98	0x607f98	data	game	engine	init	-	-	{69, 0x10, 1, 0x607F98, 0x07A8CE6F, 0x0022, 0x00000000, kNone, 0x021, kNone, kOut, 12, 74, 27, false},
-site	src/game/field/wide_staging.cpp	124	raw_literal	-	0x00607EEC	0x607eec	data	game	engine	init	-	-	{69, 0x10, 2, 0x607FBC, 0xC1A09022, 0x0005, 0x00607EEC, kNone, 0x004, kNone, kIn, 44, 73, 23, false},
-site	src/game/field/wide_staging.cpp	124	raw_literal	-	0x607FBC	0x607fbc	data	game	engine	init	-	-	{69, 0x10, 2, 0x607FBC, 0xC1A09022, 0x0005, 0x00607EEC, kNone, 0x004, kNone, kIn, 44, 73, 23, false},
-site	src/game/field/wide_staging.cpp	125	raw_literal	-	0x006158CD	0x6158cd	data	game	engine	init	-	-	{94, 0x10, 39, 0x6161EC, 0x6545C873, 0x0012, 0x006158CD, kNone, 0x00F, kNone, kIn, 34, 69, 17, false},
-site	src/game/field/wide_staging.cpp	125	raw_literal	-	0x6161EC	0x6161ec	data	game	engine	init	-	-	{94, 0x10, 39, 0x6161EC, 0x6545C873, 0x0012, 0x006158CD, kNone, 0x00F, kNone, kIn, 34, 69, 17, false},
-site	src/game/field/wide_staging.cpp	126	raw_literal	-	0x6234F0	0x6234f0	data	game	engine	init	-	-	{120, 0x18, 15, 0x6234F0, 0x1187C1B3, 0x000B, 0x00000000, 0x000, 0x008, kNone, kIn, 14, 168, 0, false},
-site	src/game/field/wide_staging.cpp	127	raw_literal	-	0x641C98	0x641c98	data	game	engine	init	-	-	{175, 0x10, 6, 0x641C98, 0x48AD3D90, 0x0022, 0x00000000, kNone, 0x021, kNone, kOut, 33, 79, 10, false},
-site	src/game/field/wide_staging.cpp	128	raw_literal	-	0x641CBC	0x641cbc	data	game	engine	init	-	-	{175, 0x10, 7, 0x641CBC, 0x327DA213, 0x002C, 0x00000000, kNone, 0x02B, kNone, kOut, 38, 72, 14, false},
-site	src/game/field/wide_staging.cpp	129	raw_literal	-	0x006418BD	0x6418bd	data	game	engine	init	-	-	{175, 0x10, 7, 0x641CBC, 0xF305F83C, 0x0004, 0x006418BD, kNone, 0x003, kNone, kIn, 17, 71, 17, true},
-site	src/game/field/wide_staging.cpp	129	raw_literal	-	0x641CBC	0x641cbc	data	game	engine	init	-	-	{175, 0x10, 7, 0x641CBC, 0xF305F83C, 0x0004, 0x006418BD, kNone, 0x003, kNone, kIn, 17, 71, 17, true},
-site	src/game/field/wide_staging.cpp	179	raw_literal	-	0x641FEC	0x641fec	data	game	engine	init	-	-	{4, 0x641FEC, 0x6354AB60, 0x008E},
-site	src/game/field/wide_staging.cpp	180	raw_literal	-	0x6420A4	0x6420a4	data	game	engine	init	-	-	{5, 0x6420A4, 0x32775E7B, 0x00A0},
+site	src/game/field/wide_staging.cpp	115	raw_literal	-	0x5EDD18	0x5edd18	data	game	engine	init	-	-	{28, 0x18, 7, 0x5EDD18, 0x0DCF7A4F, 0x000B, 0x00000000, 0x000, 0x00A, kNone, kIn, 42, 65, 0, false},
+site	src/game/field/wide_staging.cpp	116	raw_literal	-	0x5ECB30	0x5ecb30	data	game	engine	init	-	-	{27, 0x10, 2, 0x5ECB30, 0x4997E8F8, 0x000D, 0x00000000, kNone, 0x00C, kNone, kOut, 46, 94, 8, false},
+site	src/game/field/wide_staging.cpp	117	raw_literal	-	0x5EEAEC	0x5eeaec	data	game	engine	init	-	-	{32, 0x10, 4, 0x5EEAEC, 0x86FDB743, 0x001A, 0x00000000, 0x010, 0x017, kNone, kIn, 46, 171, 0, false},
+site	src/game/field/wide_staging.cpp	118	raw_literal	-	0x005F2AC8	0x5f2ac8	data	game	engine	init	-	-	{39, 0x10, 34, 0x5F31EC, 0x3AEC2712, 0x0005, 0x005F2AC8, kNone, 0x004, kNone, kIn, 46, 171, 0, false},
+site	src/game/field/wide_staging.cpp	118	raw_literal	-	0x5F31EC	0x5f31ec	data	game	engine	init	-	-	{39, 0x10, 34, 0x5F31EC, 0x3AEC2712, 0x0005, 0x005F2AC8, kNone, 0x004, kNone, kIn, 46, 171, 0, false},
+site	src/game/field/wide_staging.cpp	119	raw_literal	-	0x5F35F4	0x5f35f4	data	game	engine	init	-	-	{39, 0x18, 14, 0x5F35F4, 0x41AFD7C7, 0x0114, 0x00000000, 0x10E, 0x113, kNone, kIn, 38, 134, 0, false},
+site	src/game/field/wide_staging.cpp	120	raw_literal	-	0x5F6680	0x5f6680	data	game	engine	init	-	-	{43, 0x18, 3, 0x5F6680, 0x7C02C57B, 0x0011, 0x00000000, 0x008, 0x00E, kNone, kIn, 14, 168, 0, true},
+site	src/game/field/wide_staging.cpp	121	raw_literal	-	0x5FC858	0x5fc858	data	game	engine	init	-	-	{50, 0x18, 2, 0x5FC858, 0x7EDD120E, 0x000F, 0x00000000, 0x000, 0x00E, kNone, kIn, 27, 149, 0, true},
+site	src/game/field/wide_staging.cpp	122	raw_literal	-	0x603D90	0x603d90	data	game	engine	init	-	-	{60, 0x18, 2, 0x603D90, 0xA02E9306, 0x0032, 0x00000000, kNone, 0x02C, 0x031, kOutBefore, 31, 169, 3, false},
+site	src/game/field/wide_staging.cpp	123	raw_literal	-	0x006049BD	0x6049bd	data	game	engine	init	-	-	{66, 0x10, 1, 0x604A30, 0xBBCC151D, 0x0007, 0x006049BD, kNone, 0x004, kNone, kIn, 45, 173, 0, false},
+site	src/game/field/wide_staging.cpp	123	raw_literal	-	0x604A30	0x604a30	data	game	engine	init	-	-	{66, 0x10, 1, 0x604A30, 0xBBCC151D, 0x0007, 0x006049BD, kNone, 0x004, kNone, kIn, 45, 173, 0, false},
+site	src/game/field/wide_staging.cpp	124	raw_literal	-	0x607F98	0x607f98	data	game	engine	init	-	-	{69, 0x10, 1, 0x607F98, 0x07A8CE6F, 0x0022, 0x00000000, kNone, 0x021, kNone, kOut, 12, 74, 27, false},
+site	src/game/field/wide_staging.cpp	125	raw_literal	-	0x00607EEC	0x607eec	data	game	engine	init	-	-	{69, 0x10, 2, 0x607FBC, 0xC1A09022, 0x0005, 0x00607EEC, kNone, 0x004, kNone, kIn, 44, 73, 23, false},
+site	src/game/field/wide_staging.cpp	125	raw_literal	-	0x607FBC	0x607fbc	data	game	engine	init	-	-	{69, 0x10, 2, 0x607FBC, 0xC1A09022, 0x0005, 0x00607EEC, kNone, 0x004, kNone, kIn, 44, 73, 23, false},
+site	src/game/field/wide_staging.cpp	126	raw_literal	-	0x006158CD	0x6158cd	data	game	engine	init	-	-	{94, 0x10, 39, 0x6161EC, 0x6545C873, 0x0012, 0x006158CD, kNone, 0x00F, kNone, kIn, 34, 69, 17, false},
+site	src/game/field/wide_staging.cpp	126	raw_literal	-	0x6161EC	0x6161ec	data	game	engine	init	-	-	{94, 0x10, 39, 0x6161EC, 0x6545C873, 0x0012, 0x006158CD, kNone, 0x00F, kNone, kIn, 34, 69, 17, false},
+site	src/game/field/wide_staging.cpp	127	raw_literal	-	0x6234F0	0x6234f0	data	game	engine	init	-	-	{120, 0x18, 15, 0x6234F0, 0x1187C1B3, 0x000B, 0x00000000, 0x000, 0x008, kNone, kIn, 14, 168, 0, false},
+site	src/game/field/wide_staging.cpp	128	raw_literal	-	0x641C98	0x641c98	data	game	engine	init	-	-	{175, 0x10, 6, 0x641C98, 0x48AD3D90, 0x0022, 0x00000000, kNone, 0x021, kNone, kOut, 33, 79, 10, false},
+site	src/game/field/wide_staging.cpp	129	raw_literal	-	0x641CBC	0x641cbc	data	game	engine	init	-	-	{175, 0x10, 7, 0x641CBC, 0x327DA213, 0x002C, 0x00000000, kNone, 0x02B, kNone, kOut, 38, 72, 14, false},
+site	src/game/field/wide_staging.cpp	130	raw_literal	-	0x006418BD	0x6418bd	data	game	engine	init	-	-	{175, 0x10, 7, 0x641CBC, 0xF305F83C, 0x0004, 0x006418BD, kNone, 0x003, kNone, kIn, 17, 71, 17, true},
+site	src/game/field/wide_staging.cpp	130	raw_literal	-	0x641CBC	0x641cbc	data	game	engine	init	-	-	{175, 0x10, 7, 0x641CBC, 0xF305F83C, 0x0004, 0x006418BD, kNone, 0x003, kNone, kIn, 17, 71, 17, true},
+site	src/game/field/wide_staging.cpp	180	raw_literal	-	0x641FEC	0x641fec	data	game	engine	init	-	-	{4, 0x641FEC, 0x6354AB60, 0x008E},
+site	src/game/field/wide_staging.cpp	181	raw_literal	-	0x6420A4	0x6420a4	data	game	engine	init	-	-	{5, 0x6420A4, 0x32775E7B, 0x00A0},
 site	src/game/field_c1_callees.h	15	const_def	derived	at::kFc2Aim	0x46d0e0	code	game	field	at	EffectKind3A_LeaderPose	-	constexpr ::bof3::image::CodeVa kFc2Aim{bof3::addr::EffectKind3A_LeaderPose};
 site	src/game/field_c1_callees.h	16	const_def	derived	at::kFc2Place	0x46bf80	code	game	field	at	EffectKind30_ClaimCells	-	constexpr ::bof3::image::CodeVa kFc2Place{bof3::addr::EffectKind30_ClaimCells};
 site	src/game/field_c1_callees.h	29	const_def	literal	at::kKind2ZHigh	0x905e62	data	game	field	at	Field_Kind2Z+0x2	-	constexpr std::uint32_t kKind2ZHigh = 0x905E62;
@@ -15274,42 +15276,42 @@ site	src/game/platform/gfx_vram_ops.cpp	137	code_const	gen_func	bof3::addr::Gfx_
 site	src/game/platform/gfx_vram_ops.cpp	139	code_const	gen_func	bof3::addr::Gfx_ClearImage	0x59e650	code	hosted	engine	call	Gfx_ClearImage	-	auto* clear = bof3::CloneOriginal(" ", bof3::addr::Gfx_ClearImage, 0xA5, clear_calls, 1);
 site	src/game/platform/gfx_vram_ops.cpp	141	code_const	gen_func	bof3::addr::Gfx_MoveImage	0x59e9a0	code	hosted	engine	call	Gfx_MoveImage	-	auto* move = bof3::CloneOriginal(" ", bof3::addr::Gfx_MoveImage, 0xC8, move_calls, 2);
 site	src/game/platform/gpu_2.cpp	132	module_const	-	kDispEnv	0x7dece0	data	game	engine	base_helper	Gpu_DispEnv	include	if (Word(::bof3::Img(kDispEnv.v) + 2) != Word(Addr(env) + 2)) display_env::g.present();
-site	src/game/platform/magic_080.cpp	73	at_global	-	at::kTarget	0x904b44	data	game	magic	base_helper	-	-	unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
-site	src/game/platform/magic_080.cpp	133	const_def	literal	kStrSaveOk	0x65da54	data	game	magic	module	-	-	constexpr ::bof3::image::Va kStrSaveOk{0x65DA54};
-site	src/game/platform/magic_080.cpp	135	const_def	literal	kStrFrameRate	0x65da5c	data	game	magic	module	-	-	constexpr ::bof3::image::Va kStrFrameRate{0x65DA5C};
-site	src/game/platform/magic_080.cpp	137	const_def	literal	kStrLogosAvi	0x65da6c	data	game	magic	module	-	-	constexpr ::bof3::image::Va kStrLogosAvi{0x65DA6C};
-site	src/game/platform/magic_080.cpp	139	const_def	literal	kStrClass	0x65da84	data	game	magic	module	-	-	constexpr ::bof3::image::Va kStrClass{0x65DA84};
-site	src/game/platform/magic_080.cpp	141	const_def	literal	kStrIcon	0x65da8c	data	game	magic	module	-	-	constexpr ::bof3::image::Va kStrIcon{0x65DA8C};
-site	src/game/platform/magic_080.cpp	155	const_def	literal	kStrCapcomAvi	0x65dab8	data	game	magic	module	-	-	constexpr ::bof3::image::Va kStrCapcomAvi{0x65DAB8};
-site	src/game/platform/magic_080.cpp	157	const_def	literal	kStrBof3Exe	0x65dac4	data	game	magic	module	-	-	constexpr ::bof3::image::Va kStrBof3Exe{0x65DAC4};
-site	src/game/platform/magic_080.cpp	232	const_def	literal	kEnvBase	0x903880	data	game	magic	module	Gfx_BufferBlocks	-	constexpr ::bof3::image::Va kEnvBase{0x903880};
-site	src/game/platform/magic_080.cpp	399	abs_call	fnptr	kSoundSetup	0x5a6830	code	game	magic	base_helper	Snd_Init	include	reinterpret_cast<void (__cdecl*)(void*)>(static_cast<std::uintptr_t>(::bof3::Code(kSoundSetup.v))), Port_DroppedCall,
-site	src/game/platform/magic_080.cpp	430	code_const	gen_func	bof3::addr::Magic080_Run	0x4fc3c0	code	game	magic	init	Magic080_Run	-	static constexpr std::uint32_t kPhases[2] = {bof3::addr::Magic080_Start, bof3::addr::Magic080_Run};
-site	src/game/platform/magic_080.cpp	430	code_const	gen_func	bof3::addr::Magic080_Start	0x4fc360	code	game	magic	init	Magic080_Start	-	static constexpr std::uint32_t kPhases[2] = {bof3::addr::Magic080_Start, bof3::addr::Magic080_Run};
-site	src/game/platform/magic_080.cpp	456	abs_call	via=Call0	bof3::addr::Magic080_DrawGlyphs	0x4fc540	code	game	magic	call	Magic080_DrawGlyphs	-	Call0(bof3::addr::Magic080_DrawGlyphs);
-site	src/game/platform/magic_080.cpp	458	abs_call	via=Call0	bof3::addr::Magic080_DrawText	0x4fc420	code	game	magic	call	Magic080_DrawText	-	Call0(bof3::addr::Magic080_DrawText);
-site	src/game/platform/magic_080.cpp	462	at_global	-	at::kFlags	0x904aa8	data	game	magic	base_helper	-	-	Mem(::bof3::Img(at::kFlags))[0] |= 4;
-site	src/game/platform/magic_080.cpp	702	module_const	-	kStrSaveOk	0x65da54	data	game	magic	base_helper	-	file	Overlay_Text = StrWinMain(::bof3::Img(kStrSaveOk.v));
-site	src/game/platform/magic_080.cpp	781	abs_call	orig	bof3::orig::Disc_Probe	0x5a72c0	code	game	magic	-	Disc_Probe	-	if (!bof3::orig::Disc_Probe(StrWinMain(::bof3::Img(kStrCapcomAvi.v)), StrWinMain(::bof3::Img(kStrBof3Exe.v)))) {
-site	src/game/platform/magic_080.cpp	781	module_const	-	kStrBof3Exe	0x65dac4	data	game	magic	base_helper	-	file	if (!bof3::orig::Disc_Probe(StrWinMain(::bof3::Img(kStrCapcomAvi.v)), StrWinMain(::bof3::Img(kStrBof3Exe.v)))) {
-site	src/game/platform/magic_080.cpp	781	module_const	-	kStrCapcomAvi	0x65dab8	data	game	magic	base_helper	-	file	if (!bof3::orig::Disc_Probe(StrWinMain(::bof3::Img(kStrCapcomAvi.v)), StrWinMain(::bof3::Img(kStrBof3Exe.v)))) {
-site	src/game/platform/magic_080.cpp	807	code_const	gen_func	bof3::addr::Game_WndProc	0x4fc6f0	code	game	magic	base_helper	Game_WndProc	-	wc.lpfnWndProc = reinterpret_cast<WNDPROC>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Game_WndProc)));
-site	src/game/platform/magic_080.cpp	809	module_const	-	kStrIcon	0x65da8c	data	game	magic	base_helper	-	file	wc.hIcon = LoadIconA(hinstance, StrWinMain(::bof3::Img(kStrIcon.v)));
-site	src/game/platform/magic_080.cpp	813	module_const	-	kStrClass	0x65da84	data	game	magic	base_helper	-	file	wc.lpszClassName = StrWinMain(::bof3::Img(kStrClass.v));
-site	src/game/platform/magic_080.cpp	816	abs_call	orig	bof3::orig::Cfg_Load	0x4fd030	code	game	magic	-	Cfg_Load	-	bof3::orig::Cfg_Load();
-site	src/game/platform/magic_080.cpp	829	module_const	-	kStrClass	0x65da84	data	game	magic	base_helper	-	file	HWND hwnd = CreateWindowExA(0, StrWinMain(::bof3::Img(kStrClass.v)), kTitle, style, r.left, r.top, r.right - r.left,
-site	src/game/platform/magic_080.cpp	838	abs_call	orig	bof3::orig::Fmv_Play	0x59e360	code	game	magic	-	Fmv_Play	-	bof3::orig::Fmv_Play(StrWinMain(::bof3::Img(kStrCapcomAvi.v)), hwnd, Cfg_Fullscreen);
-site	src/game/platform/magic_080.cpp	838	module_const	-	kStrCapcomAvi	0x65dab8	data	game	magic	base_helper	-	file	bof3::orig::Fmv_Play(StrWinMain(::bof3::Img(kStrCapcomAvi.v)), hwnd, Cfg_Fullscreen);
-site	src/game/platform/magic_080.cpp	839	abs_call	orig	bof3::orig::Fmv_Play	0x59e360	code	game	magic	-	Fmv_Play	-	if (!win_main::g_capcom_movie_only) bof3::orig::Fmv_Play(StrWinMain(::bof3::Img(kStrLogosAvi.v)), hwnd, Cfg_Fullscreen);
-site	src/game/platform/magic_080.cpp	839	module_const	-	kStrLogosAvi	0x65da6c	data	game	magic	base_helper	-	file	if (!win_main::g_capcom_movie_only) bof3::orig::Fmv_Play(StrWinMain(::bof3::Img(kStrLogosAvi.v)), hwnd, Cfg_Fullscreen);
-site	src/game/platform/magic_080.cpp	846	abs_call	orig	bof3::orig::Display_Setup	0x5a5160	code	game	magic	-	Display_Setup	-	const int error = bof3::orig::Display_Setup(hwnd, &Cfg_Fullscreen, &Cfg_RenderMode, nullptr);
-site	src/game/platform/magic_080.cpp	854	abs_call	orig	bof3::orig::Game_Init	0x4fd110	code	game	magic	-	Game_Init	-	bof3::orig::Game_Init();
-site	src/game/platform/magic_080.cpp	884	code_const	gen_func	bof3::addr::Boot_Task	0x496b60	code	game	magic	base_helper	Boot_Task	-	Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
-site	src/game/platform/magic_080.cpp	983	module_const	-	kStrFrameRate	0x65da5c	data	game	magic	base_helper	-	file	Crt_sprintf(fps, StrWinMain(::bof3::Img(kStrFrameRate.v)), frames_drawn);
-site	src/game/platform/magic_080.cpp	1000	module_const	-	kEnvBase	0x903880	data	game	magic	base_helper	Gfx_BufferBlocks	file	unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride));
-site	src/game/platform/magic_080.cpp	1011	abs_call	orig	bof3::orig::Task_RunAll	0x5a98a0	code	game	magic	-	Task_RunAll	-	bof3::orig::Task_RunAll();
-site	src/game/platform/magic_080.cpp	1022	abs_call	orig	bof3::orig::Gfx_LinkOTags	0x4fd290	code	game	magic	-	Gfx_LinkOTags	-	bof3::orig::Gfx_LinkOTags();
-site	src/game/platform/magic_080.cpp	1157	module_const	-	kGfxOtPointers	0x929ea0	data	game	magic	base_helper	Gfx_OtPointers	include	const U link = Long(::bof3::Img(kGfxOtPointers.v) + 4 * i);
+site	src/game/platform/magic_080.cpp	74	at_global	-	at::kTarget	0x904b44	data	game	magic	base_helper	-	-	unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
+site	src/game/platform/magic_080.cpp	134	const_def	literal	kStrSaveOk	0x65da54	data	game	magic	module	-	-	constexpr ::bof3::image::Va kStrSaveOk{0x65DA54};
+site	src/game/platform/magic_080.cpp	136	const_def	literal	kStrFrameRate	0x65da5c	data	game	magic	module	-	-	constexpr ::bof3::image::Va kStrFrameRate{0x65DA5C};
+site	src/game/platform/magic_080.cpp	138	const_def	literal	kStrLogosAvi	0x65da6c	data	game	magic	module	-	-	constexpr ::bof3::image::Va kStrLogosAvi{0x65DA6C};
+site	src/game/platform/magic_080.cpp	140	const_def	literal	kStrClass	0x65da84	data	game	magic	module	-	-	constexpr ::bof3::image::Va kStrClass{0x65DA84};
+site	src/game/platform/magic_080.cpp	142	const_def	literal	kStrIcon	0x65da8c	data	game	magic	module	-	-	constexpr ::bof3::image::Va kStrIcon{0x65DA8C};
+site	src/game/platform/magic_080.cpp	156	const_def	literal	kStrCapcomAvi	0x65dab8	data	game	magic	module	-	-	constexpr ::bof3::image::Va kStrCapcomAvi{0x65DAB8};
+site	src/game/platform/magic_080.cpp	158	const_def	literal	kStrBof3Exe	0x65dac4	data	game	magic	module	-	-	constexpr ::bof3::image::Va kStrBof3Exe{0x65DAC4};
+site	src/game/platform/magic_080.cpp	239	const_def	literal	kEnvBase	0x903880	data	game	magic	module	Gfx_BufferBlocks	-	constexpr ::bof3::image::Va kEnvBase{0x903880};
+site	src/game/platform/magic_080.cpp	406	abs_call	fnptr	kSoundSetup	0x5a6830	code	game	magic	base_helper	Snd_Init	include	reinterpret_cast<void (__cdecl*)(void*)>(static_cast<std::uintptr_t>(::bof3::Code(kSoundSetup.v))), Port_DroppedCall,
+site	src/game/platform/magic_080.cpp	437	code_const	gen_func	bof3::addr::Magic080_Run	0x4fc3c0	code	game	magic	init	Magic080_Run	-	static constexpr std::uint32_t kPhases[2] = {bof3::addr::Magic080_Start, bof3::addr::Magic080_Run};
+site	src/game/platform/magic_080.cpp	437	code_const	gen_func	bof3::addr::Magic080_Start	0x4fc360	code	game	magic	init	Magic080_Start	-	static constexpr std::uint32_t kPhases[2] = {bof3::addr::Magic080_Start, bof3::addr::Magic080_Run};
+site	src/game/platform/magic_080.cpp	463	abs_call	via=Call0	bof3::addr::Magic080_DrawGlyphs	0x4fc540	code	game	magic	call	Magic080_DrawGlyphs	-	Call0(bof3::addr::Magic080_DrawGlyphs);
+site	src/game/platform/magic_080.cpp	465	abs_call	via=Call0	bof3::addr::Magic080_DrawText	0x4fc420	code	game	magic	call	Magic080_DrawText	-	Call0(bof3::addr::Magic080_DrawText);
+site	src/game/platform/magic_080.cpp	469	at_global	-	at::kFlags	0x904aa8	data	game	magic	base_helper	-	-	Mem(::bof3::Img(at::kFlags))[0] |= 4;
+site	src/game/platform/magic_080.cpp	709	module_const	-	kStrSaveOk	0x65da54	data	game	magic	base_helper	-	file	Overlay_Text = StrWinMain(::bof3::Img(kStrSaveOk.v));
+site	src/game/platform/magic_080.cpp	793	abs_call	orig	bof3::orig::Disc_Probe	0x5a72c0	code	game	magic	-	Disc_Probe	-	if (!bof3::orig::Disc_Probe(StrWinMain(::bof3::Img(kStrCapcomAvi.v)), StrWinMain(::bof3::Img(kStrBof3Exe.v)))) {
+site	src/game/platform/magic_080.cpp	793	module_const	-	kStrBof3Exe	0x65dac4	data	game	magic	base_helper	-	file	if (!bof3::orig::Disc_Probe(StrWinMain(::bof3::Img(kStrCapcomAvi.v)), StrWinMain(::bof3::Img(kStrBof3Exe.v)))) {
+site	src/game/platform/magic_080.cpp	793	module_const	-	kStrCapcomAvi	0x65dab8	data	game	magic	base_helper	-	file	if (!bof3::orig::Disc_Probe(StrWinMain(::bof3::Img(kStrCapcomAvi.v)), StrWinMain(::bof3::Img(kStrBof3Exe.v)))) {
+site	src/game/platform/magic_080.cpp	819	code_const	gen_func	bof3::addr::Game_WndProc	0x4fc6f0	code	game	magic	base_helper	Game_WndProc	-	wc.lpfnWndProc = reinterpret_cast<WNDPROC>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Game_WndProc)));
+site	src/game/platform/magic_080.cpp	821	module_const	-	kStrIcon	0x65da8c	data	game	magic	base_helper	-	file	wc.hIcon = LoadIconA(hinstance, StrWinMain(::bof3::Img(kStrIcon.v)));
+site	src/game/platform/magic_080.cpp	825	module_const	-	kStrClass	0x65da84	data	game	magic	base_helper	-	file	wc.lpszClassName = StrWinMain(::bof3::Img(kStrClass.v));
+site	src/game/platform/magic_080.cpp	828	abs_call	orig	bof3::orig::Cfg_Load	0x4fd030	code	game	magic	-	Cfg_Load	-	bof3::orig::Cfg_Load();
+site	src/game/platform/magic_080.cpp	841	module_const	-	kStrClass	0x65da84	data	game	magic	base_helper	-	file	HWND hwnd = CreateWindowExA(0, StrWinMain(::bof3::Img(kStrClass.v)), kTitle, style, r.left, r.top, r.right - r.left,
+site	src/game/platform/magic_080.cpp	850	abs_call	orig	bof3::orig::Fmv_Play	0x59e360	code	game	magic	-	Fmv_Play	-	bof3::orig::Fmv_Play(StrWinMain(::bof3::Img(kStrCapcomAvi.v)), hwnd, Cfg_Fullscreen);
+site	src/game/platform/magic_080.cpp	850	module_const	-	kStrCapcomAvi	0x65dab8	data	game	magic	base_helper	-	file	bof3::orig::Fmv_Play(StrWinMain(::bof3::Img(kStrCapcomAvi.v)), hwnd, Cfg_Fullscreen);
+site	src/game/platform/magic_080.cpp	851	abs_call	orig	bof3::orig::Fmv_Play	0x59e360	code	game	magic	-	Fmv_Play	-	if (!win_main::g_capcom_movie_only) bof3::orig::Fmv_Play(StrWinMain(::bof3::Img(kStrLogosAvi.v)), hwnd, Cfg_Fullscreen);
+site	src/game/platform/magic_080.cpp	851	module_const	-	kStrLogosAvi	0x65da6c	data	game	magic	base_helper	-	file	if (!win_main::g_capcom_movie_only) bof3::orig::Fmv_Play(StrWinMain(::bof3::Img(kStrLogosAvi.v)), hwnd, Cfg_Fullscreen);
+site	src/game/platform/magic_080.cpp	858	abs_call	orig	bof3::orig::Display_Setup	0x5a5160	code	game	magic	-	Display_Setup	-	const int error = bof3::orig::Display_Setup(hwnd, &Cfg_Fullscreen, &Cfg_RenderMode, nullptr);
+site	src/game/platform/magic_080.cpp	866	abs_call	orig	bof3::orig::Game_Init	0x4fd110	code	game	magic	-	Game_Init	-	bof3::orig::Game_Init();
+site	src/game/platform/magic_080.cpp	898	code_const	gen_func	bof3::addr::Boot_Task	0x496b60	code	game	magic	base_helper	Boot_Task	-	Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
+site	src/game/platform/magic_080.cpp	1034	module_const	-	kStrFrameRate	0x65da5c	data	game	magic	base_helper	-	file	Crt_sprintf(fps, StrWinMain(::bof3::Img(kStrFrameRate.v)), frames_drawn);
+site	src/game/platform/magic_080.cpp	1052	module_const	-	kEnvBase	0x903880	data	game	magic	base_helper	Gfx_BufferBlocks	file	unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride));
+site	src/game/platform/magic_080.cpp	1063	abs_call	orig	bof3::orig::Task_RunAll	0x5a98a0	code	game	magic	-	Task_RunAll	-	bof3::orig::Task_RunAll();
+site	src/game/platform/magic_080.cpp	1074	abs_call	orig	bof3::orig::Gfx_LinkOTags	0x4fd290	code	game	magic	-	Gfx_LinkOTags	-	bof3::orig::Gfx_LinkOTags();
+site	src/game/platform/magic_080.cpp	1209	module_const	-	kGfxOtPointers	0x929ea0	data	game	magic	base_helper	Gfx_OtPointers	include	const U link = Long(::bof3::Img(kGfxOtPointers.v) + 4 * i);
 site	src/game/platform/music.cpp	402	asm_operand	m	sound::kInverse127At	0x5c464c	data	game	engine	cast	Sound_InverseFullVolume	include	: [level] " "(level), [inverse] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(sound::kInverse127At))),
 site	src/game/platform/music.cpp	403	asm_operand	m	sound::k10000At	0x5c4648	data	game	engine	cast	Sound_VolumeScale	include	[scale] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(sound::k10000At)))
 site	src/game/platform/music.cpp	487	module_const	-	kMemoryName	0x66bc24	data	game	engine	base_helper	-	include	sound::g.sprintf(name, reinterpret_cast<const char*>(::bof3::Img(kMemoryName.v)), size, file);
@@ -19121,21 +19123,21 @@ site	src/hook/input_script.cpp	891	abs_call	orig	bof3::orig::Field_ChangeArea	0x
 site	src/hook/input_script.cpp	917	abs_call	orig	bof3::orig::Field_StartEventBattle	0x4410b0	code	platform	hook	-	Field_StartEventBattle	-	bof3::orig::Field_StartEventBattle(s.arg[0]);
 site	src/hook/input_script.cpp	926	abs_call	orig	bof3::orig::Party_PlaceForBattle	0x532ed0	code	platform	hook	-	Party_PlaceForBattle	-	bof3::orig::Party_PlaceForBattle(static_cast<int>(s.arg[0]), static_cast<int>(s.arg[1]), s.arg[2]);
 site	src/hook/input_script.cpp	936	abs_call	orig	bof3::orig::Field_ViewReset	0x56f670	code	platform	hook	-	Field_ViewReset	-	bof3::orig::Field_ViewReset();
-site	src/hook/input_script.cpp	1042	abs_call	orig	bof3::orig::Input_Latch	0x4fc6a0	code	platform	hook	-	Input_Latch	-	bof3::orig::Input_Latch();
-site	src/hook/input_script.cpp	1178	const_def	literal	kLatchCall	0x4fcdde	code	platform	hook	module	-	-	constexpr std::uint32_t kLatchCall = 0x4FCDDE;
-site	src/hook/input_script.cpp	1179	const_def	derived	kInputLatch	0x4fc6a0	code	platform	hook	module	Input_Latch	-	constexpr std::uint32_t kInputLatch = bof3::addr::Input_Latch;
-site	src/hook/input_script.cpp	1180	code_const	module	kInputLatch	0x4fc6a0	code	hosted	hook	call	Input_Latch	file	RetargetCall(" ", kLatchCall, kInputLatch, reinterpret_cast<void*>(&RecordingLatch), true);
-site	src/hook/input_script.cpp	1180	code_const	module	kLatchCall	0x4fcdde	code	hosted	hook	call	-	file	RetargetCall(" ", kLatchCall, kInputLatch, reinterpret_cast<void*>(&RecordingLatch), true);
-site	src/hook/input_script.cpp	1220	abs_call	orig	bof3::orig::Input_Latch	0x4fc6a0	code	platform	hook	-	Input_Latch	-	bof3::orig::Input_Latch();
-site	src/hook/input_script.cpp	1228	abs_call	orig	bof3::orig::Input_Latch	0x4fc6a0	code	platform	hook	-	Input_Latch	-	bof3::orig::Input_Latch();
-site	src/hook/input_script.cpp	1305	const_def	literal	kLatchCall	0x4fcdde	code	platform	hook	module	-	-	constexpr std::uint32_t kLatchCall = 0x4FCDDE;
-site	src/hook/input_script.cpp	1306	const_def	derived	kInputLatch	0x4fc6a0	code	platform	hook	module	Input_Latch	-	constexpr std::uint32_t kInputLatch = bof3::addr::Input_Latch;
-site	src/hook/input_script.cpp	1319	code_const	module	kInputLatch	0x4fc6a0	code	hosted	hook	call	Input_Latch	file	if (hashing) RetargetCall(" ", kLatchCall, kInputLatch, reinterpret_cast<void*>(&HashedLatch), true);
-site	src/hook/input_script.cpp	1319	code_const	module	kLatchCall	0x4fcdde	code	hosted	hook	call	-	file	if (hashing) RetargetCall(" ", kLatchCall, kInputLatch, reinterpret_cast<void*>(&HashedLatch), true);
-site	src/hook/input_script.cpp	1320	code_const	module	kInputLatch	0x4fc6a0	code	hosted	hook	call	Input_Latch	file	else if (WavDump_On()) RetargetCall(" ", kLatchCall, kInputLatch, reinterpret_cast<void*>(&WavLatch), true);
-site	src/hook/input_script.cpp	1320	code_const	module	kLatchCall	0x4fcdde	code	hosted	hook	call	-	file	else if (WavDump_On()) RetargetCall(" ", kLatchCall, kInputLatch, reinterpret_cast<void*>(&WavLatch), true);
-site	src/hook/input_script.cpp	1353	code_const	module	kInputLatch	0x4fc6a0	code	hosted	hook	call	Input_Latch	file	RetargetCall(" ", kLatchCall, kInputLatch, reinterpret_cast<void*>(&ScriptedLatch), true);
-site	src/hook/input_script.cpp	1353	code_const	module	kLatchCall	0x4fcdde	code	hosted	hook	call	-	file	RetargetCall(" ", kLatchCall, kInputLatch, reinterpret_cast<void*>(&ScriptedLatch), true);
+site	src/hook/input_script.cpp	1053	abs_call	orig	bof3::orig::Input_Latch	0x4fc6a0	code	platform	hook	-	Input_Latch	-	bof3::orig::Input_Latch();
+site	src/hook/input_script.cpp	1189	const_def	literal	kLatchCall	0x4fcdde	code	platform	hook	module	-	-	constexpr std::uint32_t kLatchCall = 0x4FCDDE;
+site	src/hook/input_script.cpp	1190	const_def	derived	kInputLatch	0x4fc6a0	code	platform	hook	module	Input_Latch	-	constexpr std::uint32_t kInputLatch = bof3::addr::Input_Latch;
+site	src/hook/input_script.cpp	1191	code_const	module	kInputLatch	0x4fc6a0	code	hosted	hook	call	Input_Latch	file	RetargetCall(" ", kLatchCall, kInputLatch, reinterpret_cast<void*>(&RecordingLatch), true);
+site	src/hook/input_script.cpp	1191	code_const	module	kLatchCall	0x4fcdde	code	hosted	hook	call	-	file	RetargetCall(" ", kLatchCall, kInputLatch, reinterpret_cast<void*>(&RecordingLatch), true);
+site	src/hook/input_script.cpp	1231	abs_call	orig	bof3::orig::Input_Latch	0x4fc6a0	code	platform	hook	-	Input_Latch	-	bof3::orig::Input_Latch();
+site	src/hook/input_script.cpp	1239	abs_call	orig	bof3::orig::Input_Latch	0x4fc6a0	code	platform	hook	-	Input_Latch	-	bof3::orig::Input_Latch();
+site	src/hook/input_script.cpp	1316	const_def	literal	kLatchCall	0x4fcdde	code	platform	hook	module	-	-	constexpr std::uint32_t kLatchCall = 0x4FCDDE;
+site	src/hook/input_script.cpp	1317	const_def	derived	kInputLatch	0x4fc6a0	code	platform	hook	module	Input_Latch	-	constexpr std::uint32_t kInputLatch = bof3::addr::Input_Latch;
+site	src/hook/input_script.cpp	1330	code_const	module	kInputLatch	0x4fc6a0	code	hosted	hook	call	Input_Latch	file	if (hashing) RetargetCall(" ", kLatchCall, kInputLatch, reinterpret_cast<void*>(&HashedLatch), true);
+site	src/hook/input_script.cpp	1330	code_const	module	kLatchCall	0x4fcdde	code	hosted	hook	call	-	file	if (hashing) RetargetCall(" ", kLatchCall, kInputLatch, reinterpret_cast<void*>(&HashedLatch), true);
+site	src/hook/input_script.cpp	1331	code_const	module	kInputLatch	0x4fc6a0	code	hosted	hook	call	Input_Latch	file	else if (WavDump_On()) RetargetCall(" ", kLatchCall, kInputLatch, reinterpret_cast<void*>(&WavLatch), true);
+site	src/hook/input_script.cpp	1331	code_const	module	kLatchCall	0x4fcdde	code	hosted	hook	call	-	file	else if (WavDump_On()) RetargetCall(" ", kLatchCall, kInputLatch, reinterpret_cast<void*>(&WavLatch), true);
+site	src/hook/input_script.cpp	1364	code_const	module	kInputLatch	0x4fc6a0	code	hosted	hook	call	Input_Latch	file	RetargetCall(" ", kLatchCall, kInputLatch, reinterpret_cast<void*>(&ScriptedLatch), true);
+site	src/hook/input_script.cpp	1364	code_const	module	kLatchCall	0x4fcdde	code	hosted	hook	call	-	file	RetargetCall(" ", kLatchCall, kInputLatch, reinterpret_cast<void*>(&ScriptedLatch), true);
 site	src/hook/snapshot.cpp	159	raw_literal	-	0x66C854	0x66c854	data	platform	hook	init	Task_SchedulerEsp	symbol	{0x66C854, 4, " "},
 site	src/hook/snapshot.cpp	160	raw_literal	-	0x6BC620	0x6bc620	data	platform	hook	init	Game_Hwnd	symbol	{0x6BC620, 4, " "},
 site	src/hook/snapshot.cpp	161	raw_literal	-	0x6BC624	0x6bc624	data	platform	hook	init	Game_HInstance	symbol	{0x6BC624, 4, " "},
@@ -20638,44 +20640,44 @@ range	src/game/field/field_event_fuzz.cpp	424	addr_eq	case	0x454590	0x454590	cod
 range	src/game/field/field_event_fuzz.cpp	425	addr_eq	case	0x572590	0x572590	code	fuzz	case 0x572590: return f(&StubHeightCheck);
 range	src/game/field/field_event_fuzz.cpp	426	addr_eq	case	0x5720C0	0x5720c0	code	fuzz	case 0x5720C0: return f(&StubElevation);
 range	src/game/field/field_event_fuzz.cpp	427	addr_eq	case	0x454D60	0x454d60	code	fuzz	case 0x454D60: return f(&StubTintRelease);
-range	src/game/field/field_frame.cpp	274	addr_eq	case	0x573080	0x573080	code	hosted	case 0x573080: return f(&StubVoid<1>);
-range	src/game/field/field_frame.cpp	275	addr_eq	case	0x57B7B0	0x57b7b0	code	hosted	case 0x57B7B0: return f(&StubVoid<2>);
-range	src/game/field/field_frame.cpp	276	addr_eq	case	0x517350	0x517350	code	hosted	case 0x517350: return f(&StubVoid<3>);
-range	src/game/field/field_frame.cpp	277	addr_eq	case	0x517490	0x517490	code	hosted	case 0x517490: return f(&StubVoid<4>);
-range	src/game/field/field_frame.cpp	278	addr_eq	case	0x56E6C0	0x56e6c0	code	hosted	case 0x56E6C0: return f(&StubVoid<5>);
-range	src/game/field/field_frame.cpp	279	addr_eq	case	0x57B780	0x57b780	code	hosted	case 0x57B780: return f(&StubVoid<6>);
-range	src/game/field/field_frame.cpp	280	addr_eq	case	0x531B60	0x531b60	code	hosted	case 0x531B60: return f(&StubVoid<7>);
-range	src/game/field/field_frame.cpp	281	addr_eq	case	0x5173E0	0x5173e0	code	hosted	case 0x5173E0: return f(&StubVoid<8>);
-range	src/game/field/field_frame.cpp	282	addr_eq	case	0x494030	0x494030	code	hosted	case 0x494030: return f(&StubVoid<9>);
-range	src/game/field/field_frame.cpp	283	addr_eq	case	0x455250	0x455250	code	hosted	case 0x455250: return f(&StubVoid<10>);
-range	src/game/field/field_frame.cpp	284	addr_eq	case	0x454AD0	0x454ad0	code	hosted	case 0x454AD0: return f(&StubVoid<11>);
-range	src/game/field/field_frame.cpp	285	addr_eq	case	0x592F00	0x592f00	code	hosted	case 0x592F00: return f(&StubVoid<12>);
-range	src/game/field/field_frame.cpp	286	addr_eq	case	0x56D690	0x56d690	code	hosted	case 0x56D690: return f(&StubVoid<13>);
-range	src/game/field/field_frame.cpp	287	addr_eq	case	0x59E230	0x59e230	code	hosted	case 0x59E230: return f(&StubVoid<14>);
-range	src/game/field/field_frame.cpp	288	addr_eq	case	0x533760	0x533760	code	hosted	case 0x533760: return f(&StubVoid<15>);
-range	src/game/field/field_frame.cpp	289	addr_eq	case	0x52D8F0	0x52d8f0	code	hosted	case 0x52D8F0: return f(&StubVoid<16>);
-range	src/game/field/field_frame.cpp	290	addr_eq	case	0x51AC50	0x51ac50	code	hosted	case 0x51AC50: return f(&StubVoid<17>);
-range	src/game/field/field_frame.cpp	291	addr_eq	case	0x57B830	0x57b830	code	hosted	case 0x57B830: return f(&StubVoid<18>);
-range	src/game/field/field_frame.cpp	292	addr_eq	case	0x588F20	0x588f20	code	hosted	case 0x588F20: return f(&StubVoid<19>);
-range	src/game/field/field_frame.cpp	293	addr_eq	case	0x517E90	0x517e90	code	hosted	case 0x517E90: return f(&StubTurnTarget);
-range	src/game/field/field_frame.cpp	294	addr_eq	case	0x57C4C0	0x57c4c0	code	hosted	case 0x57C4C0: return f(&StubFace);
-range	src/game/field/field_frame.cpp	295	addr_eq	case	0x517F30	0x517f30	code	hosted	case 0x517F30: return f(&StubObject<22>);
-range	src/game/field/field_frame.cpp	296	addr_eq	case	0x519600	0x519600	code	hosted	case 0x519600: return f(&StubVoid<23>);
-range	src/game/field/field_frame.cpp	297	addr_eq	case	0x518B40	0x518b40	code	hosted	case 0x518B40: return f(&StubObject<24>);
-range	src/game/field/field_frame.cpp	298	addr_eq	case	0x5893A0	0x5893a0	code	hosted	case 0x5893A0: return f(&StubTick<25>);
-range	src/game/field/field_frame.cpp	299	addr_eq	case	0x589410	0x589410	code	hosted	case 0x589410: return f(&StubTick<26>);
-range	src/game/field/field_frame.cpp	300	addr_eq	case	0x57B860	0x57b860	code	hosted	case 0x57B860: return f(&StubVoid<27>);
-range	src/game/field/field_frame.cpp	301	addr_eq	case	0x589770	0x589770	code	hosted	case 0x589770: return f(&StubInheritKey);
-range	src/game/field/field_frame.cpp	302	addr_eq	case	0x5A8E30	0x5a8e30	code	hosted	case 0x5A8E30: return f(&StubLoadVertex);
-range	src/game/field/field_frame.cpp	303	addr_eq	case	0x5A8E90	0x5a8e90	code	hosted	case 0x5A8E90: return f(&StubVoid<30>);
-range	src/game/field/field_frame.cpp	304	addr_eq	case	0x5A90B0	0x5a90b0	code	hosted	case 0x5A90B0: return f(&StubStoreXY);
-range	src/game/field/field_frame.cpp	305	addr_eq	case	0x5A94B0	0x5a94b0	code	hosted	case 0x5A94B0: return f(&StubStoreDepth);
-range	src/game/field/field_frame.cpp	306	addr_eq	case	0x5B9550	0x5b9550	code	hosted	case 0x5B9550: return nullptr;
-range	src/game/field/field_frame.cpp	307	addr_eq	case	0x571AF0	0x571af0	code	hosted	case 0x571AF0: return f(&StubVoid<33>);
-range	src/game/field/field_frame.cpp	308	addr_eq	case	0x592F20	0x592f20	code	hosted	case 0x592F20: return f(&StubVoid<34>);
-range	src/game/field/field_frame.cpp	309	addr_eq	case	0x593060	0x593060	code	hosted	case 0x593060: return f(&StubVoid<35>);
-range	src/game/field/field_frame.cpp	310	addr_eq	case	0x593020	0x593020	code	hosted	case 0x593020: return f(&StubSwap);
-range	src/game/field/field_frame.cpp	311	addr_eq	case	0x5935B0	0x5935b0	code	hosted	case 0x5935B0: return f(&StubSpriteDraw);
+range	src/game/field/field_frame.cpp	276	addr_eq	case	0x573080	0x573080	code	hosted	case 0x573080: return f(&StubVoid<1>);
+range	src/game/field/field_frame.cpp	277	addr_eq	case	0x57B7B0	0x57b7b0	code	hosted	case 0x57B7B0: return f(&StubVoid<2>);
+range	src/game/field/field_frame.cpp	278	addr_eq	case	0x517350	0x517350	code	hosted	case 0x517350: return f(&StubVoid<3>);
+range	src/game/field/field_frame.cpp	279	addr_eq	case	0x517490	0x517490	code	hosted	case 0x517490: return f(&StubVoid<4>);
+range	src/game/field/field_frame.cpp	280	addr_eq	case	0x56E6C0	0x56e6c0	code	hosted	case 0x56E6C0: return f(&StubVoid<5>);
+range	src/game/field/field_frame.cpp	281	addr_eq	case	0x57B780	0x57b780	code	hosted	case 0x57B780: return f(&StubVoid<6>);
+range	src/game/field/field_frame.cpp	282	addr_eq	case	0x531B60	0x531b60	code	hosted	case 0x531B60: return f(&StubVoid<7>);
+range	src/game/field/field_frame.cpp	283	addr_eq	case	0x5173E0	0x5173e0	code	hosted	case 0x5173E0: return f(&StubVoid<8>);
+range	src/game/field/field_frame.cpp	284	addr_eq	case	0x494030	0x494030	code	hosted	case 0x494030: return f(&StubVoid<9>);
+range	src/game/field/field_frame.cpp	285	addr_eq	case	0x455250	0x455250	code	hosted	case 0x455250: return f(&StubVoid<10>);
+range	src/game/field/field_frame.cpp	286	addr_eq	case	0x454AD0	0x454ad0	code	hosted	case 0x454AD0: return f(&StubVoid<11>);
+range	src/game/field/field_frame.cpp	287	addr_eq	case	0x592F00	0x592f00	code	hosted	case 0x592F00: return f(&StubVoid<12>);
+range	src/game/field/field_frame.cpp	288	addr_eq	case	0x56D690	0x56d690	code	hosted	case 0x56D690: return f(&StubVoid<13>);
+range	src/game/field/field_frame.cpp	289	addr_eq	case	0x59E230	0x59e230	code	hosted	case 0x59E230: return f(&StubVoid<14>);
+range	src/game/field/field_frame.cpp	290	addr_eq	case	0x533760	0x533760	code	hosted	case 0x533760: return f(&StubVoid<15>);
+range	src/game/field/field_frame.cpp	291	addr_eq	case	0x52D8F0	0x52d8f0	code	hosted	case 0x52D8F0: return f(&StubVoid<16>);
+range	src/game/field/field_frame.cpp	292	addr_eq	case	0x51AC50	0x51ac50	code	hosted	case 0x51AC50: return f(&StubVoid<17>);
+range	src/game/field/field_frame.cpp	293	addr_eq	case	0x57B830	0x57b830	code	hosted	case 0x57B830: return f(&StubVoid<18>);
+range	src/game/field/field_frame.cpp	294	addr_eq	case	0x588F20	0x588f20	code	hosted	case 0x588F20: return f(&StubVoid<19>);
+range	src/game/field/field_frame.cpp	295	addr_eq	case	0x517E90	0x517e90	code	hosted	case 0x517E90: return f(&StubTurnTarget);
+range	src/game/field/field_frame.cpp	296	addr_eq	case	0x57C4C0	0x57c4c0	code	hosted	case 0x57C4C0: return f(&StubFace);
+range	src/game/field/field_frame.cpp	297	addr_eq	case	0x517F30	0x517f30	code	hosted	case 0x517F30: return f(&StubObject<22>);
+range	src/game/field/field_frame.cpp	298	addr_eq	case	0x519600	0x519600	code	hosted	case 0x519600: return f(&StubVoid<23>);
+range	src/game/field/field_frame.cpp	299	addr_eq	case	0x518B40	0x518b40	code	hosted	case 0x518B40: return f(&StubObject<24>);
+range	src/game/field/field_frame.cpp	300	addr_eq	case	0x5893A0	0x5893a0	code	hosted	case 0x5893A0: return f(&StubTick<25>);
+range	src/game/field/field_frame.cpp	301	addr_eq	case	0x589410	0x589410	code	hosted	case 0x589410: return f(&StubTick<26>);
+range	src/game/field/field_frame.cpp	302	addr_eq	case	0x57B860	0x57b860	code	hosted	case 0x57B860: return f(&StubVoid<27>);
+range	src/game/field/field_frame.cpp	303	addr_eq	case	0x589770	0x589770	code	hosted	case 0x589770: return f(&StubInheritKey);
+range	src/game/field/field_frame.cpp	304	addr_eq	case	0x5A8E30	0x5a8e30	code	hosted	case 0x5A8E30: return f(&StubLoadVertex);
+range	src/game/field/field_frame.cpp	305	addr_eq	case	0x5A8E90	0x5a8e90	code	hosted	case 0x5A8E90: return f(&StubVoid<30>);
+range	src/game/field/field_frame.cpp	306	addr_eq	case	0x5A90B0	0x5a90b0	code	hosted	case 0x5A90B0: return f(&StubStoreXY);
+range	src/game/field/field_frame.cpp	307	addr_eq	case	0x5A94B0	0x5a94b0	code	hosted	case 0x5A94B0: return f(&StubStoreDepth);
+range	src/game/field/field_frame.cpp	308	addr_eq	case	0x5B9550	0x5b9550	code	hosted	case 0x5B9550: return nullptr;
+range	src/game/field/field_frame.cpp	309	addr_eq	case	0x571AF0	0x571af0	code	hosted	case 0x571AF0: return f(&StubVoid<33>);
+range	src/game/field/field_frame.cpp	310	addr_eq	case	0x592F20	0x592f20	code	hosted	case 0x592F20: return f(&StubVoid<34>);
+range	src/game/field/field_frame.cpp	311	addr_eq	case	0x593060	0x593060	code	hosted	case 0x593060: return f(&StubVoid<35>);
+range	src/game/field/field_frame.cpp	312	addr_eq	case	0x593020	0x593020	code	hosted	case 0x593020: return f(&StubSwap);
+range	src/game/field/field_frame.cpp	313	addr_eq	case	0x5935B0	0x5935b0	code	hosted	case 0x5935B0: return f(&StubSpriteDraw);
 range	src/game/field/field_hidden_fuzz.cpp	265	addr_eq	case	0x5893A0	0x5893a0	code	fuzz	case 0x5893A0: return f(&StubTick);
 range	src/game/field/field_hidden_fuzz.cpp	266	addr_eq	case	0x589410	0x589410	code	fuzz	case 0x589410: return f(&StubTickOnce);
 range	src/game/field/field_hidden_fuzz.cpp	267	addr_eq	case	0x589810	0x589810	code	fuzz	case 0x589810: return f(&StubEffectFree);
@@ -23918,7 +23920,7 @@ file	src/game/effect/effect_kind_18_sub_10.cpp	game	effect	ptr_sub	2
 file	src/game/effect/effect_kind_18_sub_11.cpp	game	effect	accessor	11
 file	src/game/effect/effect_kind_18_sub_11.cpp	game	effect	accessor_addr	2
 file	src/game/effect/effect_kind_18_sub_11.cpp	game	effect	inject	6
-file	src/game/effect/effect_kind_18_sub_12.cpp	game	effect	accessor	46
+file	src/game/effect/effect_kind_18_sub_12.cpp	game	effect	accessor	50
 file	src/game/effect/effect_kind_18_sub_12.cpp	game	effect	accessor_addr	3
 file	src/game/effect/effect_kind_18_sub_12.cpp	game	effect	at_global	5
 file	src/game/effect/effect_kind_18_sub_12.cpp	game	effect	inject	11
@@ -24604,13 +24606,13 @@ file	src/game/field/encounter.cpp	game	engine	accessor_addr	4
 file	src/game/field/encounter.cpp	game	engine	at_global	22
 file	src/game/field/encounter.cpp	game	engine	inject	20
 file	src/game/field/event_cond.cpp	game	field	abs_call	1
-file	src/game/field/event_cond.cpp	game	field	accessor	116
+file	src/game/field/event_cond.cpp	game	field	accessor	120
 file	src/game/field/event_cond.cpp	game	field	accessor_addr	13
 file	src/game/field/event_cond.cpp	game	field	at_global	2
 file	src/game/field/event_cond.cpp	game	field	base_offset	5
 file	src/game/field/event_cond.cpp	game	field	const_def_literal	1
 file	src/game/field/event_cond.cpp	game	field	inject	56
-file	src/game/field/event_cond.cpp	game	field	module_const	2
+file	src/game/field/event_cond.cpp	game	field	module_const	3
 file	src/game/field/event_cond.cpp	game	field	value_literal	2
 file	src/game/field/event_leader_fuzz.cpp	fuzz	field	accessor	79
 file	src/game/field/event_leader_fuzz.cpp	fuzz	field	accessor_addr	23
@@ -24749,7 +24751,7 @@ file	src/game/field/field_event_fuzz.cpp	fuzz	field	accessor_addr	41
 file	src/game/field/field_event_fuzz.cpp	fuzz	field	addr_eq	49
 file	src/game/field/field_event_fuzz.cpp	fuzz	field	at_global	6
 file	src/game/field/field_event_fuzz.cpp	fuzz	field	code_literal	105
-file	src/game/field/field_frame.cpp	game	field	accessor	86
+file	src/game/field/field_frame.cpp	game	field	accessor	87
 file	src/game/field/field_frame.cpp	game	field	accessor_addr	1
 file	src/game/field/field_frame.cpp	game	field	code_literal	70
 file	src/game/field/field_frame.cpp	hosted	field	addr_eq	38
@@ -25066,7 +25068,7 @@ file	src/game/field/sprite_screen.cpp	hosted	field	code_const	2
 file	src/game/field/wide_rand.cpp	game	engine	accessor	51
 file	src/game/field/wide_rand.cpp	game	engine	ptr_sub	1
 file	src/game/field/wide_staging.cpp	game	engine	accessor	58
-file	src/game/field/wide_staging.cpp	game	engine	raw_literal	27
+file	src/game/field/wide_staging.cpp	game	engine	raw_literal	28
 file	src/game/field_c1_callees.h	game	field	const_def_derived	2
 file	src/game/field_c1_callees.h	game	field	const_def_literal	7
 file	src/game/field_c2_callees.h	game	field	const_def_derived	6
@@ -26821,7 +26823,7 @@ file	src/game/platform/gpu_2.cpp	game	engine	module_const	1
 file	src/game/platform/gte.cpp	game	engine	accessor	201
 file	src/game/platform/gte.cpp	game	engine	inject	58
 file	src/game/platform/magic_080.cpp	game	magic	abs_call	11
-file	src/game/platform/magic_080.cpp	game	magic	accessor	124
+file	src/game/platform/magic_080.cpp	game	magic	accessor	127
 file	src/game/platform/magic_080.cpp	game	magic	accessor_addr	2
 file	src/game/platform/magic_080.cpp	game	magic	at_global	2
 file	src/game/platform/magic_080.cpp	game	magic	code_const	4
@@ -27642,7 +27644,7 @@ file	src/hook/host.cpp	platform	hook	ptr_sub	3
 file	src/hook/host.cpp	platform	hook	range_cmp	2
 file	src/hook/input_script.cpp	hosted	hook	code_const	8
 file	src/hook/input_script.cpp	platform	hook	abs_call	9
-file	src/hook/input_script.cpp	platform	hook	accessor	40
+file	src/hook/input_script.cpp	platform	hook	accessor	41
 file	src/hook/input_script.cpp	platform	hook	accessor_addr	7
 file	src/hook/input_script.cpp	platform	hook	const_def_derived	2
 file	src/hook/input_script.cpp	platform	hook	const_def_literal	3
@@ -27686,16 +27688,16 @@ file	src/launcher/launcher.cpp	launcher	launcher	module_const	2
 file	src/launcher/save_dialog.cpp	launcher	launcher	raw_literal	3
 file	src/render/gfx_snapshot.cpp	platform	render	accessor	30
 file	src/render/gfx_snapshot.cpp	platform	render	base_offset	22
-file	src/render/render_shim.cpp	platform	render	accessor	5
-#count sites	125759
-#count sites_game	57223
-#count sites_platform	636
+file	src/render/render_shim.cpp	platform	render	accessor	7
+#count sites	125776
+#count sites_game	57237
+#count sites_platform	639
 #count sites_hosted	302
 #count sites_fuzz	67580
 #count sites_launcher	18
-#count class_accessor	27289
-#count class_accessor_game	23674
-#count class_accessor_platform	173
+#count class_accessor	27304
+#count class_accessor_game	23686
+#count class_accessor_platform	176
 #count class_accessor_hosted	0
 #count class_accessor_fuzz	3441
 #count class_accessor_launcher	1
@@ -27711,8 +27713,8 @@ file	src/render/render_shim.cpp	platform	render	accessor	5
 #count class_at_global_hosted	0
 #count class_at_global_fuzz	1620
 #count class_at_global_launcher	0
-#count class_module_const	3505
-#count class_module_const_game	2304
+#count class_module_const	3506
+#count class_module_const_game	2305
 #count class_module_const_platform	98
 #count class_module_const_hosted	0
 #count class_module_const_fuzz	1101
@@ -27723,8 +27725,8 @@ file	src/render/render_shim.cpp	platform	render	accessor	5
 #count class_code_const_hosted	83
 #count class_code_const_fuzz	5396
 #count class_code_const_launcher	0
-#count class_raw_literal	2813
-#count class_raw_literal_game	581
+#count class_raw_literal	2814
+#count class_raw_literal_game	582
 #count class_raw_literal_platform	86
 #count class_raw_literal_hosted	0
 #count class_raw_literal_fuzz	2143
@@ -27799,7 +27801,7 @@ file	src/render/render_shim.cpp	platform	render	accessor	5
 #count raw_literal_ctx_accessor	10
 #count raw_literal_ctx_cast	12
 #count raw_literal_ctx_call	123
-#count raw_literal_ctx_init	445
+#count raw_literal_ctx_init	446
 #count raw_literal_ctx_subscript	0
 #count raw_literal_ctx_template	0
 #count raw_literal_ctx_static_assert	0
@@ -27827,7 +27829,7 @@ file	src/render/render_shim.cpp	platform	render	accessor	5
 #count gate_addr_eq	84
 #count gate_ptr_sub	50
 #count gate_const_def_literal	3012
-#count gate_raw_literal	667
+#count gate_raw_literal	668
 #count gate_code_literal	932
 #gate asm_operand	66
 #gate asm_text	0
@@ -27836,5 +27838,5 @@ file	src/render/render_shim.cpp	platform	render	accessor	5
 #gate addr_eq	84
 #gate ptr_sub	50
 #gate const_def_literal	3012
-#gate raw_literal	667
+#gate raw_literal	668
 #gate code_literal	932

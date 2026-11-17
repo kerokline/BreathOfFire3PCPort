@@ -390,6 +390,24 @@ ear and the WAV A/B stay owed (IDEAS I68).
     none at 0.65. Now each picture has the trail as strong as with the
     in-between off, and it lasts half as long. Not captured from the look
     itself; the owner's eye decides.
+
+    **The scan lines roll by the frame's roll, halved** (2026-11-16). The
+    lines are `sin(6 * time - y)`: 6 radians a frame is 0.2832 short of a
+    turn, so they roll slowly back. On the half-frame clock a picture moved
+    them 3 radians, 0.1416 short of half a turn: bright and dark lines
+    changed places on every picture and all but cancelled. And since item
+    18 a late frame is followed by pictures a whole frame apart, so the
+    lines stood for a moment and went again - the owner, in play: the look
+    "flickering in and out". With `scanroll=0` it was gone (the owner, the
+    same day), which names the term. The shader now takes the whole frames
+    at 6 radians, as the preset does, and the part of a frame at
+    6 - 2 pi: -0.1416 a half step, the same roll on the screen with the
+    in-between on, off, or coming and going. With it off the part is 0 and
+    the sum is the preset's own. A `scanroll` knob below 1 scales a whole
+    frame's 6 radians, as before: at 0.5 it is 3 a frame with the
+    in-between off too, the preset's own behaviour. Not captured from the
+    look. Seen by the owner in play on the build with the change, the same
+    day: "much better".
 11. **Captures between presents.** From the in-between to the next real
     present the target holds the in-between, so F11 (`SaveFrameBesideDll`)
     pressed in the second half of a period saves an interpolated picture.
