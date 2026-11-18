@@ -866,16 +866,21 @@ call the toolchain's `malloc`, `calloc` and `free` as before, after one test of 
 size is `_msize` through the seam. `tools/ledger_switches.py` lists the name (`env`). No ledger entry:
 where a block lies and how the heap is cut is nothing a player sees.
 
-**Proof.** See R10's hand-back for the measured gate line; in short:
+**Proof.**
 
 | Check | Result |
 |---|---|
 | `os_tests`, `TestHeapArena` | Win32 32-bit: 153 checks, 0 failed (the arena at `0x015F0000`: no free run above 2 GB in a 32-bit process, so the system's place); 64-bit: 157, 0 failed (at `0xFF000000`); POSIX (g++ 15.2, WSL): 157, 0 failed (at `0xFF000000`) |
 | What the test does | the exact-size call per system; a reservation below 4 GB above a 2 GB floor; zero-size, too-large and double-free cases; 20,000 random rounds of malloc, calloc, realloc and free against a model (sizes, 16-byte alignment, every block below 4 GB, contents kept, calloc zeroed, invariants every 500 rounds); free all, then the used end at 0; 4,177 blocks of 4,000 bytes to the end, every other one freed, the rest freed, one block of 16 MB less 4 KB; a block grown into the reserved room and shrunk in place; four threads at once |
 | The test fails when it should | two mutations, built in the WSL: no merge with the block below (at least 6 checks fail, the output cut at 6: the invariants and the used end after freeing all), `SizeOf` answering the usable size (4 fail) |
+| The hosted shadow suite, 32-bit (`BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'`, a clean launcher folder, the PC install) | arena off: `self-test only: done`, 922 `MISMATCHES` lines, each 0; arena on (`BOF3X_ARENA=1`): the same, 922 and 0, the arena at `0x18440000..0x28440000` (no free run above 2 GB, so the system's place), the SOUND self-test and `crt_rest`'s heap fuzz (200 rounds of 64 blocks) among them |
+| The 64-bit exe host's start-up self-tests (`BOF3X_SELFTEST_ONLY=1 ... --host exe`, `build-x86_64`) | off and on: exit 0, `self-test only: done`; on, the arena at `0xF0000000..0x100000000`; the two logs differ only in process and thread numbers and one free-run size below 16 MB |
+| `linux_tree.py` | 804 files (the two new), 767 compile for x86-64 Linux, 37 do not; `sound_ours.cpp` is not among them |
 
-**Not verified:** the game's peak heap with the arena; the 64-bit exe host's self-tests and the ten
-state-hash routes with it on; anything on Linux beyond the compile and `os_tests` (no link exists).
+**Not verified:** the game's peak heap with the arena (the used end's high-water mark is kept,
+`LowArena::HighWater`, and not logged); the ten state-hash routes with it on or off (the
+coordinator's, at the merge); a played game with it on; anything on Linux beyond the compile and
+`os_tests` (no link exists).
 
 ### Stage LC - link and run on Linux
 
