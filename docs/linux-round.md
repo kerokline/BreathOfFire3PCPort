@@ -1179,6 +1179,50 @@ has not run):** M1 (`linux/w2-m1`) and R9 (`linux/w2-r9`).
   [`THIRD_PARTY.md`](THIRD_PARTY.md) is owed when a tarball ships its
   libraries (stage LD).
 
+**All eight groups merged, `98ae6e11` (2026-11-18).** R6m
+(`linux/w2-r6m`), R5 (`linux/w2-r5`) and I1 (`linux/w2-i1`) after the five
+above. Both presets build; `data_census --strict`, `reloc_census --check`,
+`reloc_bare --check`, `ledger_check.py` and `ledger_switches.py --check`
+pass. **`linux_tree.py` with DXVK-native's headers: 813 files, 813 compile
+for `x86_64-linux-gnu`, 0 do not; 11 are Windows-only by design.** The
+round's goal is met. Nothing links or runs on Linux.
+
+- **R6m:** on SDL's window the movie has no subclass and no Win32 pump; it
+  takes the window's events (`game_window::TakeForMovie`). The picture on
+  Windows is the same GDI code, in `fmv_play_win32.cpp`. Off Windows the
+  picture is a `Fatal` that names the open decision
+  ([`replacing-mci.md`](replacing-mci.md) 9: the renderer brought up before
+  the movies, or SDL's window surface; neither built).
+- **R5:** `src/input/key_sdl.*`, 159 pairs from SDL's scancode to the DIK
+  number; SDL's keyboard is read at the latch. DirectInput is left under
+  `BOF3X_OFF=WindowSdl` and `BOF3X_OFF=KeyboardSdl` (the proof tool: it logs
+  each key the two readers keep apart). `tools/key_host`: 132,756 checks, 0
+  failed, at both widths and in the WSL. Read, not run: the state hash's
+  page `0x7DE000` will differ from a reference made before R5
+  (`DInput_Object` and `DInput_Keyboard` stay 0).
+- **I1:** `input_script.cpp` has no Win32 site; on SDL's window a recipe's
+  key goes into the window's queue (`game_window::QueueKey`), on the Win32
+  window through `os::PostWindowKey`. None of the ten routes has a key
+  step; the recipes with one are listed in its hand-back (`quick_menu`,
+  `f9ExitMode` and others).
+- **Found, not of this round:** the launcher's key capture stores Pause as
+  0x45 and names it NumLock, and the reverse
+  (`config_dialog.cpp`, the `WH_KEYBOARD` hook); R5 kept DirectInput's
+  meaning so that no stored number changes.
+
+**The owner's second look, 2026-11-18, the 32-bit build of `f32becb3`
+(`launcher/function-keys`, which holds all of the above) from `game\`:**
+rebinding, clearing and a double binding on the launcher's new Function
+keys page work, and "the keyboard strokes seem fine" in play. **Not
+reported on:** the three movies and a close during one, a pad-bound action,
+the pad unplugged and plugged in, MP3 music on the own stack, satpixie,
+`BOF3X_OFF=WindowSdl` and `BOF3X_OFF=KeyboardSdl`, the 64-bit build.
+
+**Owed before a PR:** the hosted shadow suite, the exe-host run and the
+moved-base run on the merge; the ten state-hash routes; the key-step
+recipes on both windows; `music_heard.py`; the ledger entries (the window,
+the keyboard, the movie's events).
+
 ### Stage LC - link and run on Linux
 
 - A CMake preset for the ELF, clang, SDL3 from source as today.
