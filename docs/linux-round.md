@@ -1030,6 +1030,98 @@ named the right form for the self-test and did not forbid other forms: the
 next brief says that a worktree holds no game data, and that a run not in
 the brief is not made.
 
+### Wave 2's read passes (2026-11-18; read, nothing built or run)
+
+Three agents read the source for the three questions the staging left
+unmeasured. Each finding below is from reading at `main` `5683387a`; the
+lines are theirs and none was checked by a build or a run.
+
+**R6: `battle_menu_win.cpp`'s window is the movie player, and it is live.**
+
+- `tools/move_funcs.py` built the file from eight, `fmv_play.cpp` among
+  them (its line 1). All its window and GDI sites are `Fmv_Play` (:1017)
+  and `Fmv_WndProc` (:1185): lines 127..302 and 1017..1221. The picture is
+  `StretchDIBits` (:220..238); the player subclasses the game window's
+  procedure (:1066) and runs a message pump of its own (:1107..1155).
+- Its one caller is `Game_WinMain`, `magic_080.cpp:850..851`: after the
+  window is made, before `Display_Setup` (:858). The movies play before a
+  Direct3D device exists.
+- `magic_080.cpp` is three jobs: the window, its geometry and its procedure
+  (:291..348, :562, :841..847, :909..916); the desktop's size (:830..834);
+  two `_wfopen` calls for the placement file (:284, :298).
+- `src/os` has no window, event or present service (`os.h:4`), and no
+  `SDL_CreateWindow` is anywhere in `src`.
+- Not reconciled: the agent's count of `magic_080.cpp`'s rows was about 136;
+  the staging says 131.
+
+**R5: the pad is on SDL3 already; DirectInput holds the keyboard alone.**
+
+- `DInput_Init` (`d_input.cpp:164..200`) opens `GUID_SysKeyboard` only.
+  `DInput_EnumJoystick` (:210..231) is reached through
+  `BOF3X_ORIGINAL=DInput_Init` alone. The pad is `src/input/pad_sdl.cpp`
+  (DIV-0050, 2026-09-24).
+- `Pad_Read` fills `Key_State[256]`, indexed by DIK number, and reads the
+  32 pairs of `Key_Table`. `Key_State` is game memory that the state hash
+  reads: an SDL reader must fill it byte for byte the same.
+- The stored numbers: `key.NAME=` lines of `bof3x.ini` and lines 3 on of
+  `BOF3.CFG` hold DIK numbers; `pad.INPUT=` lines hold SDL's names. None is
+  in a save. The launcher takes a key by a `WH_KEYBOARD` hook
+  (`config_dialog.cpp:1242..1263`) and never opens DirectInput: its pages
+  need no change.
+- No table from `SDL_Scancode` to DIK numbers is in the tree.
+- The check of `c_dfDIKeyboard` (`rdata_consts.cpp:62..139`) also writes
+  the format's header into the image, so that the original `DInput_Init`
+  runs.
+- Not verified: how SDL3 on Windows reads the keyboard, and whether the
+  window messages `input_script.cpp` posts reach it; that SDL's keyboard
+  state needs an SDL window (so R5 is after R6).
+
+**R7: neither the task switch nor a thread; a call in the seam that runs a
+function on a stack of its own.**
+
+- The render fiber (`render_d3d11.cpp:1013..1066`, commit `340d3739`) is
+  there because the game presents from inside a task on a 16 KB slice of
+  the main thread's stack, and the first DXGI present ran off it
+  ([`render-backend.md`](render-backend.md) 4). The snapshot's
+  (`snapshot.cpp:636..680`, commit `e04db5b4`) is there so that a take
+  copies slice 0 as the tasks left it. Both ask 256 KB committed of 1 MB.
+- The task switch (`src/game/task_switch*.h`) is the game's scheduler: four
+  fixed records, slices of 0x4000 or 0x8000 bytes, no System V half. Its
+  slices are the stacks the fibers were made to leave.
+- A thread: DXGI sends messages to the window's thread, which would wait on
+  the hand-off; the hosted self-test runs under the loader lock, where a
+  thread cannot start (`snapshot.cpp:296..299`).
+- Proposed: `os::RunOnOwnStack`, call and return. Windows keeps its fibers
+  behind it (they keep the thread block's stack bounds right, so nothing
+  changes there and no ledger entry); POSIX gets a mapped stack with a
+  guard page and a switch of its own, and registers the range so that
+  `os::CurrentStack()` answers for it (wave 1's gap).
+- `snapshot.cpp`'s 52 file sites: the seam covers the writes, reads and
+  name calls. It lacks a rename that refuses an existing target (:562), a
+  way for the self-test to make the rotation fail (:1068..1070 hold a file
+  open with no sharing), and neutral error codes (:615, :1088).
+- Not verified: the stack depth DXVK and a Vulkan driver need; whether a
+  snapshot participant calls the renderer (nesting).
+
+**What the passes change in the staging.**
+
+- R5 is the keyboard alone, engine alone, and runs after R6 (the owner's
+  call 3 above, as changed).
+- R6 splits: **R6** the window, its procedure and its loop on SDL3
+  (`magic_080.cpp`, `win_main.cpp`, `display_setup.cpp`, `d3d.cpp`), and
+  **R6m** the movie's picture and its events, after R6. Before either, the
+  movie's code moves back to a file of its own, so that the battle menu's
+  code is in no group.
+- R7 is the seam call and `snapshot.cpp`'s file sites. It shares no file
+  with R6 and can run beside it.
+- The order: R6 and R7 side by side; then R5, R6m and R9.
+
+**For the owner:** where the movie's frame is drawn (R6m) - an SDL texture
+on the window before the device exists, or the renderer brought up before
+the movies. Proposed: the renderer, since tier 2 has no second way to put
+a picture on a window that DXVK also owns; R6m's agent measures whether
+the device can be made before `Display_Setup` first.
+
 ### Stage LC - link and run on Linux
 
 - A CMake preset for the ELF, clang, SDL3 from source as today.
