@@ -177,64 +177,50 @@ int __stdcall Start(void* decoder) {
 // thread's stack below WinMain's frame (Task_SetStackBase, docs/task_sched.md),
 // the title's Music_Play among them. A decode there overran the slice into
 // the next task's saved context (2026-10-10, the owner's crash at a float
-// bit pattern with every register a float). So DecodeFrame runs with esp on
-// a 256 KB block of ours, switched in and out around the one call.
+// bit pattern with every register a float). So DecodeFrame runs on a 256 KB
+// stack of ours, switched to and back around the one call.
 //
-// The switch is a pair by width (docs/x64-asm-policy.md 4.1, 8 unit 2;
-// x64-build-design.md 7.6): the i686 block as it was, and for x86-64 the same
-// shape for rsp - the two arguments in rcx and rdx, the 32 bytes of home space
-// under the call, the block's top 16-aligned so the callee sees rsp at 8 mod
-// 16. The block's address needs no width: its top is in a register, stored
-// nowhere the game reads.
+// The switch is the seam's (os/own_stack.h; it replaced a hand switch of esp
+// and rsp, docs/linux-round.md wave 2 group M1): on Windows a fiber, 256 KB
+// committed of 256 KB, so the thread block's stack bounds follow it; on POSIX
+// a mapped stack with a guard page under it and swapcontext. The x87 control
+// word is the caller's at every call (callers_x87), as the hand switch left
+// it - the game's 0x027F, not the new stack's default - so the decoder rounds
+// as it did. A thread made a fiber for the call stays one (the renderer's
+// choice: the game thread is made one at its first present anyway). The
+// arguments and the result go through a block of the caller's; nothing the
+// game reads holds an address of the stack.
 namespace {
 
-constexpr std::uint32_t kStackBytes = 256 * 1024;
-unsigned char* g_stack;
+constexpr std::size_t kStackBytes = 256 * 1024;
+bof3::os::OwnStack g_stack{{kStackBytes, kStackBytes, true, false}};
 
-int __stdcall DecodeFrame(void* decoder, void* out);
+int DecodeFrame(void* decoder, void* out);
+
+struct DecodeCall {
+    void* decoder;
+    void* out;
+    int result;
+};
+
+void DecodeOnOwnStack(void* p) {
+    auto* call = static_cast<DecodeCall*>(p);
+    call->result = DecodeFrame(call->decoder, call->out);
+}
 
 }  // namespace
 
 int __stdcall Decode(void* decoder, void* out) {
-    if (!g_stack) {
-        g_stack = static_cast<unsigned char*>(bof3::os::MemAlloc(nullptr, kStackBytes, bof3::os::Prot::ReadWrite));
-        if (!g_stack) bof3::Fatal("DIV-0091: no memory for the decoder's stack");
-        bof3::os::MemProtect(g_stack, 4096, bof3::os::Prot::None);  // a guard page under it: an overrun faults, never wanders
-    }
-    const std::uintptr_t top = (reinterpret_cast<std::uintptr_t>(g_stack) + kStackBytes - 16) & ~static_cast<std::uintptr_t>(15);
-    int result;
-#if defined(__i386__)
-    asm volatile(
-        "movl %%esp, %%esi\n\t"
-        "movl %[top], %%esp\n\t"
-        "pushl %[out]\n\t"
-        "pushl %[dec]\n\t"
-        "call *%[fn]\n\t"
-        "movl %%esi, %%esp\n\t"
-        : "=a"(result)
-        : [top] "r"(top), [out] "r"(out), [dec] "r"(decoder), [fn] "r"(&DecodeFrame)
-        : "esi", "ecx", "edx", "memory", "cc");
-#elif defined(__x86_64__)
-    void* dec = decoder;   // rcx and rdx: the Win64 arguments, which the call may clobber
-    void* out_r = out;
-    asm volatile(
-        "movq %%rsp, %%rsi\n\t"
-        "movq %[top], %%rsp\n\t"
-        "subq $32, %%rsp\n\t"
-        "call *%[fn]\n\t"
-        "movq %%rsi, %%rsp\n\t"
-        : "=a"(result), "+c"(dec), "+d"(out_r)
-        : [top] "r"(top), [fn] "r"(&DecodeFrame)
-        : "rsi", "r8", "r9", "r10", "r11", "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "memory", "cc");
-#else
-#error "mp3 Decode: no stack switch for this architecture"
-#endif
-    return result;
+    DecodeCall call = {decoder, out, 0};
+    const bof3::os::OwnStackResult r = g_stack.Run(&DecodeOnOwnStack, &call);
+    if (r != bof3::os::OwnStackResult::Done)
+        bof3::Fatal("DIV-0091: the decoder's stack: %s (error %u)", bof3::os::OwnStackFailure(r), bof3::os::LastError());
+    return call.result;
 }
 
 namespace {
 
-int __stdcall DecodeFrame(void* decoder, void* out) {
+int DecodeFrame(void* decoder, void* out) {
     Decoder* d = D(decoder);
     if (!d->started) bof3::Fatal("DIV-0091: Mp3_Decode before Mp3_Start");
     if (d->clip) {   // DIV-0215: 1,152 stereo frames of the clip; none left is the end of the stream
@@ -311,6 +297,11 @@ struct Entries {
 };
 
 Entries Ours() { return {Create, MemoryIo, SetIo, Open, Start, Decode, Seek, Destroy}; }
+// Ours with the frame decoded on the caller's stack, no switch: for the
+// self-test alone, which runs at start-up on a whole thread stack (never on a
+// task's slice), to show that the own stack changes no sample.
+int __stdcall DecodeHere(void* decoder, void* out) { return DecodeFrame(decoder, out); }
+Entries OursHere() { return {Create, MemoryIo, SetIo, Open, Start, DecodeHere, Seek, Destroy}; }
 Entries Capcoms() {
     const sound::Callees& o = sound::kOriginals;
     return {o.mp3_create, o.mp3_memory_io, o.mp3_set_io, o.mp3_open, o.mp3_start, o.mp3_decode, o.mp3_seek, o.mp3_destroy};
@@ -664,9 +655,18 @@ void SelfTest() {
                     "end, the replay after Seek(0) %s over %u frames",
                     path, ours.frames, walked, ours.frame_bytes, ours.uniform ? "" : " (uneven)", ours.eos_bytes,
                     ours.replay_identical ? "identical" : "DIFFERENT", ours.replay_frames);
+    // The same file decoded on this thread's own stack, no switch: every
+    // sample the own stack's run gave, bit for bit (the switch carries the
+    // caller's x87 control word; a stack that rounded otherwise shows here).
+    Run here;
+    DecodeAll(OursHere(), data.data(), static_cast<std::uint32_t>(data.size()), 0, &here);
+    if (!here.opened || here.frames != ours.frames || here.pcm != ours.pcm)
+        bof3::Fatal("DIV-0091 self-test: %s decoded on the decoder's own stack differs from the same decode on the "
+                    "caller's stack (%u frames against %u, %u samples against %u)",
+                    path, ours.frames, here.frames, static_cast<unsigned>(ours.pcm.size()), static_cast<unsigned>(here.pcm.size()));
     bof3::Log("shadow      DIV-0091 self-test: %s - %u frames of %u bytes, as many as the header walk counts; %u stored "
               "at the end of the stream; the replay after Seek(0) identical over all %u frames; the size@address name "
-              "round-trips",
+              "round-trips; the decode on its own stack the same as on the caller's, sample for sample",
               path, ours.frames, ours.frame_bytes, ours.eos_bytes, ours.replay_frames);
 
     // DIV-0215: an XA clip (silent groups: a header and 200 zero groups, 37,800
