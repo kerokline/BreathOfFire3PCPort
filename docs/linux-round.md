@@ -934,6 +934,67 @@ show it, but on Linux that read is not the image's base; LC must give it
 another source (a variable the start-up sets, read once) before anything
 places an address.
 
+### Wave 1 as run (2026-11-17, branch `linux/wave1`, not merged)
+
+The owner's word on 2026-11-17: the round runs here. Wave 1's six groups ran
+as five agents (R2 and R3 as one), each in a worktree from `b0955695`, and
+were merged one at a time into `linux/wave1`. Calls 2 and 4 stand as
+proposed: the three watchers are Windows files, the arena is on Windows
+behind a switch.
+
+| Group | What it left | Its own proof |
+|---|---|---|
+| R4 | `src/input/key_codes.h` (`kDik*`, `kVk*`, the SDK's values, asserted against the SDK in `src/launcher/key_codes_check.cpp`); the four `dinput.h` includes were dead | Objects equal but for `__LINE__` and one format string; the hosted suite not run, on that ground |
+| R10 | The arena, "R10 as run" above; `BOF3X_ARENA` | Hosted suite off and on, 922 lines of 0 each; the 64-bit exe host's start-up tests off and on |
+| R2, R3 | `WINDOWS_ONLY` in `linux_tree.py`; `src/hook/windows_only.cpp` (a Fatal for `BOF3X_CALLTRACE`, `BOF3X_GAPWATCH`, `BOF3X_WRITEWATCH` off Windows); `detour.cpp` and `exe_image.cpp` on the seam (`os::PathOfUtf8`); "R3" above | Hosted suite 922 of 0; the exe-host self-test. `exe_image.cpp`'s reading of a disc-built image not exercised |
+| R1 | `os/module.h`, `stack.h`, `sampler.h`, `local_time.h`, `named_event.h`, `path_file.h`; five harness files compile; `BOF3X_STALLWATCH` is a Fatal off Windows (no sampler there yet) | Hosted suite 922 of 0. No route, no WAV dump in a game |
+| R8 | `os/event.h`, `thread.h`, `out_file.h`; `crash.cpp` the portable report, `crash_win32.cpp` the old catcher, `crash_posix.cpp` a signal catcher; `stackwatch_win32.cpp` and a refusing `stackwatch_posix.cpp`; `log.cpp` and `sound_sdl.cpp` off Windows' API; `tools/crash_report.py --log` | Hosted suite 922 of 0; a crash on purpose before and after, the same seven `CRASH` lines (32-bit, exe host); `tools/linux_probe/crash_catch_test.sh` in the WSL, nine modes. `music_heard.py`: two ring lines only, the run was stopped |
+
+**At the merge.** Both groups R1 and R8 added `src/os/{win32,posix}/thread.cpp`:
+R1's keeps the name, R8's is `thread_start.cpp`. The other conflicts were
+both-sides-appended (`os.h`, `os_tests.cpp`, `linux_tree.py`,
+`os_census.py`, this file).
+
+| Check on `linux/wave1` after the five merges | Result |
+|---|---|
+| Both presets | build, no error |
+| `os_tests` | Win32 32-bit 234 checks, 64-bit 237; POSIX (g++ 15.2, WSL) 232; 0 failed |
+| `os_census --check --boundary` | ok, 11 files wait |
+| `linux_tree.py` | 806 files, **794 compile for x86-64 Linux, 12 do not**, 9 Windows files by design |
+| `width_census`, `reloc_bare`, `data_census --strict`, `ledger_check` | ok after the censuses were regenerated |
+| `reloc_census` | `range_cmp` 83 to 85, on purpose: `log.cpp`'s queue size is 4 MB, which is `0x400000`; a size, not an address |
+
+The 12: `win_main.cpp`, `display_setup.cpp`, `d3d.cpp`, `magic_080.cpp`,
+`battle_menu_win.cpp` (R6); `d_input.cpp`, `pad_read.cpp`, `rdata_consts.cpp`
+(R5); `snapshot.cpp` (R7); `render_d3d11.cpp`, `satpixie.cpp` (R9);
+`input_script.cpp`, which waits for R6's window (lines 960..969) and takes
+R4's key names (lines 221..223, 1302..1303).
+
+**Not run on the merged branch:** the hosted shadow suite, the exe-host and
+moved-base runs, the ten state-hash routes (R8, R10 and R1 change what
+runs), `music_heard.py` to its end. Another session's route recordings held
+the machine when the merges ended. Each group ran the hosted suite on its
+own branch.
+
+**A player on Windows:** nothing by intent, so no ledger entry. Under test
+switches: the stall log's module names are UTF-8; a failed seek of the WAV
+dump is a Fatal (it was ignored); two state-hash messages are one.
+
+**For stage LC, found by the groups:** `ImageBase()` reads the Windows
+process block (above); the game's `CreateEventA`, `CloseHandle` and
+`MsgWaitForMultipleObjects` import slots need stand-ins on `os::Event`;
+memory the game holds in 32-bit words outside the arena
+(`music_seq.cpp:634`, `render_shim.cpp:53`, `mp3.cpp:109`, SDL's sound
+objects not traced); `os::CurrentStack()` on POSIX does not know a stack
+the program switched onto; the crash catcher's alternate stack covers the
+arming thread alone; `tools/input_run.py`'s frozen shots have no Linux side.
+
+**A fault of the run.** One agent started the launcher on its worktree's
+empty `bof3` folder and a dialog stood on the owner's screen. The brief
+named the right form for the self-test and did not forbid other forms: the
+next brief says that a worktree holds no game data, and that a run not in
+the brief is not made.
+
 ### Stage LC - link and run on Linux
 
 - A CMake preset for the ELF, clang, SDL3 from source as today.
