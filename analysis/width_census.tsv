@@ -983,32 +983,28 @@ site	src/game/battle/battle_menu_states_fuzz.cpp	67	narrow_call	image_local	fuzz
 site	src/game/battle/battle_menu_states_fuzz.cpp	68	narrow_call	object_ours	fuzz	g_cmd	Address	const std::uint32_t cmd = Address(g_cmd);
 site	src/game/battle/battle_menu_states_fuzz.cpp	170	uintptr	-	fuzz	std::uintptr_t	-	return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(Hash()));
 site	src/game/battle/battle_menu_states_fuzz.cpp	170	widen	other	fuzz	Hash()	const unsigned char*	return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(Hash()));
-site	src/game/battle/battle_menu_win.cpp	79	uintptr	-	live	std::uintptr_t	-	unsigned char* AtBattleDraw(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/battle/battle_menu_win.cpp	79	widen	param	live	address	unsigned char*	unsigned char* AtBattleDraw(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/battle/battle_menu_win.cpp	81	low32	image_local	live	p	Low32	battle_draw::U Addr(const void* p) { return Low32(p); }
-site	src/game/battle/battle_menu_win.cpp	177	long	l	live	long	-	const long long n = static_cast<long long>(f.tellg());
-site	src/game/battle/battle_menu_win.cpp	177	long	l	live	long	-	const long long n = static_cast<long long>(f.tellg());
-site	src/game/battle/battle_menu_win.cpp	185	long	l	live	long	-	std::snprintf(why, why_n, " ", static_cast<long long>(n));
-site	src/game/battle/battle_menu_win.cpp	310	uintptr	-	live	std::uintptr_t	-	return AtMenuDrawHelpers(*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr))));
-site	src/game/battle/battle_menu_win.cpp	310	widen	img_place	live	::bof3::Img(BattleWinStates_Current_addr)	volatile std::uint32_t*	return AtMenuDrawHelpers(*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr))));
-site	src/game/battle/battle_menu_win.cpp	322	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<menu_draw_helpers::U>(LongMenuDrawHelpers(AtMenuDrawHelpers(table + index * 4)))))();
-site	src/game/battle/battle_menu_win.cpp	322	widen	other	live	static_cast<menu_draw_helpers::U>(LongMenuDrawHelpers(AtMenuDrawHelpers(table + index * 4)))	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<menu_draw_helpers::U>(LongMenuDrawHelpers(AtMenuDrawHelpers(table + index * 4)))))();
-site	src/game/battle/battle_menu_win.cpp	362	low32	helper_def	live	p	Low32	U Key(const void* p) { return Low32(p); }
-site	src/game/battle/battle_menu_win.cpp	366	uintptr	-	live	std::uintptr_t	-	unsigned char* RecRest2h() { return AtRest2h(*reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)))); }
-site	src/game/battle/battle_menu_win.cpp	366	widen	img_place	live	::bof3::Img(BattleWinStates_Current_addr)	volatile U*	unsigned char* RecRest2h() { return AtRest2h(*reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)))); }
-site	src/game/battle/battle_menu_win.cpp	384	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2h(table + 4 * index)))();
-site	src/game/battle/battle_menu_win.cpp	384	widen	other	live	LRest2h(table + 4 * index)	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2h(table + 4 * index)))();
-site	src/game/battle/battle_menu_win.cpp	430	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(
-site	src/game/battle/battle_menu_win.cpp	430	widen	other	live	*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)))	unsigned char*	return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(
-site	src/game/battle/battle_menu_win.cpp	431	uintptr	-	live	std::uintptr_t	-	*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)))));
-site	src/game/battle/battle_menu_win.cpp	431	widen	img_place	live	::bof3::Img(BattleWinStates_Current_addr)	volatile std::uint32_t*	*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)))));
-site	src/game/battle/battle_menu_win.cpp	479	narrow_call	image_local	live	w	Key	static_cast<U>(LongRest2h(w + 0x20)), w[0xD], Key(w));
-site	src/game/battle/battle_menu_win.cpp	712	uintptr	-	live	std::uintptr_t	-	BH_CALL(Equip_PreviewSet)(member, reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(set)), marks,
-site	src/game/battle/battle_menu_win.cpp	712	widen	param	live	set	const unsigned char*	BH_CALL(Equip_PreviewSet)(member, reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(set)), marks,
-site	src/game/battle/battle_menu_win.cpp	944	low32	image_local	live	record	Low32	BattleWinStates_Current = static_cast<std::int32_t>(Low32(record));
-site	src/game/battle/battle_menu_win.cpp	1154	handle_array	none	live	nullptr	MsgWaitForMultipleObjects	MsgWaitForMultipleObjects(0, nullptr, FALSE, wait, QS_ALLINPUT);
-site	src/game/battle/battle_menu_win.cpp	1227	low32	object_ours	live	&g_equip_labels_row	Low32	bof3::PatchBytes(" ", Low32(&g_equip_labels_row),
-site	src/game/battle/battle_menu_win.cpp	1262	low32	object_ours	live	&mode_flow::g_reset_full	Low32	bof3::PatchBytes(" ", Low32(&mode_flow::g_reset_full), &was, &is, 1);
+site	src/game/battle/battle_menu_win.cpp	78	uintptr	-	live	std::uintptr_t	-	unsigned char* AtBattleDraw(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/battle/battle_menu_win.cpp	78	widen	param	live	address	unsigned char*	unsigned char* AtBattleDraw(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/battle/battle_menu_win.cpp	80	low32	image_local	live	p	Low32	battle_draw::U Addr(const void* p) { return Low32(p); }
+site	src/game/battle/battle_menu_win.cpp	135	uintptr	-	live	std::uintptr_t	-	return AtMenuDrawHelpers(*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr))));
+site	src/game/battle/battle_menu_win.cpp	135	widen	img_place	live	::bof3::Img(BattleWinStates_Current_addr)	volatile std::uint32_t*	return AtMenuDrawHelpers(*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr))));
+site	src/game/battle/battle_menu_win.cpp	147	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<menu_draw_helpers::U>(LongMenuDrawHelpers(AtMenuDrawHelpers(table + index * 4)))))();
+site	src/game/battle/battle_menu_win.cpp	147	widen	other	live	static_cast<menu_draw_helpers::U>(LongMenuDrawHelpers(AtMenuDrawHelpers(table + index * 4)))	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<menu_draw_helpers::U>(LongMenuDrawHelpers(AtMenuDrawHelpers(table + index * 4)))))();
+site	src/game/battle/battle_menu_win.cpp	187	low32	helper_def	live	p	Low32	U Key(const void* p) { return Low32(p); }
+site	src/game/battle/battle_menu_win.cpp	191	uintptr	-	live	std::uintptr_t	-	unsigned char* RecRest2h() { return AtRest2h(*reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)))); }
+site	src/game/battle/battle_menu_win.cpp	191	widen	img_place	live	::bof3::Img(BattleWinStates_Current_addr)	volatile U*	unsigned char* RecRest2h() { return AtRest2h(*reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)))); }
+site	src/game/battle/battle_menu_win.cpp	209	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2h(table + 4 * index)))();
+site	src/game/battle/battle_menu_win.cpp	209	widen	other	live	LRest2h(table + 4 * index)	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2h(table + 4 * index)))();
+site	src/game/battle/battle_menu_win.cpp	255	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(
+site	src/game/battle/battle_menu_win.cpp	255	widen	other	live	*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)))	unsigned char*	return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(
+site	src/game/battle/battle_menu_win.cpp	256	uintptr	-	live	std::uintptr_t	-	*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)))));
+site	src/game/battle/battle_menu_win.cpp	256	widen	img_place	live	::bof3::Img(BattleWinStates_Current_addr)	volatile std::uint32_t*	*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)))));
+site	src/game/battle/battle_menu_win.cpp	304	narrow_call	image_local	live	w	Key	static_cast<U>(LongRest2h(w + 0x20)), w[0xD], Key(w));
+site	src/game/battle/battle_menu_win.cpp	537	uintptr	-	live	std::uintptr_t	-	BH_CALL(Equip_PreviewSet)(member, reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(set)), marks,
+site	src/game/battle/battle_menu_win.cpp	537	widen	param	live	set	const unsigned char*	BH_CALL(Equip_PreviewSet)(member, reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(set)), marks,
+site	src/game/battle/battle_menu_win.cpp	769	low32	image_local	live	record	Low32	BattleWinStates_Current = static_cast<std::int32_t>(Low32(record));
+site	src/game/battle/battle_menu_win.cpp	846	low32	object_ours	live	&g_equip_labels_row	Low32	bof3::PatchBytes(" ", Low32(&g_equip_labels_row),
+site	src/game/battle/battle_menu_win.cpp	879	low32	object_ours	live	&mode_flow::g_reset_full	Low32	bof3::PatchBytes(" ", Low32(&mode_flow::g_reset_full), &was, &is, 1);
 site	src/game/battle/battle_misc.cpp	52	uintptr	-	live	std::uintptr_t	-	template <typename T> T* Fn(U address) { return reinterpret_cast<T*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/battle/battle_misc.cpp	52	widen	param	live	address	T*	template <typename T> T* Fn(U address) { return reinterpret_cast<T*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/battle/battle_misc.cpp	64	uintptr	-	live	std::uintptr_t	-	unsigned char* AtBattleMisc(battle_misc::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
@@ -4999,6 +4995,10 @@ site	src/game/field_misc_callees.h	71	narrow_call	image	live	&MapView_HeightScal
 site	src/game/field_misc_callees.h	72	narrow_call	image	live	MapView_Origin	Of	inline U MapView_OriginAt() { return Of(MapView_Origin); }
 site	src/game/field_misc_callees.h	73	narrow_call	image	live	&MapView_Redraw	Of	inline U MapView_RedrawAt() { return Of(&MapView_Redraw); }
 site	src/game/field_misc_callees.h	74	narrow_call	image	live	&MapView_Row	Of	inline U MapView_RowAt() { return Of(&MapView_Row); }
+site	src/game/fmv_play.cpp	132	long	l	live	long	-	const long long n = static_cast<long long>(f.tellg());
+site	src/game/fmv_play.cpp	132	long	l	live	long	-	const long long n = static_cast<long long>(f.tellg());
+site	src/game/fmv_play.cpp	140	long	l	live	long	-	std::snprintf(why, why_n, " ", static_cast<long long>(n));
+site	src/game/fmv_play.cpp	395	handle_array	none	live	nullptr	MsgWaitForMultipleObjects	MsgWaitForMultipleObjects(0, nullptr, FALSE, wait, QS_ALLINPUT);
 site	src/game/magic/accession.cpp	66	low32	helper_def	live	p	Low32	std::uint32_t Key(const void* p) { return Low32(p); }
 site	src/game/magic/accession.cpp	112	narrow_call	image_local	live	s	Key	tchild->owner = static_cast<std::int32_t>(Key(s));
 site	src/game/magic/accession.cpp	123	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(U(move_script::Long(Mem(cell)))));
@@ -11774,8 +11774,6 @@ file	src/game/battle/battle_menu_states_fuzz.cpp	fuzz	narrow_call	image_local	2
 file	src/game/battle/battle_menu_states_fuzz.cpp	fuzz	narrow_call	object_ours	1
 file	src/game/battle/battle_menu_states_fuzz.cpp	fuzz	uintptr	-	2
 file	src/game/battle/battle_menu_states_fuzz.cpp	fuzz	widen	other	1
-file	src/game/battle/battle_menu_win.cpp	live	handle_array	none	1
-file	src/game/battle/battle_menu_win.cpp	live	long	l	3
 file	src/game/battle/battle_menu_win.cpp	live	low32	helper_def	1
 file	src/game/battle/battle_menu_win.cpp	live	low32	image_local	2
 file	src/game/battle/battle_menu_win.cpp	live	low32	object_ours	2
@@ -13655,6 +13653,8 @@ file	src/game/field/wide_staging.cpp	live	widen	param	1
 file	src/game/field_misc_callees.h	live	low32	helper_def	1
 file	src/game/field_misc_callees.h	live	low32	pool	1
 file	src/game/field_misc_callees.h	live	narrow_call	image	18
+file	src/game/fmv_play.cpp	live	handle_array	none	1
+file	src/game/fmv_play.cpp	live	long	l	3
 file	src/game/magic/accession.cpp	live	low32	helper_def	1
 file	src/game/magic/accession.cpp	live	narrow_call	image_local	1
 file	src/game/magic/accession.cpp	live	uintptr	-	1

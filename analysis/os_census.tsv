@@ -1,75 +1,5 @@
 #os_census: every Windows header, type, call and constant in src/ (tools/os_census.py; docs/linux-round.md 4, LA1)
 type	file	line	kind	class	group	token
-site	src/game/battle/battle_menu_win.cpp	12	include	input	header	dinput.h
-site	src/game/battle/battle_menu_win.cpp	133	type	type_only	type	LONG
-site	src/game/battle/battle_menu_win.cpp	133	type	type_only	type	LONG
-site	src/game/battle/battle_menu_win.cpp	133	type	type_only	type	RECT
-site	src/game/battle/battle_menu_win.cpp	134	type	type_only	type	LONG
-site	src/game/battle/battle_menu_win.cpp	135	type	type_only	type	LONG
-site	src/game/battle/battle_menu_win.cpp	136	type	type_only	type	LONG
-site	src/game/battle/battle_menu_win.cpp	148	type	type_only	type	LONG
-site	src/game/battle/battle_menu_win.cpp	205	type	type_only	type	HWND
-site	src/game/battle/battle_menu_win.cpp	207	type	type_only	type	RECT
-site	src/game/battle/battle_menu_win.cpp	210	type	type_only	type	LONGLONG
-site	src/game/battle/battle_menu_win.cpp	211	type	type_only	type	LONGLONG
-site	src/game/battle/battle_menu_win.cpp	220	type	type_only	type	HDC
-site	src/game/battle/battle_menu_win.cpp	223	type	type_only	type	BITMAPINFO
-site	src/game/battle/battle_menu_win.cpp	225	type	type_only	type	LONG
-site	src/game/battle/battle_menu_win.cpp	226	type	type_only	type	LONG
-site	src/game/battle/battle_menu_win.cpp	229	const	window	const	BI_RGB
-site	src/game/battle/battle_menu_win.cpp	231	call	window	gdi	SetStretchBltMode
-site	src/game/battle/battle_menu_win.cpp	231	const	window	const	COLORONCOLOR
-site	src/game/battle/battle_menu_win.cpp	233	call	window	gdi	SetStretchBltMode
-site	src/game/battle/battle_menu_win.cpp	233	const	window	const	HALFTONE
-site	src/game/battle/battle_menu_win.cpp	234	call	window	gdi	SetBrushOrgEx
-site	src/game/battle/battle_menu_win.cpp	236	call	window	gdi	StretchDIBits
-site	src/game/battle/battle_menu_win.cpp	237	const	window	const	DIB_RGB_COLORS
-site	src/game/battle/battle_menu_win.cpp	237	const	window	const	SRCCOPY
-site	src/game/battle/battle_menu_win.cpp	241	call	window	gdi	GetDC
-site	src/game/battle/battle_menu_win.cpp	241	type	type_only	type	HDC
-site	src/game/battle/battle_menu_win.cpp	244	call	window	gdi	ReleaseDC
-site	src/game/battle/battle_menu_win.cpp	247	type	type_only	type	LONGLONG
-site	src/game/battle/battle_menu_win.cpp	247	type	type_only	type	LONGLONG
-site	src/game/battle/battle_menu_win.cpp	1018	type	type_only	type	HWND
-site	src/game/battle/battle_menu_win.cpp	1018	type	type_only	type	HWND
-site	src/game/battle/battle_menu_win.cpp	1028	call	crt	string	_stricmp
-site	src/game/battle/battle_menu_win.cpp	1066	type	type_only	type	LONG_PTR
-site	src/game/battle/battle_menu_win.cpp	1067	call	window	longptr	SetWindowLongPtrA
-site	src/game/battle/battle_menu_win.cpp	1067	const	window	const	GWLP_WNDPROC
-site	src/game/battle/battle_menu_win.cpp	1067	type	type_only	type	LONG_PTR
-site	src/game/battle/battle_menu_win.cpp	1069	type	type_only	type	RECT
-site	src/game/battle/battle_menu_win.cpp	1070	call	window	geometry	GetClientRect
-site	src/game/battle/battle_menu_win.cpp	1095	type	type_only	type	LONGLONG
-site	src/game/battle/battle_menu_win.cpp	1108	type	type_only	type	MSG
-site	src/game/battle/battle_menu_win.cpp	1112	call	window	loop	PeekMessageA
-site	src/game/battle/battle_menu_win.cpp	1112	const	window	const	PM_REMOVE
-site	src/game/battle/battle_menu_win.cpp	1113	const	window	const	WM_QUIT
-site	src/game/battle/battle_menu_win.cpp	1115	call	window	loop	PostQuitMessage
-site	src/game/battle/battle_menu_win.cpp	1118	call	window	loop	TranslateMessage
-site	src/game/battle/battle_menu_win.cpp	1119	call	window	loop	DispatchMessageA
-site	src/game/battle/battle_menu_win.cpp	1130	type	type_only	type	DWORD
-site	src/game/battle/battle_menu_win.cpp	1152	type	type_only	type	DWORD
-site	src/game/battle/battle_menu_win.cpp	1154	call	thread	event	MsgWaitForMultipleObjects
-site	src/game/battle/battle_menu_win.cpp	1163	call	window	longptr	SetWindowLongPtrA
-site	src/game/battle/battle_menu_win.cpp	1163	const	window	const	GWLP_WNDPROC
-site	src/game/battle/battle_menu_win.cpp	1186	type	type_only	type	HWND
-site	src/game/battle/battle_menu_win.cpp	1186	type	type_only	type	HWND
-site	src/game/battle/battle_menu_win.cpp	1188	const	window	const	WM_KEYDOWN
-site	src/game/battle/battle_menu_win.cpp	1189	const	window	const	WM_LBUTTONDOWN
-site	src/game/battle/battle_menu_win.cpp	1190	const	window	const	WM_RBUTTONDOWN
-site	src/game/battle/battle_menu_win.cpp	1193	const	window	const	WM_DESTROY
-site	src/game/battle/battle_menu_win.cpp	1196	call	window	loop	PostQuitMessage
-site	src/game/battle/battle_menu_win.cpp	1198	const	window	const	WM_ACTIVATEAPP
-site	src/game/battle/battle_menu_win.cpp	1200	call	window	state	SetFocus
-site	src/game/battle/battle_menu_win.cpp	1206	const	window	const	WM_PAINT
-site	src/game/battle/battle_menu_win.cpp	1208	type	type_only	type	PAINTSTRUCT
-site	src/game/battle/battle_menu_win.cpp	1209	call	window	gdi	BeginPaint
-site	src/game/battle/battle_menu_win.cpp	1209	type	type_only	type	HDC
-site	src/game/battle/battle_menu_win.cpp	1211	call	window	gdi	EndPaint
-site	src/game/battle/battle_menu_win.cpp	1214	call	window	class	DefWindowProcA
-site	src/game/battle/battle_menu_win.cpp	1214	type	type_only	type	LPARAM
-site	src/game/battle/battle_menu_win.cpp	1219	call	window	class	DefWindowProcA
-site	src/game/battle/battle_menu_win.cpp	1219	type	type_only	type	LPARAM
 site	src/game/core/sound.cpp	10	include	crt	header	malloc.h
 site	src/game/crt_rest_fuzz.cpp	22	include	crt	header	io.h
 site	src/game/crt_rest_fuzz.cpp	23	include	umbrella	api	windows.h
@@ -99,6 +29,76 @@ site	src/game/field/field_o_fuzz.cpp	519	const	harness-only	fault/const	EXCEPTIO
 site	src/game/field/field_o_fuzz.cpp	530	type	harness-only	type_only/type	DWORD
 site	src/game/field/field_o_fuzz.cpp	540	call	harness-only	fault/filter	AddVectoredExceptionHandler
 site	src/game/field/field_o_fuzz.cpp	547	type	harness-only	type_only/type	DWORD
+site	src/game/fmv_play.cpp	11	include	input	header	dinput.h
+site	src/game/fmv_play.cpp	88	type	type_only	type	LONG
+site	src/game/fmv_play.cpp	88	type	type_only	type	LONG
+site	src/game/fmv_play.cpp	88	type	type_only	type	RECT
+site	src/game/fmv_play.cpp	89	type	type_only	type	LONG
+site	src/game/fmv_play.cpp	90	type	type_only	type	LONG
+site	src/game/fmv_play.cpp	91	type	type_only	type	LONG
+site	src/game/fmv_play.cpp	103	type	type_only	type	LONG
+site	src/game/fmv_play.cpp	160	type	type_only	type	HWND
+site	src/game/fmv_play.cpp	162	type	type_only	type	RECT
+site	src/game/fmv_play.cpp	165	type	type_only	type	LONGLONG
+site	src/game/fmv_play.cpp	166	type	type_only	type	LONGLONG
+site	src/game/fmv_play.cpp	175	type	type_only	type	HDC
+site	src/game/fmv_play.cpp	178	type	type_only	type	BITMAPINFO
+site	src/game/fmv_play.cpp	180	type	type_only	type	LONG
+site	src/game/fmv_play.cpp	181	type	type_only	type	LONG
+site	src/game/fmv_play.cpp	184	const	window	const	BI_RGB
+site	src/game/fmv_play.cpp	186	call	window	gdi	SetStretchBltMode
+site	src/game/fmv_play.cpp	186	const	window	const	COLORONCOLOR
+site	src/game/fmv_play.cpp	188	call	window	gdi	SetStretchBltMode
+site	src/game/fmv_play.cpp	188	const	window	const	HALFTONE
+site	src/game/fmv_play.cpp	189	call	window	gdi	SetBrushOrgEx
+site	src/game/fmv_play.cpp	191	call	window	gdi	StretchDIBits
+site	src/game/fmv_play.cpp	192	const	window	const	DIB_RGB_COLORS
+site	src/game/fmv_play.cpp	192	const	window	const	SRCCOPY
+site	src/game/fmv_play.cpp	196	call	window	gdi	GetDC
+site	src/game/fmv_play.cpp	196	type	type_only	type	HDC
+site	src/game/fmv_play.cpp	199	call	window	gdi	ReleaseDC
+site	src/game/fmv_play.cpp	202	type	type_only	type	LONGLONG
+site	src/game/fmv_play.cpp	202	type	type_only	type	LONGLONG
+site	src/game/fmv_play.cpp	259	type	type_only	type	HWND
+site	src/game/fmv_play.cpp	259	type	type_only	type	HWND
+site	src/game/fmv_play.cpp	269	call	crt	string	_stricmp
+site	src/game/fmv_play.cpp	307	type	type_only	type	LONG_PTR
+site	src/game/fmv_play.cpp	308	call	window	longptr	SetWindowLongPtrA
+site	src/game/fmv_play.cpp	308	const	window	const	GWLP_WNDPROC
+site	src/game/fmv_play.cpp	308	type	type_only	type	LONG_PTR
+site	src/game/fmv_play.cpp	310	type	type_only	type	RECT
+site	src/game/fmv_play.cpp	311	call	window	geometry	GetClientRect
+site	src/game/fmv_play.cpp	336	type	type_only	type	LONGLONG
+site	src/game/fmv_play.cpp	349	type	type_only	type	MSG
+site	src/game/fmv_play.cpp	353	call	window	loop	PeekMessageA
+site	src/game/fmv_play.cpp	353	const	window	const	PM_REMOVE
+site	src/game/fmv_play.cpp	354	const	window	const	WM_QUIT
+site	src/game/fmv_play.cpp	356	call	window	loop	PostQuitMessage
+site	src/game/fmv_play.cpp	359	call	window	loop	TranslateMessage
+site	src/game/fmv_play.cpp	360	call	window	loop	DispatchMessageA
+site	src/game/fmv_play.cpp	371	type	type_only	type	DWORD
+site	src/game/fmv_play.cpp	393	type	type_only	type	DWORD
+site	src/game/fmv_play.cpp	395	call	thread	event	MsgWaitForMultipleObjects
+site	src/game/fmv_play.cpp	404	call	window	longptr	SetWindowLongPtrA
+site	src/game/fmv_play.cpp	404	const	window	const	GWLP_WNDPROC
+site	src/game/fmv_play.cpp	427	type	type_only	type	HWND
+site	src/game/fmv_play.cpp	427	type	type_only	type	HWND
+site	src/game/fmv_play.cpp	429	const	window	const	WM_KEYDOWN
+site	src/game/fmv_play.cpp	430	const	window	const	WM_LBUTTONDOWN
+site	src/game/fmv_play.cpp	431	const	window	const	WM_RBUTTONDOWN
+site	src/game/fmv_play.cpp	434	const	window	const	WM_DESTROY
+site	src/game/fmv_play.cpp	437	call	window	loop	PostQuitMessage
+site	src/game/fmv_play.cpp	439	const	window	const	WM_ACTIVATEAPP
+site	src/game/fmv_play.cpp	441	call	window	state	SetFocus
+site	src/game/fmv_play.cpp	447	const	window	const	WM_PAINT
+site	src/game/fmv_play.cpp	449	type	type_only	type	PAINTSTRUCT
+site	src/game/fmv_play.cpp	450	call	window	gdi	BeginPaint
+site	src/game/fmv_play.cpp	450	type	type_only	type	HDC
+site	src/game/fmv_play.cpp	452	call	window	gdi	EndPaint
+site	src/game/fmv_play.cpp	455	call	window	class	DefWindowProcA
+site	src/game/fmv_play.cpp	455	type	type_only	type	LPARAM
+site	src/game/fmv_play.cpp	460	call	window	class	DefWindowProcA
+site	src/game/fmv_play.cpp	460	type	type_only	type	LPARAM
 site	src/game/platform/d3d.cpp	11	include	umbrella	api	windows.h
 site	src/game/platform/d3d.cpp	937	type	type_only	type	HWND
 site	src/game/platform/d3d.cpp	944	type	type_only	type	RECT
@@ -3706,10 +3706,10 @@ site	src/render/satpixie.h	36	type	graphics	type	ID3D11RenderTargetView
 site	src/render/satpixie.h	36	type	graphics	type	ID3D11ShaderResourceView
 site	src/render/satpixie.h	37	const	graphics	const	D3D11_VIEWPORT
 type	file	folder	standing	windows_h	takes	sites
-file	src/game/battle/battle_menu_win.cpp	game/battle	live		crt,thread,type_only,window	70
 file	src/game/core/sound.cpp	game/core	live		nothing	1
 file	src/game/crt_rest_fuzz.cpp	game(root)	harness-only	api	crt,file,process,type_only	19
 file	src/game/field/field_o_fuzz.cpp	game/field	harness-only	api	fault,type_only	9
+file	src/game/fmv_play.cpp	game(root)	live		crt,thread,type_only,window	70
 file	src/game/platform/d3d.cpp	game/platform	live	api	type_only,window	16
 file	src/game/platform/d_input.cpp	game/platform	live		input,process,type_only	37
 file	src/game/platform/display_setup.cpp	game/platform	live	api	process,type_only,window	10
@@ -3797,8 +3797,7 @@ file	src/render/satpixie.h	render	live		graphics	7
 #count	call_or_keyword_class:sound	6
 #count	call_or_keyword_class:thread	113
 #count	call_or_keyword_class:window	359
-#count	files_in:game(root)	1
-#count	files_in:game/battle	1
+#count	files_in:game(root)	2
 #count	files_in:game/core	1
 #count	files_in:game/field	1
 #count	files_in:game/platform	8
