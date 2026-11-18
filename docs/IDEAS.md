@@ -2610,6 +2610,7 @@ _(2026-11-10) open; staged, nothing built or run on Linux._
 ### Outcome
 _(2026-11-10) open; nothing built._
 _(2026-11-18) the Linux build took DXVK-native ([`linux-round.md`](linux-round.md) 6, call 1); the owner asked for a Vulkan / Direct3D 11 toggle on Windows, staged by the same road in [`vulkan-toggle-round.md`](vulkan-toggle-round.md). Nothing built._
+_(2026-11-18, the owner) SDL3's GPU API is kept for an away day, when the machine is free to compare as many routes as possible for the same picture. Read in SDL 3.4.16's source that day: its backends are Direct3D 12, Vulkan and Metal, with no Direct3D 11 (`src/gpu`); its Direct3D 12 backend asks resource binding tier 2 (`SDL_gpu_d3d12.c:8664`), where today's renderer accepts feature level 10_0; `SDL_gpu.h`'s blend factors have no second-source factor, which DIV-0160's draw uses. So it is a second renderer beside Direct3D 11, not a replacement, and the dual-source draw must be made another way. First step that day: the present pass alone and the dual-source draw on SDL's GPU API, then every recipe's shots against Direct3D 11's._
 
 ## I64 — A sequencer truer to the PlayStation's
 
