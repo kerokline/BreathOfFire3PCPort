@@ -83,7 +83,7 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      Settings page's tighter layout), the music by ear (IDEAS I68). PR #246's own tip did not run the ten-route proof (the
      changes after the 2026-11-14 proof are in the in-between's builder and the launcher); the three recipes it ended with
      `quit` (`desertSummary`, `overheatAndDeepSea`, `shisuMinigame`) have not run since. 2026-11-16 (branch `render/interp-qc`): no in-between after a late frame (frame doc 6, item 18, closed); D426, the original's missing present after a late frame, fixed by DIV-0237 (owed: the owner's eye, a run at `BOF3X_SPEED` above 1 and under the hosted `BOF3.exe`); item 19 open; `tools/interp_stats.py` and `tools/interp_motion.py`, and the loose battle frames they list, not read (frame doc 4a).
-   - **The Linux round, unit LB0 (2026-11-17, branch `linux/long-pass`, not merged):** `long` in `src/game` and the generated
+   - **The Linux round, unit LB0 (2026-11-17, branch `linux/long-pass`, merged as PR #259 on 2026-11-18):** `long` in `src/game` and the generated
      header is fixed-width, variadic functions carry no `__cdecl`, and the save list's search and the file layer's descriptor
      calls are in the OS seam (`os/find.h`, `os/stream.h`): 764 of 802 source files compile for x86-64 Linux (40 of 813
      before; [`linux-round.md`](linux-round.md), "LB0 as run" and its second part). The hosted shadow suite passes; the
@@ -91,13 +91,16 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      Not read: `long` in `src/render` and `src/audio`. On the 64-bit Windows build the save list's search handle is now a
      slot number (it was a narrowed address): open the save list there once.
    - **The 38 files are staged as one round** of ten groups in two waves ([`linux-round.md`](linux-round.md), "The 38 files,
-     staged as one round"). **Wave 1 ran on 2026-11-17** (the owner: the round runs here) and is merged into the local branch
-     `linux/wave1`, not pushed: 794 of 806 files compile for x86-64 Linux, 12 wait for wave 2, 9 are Windows files by design
+     staged as one round"). **Wave 1 ran on 2026-11-17** (the owner: the round runs here) on the branch
+     `linux/wave1`: 794 of 806 files compile for x86-64 Linux, 12 wait for wave 2, 9 are Windows files by design
      ("Wave 1 as run"). **The ten state-hash routes ran on the merged branch on 2026-11-18:** seven identical to
      `m1116` on every tick, three differ on the one page `0x6C3000`, which two runs of the same build also differ on.
      The hosted shadow suite (922 lines of 0), the exe host and the moved base passed there the same day.
-     **Owed before a PR:** `music_heard.py` to its end. Wave 2 (R5, R6, R7, R9) is not launched: it needs
-     the owner's eye, and call 3 (DirectInput's switch).
+     **LB0 and wave 1 are on `main` (PRs #259 and #261, merged 2026-11-18).** Not known to have run:
+     `music_heard.py` to its end, a game with `BOF3X_ARENA=1`. Wave 2 (R5, R6, R7, R9) is not launched: it needs
+     the owner's eye and the split with frost (call 1 of the staging). Call 3 is answered (the owner, 2026-11-18):
+     DirectInput stays beside SDL3 for one release and the player chooses; the default and where the choice is
+     made are open.
    - **The Linux round's next units** are frost's, on his fork ([`linux-round.md`](linux-round.md) 4 and 6; "Waiting on
      someone else"). Here: the renderer's remainder ([`platform-layers-plan.md`](platform-layers-plan.md) 2.2) and the
      second backend (IDEAS I63) gate tier 2, and the API is the owner's call 1 of `linux-round.md` 6. Tier 1's rows 5, 7

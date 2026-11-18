@@ -797,7 +797,10 @@ nothing in the ledger or the defect list.
    units L2 and L3 and his machine has the GPU that proves R9.
 2. **R2:** the three watchers Windows-only, or ported.
 3. **R5's switch:** how long DirectInput stays beside SDL3 (proposed: one
-   release).
+   release). **Decided (the owner, 2026-11-18): one release, and the player
+   chooses** between the two paths in it. Not decided: which path is the
+   default in that release, and where the choice is made (a launcher option
+   or the `BOF3X_OFF` switch alone).
 4. **R10:** the arena on Windows too, or on Linux alone (proposed: both, so
    that one heap is tested; behind a switch first).
 

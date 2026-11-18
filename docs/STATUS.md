@@ -64,7 +64,7 @@ D406's quick-load listen and DIV-0203's German - the notes say exactly that. **T
 issue #190** (the dragon gene window; not reproduced in many tries; left open by the owner to gather data).
 The tag and the release are made; PR #211, the readiness docs, is merged.
 
-**The Linux round's unit LB0, 2026-11-17 (branch `linux/long-pass`, not merged).** `long` is 8 bytes on x86-64 Linux and 4 on
+**The Linux round's unit LB0, 2026-11-17 (branch `linux/long-pass`, merged as PR #259 on 2026-11-18).** `long` is 8 bytes on x86-64 Linux and 4 on
 Windows; `src/game` (5,077 sites) and the generated header now spell the image's word as `std::int32_t` / `std::uint32_t`.
 Variadic functions carry no `__cdecl`, and the save list's directory search and the file layer's descriptor calls went
 into the OS seam (`os/find.h`, `os/stream.h`, a Win32 and a POSIX backend each, `os_tests` passing on both).
