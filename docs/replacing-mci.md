@@ -289,3 +289,102 @@ keeps the rest untouched.
 - **Not yet:** the owner's eye and ear on either width; a pause and resume
   under `background=0`; a client that is not a whole multiple (the HALFTONE
   path), seen only in the decoder's own output.
+
+## 9. The events on SDL's window, and the picture off Windows (2026-11-18, Linux round R6m)
+
+**Status:** the events built (branch `linux/w2-r6m`); the picture off Windows
+measured by reading, not built - the owner's call is open. Nobody has seen
+a movie on this code yet.
+
+**The events.** Since R6 the game's window is SDL3's (`game_window.h`), with
+SDL's procedure behind one of ours (`FrontProc`, `game_window_win32.cpp`).
+`Fmv_Play` put `Fmv_WndProc` in place of that procedure for the length of a
+movie, so SDL's procedure did not run: SDL's window state went stale, and a
+close during a movie destroyed the `HWND` behind SDL's back. Now:
+
+- On SDL's window (the default) the player puts no procedure in front of the
+  window's. Its loop takes the window's events from
+  `game_window::TakeForMovie` - a key (not Alt or F10, which a Win32 window
+  sends as `WM_SYSKEYDOWN`) or a left or right click skips, a close ends the
+  movie and quits the game (the window path's own close: the placement saved,
+  `Game_QuitFlag`, the window hidden; a later movie ends at once, as the port's
+  second movie met the `WM_QUIT` the first put back), the activation pauses
+  and resumes under DIV-0049's rule, a repaint draws the frame again with the
+  client outside the rectangle painted black (SDL's procedure erases the
+  background once only). A quit message is put back for WinMain's loop. A
+  move or a resize goes to the game as `game_window::Pump` hands it. The pad
+  is polled as before (DIV-0066); the wait is `SDL_Delay` up to the next
+  frame, at most 16 ms, so an event that comes during it is taken at most
+  16 ms later (the port's `MsgWaitForMultipleObjects` woke at once).
+- The clicks come from `WM_LBUTTONDOWN` / `WM_RBUTTONDOWN` in `FrontProc` on
+  Windows (the keys come from the messages there too), from
+  `SDL_EVENT_MOUSE_BUTTON_DOWN` elsewhere; the repaint from
+  `SDL_EVENT_WINDOW_EXPOSED` (SDL's `WM_PAINT`).
+- On the Win32 window (`BOF3X_OFF=WindowSdl`) the subclass, the pump and the
+  wait are as they were (`fmv_play_win32.cpp`).
+- `BOF3X_ORIGINAL=Fmv_Play` or `=Fmv_WndProc` keeps the Win32 window, as
+  `Game_WndProc` already did: Capcom's player and procedure are put in front
+  of the window's procedure, which on SDL's window would take SDL's out.
+
+**The picture: what was measured** (by reading the source at `f7d4fc0f`; no
+Linux display or Linux SDL build was in this round). On Windows the picture is
+GDI's as before, on both window paths (the `HWND` is real under both). Off
+Windows `fmv_play::native::Draw` is a `Fatal` that names this section. The two
+roads:
+
+*The renderer brought up before the movies.*
+- `render::InitD3d11` needs only `render::Options` and the shim
+  (`render::InitShim`, for the vertex buffer's size); `ReadOptions`
+  (`d3d.cpp:937`) takes them from the client's size (the scale k), the wide
+  columns, `BOF3X_FILTER`, `BOF3X_VSYNC` and snap. The window's mode and its
+  client are final at `game_window::Create` (`magic_080.cpp:657`), before the
+  movies (`:660`); F8 is a key, which a movie takes as a skip. So the options
+  read before the movies are the set-up's, unless the player resizes the
+  window during a movie.
+- `Display_Setup` would survive it: its `g_backend_up` guard (`d3d.cpp:3603`)
+  skips a second `InitD3d11`. But it calls `ReadOptions` again, which sets
+  `display_setup::g_scale` from the client then (`d3d.cpp:953`), while the
+  target keeps the k it was made at: after a resize during a movie the game's
+  scale and the target's would differ. `Display_Setup` would have to take the
+  target's k, or ask `RequestScale` - a change in `d3d.cpp`. A client resize is
+  otherwise handled: `Show` remakes the swap chain's buffers when the client
+  changes (`render_d3d11.cpp:824`).
+- The movie needs a present of its own in `render_d3d11.cpp`: a 640 x 480
+  dynamic texture updated each frame, a draw into DIV-0035's rectangle, the
+  present, all on the render stack (`RunOnFiber`). `Show` presents only the
+  game's target, through a point or a bilinear sampler (`:872`); a bilinear
+  sample of a smaller fit is not the average `HALFTONE` gives, so the fit
+  wants a filter of its own (a box filter in the shader, or mips). About 100
+  to 150 lines and one shader, in R9's file, which R9 is moving to
+  DXVK-native's headers now; plus the `d3d.cpp` change. Nothing of the game's
+  memory changes by bringing the device up early (`InitOnFiber` writes the
+  renderer's own statics; `Display_Setup`'s writes are unchanged).
+- What it gives: one presenter on the window on every system, DXVK's surface
+  from the start; the GDI path could later go on Windows too.
+
+*SDL's own surface on the window until `Display_Setup`.*
+- `SDL_GetWindowSurface`, a scaled blit (`SDL_BlitSurfaceScaled`, nearest at
+  a whole multiple; a fit by a box filter of ours, since SDL's linear mode is
+  bilinear), `SDL_UpdateWindowSurface`, and `SDL_DestroyWindowSurface` after
+  the movies. About 40 lines, in `fmv_play.cpp`'s non-Windows half alone.
+- SDL3 says of the window surface: "You may not combine this with 3D or the
+  rendering API on this window" (`SDL_video.h:2418`).
+- Where SDL decides the surface is better as a texture
+  (`SDL_CreateWindowFramebuffer`, `SDL_video.c:3648..3666`) it makes an SDL
+  renderer on the window, and the GL renderer may recreate the window with
+  `SDL_WINDOW_OPENGL` (`SDL_render_gl.c:2051`, `SDL_render_gles2.c:2475`). On X11
+  the surface can be kept in software (`SDL_HINT_FRAMEBUFFER_ACCELERATION`
+  "0": `X11_CreateWindowFramebuffer`, shared memory). **Wayland has no
+  software window surface in SDL3** (no `CreateWindowFramebuffer` in its
+  driver), so there it is always an SDL renderer on the window that DXVK-native
+  then takes. `SDL_Vulkan_CreateSurface` turns a GL window into a Vulkan one
+  (`SDL_video.c:6326..6337`, unloading GL); whether a Wayland surface that
+  carried SDL's GL or Vulkan buffers then takes DXVK's swap chain cleanly is
+  not measured.
+- On Windows this road is not taken (GDI stays).
+
+Neither road is both clean and small on what this round could measure: the
+first is clean but lands in R9's file and `d3d.cpp`; the second is small but
+its Wayland half is unmeasured. **For the owner:** which road. Proposed, as
+before: the renderer, after R9, since tier 2 has no second way to put a
+picture on a window that DXVK owns.
