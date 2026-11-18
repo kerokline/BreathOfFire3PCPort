@@ -1017,91 +1017,6 @@ site	src/hook/input_script.cpp	969	const	harness-only	window/const	WM_KEYUP
 site	src/hook/input_script.cpp	1302	const	harness-only	window/const	VK_F12
 site	src/hook/input_script.cpp	1303	const	harness-only	window/const	VK_F1
 site	src/hook/input_script.cpp	1303	const	harness-only	window/const	VK_F11
-site	src/hook/snapshot.cpp	11	include	umbrella	api	windows.h
-site	src/hook/snapshot.cpp	287	type	type_only	type	HMODULE
-site	src/hook/snapshot.cpp	288	type	type_only	type	HMODULE
-site	src/hook/snapshot.cpp	289	call	process	module	GetModuleHandleExW
-site	src/hook/snapshot.cpp	290	type	type_only	type	LPCWSTR
-site	src/hook/snapshot.cpp	307	const	file	const	MAX_PATH
-site	src/hook/snapshot.cpp	308	type	type_only	type	HMODULE
-site	src/hook/snapshot.cpp	309	call	process	module	GetModuleFileNameW
-site	src/hook/snapshot.cpp	309	const	file	const	MAX_PATH
-site	src/hook/snapshot.cpp	309	type	type_only	type	DWORD
-site	src/hook/snapshot.cpp	310	const	file	const	MAX_PATH
-site	src/hook/snapshot.cpp	547	call	file	name	GetFileAttributesW
-site	src/hook/snapshot.cpp	547	const	file	const	INVALID_FILE_ATTRIBUTES
-site	src/hook/snapshot.cpp	555	call	file	name	DeleteFileW
-site	src/hook/snapshot.cpp	562	call	file	name	MoveFileExW
-site	src/hook/snapshot.cpp	572	call	file	open	CreateFileW
-site	src/hook/snapshot.cpp	572	const	file	const	CREATE_ALWAYS
-site	src/hook/snapshot.cpp	572	const	file	const	FILE_ATTRIBUTE_NORMAL
-site	src/hook/snapshot.cpp	572	const	file	const	GENERIC_WRITE
-site	src/hook/snapshot.cpp	572	type	type_only	type	HANDLE
-site	src/hook/snapshot.cpp	573	const	file	const	INVALID_HANDLE_VALUE
-site	src/hook/snapshot.cpp	577	type	type_only	type	DWORD
-site	src/hook/snapshot.cpp	578	call	file	io	WriteFile
-site	src/hook/snapshot.cpp	578	type	type_only	type	BOOL
-site	src/hook/snapshot.cpp	578	type	type_only	type	DWORD
-site	src/hook/snapshot.cpp	581	call	file	io	FlushFileBuffers
-site	src/hook/snapshot.cpp	582	type	type_only	type	DWORD
-site	src/hook/snapshot.cpp	583	call	file	handle	CloseHandle
-site	src/hook/snapshot.cpp	585	call	file	name	DeleteFileW
-site	src/hook/snapshot.cpp	599	call	file	name	DeleteFileW
-site	src/hook/snapshot.cpp	602	call	file	name	MoveFileExW
-site	src/hook/snapshot.cpp	602	const	file	const	MOVEFILE_REPLACE_EXISTING
-site	src/hook/snapshot.cpp	612	call	file	open	CreateFileW
-site	src/hook/snapshot.cpp	612	const	file	const	FILE_ATTRIBUTE_NORMAL
-site	src/hook/snapshot.cpp	612	const	file	const	FILE_SHARE_READ
-site	src/hook/snapshot.cpp	612	const	file	const	GENERIC_READ
-site	src/hook/snapshot.cpp	612	const	file	const	OPEN_EXISTING
-site	src/hook/snapshot.cpp	612	type	type_only	type	HANDLE
-site	src/hook/snapshot.cpp	613	const	file	const	INVALID_HANDLE_VALUE
-site	src/hook/snapshot.cpp	614	type	type_only	type	DWORD
-site	src/hook/snapshot.cpp	615	const	process	const	ERROR_FILE_NOT_FOUND
-site	src/hook/snapshot.cpp	619	type	type_only	type	LARGE_INTEGER
-site	src/hook/snapshot.cpp	620	call	file	io	GetFileSizeEx
-site	src/hook/snapshot.cpp	620	type	type_only	type	LONGLONG
-site	src/hook/snapshot.cpp	621	call	file	handle	CloseHandle
-site	src/hook/snapshot.cpp	626	type	type_only	type	DWORD
-site	src/hook/snapshot.cpp	627	call	file	io	ReadFile
-site	src/hook/snapshot.cpp	627	type	type_only	type	BOOL
-site	src/hook/snapshot.cpp	627	type	type_only	type	DWORD
-site	src/hook/snapshot.cpp	628	call	file	handle	CloseHandle
-site	src/hook/snapshot.cpp	655	call	fiber	fiber	SwitchToFiber
-site	src/hook/snapshot.cpp	662	call	fiber	fiber	IsThreadAFiber
-site	src/hook/snapshot.cpp	663	call	fiber	fiber	GetCurrentFiber
-site	src/hook/snapshot.cpp	665	call	fiber	fiber	ConvertThreadToFiberEx
-site	src/hook/snapshot.cpp	670	call	fiber	fiber	CreateFiberEx
-site	src/hook/snapshot.cpp	676	call	fiber	fiber	SwitchToFiber
-site	src/hook/snapshot.cpp	679	call	fiber	fiber	ConvertFiberToThread
-site	src/hook/snapshot.cpp	1025	call	file	name	DeleteFileW
-site	src/hook/snapshot.cpp	1031	call	file	open	CreateFileW
-site	src/hook/snapshot.cpp	1031	const	file	const	FILE_ATTRIBUTE_NORMAL
-site	src/hook/snapshot.cpp	1031	const	file	const	FILE_SHARE_READ
-site	src/hook/snapshot.cpp	1031	const	file	const	GENERIC_READ
-site	src/hook/snapshot.cpp	1031	const	file	const	OPEN_EXISTING
-site	src/hook/snapshot.cpp	1031	type	type_only	type	HANDLE
-site	src/hook/snapshot.cpp	1032	const	file	const	INVALID_HANDLE_VALUE
-site	src/hook/snapshot.cpp	1034	type	type_only	type	DWORD
-site	src/hook/snapshot.cpp	1035	call	file	io	ReadFile
-site	src/hook/snapshot.cpp	1036	call	file	handle	CloseHandle
-site	src/hook/snapshot.cpp	1041	call	file	name	DeleteFileW
-site	src/hook/snapshot.cpp	1042	call	file	name	DeleteFileW
-site	src/hook/snapshot.cpp	1068	call	file	open	CreateFileW
-site	src/hook/snapshot.cpp	1068	const	file	const	FILE_ATTRIBUTE_NORMAL
-site	src/hook/snapshot.cpp	1068	const	file	const	GENERIC_READ
-site	src/hook/snapshot.cpp	1068	const	file	const	OPEN_EXISTING
-site	src/hook/snapshot.cpp	1068	type	type_only	type	HANDLE
-site	src/hook/snapshot.cpp	1070	call	file	handle	CloseHandle
-site	src/hook/snapshot.cpp	1070	const	file	const	INVALID_HANDLE_VALUE
-site	src/hook/snapshot.cpp	1082	const	file	const	MAX_PATH
-site	src/hook/snapshot.cpp	1083	call	file	name	GetTempPathW
-site	src/hook/snapshot.cpp	1083	const	file	const	MAX_PATH
-site	src/hook/snapshot.cpp	1083	type	type_only	type	DWORD
-site	src/hook/snapshot.cpp	1084	const	file	const	MAX_PATH
-site	src/hook/snapshot.cpp	1088	call	file	directory	CreateDirectoryW
-site	src/hook/snapshot.cpp	1088	const	process	const	ERROR_ALREADY_EXISTS
-site	src/hook/snapshot.cpp	1094	call	file	directory	RemoveDirectoryW
 site	src/hook/stackwatch_win32.cpp	34	include	umbrella	api	windows.h
 site	src/hook/stackwatch_win32.cpp	35	include	thread	header	tlhelp32.h
 site	src/hook/stackwatch_win32.cpp	84	type	type_only	type	DWORD
@@ -3283,6 +3198,15 @@ site	src/os/win32/file.cpp	40	const	dialog	const	MB_ERR_INVALID_CHARS
 site	src/os/win32/file.cpp	53	type	type_only	type	UINT
 site	src/os/win32/file.cpp	54	call	process	codepage	WideCharToMultiByte
 site	src/os/win32/file.cpp	57	call	process	codepage	WideCharToMultiByte
+site	src/os/win32/file_move.cpp	5	include	umbrella	api	windows.h
+site	src/os/win32/file_move.cpp	11	type	type_only	type	DWORD
+site	src/os/win32/file_move.cpp	12	call	file	name	MoveFileExW
+site	src/os/win32/file_move.cpp	13	call	process	error	GetLastError
+site	src/os/win32/file_move.cpp	14	const	process	const	ERROR_ALREADY_EXISTS
+site	src/os/win32/file_move.cpp	15	const	process	const	ERROR_FILE_EXISTS
+site	src/os/win32/file_move.cpp	16	const	process	const	ERROR_FILE_NOT_FOUND
+site	src/os/win32/file_move.cpp	17	const	process	const	ERROR_PATH_NOT_FOUND
+site	src/os/win32/file_move.cpp	29	const	file	const	MOVEFILE_REPLACE_EXISTING
 site	src/os/win32/find.cpp	16	include	crt	header	io.h
 site	src/os/win32/find.cpp	23	type	crt	type	_finddata32_t
 site	src/os/win32/find.cpp	23	type	crt	type	_finddata32_t
@@ -3392,6 +3316,16 @@ site	src/os/win32/out_file.cpp	22	call	file	io	WriteFile
 site	src/os/win32/out_file.cpp	22	type	type_only	type	DWORD
 site	src/os/win32/out_file.cpp	25	call	file	io	FlushFileBuffers
 site	src/os/win32/out_file.cpp	28	call	file	handle	CloseHandle
+site	src/os/win32/own_stack.cpp	10	include	umbrella	api	windows.h
+site	src/os/win32/own_stack.cpp	32	call	fiber	fiber	SwitchToFiber
+site	src/os/win32/own_stack.cpp	53	call	process	error	SetLastError
+site	src/os/win32/own_stack.cpp	53	const	process	const	ERROR_NOT_ENOUGH_MEMORY
+site	src/os/win32/own_stack.cpp	63	call	fiber	fiber	IsThreadAFiber
+site	src/os/win32/own_stack.cpp	64	call	fiber	fiber	GetCurrentFiber
+site	src/os/win32/own_stack.cpp	66	call	fiber	fiber	ConvertThreadToFiberEx
+site	src/os/win32/own_stack.cpp	71	call	fiber	fiber	CreateFiberEx
+site	src/os/win32/own_stack.cpp	79	call	fiber	fiber	SwitchToFiber
+site	src/os/win32/own_stack.cpp	83	call	fiber	fiber	ConvertFiberToThread
 site	src/os/win32/path_file.cpp	21	call	crt	file	_wfopen
 site	src/os/win32/stream.cpp	6	include	crt	header	io.h
 site	src/os/win32/stream.cpp	10	call	crt	file	_fileno
@@ -3634,19 +3568,14 @@ site	src/render/render_d3d11.cpp	997	const	graphics	const	D3D11_FILL_SOLID
 site	src/render/render_d3d11.cpp	998	const	graphics	const	D3D11_CULL_NONE
 site	src/render/render_d3d11.cpp	1001	const	graphics	const	D3D11_BLEND_DESC
 site	src/render/render_d3d11.cpp	1002	const	graphics	const	D3D11_COLOR_WRITE_ENABLE_ALL
-site	src/render/render_d3d11.cpp	1049	call	fiber	fiber	SwitchToFiber
-site	src/render/render_d3d11.cpp	1058	call	fiber	fiber	ConvertThreadToFiberEx
-site	src/render/render_d3d11.cpp	1059	call	fiber	fiber	GetCurrentFiber
-site	src/render/render_d3d11.cpp	1061	call	fiber	fiber	CreateFiberEx
-site	src/render/render_d3d11.cpp	1065	call	fiber	fiber	SwitchToFiber
-site	src/render/render_d3d11.cpp	1134	const	graphics	const	D3D11_TEXTURE2D_DESC
-site	src/render/render_d3d11.cpp	1136	const	graphics	const	D3D11_USAGE_STAGING
-site	src/render/render_d3d11.cpp	1138	const	graphics	const	D3D11_CPU_ACCESS_READ
-site	src/render/render_d3d11.cpp	1140	type	graphics	type	ID3D11Texture2D
-site	src/render/render_d3d11.cpp	1141	const	process	const	FAILED
-site	src/render/render_d3d11.cpp	1146	const	graphics	const	D3D11_MAPPED_SUBRESOURCE
-site	src/render/render_d3d11.cpp	1147	const	graphics	const	D3D11_MAP_READ
-site	src/render/render_d3d11.cpp	1147	const	process	const	FAILED
+site	src/render/render_d3d11.cpp	1129	const	graphics	const	D3D11_TEXTURE2D_DESC
+site	src/render/render_d3d11.cpp	1131	const	graphics	const	D3D11_USAGE_STAGING
+site	src/render/render_d3d11.cpp	1133	const	graphics	const	D3D11_CPU_ACCESS_READ
+site	src/render/render_d3d11.cpp	1135	type	graphics	type	ID3D11Texture2D
+site	src/render/render_d3d11.cpp	1136	const	process	const	FAILED
+site	src/render/render_d3d11.cpp	1141	const	graphics	const	D3D11_MAPPED_SUBRESOURCE
+site	src/render/render_d3d11.cpp	1142	const	graphics	const	D3D11_MAP_READ
+site	src/render/render_d3d11.cpp	1142	const	process	const	FAILED
 site	src/render/satpixie.cpp	225	type	graphics	type	ID3D11VertexShader
 site	src/render/satpixie.cpp	226	type	graphics	type	ID3D11PixelShader
 site	src/render/satpixie.cpp	227	type	graphics	type	ID3D11PixelShader
@@ -3727,7 +3656,6 @@ file	src/hook/exe_icon.cpp	hook	live	api	file,input,memory,process,type_only,win
 file	src/hook/gapwatch.cpp	hook	harness-only	api	clock,fault,file,memory,process,thread,type_only	154
 file	src/hook/host.cpp	hook	live	api	process,type_only	4
 file	src/hook/input_script.cpp	hook	harness-only	api	type_only,window	25
-file	src/hook/snapshot.cpp	hook	live	api	fiber,file,process,type_only	85
 file	src/hook/stackwatch_win32.cpp	hook	live	api	clock,fault,file,memory,process,thread,type_only	86
 file	src/hook/write_watch.cpp	hook	harness-only	api	fault,file,memory,process,thread,type_only	44
 file	src/launcher/config.cpp	launcher	launcher	api	dialog,file,process,type_only	162
@@ -3747,49 +3675,51 @@ file	src/os/win32/dialog.cpp	os	live	api	dialog	5
 file	src/os/win32/env.cpp	os	live	api	file,process,thread,type_only	15
 file	src/os/win32/event.cpp	os	live	api	file,thread,type_only	12
 file	src/os/win32/file.cpp	os	live	api	dialog,process,type_only	15
+file	src/os/win32/file_move.cpp	os	live	api	file,process,type_only	9
 file	src/os/win32/find.cpp	os	live		crt	20
 file	src/os/win32/heap.cpp	os	live		crt	2
 file	src/os/win32/memory.cpp	os	live	api	memory,process,type_only	52
 file	src/os/win32/module.cpp	os	live	api	process,type_only	8
 file	src/os/win32/named_event.cpp	os	live	api	file,process,thread,type_only	12
 file	src/os/win32/out_file.cpp	os	live	api	file,type_only	15
+file	src/os/win32/own_stack.cpp	os	live	api	fiber,process	10
 file	src/os/win32/path_file.cpp	os	live		crt	1
 file	src/os/win32/stream.cpp	os	live		crt	3
 file	src/os/win32/thread.cpp	os	live	api	clock,fault,file,process,thread,type_only	30
 file	src/os/win32/thread_start.cpp	os	live	api	process,thread,type_only	9
-file	src/render/render_d3d11.cpp	render	live		fiber,graphics,process,type_only,window	212
+file	src/render/render_d3d11.cpp	render	live		graphics,process,type_only,window	207
 file	src/render/satpixie.cpp	render	live		graphics,process,type_only	51
 file	src/render/satpixie.h	render	live		graphics	7
-#count	sites	3705
-#count	files_with_a_site	54
+#count	sites	3634
+#count	files_with_a_site	55
 #count	class:clock	11
 #count	class:crt	33
 #count	class:dialog	15
 #count	class:fault	41
-#count	class:fiber	12
-#count	class:file	137
+#count	class:fiber	7
+#count	class:file	87
 #count	class:graphics	227
 #count	class:harness-only	350
 #count	class:input	21
 #count	class:launcher	1974
 #count	class:memory	84
-#count	class:process	172
+#count	class:process	175
 #count	class:sound	1
 #count	class:thread	62
-#count	class:type_only	368
-#count	class:umbrella	39
+#count	class:type_only	348
+#count	class:umbrella	40
 #count	class:window	158
-#count	kind:call	1231
-#count	kind:const	1247
-#count	kind:include	70
-#count	kind:type	1157
-#count	live_sites	1381
+#count	kind:call	1201
+#count	kind:const	1225
+#count	kind:include	71
+#count	kind:type	1137
+#count	live_sites	1310
 #count	call_or_keyword_class:clock	14
 #count	call_or_keyword_class:crt	17
 #count	call_or_keyword_class:dialog	188
 #count	call_or_keyword_class:fault	10
-#count	call_or_keyword_class:fiber	12
-#count	call_or_keyword_class:file	160
+#count	call_or_keyword_class:fiber	7
+#count	call_or_keyword_class:file	135
 #count	call_or_keyword_class:graphics	3
 #count	call_or_keyword_class:input	3
 #count	call_or_keyword_class:memory	41
@@ -3802,7 +3732,7 @@ file	src/render/satpixie.h	render	live		graphics	7
 #count	files_in:game/field	1
 #count	files_in:game/platform	8
 #count	files_in:game/shop	1
-#count	files_in:hook	11
+#count	files_in:hook	10
 #count	files_in:launcher	12
-#count	files_in:os	15
+#count	files_in:os	17
 #count	files_in:render	3
