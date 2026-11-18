@@ -5,7 +5,9 @@
 #include "common/sha256.h"
 #include "os/os.h"
 
+#include <atomic>
 #include <chrono>
+#include <ctime>
 #include <filesystem>
 #include <fstream>
 #include <cstdio>
@@ -19,6 +21,8 @@
 #ifdef _WIN32
 #include <windows.h>
 #else
+#include <fcntl.h>
+#include <semaphore.h>
 #include <unistd.h>
 #endif
 
@@ -455,6 +459,184 @@ void TestFindAndStreams() {
     fs::remove_all(os::Path(dir.c_str()), ec);
 }
 
+// ---- the harness's calls (linux round wave 1, group R1) ----------------------
+// os/module.h, os/stack.h, os/sampler.h, os/local_time.h, os/named_event.h,
+// os/path_file.h: what the state hash, the WAV dump, the stall watch, the
+// input queue's frozen shots and the self-tests' stack guards ask.
+
+const char kR1Text[] = "a constant of the test's own image";
+
+volatile std::uint32_t g_r1_spin = 0;
+volatile int g_r1_sink = 0;
+std::atomic<bool> g_r1_stop{false};
+
+void R1Spin(os::SampledThread** self, os::StackRange* stack, std::atomic<bool>* ready) {
+    *self = os::SampleThisThread();
+    *stack = os::CurrentStack();
+    ready->store(true);
+    while (!g_r1_stop.load(std::memory_order_relaxed)) g_r1_spin = g_r1_spin + 1;
+}
+
+struct R1Read {
+    int calls = 0;
+    std::uintptr_t ip = 0, sp = 0;
+    bool held = false;   // the spin did not move while the thread was held
+};
+
+void R1OnSample(void* ctx, std::uintptr_t ip, std::uintptr_t sp) {
+    auto* r = static_cast<R1Read*>(ctx);
+    ++r->calls;
+    r->ip = ip;
+    r->sp = sp;
+    const std::uint32_t a = g_r1_spin;
+    for (int i = 0; i < 200000; ++i) g_r1_sink = i;   // a while, with the thread held
+    r->held = g_r1_spin == a;
+}
+
+void TestR1Harness() {
+    // The module that holds a function of ours: its code and its constants.
+    os::ModuleImageInfo image;
+    const auto code = reinterpret_cast<std::uintptr_t>(&TestR1Harness);
+    const auto text = reinterpret_cast<std::uintptr_t>(kR1Text);
+    CHECK(os::ModuleImage(reinterpret_cast<const void*>(&TestR1Harness), &image));
+    CHECK(image.extent > 0 && code >= image.base && code < image.base + image.extent && !image.parts.empty());
+    bool code_part = false, text_part = false;
+    for (const os::ModulePart& p : image.parts) {
+        code_part = code_part || (code >= p.lo && code < p.hi && p.executable);
+        text_part = text_part || (text >= p.lo && text < p.hi && p.readable && !p.executable);
+        CHECK(p.lo >= image.base && p.hi <= image.base + image.extent && p.lo < p.hi);
+    }
+    CHECK(code_part && text_part);
+    // The base itself names the same module (a Windows module handle is its base).
+    os::ModuleImageInfo again;
+    CHECK(os::ModuleImage(reinterpret_cast<const void*>(image.base), &again) && again.base == image.base &&
+          again.extent == image.extent && again.parts.size() == image.parts.size());
+    void* const heap = os::MemAlloc(nullptr, kPage, os::Prot::ReadWrite);
+    CHECK(heap && !os::ModuleImage(heap, &again));
+    if (heap) os::MemRelease(heap, kPage);
+
+    CHECK(os::ModuleExportByOrdinal("bof3x_no_such_module.dll", 1) == nullptr);
+#ifdef _WIN32
+    // Some ordinal of kernel32 answers, and some lies in kernel32's own image
+    // (many are forwarded: GetProcAddress follows them into another DLL).
+    const auto k32_base = reinterpret_cast<std::uintptr_t>(GetModuleHandleA("kernel32.dll"));
+    bool any = false, own = false, same = true;
+    for (unsigned o = 1; o < 4096 && !own; ++o) {
+        void* const p = os::ModuleExportByOrdinal("kernel32.dll", o);
+        same = same && p == reinterpret_cast<void*>(GetProcAddress(GetModuleHandleA("kernel32.dll"), MAKEINTRESOURCEA(o)));
+        if (!p) continue;
+        any = true;
+        os::ModuleImageInfo k32;
+        own = os::ModuleImage(p, &k32) && k32.base == k32_base;
+    }
+    CHECK(any && own && same);
+    CHECK(os::ModuleExportByOrdinal("kernel32.dll", 0xFFFF) == nullptr);
+#else
+    CHECK(os::ModuleExportByOrdinal("libc.so.6", 1) == nullptr);   // ELF numbers no export
+#endif
+
+    // The stack: a local of ours lies in it, and another thread's is another.
+    int local = 0;
+    const os::StackRange here = os::CurrentStack();
+    const auto at = reinterpret_cast<std::uintptr_t>(&local);
+    CHECK(here.limit && here.base && reinterpret_cast<std::uintptr_t>(here.limit) <= at && at < reinterpret_cast<std::uintptr_t>(here.base));
+    os::StackRange there;
+    std::uintptr_t there_local = 0;
+    std::thread([&] {
+        int other = 0;
+        there = os::CurrentStack();
+        there_local = reinterpret_cast<std::uintptr_t>(&other);
+    }).join();
+    CHECK(there.base != here.base && reinterpret_cast<std::uintptr_t>(there.limit) <= there_local &&
+          there_local < reinterpret_cast<std::uintptr_t>(there.base));
+
+    // The sampler: Windows holds a spinning thread and reads it; POSIX has none.
+    if (os::CanSampleThreads()) {
+        os::SampledThread* t = nullptr;
+        os::StackRange spin_stack;
+        std::atomic<bool> ready{false};
+        g_r1_stop = false;
+        std::thread spinner(&R1Spin, &t, &spin_stack, &ready);
+        while (!ready.load()) std::this_thread::yield();
+        R1Read r;
+        CHECK(t != nullptr && os::SampleThread(t, &R1OnSample, &r));
+        g_r1_stop = true;
+        spinner.join();
+        CHECK(r.calls == 1 && r.held);
+        CHECK(r.sp >= reinterpret_cast<std::uintptr_t>(spin_stack.limit) && r.sp < reinterpret_cast<std::uintptr_t>(spin_stack.base));
+        os::ModuleImageInfo at_ip;
+        CHECK(os::ModuleImage(reinterpret_cast<const void*>(r.ip), &at_ip) && at_ip.base == image.base);
+    } else {
+        CHECK(os::SampleThisThread() == nullptr);
+        R1Read r;
+        CHECK(!os::SampleThread(nullptr, &R1OnSample, &r) && r.calls == 0);
+    }
+
+    // The local time of day, against the C library's.
+    const std::time_t before = std::time(nullptr);
+    const os::LocalTime lt = os::LocalNow();
+    const std::tm* tm = std::localtime(&before);
+    CHECK(lt.hour < 24 && lt.minute < 60 && lt.second < 61 && lt.millisecond < 1000);
+    const int ours = static_cast<int>(lt.hour * 60 + lt.minute), theirs = tm->tm_hour * 60 + tm->tm_min;
+    CHECK(ours == theirs || (ours - theirs + 1440) % 1440 == 1);
+
+    // The named event, set by name as a driver sets it.
+    const std::string name = "bof3x_os_test_" + std::to_string(os::ProcessId());
+    os::NamedEvent* const e = os::CreateNamedEvent(name.c_str());
+    CHECK(e != nullptr);
+    if (e) {
+#ifdef _WIN32
+        HANDLE other = OpenEventW(EVENT_MODIFY_STATE, FALSE, os::ToWide(("Local\\" + name).c_str()).c_str());
+        const auto set = [&] { SetEvent(other); };
+#else
+        sem_t* other = sem_open(("/" + name).c_str(), 0);
+        const auto set = [&] { sem_post(other); };
+#endif
+        CHECK(other != nullptr);
+        const auto t0 = std::chrono::steady_clock::now();
+        CHECK(!os::WaitNamedEvent(e, 60));
+        CHECK(std::chrono::steady_clock::now() - t0 >= std::chrono::milliseconds(40));
+        set();
+        CHECK(os::WaitNamedEvent(e, 1000));
+        CHECK(!os::WaitNamedEvent(e, 20));   // taken by the wait: an auto-reset event
+        set();
+        set();
+        os::ResetNamedEvent(e);
+        CHECK(!os::WaitNamedEvent(e, 20));
+        std::thread late([&] {
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            set();
+        });
+        CHECK(os::WaitNamedEvent(e, 5000));
+        late.join();
+#ifdef _WIN32
+        CloseHandle(other);
+#else
+        sem_close(other);
+        sem_unlink(("/" + name).c_str());
+#endif
+    }
+
+    // A stream on a wide path, made only when it is not there ("x").
+    const std::string dir = Scratch() + "_r1";
+    std::error_code ec;
+    fs::create_directories(os::Path(dir.c_str()), ec);
+    const fs::path file = os::Path(dir.c_str()) / fs::path(L"wav_é中.bin");
+    std::FILE* f = os::OpenPath(file, "wbx");
+    CHECK(f != nullptr);
+    if (f) {
+        CHECK(std::fwrite("RIFF....", 1, 8, f) == 8 && std::fseek(f, 4, SEEK_SET) == 0 && std::fwrite("WAVE", 1, 4, f) == 4 &&
+              std::fseek(f, 0, SEEK_END) == 0 && std::fwrite("!", 1, 1, f) == 1);
+        std::fclose(f);
+    }
+    CHECK(os::OpenPath(file, "wbx") == nullptr);   // there now: CREATE_NEW's refusal
+    f = os::OpenPath(file, "rb");
+    char back[16] = {};
+    CHECK(f && std::fread(back, 1, sizeof back, f) == 9 && std::memcmp(back, "RIFFWAVE!", 9) == 0);
+    if (f) std::fclose(f);
+    fs::remove_all(os::Path(dir.c_str()), ec);
+}
+
 }  // namespace
 
 int main() {
@@ -465,6 +647,7 @@ int main() {
     TestClocks();
     TestEnvironment();
     TestSha256();
+    TestR1Harness();
     std::printf("os_tests: %d checks, %d failed\n", g_checks, g_fail);
     return g_fail ? 1 : 0;
 }
