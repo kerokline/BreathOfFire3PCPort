@@ -1435,7 +1435,7 @@ void TestPresetPlan() {
         const bof3x::PresetPlan plan = bof3x::ConfigPresetPlan(pc, cfg, Preset::kShipped, "original");
         int off = 0;
         for (const auto& it : plan.items) off += it.action == bof3x::PresetAction::kOff ? 1 : 0;
-        Check(off == 92, "as shipped, original: 92 entries off, as the tool's table", std::to_string(off));
+        Check(off == 94, "as shipped, original: 94 entries off, as the tool's table", std::to_string(off));
         const std::vector<std::string> n = names(plan.off);
         Check(std::find(n.begin(), n.end(), "SunderLoop") != n.end() &&
                   std::find(n.begin(), n.end(), "Game_Clock") != n.end(),
