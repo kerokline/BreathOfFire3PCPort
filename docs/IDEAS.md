@@ -2609,6 +2609,7 @@ _(2026-11-10) open; staged, nothing built or run on Linux._
 
 ### Outcome
 _(2026-11-10) open; nothing built._
+_(2026-11-18) the Linux build took DXVK-native ([`linux-round.md`](linux-round.md) 6, call 1); the owner asked for a Vulkan / Direct3D 11 toggle on Windows, staged by the same road in [`vulkan-toggle-round.md`](vulkan-toggle-round.md). Nothing built._
 
 ## I64 — A sequencer truer to the PlayStation's
 
