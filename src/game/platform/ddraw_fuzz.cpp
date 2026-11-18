@@ -521,7 +521,7 @@ void Build() {
     for (int pass = 0; pass < 2; ++pass) {
         g_arena[pass] = static_cast<unsigned char*>(
             bof3::os::MemAlloc(nullptr, static_cast<std::size_t>(kMaxSurfaces) * kSlotBytes, bof3::os::Prot::ReadWrite));
-        if (!g_arena[pass]) bof3::Fatal("ddraw_fuzz: MemAlloc of the pixel arena failed, error %lu", (std::uint32_t)bof3::os::LastError());
+        if (!g_arena[pass]) bof3::Fatal("ddraw_fuzz: MemAlloc of the pixel arena failed, error %u", (std::uint32_t)bof3::os::LastError());
     }
 }
 
