@@ -7,6 +7,7 @@
 #include <cwchar>
 #include <cstdlib>
 #include <cstring>
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -180,8 +181,8 @@ bool g_seen_frame = false;
 std::uint32_t g_last_frame = 0;    // Frame_Counter at the last new frame
 unsigned g_frame = 0;              // frames the recipe has played
 unsigned short g_prev = 0, g_cur = 0;
-HANDLE g_release = nullptr;         // BOF3X_SHOT_WAIT: set by the driver after each grab
-constexpr DWORD kFreezeMs = 3000;   // Windows ghosts a window that pumps nothing for 5 s
+bof3::os::NamedEvent* g_release = nullptr;   // BOF3X_SHOT_WAIT: set by the driver after each grab
+constexpr std::uint32_t kFreezeMs = 3000;   // Windows ghosts a window that pumps nothing for 5 s
 
 struct Button { const char* name; unsigned short bit; };
 constexpr Button kButtons[] = {
@@ -525,10 +526,12 @@ void Finish(const char* how) {
 // (render::SaveFrame - the target, not the window, so nothing has to be on
 // top). Logged as `saved` or `NOT saved` before the shot line.
 std::wstring g_shot_dir;
+// Between the directory and the name: the system's separator (a backslash on Windows, as ever).
+const wchar_t kSep = static_cast<wchar_t>(std::filesystem::path::preferred_separator);
 
 void SaveShot(const Step& s) {
     if (g_shot_dir.empty()) return;
-    std::wstring path = g_shot_dir + L"\\";
+    std::wstring path = g_shot_dir + kSep;
     for (char c : s.text) path += static_cast<wchar_t>(static_cast<unsigned char>(c));
     path += L".bmp";
     const bool ok = render::SaveFrame(path.c_str());
@@ -544,12 +547,13 @@ void SaveShot(const Step& s) {
 void Freeze(const Step& s) {
     const bool clock = GameClock_Pause();
     SaveShot(s);
-    ResetEvent(g_release);
+    bof3::os::ResetNamedEvent(g_release);
     Log("input       shot %s recipe frame %u frozen%s", s.text.c_str(), g_frame,
         clock ? "" : " (clock not ours: the pause will be replayed)");
     LogFlush();
-    if (WaitForSingleObject(g_release, kFreezeMs) != WAIT_OBJECT_0)
-        Log("input       shot %s: no release from the driver in %lu ms; going on", s.text.c_str(), kFreezeMs);
+    if (!bof3::os::WaitNamedEvent(g_release, kFreezeMs))
+        Log("input       shot %s: no release from the driver in %lu ms; going on", s.text.c_str(),
+            static_cast<unsigned long>(kFreezeMs));
     GameClock_Resume();
 }
 
@@ -568,7 +572,7 @@ void SaveTimed() {
     if (g_shot_dir.empty() || g_every == 0 || g_frame % g_every != 0) return;
     char name[16];
     std::snprintf(name, sizeof name, "t%06u", g_frame);
-    std::wstring path = g_shot_dir + L"\\";
+    std::wstring path = g_shot_dir + kSep;
     for (const char* c = name; *c; ++c) path += static_cast<wchar_t>(*c);
     path += L".bmp";
     const bool clock = GameClock_Pause();
@@ -654,7 +658,7 @@ void WatchTick() {
     if (!shoot || g_shot_dir.empty()) return;
     char name[16];
     std::snprintf(name, sizeof name, "w%06u", g_frame);
-    std::wstring path = g_shot_dir + L"\\";
+    std::wstring path = g_shot_dir + kSep;
     for (const char* c = name; *c; ++c) path += static_cast<wchar_t>(*c);
     path += L".bmp";
     const bool clock = GameClock_Pause();
@@ -1307,10 +1311,10 @@ bool InputScript_PausedWord(unsigned short* word) {
 }
 
 void InputScript_Start() {
-    char path[MAX_PATH];
-    char rec[MAX_PATH];
-    const DWORD r = bof3::os::GetEnv("BOF3X_RECORD", rec, sizeof rec);
-    const DWORD n = bof3::os::GetEnv("BOF3X_INPUT", path, sizeof path);
+    char path[bof3::os::kMaxPath];
+    char rec[bof3::os::kMaxPath];
+    const std::uint32_t r = bof3::os::GetEnv("BOF3X_RECORD", rec, sizeof rec);
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_INPUT", path, sizeof path);
     if (r && n) Fatal("BOF3X_RECORD and BOF3X_INPUT are both set; one latch, one of them");
     const bool hashing = StateHash_Start();
     constexpr std::uint32_t kLatchCall = 0x4FCDDE;   // WinMain: call Input_Latch
@@ -1334,14 +1338,14 @@ void InputScript_Start() {
     RandCountStart();
     Load(path);
     Log("input       %u steps from %s", (unsigned)g_steps.size(), path);
-    wchar_t dir[MAX_PATH];
-    const DWORD dn = bof3::os::GetEnvW(L"BOF3X_SHOT_DIR", dir, MAX_PATH);
-    if (dn > 0 && dn < MAX_PATH) {
+    wchar_t dir[bof3::os::kMaxPath];
+    const std::uint32_t dn = bof3::os::GetEnvW(L"BOF3X_SHOT_DIR", dir, bof3::os::kMaxPath);
+    if (dn > 0 && dn < bof3::os::kMaxPath) {
         g_shot_dir = dir;
         Log("input       shots are written by the game to %s (BOF3X_SHOT_DIR)", Utf8Path(dir).text);
     }
     char every[16];
-    const DWORD en = bof3::os::GetEnv("BOF3X_SHOT_EVERY", every, sizeof every);
+    const std::uint32_t en = bof3::os::GetEnv("BOF3X_SHOT_EVERY", every, sizeof every);
     if (en > 0 && en < sizeof every) {
         char* end = nullptr;
         const unsigned long v = std::strtoul(every, &end, 10);
@@ -1353,9 +1357,10 @@ void InputScript_Start() {
     char wait[8];
     if (bof3::os::GetEnv("BOF3X_SHOT_WAIT", wait, sizeof wait)) {
         // Named for the process, so the driver can find it by pid.
-        wchar_t name[64];
-        std::swprintf(name, 64, L"Local\\bof3x_shot_%lu", static_cast<unsigned long>(bof3::os::ProcessId()));
-        g_release = CreateEventW(nullptr, FALSE, FALSE, name);
+        // Windows: the auto-reset event Local\bof3x_shot_<pid> (os/named_event.h).
+        char name[64];
+        std::snprintf(name, sizeof name, "bof3x_shot_%lu", static_cast<unsigned long>(bof3::os::ProcessId()));
+        g_release = bof3::os::CreateNamedEvent(name);
         if (!g_release) Fatal("BOF3X_SHOT_WAIT: CreateEvent failed, error %lu", static_cast<unsigned long>(bof3::os::LastError()));
         Log("input       shots freeze the game until released (BOF3X_SHOT_WAIT)");
     }
