@@ -27,12 +27,13 @@ unsigned MsgBox_StepRecord(const unsigned char* msg, unsigned glyphs, MsgBoxDraw
 // loaded and the walk can draw it, else `plain`.
 const unsigned char* MsgBox_ReadingRowSystem(unsigned id, const unsigned char* plain);
 
-// The reading row's study key (docs/reading-row.md 3.5), for WM_KEYDOWN
-// (src/game/win_main.cpp): true when `vk` is the key BOF3X_RUBY_KEY names
-// (F4 by default; "none" binds nothing), which then toggles - unless
-// `repeat`, a held key's auto-repeat - whether the reading rows' glyphs are
-// drawn. The layout, the reveal and the pages are the same either way.
-bool MsgBox_ReadingRowKey(unsigned vk, bool repeat);
+// The reading row's study key (docs/reading-row.md 3.5), for WinGame_Key
+// (src/game/platform/magic_080.cpp) when the key or pad input is the one the
+// function keys' table gives the reading_rows action (BOF3X_RUBY_KEY's, F4 by
+// default; game/function_keys_game.h): toggles - unless `repeat`, a held
+// key's auto-repeat - whether the reading rows' glyphs are drawn. The layout,
+// the reveal and the pages are the same either way.
+void MsgBox_ReadingRowKey(bool repeat);
 
 namespace msgbox {
 extern bool g_text_faster;   // defined in msgbox.cpp (source-layout B0: promoted for a moved reader)

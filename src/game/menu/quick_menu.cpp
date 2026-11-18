@@ -453,13 +453,12 @@ void CursorSelfTest() {
 
 namespace bof3 {
 
-bool QuickMenu_Key(unsigned vk, std::int32_t lparam) {
-    const bool repeat = (lparam & (1L << 30)) != 0;
+bool QuickMenu_Key(bool its_key, bool repeat) {
     if (g_open) {
-        if (vk == bof3x::input::kVkF5 && !repeat) Close("F5");
+        if (its_key && !repeat) Close("its key");
         return true;   // every key is the menu's while it is open
     }
-    if (vk != bof3x::input::kVkF5) return false;
+    if (!its_key) return false;
     if (repeat) return true;
     if (Frame_Counter == 0) return false;   // before the loop's first frame (the intro videos): F5 is nothing, as before
     Open();

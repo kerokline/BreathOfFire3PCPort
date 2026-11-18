@@ -167,6 +167,9 @@ void ConfigLoad(const std::string& text, Config& cfg, std::string& error) {
     // list, so what the file says is what the game gets - not the defaults
     // with the file's lines appended.
     bool keys_seen = false, pad_seen = false;
+    // The function keys: the first fkey. or fpad. line starts from the
+    // defaults, as key. lines do; each line is applied over them in order.
+    bool fkeys_seen = false;
     for (const std::string& raw : SplitLines(text)) {
         const std::string line = Trim(raw);
         if (line.empty() || line[0] == '#' || line[0] == ';' || line[0] == '[') continue;
@@ -315,6 +318,14 @@ void ConfigLoad(const std::string& text, Config& cfg, std::string& error) {
             if (!keys_seen) cfg.bindings.keys.clear();
             keys_seen = true;
             input::ParseKeys(key.substr(4) + "=" + value, ',', cfg.bindings.keys);
+        } else if (key.compare(0, 5, "fkey.") == 0 || key.compare(0, 5, "fpad.") == 0) {
+            if (!fkeys_seen) cfg.fkeys = input::FnBindings::Defaults();
+            fkeys_seen = true;
+            cfg.fkeys_named = true;
+            std::vector<std::string> problems;
+            input::FnParse(key + "=" + value, '\n', cfg.fkeys, &problems);
+            for (const std::string& p : problems)
+                std::fprintf(stderr, "bof3x-launcher: bof3x.ini's function key line %s; the line is left out\n", p.c_str());
         } else if (key.compare(0, 4, "pad.") == 0) {
             if (!pad_seen) cfg.bindings.pad.clear();
             pad_seen = true;
@@ -451,6 +462,13 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
     out += "# dpad_up/down/left/right ls_up/down/left/right rs_up/down/left/right; pad.layout positional |\r\n";
     out += "# nintendo (the face pairs swapped) | auto (the pad's own labels)\r\n";
     out += input::FormatPad(cfg.bindings.pad, cfg.bindings.layout, "pad.", "\r\n");
+    out += "# the function keys (docs/controls.md 7; the Controls tab's Function keys page): fkey.ACTION=KEY\r\n";
+    out += "# (a key name as for key. lines, or none) and fpad.ACTION=INPUT (a pad input as for pad. lines, or\r\n";
+    out += "# none); actions speed reading_rows quick_menu quicksave quickload window pause picture save_write\r\n";
+    if (cfg.fkeys_named)
+        out += input::FnFormat(cfg.fkeys, "\r\n");
+    else
+        out += "# none yet: the defaults F1 F4 F5 F6 F7 F8 F9 F11 F12, no pad input, and ruby_key= above\r\n";
     out += "# 0 hides this launcher's dialog and starts the game straight away\r\n";
     out += std::string("show_launcher=") + (cfg.show_launcher ? "1" : "0") + "\r\n";
     return WriteWhole(path, out);
@@ -691,6 +709,18 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, boo
     if (GetEnvironmentVariableW(L"BOF3X_LEARN", existing, 64) == 0 && cfg.cheats.learn)
         SetEnvironmentVariableW(L"BOF3X_LEARN", L"1");
 
+    // The function keys: BOF3X_FKEYS only when they differ from what the game
+    // builds without it (the defaults and BOF3X_RUBY_KEY's key), so an ini
+    // that never named one sends nothing new.
+    if (GetEnvironmentVariableW(L"BOF3X_FKEYS", existing, 64) == 0) {
+        const input::FnBindings fkeys = ConfigFnKeys(cfg);
+        if (fkeys != ConfigFnKeysBaseline(cfg)) {
+            std::string line = input::FnFormat(fkeys, ",");
+            if (!line.empty()) line.pop_back();
+            SetEnvironmentVariableA("BOF3X_FKEYS", line.c_str());
+        }
+    }
+
     const input::Bindings defaults = input::Bindings::Defaults();
     const bool keys_default = cfg.bindings.keys.size() == defaults.keys.size() &&
         [&] { for (size_t i = 0; i < defaults.keys.size(); ++i)
@@ -714,6 +744,27 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, boo
     // None is set for its default value: an unset variable is exactly what
     // the DLL treats as "the original's behaviour", and leaving it unset keeps
     // a default run byte-identical to one launched without a settings file.
+}
+
+input::FnBindings ConfigFnKeysBaseline(const Config& cfg) {
+    input::FnBindings b = input::FnBindings::Defaults();
+    const int k = input::FnRubyKey(cfg.ruby_key);
+    if (k != -2) b.key[static_cast<int>(input::FnAction::kRows)] = k;
+    return b;
+}
+
+input::FnBindings ConfigFnKeys(const Config& cfg) { return cfg.fkeys_named ? cfg.fkeys : ConfigFnKeysBaseline(cfg); }
+
+void ConfigFnKeysSet(Config& cfg, const input::FnBindings& fkeys) {
+    cfg.fkeys = fkeys;
+    cfg.fkeys_named = true;
+    const int rows = fkeys.key[static_cast<int>(input::FnAction::kRows)];
+    if (rows < 0) {
+        cfg.ruby_key = "none";
+        return;
+    }
+    for (int n = 1; n <= 12; ++n)
+        if (rows == input::FnKeyOfF(n)) cfg.ruby_key = "f" + std::to_string(n);
 }
 
 void ConfigSeedFromGameCfg(const std::wstring& game_dir, Config& cfg) {

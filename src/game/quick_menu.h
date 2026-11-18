@@ -7,11 +7,15 @@
 
 namespace bof3 {
 
-// Game_WndProc's WM_KEYDOWN, first: F5 opens the menu (pausing the game, as
-// F9 does) or closes it; while it is open every other key is the menu's and
-// does nothing (the pad drives it, not WM_KEYDOWN). True when the key was
+// Game_WndProc's WM_KEYDOWN, first (and a pad press bound to a function key's
+// action, WinGame_PadActions): `its_key`, the key or press is the one the
+// function keys' table gives the quick menu (F5 by default;
+// game/function_keys_game.h), opens the menu (pausing the game, as F9 does)
+// or closes it; while it is open every other key is the menu's and does
+// nothing (the pad drives it, not WM_KEYDOWN). `repeat`: a held key's
+// auto-repeat, which neither opens nor closes it. True when the key was
 // taken; false leaves it to the rest of WndProc.
-bool QuickMenu_Key(unsigned vk, std::int32_t lparam);
+bool QuickMenu_Key(bool its_key, bool repeat);
 
 // WinMain's loop, in the paused branch, once a frame: the menu's input and
 // draw when it is open (true), nothing otherwise (false: the pause lines are

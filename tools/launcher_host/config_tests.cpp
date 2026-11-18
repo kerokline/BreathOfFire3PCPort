@@ -1811,6 +1811,83 @@ void TestHomeDefaults() {
 // The row above the text (docs/mods.md 5): ruby= read, saved, and composed into
 // BOF3X_OPT after the ini's layers - for each choice the Settings box offers, and
 // each refusal (said on stderr, no row). The mods.toml reader the box rests on.
+// The function keys (input/function_keys.h; docs/controls.md 7): fkey. and
+// fpad. lines read over the defaults and written only once named; BOF3X_FKEYS
+// only when the table differs from what the game builds without it (the
+// defaults and ruby_key='s key); ruby_key= kept in step by the page.
+void TestFnKeys() {
+    namespace in = bof3x::input;
+    const std::wstring a = Temp(L"bof3x_config_tests_fkeys.ini"), game = Temp(L"bof3x_fkeys_game");
+    MakeDirs(game + L"\\DAT");
+    std::string err;
+    const auto Sent = [&](const bof3x::Config& c) {
+        ClearEnv();
+        SetEnvironmentVariableA("BOF3X_FKEYS", nullptr);
+        bof3x::ConfigApplyEnvironment(game, c, false);
+        return Env("BOF3X_FKEYS");
+    };
+    // An old ini: no fkey lines. Nothing named, nothing written, nothing sent.
+    WriteAll(a, "[bof3x]\r\nruby_key=f4\r\nkey.Z=triangle\r\n");
+    bof3x::Config old;
+    Check(bof3x::ConfigLoad(a, old, err) && err.empty() && !old.fkeys_named && old.fkeys == in::FnBindings::Defaults(),
+          "an old ini: the defaults, not named");
+    Check(Sent(old).empty(), "an old ini: no BOF3X_FKEYS", Env("BOF3X_FKEYS"));
+    Check(bof3x::ConfigSave(a, old) && ReadAll(a).find("\r\nfkey.") == std::string::npos &&
+              ReadAll(a).find("\r\nfpad.") == std::string::npos,
+          "an old ini: no fkey or fpad line written");
+    // ruby_key= alone moves the row above the text, as before: still no BOF3X_FKEYS.
+    old.ruby_key = "f6";
+    Check(bof3x::ConfigFnKeys(old).key[static_cast<int>(in::FnAction::kRows)] == in::FnKeyOfF(6) && Sent(old).empty() &&
+              Env("BOF3X_RUBY_KEY") == "f6",
+          "ruby_key=f6 alone: the page shows F6, BOF3X_RUBY_KEY carries it");
+    // Named lines: read over the defaults, in order, bad ones left out.
+    WriteAll(a, "[bof3x]\r\nfkey.quicksave=Z\r\nfpad.pause=rpaddle1\r\nfkey.speed=none\r\nfkey.nope=F2\r\n"
+                "fpad.window=nothing\r\n");
+    bof3x::Config c;
+    Check(bof3x::ConfigLoad(a, c, err) && err.empty() && c.fkeys_named, "fkey lines read, named");
+    Check(c.fkeys.key[static_cast<int>(in::FnAction::kQuicksave)] == in::KeyFromName("Z") &&
+              c.fkeys.pad[static_cast<int>(in::FnAction::kPause)] == static_cast<int>(in::PadInput::kRightPaddle1) &&
+              c.fkeys.key[static_cast<int>(in::FnAction::kSpeed)] == -1 &&
+              c.fkeys.key[static_cast<int>(in::FnAction::kQuickload)] == in::FnKeyOfF(7) &&
+              c.fkeys.pad[static_cast<int>(in::FnAction::kWindow)] == -1,
+          "the good lines over the defaults; the bad ones change nothing");
+    const std::string sent = Sent(c);
+    Check(sent == in::FnFormat(c.fkeys, ",").substr(0, in::FnFormat(c.fkeys, ",").size() - 1),
+          "BOF3X_FKEYS: the whole table, comma-separated", sent);
+    Check(sent.find("fkey.quicksave=Z,") != std::string::npos && sent.find("fpad.pause=rpaddle1,") != std::string::npos,
+          "  naming Z and rpaddle1");
+    // Written back whole, and read back the same.
+    Check(bof3x::ConfigSave(a, c) && ReadAll(a).find("\r\nfkey.quicksave=Z\r\nfpad.quicksave=none\r\n") != std::string::npos,
+          "the fkey lines written");
+    bof3x::Config back;
+    Check(bof3x::ConfigLoad(a, back, err) && back.fkeys_named && back.fkeys == c.fkeys, "and read back the same");
+    // Named but equal to the defaults: written, not sent.
+    bof3x::Config same;
+    bof3x::ConfigFnKeysSet(same, in::FnBindings::Defaults());
+    Check(same.fkeys_named && same.ruby_key == "f4" && Sent(same).empty(), "the page's defaults: nothing sent");
+    // The page and ruby_key=: an F key or none goes into ruby_key=; another key leaves it.
+    in::FnBindings t = in::FnBindings::Defaults();
+    t.key[static_cast<int>(in::FnAction::kRows)] = in::FnKeyOfF(2);
+    bof3x::Config p;
+    bof3x::ConfigFnKeysSet(p, t);
+    Check(p.ruby_key == "f2" && Sent(p).empty() && Env("BOF3X_RUBY_KEY") == "f2",
+          "the row above the text on F2: ruby_key=f2, BOF3X_RUBY_KEY says it, no BOF3X_FKEYS", Env("BOF3X_FKEYS"));
+    t.key[static_cast<int>(in::FnAction::kRows)] = -1;
+    bof3x::ConfigFnKeysSet(p, t);
+    Check(p.ruby_key == "none" && Sent(p).empty(), "on none: ruby_key=none");
+    t.key[static_cast<int>(in::FnAction::kRows)] = in::KeyFromName("R");
+    bof3x::ConfigFnKeysSet(p, t);
+    Check(p.ruby_key == "none" && Sent(p).find("fkey.reading_rows=R,") != std::string::npos,
+          "on R: ruby_key= kept, BOF3X_FKEYS carries R", Env("BOF3X_FKEYS"));
+    // An environment's BOF3X_FKEYS wins, as for the others.
+    ClearEnv();
+    SetEnvironmentVariableA("BOF3X_FKEYS", "fkey.speed=F2");
+    bof3x::ConfigApplyEnvironment(game, c, false);
+    Check(Env("BOF3X_FKEYS") == "fkey.speed=F2", "an environment's BOF3X_FKEYS wins");
+    SetEnvironmentVariableA("BOF3X_FKEYS", nullptr);
+    ClearEnv();
+}
+
 void TestRuby() {
     const std::wstring game = Temp(L"bof3x_ruby_game");
     MakeDirs(game + L"\\DAT");
@@ -2031,6 +2108,8 @@ int main() {
     TestCacheCodePage();
     std::printf("the row above the text (docs/mods.md)\n");
     TestRuby();
+    std::printf("the function keys (fkey., fpad., BOF3X_FKEYS)\n");
+    TestFnKeys();
     std::printf("%d checks, %d failures\n", g_checks, g_failures);
     return g_failures ? 1 : 0;
 }

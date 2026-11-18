@@ -86,6 +86,7 @@
 #include "game/title_states.h"
 #include "game/frame_callees.h"
 #include "game/field_event.h"
+#include "game/function_keys_game.h"
 #include "game/msgbox.h"
 #include "game/window_task.h"
 #include "game/sprite_pose.h"
@@ -1073,6 +1074,7 @@ void InjectAll() {
                                 // dispatch table's immediates too: order does not matter
     TextMsgBoxFromMsgbox_Inject();
     MsgBox_ArmAfterBinds();     // the reading row and the faster text ask IsEnabled of what the line above binds
+    bof3::FunctionKeys_Load();  // the function keys' table: BOF3X_RUBY_KEY (stopping on a bad one, as above did) and BOF3X_FKEYS
     WindowTask_Inject();        // every call of its clones is re-aimed at a recorder and every
                                 // stack-built table re-aimed in the copy, so order does not matter
     if (bof3::WantsShadow("sprite_pose")) sprite_pose::SelfTest();        // every call of its clones re-aimed at a recorder or at another of its

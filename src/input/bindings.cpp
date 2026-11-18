@@ -75,6 +75,17 @@ const PadInputInfo kPadInputs[] = {
     {PadInput::kRsDown, "rs_down", "Right stick down"},
     {PadInput::kRsLeft, "rs_left", "Right stick left"},
     {PadInput::kRsRight, "rs_right", "Right stick right"},
+    {PadInput::kMisc1, "misc1", "Extra button 1"},
+    {PadInput::kRightPaddle1, "rpaddle1", "Right paddle 1"},
+    {PadInput::kLeftPaddle1, "lpaddle1", "Left paddle 1"},
+    {PadInput::kRightPaddle2, "rpaddle2", "Right paddle 2"},
+    {PadInput::kLeftPaddle2, "lpaddle2", "Left paddle 2"},
+    {PadInput::kTouchpad, "touchpad", "Touchpad click"},
+    {PadInput::kMisc2, "misc2", "Extra button 2"},
+    {PadInput::kMisc3, "misc3", "Extra button 3"},
+    {PadInput::kMisc4, "misc4", "Extra button 4"},
+    {PadInput::kMisc5, "misc5", "Extra button 5"},
+    {PadInput::kMisc6, "misc6", "Extra button 6"},
 };
 static_assert(sizeof kPadInputs / sizeof kPadInputs[0] == static_cast<size_t>(PadInput::kCount));
 

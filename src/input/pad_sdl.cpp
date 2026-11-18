@@ -180,6 +180,17 @@ bool PadSdl_InputDown(PadInput input) {
     case PadInput::kRsDown: return axis(SDL_GAMEPAD_AXIS_RIGHTY, true);
     case PadInput::kRsLeft: return axis(SDL_GAMEPAD_AXIS_RIGHTX, false);
     case PadInput::kRsRight: return axis(SDL_GAMEPAD_AXIS_RIGHTX, true);
+    case PadInput::kMisc1: return button(SDL_GAMEPAD_BUTTON_MISC1);
+    case PadInput::kRightPaddle1: return button(SDL_GAMEPAD_BUTTON_RIGHT_PADDLE1);
+    case PadInput::kLeftPaddle1: return button(SDL_GAMEPAD_BUTTON_LEFT_PADDLE1);
+    case PadInput::kRightPaddle2: return button(SDL_GAMEPAD_BUTTON_RIGHT_PADDLE2);
+    case PadInput::kLeftPaddle2: return button(SDL_GAMEPAD_BUTTON_LEFT_PADDLE2);
+    case PadInput::kTouchpad: return button(SDL_GAMEPAD_BUTTON_TOUCHPAD);
+    case PadInput::kMisc2: return button(SDL_GAMEPAD_BUTTON_MISC2);
+    case PadInput::kMisc3: return button(SDL_GAMEPAD_BUTTON_MISC3);
+    case PadInput::kMisc4: return button(SDL_GAMEPAD_BUTTON_MISC4);
+    case PadInput::kMisc5: return button(SDL_GAMEPAD_BUTTON_MISC5);
+    case PadInput::kMisc6: return button(SDL_GAMEPAD_BUTTON_MISC6);
     default: return false;
     }
 }
