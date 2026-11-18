@@ -100,7 +100,8 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      `music_heard.py` to its end, a game with `BOF3X_ARENA=1`. Wave 2 (R5, R6, R7, R9) is not launched: it needs
      the owner's eye. Call 1 is answered (the owner, 2026-11-18): wave 2 runs here too, and frost takes the round
      over when he is ready. Call 3 is answered (the owner, 2026-11-18):
-     no release with both paths. The pad is on SDL3 already (DIV-0050), so R5 is the keyboard alone, and it goes
+     no release with both paths. The read passes ran ([`linux-round.md`](linux-round.md), "Wave 2's read passes") and
+     the wave's brief is drafted, not launched: `analysis/linux_wave2_brief.md` in the main checkout (not tracked). The pad is on SDL3 already (DIV-0050), so R5 is the keyboard alone, and it goes
      to SDL3 with no launcher option.
    - **The Linux round's next units** are frost's, on his fork ([`linux-round.md`](linux-round.md) 4 and 6; "Waiting on
      someone else"). Here: the renderer's remainder ([`platform-layers-plan.md`](platform-layers-plan.md) 2.2) and the
