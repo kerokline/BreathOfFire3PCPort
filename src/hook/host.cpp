@@ -6,6 +6,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "hook/detour.h"
 #include "hook/exe_layout.h"
 #include "hook/log.h"
 #include "os/os.h"
@@ -15,7 +16,6 @@ namespace {
 
 bool g_known = false;
 HostKind g_host = HostKind::Bof3;
-
 }  // namespace
 }  // namespace bof3
 
@@ -121,6 +121,34 @@ HostKind Host() {
     return g_host;
 }
 
+// detour.h's VerifyImage: the hosted build's check of BOF3.exe's header. It
+// lived in detour.cpp until the Linux round's R3 moved it here, beside the
+// other reader of the main module's PE header, so that detour.cpp compiles
+// for a system without one (docs/linux-round.md). Unchanged.
+void VerifyImage() {
+#if defined(__x86_64__)
+    Fatal("VerifyImage in the 64-bit DLL: BOF3.exe is a 32-bit process, which never hosts this DLL "
+          "(docs/x64-build-round.md 2; the hosted build is bof3x-launcher --host bof3, 32-bit)");
+#else
+    auto* base = reinterpret_cast<const std::uint8_t*>(GetModuleHandleW(nullptr));
+    if (reinterpret_cast<std::uintptr_t>(base) != image::kBase)
+        Fatal("main module is at %p, not 0x%X: this is not BOF3.exe, or it was rebased",
+              (void*)base, (unsigned)image::kBase);
+    auto* dos = reinterpret_cast<const IMAGE_DOS_HEADER*>(base);
+    auto* nt = reinterpret_cast<const IMAGE_NT_HEADERS32*>(base + dos->e_lfanew);
+    if (nt->Signature != IMAGE_NT_SIGNATURE ||
+        nt->FileHeader.TimeDateStamp != image::kTimestamp ||
+        nt->OptionalHeader.SizeOfImage != image::kSizeOfImage)
+        Fatal("main module is not the BOF3.exe that symbols.toml describes "
+              "(timestamp 0x%lX size 0x%lX, expected 0x%X / 0x%X). Every address "
+              "would be wrong; refusing to patch.",
+              nt->FileHeader.TimeDateStamp, nt->OptionalHeader.SizeOfImage,
+              (unsigned)image::kTimestamp, (unsigned)image::kSizeOfImage);
+    Log("image verified: base 0x%X timestamp 0x%X", (unsigned)image::kBase,
+        (unsigned)image::kTimestamp);
+#endif
+}
+
 std::uint32_t CodeLo() { return IsExeHost() ? exe_layout::kStubVa : image::kTextVa; }
 
 std::uint32_t CodeHi() {
@@ -128,3 +156,10 @@ std::uint32_t CodeHi() {
 }
 
 }  // namespace bof3
+
+// This file is Windows-only by design (tools/linux_probe/linux_tree.py's
+// WINDOWS_ONLY): the hosts are told apart by the main module's PE header.
+// What a Linux start-up must supply in its place: docs/linux-round.md, "R3:
+// what a Linux start-up needs from the PE host". (Said here at the end, and
+// the line count above DetectHost kept: Low32's message there carries
+// __LINE__ in the 64-bit build.)

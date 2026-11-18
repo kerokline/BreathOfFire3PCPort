@@ -28,6 +28,22 @@ std::filesystem::path Path(const char* narrow) noexcept {
     }
 }
 
+// As exe_image.cpp opened its files before the seam: MB_ERR_INVALID_CHARS, so a
+// byte sequence that is not UTF-8 is refused rather than read as U+FFFD.
+std::filesystem::path PathOfUtf8(const char* utf8) noexcept {
+    try {
+        if (!utf8 || !*utf8) return std::filesystem::path();
+        const int len = static_cast<int>(std::strlen(utf8));
+        const int n = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, utf8, len, nullptr, 0);
+        if (n <= 0) return std::filesystem::path();
+        std::wstring w(static_cast<std::size_t>(n), L'\0');
+        if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, utf8, len, w.data(), n) != n) return std::filesystem::path();
+        return std::filesystem::path(std::move(w));
+    } catch (...) {
+        return std::filesystem::path();
+    }
+}
+
 // As FindFirstFileA hands a name: a character the code page cannot hold comes
 // back as its best fit or the default character, and that name does not open.
 std::string Narrow(const std::filesystem::path& path) noexcept {

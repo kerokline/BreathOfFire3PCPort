@@ -2,7 +2,8 @@
 """Which source files compile for x86-64 Linux today (docs/linux-round.md, unit LB0).
 
 Every `.cpp` under src/ but the launcher's, the Win32 backend's and the fuzz files (`*_fuzz.cpp`: the 64-bit host
-drops them, CMakeLists.txt, and a Linux build is the 64-bit host) is compiled `-fsyntax-only` for
+drops them, CMakeLists.txt, and a Linux build is the 64-bit host) and the Windows-only files by design
+(WINDOWS_ONLY below, each with its reason) is compiled `-fsyntax-only` for
 `x86_64-linux-gnu` with clang, with no stub for any Windows header: a file that needs one fails on the include,
 and that is the answer. `__cdecl` is `ms_abi`, the road stage LA3 chose. Reads src/ and symbols.toml; writes
 nothing into the repository but the list, and only when asked.
@@ -27,6 +28,17 @@ import argparse, collections, concurrent.futures, glob, os, re, subprocess, sys,
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 LIST = 'analysis/linux_tree.tsv'
 SKIP = ('src/launcher/', 'src/os/win32/')
+# Files that are Windows files by design and leave the Linux source list (docs/linux-round.md, "The 38 files, staged
+# as one round"): exact names, one reason each. Not compiled; --check and --write do not list them.
+WINDOWS_ONLY = (
+    ('src/hook/gapwatch.cpp', 'R2: the gap watch - PAGE_GUARD pages, debug registers and a vectored handler'),
+    ('src/hook/write_watch.cpp', 'R2: the write watch - debug registers through a thread CONTEXT and a vectored handler'),
+    ('src/hook/calltrace.cpp', 'R2: the call trace - int3 at entries, single steps and a vectored handler'),
+    ('src/hook/exe_host.cpp', 'R3: the PE exe host - maps, rebases and binds bof3x.exe in the process (Engine_Main)'),
+    ('src/hook/exe_icon.cpp', 'R3: the window icon through HICON, WIC and COM'),
+    ('src/hook/dllmain.cpp', 'R3: the DLL entry point'),
+    ('src/hook/host.cpp', "R3: tells the hosts apart by the main module's PE headers (DetectHost, VerifyImage)"),
+)
 HEADER = ('# tools/linux_probe/linux_tree.py: the source files that do not compile for x86_64-linux-gnu, and why. '
           'File names and reasons only.\n#file\treason\terrors\n')
 
@@ -43,10 +55,11 @@ def gen_headers(work):
 
 def sources():
     out = []
+    windows_only = {f for f, _ in WINDOWS_ONLY}
     for d, _, fs in os.walk(os.path.join(ROOT, 'src')):
         for f in fs:
             rel = os.path.relpath(os.path.join(d, f), ROOT).replace('\\', '/')
-            if f.endswith('.cpp') and not f.endswith('_fuzz.cpp') and not rel.startswith(SKIP):
+            if f.endswith('.cpp') and not f.endswith('_fuzz.cpp') and not rel.startswith(SKIP) and rel not in windows_only:
                 out.append(rel)
     return sorted(out)
 
@@ -107,6 +120,9 @@ def main():
         flags.append('--sysroot=' + a.sysroot)
 
     files = sources()
+    gone = [f for f, _ in WINDOWS_ONLY if not os.path.isfile(os.path.join(ROOT, f))]
+    if gone:
+        sys.exit('linux_tree: WINDOWS_ONLY names a file that does not exist: ' + ', '.join(gone))
     with concurrent.futures.ThreadPoolExecutor(a.jobs) as ex:
         res = dict(ex.map(compile_one, [(f, flags) for f in files]))
     bad = {f: (reason(e), len(e)) for f, e in res.items() if e}
@@ -117,6 +133,7 @@ def main():
           + (' (no SDL3 headers found: files that include them fail on that)' if not sdl else ''))
     for k, v in why.most_common():
         print(f'  {v:4d}  {k}')
+    print(f'linux_tree: {len(WINDOWS_ONLY)} files are Windows-only by design and not compiled (WINDOWS_ONLY)')
 
     if a.write:
         with open(os.path.join(ROOT, LIST), 'w', encoding='utf-8', newline='\n') as o:
@@ -126,7 +143,8 @@ def main():
         print(f'linux_tree: wrote {LIST}')
         return 0
     if a.check:
-        listed = read_list()
+        windows_only = {f for f, _ in WINDOWS_ONLY}
+        listed = {f: r for f, r in read_list().items() if f not in windows_only}   # not compiled: a row of one says nothing
         new = sorted(f for f in bad if f not in listed)
         fixed = sorted(f for f in listed if f not in bad)
         for f in new:

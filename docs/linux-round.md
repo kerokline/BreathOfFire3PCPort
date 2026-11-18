@@ -551,9 +551,11 @@ unit that finds it on a profile.
 
 **Windows-only, by design:** the launcher, `write_watch`, `gapwatch`, `calltrace`
 (harness-only watchers), the PE exe host (`exe_host.cpp`, `exe_icon.cpp`,
-`dllmain.cpp`, and the PE-header readers `host.cpp`, `detour.cpp`,
-`exe_image.cpp`), and `MiniDumpWriteDump` in `crash.cpp`. They need the PE
-format or a Windows API with no portable form.
+`dllmain.cpp`, and the PE-header reader `host.cpp`), and `MiniDumpWriteDump`
+in `crash.cpp`. They need the PE format or a Windows API with no portable
+form. (`detour.cpp` and `exe_image.cpp` were listed here too until group R23
+of the 38-file round: neither needs Windows now; `tools/linux_probe/linux_tree.py`'s
+`WINDOWS_ONLY` holds the list.)
 
 **The gate.** `python tools/os_census.py --boundary` (CI job `os-host`) fails
 when a live file outside `src/os` and `src/launcher` includes `<windows.h>` or
@@ -881,6 +883,56 @@ where a block lies and how the heap is cut is nothing a player sees.
 `LowArena::HighWater`, and not logged); the ten state-hash routes with it on or off (the
 coordinator's, at the merge); a played game with it on; anything on Linux beyond the compile and
 `os_tests` (no link exists).
+
+#### R3: what a Linux start-up needs from the PE host
+
+Group R23 (wave 1), 2026-11-17. `host.cpp`, `exe_host.cpp`, `exe_icon.cpp`
+and `dllmain.cpp` are in `tools/linux_probe/linux_tree.py`'s `WINDOWS_ONLY`:
+each one reads or patches a PE image in the process or is the DLL's entry.
+`detour.cpp` is not: its only PE part was `VerifyImage`, the hosted build's
+check of `BOF3.exe`'s header, which moved to `host.cpp` (it is called from
+`dllmain.cpp` alone). The rest of `detour.cpp` (`Inject`, `RetargetCall`,
+`PatchBytes`, `CloneOriginal`, the name lists) compiles for Linux and
+already takes its exe-host branch by `IsExeHost()`.
+
+`exe_image.cpp` (the data image from a disc-built install) is on the seam:
+`BOF3X_EXEIMAGE` is read by `os::GetEnvW` and `os::ToUtf8`, and its files
+are opened by `std::ifstream` on `os::PathOfUtf8` (new in `os/file.h`: a
+UTF-8 name as a path, a backslash read as a separator, ill-formed UTF-8
+refused; Windows converts with `MB_ERR_INVALID_CHARS` as the file did, POSIX
+checks the bytes; `TestUtf8Paths` in `tools/os_host`). The three watchers of
+R2 stay Windows files; on another system `src/hook/windows_only.cpp` defines
+their entry functions, each switch a `Fatal` when it is set.
+
+The functions the rest of the engine calls in the four files, measured with
+`grep -rnE '\b(<name>)\(' src` outside the four files and their headers
+(comment lines left out), and what a Linux start-up must supply:
+
+| Function | File | Called from | A Linux start-up must supply |
+|---|---|---|---|
+| `DllMain` | `dllmain.cpp` | the Windows loader | Nothing: it is the hosted build's start-up, and a Linux build is the exe host only (`IsExeHost()` true). Its order (log, host, image check, `InjectAll`, the watchers) is the template for `main`'s |
+| `Engine_Main(hinstance, command_line, show)` | `exe_host.cpp` | `bof3x.exe`'s entry (`tools/make_exe.py`, the import `bof3x.dll!Engine_Main`) | A `main` that does the same steps in the same order: refuse the hosted switches; reserve the linked span 0x400000.. (`Fence`); check the layout; make `.stub` no-access (`TrapStub`); copy `.data` from `BOF3.exe` or from `ExeImage_Source` (`CopyData`, the disc-built image - `exe_image.cpp`, which now compiles for Linux); move the pointer words (`Rebase`); fill the import slots with our functions (`BindSlots`); `SoundSdl_Start`; the x87 word (`SetX87`); `Crash_Start`; `InjectAll`; the watchers' `_Start` calls; `Game_WinMain`. On Linux the image is not mapped by a loader: the start-up maps `bof3x.exe`'s sections (or a layout of its own) at a fixed low address itself |
+| `ExeFile_Present()`, `ExeFile_Read(va, to, n)` | `exe_host.cpp` | `dat_load.cpp:848`, `magic_080.cpp:803`, `rdata_consts.cpp:37`, `:109`, `shell.cpp:113`, `:115`, `exe_image.cpp:617`, `:619`, `:1308`, `:1314`, `exe_own.cpp:350`, `:356` (12 lines in 6 files) | A reader of the player's `BOF3.exe` file: whether it is there, and `n` bytes at a VA of its `.text`, `.rdata` or `.data` from the file's section table. This is a file read and the PE file format, not a Windows call: it can be portable code over `std::ifstream` |
+| `ExeIcon_Frame(hwnd)` | `exe_icon.cpp` | `magic_080.cpp:1017` | The window icon (DIV-0095) from the same picture through SDL3's `SDL_SetWindowIcon` once the window is SDL3's (R6). `exe_icon.cpp`'s picture code (the VRAM read, the Lanczos scale) is portable; the icon, WIC and COM parts are not |
+| `ExeIcon_SelfTest()` | `exe_icon.cpp` | `exe_host.cpp:651` only | The same self-test against the reference `.ico`, without WIC's decoder |
+| `DetectHost()` | `host.cpp` | `dllmain.cpp:45` only | The host's identity and base without the main module's PE header: on Linux the host is the exe host, and the start-up knows where it mapped the image. It must still make the 16 MB window check and the `BOF3X_IMAGEBASE` check and set `Bof3_ImageMove` |
+| `VerifyImage()` | `host.cpp` (from `detour.cpp`, this group) | `dllmain.cpp:47` only | Nothing: hosted only |
+| `Host()`, `IsExeHost()` (inline in `host.h`) | `host.cpp` | 33 lines in 18 files (`grep -rlE '\b(IsExeHost\|Host)\(\)' src`) | `Host()` answering `HostKind::Exe` once the start-up has set it |
+| `CodeLo()`, `CodeHi()`, `InCode()` (inline) | `host.cpp` | `calltrace.cpp:310`, `:311`, `crash.cpp:328`, `:329`; `InCode` in `labels.cpp:454`, `code_bytes.cpp:58`, `detour.cpp` (4 lines) | `.stub`'s range (`exe_layout::kStubVa`, `kStubSize`): no PE read needed |
+| `Bof3_ImageMove` (a variable) | `host.cpp` | the asm of `field_6.cpp` (4 sites) and `task_switch_i686.h` / `task_switch_x86_64.h` (14) | The same 32-bit word: image base minus 0x400000 |
+
+**Proposed for LC:** split `host.cpp` into its portable part (the state,
+`Host`, `CodeLo`, `CodeHi`, `Bof3_ImageMove`, the window and
+`BOF3X_IMAGEBASE` checks) and a per-host part that answers the base and the
+identity (`DetectHost` reading the PE header on Windows, the Linux start-up
+on Linux). Not done here: it changes the Windows file for no Windows gain.
+
+**Found on the way, for LC:** `ImageBase()` (`src/common/image_base.h`, not
+this group's) reads the base from the Windows process environment block
+(`fs:0x30` / `gs:0x60`). It compiles for Linux, so `linux_tree.py` does not
+show it, but on Linux that read is not the image's base; LC must give it
+another source (a variable the start-up sets, read once) before anything
+places an address.
 
 ### Stage LC - link and run on Linux
 

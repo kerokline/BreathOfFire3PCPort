@@ -399,8 +399,6 @@ BOUNDARY_WAITING = {
     'src/hook/exe_icon.cpp': 'W: the PE exe host, Windows only by design',
     'src/hook/dllmain.cpp': 'W: the DLL entry, Windows only by design',
     'src/hook/host.cpp': 'W: reads the PE headers of the host process',
-    'src/hook/detour.cpp': 'W: reads the PE headers of the host process',
-    'src/hook/exe_image.cpp': 'W: the PE image of BOF3.exe',
     'src/hook/crash.cpp': 'L3: crash catching (SEH, MiniDumpWriteDump)',
     'src/hook/stackwatch.cpp': 'L3: crash catching (the stack walk)',
     'src/hook/cpu_context.h': 'L3: crash catching (CONTEXT)',
