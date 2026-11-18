@@ -728,6 +728,84 @@ the keys), L3 (the fibers, the crash catcher), the renderer's headers, the
 heap. A compile is not a link: stage LC's items (the ELF preset, the
 low-memory image, DXVK-native) are untouched.
 
+### The 38 files, staged as one round (2026-11-17; not launched)
+
+**Staged, not started.** It launches at the owner's word, after this branch
+is on `main`, and after the split with frost is settled (item 1 of "For the
+owner" below). It is the rest of stage LB cut by file, so that groups can run
+side by side: no file is in two groups. The site counts are the rows of
+`analysis/os_census.tsv` for the file, includes left out
+(`python tools/os_census.py`, this branch).
+
+**Goal:** `python tools/linux_probe/linux_tree.py` answers 0 files that do
+not compile, or names each file that stays a Windows file by design and is
+left out of the Linux source list. Still no link: stage LC is after it.
+
+| Group | Files | Sites | What it does | Unit |
+|---|---|---:|---|---|
+| R1, the harness that proves a Linux run | `statehash.cpp`, `input_script.cpp`, `wav_dump.cpp`, `stallwatch.cpp`, `boss_harness.cpp`, `scenario_harness.cpp` | 8, 39, 53, 81, 8, 2 | Onto the seam. The state hash and the input queue are stage LC's gate, so they must run on Linux; `statehash.cpp` uses two type names alone. `input_script.cpp` posts window messages and names `VK_F1`..`VK_F12`: it takes R4's key names | LB7 |
+| R2, the watchers that stay Windows files | `gapwatch.cpp`, `write_watch.cpp`, `calltrace.cpp` | 153, 43, 100 | They work by debug registers, guard pages and a vectored handler. Proposed: Windows-only, out of the Linux source list, each switch a loud refusal there (rule 4: no silent stub). A port is a later, separate piece | LB7 |
+| R3, the PE host | `exe_host.cpp`, `exe_icon.cpp`, `dllmain.cpp`, `host.cpp`, `detour.cpp`; `exe_image.cpp` | 118, 154, 15, 2, 4; 21 | The first five are Windows by design and leave the Linux source list; what a Linux start-up needs from `host.cpp` and `detour.cpp` (the image's base, 2 and 4 sites) is written down for LC. `exe_image.cpp` builds the data image from a disc-built install and LC needs it: its 21 sites (the narrow and wide text calls, `_wfopen`) go to the seam | LC's start |
+| R4, the keys | `bindings.cpp`, `quick_menu.cpp`, `msgbox.cpp`; `menu_list.cpp`, `cfg.cpp`, `rest_2h.cpp`, `shop_win_2.cpp` | 24, 2, 3; 0, 0, 0, 0 | One header of our own for the key numbers the game stores (`DIK_*`, 24 uses in `bindings.cpp`; `VK_F1`, `VK_F5`): the numbers are the save's and the configuration's, so they do not change. The last four include `dinput.h` and the census finds no name from it: the include goes, the build says if it was dead | LB3 |
+| R5, the keyboard and the pad on SDL3 | `d_input.cpp`, `pad_read.cpp`, `rdata_consts.cpp` | 36, 2, 5 | Call 4: DirectInput retired on both systems. The device, its data format and the check of `c_dfDIKeyboard` against Capcom's go; SDL3's keyboard and gamepad fill the same words. A player can tell (which pads are seen, the buttons' numbers): a ledger entry and a `BOF3X_OFF` switch while both paths exist | LB2, LB3 |
+| R6, the window | `win_main.cpp`, `display_setup.cpp`, `d3d.cpp`, `magic_080.cpp`, `battle_menu_win.cpp` | 23, 9, 15, 131, 69 | The window, its message loop, the monitor and the modes on SDL3. `battle_menu_win.cpp` has a window procedure and GDI calls of its own (34 window sites): read first, it may be the movie's picture (LB4). `win_main.cpp`'s 7 fault sites are R8's | LB2, LB4 |
+| R7, the fibers | `snapshot.cpp`, the fiber of `render_d3d11.cpp` (lines 1049..1065) | 84 (7 fiber, 52 file), 5 | The render call's own stack and the snapshot's by the task switch that is already ours, or a thread. `snapshot.cpp`'s 52 file sites go to the seam in the same group | LB6 |
+| R8, the crash catcher, the log, the sound's events | `crash.cpp`, `stackwatch.cpp`, `cpu_context.h`, `log.cpp`, `sound_sdl.cpp` | 104, 84, -, 72, 16 | The report (`CRASH n:` lines) portable, the catcher per system (SEH and the minidump on Windows, signals on Linux). The log's writer thread and `sound_sdl.cpp`'s events on the C++ library's mutex and condition variable | LB7 |
+| R9, the renderer against DXVK-native's headers | `render_d3d11.cpp`, `satpixie.cpp` | 209 (169 graphics), 51 (48 graphics) | The headers fetched pinned for the Linux target alone; the 13 process and window sites of `render_d3d11.cpp` to the seam. Windows keeps Microsoft's headers (call 1). R7 owns the fiber lines of the same file, so R9 merges after R7 | call 1 |
+| R10, the heap | `sound_ours.cpp` | 3 | The arena at the `Crt_malloc` chokepoint that LA2 asks for, with a size query of its own in place of `_msize`. On Windows the arena is behind a switch until the routes pass with it | LC's start |
+
+**Two waves, since one round runs at a time and the owner's eye is the
+bottleneck.**
+
+- **Wave 1, nothing a player can tell:** R1, R2, R3, R4, R8, R10. Proof is
+  the gate line below with no live check by the owner.
+- **Wave 2, what a player can tell:** R5, R6, R7, then R9. Each has a
+  `BOF3X_OFF` switch, a ledger entry where it is one, and ends in one batched
+  check by the owner: the window modes, a pad, the keyboard's bindings, the
+  three movies.
+
+**The gate line, each group, before its hand-back:**
+
+- both presets build with no error;
+- `python tools/os_census.py --check --boundary` with the group's rows gone
+  from `BOUNDARY_WAITING` (the list may only shrink);
+- `python tools/linux_probe/linux_tree.py --check` with the group's rows
+  gone from `analysis/linux_tree.tsv`;
+- `os_tests` on the Win32 backend at both widths and on the POSIX backend,
+  with a test for every call the group adds to the seam;
+- the hosted shadow suite (`BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'`, a clean
+  launcher folder) and the exe-host and moved-base runs;
+- `data_census --strict`, `reloc_census --check`, `ledger_check.py`;
+- R5 to R8 and R10, which change what runs: the ten state-hash routes at
+  the coordinator's merge, one at a time on the machine.
+
+**What two groups share, and how it merges.** `src/os/os.h` (each group adds
+an include line: keep both), `tools/os_census.py`'s `BOUNDARY_WAITING` (each
+removes its own rows), `CMakeLists.txt`'s source lists. The three censuses
+(`os_census.tsv`, `linux_tree.tsv`, `width_census.tsv`) are regenerated by
+the coordinator after each merge, never merged by hand. Agents number
+nothing in the ledger or the defect list.
+
+**For the owner, before a launch:**
+
+1. **Who runs which group.** HANDOFF gives the round's next units to frost
+   on his fork, and his `linux/native` held nothing past `main` when this was
+   written. Proposed: wave 1 here (it is mechanical and needs no Linux
+   machine), and R5, R6, R7 and R9 offered to frost first, since they are his
+   units L2 and L3 and his machine has the GPU that proves R9.
+2. **R2:** the three watchers Windows-only, or ported.
+3. **R5's switch:** how long DirectInput stays beside SDL3 (proposed: one
+   release).
+4. **R10:** the arena on Windows too, or on Linux alone (proposed: both, so
+   that one heap is tested; behind a switch first).
+
+**Not measured for this staging:** that the four `dinput.h` includes of R4
+are dead (the census finds no name; no build without them was made); what
+`battle_menu_win.cpp`'s window is for; whether the task switch can carry
+Direct3D's calls in R7 (the fiber exists because the render call wants a
+stack of its own); the size of R5 on the PSX-button and binding pages of the
+launcher, which write the numbers R4 keeps.
+
 ### Stage LC - link and run on Linux
 
 - A CMake preset for the ELF, clang, SDL3 from source as today.

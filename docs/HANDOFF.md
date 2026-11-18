@@ -95,6 +95,9 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      routes were not run. The 38 files left are L2's, L3's, the renderer's headers and `_msize` (`analysis/linux_tree.tsv`).
      Not read: `long` in `src/render` and `src/audio`. On the 64-bit Windows build the save list's search handle is now a
      slot number (it was a narrowed address): open the save list there once.
+   - **The 38 files are staged as one round** of ten groups in two waves ([`linux-round.md`](linux-round.md), "The 38 files,
+     staged as one round"): not launched. It waits for the owner's word, this branch on `main`, and four calls there (who
+     runs which group, the three watchers, DirectInput's switch, the heap arena on Windows).
    - **The Linux round's next units** are frost's, on his fork ([`linux-round.md`](linux-round.md) 4 and 6; "Waiting on
      someone else"). Here: the renderer's remainder ([`platform-layers-plan.md`](platform-layers-plan.md) 2.2) and the
      second backend (IDEAS I63) gate tier 2, and the API is the owner's call 1 of `linux-round.md` 6. Tier 1's rows 5, 7
