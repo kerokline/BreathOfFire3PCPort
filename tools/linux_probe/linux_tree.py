@@ -38,6 +38,8 @@ WINDOWS_ONLY = (
     ('src/hook/exe_icon.cpp', 'R3: the window icon through HICON, WIC and COM'),
     ('src/hook/dllmain.cpp', 'R3: the DLL entry point'),
     ('src/hook/host.cpp', "R3: tells the hosts apart by the main module's PE headers (DetectHost, VerifyImage)"),
+    ('src/hook/crash_win32.cpp', 'R8: the fault catcher - a vectored handler, MiniDumpWriteDump (crash_posix.cpp is its counterpart)'),
+    ('src/hook/stackwatch_win32.cpp', "R8: the main thread's TEB and guard page (stackwatch_posix.cpp refuses)"),
 )
 HEADER = ('# tools/linux_probe/linux_tree.py: the source files that do not compile for x86_64-linux-gnu, and why. '
           'File names and reasons only.\n#file\treason\terrors\n')
@@ -129,7 +131,8 @@ def main():
     if len(bad) == len(files):
         sys.exit('linux_tree: no file compiled; clang++ does not find the Linux C++ headers (pass --sysroot), or is absent')
     why = collections.Counter(r for r, _ in bad.values())
-    print(f'linux_tree: {len(files)} files, {len(files) - len(bad)} compile for x86_64-linux-gnu, {len(bad)} do not'
+    print(f'linux_tree: {len(files)} files, {len(files) - len(bad)} compile for x86_64-linux-gnu, {len(bad)} do not; '
+          f'{len(WINDOWS_ONLY)} Windows-only files left out'
           + (' (no SDL3 headers found: files that include them fail on that)' if not sdl else ''))
     for k, v in why.most_common():
         print(f'  {v:4d}  {k}')

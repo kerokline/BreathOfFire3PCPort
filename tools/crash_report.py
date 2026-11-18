@@ -25,12 +25,28 @@ read and named the same way.
 
 A dump is game-derived: it holds the game's code and data. Keep it local
 (CLAUDE.md rule 1).
+
+    python tools/crash_report.py --log path/to/bof3x.log   # the CRASH lines of a log
+
+The log's `CRASH n:` lines (src/hook/crash.cpp) are the report where there is
+no dump - on Linux, whose catcher writes none (src/hook/crash_posix.cpp) - and
+beside one on Windows: each report's lines are printed with the fault's
+address and every stack word named as above, by the VA the line gives.
 """
-import argparse, bisect, glob, json, os, struct, sys, tomllib
+import argparse, bisect, glob, json, os, re, struct, sys, tomllib
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from proc_image import LINKED_BASE, place, va  # noqa: E402
+try:
+    from proc_image import LINKED_BASE, place, va  # noqa: E402
+except (ImportError, AttributeError, OSError):   # not Windows: proc_image reads processes through psapi
+    LINKED_BASE, _LINKED_END = 0x400000, 0x98F000
+
+    def place(addr, move):
+        return addr + move if LINKED_BASE <= addr < _LINKED_END else addr
+
+    def va(addr, move):
+        return addr - move if move and LINKED_BASE + move <= addr < _LINKED_END + move else addr
 CODES = {0xC0000005: 'access violation', 0xC0000006: 'in-page error',
          0xC000001D: 'illegal instruction', 0xC0000096: 'privileged instruction',
          0xC00000FD: 'stack overflow', 0xC0000094: 'integer divide by zero',
@@ -163,6 +179,42 @@ def exe_bytes(a, n, _cache={}):
     return None
 
 
+CRASH_LINE = re.compile(r'^CRASH (\d+): (.*)$')
+
+
+def read_log(path, name):
+    """Each report's CRASH lines, the fault's address and the stack words named
+    by the VA the line gives (" (VA 0x...)" where the image moved)."""
+    reports, order = {}, []
+    with open(path, encoding='utf-8', errors='replace') as f:
+        for line in f:
+            m = CRASH_LINE.match(line.rstrip('\r\n'))
+            if not m:
+                continue
+            n = int(m.group(1))
+            if n not in reports:
+                reports[n] = []
+                order.append(n)
+            reports[n].append(m.group(2))
+    if not order:
+        sys.exit(f'{path}: no CRASH lines')
+    for n in order:
+        print(f'{path}: report {n}')
+        for text in reports[n]:
+            label = None
+            if text.startswith(('exception ', 'signal ')):
+                at = re.search(r' at 0x([0-9A-Fa-f]+)(?: \(VA 0x([0-9A-Fa-f]+)\))?', text)
+                if at:
+                    label = name(int(at.group(2) or at.group(1), 16))
+            elif text.startswith('stack '):
+                sm = re.match(r'stack \+0x[0-9A-Fa-f]+\s+0x([0-9A-Fa-f]+)(.*)', text)
+                if sm:
+                    moved = re.search(r'\(VA 0x([0-9A-Fa-f]+)\)', sm.group(2))
+                    label = name(int(moved.group(1) if moved else sm.group(1), 16))
+            print('  ' + text + (f'   <- {label}' if label else ''))
+    return 0
+
+
 def after_call(dump, v):
     b = dump.read(v - 6, 6) or exe_bytes(va(v, dump.move) - 6, 6)
     return bool(b) and (b[1] == 0xE8 or b[4] == 0xFF or b[3] == 0xFF or b[0] == 0xFF)
@@ -174,7 +226,10 @@ def main():
     ap.add_argument('--read', nargs=2, metavar=('ADDR', 'LEN'))
     ap.add_argument('--u32', nargs='+', metavar='ADDR')
     ap.add_argument('--stack', type=lambda x: int(x, 0), default=0x2000, help='bytes of stack to scan')
+    ap.add_argument('--log', metavar='LOG', help="a log's CRASH lines in place of a dump")
     a = ap.parse_args()
+    if a.log:
+        return read_log(a.log, Names())
     path = a.dump
     if not path:
         found = sorted(glob.glob(os.path.join(ROOT, 'build', 'bof3x.crash-*.dmp')), key=os.path.getmtime)
