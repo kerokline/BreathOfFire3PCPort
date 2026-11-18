@@ -8641,38 +8641,38 @@ site	src/hook/host.cpp	107	long	ul	live	unsigned long	-	const unsigned long want
 site	src/hook/host.cpp	129	width_if	logic	live	VerifyImage	#if defined(__x86_64__)	#if defined(__x86_64__)
 site	src/hook/host.cpp	134	uintptr	-	live	std::uintptr_t	-	if (reinterpret_cast<std::uintptr_t>(base) != image::kBase)
 site	src/hook/host.cpp	135	fmt_place	pointer	live	(void*)base	%p	Fatal("main module is at %p, not 0x%X: this is not BOF3.exe, or it was rebased",
-site	src/hook/input_script.cpp	214	long	ul	live	unsigned long	-	unsigned long v = std::strtoul(tok.c_str(), &end, 0);
-site	src/hook/input_script.cpp	274	uintptr	-	live	std::uintptr_t	-	const void* p = reinterpret_cast<const void*>(static_cast<std::uintptr_t>(::bof3::Img(a)));
-site	src/hook/input_script.cpp	274	widen	img_place	live	::bof3::Img(a)	const void*	const void* p = reinterpret_cast<const void*>(static_cast<std::uintptr_t>(::bof3::Img(a)));
-site	src/hook/input_script.cpp	283	uintptr	-	live	std::uintptr_t	-	const void* p = reinterpret_cast<const void*>(static_cast<std::uintptr_t>(addr));
-site	src/hook/input_script.cpp	283	widen	param	live	addr	const void*	const void* p = reinterpret_cast<const void*>(static_cast<std::uintptr_t>(addr));
-site	src/hook/input_script.cpp	411	uintptr	-	live	std::uintptr_t	-	os::MemQuery(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(::bof3::Img(st.addr))), &mi);
-site	src/hook/input_script.cpp	411	widen	img_place	live	::bof3::Img(st.addr)	const void*	os::MemQuery(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(::bof3::Img(st.addr))), &mi);
-site	src/hook/input_script.cpp	556	long	ul	live	unsigned long	-	static_cast<unsigned long>(kFreezeMs));
-site	src/hook/input_script.cpp	612	uintptr	-	live	std::uintptr_t	-	std::memcpy(out, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(addr)), len);
-site	src/hook/input_script.cpp	612	widen	param	live	addr	const void*	std::memcpy(out, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(addr)), len);
-site	src/hook/input_script.cpp	638	fmt_place	word	live	(unsigned)w.addr	%08X	Log("input watch %s 0x%08X len %u%s = %s; recipe frame %u", w.name.c_str(), (unsigned)w.addr, w.len,
-site	src/hook/input_script.cpp	681	uintptr	-	live	std::uintptr_t	-	if (!os::MemQuery(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(a)), &mi)) return false;
-site	src/hook/input_script.cpp	681	widen	param	live	a	const void*	if (!os::MemQuery(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(a)), &mi)) return false;
-site	src/hook/input_script.cpp	691	fmt_place	word	live	(unsigned)AsVa(d)	%08X	Log("input links area %u: no descriptor (0x%08X)", area, (unsigned)AsVa(d));
-site	src/hook/input_script.cpp	701	fmt_place	word	live	(unsigned)AsVa(list)	%08X	Log("input links area %u: list 0x%08X not readable (last %u)", area, (unsigned)AsVa(list), last);
-site	src/hook/input_script.cpp	721	fmt_place	word	live	(unsigned)AsVa(counts)	%08X	Log("input link %u.%u cells %u,%u %c%u -> list %u: tables not readable (0x%08X, 0x%08X)", area, i, x,
-site	src/hook/input_script.cpp	721	fmt_place	word	live	(unsigned)AsVa(ptrs)	%08X	Log("input link %u.%u cells %u,%u %c%u -> list %u: tables not readable (0x%08X, 0x%08X)", area, i, x,
-site	src/hook/input_script.cpp	730	fmt_place	word	live	(unsigned)AsVa(alts)	%08X	Log("input alt %u.%u: list 0x%08X not readable", area, i, (unsigned)AsVa(alts));
-site	src/hook/input_script.cpp	759	fmt_place	word	live	(unsigned)s.buttons_at	%08X	Log("input line %d: @0x%08X holds buttons 0x%04X", s.line, (unsigned)s.buttons_at, g_step_buttons);
-site	src/hook/input_script.cpp	802	fmt_place	word	live	(unsigned)s.addr	%08X	Log("input line %d: until 0x%08X timed out after %u frames, value 0x%X", s.line,
-site	src/hook/input_script.cpp	822	fmt_place	word	live	(unsigned)s.addr	%08X	Log("input line %d: seek 0x%08X gave up after %u presses, value 0x%X", s.line,
-site	src/hook/input_script.cpp	849	uintptr	-	live	std::uintptr_t	-	void* const p = reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Img(s.addr)));
-site	src/hook/input_script.cpp	849	widen	img_place	live	::bof3::Img(s.addr)	void*	void* const p = reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Img(s.addr)));
-site	src/hook/input_script.cpp	853	fmt_place	word	live	(unsigned)s.addr	%08X	Log("input POKE 0x%08X = 0x%X (u%u) recipe frame %u", (unsigned)s.addr, (unsigned)s.value,
-site	src/hook/input_script.cpp	938	long	l	live	long	-	Field_Kind2X = static_cast<long>(s.arg[0]);
-site	src/hook/input_script.cpp	939	long	l	live	long	-	Field_Kind2Z = static_cast<long>(s.arg[1]);
-site	src/hook/input_script.cpp	1299	long	l	live	long	-	void InputScript_RecordKey(unsigned vk, long lparam) {
-site	src/hook/input_script.cpp	1322	long	ul	live	unsigned long	-	if (r >= sizeof rec) Fatal(" ", (unsigned long)r);
-site	src/hook/input_script.cpp	1323	long	ul	live	unsigned long	-	if (n >= sizeof path) Fatal(" ", (unsigned long)n);
-site	src/hook/input_script.cpp	1351	long	ul	live	unsigned long	-	const unsigned long v = std::strtoul(every, &end, 10);
-site	src/hook/input_script.cpp	1362	long	ul	live	unsigned long	-	std::snprintf(name, sizeof name, " ", static_cast<unsigned long>(bof3::os::ProcessId()));
-site	src/hook/input_script.cpp	1364	long	ul	live	unsigned long	-	if (!g_release) Fatal(" ", static_cast<unsigned long>(bof3::os::LastError()));
+site	src/hook/input_script.cpp	216	long	ul	live	unsigned long	-	unsigned long v = std::strtoul(tok.c_str(), &end, 0);
+site	src/hook/input_script.cpp	279	uintptr	-	live	std::uintptr_t	-	const void* p = reinterpret_cast<const void*>(static_cast<std::uintptr_t>(::bof3::Img(a)));
+site	src/hook/input_script.cpp	279	widen	img_place	live	::bof3::Img(a)	const void*	const void* p = reinterpret_cast<const void*>(static_cast<std::uintptr_t>(::bof3::Img(a)));
+site	src/hook/input_script.cpp	288	uintptr	-	live	std::uintptr_t	-	const void* p = reinterpret_cast<const void*>(static_cast<std::uintptr_t>(addr));
+site	src/hook/input_script.cpp	288	widen	param	live	addr	const void*	const void* p = reinterpret_cast<const void*>(static_cast<std::uintptr_t>(addr));
+site	src/hook/input_script.cpp	416	uintptr	-	live	std::uintptr_t	-	os::MemQuery(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(::bof3::Img(st.addr))), &mi);
+site	src/hook/input_script.cpp	416	widen	img_place	live	::bof3::Img(st.addr)	const void*	os::MemQuery(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(::bof3::Img(st.addr))), &mi);
+site	src/hook/input_script.cpp	561	long	ul	live	unsigned long	-	static_cast<unsigned long>(kFreezeMs));
+site	src/hook/input_script.cpp	617	uintptr	-	live	std::uintptr_t	-	std::memcpy(out, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(addr)), len);
+site	src/hook/input_script.cpp	617	widen	param	live	addr	const void*	std::memcpy(out, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(addr)), len);
+site	src/hook/input_script.cpp	643	fmt_place	word	live	(unsigned)w.addr	%08X	Log("input watch %s 0x%08X len %u%s = %s; recipe frame %u", w.name.c_str(), (unsigned)w.addr, w.len,
+site	src/hook/input_script.cpp	686	uintptr	-	live	std::uintptr_t	-	if (!os::MemQuery(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(a)), &mi)) return false;
+site	src/hook/input_script.cpp	686	widen	param	live	a	const void*	if (!os::MemQuery(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(a)), &mi)) return false;
+site	src/hook/input_script.cpp	696	fmt_place	word	live	(unsigned)AsVa(d)	%08X	Log("input links area %u: no descriptor (0x%08X)", area, (unsigned)AsVa(d));
+site	src/hook/input_script.cpp	706	fmt_place	word	live	(unsigned)AsVa(list)	%08X	Log("input links area %u: list 0x%08X not readable (last %u)", area, (unsigned)AsVa(list), last);
+site	src/hook/input_script.cpp	726	fmt_place	word	live	(unsigned)AsVa(counts)	%08X	Log("input link %u.%u cells %u,%u %c%u -> list %u: tables not readable (0x%08X, 0x%08X)", area, i, x,
+site	src/hook/input_script.cpp	726	fmt_place	word	live	(unsigned)AsVa(ptrs)	%08X	Log("input link %u.%u cells %u,%u %c%u -> list %u: tables not readable (0x%08X, 0x%08X)", area, i, x,
+site	src/hook/input_script.cpp	735	fmt_place	word	live	(unsigned)AsVa(alts)	%08X	Log("input alt %u.%u: list 0x%08X not readable", area, i, (unsigned)AsVa(alts));
+site	src/hook/input_script.cpp	764	fmt_place	word	live	(unsigned)s.buttons_at	%08X	Log("input line %d: @0x%08X holds buttons 0x%04X", s.line, (unsigned)s.buttons_at, g_step_buttons);
+site	src/hook/input_script.cpp	842	fmt_place	word	live	(unsigned)s.addr	%08X	Log("input line %d: until 0x%08X timed out after %u frames, value 0x%X", s.line,
+site	src/hook/input_script.cpp	862	fmt_place	word	live	(unsigned)s.addr	%08X	Log("input line %d: seek 0x%08X gave up after %u presses, value 0x%X", s.line,
+site	src/hook/input_script.cpp	889	uintptr	-	live	std::uintptr_t	-	void* const p = reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Img(s.addr)));
+site	src/hook/input_script.cpp	889	widen	img_place	live	::bof3::Img(s.addr)	void*	void* const p = reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Img(s.addr)));
+site	src/hook/input_script.cpp	893	fmt_place	word	live	(unsigned)s.addr	%08X	Log("input POKE 0x%08X = 0x%X (u%u) recipe frame %u", (unsigned)s.addr, (unsigned)s.value,
+site	src/hook/input_script.cpp	978	long	l	live	long	-	Field_Kind2X = static_cast<long>(s.arg[0]);
+site	src/hook/input_script.cpp	979	long	l	live	long	-	Field_Kind2Z = static_cast<long>(s.arg[1]);
+site	src/hook/input_script.cpp	1339	long	l	live	long	-	void InputScript_RecordKey(unsigned vk, long lparam) {
+site	src/hook/input_script.cpp	1363	long	ul	live	unsigned long	-	if (r >= sizeof rec) Fatal(" ", (unsigned long)r);
+site	src/hook/input_script.cpp	1364	long	ul	live	unsigned long	-	if (n >= sizeof path) Fatal(" ", (unsigned long)n);
+site	src/hook/input_script.cpp	1392	long	ul	live	unsigned long	-	const unsigned long v = std::strtoul(every, &end, 10);
+site	src/hook/input_script.cpp	1403	long	ul	live	unsigned long	-	std::snprintf(name, sizeof name, " ", static_cast<unsigned long>(bof3::os::ProcessId()));
+site	src/hook/input_script.cpp	1405	long	ul	live	unsigned long	-	if (!g_release) Fatal(" ", static_cast<unsigned long>(bof3::os::LastError()));
 site	src/hook/input_script.h	37	long	l	live	long	-	void InputScript_RecordKey(unsigned vk, long lparam);
 site	src/hook/snapshot.cpp	75	sizeof_ptr	-	live	sizeof(void*)	-	constexpr U kSlice = sizeof(void*) == 8 ? 0x8000 : 0x4000;
 site	src/hook/snapshot.cpp	179	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U va) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(va)); }

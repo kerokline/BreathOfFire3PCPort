@@ -1,14 +1,2 @@
 # tools/linux_probe/linux_tree.py: the source files that do not compile for x86_64-linux-gnu, and why. File names and reasons only.
 #file	reason	errors
-src/game/battle/battle_menu_win.cpp	dinput.h	1
-src/game/platform/d3d.cpp	windows.h	1
-src/game/platform/d_input.cpp	dinput.h	1
-src/game/platform/display_setup.cpp	windows.h	1
-src/game/platform/magic_080.cpp	windows.h	1
-src/game/platform/pad_read.cpp	dinput.h	1
-src/game/platform/rdata_consts.cpp	dinput.h	1
-src/game/platform/win_main.cpp	windows.h	1
-src/hook/input_script.cpp	windows.h	1
-src/hook/snapshot.cpp	windows.h	1
-src/render/render_d3d11.cpp	d3d11.h	1
-src/render/satpixie.cpp	d3d11.h	1

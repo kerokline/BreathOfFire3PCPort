@@ -971,31 +971,6 @@ site	src/hook/host.cpp	3	include	umbrella	api	windows.h
 site	src/hook/host.cpp	38	call	process	module	GetModuleHandleW
 site	src/hook/host.cpp	105	type	type_only	type	DWORD
 site	src/hook/host.cpp	133	call	process	module	GetModuleHandleW
-site	src/hook/input_script.cpp	3	include	umbrella	api	windows.h
-site	src/hook/input_script.cpp	221	const	harness-only	window/const	VK_F1
-site	src/hook/input_script.cpp	221	const	harness-only	window/const	VK_F2
-site	src/hook/input_script.cpp	221	const	harness-only	window/const	VK_F3
-site	src/hook/input_script.cpp	221	const	harness-only	window/const	VK_F4
-site	src/hook/input_script.cpp	221	const	harness-only	window/const	VK_F5
-site	src/hook/input_script.cpp	221	const	harness-only	window/const	VK_F6
-site	src/hook/input_script.cpp	222	const	harness-only	window/const	VK_F10
-site	src/hook/input_script.cpp	222	const	harness-only	window/const	VK_F11
-site	src/hook/input_script.cpp	222	const	harness-only	window/const	VK_F12
-site	src/hook/input_script.cpp	222	const	harness-only	window/const	VK_F7
-site	src/hook/input_script.cpp	222	const	harness-only	window/const	VK_F8
-site	src/hook/input_script.cpp	222	const	harness-only	window/const	VK_F9
-site	src/hook/input_script.cpp	223	const	harness-only	window/const	VK_ESCAPE
-site	src/hook/input_script.cpp	223	const	harness-only	window/const	VK_RETURN
-site	src/hook/input_script.cpp	223	const	harness-only	window/const	VK_SPACE
-site	src/hook/input_script.cpp	960	type	harness-only	type_only/type	HWND
-site	src/hook/input_script.cpp	960	type	harness-only	type_only/type	HWND
-site	src/hook/input_script.cpp	963	call	harness-only	window/loop	PostMessageA
-site	src/hook/input_script.cpp	963	const	harness-only	window/const	WM_KEYDOWN
-site	src/hook/input_script.cpp	969	call	harness-only	window/loop	PostMessageA
-site	src/hook/input_script.cpp	969	const	harness-only	window/const	WM_KEYUP
-site	src/hook/input_script.cpp	1302	const	harness-only	window/const	VK_F12
-site	src/hook/input_script.cpp	1303	const	harness-only	window/const	VK_F1
-site	src/hook/input_script.cpp	1303	const	harness-only	window/const	VK_F11
 site	src/hook/stackwatch_win32.cpp	34	include	umbrella	api	windows.h
 site	src/hook/stackwatch_win32.cpp	35	include	thread	header	tlhelp32.h
 site	src/hook/stackwatch_win32.cpp	84	type	type_only	type	DWORD
@@ -3348,6 +3323,14 @@ site	src/os/win32/thread_start.cpp	33	const	thread	const	WAIT_OBJECT_0
 site	src/os/win32/thread_start.cpp	33	type	type_only	type	HANDLE
 site	src/os/win32/thread_start.cpp	36	call	process	process	GetCurrentProcess
 site	src/os/win32/thread_start.cpp	36	call	process	process	TerminateProcess
+site	src/os/win32/window_key.cpp	5	include	umbrella	api	windows.h
+site	src/os/win32/window_key.cpp	10	call	window	loop	PostMessageA
+site	src/os/win32/window_key.cpp	10	const	window	const	WM_KEYDOWN
+site	src/os/win32/window_key.cpp	10	type	type_only	type	HWND
+site	src/os/win32/window_key.cpp	11	call	window	loop	PostMessageA
+site	src/os/win32/window_key.cpp	11	const	window	const	WM_KEYUP
+site	src/os/win32/window_key.cpp	11	type	type_only	type	HWND
+site	src/os/win32/window_key.cpp	11	type	type_only	type	LPARAM
 site	src/render/render_d3d11.cpp	23	include	graphics	header	d3d11.h
 site	src/render/render_d3d11.cpp	25	include	graphics	header	d3dcompiler.h
 site	src/render/render_d3d11.cpp	27	include	graphics	header	dxgi.h
@@ -3622,7 +3605,6 @@ file	src/hook/exe_host.cpp	hook	live	api	clock,fault,file,memory,process,thread,
 file	src/hook/exe_icon.cpp	hook	live	api	file,input,memory,process,type_only,window	157
 file	src/hook/gapwatch.cpp	hook	harness-only	api	clock,fault,file,memory,process,thread,type_only	154
 file	src/hook/host.cpp	hook	live	api	process,type_only	4
-file	src/hook/input_script.cpp	hook	harness-only	api	type_only,window	25
 file	src/hook/stackwatch_win32.cpp	hook	live	api	clock,fault,file,memory,process,thread,type_only	86
 file	src/hook/write_watch.cpp	hook	harness-only	api	fault,file,memory,process,thread,type_only	44
 file	src/launcher/config.cpp	launcher	launcher	api	dialog,file,process,type_only	162
@@ -3654,10 +3636,11 @@ file	src/os/win32/path_file.cpp	os	live		crt	1
 file	src/os/win32/stream.cpp	os	live		crt	3
 file	src/os/win32/thread.cpp	os	live	api	clock,fault,file,process,thread,type_only	30
 file	src/os/win32/thread_start.cpp	os	live	api	process,thread,type_only	9
+file	src/os/win32/window_key.cpp	os	live	api	type_only,window	8
 file	src/render/render_d3d11.cpp	render	live		graphics,process,type_only,window	200
 file	src/render/satpixie.cpp	render	live		graphics,process,type_only	50
 file	src/render/satpixie.h	render	live		graphics	7
-#count	sites	3605
+#count	sites	3588
 #count	files_with_a_site	51
 #count	class:clock	11
 #count	class:crt	30
@@ -3666,21 +3649,21 @@ file	src/render/satpixie.h	render	live		graphics	7
 #count	class:fiber	7
 #count	class:file	84
 #count	class:graphics	227
-#count	class:harness-only	350
+#count	class:harness-only	326
 #count	class:input	19
 #count	class:launcher	1974
 #count	class:memory	84
 #count	class:process	176
 #count	class:sound	2
 #count	class:thread	62
-#count	class:type_only	316
+#count	class:type_only	319
 #count	class:umbrella	38
-#count	class:window	168
+#count	class:window	172
 #count	kind:call	1202
-#count	kind:const	1230
+#count	kind:const	1212
 #count	kind:include	68
-#count	kind:type	1105
-#count	live_sites	1281
+#count	kind:type	1106
+#count	live_sites	1288
 #count	call_or_keyword_class:clock	14
 #count	call_or_keyword_class:crt	14
 #count	call_or_keyword_class:dialog	188
@@ -3699,7 +3682,7 @@ file	src/render/satpixie.h	render	live		graphics	7
 #count	files_in:game/field	1
 #count	files_in:game/platform	4
 #count	files_in:game/shop	1
-#count	files_in:hook	10
+#count	files_in:hook	9
 #count	files_in:launcher	12
-#count	files_in:os	17
+#count	files_in:os	18
 #count	files_in:render	3
