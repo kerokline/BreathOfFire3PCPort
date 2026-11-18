@@ -9228,13 +9228,13 @@ site	src/render/gfx_snapshot.cpp	439	narrow_call	image	live	Gfx_PixelFormat	Va	{
 site	src/render/gfx_snapshot.cpp	444	fmt_place	pointer	live	n.at	%08X	if (i == kKeptCount || n.at != n.symbol) Fatal("gfx_snapshot: kept range 0x%08X, symbols.toml says 0x%08X", n.at, n.symbol);
 site	src/render/gfx_snapshot.cpp	444	fmt_place	word	live	n.symbol	%08X	if (i == kKeptCount || n.at != n.symbol) Fatal("gfx_snapshot: kept range 0x%08X, symbols.toml says 0x%08X", n.at, n.symbol);
 site	src/render/gfx_snapshot.cpp	446	narrow_call	image	live	&D3d_ShadeModeCache	Va	if (Va(&D3d_ShadeModeCache) != ::bof3::Img(0x6C3A44)) Fatal(" ");
-site	src/render/render_d3d11.cpp	123	asm	cw	live	fnstcw %0	fnstcw	FpuGuard() { __asm__ volatile("fnstcw %0" : "=m"(cw_)); }
-site	src/render/render_d3d11.cpp	124	asm	cw	live	fldcw %0	fldcw	~FpuGuard() { __asm__ volatile("fldcw %0" : : "m"(cw_)); }
-site	src/render/render_d3d11.cpp	133	long	ul	live	unsigned long	-	if (FAILED(hr)) bof3::Fatal(" ", what, static_cast<unsigned long>(hr));
-site	src/render/render_d3d11.cpp	532	ptr_overlay	unread	live	s->gpu	GpuTexture	auto* g = static_cast<GpuTexture*>(s->gpu);
-site	src/render/render_d3d11.cpp	543	ptr_overlay	heap	live	std::calloc(1, sizeof(GpuTexture))	GpuTexture	g = static_cast<GpuTexture*>(std::calloc(1, sizeof(GpuTexture)));
-site	src/render/render_d3d11.cpp	910	long	ul	live	unsigned long	-	bof3::Log(" ", static_cast<unsigned long>(hr));
-site	src/render/render_d3d11.cpp	1197	ptr_overlay	unread	live	s->gpu	GpuTexture	auto* g = static_cast<GpuTexture*>(s->gpu);
+site	src/render/render_d3d11.cpp	135	asm	cw	live	fnstcw %0	fnstcw	FpuGuard() { __asm__ volatile("fnstcw %0" : "=m"(cw_)); }
+site	src/render/render_d3d11.cpp	136	asm	cw	live	fldcw %0	fldcw	~FpuGuard() { __asm__ volatile("fldcw %0" : : "m"(cw_)); }
+site	src/render/render_d3d11.cpp	145	long	ul	live	unsigned long	-	if (FAILED(hr)) bof3::Fatal(" ", what, static_cast<unsigned long>(hr));
+site	src/render/render_d3d11.cpp	555	ptr_overlay	unread	live	s->gpu	GpuTexture	auto* g = static_cast<GpuTexture*>(s->gpu);
+site	src/render/render_d3d11.cpp	566	ptr_overlay	heap	live	std::calloc(1, sizeof(GpuTexture))	GpuTexture	g = static_cast<GpuTexture*>(std::calloc(1, sizeof(GpuTexture)));
+site	src/render/render_d3d11.cpp	929	long	ul	live	unsigned long	-	bof3::Log(" ", static_cast<unsigned long>(hr));
+site	src/render/render_d3d11.cpp	1216	ptr_overlay	unread	live	s->gpu	GpuTexture	auto* g = static_cast<GpuTexture*>(s->gpu);
 site	src/render/render_shim.cpp	29	long	l	live	long	-	using Rect = long[4];
 site	src/render/render_shim.cpp	80	long	l	live	long	-	template <int kObject, int kSlot> long __stdcall Unsupported(void*) {
 site	src/render/render_shim.cpp	115	ptr_overlay	unread	live	Bytes(texture) - offsetof(Surface, texture_vtable)	Surface	return reinterpret_cast<Surface*>(Bytes(texture) - offsetof(Surface, texture_vtable));
