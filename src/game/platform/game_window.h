@@ -117,3 +117,16 @@ void WinGame_Close();
 // The client is now cw x ch (WM_SIZE's half, DIV-0042): the target's scale
 // follows it, between frames.
 void WinGame_ClientSized(unsigned cw, unsigned ch);
+
+// ---- the input recipe's keys (wave 2, I1; hook/input_script.cpp) -------------
+namespace game_window {
+// A key going down, put in the window's queue as the SDL path's own keys are
+// (the procedure in front of SDL's on Windows, SDL's key event elsewhere): the
+// next Pump hands it to WinGame_Key, in the order it came, with `vk` and
+// `lparam` as given (a WM_KEYDOWN's wParam and lParam). The input recipe's
+// `key` step, which before this posted WM_KEYDOWN to the HWND; its WM_KEYUP
+// went on to SDL's procedure alone, so a key's release has no call. Fatal when
+// the SDL path is not in use: the Win32 window takes keys as messages
+// (os::PostWindowKey).
+void QueueKey(unsigned vk, std::int32_t lparam);
+}  // namespace game_window

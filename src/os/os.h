@@ -26,3 +26,4 @@
 #include "os/stream.h"
 #include "os/text.h"
 #include "os/thread.h"
+#include "os/window_key.h"

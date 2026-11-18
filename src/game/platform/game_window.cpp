@@ -563,3 +563,11 @@ std::vector<MovieEvent> TakeForMovie() {
 }
 
 }  // namespace game_window
+
+// ---- the input recipe's keys (wave 2, I1; game_window.h) ---------------------
+namespace game_window {
+void QueueKey(unsigned vk, std::int32_t lparam) {
+    if (!g_on) bof3::Fatal("game_window: a recipe key queued with the Win32 window in use (it takes window messages)");
+    Post({Got::Key, static_cast<std::int32_t>(vk), lparam});
+}
+}  // namespace game_window
