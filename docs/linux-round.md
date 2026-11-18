@@ -990,9 +990,15 @@ session's `chain3.py`, no compiler seen during any run; ours as
   over the same ticks, and from `m1116` likewise. Which bytes of the page
   were not read (no dump was taken).
 
-**Not run on the merged branch:** the hosted shadow suite, the exe-host and
-moved-base runs, `music_heard.py` to its end, a game with `BOF3X_ARENA=1`.
-Each group ran the hosted suite on its own branch.
+**The self-tests on the merged branch, 2026-11-18** (the same build, clean
+folders under `C:\Users\kerok\bof3x-runs\lbw1\coord`, `--no-config`):
+hosted with `BOF3X_SHADOW='*'` - the log ends `self-test only: done`, 922
+`MISMATCHES` lines, every one 0; the exe host - game process exit code 0,
+10,388 log lines, 0 FATAL; the exe host at `BOF3X_IMAGEBASE=0xA00000` - the
+same three figures, the span `0x400000..0x98F000` reserved no-access.
+
+**Not run on the merged branch:** `music_heard.py` to its end, a game with
+`BOF3X_ARENA=1`.
 
 **A player on Windows:** nothing by intent, so no ledger entry. Under test
 switches: the stall log's module names are UTF-8; a failed seek of the WAV
