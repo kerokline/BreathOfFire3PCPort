@@ -185,8 +185,12 @@ int __stdcall Start(void* decoder) {
 // committed of 256 KB, so the thread block's stack bounds follow it; on POSIX
 // a mapped stack with a guard page under it and swapcontext. The x87 control
 // word is the caller's at every call (callers_x87), as the hand switch left
-// it - the game's 0x027F, not the new stack's default - so the decoder rounds
-// as it did. A thread made a fiber for the call stays one (the renderer's
+// it (the game's 0x027F), whatever the new stack's own would be - though
+// minimp3's decode is SSE (the i686 object holds no x87 instruction outside
+// the comparison's report, measured 2026-11-18). MXCSR is the own stack's,
+// 0x1F80 on every backend, where the hand switch ran with the caller's: the
+// game thread's is 0x1F80 too, and the self-test below compares the two
+// decodes. A thread made a fiber for the call stays one (the renderer's
 // choice: the game thread is made one at its first present anyway). The
 // arguments and the result go through a block of the caller's; nothing the
 // game reads holds an address of the stack.
@@ -655,9 +659,9 @@ void SelfTest() {
                     "end, the replay after Seek(0) %s over %u frames",
                     path, ours.frames, walked, ours.frame_bytes, ours.uniform ? "" : " (uneven)", ours.eos_bytes,
                     ours.replay_identical ? "identical" : "DIFFERENT", ours.replay_frames);
-    // The same file decoded on this thread's own stack, no switch: every
-    // sample the own stack's run gave, bit for bit (the switch carries the
-    // caller's x87 control word; a stack that rounded otherwise shows here).
+    // The same file decoded on this thread's stack, no switch: every sample
+    // the own stack's run gave, bit for bit (a stack whose x87 or SSE state
+    // rounded otherwise shows here).
     Run here;
     DecodeAll(OursHere(), data.data(), static_cast<std::uint32_t>(data.size()), 0, &here);
     if (!here.opened || here.frames != ours.frames || here.pcm != ours.pcm)
