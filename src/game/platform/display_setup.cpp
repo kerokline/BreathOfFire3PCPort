@@ -20,12 +20,11 @@
 // Capcom's set-up and therefore Capcom's DirectDraw, untouched.
 #include "game/display_setup.h"
 
-#include <windows.h>
-
 #include <cstdint>
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/platform/game_window.h"
 #include "game/sprt_draw.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -74,18 +73,9 @@ U FitScale(U view_w, U cw, U ch) {
 // apparent size on every desktop. An unaware process (the hosted build,
 // BOF3.exe has no manifest) is told 96 dpi and keeps k = 2.
 unsigned DefaultWindowedScale() {
-    unsigned dpi = 96;
-    if (HMODULE user32 = GetModuleHandleA("user32.dll")) {
-        using Fn = UINT(WINAPI*)();
-        if (auto fn = reinterpret_cast<Fn>(reinterpret_cast<void*>(GetProcAddress(user32, "GetDpiForSystem"))))
-            dpi = fn();   // Windows 10 1607 and later; absent, the system dc below
-    }
-    if (dpi == 96) {
-        if (HDC dc = GetDC(nullptr)) {
-            dpi = static_cast<unsigned>(GetDeviceCaps(dc, LOGPIXELSX));
-            ReleaseDC(nullptr, dc);
-        }
-    }
+    // GetDpiForSystem, or the system DC's LOGPIXELSX, on Windows; the primary
+    // display's content scale elsewhere (game_window.h).
+    const unsigned dpi = game_window::SystemDpi();
     unsigned k = (2 * dpi) / 96;
     if (k < 2) k = 2;
     if (k > kMaxScale) k = kMaxScale;

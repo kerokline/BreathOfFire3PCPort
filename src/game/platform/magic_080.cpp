@@ -5,7 +5,6 @@
 #include <cstdio>
 #include <cstring>
 #include <string>
-#include <windows.h>
 
 #include "audio/mp3.h"
 #include "bof3/symbols.gen.h"
@@ -18,6 +17,7 @@
 #include "game/move_script_bytes.h"
 #include "game/msgbox.h"
 #include "game/pause_text.h"
+#include "game/platform/game_window.h"
 #include "game/platform/magic_080_callees.h"
 #include "game/quick_menu.h"
 #include "game/record_views.h"
@@ -41,6 +41,7 @@
 #include "hook/stallwatch.h"
 #include "hook/statehash.h"
 #include "input/bindings.h"
+#include "input/key_codes.h"
 #include "render/render_d3d11.h"
 #include "render/render_shim.h"
 #include "os/os.h"
@@ -137,18 +138,16 @@ constexpr ::bof3::image::Va kStrFrameRate{0x65DA5C};    // "Frame Rate = %d"
 
 constexpr ::bof3::image::Va kStrLogosAvi{0x65DA6C};     // "LOGOS.AVI"
 
-constexpr ::bof3::image::Va kStrClass{0x65DA84};        // "Bof3"
+// The window class's name 0x65DA84 "Bof3" and its icon's 0x65DA8C
+// "BOF3_ICON": game_window_win32.cpp.
 
-constexpr ::bof3::image::Va kStrIcon{0x65DA8C};         // "BOF3_ICON"
-
-// DIVERGENCE DIV-0039: the window's title and the missing-disc box in English,
-// in place of the GBK 0x65DA78 龙战士Ⅲ ("Breath of Fire III"), 0x65DA98
-// 请插入龙战士Ⅲ光盘！ ("insert the disc!") and 0x65DAB0 错误 ("error").
-// The originals are GBK bytes handed to the ANSI calls, so outside a Chinese
-// locale Windows shows them as mojibake (the title as "ÁúÕ½Ê¿¢ó"). This is
-// Windows' chrome, not the game's text, so it does not follow BOF3X_LANG.
-constexpr const char* kTitle = "Breath of Fire III";
-
+// DIVERGENCE DIV-0039: the window's title (game_window_native.h, kTitle) and
+// the missing-disc box in English, in place of the GBK 0x65DA78 龙战士Ⅲ
+// ("Breath of Fire III"), 0x65DA98 请插入龙战士Ⅲ光盘！ ("insert the disc!")
+// and 0x65DAB0 错误 ("error"). The originals are GBK bytes handed to the ANSI
+// calls, so outside a Chinese locale Windows shows them as mojibake (the
+// title as "ÁúÕ½Ê¿¢ó"). This is Windows' chrome, not the game's text, so it
+// does not follow BOF3X_LANG.
 constexpr const char* kInsertDisc = "Please insert the Breath of Fire III disc.";
 
 constexpr const char* kError = "Breath of Fire III";
@@ -245,111 +244,12 @@ constexpr int kOverlayFrames = 0x78;
 // DIV-0034: how far behind the clock the deadline may fall before it restarts.
 constexpr double kMaxDebtMs = 500.0;
 
-// DIV-0032: the two styles. The original's windowed style was 0xCA0000
-// (WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX), not resizable.
-constexpr DWORD kWindowedStyle = WS_OVERLAPPEDWINDOW;
-
-constexpr DWORD kBorderlessStyle = WS_POPUP;
-
-RECT g_windowed_rect = {};    // the last windowed placement, for F8 back from borderless
-
-bool g_have_windowed_rect = false;
+// DIV-0032's styles, placements and F8's mode change, and DIV-0042's
+// placement file: game_window.cpp and game_window_win32.cpp.
 
 // GetTickCount through the import slot, as the original reads it: DIV-0022's
 // clock lives in that slot.
-DWORD Tick() { return reinterpret_cast<DWORD(WINAPI*)(void)>(Imp_GetTickCount.Native())(); }
-
-// The original's windowed placement: a 640 x 480 client, the frame added by
-// AdjustWindowRect, centred on the desktop by (desktop - outer) / 2 - the
-// cdq / sub / sar sequence at 0x4FCCB1, a signed division toward zero, which
-// C's integer division also is. DIV-0036: the client is the render target's
-// size, 320k x 240k (426k x 240k wide, DIV-0041) - the target's own k once the display is up, the window
-// size setting before - with k lowered while the frame would not fit the
-// work area. At k = 2 that is the original's 640 x 480.
-// DIV-0042: the last windowed placement, kept in bof3x.window beside this
-// dll ("left top right bottom" of the window rectangle), so that a resized
-// window comes back at its size. Used when its frame still fits the work
-// area and its top-left is on a monitor; else the computed placement.
-std::wstring PlacementPath() {
-    std::string self;
-    if (!bof3::os::ModulePath(reinterpret_cast<const void*>(&PlacementPath), &self)) return L"";
-    std::wstring p = bof3::os::ToWide(self.c_str());
-    const size_t slash = p.find_last_of(L"\\/");
-    return (slash == std::wstring::npos ? p : p.substr(0, slash)) + L"\\bof3x.window";
-}
-
-bool LoadPlacement(RECT& r) {
-    const std::wstring path = PlacementPath();
-    if (path.empty()) return false;
-    FILE* f = _wfopen(path.c_str(), L"r");
-    if (!f) return false;
-    std::int32_t v[4];
-    const bool ok = fscanf(f, "%d %d %d %d", &v[0], &v[1], &v[2], &v[3]) == 4;
-    fclose(f);
-    if (!ok || v[2] - v[0] < 64 || v[3] - v[1] < 64) return false;
-    r = {v[0], v[1], v[2], v[3]};
-    if (!MonitorFromPoint({r.left + 8, r.top + 8}, MONITOR_DEFAULTTONULL)) return false;
-    return true;
-}
-
-void SavePlacement(const RECT& r) {
-    const std::wstring path = PlacementPath();
-    if (path.empty()) return;
-    FILE* f = _wfopen(path.c_str(), L"w");
-    if (!f) return;
-    fprintf(f, "%ld %ld %ld %ld\n", r.left, r.top, r.right, r.bottom);
-    fclose(f);
-}
-
-RECT WindowedRect() {
-    RECT saved;
-    if (LoadPlacement(saved)) return saved;
-    unsigned k = DisplaySetup_TargetScale();
-    if (k == 0) k = DisplaySetup_WindowedScale();
-    RECT work = {0, 0, Desktop_Width, Desktop_Height};
-    SystemParametersInfoA(SPI_GETWORKAREA, 0, &work, 0);
-    RECT rc;
-    for (;; --k) {
-        rc = {0, 0, static_cast<LONG>(DisplaySetup_ViewWidth() * k), static_cast<LONG>(240 * k)};   // 426k wide under DIV-0041
-        AdjustWindowRect(&rc, kWindowedStyle, FALSE);
-        if (k <= 2 || (rc.right - rc.left <= work.right - work.left && rc.bottom - rc.top <= work.bottom - work.top)) break;
-    }
-    const int w = rc.right - rc.left, h = rc.bottom - rc.top;
-    const int x = (Desktop_Width - w) / 2, y = (Desktop_Height - h) / 2;
-    return {x, y, x + w, y + h};
-}
-
-// DIV-0032: the borderless window covers the monitor the window is on, or
-// the primary one before there is a window (the original's fullscreen window
-// was the desktop's size at 0, 0, which on one monitor is the same thing).
-RECT BorderlessRect(HWND hwnd) {
-    HMONITOR mon = hwnd ? MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST) : MonitorFromPoint({0, 0}, MONITOR_DEFAULTTOPRIMARY);
-    MONITORINFO info = {};
-    info.cbSize = sizeof info;
-    if (mon && GetMonitorInfoA(mon, &info)) return info.rcMonitor;
-    return {0, 0, Desktop_Width, Desktop_Height};
-}
-
-// DIV-0032: F8's half - the window's style and placement follow
-// Cfg_Fullscreen; the display objects stay.
-void ApplyMode(HWND hwnd) {
-    RECT r;
-    if (Cfg_Fullscreen) {
-        if (!(GetWindowLongA(hwnd, GWL_STYLE) & WS_POPUP)) {
-            GetWindowRect(hwnd, &g_windowed_rect);
-            g_have_windowed_rect = true;
-        }
-        r = BorderlessRect(hwnd);
-        SetWindowLongA(hwnd, GWL_STYLE, static_cast<LONG>(kBorderlessStyle | WS_VISIBLE));
-    } else {
-        r = g_have_windowed_rect ? g_windowed_rect : WindowedRect();
-        SetWindowLongA(hwnd, GWL_STYLE, static_cast<LONG>(kWindowedStyle | WS_VISIBLE));
-    }
-    SetWindowPos(hwnd, nullptr, r.left, r.top, r.right - r.left, r.bottom - r.top,
-                 SWP_FRAMECHANGED | SWP_SHOWWINDOW | SWP_NOZORDER);
-    bof3::Log("DIV-0032    window %s: %ld,%ld %ld x %ld", Cfg_Fullscreen ? "borderless" : "windowed", r.left, r.top,
-              r.right - r.left, r.bottom - r.top);
-}
+std::uint32_t Tick() { return reinterpret_cast<std::uint32_t(__stdcall*)(void)>(Imp_GetTickCount.Native())(); }
 
 // DIV-0032: the overlays. Display_TextOut needs the back buffer's GDI
 // device context; the backend's surface has none, so with the backend's
@@ -414,15 +314,16 @@ Callees g = kOriginals;
 // F11: the last frame presented, written beside the DLL as
 // bof3x-frame-<Frame_Counter>.bmp (render::SaveFrame).
 void SaveFrameBesideDll() {
-    wchar_t path[MAX_PATH];
+    constexpr std::size_t kPathMax = bof3::os::kMaxPath;   // the port's MAX_PATH
+    wchar_t path[kPathMax];
     std::string self;
     if (!bof3::os::ModulePath(reinterpret_cast<const void*>(&SaveFrameBesideDll), &self)) return;
     const std::wstring wide = bof3::os::ToWide(self.c_str());
-    if (wide.empty() || wide.size() >= MAX_PATH) return;
+    if (wide.empty() || wide.size() >= kPathMax) return;
     std::wmemcpy(path, wide.c_str(), wide.size() + 1);
     wchar_t* slash = wcsrchr(path, L'\\');
     if (!slash) return;
-    const size_t room = MAX_PATH - static_cast<size_t>(slash + 1 - path);
+    const size_t room = kPathMax - static_cast<size_t>(slash + 1 - path);
     if (std::swprintf(slash + 1, room, L"bof3x-frame-%lu.bmp", static_cast<unsigned long>(Frame_Counter)) < 0) return;
     const bool ok = render::SaveFrame(path);
     bof3::Log("F11         frame %lu %s %s", static_cast<unsigned long>(Frame_Counter), ok ? "saved to" : "NOT saved:",
@@ -559,214 +460,139 @@ extern "C" void __cdecl Input_Latch(void) {
     Input2_Pressed = static_cast<std::uint16_t>((was2 ^ now2) & now2);
 }
 
-extern "C" std::int32_t __stdcall Game_WndProc(void* hwnd_, unsigned int msg, unsigned int wparam, std::int32_t lparam) {
-    HWND hwnd = static_cast<HWND>(hwnd_);
-    switch (msg) {
-    case WM_DESTROY:
-        bof3::Log("WndProc: WM_DESTROY - quitting");
-        // The loop leaves on Game_QuitFlag as well as on WM_QUIT. With SDL's
-        // gamepad layer in the process (DIV-0050) the WM_QUIT that
-        // PostQuitMessage sets can be taken by SDL's HIDAPI device discovery,
-        // which pumps its message window from our thread on every update
-        // (SDL_hidapi.c, PeekMessage / GetMessage on m_hwndMsg); the game then
-        // ran on without a window (2026-09-24, closing at the title, 3 of 3).
-        // The flag is what the original's Fmv_WndProc sets on WM_DESTROY too.
-        Game_QuitFlag = 1;
-        // DIV-0042: the windowed placement outlives the window.
-        if (!Cfg_Fullscreen) {
-            RECT r;
-            if (GetWindowRect(hwnd, &r)) SavePlacement(r);
-        } else if (g_have_windowed_rect) {
-            SavePlacement(g_windowed_rect);
-        }
-        PostQuitMessage(0);
-        return 0;
-    case WM_MOVE:
-        Display_WindowMoved(static_cast<int>(static_cast<std::uint32_t>(lparam) & 0xFFFF),
-                            static_cast<int>(static_cast<std::uint32_t>(lparam) >> 16));
-        return 0;
-    case WM_SIZING: {
-        // DIV-0042: a windowed drag keeps the picture's shape. With snap the
-        // client lands on a whole multiple of the picture (the nearest to the
-        // dragged height, 1..8); without, on the picture's aspect at the
-        // dragged height (a side edge: at the dragged width).
-        if (Cfg_Fullscreen) break;
-        RECT* r = reinterpret_cast<RECT*>(lparam);
-        RECT frame = {0, 0, 0, 0};
-        AdjustWindowRect(&frame, kWindowedStyle, FALSE);
-        const LONG fw = frame.right - frame.left, fh = frame.bottom - frame.top;
-        const LONG view_w = static_cast<LONG>(DisplaySetup_ViewWidth());
-        LONG cw = (r->right - r->left) - fw, ch = (r->bottom - r->top) - fh;
-        const bool by_width = wparam == WMSZ_LEFT || wparam == WMSZ_RIGHT;
-        if (DisplaySetup_Snap()) {
-            LONG k = by_width ? (cw + view_w / 2) / view_w : (ch + 120) / 240;
-            if (k < 1) k = 1;
-            if (k > 8) k = 8;
-            cw = view_w * k;
-            ch = 240 * k;
+// The window's side of the game (game_window.h): what Game_WndProc did for
+// each message, now for both window paths. Game_WndProc itself - the Win32
+// path's class procedure, original 0x4FC6F0 - is in game_window_win32.cpp.
+
+// WM_DESTROY's half: the loop leaves on Game_QuitFlag.
+void WinGame_Close() { Game_QuitFlag = 1; }
+
+// WM_SIZE's half. DIV-0042: the target follows the client, between frames.
+void WinGame_ClientSized(unsigned cw, unsigned ch) {
+    if (DisplaySetup_TargetScale() == 0) return;
+    if (cw && ch) render::RequestScale(DisplaySetup_ScaleForClient(cw, ch));
+}
+
+// WM_ACTIVATEAPP's half (the Win32 path also sets the focus).
+void WinGame_Activate(bool active) {
+    if (active) {
+        if (App_WasInactive) Sound_ResumeAll();
+        App_Active = 1;
+        win_main::g_foreground = true;
+    } else {
+        win_main::g_foreground = false;
+        if (win_main::g_background) {
+            // DIV-0033: nothing stops. The pads read zero from here on
+            // (WinMain_InputAllowed) until the next activation.
         } else {
-            if (by_width) ch = cw * 240 / view_w;
-            else cw = ch * view_w / 240;
-            if (cw < view_w) cw = view_w, ch = 240;
+            App_WasInactive = 1;
+            App_Active = 0;
+            Sound_PauseAll();
         }
-        const LONG w = cw + fw, h = ch + fh;
-        // Anchor the edge the user is not dragging.
-        if (wparam == WMSZ_LEFT || wparam == WMSZ_TOPLEFT || wparam == WMSZ_BOTTOMLEFT) r->left = r->right - w;
-        else r->right = r->left + w;
-        if (wparam == WMSZ_TOP || wparam == WMSZ_TOPLEFT || wparam == WMSZ_TOPRIGHT) r->top = r->bottom - h;
-        else r->bottom = r->top + h;
-        return 1;
     }
-    case WM_SIZE:
-        // DIV-0042: the target follows the client, between frames.
-        if (wparam != SIZE_MINIMIZED && DisplaySetup_TargetScale() != 0) {
-            const unsigned cw = static_cast<std::uint32_t>(lparam) & 0xFFFF, ch = static_cast<std::uint32_t>(lparam) >> 16;
-            if (cw && ch) render::RequestScale(DisplaySetup_ScaleForClient(cw, ch));
-        }
-        return 0;
-    case WM_EXITSIZEMOVE:
-        if (!Cfg_Fullscreen) {
-            RECT r;
-            if (GetWindowRect(hwnd, &r)) {
-                g_windowed_rect = r;
-                g_have_windowed_rect = true;
-                SavePlacement(r);
-            }
-        }
-        return 0;
-    case WM_ACTIVATEAPP:
-        if (wparam) {
-            if (App_WasInactive) Sound_ResumeAll();
-            SetFocus(hwnd);
-            App_Active = 1;
-            win_main::g_foreground = true;
+}
+
+// WM_KEYDOWN's: `vk` its wParam, `lparam` its lParam.
+void WinGame_Key(unsigned vk, std::int32_t lparam) {
+    using namespace bof3x::input;
+    const unsigned wparam = vk;
+    bof3::InputScript_RecordKey(wparam, lparam);   // BOF3X_RECORD only
+    // DIVERGENCE (the quicksave round's draft D, docs/quicksave.md, section QM): F5
+    // opens the quick menu, pausing; while it is open every key is its own.
+    if (bof3::QuickMenu_Key(wparam, lparam)) return;
+    const bool was_paused = Game_Paused != 0;
+    if (was_paused && wparam != kVkF9) {
+        Game_Paused = 0;
+        Sound_ResumeAll();
+    }
+    if (wparam == kVkF9) {
+        if (!was_paused) {
+            Game_Paused = 1;
+            Sound_PauseAll();
         } else {
-            win_main::g_foreground = false;
-            if (win_main::g_background) {
-                // DIV-0033: nothing stops. The pads read zero from here on
-                // (WinMain_InputAllowed) until the next activation.
-            } else {
-                App_WasInactive = 1;
-                App_Active = 0;
-                Sound_PauseAll();
-            }
-        }
-        return 0;
-    case WM_KEYDOWN: {
-        bof3::InputScript_RecordKey(static_cast<unsigned>(wparam), static_cast<std::int32_t>(lparam));   // BOF3X_RECORD only
-        // DIVERGENCE (the quicksave round's draft D, docs/quicksave.md, section QM): F5
-        // opens the quick menu, pausing; while it is open every key is its own.
-        if (bof3::QuickMenu_Key(static_cast<unsigned>(wparam), static_cast<std::int32_t>(lparam))) return 0;
-        const bool was_paused = Game_Paused != 0;
-        if (was_paused && wparam != VK_F9) {
             Game_Paused = 0;
-            Sound_ResumeAll();
+            if (Title_LogoState == 0 && Title_Fade == 0) Game_RestartFlag = 1;
+            else Game_QuitFlag = 1;
         }
-        if (wparam == VK_F9) {
-            if (!was_paused) {
-                Game_Paused = 1;
-                Sound_PauseAll();
-            } else {
-                Game_Paused = 0;
-                if (Title_LogoState == 0 && Title_Fade == 0) Game_RestartFlag = 1;
-                else Game_QuitFlag = 1;
-            }
-            return 0;
+        return;
+    }
+    if (wparam == kVkF8) {
+        if (Desktop_Width > 640 && Desktop_Height > 480) {
+            Display_Changed = 1;
+            Cfg_Fullscreen ^= 1;
+            game_window::ApplyMode();   // DIV-0032: no teardown, no set-up
+            Cursor_Sync();
         }
-        if (wparam == VK_F8) {
-            if (Desktop_Width > 640 && Desktop_Height > 480) {
-                Display_Changed = 1;
-                Cfg_Fullscreen ^= 1;
-                ApplyMode(hwnd);   // DIV-0032: no teardown, no set-up
-                Cursor_Sync();
-            }
-            return 0;
-        }
-        // DIVERGENCE DIV-0040: F7 (the next renderer device, re-made, and its
-        // name on screen) and F11 (the frame-rate readout) do nothing - the
-        // owner, 2026-09-23: not needed as keys. With the backend there is
-        // one device, and neither readout could be drawn (DIV-0032). Like
-        // any other key they still end a pause, above.
-        // DIVERGENCE (the quicksave round's draft A, docs/quicksave.md 6): F6
-        // quicksaves and F7 quick-loads - asked here, run by the loop between
-        // two logic frames (Snapshot_Pending), never mid-frame. A held key's
-        // repeats ask nothing more.
-        // The reading row's study key (docs/reading-row.md 3.5; BOF3X_RUBY_KEY,
-        // F4 by default): shows and hides the reading rows' glyphs. Ours; a
-        // key Capcom left unbound.
-        if (MsgBox_ReadingRowKey(static_cast<unsigned>(wparam), (lparam & (1 << 30)) != 0)) return 0;
-        if (wparam == VK_F6) {
-            if ((lparam & (1 << 30)) == 0) bof3::Snapshot_RequestTake();
-            return 0;
-        }
-        if (wparam == VK_F7) {
-            if ((lparam & (1 << 30)) == 0) bof3::Snapshot_RequestLoad(0x10);
-            return 0;
-        }
-        if (wparam == VK_F12) {
-            Save_QuickWrite();
+        return;
+    }
+    // DIVERGENCE DIV-0040: F7 (the next renderer device, re-made, and its
+    // name on screen) and F11 (the frame-rate readout) do nothing - the
+    // owner, 2026-09-23: not needed as keys. With the backend there is
+    // one device, and neither readout could be drawn (DIV-0032). Like
+    // any other key they still end a pause, above.
+    // DIVERGENCE (the quicksave round's draft A, docs/quicksave.md 6): F6
+    // quicksaves and F7 quick-loads - asked here, run by the loop between
+    // two logic frames (Snapshot_Pending), never mid-frame. A held key's
+    // repeats ask nothing more.
+    // The reading row's study key (docs/reading-row.md 3.5; BOF3X_RUBY_KEY,
+    // F4 by default): shows and hides the reading rows' glyphs. Ours; a
+    // key Capcom left unbound.
+    if (MsgBox_ReadingRowKey(wparam, (lparam & (1 << 30)) != 0)) return;
+    if (wparam == kVkF6) {
+        if ((lparam & (1 << 30)) == 0) bof3::Snapshot_RequestTake();
+        return;
+    }
+    if (wparam == kVkF7) {
+        if ((lparam & (1 << 30)) == 0) bof3::Snapshot_RequestLoad(0x10);
+        return;
+    }
+    if (wparam == kVkF12) {
+        Save_QuickWrite();
+        Overlay_Frames = kOverlayFrames;
+        Overlay_Text = StrWinMain(::bof3::Img(kStrSaveOk.v));
+        return;
+    }
+    // F11: the frame to a file (render::SaveFrame). Tooling, not a
+    // divergence: DIV-0040 made the key nothing, and nothing of the
+    // game's changes.
+    if (wparam == kVkF11) {
+        if ((lparam & (1 << 30)) == 0) SaveFrameBesideDll();
+        return;
+    }
+    // DIV-0048: F1 toggles double speed; a held key's repeats (bit 30 of
+    // lparam, the previous state) do not toggle it back.
+    if (wparam == kVkF1) {
+        if ((lparam & (1 << 30)) == 0) {
+            g_speed = g_speed == 1 ? 2 : 1;
+            g_speed_scripted = false;
             Overlay_Frames = kOverlayFrames;
-            Overlay_Text = StrWinMain(::bof3::Img(kStrSaveOk.v));
-            return 0;
+            Overlay_Text = g_speed == 2 ? kStrSpeed2 : kStrSpeed1;
+            bof3::Log("DIV-0048    speed x%d (F1) at Frame_Counter %u", g_speed, static_cast<std::uint32_t>(Frame_Counter));
         }
-        // F11: the frame to a file (render::SaveFrame). Tooling, not a
-        // divergence: DIV-0040 made the key nothing, and nothing of the
-        // game's changes.
-        if (wparam == VK_F11) {
-            if ((lparam & (1 << 30)) == 0) SaveFrameBesideDll();
-            return 0;
-        }
-        // DIV-0048: F1 toggles double speed; a held key's repeats (bit 30 of
-        // lparam, the previous state) do not toggle it back.
-        if (wparam == VK_F1) {
-            if ((lparam & (1 << 30)) == 0) {
-                g_speed = g_speed == 1 ? 2 : 1;
-                g_speed_scripted = false;
-                Overlay_Frames = kOverlayFrames;
-                Overlay_Text = g_speed == 2 ? kStrSpeed2 : kStrSpeed1;
-                bof3::Log("DIV-0048    speed x%d (F1) at Frame_Counter %u", g_speed, static_cast<std::uint32_t>(Frame_Counter));
-            }
-            return 0;
-        }
-        return 0;
+        return;
     }
-    case WM_SYSKEYDOWN:
-        if (wparam == VK_F10 || wparam == VK_MENU) return 1;
-        break;
-    case WM_SYSCOMMAND: {
-        const unsigned int command = wparam & 0xFFF0;
-        if (command == SC_SCREENSAVE || command == SC_MONITORPOWER) return 1;
-        break;
-    }
-    case WM_POWERBROADCAST:
-        if (wparam == 0) return static_cast<std::int32_t>(BROADCAST_QUERY_DENY);   // PBT_APMQUERYSUSPEND
-        break;
-    default:
-        break;
-    }
-    return static_cast<std::int32_t>(DefWindowProcA(hwnd, msg, wparam, lparam));
 }
 
 extern "C" void __cdecl Cursor_Sync(void) {
     if (Cfg_Fullscreen) {
         if (Cursor_Hidden == 1) {
-            ShowCursor(FALSE);
+            game_window::ShowPointer(false);
             Cursor_Hidden = 0;
         }
     } else if (Cursor_Hidden == 0) {
-        ShowCursor(TRUE);
+        game_window::ShowPointer(true);
         Cursor_Hidden = 1;
     }
 }
 
 extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /*cmdline*/, int /*show*/) {
-    HINSTANCE hinstance = static_cast<HINSTANCE>(hinstance_);
+    void* const hinstance = hinstance_;
     mp3dec::CompareAtStart();  // DIV-0091: BOF3X_MP3_COMPARE - the runtime's heap exists from here
     win_main::g_loop_ours = true;
     {
         char text[32];
         if (bof3::os::GetEnv("BOF3X_BACKGROUND", text, sizeof text) > 0 && text[0] == '0') win_main::g_background = false;
-        const DWORD n = bof3::os::GetEnv("BOF3X_FRAME_MS", text, sizeof text);
+        const std::uint32_t n = bof3::os::GetEnv("BOF3X_FRAME_MS", text, sizeof text);
         if (n > 0) {
             char* end = nullptr;
             const double v = n < sizeof text ? std::strtod(text, &end) : 0.0;
@@ -779,7 +605,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
             bof3::Log("WinMain: BOF3X_LATE_EVERY: one pass in %u is not drawn", g_late_every);
         }
         g_late_log = g_late_every != 0 || g_fps_log;
-        const DWORD sn = bof3::os::GetEnv("BOF3X_SPEED", text, sizeof text);
+        const std::uint32_t sn = bof3::os::GetEnv("BOF3X_SPEED", text, sizeof text);
         if (sn > 0) {
             char* end = nullptr;
             const std::int32_t v = sn < sizeof text ? std::strtol(text, &end, 10) : 0;
@@ -810,41 +636,25 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
     }
     Game_HInstance = hinstance;
 
-    // The window procedure, the FMV player and the set-up are reached through
-    // Capcom's addresses, as the original reached them, so that each one's
-    // BOF3X_ORIGINAL switch holds on its own under our WinMain: the address
-    // is ours when injected and Capcom's when not.
-    WNDCLASSA wc = {};
-    wc.style = 0;
-    wc.lpfnWndProc = reinterpret_cast<WNDPROC>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Game_WndProc)));
-    wc.hInstance = hinstance;
-    wc.hIcon = LoadIconA(hinstance, StrWinMain(::bof3::Img(kStrIcon.v)));
-    wc.hCursor = LoadCursorA(nullptr, IDC_ARROW);
-    wc.hbrBackground = static_cast<HBRUSH>(GetStockObject(BLACK_BRUSH));
-    wc.lpszMenuName = nullptr;
-    wc.lpszClassName = StrWinMain(::bof3::Img(kStrClass.v));
-    if (!RegisterClassA(&wc)) return -1;
+    // The window class, or SDL's video (game_window.h): where the port
+    // registered its class. The window procedure, the FMV player and the
+    // set-up are reached through Capcom's addresses, as the original reached
+    // them, so that each one's BOF3X_ORIGINAL switch holds on its own under
+    // our WinMain: the address is ours when injected and Capcom's when not.
+    if (!game_window::Start(hinstance)) return -1;
 
     bof3::orig::Cfg_Load();
     {
-        HDC dc = GetDC(nullptr);
-        Desktop_Width = GetDeviceCaps(dc, HORZRES);
-        Desktop_Height = GetDeviceCaps(dc, VERTRES);
-        Desktop_Bpp = GetDeviceCaps(dc, BITSPIXEL) * GetDeviceCaps(dc, PLANES);
-        ReleaseDC(nullptr, dc);
+        int w = 0, h = 0, bpp = 0;
+        game_window::Desktop(&w, &h, &bpp);
+        Desktop_Width = w;
+        Desktop_Height = h;
+        Desktop_Bpp = bpp;
     }
     if (Desktop_Width == 640 && Desktop_Height == 480) Cfg_Fullscreen = 1;
 
     // DIV-0032: the window in its mode's style and placement.
-    RECT r = Cfg_Fullscreen ? BorderlessRect(nullptr) : WindowedRect();
-    const DWORD style = Cfg_Fullscreen ? kBorderlessStyle : kWindowedStyle;
-    HWND hwnd = CreateWindowExA(0, StrWinMain(::bof3::Img(kStrClass.v)), kTitle, style, r.left, r.top, r.right - r.left,
-                                r.bottom - r.top, nullptr, nullptr, hinstance, nullptr);
-    Game_Hwnd = hwnd;
-    bof3::Log("DIV-0032    window %s: %ld,%ld %ld x %ld%s", Cfg_Fullscreen ? "borderless" : "windowed", r.left, r.top,
-              r.right - r.left, r.bottom - r.top, win_main::g_background ? "; DIV-0033 runs unfocused" : "");
-    ShowWindow(hwnd, SW_SHOW);
-    UpdateWindow(hwnd);
+    void* const hwnd = game_window::Create(Cfg_Fullscreen != 0);
     Cursor_Sync();
 
     bof3::orig::Fmv_Play(StrWinMain(::bof3::Img(kStrCapcomAvi.v)), hwnd, Cfg_Fullscreen);
@@ -870,20 +680,19 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
         // The loop. Small locals on purpose (see the header comment).
         char fps[0x50] = {};
         int frames_drawn = 0;
-        DWORD last_fps_tick = 0;
+        std::uint32_t last_fps_tick = 0;
         std::uint32_t logic_at_fps_tick = 0;
         // BOF3X_FPS_LOG: time inside the draw branch (present included) and
         // inside the logic, QueryPerformanceCounter ticks, per second.
         std::int64_t q0 = 0, q1 = 0, q2 = 0;
         const std::uint64_t qpf = bof3::os::CounterFrequency();
         long long draw_ticks = 0, logic_ticks = 0;
-        MSG msg;
         bool quit = false;
         // DIV-0047: the deadline as base + frames * period against the
         // high-resolution clock (GameClock_NowMs: the tick slot steps 15.6 ms
         // at a time, too coarse for a period under that). The tick is still
         // read for the once-a-second frame-rate text, as the original did.
-        DWORD last_tick = Tick();
+        std::uint32_t last_tick = Tick();
         const auto Now = [&]() {
             last_tick = Tick();
             return GameClock_NowMs();
@@ -906,14 +715,11 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                 }
                 if (!Game_Paused) bof3::InputScript_Latch();
                 else bof3::InputScript_PausedLatch();   // a recipe keeps its frame count through a pause
-                if (PeekMessageA(&msg, nullptr, 0, 0, PM_REMOVE)) {
-                    if (msg.message == WM_QUIT) {
-                        bof3::Log("WinMain: WM_QUIT");
-                        quit = true;
-                        break;
-                    }
-                    TranslateMessage(&msg);
-                    DispatchMessageA(&msg);
+                // The message step (game_window.h): the port's one
+                // PeekMessage and dispatch, or what SDL's pump brought.
+                if (!game_window::Pump()) {
+                    quit = true;   // WM_QUIT, logged by the step
+                    break;
                 }
                 if (!App_Active) continue;
                 if (Game_RestartFlag) {
@@ -1088,6 +894,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
     bof3::Log("WinMain: loop left, tearing down");
     Display_Teardown(hwnd);
     bof3::Log("WinMain: display down");
+    game_window::Destroy();   // the SDL window, after the swap chain on it; nothing on the Win32 path
     Sound_Shutdown();
     bof3::Log("WinMain: sound down");
     DInput_Shutdown();

@@ -117,8 +117,8 @@ add_custom_target(bof3x_suites DEPENDS "${_suites_hdr}")
 # --- SDL3, for the pad (DIV-0050, docs/controls.md) and the sound output
 # (DIV-0201, src/audio/sound_sdl.cpp) ------------------------------------------
 # Fetched at configure time and built static into the DLL: the joystick and
-# gamepad layers and the audio subsystem (WASAPI on Windows), no video or
-# render. zlib licence (docs/THIRD_PARTY.md section 2). Pinned to a release
+# gamepad layers, the audio subsystem (WASAPI on Windows) and the video
+# subsystem for the game's window; no render. zlib licence (docs/THIRD_PARTY.md section 2). Pinned to a release
 # tag; the first configure needs the network.
 include(FetchContent)
 set(SDL_SHARED OFF CACHE BOOL "" FORCE)
@@ -128,7 +128,11 @@ set(SDL_TESTS OFF CACHE BOOL "" FORCE)
 set(SDL_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(SDL_INSTALL OFF CACHE BOOL "" FORCE)
 set(SDL_AUDIO ON CACHE BOOL "" FORCE)
-foreach(_sub VIDEO RENDER GPU CAMERA HAPTIC SENSOR POWER DIALOG OPENGL OPENGLES VULKAN DIRECTX)
+# The video subsystem since the Linux round's R6: the game's window is SDL's
+# (src/game/platform/game_window.h). Its renderers stay out: the picture is
+# Direct3D 11's.
+set(SDL_VIDEO ON CACHE BOOL "" FORCE)
+foreach(_sub RENDER GPU CAMERA HAPTIC SENSOR POWER DIALOG OPENGL OPENGLES VULKAN DIRECTX)
   set(SDL_${_sub} OFF CACHE BOOL "" FORCE)
 endforeach()
 FetchContent_Declare(SDL3
