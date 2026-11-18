@@ -407,8 +407,6 @@ BOUNDARY_WAITING = {
     'src/hook/snapshot.cpp': 'L3: fibers (ConvertThreadToFiber)',
     'src/hook/log.cpp': 'L3: the log writer thread flushes from the crash path',
     'src/audio/sound_sdl.cpp': 'L3: the DirectSound notify events',
-    'src/game/text/msgbox.cpp': 'L2: key codes (VK_*)',
-    'src/game/menu/quick_menu.cpp': 'L2: key codes (VK_*)',
     'src/game/platform/win_main.cpp': 'L2: the window and its message loop',
     'src/game/platform/display_setup.cpp': 'L2: the window and the monitor',
     'src/game/platform/d3d.cpp': 'L2: the window (HWND)',
