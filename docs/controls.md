@@ -357,6 +357,18 @@ the physical bindings live in the launcher's Controls dialog instead.
    client rectangle (on `main` too), and SDL's HIDAPI discovery taking the
    `WM_QUIT` - `WM_DESTROY` now sets `Game_QuitFlag`. `tools/close_probe.py`
    is the check. **Confirmed by the owner in play with the pad, 2026-09-24.**
+   **Since 2026-11-18, DIV-0239** (the Linux round's wave 2, group R5; the
+   owner's call): the keyboard is SDL3's too. With SDL's window (DIV-0238)
+   and our `Pad_Read`, `DInput_Init` creates no DirectInput object and each
+   latch fills the same 256 bytes at `Key_State` from SDL's keyboard state
+   through `src/input/key_sdl.cpp`'s table (the DIK numbers, so `BOF3.CFG`'s
+   lines and the `key.NAME=` lines mean what they meant); the table at
+   `Key_Table` is applied over them as before. The bytes are all 0 while the
+   window is not in front (DirectInput's were filled in the background).
+   DirectInput's keyboard is left on Windows only, under
+   `BOF3X_OFF=WindowSdl`, `BOF3X_ORIGINAL=Pad_Read` or `DInput_Init`, and
+   `BOF3X_OFF=KeyboardSdl` (which, with SDL's window, also fills SDL's bytes
+   and logs each key the two keep apart for two latches).
 2. **Built 2026-09-24:** the physical map in `bof3x.ini` as `key.NAME=action`
    and `pad.NAME=action` lines (`src/input/bindings.h`, shared by the launcher
    and the DLL), handed to the DLL as `BOF3X_KEYS` / `BOF3X_PAD` when they

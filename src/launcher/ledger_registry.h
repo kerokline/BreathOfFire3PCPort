@@ -71,7 +71,7 @@ struct Entry {
     std::uint8_t languages;        // kLang* bits, or kLangAny
 };
 
-inline constexpr std::size_t kSwitchCount = 229;
+inline constexpr std::size_t kSwitchCount = 231;
 inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "Save_WriteFile", 0, 14},   // DIV-0002
     {SwitchForm::Name, "File_OpenWrite", 0, 14},   // DIV-0003
@@ -302,9 +302,11 @@ inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "Commu_DrawTiledFrame", 0, 20},   // DIV-0235
     {SwitchForm::Lang, "lang", 0, 4},   // DIV-0236
     {SwitchForm::Name, "Game_WinMain", 0, 12},   // DIV-0237
+    {SwitchForm::Name, "WindowSdl", 0, 9},   // DIV-0238
+    {SwitchForm::Name, "KeyboardSdl", 0, 11},   // DIV-0239
 };
 
-inline constexpr std::size_t kEntryCount = 237;
+inline constexpr std::size_t kEntryCount = 239;
 inline constexpr Entry kEntries[kEntryCount] = {
     {1, "Re-encode `capcom.avi` from Indeo 5 to Cinepak",
      Tier::Intent, State::Active, 0, 0, 0, true, Player::Never, 0, kLangAny},
@@ -780,6 +782,10 @@ inline constexpr Entry kEntries[kEntryCount] = {
      Tier::Sensible, State::Active, 0, 227, 1, true, Player::Yes, kTowardPsx, kLangEnUs | kLangEn150 | kLangFrFr},
     {237, "A frame that waited through a late frame is shown",
      Tier::Intent, State::Active, 0, 228, 1, true, Player::Costly, 0, kLangAny},
+    {238, "The game's window through SDL3, and the movie's events off the window's queue",
+     Tier::Sensible, State::Active, 0, 229, 1, true, Player::Yes, 0, kLangAny},
+    {239, "The keyboard through SDL3's keyboard state, DirectInput's numbers kept",
+     Tier::Sensible, State::Active, 0, 230, 1, true, Player::Yes, 0, kLangAny},
 };
 
 // The switches of one entry.
