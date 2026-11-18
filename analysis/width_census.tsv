@@ -6707,13 +6707,14 @@ site	src/game/platform/d3d_rest_fuzz.cpp	709	narrow_call	unread	fuzz	Next() % 2 
 site	src/game/platform/d3d_rest_fuzz.cpp	710	narrow_call	unread	fuzz	Next() % 2 ? kTexA : kTexB	Addr	PutLong(At(D3d_CaptureTexSurface_addr), Addr(Next() % 2 ? kTexA : kTexB));
 site	src/game/platform/d3d_rest_fuzz.cpp	712	narrow_call	unread	fuzz	Next() % 2 ? kBackA : kBackB	Addr	PutLong(At(DDraw_BackBuffer_addr), Addr(Next() % 2 ? kBackA : kBackB));
 site	src/game/platform/d3d_rest_fuzz.cpp	867	narrow_call	object_ours	fuzz	g_palette	Addr	g_palette_at = Addr(g_palette);
-site	src/game/platform/d_input.cpp	173	fmt_place	pointer	live	hinstance	%p	bof3::Log("pad: DirectInputCreateA failed (dinput.dll %p, entry %p, hinstance %p, hr %#x) - no keyboard through DirectInput",
-site	src/game/platform/d_input.cpp	173	fmt_place	pointer	live	reinterpret_cast<void*>(create)	%p	bof3::Log("pad: DirectInputCreateA failed (dinput.dll %p, entry %p, hinstance %p, hr %#x) - no keyboard through DirectInput",
-site	src/game/platform/d_input.cpp	173	fmt_place	pointer	live	static_cast<void*>(dinput)	%p	bof3::Log("pad: DirectInputCreateA failed (dinput.dll %p, entry %p, hinstance %p, hr %#x) - no keyboard through DirectInput",
-site	src/game/platform/d_input.cpp	186	uintptr	-	live	std::uintptr_t	-	const GUID& guid = *reinterpret_cast<const GUID*>(static_cast<std::uintptr_t>(kKeyboardGuid));
-site	src/game/platform/d_input.cpp	186	widen	param	live	kKeyboardGuid	const GUID*	const GUID& guid = *reinterpret_cast<const GUID*>(static_cast<std::uintptr_t>(kKeyboardGuid));
-site	src/game/platform/d_input.cpp	225	uintptr	-	live	std::uintptr_t	-	joy->QueryInterface(*reinterpret_cast<const IID*>(static_cast<std::uintptr_t>(rest_2h::at::kJoystickIid)), &joystick2);
-site	src/game/platform/d_input.cpp	225	widen	param	live	rest_2h::at::kJoystickIid	const IID*	joy->QueryInterface(*reinterpret_cast<const IID*>(static_cast<std::uintptr_t>(rest_2h::at::kJoystickIid)), &joystick2);
+site	src/game/platform/d_input.cpp	272	fmt_place	pointer	live	hinstance	%p	bof3::Log("pad: DirectInputCreateA failed (dinput.dll %p, entry %p, hinstance %p, hr %#x) - no keyboard through DirectInput",
+site	src/game/platform/d_input.cpp	272	fmt_place	pointer	live	reinterpret_cast<void*>(create)	%p	bof3::Log("pad: DirectInputCreateA failed (dinput.dll %p, entry %p, hinstance %p, hr %#x) - no keyboard through DirectInput",
+site	src/game/platform/d_input.cpp	272	fmt_place	pointer	live	static_cast<void*>(dinput)	%p	bof3::Log("pad: DirectInputCreateA failed (dinput.dll %p, entry %p, hinstance %p, hr %#x) - no keyboard through DirectInput",
+site	src/game/platform/d_input.cpp	284	uintptr	-	live	std::uintptr_t	-	const GUID& guid = *reinterpret_cast<const GUID*>(static_cast<std::uintptr_t>(kKeyboardGuid));
+site	src/game/platform/d_input.cpp	284	widen	param	live	kKeyboardGuid	const GUID*	const GUID& guid = *reinterpret_cast<const GUID*>(static_cast<std::uintptr_t>(kKeyboardGuid));
+site	src/game/platform/d_input.cpp	371	uintptr	-	live	std::uintptr_t	-	joy->QueryInterface(*reinterpret_cast<const IID*>(static_cast<std::uintptr_t>(rest_2h::at::kJoystickIid)), &joystick2);
+site	src/game/platform/d_input.cpp	371	widen	param	live	rest_2h::at::kJoystickIid	const IID*	joy->QueryInterface(*reinterpret_cast<const IID*>(static_cast<std::uintptr_t>(rest_2h::at::kJoystickIid)), &joystick2);
+site	src/game/platform/d_input.cpp	446	low32	object_ours	live	&g_keyboard_sdl	Low32	bof3::PatchBytes(" ", Low32(&g_keyboard_sdl), &was, &is, 1);
 site	src/game/platform/dat_cache.cpp	71	long	l	live	long	-	const long long size = static_cast<long long>(h.tellg());
 site	src/game/platform/dat_cache.cpp	71	long	l	live	long	-	const long long size = static_cast<long long>(h.tellg());
 site	src/game/platform/dat_cache.cpp	73	long	l	live	long	-	long long off = 0;
@@ -6951,10 +6952,10 @@ site	src/game/platform/psx_rest_fuzz.cpp	620	narrow_call	object_ours	fuzz	g_text
 site	src/game/platform/psx_rest_fuzz.cpp	624	narrow_call	object_ours	fuzz	g_text	Addr	x.a[2] = Addr(g_text);
 site	src/game/platform/psx_rest_fuzz.cpp	688	fmt_place	word	fuzz	(unsigned)ours.log_hash	%08X	bof3::Log("shadow psx_rest MISMATCH: round %u, %s, log %u / %u (hash %08X / %08X), memory at 0x%X, "
 site	src/game/platform/psx_rest_fuzz.cpp	688	fmt_place	word	fuzz	(unsigned)theirs.log_hash	%08X	bof3::Log("shadow psx_rest MISMATCH: round %u, %s, log %u / %u (hash %08X / %08X), memory at 0x%X, "
-site	src/game/platform/rdata_consts.cpp	33	uintptr	-	live	std::uintptr_t	-	unsigned char* At(std::uint32_t va) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(va)); }
-site	src/game/platform/rdata_consts.cpp	33	widen	param	live	va	unsigned char*	unsigned char* At(std::uint32_t va) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(va)); }
-site	src/game/platform/rdata_consts.cpp	65	low32	windows	live	ours.rgodf	Low32	ours.dwNumObjs, Low32(ours.rgodf)};
-site	src/game/platform/rdata_consts.cpp	135	fmt_place	pointer	live	(unsigned)(sizeof kEntries / sizeof kEntries[0])	%p	"objects the SDK's, at %p); the rest zero", (unsigned)(sizeof kEntries / sizeof kEntries[0]),
+site	src/game/platform/rdata_consts.cpp	42	uintptr	-	live	std::uintptr_t	-	unsigned char* At(std::uint32_t va) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(va)); }
+site	src/game/platform/rdata_consts.cpp	42	widen	param	live	va	unsigned char*	unsigned char* At(std::uint32_t va) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(va)); }
+site	src/game/platform/rdata_consts.cpp	76	low32	windows	live	ours.rgodf	Low32	ours.dwNumObjs, Low32(ours.rgodf)};
+site	src/game/platform/rdata_consts.cpp	159	fmt_place	pointer	live	(unsigned)(sizeof kEntries / sizeof kEntries[0])	%p	"objects the SDK's, at %p); the rest zero", (unsigned)(sizeof kEntries / sizeof kEntries[0]),
 site	src/game/platform/shell.cpp	45	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/platform/shell.cpp	45	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/platform/shell.cpp	46	uintptr	-	live	std::uintptr_t	-	const char* Str(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
@@ -14475,6 +14476,7 @@ file	src/game/platform/d3d_rest_fuzz.cpp	fuzz	uintptr	-	3
 file	src/game/platform/d3d_rest_fuzz.cpp	fuzz	widen	other	1
 file	src/game/platform/d3d_rest_fuzz.cpp	fuzz	widen	param	1
 file	src/game/platform/d_input.cpp	live	fmt_place	pointer	3
+file	src/game/platform/d_input.cpp	live	low32	object_ours	1
 file	src/game/platform/d_input.cpp	live	uintptr	-	2
 file	src/game/platform/d_input.cpp	live	widen	param	2
 file	src/game/platform/dat_cache.cpp	live	long	l	10
@@ -15281,8 +15283,8 @@ file	symbols.toml	live	ptr_member	ours_render	11
 file	symbols.toml	live	ptr_member	windows_function	14
 file	symbols.toml	live	ptr_member	windows_handle	3
 file	symbols.toml	live	ptr_member	windows_object	10
-#count sites	11269
-#count sites_live	7798
+#count sites	11270
+#count sites_live	7799
 #count sites_fuzz	3471
 #count fuzz_files	250
 #count narrow	357
@@ -15519,9 +15521,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count ptr_member_windows_object	10
 #count ptr_member_windows_object_live	10
 #count ptr_member_windows_object_live_files	1
-#count low32	732
-#count low32_live	724
-#count low32_live_files	468
+#count low32	733
+#count low32_live	725
+#count low32_live_files	469
 #count low32_fuzz	8
 #count low32_fuzz_files	1
 #count low32_crt	1
@@ -15539,9 +15541,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count low32_image_local	139
 #count low32_image_local_live	139
 #count low32_image_local_live_files	91
-#count low32_object_ours	94
-#count low32_object_ours_live	94
-#count low32_object_ours_live_files	64
+#count low32_object_ours	95
+#count low32_object_ours_live	95
+#count low32_object_ours_live_files	65
 #count low32_pool	18
 #count low32_pool_live	18
 #count low32_pool_live_files	14
@@ -15613,9 +15615,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count callconv___cdecl	16384
 #count callconv___cdecl_fuzz	2014
 #count callconv___cdecl_live	14370
-#count callconv___stdcall	364
+#count callconv___stdcall	365
 #count callconv___stdcall_fuzz	96
-#count callconv___stdcall_live	268
+#count callconv___stdcall_live	269
 #count img_place_Code	625
 #count img_place_Code_fuzz	6
 #count img_place_Code_live	619

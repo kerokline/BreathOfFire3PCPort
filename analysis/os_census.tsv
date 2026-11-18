@@ -89,43 +89,40 @@ site	src/game/fmv_play_win32.cpp	150	call	window	class	DefWindowProcA
 site	src/game/fmv_play_win32.cpp	150	type	type_only	type	LPARAM
 site	src/game/fmv_play_win32.cpp	155	call	window	class	DefWindowProcA
 site	src/game/fmv_play_win32.cpp	155	type	type_only	type	LPARAM
-site	src/game/platform/d_input.cpp	6	include	input	header	dinput.h
-site	src/game/platform/d_input.cpp	43	type	type_only	type	HRESULT
-site	src/game/platform/d_input.cpp	43	type	type_only	type	HRESULT
-site	src/game/platform/d_input.cpp	45	type	input	type	IDirectInputDeviceA
-site	src/game/platform/d_input.cpp	45	type	input	type	IDirectInputDeviceA
-site	src/game/platform/d_input.cpp	63	type	input	type	IDirectInputDeviceA
-site	src/game/platform/d_input.cpp	66	type	type_only	type	HRESULT
-site	src/game/platform/d_input.cpp	78	type	type_only	type	DWORD
-site	src/game/platform/d_input.cpp	95	type	type_only	type	DWORD
-site	src/game/platform/d_input.cpp	121	type	type_only	type	DWORD
-site	src/game/platform/d_input.cpp	166	type	type_only	type	DWORD
-site	src/game/platform/d_input.cpp	166	type	type_only	type	HINSTANCE
-site	src/game/platform/d_input.cpp	166	type	type_only	type	HRESULT
-site	src/game/platform/d_input.cpp	166	type	input	type	LPDIRECTINPUTA
-site	src/game/platform/d_input.cpp	167	call	process	module	LoadLibraryA
-site	src/game/platform/d_input.cpp	167	type	type_only	type	HMODULE
-site	src/game/platform/d_input.cpp	168	call	process	module	GetProcAddress
-site	src/game/platform/d_input.cpp	169	type	input	type	LPDIRECTINPUTA
-site	src/game/platform/d_input.cpp	170	type	type_only	type	HINSTANCE
-site	src/game/platform/d_input.cpp	170	type	type_only	type	HRESULT
-site	src/game/platform/d_input.cpp	171	const	process	const	E_FAIL
-site	src/game/platform/d_input.cpp	171	type	type_only	type	HRESULT
-site	src/game/platform/d_input.cpp	179	type	input	type	LPDIRECTINPUTDEVICEA
-site	src/game/platform/d_input.cpp	186	type	type_only	type	GUID
-site	src/game/platform/d_input.cpp	186	type	type_only	type	GUID
-site	src/game/platform/d_input.cpp	187	type	input	type	DIDATAFORMAT
-site	src/game/platform/d_input.cpp	193	const	input	const	DISCL_BACKGROUND
-site	src/game/platform/d_input.cpp	193	const	input	const	DISCL_NONEXCLUSIVE
-site	src/game/platform/d_input.cpp	193	type	type_only	type	HWND
-site	src/game/platform/d_input.cpp	212	type	input	type	IDirectInputA
-site	src/game/platform/d_input.cpp	219	type	input	type	LPDIRECTINPUTDEVICEA
-site	src/game/platform/d_input.cpp	220	type	type_only	type	GUID
-site	src/game/platform/d_input.cpp	220	type	type_only	type	HRESULT
-site	src/game/platform/d_input.cpp	223	type	type_only	type	IUnknown
-site	src/game/platform/d_input.cpp	237	type	input	type	IDirectInputDeviceA
-site	src/game/platform/d_input.cpp	242	type	type_only	type	IUnknown
-site	src/game/platform/d_input.cpp	251	type	type_only	type	IUnknown
+site	src/game/platform/d_input.cpp	35	include	input	header	dinput.h
+site	src/game/platform/d_input.cpp	110	type	type_only	type	HRESULT
+site	src/game/platform/d_input.cpp	110	type	type_only	type	HRESULT
+site	src/game/platform/d_input.cpp	112	type	input	type	IDirectInputDeviceA
+site	src/game/platform/d_input.cpp	112	type	input	type	IDirectInputDeviceA
+site	src/game/platform/d_input.cpp	119	type	input	type	IDirectInputDeviceA
+site	src/game/platform/d_input.cpp	122	type	type_only	type	HRESULT
+site	src/game/platform/d_input.cpp	265	type	type_only	type	DWORD
+site	src/game/platform/d_input.cpp	265	type	type_only	type	HINSTANCE
+site	src/game/platform/d_input.cpp	265	type	type_only	type	HRESULT
+site	src/game/platform/d_input.cpp	265	type	input	type	LPDIRECTINPUTA
+site	src/game/platform/d_input.cpp	266	call	process	module	LoadLibraryA
+site	src/game/platform/d_input.cpp	266	type	type_only	type	HMODULE
+site	src/game/platform/d_input.cpp	267	call	process	module	GetProcAddress
+site	src/game/platform/d_input.cpp	268	type	input	type	LPDIRECTINPUTA
+site	src/game/platform/d_input.cpp	269	type	type_only	type	HINSTANCE
+site	src/game/platform/d_input.cpp	269	type	type_only	type	HRESULT
+site	src/game/platform/d_input.cpp	270	const	process	const	E_FAIL
+site	src/game/platform/d_input.cpp	270	type	type_only	type	HRESULT
+site	src/game/platform/d_input.cpp	277	type	input	type	LPDIRECTINPUTDEVICEA
+site	src/game/platform/d_input.cpp	284	type	type_only	type	GUID
+site	src/game/platform/d_input.cpp	284	type	type_only	type	GUID
+site	src/game/platform/d_input.cpp	285	type	input	type	DIDATAFORMAT
+site	src/game/platform/d_input.cpp	291	const	input	const	DISCL_BACKGROUND
+site	src/game/platform/d_input.cpp	291	const	input	const	DISCL_NONEXCLUSIVE
+site	src/game/platform/d_input.cpp	291	type	type_only	type	HWND
+site	src/game/platform/d_input.cpp	358	type	input	type	IDirectInputA
+site	src/game/platform/d_input.cpp	365	type	input	type	LPDIRECTINPUTDEVICEA
+site	src/game/platform/d_input.cpp	366	type	type_only	type	GUID
+site	src/game/platform/d_input.cpp	366	type	type_only	type	HRESULT
+site	src/game/platform/d_input.cpp	369	type	type_only	type	IUnknown
+site	src/game/platform/d_input.cpp	393	type	input	type	IDirectInputDeviceA
+site	src/game/platform/d_input.cpp	398	type	type_only	type	IUnknown
+site	src/game/platform/d_input.cpp	407	type	type_only	type	IUnknown
 site	src/game/platform/game_window_win32.cpp	9	include	umbrella	api	windows.h
 site	src/game/platform/game_window_win32.cpp	27	const	window	const	WS_OVERLAPPEDWINDOW
 site	src/game/platform/game_window_win32.cpp	27	type	type_only	type	DWORD
@@ -293,15 +290,12 @@ site	src/game/platform/game_window_win32.cpp	386	const	window	const	WM_POWERBROA
 site	src/game/platform/game_window_win32.cpp	387	const	dialog	const	BROADCAST_QUERY_DENY
 site	src/game/platform/game_window_win32.cpp	392	call	window	class	DefWindowProcA
 site	src/game/platform/music.cpp	12	include	crt	header	malloc.h
-site	src/game/platform/pad_read.cpp	33	include	input	header	dinput.h
-site	src/game/platform/pad_read.cpp	82	type	type_only	type	DWORD
-site	src/game/platform/pad_read.cpp	99	type	type_only	type	DWORD
-site	src/game/platform/rdata_consts.cpp	5	include	input	header	dinput.h
-site	src/game/platform/rdata_consts.cpp	63	type	input	type	DIDATAFORMAT
-site	src/game/platform/rdata_consts.cpp	72	type	input	type	DIDATAFORMAT
-site	src/game/platform/rdata_consts.cpp	86	type	type_only	type	DWORD
-site	src/game/platform/rdata_consts.cpp	89	type	input	type	DIOBJECTDATAFORMAT
-site	src/game/platform/rdata_consts.cpp	90	type	type_only	type	GUID
+site	src/game/platform/rdata_consts.cpp	13	include	input	header	dinput.h
+site	src/game/platform/rdata_consts.cpp	74	type	input	type	DIDATAFORMAT
+site	src/game/platform/rdata_consts.cpp	83	type	input	type	DIDATAFORMAT
+site	src/game/platform/rdata_consts.cpp	97	type	type_only	type	DWORD
+site	src/game/platform/rdata_consts.cpp	100	type	input	type	DIOBJECTDATAFORMAT
+site	src/game/platform/rdata_consts.cpp	101	type	type_only	type	GUID
 site	src/game/shop/rest_2h_fuzz.cpp	19	include	umbrella	type_only	windows.h
 site	src/game/shop/rest_2h_fuzz.cpp	237	type	harness-only	type_only/type	GUID
 site	src/game/shop/rest_2h_fuzz.cpp	237	type	harness-only	type_only/type	HRESULT
@@ -3616,10 +3610,9 @@ file	src/game/core/sound.cpp	game/core	live		nothing	1
 file	src/game/crt_rest_fuzz.cpp	game(root)	harness-only	api	crt,file,process,type_only	19
 file	src/game/field/field_o_fuzz.cpp	game/field	harness-only	api	fault,type_only	9
 file	src/game/fmv_play_win32.cpp	game(root)	live	api	thread,type_only,window	60
-file	src/game/platform/d_input.cpp	game/platform	live		input,process,type_only	37
+file	src/game/platform/d_input.cpp	game/platform	live		input,process,type_only	34
 file	src/game/platform/game_window_win32.cpp	game/platform	live	api	dialog,process,type_only,window	166
 file	src/game/platform/music.cpp	game/platform	live		nothing	1
-file	src/game/platform/pad_read.cpp	game/platform	live		type_only	3
 file	src/game/platform/rdata_consts.cpp	game/platform	live		input,type_only	6
 file	src/game/shop/rest_2h_fuzz.cpp	game/shop	harness-only	type_only	type_only	6
 file	src/hook/calltrace.cpp	hook	harness-only	api	fault,file,memory,process,thread,type_only	101
@@ -3664,8 +3657,8 @@ file	src/os/win32/thread_start.cpp	os	live	api	process,thread,type_only	9
 file	src/render/render_d3d11.cpp	render	live		graphics,process,type_only,window	200
 file	src/render/satpixie.cpp	render	live		graphics,process,type_only	50
 file	src/render/satpixie.h	render	live		graphics	7
-#count	sites	3611
-#count	files_with_a_site	52
+#count	sites	3605
+#count	files_with_a_site	51
 #count	class:clock	11
 #count	class:crt	30
 #count	class:dialog	16
@@ -3674,20 +3667,20 @@ file	src/render/satpixie.h	render	live		graphics	7
 #count	class:file	84
 #count	class:graphics	227
 #count	class:harness-only	350
-#count	class:input	20
+#count	class:input	19
 #count	class:launcher	1974
 #count	class:memory	84
 #count	class:process	176
 #count	class:sound	2
 #count	class:thread	62
-#count	class:type_only	321
+#count	class:type_only	316
 #count	class:umbrella	38
 #count	class:window	168
 #count	kind:call	1202
 #count	kind:const	1230
-#count	kind:include	69
-#count	kind:type	1110
-#count	live_sites	1287
+#count	kind:include	68
+#count	kind:type	1105
+#count	live_sites	1281
 #count	call_or_keyword_class:clock	14
 #count	call_or_keyword_class:crt	14
 #count	call_or_keyword_class:dialog	188
@@ -3704,7 +3697,7 @@ file	src/render/satpixie.h	render	live		graphics	7
 #count	files_in:game(root)	2
 #count	files_in:game/core	1
 #count	files_in:game/field	1
-#count	files_in:game/platform	5
+#count	files_in:game/platform	4
 #count	files_in:game/shop	1
 #count	files_in:hook	10
 #count	files_in:launcher	12
