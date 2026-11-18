@@ -8,19 +8,14 @@ site	src/audio/mp3.cpp	116	sizeof_ptr	-	live	sizeof(void*)	-	if (sizeof(void*) >
 site	src/audio/mp3.cpp	117	fmt_place	pointer	live	static_cast<void*>(d)	%p	bof3::Fatal("DIV-0091: the decoder at %p lies above 4 GB, where the game's word for its frame cannot reach it",
 site	src/audio/mp3.cpp	139	uintptr	-	live	std::uintptr_t	-	d->data = reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(address));
 site	src/audio/mp3.cpp	139	widen	param	live	address	const std::uint8_t*	d->data = reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(address));
-site	src/audio/mp3.cpp	204	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t top = (reinterpret_cast<std::uintptr_t>(g_stack) + kStackBytes - 16) & ~static_cast<std::uintptr_t>(15);
-site	src/audio/mp3.cpp	204	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t top = (reinterpret_cast<std::uintptr_t>(g_stack) + kStackBytes - 16) & ~static_cast<std::uintptr_t>(15);
-site	src/audio/mp3.cpp	204	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t top = (reinterpret_cast<std::uintptr_t>(g_stack) + kStackBytes - 16) & ~static_cast<std::uintptr_t>(15);
-site	src/audio/mp3.cpp	206	width_if	logic	live	Decode	#if defined(__i386__)	#if defined(__i386__)
-site	src/audio/mp3.cpp	207	asm	stack	live	movl %%esp, %%esi	call movl pushl	asm volatile(
-site	src/audio/mp3.cpp	220	asm	stack	live	movq %%rsp, %%rsi	call movq subq	asm volatile(
-site	src/audio/mp3.cpp	335	uintptr	-	live	std::uintptr_t	-	std::memcpy(&bytes, reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(frame)) + 8, 4);
-site	src/audio/mp3.cpp	335	widen	param	live	frame	const unsigned char*	std::memcpy(&bytes, reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(frame)) + 8, 4);
-site	src/audio/mp3.cpp	349	low32	unread	live	data	Low32	std::snprintf(name, sizeof name, " ", size, Low32(data));
-site	src/audio/mp3.cpp	447	long	l	live	long	-	const long long file_size = static_cast<long long>(h.tellg());
-site	src/audio/mp3.cpp	447	long	l	live	long	-	const long long file_size = static_cast<long long>(h.tellg());
-site	src/audio/mp3.cpp	598	long	ul	live	unsigned long	-	files, static_cast<unsigned long>(bof3::os::TickMs32() - t0), same, max_abs, worst_rms, tsv_path);
-site	src/audio/mp3.cpp	633	long	ul	live	unsigned long	-	if (t >= sizeof tsv) bof3::Fatal(" ", static_cast<unsigned long>(t));
+site	src/audio/mp3.cpp	211	ptr_overlay	unread	live	p	DecodeCall	auto* call = static_cast<DecodeCall*>(p);
+site	src/audio/mp3.cpp	330	uintptr	-	live	std::uintptr_t	-	std::memcpy(&bytes, reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(frame)) + 8, 4);
+site	src/audio/mp3.cpp	330	widen	param	live	frame	const unsigned char*	std::memcpy(&bytes, reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(frame)) + 8, 4);
+site	src/audio/mp3.cpp	344	low32	unread	live	data	Low32	std::snprintf(name, sizeof name, " ", size, Low32(data));
+site	src/audio/mp3.cpp	442	long	l	live	long	-	const long long file_size = static_cast<long long>(h.tellg());
+site	src/audio/mp3.cpp	442	long	l	live	long	-	const long long file_size = static_cast<long long>(h.tellg());
+site	src/audio/mp3.cpp	593	long	ul	live	unsigned long	-	files, static_cast<unsigned long>(bof3::os::TickMs32() - t0), same, max_abs, worst_rms, tsv_path);
+site	src/audio/mp3.cpp	628	long	ul	live	unsigned long	-	if (t >= sizeof tsv) bof3::Fatal(" ", static_cast<unsigned long>(t));
 site	src/audio/seq.cpp	168	long	l	live	long	-	song_.number, score_.resolution, bpm, static_cast<unsigned long long>(q));
 site	src/audio/sound_sdl.cpp	90	long	l	live	long	-	constexpr long kOk = 0;
 site	src/audio/sound_sdl.cpp	91	long	l	live	long	-	constexpr long kNoInterface = static_cast<long>(0x80004002u);
@@ -11275,16 +11270,14 @@ site	symbols.toml	136253	long	ctype:unsigned long	live	unsigned long	-	ctype = "
 site	symbols.toml	136261	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
 site	symbols.toml	136269	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
 #rec	file	standing	class	detail	n
-file	src/audio/mp3.cpp	live	asm	stack	2
 file	src/audio/mp3.cpp	live	fmt_place	pointer	1
 file	src/audio/mp3.cpp	live	long	l	2
 file	src/audio/mp3.cpp	live	long	ul	2
 file	src/audio/mp3.cpp	live	low32	unread	1
-file	src/audio/mp3.cpp	live	ptr_overlay	unread	1
+file	src/audio/mp3.cpp	live	ptr_overlay	unread	2
 file	src/audio/mp3.cpp	live	sizeof_ptr	-	1
-file	src/audio/mp3.cpp	live	uintptr	-	7
+file	src/audio/mp3.cpp	live	uintptr	-	4
 file	src/audio/mp3.cpp	live	widen	param	3
-file	src/audio/mp3.cpp	live	width_if	logic	1
 file	src/audio/seq.cpp	live	long	l	1
 file	src/audio/sound_sdl.cpp	live	fmt_place	pointer	5
 file	src/audio/sound_sdl.cpp	live	fmt_place	word	9
@@ -15288,8 +15281,8 @@ file	symbols.toml	live	ptr_member	ours_render	11
 file	symbols.toml	live	ptr_member	windows_function	14
 file	symbols.toml	live	ptr_member	windows_handle	3
 file	symbols.toml	live	ptr_member	windows_object	10
-#count sites	11274
-#count sites_live	7803
+#count sites	11269
+#count sites_live	7798
 #count sites_fuzz	3471
 #count fuzz_files	250
 #count narrow	357
@@ -15396,9 +15389,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count long_ul	225
 #count long_ul_live	225
 #count long_ul_live_files	28
-#count asm	326
-#count asm_live	205
-#count asm_live_files	82
+#count asm	324
+#count asm_live	203
+#count asm_live_files	81
 #count asm_fuzz	121
 #count asm_fuzz_files	64
 #count asm_cw	73
@@ -15410,9 +15403,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count asm_other	29
 #count asm_other_live	29
 #count asm_other_live_files	17
-#count asm_stack	82
-#count asm_stack_live	36
-#count asm_stack_live_files	13
+#count asm_stack	80
+#count asm_stack_live	34
+#count asm_stack_live_files	12
 #count asm_x87	115
 #count asm_x87_live	111
 #count asm_x87_live_files	46
@@ -15464,13 +15457,13 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count sizeof_ptr_-	15
 #count sizeof_ptr_-_live	15
 #count sizeof_ptr_-_live_files	8
-#count uintptr	1938
-#count uintptr_live	1272
+#count uintptr	1935
+#count uintptr_live	1269
 #count uintptr_live_files	519
 #count uintptr_fuzz	666
 #count uintptr_fuzz_files	249
-#count uintptr_-	1938
-#count uintptr_-_live	1272
+#count uintptr_-	1935
+#count uintptr_-_live	1269
 #count uintptr_-_live_files	519
 #count fmt_place	493
 #count fmt_place_live	423
@@ -15572,8 +15565,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count handle_array_slot_i686	1
 #count handle_array_slot_i686_live	1
 #count handle_array_slot_i686_live_files	1
-#count ptr_overlay	45
-#count ptr_overlay_live	45
+#count ptr_overlay	46
+#count ptr_overlay_live	46
 #count ptr_overlay_live_files	13
 #count ptr_overlay_fuzz	0
 #count ptr_overlay_fuzz_files	0
@@ -15592,20 +15585,20 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count ptr_overlay_object_ours	1
 #count ptr_overlay_object_ours_live	1
 #count ptr_overlay_object_ours_live_files	1
-#count ptr_overlay_unread	32
-#count ptr_overlay_unread_live	32
+#count ptr_overlay_unread	33
+#count ptr_overlay_unread_live	33
 #count ptr_overlay_unread_live_files	10
-#count width_if	49
-#count width_if_live	49
-#count width_if_live_files	25
+#count width_if	48
+#count width_if_live	48
+#count width_if_live_files	24
 #count width_if_fuzz	0
 #count width_if_fuzz_files	0
 #count width_if_asm_pair	16
 #count width_if_asm_pair_live	16
 #count width_if_asm_pair_live_files	10
-#count width_if_logic	33
-#count width_if_logic_live	33
-#count width_if_logic_live_files	16
+#count width_if_logic	32
+#count width_if_logic_live	32
+#count width_if_logic_live_files	15
 #count asm_live_x87_only_files	42
 #count widen_live_fnptr	472
 #count long_src	573
@@ -15620,9 +15613,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count callconv___cdecl	16384
 #count callconv___cdecl_fuzz	2014
 #count callconv___cdecl_live	14370
-#count callconv___stdcall	364
+#count callconv___stdcall	363
 #count callconv___stdcall_fuzz	96
-#count callconv___stdcall_live	268
+#count callconv___stdcall_live	267
 #count img_place_Code	625
 #count img_place_Code_fuzz	6
 #count img_place_Code_live	619
