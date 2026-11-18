@@ -1,7 +1,6 @@
 #include "hook/detour.h"
 
-#include <windows.h>
-
+#include <cstdint>
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
@@ -48,7 +47,7 @@ bool NameListed(const char* list, const char* name) {
 
 bool WantsOriginal(const char* name) {
     char list[8192];  // a whole round of takeovers fits: 119 names is 2,061 characters
-    DWORD n = bof3::os::GetEnv("BOF3X_ORIGINAL", list, sizeof list);
+    std::uint32_t n = bof3::os::GetEnv("BOF3X_ORIGINAL", list, sizeof list);
     if (n == 0) return false;
     if (n >= sizeof list) Fatal("BOF3X_ORIGINAL is longer than %u bytes", (unsigned)sizeof list);
     return NameListed(list, name);
@@ -63,7 +62,7 @@ const char* OffList() {
     static char list[8192];
     static bool read = false;
     if (!read) {
-        DWORD n = bof3::os::GetEnv("BOF3X_OFF", list, sizeof list);
+        std::uint32_t n = bof3::os::GetEnv("BOF3X_OFF", list, sizeof list);
         if (n >= sizeof list) Fatal("BOF3X_OFF is longer than %u bytes", (unsigned)sizeof list - 1);
         if (n == 0) list[0] = '\0';
         read = true;
@@ -133,8 +132,9 @@ const char* CodeOff(const char* name) {
     return off;
 }
 
-// The hosted mode's writers into Capcom's code - WriteJmp, VerifyImage,
-// CloneOriginal - exist in the 32-bit DLL alone: the hosted build is 32-bit
+// The hosted mode's writers into Capcom's code - WriteJmp, CloneOriginal - and
+// its image check (VerifyImage, host.cpp since the Linux round's R3: it reads
+// the main module's PE header, and this file is portable) exist in the 32-bit DLL alone: the hosted build is 32-bit
 // for ever (docs/x64-build-round.md 2), a 64-bit bof3x.dll is never inside
 // BOF3.exe's process (host.cpp DetectHost refuses the identity), and the exe
 // host writes no code in either width (Inject, RetargetCall and PatchBytes
@@ -163,30 +163,6 @@ void WriteJmp(const char* name, std::uint8_t* at, const std::uint8_t* to) {
 }
 
 }  // namespace
-
-void VerifyImage() {
-#if defined(__x86_64__)
-    Fatal("VerifyImage in the 64-bit DLL: BOF3.exe is a 32-bit process, which never hosts this DLL "
-          "(docs/x64-build-round.md 2; the hosted build is bof3x-launcher --host bof3, 32-bit)");
-#else
-    auto* base = reinterpret_cast<const std::uint8_t*>(GetModuleHandleW(nullptr));
-    if (reinterpret_cast<std::uintptr_t>(base) != image::kBase)
-        Fatal("main module is at %p, not 0x%X: this is not BOF3.exe, or it was rebased",
-              (void*)base, (unsigned)image::kBase);
-    auto* dos = reinterpret_cast<const IMAGE_DOS_HEADER*>(base);
-    auto* nt = reinterpret_cast<const IMAGE_NT_HEADERS32*>(base + dos->e_lfanew);
-    if (nt->Signature != IMAGE_NT_SIGNATURE ||
-        nt->FileHeader.TimeDateStamp != image::kTimestamp ||
-        nt->OptionalHeader.SizeOfImage != image::kSizeOfImage)
-        Fatal("main module is not the BOF3.exe that symbols.toml describes "
-              "(timestamp 0x%lX size 0x%lX, expected 0x%X / 0x%X). Every address "
-              "would be wrong; refusing to patch.",
-              nt->FileHeader.TimeDateStamp, nt->OptionalHeader.SizeOfImage,
-              (unsigned)image::kTimestamp, (unsigned)image::kSizeOfImage);
-    Log("image verified: base 0x%X timestamp 0x%X", (unsigned)image::kBase,
-        (unsigned)image::kTimestamp);
-#endif
-}
 
 void Inject(const char* name, std::uint32_t original, void* ours, bool instrument) {
     // `original` is a VA, a name. Hosted the jmp goes at it, in BOF3.exe's
@@ -378,7 +354,7 @@ void* CloneOriginal(const char* name, std::uint32_t original, std::uint32_t size
 #if !defined(__x86_64__)   // x86-64: a constant false in detour.h (no shadow fuzz in the 64-bit build)
 bool WantsShadow(const char* name) {
     char list[8192];  // a whole round of takeovers fits: 119 names is 2,061 characters
-    DWORD n = bof3::os::GetEnv("BOF3X_SHADOW", list, sizeof list);
+    std::uint32_t n = bof3::os::GetEnv("BOF3X_SHADOW", list, sizeof list);
     if (n == 0) return false;
     if (n >= sizeof list) Fatal("BOF3X_SHADOW is longer than %u bytes", (unsigned)sizeof list);
     return NameListed(list, name);

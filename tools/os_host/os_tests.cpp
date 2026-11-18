@@ -455,6 +455,42 @@ void TestFindAndStreams() {
     fs::remove_all(os::Path(dir.c_str()), ec);
 }
 
+// ---- a UTF-8 name as a path (R23: exe_image.cpp's BOF3X_EXEIMAGE files) -----
+
+std::string AsString(const std::u8string& u) { return std::string(u.begin(), u.end()); }
+
+void TestUtf8Paths() {
+    const fs::path base = os::Path((Scratch() + "_u8").c_str());
+    std::error_code ec;
+    const fs::path leaf(std::u8string(u8"中文é"));   // outside every single ANSI code page at once
+    fs::path file_leaf = leaf;
+    file_leaf += ".bin";
+    fs::create_directories(base / leaf, ec);
+    CHECK(!ec);
+    std::ofstream(base / leaf / file_leaf, std::ios::binary) << "utf8";
+
+    // The engine's spelling: UTF-8 with the game's backslashes.
+    const std::string dir = AsString(base.u8string()) + "\\" + AsString(leaf.u8string());
+    const std::string file = dir + "\\" + AsString(file_leaf.u8string());
+    const fs::path p = os::PathOfUtf8(file.c_str());
+    CHECK(!p.empty() && p.filename() == file_leaf);
+    {
+        std::string read;
+        std::ifstream in(p, std::ios::binary);   // closed at the brace: Windows removes no open file
+        CHECK(static_cast<bool>(in) && static_cast<bool>(in >> read) && read == "utf8");
+    }
+    CHECK(fs::equivalent(os::PathOfUtf8(dir.c_str()), base / leaf, ec) && !ec);
+
+    // Not UTF-8: a lone lead byte, a surrogate, an overlong slash, a byte past U+10FFFF; and nothing.
+    for (const char* bad : {"a\xC3", "\xED\xA0\x80", "\xC0\xAF", "\xF4\x90\x80\x80", "\xFF"})
+        CHECK(os::PathOfUtf8(bad).empty());
+    CHECK(os::PathOfUtf8(nullptr).empty() && os::PathOfUtf8("").empty());
+    CHECK(os::PathOfUtf8("\xE4\xB8\xAD") == fs::path(std::u8string(u8"中")));
+
+    fs::remove_all(base, ec);
+    CHECK(!fs::exists(base, ec));
+}
+
 }  // namespace
 
 int main() {
@@ -465,6 +501,7 @@ int main() {
     TestClocks();
     TestEnvironment();
     TestSha256();
+    TestUtf8Paths();
     std::printf("os_tests: %d checks, %d failed\n", g_checks, g_fail);
     return g_fail ? 1 : 0;
 }

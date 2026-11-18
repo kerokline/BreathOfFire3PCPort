@@ -1,11 +1,11 @@
 // BOF3X_EXEIMAGE (exe_image.h; docs/exe-import-engine.md section 4.4).
 #include "hook/exe_image.h"
 
-#include <windows.h>
-
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <filesystem>
+#include <fstream>
 #include <string>
 #include <vector>
 
@@ -115,24 +115,27 @@ bool g_disc_mapped = false;
 // and held as UTF-8 (the log's and Fatal's text); "" when unset. A path
 // outside the ANSI code page reads whole (docs/disc-only-round-review.md 2).
 std::string ImageDir() {
-    wchar_t w[MAX_PATH];
-    const DWORD n = bof3::os::GetEnvW(L"BOF3X_EXEIMAGE", w, MAX_PATH);
+    wchar_t w[bof3::os::kMaxPath];
+    const std::uint32_t n = bof3::os::GetEnvW(L"BOF3X_EXEIMAGE", w, bof3::os::kMaxPath);
     if (n == 0) return std::string();
-    if (n >= MAX_PATH) Fatal("BOF3X_EXEIMAGE: the path is longer than %u", (unsigned)MAX_PATH);
-    const int len = WideCharToMultiByte(CP_UTF8, 0, w, static_cast<int>(n), nullptr, 0, nullptr, nullptr);
-    std::string out(static_cast<std::size_t>(len > 0 ? len : 0), '\0');
-    if (len <= 0 || WideCharToMultiByte(CP_UTF8, 0, w, static_cast<int>(n), &out[0], len, nullptr, nullptr) != len)
-        Fatal("BOF3X_EXEIMAGE: the path does not convert to UTF-8 (error %lu)", static_cast<unsigned long>(bof3::os::LastError()));
+    if (n >= bof3::os::kMaxPath) Fatal("BOF3X_EXEIMAGE: the path is longer than %u", (unsigned)bof3::os::kMaxPath);
+    std::string out = bof3::os::ToUtf8(w);
+    if (out.empty()) Fatal("BOF3X_EXEIMAGE: the path does not convert to UTF-8");
     return out;
 }
 
-// A file under ImageDir() (UTF-8) opened for reading through the wide API.
-FILE* OpenUtf8(const std::string& path) {
-    const int len = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path.c_str(), -1, nullptr, 0);
-    if (len <= 0) Fatal("BOF3X_EXEIMAGE: %s is not UTF-8", path.c_str());
-    std::wstring w(static_cast<std::size_t>(len), L'\0');
-    MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path.c_str(), -1, &w[0], len);
-    return _wfopen(w.c_str(), L"rb");
+// A file under ImageDir() (UTF-8) opened for reading by its UTF-8 name
+// (os::PathOfUtf8: the wide name on Windows).
+std::ifstream OpenUtf8(const std::string& path) {
+    const std::filesystem::path p = bof3::os::PathOfUtf8(path.c_str());
+    if (p.empty()) Fatal("BOF3X_EXEIMAGE: %s is not UTF-8", path.c_str());
+    return std::ifstream(p, std::ios::binary);
+}
+
+// Up to `cap` bytes of an open stream into `out`; how many were read.
+std::size_t ReadUpTo(std::ifstream& f, void* out, std::size_t cap) {
+    f.read(static_cast<char*>(out), static_cast<std::streamsize>(cap));
+    return static_cast<std::size_t>(f.gcount());
 }
 
 // data.toml as tools/exe_tables.py writes it: `key = value` lines in [image],
@@ -182,13 +185,12 @@ Image ParseToml(const std::string& text, const std::string& path) {
 }
 
 std::string ReadWhole(const std::string& path) {
-    FILE* f = OpenUtf8(path);
+    std::ifstream f = OpenUtf8(path);
     if (!f) Fatal("BOF3X_EXEIMAGE: cannot open %s", path.c_str());
     std::string out;
     char buf[4096];
     std::size_t n;
-    while ((n = std::fread(buf, 1, sizeof buf, f)) > 0) out.append(buf, n);
-    std::fclose(f);
+    while ((n = ReadUpTo(f, buf, sizeof buf)) > 0) out.append(buf, n);
     return out;
 }
 
@@ -208,7 +210,7 @@ enum class Strict { kAccepted, kLenient, kEvery };
 
 Strict StrictMode() {
     char v[8] = {};
-    const DWORD n = bof3::os::GetEnv("BOF3X_EXEIMAGE_STRICT", v, sizeof v);
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_EXEIMAGE_STRICT", v, sizeof v);
     if (n == 0) return Strict::kAccepted;
     if (n < sizeof v && std::strcmp(v, "0") == 0) return Strict::kLenient;
     if (n < sizeof v && std::strcmp(v, "1") == 0) return Strict::kEvery;
@@ -383,11 +385,10 @@ void StrictSelfTest(const std::string& mapped_text) {
 }
 
 std::vector<unsigned char> ReadBin(const std::string& path, std::uint32_t size) {
-    FILE* f = OpenUtf8(path);
+    std::ifstream f = OpenUtf8(path);
     if (!f) Fatal("BOF3X_EXEIMAGE: cannot open %s", path.c_str());
     std::vector<unsigned char> out(size + 1);
-    const std::size_t n = std::fread(out.data(), 1, out.size(), f);
-    std::fclose(f);
+    const std::size_t n = ReadUpTo(f, out.data(), out.size());
     if (n != size) Fatal("BOF3X_EXEIMAGE: %s holds %u bytes, data.toml says %u", path.c_str(), (unsigned)n, (unsigned)size);
     out.resize(size);
     return out;
@@ -497,12 +498,11 @@ std::vector<TableRow> ComposeBase(const std::string& exe_dir, const Image& im, s
                   "names. Rebuild the cache (tools/importer.py build).",
                   dir.c_str(), r.from.c_str(), (unsigned)r.lo, (unsigned)r.hi);
         const std::string path = dir + r.from + ".bin";
-        FILE* f = OpenUtf8(path);
+        std::ifstream f = OpenUtf8(path);
         if (!f) Fatal("BOF3X_EXEIMAGE: cannot open %s, a table of this install's game data. Rebuild the cache "
                       "(tools/importer.py build).", path.c_str());
         std::vector<unsigned char> body(row->hi - row->lo + 1);   // the whole table, one byte more to see a long file
-        body.resize(std::fread(body.data(), 1, body.size(), f));
-        std::fclose(f);
+        body.resize(ReadUpTo(f, body.data(), body.size()));
         if (!LayBaseTable(*row, body, r, bin.data(), im.va, &why))
             Fatal("BOF3X_EXEIMAGE: %s: %s. Rebuild the cache (tools/importer.py build).", path.c_str(), why.c_str());
         bytes += r.hi - r.lo;
@@ -1015,13 +1015,13 @@ bool ReadBytes(const std::string& path, std::vector<unsigned char>* out) {
 
 void ExeImage_LayOptTables(void* to, std::uint32_t va, std::uint32_t size) {
     char opt[16 * 24];
-    const DWORD n = bof3::os::GetEnv("BOF3X_OPT", opt, sizeof opt);
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_OPT", opt, sizeof opt);
     if (n == 0 || n >= sizeof opt) return;   // none, or too long: ReadOptLayers refuses it at injection
     char data_mode[4];
-    const DWORD m = bof3::os::GetEnv("BOF3X_CACHE_DATA", data_mode, sizeof data_mode);
+    const std::uint32_t m = bof3::os::GetEnv("BOF3X_CACHE_DATA", data_mode, sizeof data_mode);
     if (m == 1 && data_mode[0] == '0') return;   // the cache for the music only (DIV-0089)
-    char root[MAX_PATH];
-    const DWORD r = bof3::os::GetEnv("BOF3X_CACHE", root, sizeof root);
+    char root[bof3::os::kMaxPath];
+    const std::uint32_t r = bof3::os::GetEnv("BOF3X_CACHE", root, sizeof root);
     if (r == 0 || r >= sizeof root) return;
     std::string base(root, r);
     while (base.size() > 1 && (base.back() == '\\' || base.back() == '/')) base.pop_back();
