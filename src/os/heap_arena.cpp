@@ -117,7 +117,7 @@ bool LowArena::OpenAt(void* base, std::size_t bytes) {
     return true;
 }
 
-LowArena::Head* LowArena::At(std::uint32_t off) const {
+LowArena::Head* LowArena::HeadAt(std::uint32_t off) const {
     static_assert(sizeof(Head) == kHeader, "the block header");
     return reinterpret_cast<Head*>(base_ + off);
 }
@@ -129,17 +129,17 @@ void LowArena::Link(Head* h) {
     Links* const l = LinksOf(h);
     l->prev = kNone;
     l->next = free_;
-    if (free_ != kNone) LinksOf(At(free_))->prev = OffOf(h);
+    if (free_ != kNone) LinksOf(HeadAt(free_))->prev = OffOf(h);
     free_ = OffOf(h);
 }
 
 void LowArena::Unlink(Head* h) {
     Links* const l = LinksOf(h);
     if (l->prev != kNone)
-        LinksOf(At(l->prev))->next = l->next;
+        LinksOf(HeadAt(l->prev))->next = l->next;
     else
         free_ = l->next;
-    if (l->next != kNone) LinksOf(At(l->next))->prev = l->prev;
+    if (l->next != kNone) LinksOf(HeadAt(l->next))->prev = l->prev;
 }
 
 bool LowArena::CommitTo(std::size_t end) {
@@ -157,7 +157,7 @@ LowArena::Head* LowArena::Live(const void* p) const {
     if (rel < kHeader || rel % kAlign != 0) return nullptr;
     const auto off = static_cast<std::uint32_t>(rel - kHeader);
     if (off >= end_) return nullptr;
-    Head* const h = At(off);
+    Head* const h = HeadAt(off);
     if (h->tag != kUsed || h->size < kMinBlock || static_cast<std::uint64_t>(off) + h->size > end_) return nullptr;
     return h;
 }
@@ -167,7 +167,7 @@ LowArena::Head* LowArena::Live(const void* p) const {
 // block above it or goes back to the wilderness).
 void LowArena::Split(Head* h, std::size_t need) {
     if (h->size - need < kMinBlock) return;
-    Head* const rest = At(OffOf(h) + static_cast<std::uint32_t>(need));
+    Head* const rest = HeadAt(OffOf(h) + static_cast<std::uint32_t>(need));
     rest->size = h->size - static_cast<std::uint32_t>(need);
     rest->prev = static_cast<std::uint32_t>(need);
     rest->requested = 0;
@@ -175,7 +175,7 @@ void LowArena::Split(Head* h, std::size_t need) {
     h->size = static_cast<std::uint32_t>(need);
     const std::uint32_t above = OffOf(rest) + rest->size;
     if (above < end_)
-        At(above)->prev = rest->size;
+        HeadAt(above)->prev = rest->size;
     else
         tail_ = rest->size;
     Release(rest);
@@ -188,7 +188,7 @@ void LowArena::Release(Head* h) {
     std::uint32_t off = OffOf(h);
     const std::uint32_t above = off + h->size;
     if (above < end_) {
-        Head* const n = At(above);
+        Head* const n = HeadAt(above);
         if (n->tag == kFree) {
             Unlink(n);
             n->tag = 0;
@@ -196,7 +196,7 @@ void LowArena::Release(Head* h) {
         }
     }
     if (h->prev != 0) {
-        Head* const p = At(off - h->prev);
+        Head* const p = HeadAt(off - h->prev);
         if (p->tag == kFree) {
             Unlink(p);
             h->tag = 0;
@@ -212,13 +212,13 @@ void LowArena::Release(Head* h) {
         h->tag = 0;
         return;
     }
-    At(next)->prev = h->size;
+    HeadAt(next)->prev = h->size;
     Link(h);
 }
 
 void* LowArena::Take(std::size_t need, std::size_t n) {
-    for (std::uint32_t off = free_; off != kNone; off = LinksOf(At(off))->next) {
-        Head* const h = At(off);
+    for (std::uint32_t off = free_; off != kNone; off = LinksOf(HeadAt(off))->next) {
+        Head* const h = HeadAt(off);
         if (h->size < need) continue;
         Unlink(h);
         h->tag = kUsed;
@@ -228,7 +228,7 @@ void* LowArena::Take(std::size_t need, std::size_t n) {
         return reinterpret_cast<unsigned char*>(h) + kHeader;
     }
     if (static_cast<std::uint64_t>(end_) + need > reserved_ || !CommitTo(end_ + need)) return nullptr;
-    Head* const h = At(end_);
+    Head* const h = HeadAt(end_);
     h->size = static_cast<std::uint32_t>(need);
     h->prev = tail_;
     h->requested = static_cast<std::uint32_t>(n);
@@ -296,12 +296,12 @@ void* LowArena::Realloc(void* p, std::size_t n) {
             return p;
         }
     } else {
-        Head* const nb = At(above);
+        Head* const nb = HeadAt(above);
         if (nb->tag == kFree && static_cast<std::size_t>(h->size) + nb->size >= need) {   // into the free block above
             Unlink(nb);
             nb->tag = 0;
             h->size += nb->size;
-            At(off + h->size)->prev = h->size;   // a free block never ends at end_
+            HeadAt(off + h->size)->prev = h->size;   // a free block never ends at end_
             Split(h, need);
             in_use_ = in_use_ - h->requested + n;
             h->requested = static_cast<std::uint32_t>(n);
@@ -362,7 +362,7 @@ bool LowArena::Verify(const char** why) const {
     std::size_t used = 0;
     bool last_free = false;
     while (off < end_) {
-        const Head* const h = At(off);
+        const Head* const h = HeadAt(off);
         if (h->size < kMinBlock || h->size % kAlign != 0) return fail("a block's size");
         if (static_cast<std::uint64_t>(off) + h->size > end_) return fail("a block past the used end");
         if (h->prev != last) return fail("a block's prev size");
@@ -385,9 +385,9 @@ bool LowArena::Verify(const char** why) const {
     if (last_free) return fail("a free block at the used end");
     if (used != in_use_) return fail("the bytes in use");
     std::uint32_t listed = 0, prev = kNone;
-    for (std::uint32_t f = free_; f != kNone; f = LinksOf(At(f))->next) {
-        if (f >= end_ || At(f)->tag != kFree) return fail("a listed block that is not free");
-        if (LinksOf(At(f))->prev != prev) return fail("the free list's back link");
+    for (std::uint32_t f = free_; f != kNone; f = LinksOf(HeadAt(f))->next) {
+        if (f >= end_ || HeadAt(f)->tag != kFree) return fail("a listed block that is not free");
+        if (LinksOf(HeadAt(f))->prev != prev) return fail("the free list's back link");
         if (++listed > frees) return fail("the free list longer than the free blocks");
         prev = f;
     }

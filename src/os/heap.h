@@ -98,7 +98,7 @@ public:
 
 private:
     struct Head;
-    Head* At(std::uint32_t off) const;
+    Head* HeadAt(std::uint32_t off) const;
     std::uint32_t OffOf(const Head* h) const;
     void Link(Head* h);
     void Unlink(Head* h);
