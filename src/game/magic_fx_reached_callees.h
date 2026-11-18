@@ -116,7 +116,7 @@ struct Callees {
     unsigned char (__cdecl* inventory_add)(unsigned, unsigned, unsigned);   // Inventory_Add (ours)
     void (__cdecl* item_name)(unsigned, unsigned);                   // 0x4B58F0
     const unsigned char* (__cdecl* msg_system)(unsigned);            // Msg_SystemPtr (ours)
-    unsigned long (__cdecl* queue_push)(unsigned, unsigned, unsigned long);   // BattleQueue_Push (ours)
+    std::uint32_t (__cdecl* queue_push)(unsigned, unsigned, std::uint32_t);   // BattleQueue_Push (ours)
     unsigned char (__cdecl* script_tick_once)();                     // Sprite_ScriptTickOnce (ours)
     void (__cdecl* play_sound)(unsigned, unsigned);                  // BattleActor_PlaySound (ours)
     void (__cdecl* update_screen)();                                 // Sprite_UpdateScreen (ours)

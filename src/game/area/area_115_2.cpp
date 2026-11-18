@@ -43,7 +43,7 @@ std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word
 unsigned char* Bank() { return At(::bof3::Img(Cond_Flags_addr) + 0xa0); }
 
 // The high word of a 16.16 position, as the hooks read it (a word at +2).
-std::uint16_t High(long v) { return static_cast<std::uint16_t>(static_cast<U>(v) >> 16); }
+std::uint16_t High(std::int32_t v) { return static_cast<std::uint16_t>(static_cast<U>(v) >> 16); }
 
 void SetMessage(unsigned id) { SetWord(At(::bof3::Img(at::kMessage.v)), id); }
 
@@ -61,7 +61,7 @@ using DrawAt = void (__cdecl*)(int, int);
 
 using DrawSpriteAt = void (__cdecl*)(int, int, unsigned);
 
-using RingFn = void (__cdecl*)(const long*);
+using RingFn = void (__cdecl*)(const std::int32_t*);
 
 // The region box's leave test the HUD machine's states share: the map's mode
 // byte set while +0xB is, or Field_Request 2, or bit 8 of Field_ScriptFlags.
@@ -371,10 +371,10 @@ void DrawDrift(const WorldMapTables& t) {
     rv::Store<unsigned>(rv::As<records::SVector>(v)[1].z, 0xFD00);
     rv::Store<unsigned>(rv::As<records::SVector>(v)[2].z, 0xFD00);
     rv::Store<unsigned>(rv::As<records::SVector>(v)[3].z, 0xFD00);
-    long depth = 0, flag = 0;
+    std::int32_t depth = 0, flag = 0;
     const auto* const sv = reinterpret_cast<const short*>(v);
-    using Pers4 = long (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*,
-                                  long*, long*);
+    using Pers4 = std::int32_t (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*,
+                                  std::int32_t*, std::int32_t*);
     AH_AT(Pers4, bof3::addr::Gte_RotTransPers4)(sv, sv + 4, sv + 8, sv + 12, reinterpret_cast<float*>(prim + 8),
                                                 reinterpret_cast<float*>(prim + 0x18), reinterpret_cast<float*>(prim + 0x28),
                                                 reinterpret_cast<float*>(prim + 0x38), &depth, &flag);
@@ -500,7 +500,7 @@ extern "C" void __cdecl Area116_ToArea100(void) { AH_CALL(Field_ChangeArea)(0x64
 // 0x414330 with two constants moved): Cond_ByteFD 2, story flag 0x33, x's
 // high word 0x46..0x48 and z's 0x33..0x35 (16-bit compares), the leader's pose
 // 0, 7 or 6: counter 0 = 0, Party_DropIn(0), al 1. Else al 0.
-extern "C" unsigned char __cdecl Area116_StepHook(long x, long z) {
+extern "C" unsigned char __cdecl Area116_StepHook(std::int32_t x, std::int32_t z) {
     if (Cond_ByteFD != 2) return 0;
     if (AH_CALL(Flags_Test)(Bank(), 0x33) == 0) return 0;
     if (static_cast<std::uint16_t>(High(x) - 0x46) >= 3) return 0;
@@ -536,7 +536,7 @@ extern "C" void __cdecl Area116_EffectB8Run(void) {
 // read): ours passes 0.
 extern "C" void __cdecl Area116_EffectB8Ring(void) {
     const unsigned char* const cur = Sprite_Current;
-    long point[4];
+    std::int32_t point[4];
     point[0] = rv::As<records::SpriteHead>(cur)->x;
     point[1] = rv::As<records::SpriteHead>(cur)->z;
     point[2] = rv::As<records::SpriteHead>(cur)->height;

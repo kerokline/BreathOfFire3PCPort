@@ -328,7 +328,7 @@ void Seed(unsigned k) {
     SetLong(Mem(Effect_Objects_addr + 0x34), static_cast<std::int32_t>(PickOf(0x60000, 0x60001, 0x80000, 0x80001, 0x120000, 0x11FFFF, 0x150000, 0x14FFFF, sh::Next())));
     const U z = PickOf(0x3E8000, 0x3E7FFF, 0x150000, 0x14FFFF, 0x3C0000, 0x3C0001, 0x200000, sh::Next());
     SetLong(Mem(Effect_Objects_addr + 0x38), static_cast<std::int32_t>(z));
-    Field_Kind2Z = static_cast<long>(PickOf(z, z - 1, z + 1, sh::Next()));
+    Field_Kind2Z = static_cast<std::int32_t>(PickOf(z, z - 1, z + 1, sh::Next()));
     SetWord(Mem(Effect_Objects_addr + 0x3e), sh::Next());
     Frame_Counter = sh::Half() ? sh::Next() & ~0xFu : sh::Next();
     Mem(0x903850)[0] = static_cast<unsigned char>(PickOf(0, 1, sh::Next()));

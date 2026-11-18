@@ -56,16 +56,17 @@
 // restart). The dump is the mix the game asked for, frame by frame.
 #include "hook/wav_dump.h"
 
-#include <windows.h>
-#include <mmsystem.h>
-
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <cwchar>
+#include <filesystem>
+#include <mutex>
 #include <string>
+#include <system_error>
 #include <vector>
 
 #include "audio/sound_sdl.h"
@@ -95,9 +96,24 @@ constexpr unsigned long kLockFromWriteCursor = 0x01, kLockEntireBuffer = 0x02;  
 constexpr unsigned long kPlayLooping = 0x01;                                     // DSBPLAY_LOOPING
 
 struct BufferDesc {   // the game's DSBUFFERDESC, 0x24 bytes: lpwfxFormat a 32-bit place (the image is 32-bit whatever the host)
-    unsigned long size, flags, bytes, reserved;
+    std::uint32_t size, flags, bytes, reserved;
     std::uint32_t format;
 };
+static_assert(sizeof(BufferDesc) == 0x14, "BufferDesc is DSBUFFERDESC's first 0x14 bytes, the words the dump reads");
+
+// The format a secondary buffer is made with: WAVEFORMATEX, a file format's
+// record (a RIFF WAVE's "fmt " chunk) of 18 bytes, packed.
+#pragma pack(push, 1)
+struct WaveFormat {
+    std::uint16_t wFormatTag, nChannels;
+    std::uint32_t nSamplesPerSec, nAvgBytesPerSec;
+    std::uint16_t nBlockAlign, wBitsPerSample, cbSize;
+};
+#pragma pack(pop)
+static_assert(sizeof(WaveFormat) == 18 && offsetof(WaveFormat, nSamplesPerSec) == 4 && offsetof(WaveFormat, nBlockAlign) == 12 &&
+                  offsetof(WaveFormat, wBitsPerSample) == 14,
+              "WaveFormat is WAVEFORMATEX");
+constexpr std::uint16_t kWaveFormatPcm = 1;   // WAVE_FORMAT_PCM
 
 // --- The model --------------------------------------------------------------
 
@@ -118,11 +134,15 @@ struct Buffer {
     unsigned long lock_offset = 0;
 };
 
-CRITICAL_SECTION g_lock;
+// Made by WavDump_Start and never destroyed, as the critical section it
+// replaces was initialised there and never deleted: WavDump_Stop runs at the
+// process's end (DLL_PROCESS_DETACH), when a static object's destructor may
+// already have run. Recursive, as a critical section is.
+std::recursive_mutex* g_lock = nullptr;
 bool g_on = false;
 std::vector<Buffer*> g_buffers;
 std::wstring g_dir, g_label;
-HANDLE g_file = INVALID_HANDLE_VALUE;
+std::FILE* g_file = nullptr;
 std::wstring g_path;
 std::uint64_t g_data_bytes = 0;
 std::vector<std::int16_t> g_pending;   // mixed, not yet written
@@ -246,10 +266,21 @@ void MixBuffer(Buffer& b, std::size_t at, std::size_t n) {
     }
 }
 
-void WriteAll(const void* p, DWORD n) {
-    DWORD done = 0;
-    if (!WriteFile(g_file, p, n, &done, nullptr) || done != n)
+void WriteAll(const void* p, std::uint32_t n) {
+    if (std::fwrite(p, 1, n, g_file) != n)
         Fatal("wav: writing %s failed, error %lu", Utf8Path(g_path.c_str()).text, static_cast<unsigned long>(bof3::os::LastError()));
+}
+
+// What is written so far handed to the system, as WriteFile did each write.
+void Hand() {
+    if (std::fflush(g_file) != 0)
+        Fatal("wav: writing %s failed, error %lu", Utf8Path(g_path.c_str()).text, static_cast<unsigned long>(bof3::os::LastError()));
+}
+
+// A name in the dump's directory: the system's separator between them (a
+// backslash on Windows, as ever).
+std::wstring InDir(const std::wstring& leaf) {
+    return g_dir + static_cast<wchar_t>(std::filesystem::path::preferred_separator) + leaf;
 }
 
 void PutDword(std::uint8_t* p, std::uint32_t v) { std::memcpy(p, &v, 4); }
@@ -273,51 +304,71 @@ void Header(std::uint8_t (&h)[44], std::uint64_t data) {
 
 // The next free <n>_ in the directory: one more than the largest number any
 // .wav there starts with.
+// A name ends in ".wav" as FindFirstFileW's "*.wav" matched it: the case of
+// the letters aside.
+bool IsWav(const std::wstring& name) {
+    if (name.size() < 4) return false;
+    const wchar_t* e = name.c_str() + name.size() - 4;
+    const auto lower = [](wchar_t c) { return c >= L'A' && c <= L'Z' ? static_cast<wchar_t>(c + 32) : c; };
+    return e[0] == L'.' && lower(e[1]) == L'w' && lower(e[2]) == L'a' && lower(e[3]) == L'v';
+}
+
 unsigned NextNumber() {
     unsigned next = 1;
-    WIN32_FIND_DATAW fd;
-    const HANDLE h = FindFirstFileW((g_dir + L"\\*.wav").c_str(), &fd);
-    if (h == INVALID_HANDLE_VALUE) return next;
-    do {
+    std::error_code ec;
+    std::filesystem::directory_iterator it(std::filesystem::path(g_dir), ec), end;
+    for (; !ec && it != end; it.increment(ec)) {
+        std::wstring name;
+        try {
+            name = it->path().filename().wstring();
+        } catch (...) {
+            continue;   // a name that has no wide spelling (POSIX bytes that are not UTF-8): not one of ours
+        }
+        if (!IsWav(name)) continue;
         unsigned v = 0;
-        const wchar_t* p = fd.cFileName;
+        const wchar_t* p = name.c_str();
         if (*p < L'0' || *p > L'9') continue;
         while (*p >= L'0' && *p <= L'9') v = v * 10 + static_cast<unsigned>(*p++ - L'0');
         if (*p == L'_' && v >= next) next = v + 1;
-    } while (FindNextFileW(h, &fd));
-    FindClose(h);
+    }
     return next;
 }
 
 void OpenFile() {
-    CreateDirectoryW(g_dir.c_str(), nullptr);
+    std::error_code ec;
+    std::filesystem::create_directory(std::filesystem::path(g_dir), ec);   // there already, or not made: the open says
     wchar_t number[16];
     std::swprintf(number, 16, L"%03u_", NextNumber());
-    g_path = g_dir + L"\\" + number + g_label + L".wav";
-    g_file = CreateFileW(g_path.c_str(), GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, nullptr);
-    if (g_file == INVALID_HANDLE_VALUE)
+    g_path = InDir(number + g_label + L".wav");
+    g_file = os::OpenPath(std::filesystem::path(g_path), "wbx");   // "x": never over a file that is there (CREATE_NEW)
+    if (!g_file)
         Fatal("wav: cannot create %s, error %lu", Utf8Path(g_path.c_str()).text, static_cast<unsigned long>(bof3::os::LastError()));
     std::uint8_t h[44];
     Header(h, 0);
     WriteAll(h, sizeof h);
+    Hand();
     Log("wav         writing the mix to %s (44,100 Hz 16-bit stereo; a logic frame is %.4f ms, from Frame_Counter %u)",
         Utf8Path(g_path.c_str()).text, g_frame_ms, g_first_frame);
 }
 
 // What is mixed goes to the file, then the header is made to cover it.
 void Flush() {
-    if (g_file == INVALID_HANDLE_VALUE || g_pending.empty()) return;
-    const DWORD n = static_cast<DWORD>(g_pending.size() * sizeof(std::int16_t));
+    if (!g_file || g_pending.empty()) return;
+    const std::uint32_t n = static_cast<std::uint32_t>(g_pending.size() * sizeof(std::int16_t));
     WriteAll(g_pending.data(), n);
     g_data_bytes += n;
     g_pending.clear();
     std::uint8_t h[44];
     Header(h, g_data_bytes);
-    LARGE_INTEGER zero = {}, end = {};
-    SetFilePointerEx(g_file, zero, &end, FILE_CURRENT);
-    SetFilePointerEx(g_file, zero, nullptr, FILE_BEGIN);
+    // Every write is at the end, so the end is where the next one goes: the
+    // header rewritten at 0, then back to the end (offset 0 from either:
+    // no 32-bit offset however long the file grows).
+    if (std::fseek(g_file, 0, SEEK_SET) != 0)
+        Fatal("wav: seeking in %s failed, error %lu", Utf8Path(g_path.c_str()).text, static_cast<unsigned long>(bof3::os::LastError()));
     WriteAll(h, sizeof h);
-    SetFilePointerEx(g_file, end, nullptr, FILE_BEGIN);
+    if (std::fseek(g_file, 0, SEEK_END) != 0)
+        Fatal("wav: seeking in %s failed, error %lu", Utf8Path(g_path.c_str()).text, static_cast<unsigned long>(bof3::os::LastError()));
+    Hand();
 }
 
 std::uint64_t SampleAt(std::uint32_t frame) {
@@ -364,8 +415,8 @@ void Advance(std::uint32_t now) {
 void AdvanceNow() { Advance(Frame_Counter); }
 
 struct Guard {
-    Guard() { EnterCriticalSection(&g_lock); }
-    ~Guard() { LeaveCriticalSection(&g_lock); }
+    Guard() { g_lock->lock(); }
+    ~Guard() { g_lock->unlock(); }
 };
 
 // --- The hooks ---------------------------------------------------------------
@@ -389,11 +440,14 @@ unsigned long __stdcall HookRelease(void* self) {
     return left;
 }
 
-long __stdcall HookLock(void* self, unsigned long offset, unsigned long bytes, void** first, unsigned long* first_bytes,
-                        void** second, unsigned long* second_bytes, unsigned long flags) {
+// The methods' DWORD words are std::uint32_t, as the SDL3 layer's own
+// methods spell them (sound_sdl.cpp); a LONG and an HRESULT are `long`, as
+// there.
+long __stdcall HookLock(void* self, std::uint32_t offset, std::uint32_t bytes, void** first, std::uint32_t* first_bytes,
+                        void** second, std::uint32_t* second_bytes, std::uint32_t flags) {
     const VTable& v = Originals(self);
-    const long r = As<long (__stdcall*)(void*, unsigned long, unsigned long, void**, unsigned long*, void**, unsigned long*,
-                                        unsigned long)>(v.lock)(self, offset, bytes, first, first_bytes, second, second_bytes, flags);
+    const long r = As<long (__stdcall*)(void*, std::uint32_t, std::uint32_t, void**, std::uint32_t*, void**, std::uint32_t*,
+                                        std::uint32_t)>(v.lock)(self, offset, bytes, first, first_bytes, second, second_bytes, flags);
     Guard g;
     Buffer* const b = Find(self);
     if (r != 0 || !b) return r;
@@ -404,7 +458,7 @@ long __stdcall HookLock(void* self, unsigned long offset, unsigned long bytes, v
     return r;
 }
 
-long __stdcall HookUnlock(void* self, void* first, unsigned long first_bytes, void* second, unsigned long second_bytes) {
+long __stdcall HookUnlock(void* self, void* first, std::uint32_t first_bytes, void* second, std::uint32_t second_bytes) {
     Guard g;
     Buffer* const b = Find(self);
     if (b) {
@@ -426,15 +480,15 @@ long __stdcall HookUnlock(void* self, void* first, unsigned long first_bytes, vo
         b->lock_first = nullptr;
     }
     const VTable& v = Originals(self);
-    return As<long (__stdcall*)(void*, void*, unsigned long, void*, unsigned long)>(v.unlock)(self, first, first_bytes, second,
+    return As<long (__stdcall*)(void*, void*, std::uint32_t, void*, std::uint32_t)>(v.unlock)(self, first, first_bytes, second,
                                                                                            second_bytes);
 }
 
-long __stdcall HookPlay(void* self, unsigned long reserved, unsigned long priority, unsigned long flags) {
+long __stdcall HookPlay(void* self, std::uint32_t reserved, std::uint32_t priority, std::uint32_t flags) {
     Guard g;
     AdvanceNow();
     const VTable& v = Originals(self);
-    const long r = As<long (__stdcall*)(void*, unsigned long, unsigned long, unsigned long)>(v.play)(self, reserved, priority, flags);
+    const long r = As<long (__stdcall*)(void*, std::uint32_t, std::uint32_t, std::uint32_t)>(v.play)(self, reserved, priority, flags);
     if (Buffer* const b = Find(self); b && r == 0) {
         if (!b->stream) ++g_plays;
         b->playing = true;
@@ -452,15 +506,15 @@ long __stdcall HookStop(void* self) {
     return r;
 }
 
-long __stdcall HookSetPosition(void* self, unsigned long position) {
+long __stdcall HookSetPosition(void* self, std::uint32_t position) {
     Guard g;
     AdvanceNow();
     const VTable& v = Originals(self);
-    const long r = As<long (__stdcall*)(void*, unsigned long)>(v.set_position)(self, position);
+    const long r = As<long (__stdcall*)(void*, std::uint32_t)>(v.set_position)(self, position);
     if (Buffer* const b = Find(self); b && r == 0) {
         if (b->stream)
             Fatal("wav: SetCurrentPosition(%lu) on the stream %p is not modelled (the game never asked for it until now)",
-                  position, self);
+                  static_cast<unsigned long>(position), self);
         b->pos = static_cast<double>(position / b->block);
     }
     return r;
@@ -484,11 +538,11 @@ long __stdcall HookSetPan(void* self, long pan) {
     return r;
 }
 
-long __stdcall HookSetFrequency(void* self, unsigned long frequency) {
+long __stdcall HookSetFrequency(void* self, std::uint32_t frequency) {
     Guard g;
     AdvanceNow();
     const VTable& v = Originals(self);
-    const long r = As<long (__stdcall*)(void*, unsigned long)>(v.set_frequency)(self, frequency);
+    const long r = As<long (__stdcall*)(void*, std::uint32_t)>(v.set_frequency)(self, frequency);
     if (Buffer* const b = Find(self); b && r == 0) b->frequency = frequency;
     return r;
 }
@@ -553,9 +607,9 @@ long __stdcall HookCreateBuffer(void* device, const BufferDesc* desc, void** out
     }
     Guard g;
     AdvanceNow();
-    const WAVEFORMATEX* const f = reinterpret_cast<const WAVEFORMATEX*>(static_cast<std::uintptr_t>(desc->format));
+    const WaveFormat* const f = reinterpret_cast<const WaveFormat*>(static_cast<std::uintptr_t>(desc->format));
     if (!f) Fatal("wav: a secondary buffer with no format");
-    if (f->wFormatTag != WAVE_FORMAT_PCM || (f->wBitsPerSample != 8 && f->wBitsPerSample != 16) || f->nChannels < 1 ||
+    if (f->wFormatTag != kWaveFormatPcm || (f->wBitsPerSample != 8 && f->wBitsPerSample != 16) || f->nChannels < 1 ||
         f->nChannels > 2 || f->nBlockAlign != f->nChannels * f->wBitsPerSample / 8)
         Fatal("wav: a secondary buffer of format tag %u, %u channels, %u bits, block %u is not modelled", f->wFormatTag,
               f->nChannels, f->wBitsPerSample, f->nBlockAlign);
@@ -573,7 +627,8 @@ long __stdcall HookCreateBuffer(void* device, const BufferDesc* desc, void** out
     if (b->stream) {
         ++g_streams;
         Log("wav         stream %p: %lu bytes, %lu Hz %u-bit %u channel(s), flags 0x%lX (queued in write order)", made,
-            desc->bytes, static_cast<unsigned long>(f->nSamplesPerSec), b->bits, b->channels, desc->flags);
+            static_cast<unsigned long>(desc->bytes), static_cast<unsigned long>(f->nSamplesPerSec), b->bits, b->channels,
+            static_cast<unsigned long>(desc->flags));
     }
     HookBufferVtable(made);
     return r;
@@ -619,22 +674,22 @@ std::wstring Clean(const std::wstring& s) {
 bool WavDump_On() { return g_on; }
 
 void WavDump_Start() {
-    wchar_t dir[MAX_PATH];
-    const DWORD n = bof3::os::GetEnvW(L"BOF3X_WAV_DIR", dir, MAX_PATH);
+    wchar_t dir[os::kMaxPath];
+    const std::uint32_t n = bof3::os::GetEnvW(L"BOF3X_WAV_DIR", dir, os::kMaxPath);
     if (n == 0) return;
-    if (n >= MAX_PATH) Fatal("BOF3X_WAV_DIR: the path is %lu characters, over MAX_PATH", static_cast<unsigned long>(n));
-    InitializeCriticalSection(&g_lock);
+    if (n >= os::kMaxPath) Fatal("BOF3X_WAV_DIR: the path is %lu characters, over MAX_PATH", static_cast<unsigned long>(n));
+    g_lock = new std::recursive_mutex;
     g_dir = dir;
     while (!g_dir.empty() && (g_dir.back() == L'\\' || g_dir.back() == L'/')) g_dir.pop_back();
     wchar_t label[128];
-    const DWORD ln = bof3::os::GetEnvW(L"BOF3X_WAV_LABEL", label, 128);
+    const std::uint32_t ln = bof3::os::GetEnvW(L"BOF3X_WAV_LABEL", label, 128);
     if (ln > 0 && ln < 128) {
         g_label = Clean(label);
     } else {
-        wchar_t recipe[MAX_PATH];
-        const DWORD rn = bof3::os::GetEnvW(L"BOF3X_INPUT", recipe, MAX_PATH);
+        wchar_t recipe[os::kMaxPath];
+        const std::uint32_t rn = bof3::os::GetEnvW(L"BOF3X_INPUT", recipe, os::kMaxPath);
         std::wstring stem = L"play";
-        if (rn > 0 && rn < MAX_PATH) {
+        if (rn > 0 && rn < os::kMaxPath) {
             stem = recipe;
             const std::size_t slash = stem.find_last_of(L"\\/");
             if (slash != std::wstring::npos) stem = stem.substr(slash + 1);
@@ -650,7 +705,7 @@ void WavDump_Start() {
         g_frame_ms = kCapcomFrameMs;
     } else {
         char text[32];
-        const DWORD fn = bof3::os::GetEnv("BOF3X_FRAME_MS", text, sizeof text);
+        const std::uint32_t fn = bof3::os::GetEnv("BOF3X_FRAME_MS", text, sizeof text);
         if (fn > 0 && fn < sizeof text) {
             char* end = nullptr;
             const double v = std::strtod(text, &end);
@@ -672,8 +727,9 @@ void WavDump_Start() {
     if (SoundSdl_IsCreate(held)) {
         holder = "the SDL3 layer's Create (DIV-0201)";
     } else {
-        HMODULE dsound = GetModuleHandleA("dsound.dll");
-        void* const real = dsound ? reinterpret_cast<void*>(GetProcAddress(dsound, MAKEINTRESOURCEA(1))) : nullptr;
+        // Null where no DSOUND.dll is loaded - on POSIX always (os/module.h),
+        // where the slot holds the SDL3 layer's Create or nothing the dump knows.
+        void* const real = os::ModuleExportByOrdinal("dsound.dll", 1);
         if (!real) Fatal("wav: DSOUND.dll is not loaded, or has no DirectSoundCreate (#1), and the slot is not the SDL3 layer's Create");
         if (held != real)
             Fatal("wav: the import slot 0x%08X holds %p, neither DSOUND.dll's DirectSoundCreate %p nor the SDL3 layer's Create",
@@ -698,7 +754,7 @@ void WavDump_Stop() {
     if (!g_on) return;
     // ExitProcess has ended every other thread by now; one may have died
     // holding the lock, so it is only tried.
-    if (!TryEnterCriticalSection(&g_lock)) {
+    if (!g_lock->try_lock()) {
         Log("wav         the lock is held at exit: the file stays as last flushed");
         return;
     }
@@ -706,16 +762,16 @@ void WavDump_Stop() {
         AdvanceNow();
         Flush();
     }
-    if (g_file != INVALID_HANDLE_VALUE) {
-        CloseHandle(g_file);
-        g_file = INVALID_HANDLE_VALUE;
+    if (g_file) {
+        std::fclose(g_file);
+        g_file = nullptr;
         Log("wav         %s closed: %u frames, %llu samples (%.2f s); %u buffers made, %u of them streams; %llu samples "
             "the music's queue ran dry, its lead at most %llu; %u effect plays",
             Utf8Path(g_path.c_str()).text, g_next_frame - g_first_frame, static_cast<unsigned long long>(g_data_bytes / 4),
             static_cast<double>(g_data_bytes / 4) / kRate, g_created, g_streams,
             static_cast<unsigned long long>(g_underrun_samples), static_cast<unsigned long long>(g_max_lead), g_plays);
     }
-    LeaveCriticalSection(&g_lock);
+    g_lock->unlock();
 }
 
 }  // namespace bof3

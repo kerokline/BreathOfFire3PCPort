@@ -676,7 +676,7 @@ extern "C" void __cdecl Area104_ObjectAhead121(void) {
     const U dir = o[8];
     const U x = static_cast<U>(rv::As<records::SpriteHead>(o)->x) + static_cast<U>(Long(At(::bof3::Img(Field_DirectionSteps_addr) + dir * 8))) * 2u;
     const U z = static_cast<U>(rv::As<records::SpriteHead>(o)->z) + static_cast<U>(Long(At(::bof3::Img(Field_DirectionSteps_addr) + dir * 8 + 4))) * 2u;
-    const unsigned char object = AH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 1);
+    const unsigned char object = AH_CALL(Sprite_ObjectAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), 1);
     const U button = Word(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f002));
     const U held = Input_Held;
     if ((button & held & 0xFFFF) != 0) {
@@ -705,7 +705,7 @@ extern "C" unsigned char __cdecl Area104_TurnToFree(U x, U z, U object) {
     Cur()[8] = AH_AT(Turn121Fn, area_w2e::kTurnToward121.v)(x, z, object);
     for (int turns = 0; turns < 8; ++turns) {
         if (AH_CALL(Field_LeaderStepTarget)() == 0 &&
-            AH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 0) == 0xFF)
+            AH_CALL(Sprite_ObjectAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), 0) == 0xFF)
             return 1;
         unsigned char* const o = Cur();
         o[8] = static_cast<unsigned char>((o[8] + 1) & 7);

@@ -122,17 +122,17 @@ void CellCall(std::uint32_t table, unsigned n, unsigned phase, const char* who) 
 
 // The GTE callees with the arguments the originals push: Gte_RotTrans a flag
 // pointer more than it takes, the projections a depth and a flag pointer.
-using RotTransFn = void (__cdecl*)(const short*, long*, long*);
+using RotTransFn = void (__cdecl*)(const short*, std::int32_t*, std::int32_t*);
 
-using Rtp3Fn = long (__cdecl*)(const short*, const short*, const short*, unsigned char*, unsigned char*, unsigned char*,
-                               long*, long*);
+using Rtp3Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, unsigned char*, unsigned char*, unsigned char*,
+                               std::int32_t*, std::int32_t*);
 
 #define S04_AS(type, name) ::magic_harness::Call(reinterpret_cast<type>(reinterpret_cast<void*>(&::name)))
 
 // Vertices 0..2 of Prim_VertexScratch projected to prim + 8, + 8 + step,
 // + 8 + 2 step; vertices 0..3 to four.
 void Rtp3(unsigned char* prim, unsigned step) {
-    long p, flag;
+    std::int32_t p, flag;
     S04_AS(Rtp3Fn, Gte_RotTransPers3)(VP(0), VP(8), VP(0x10), prim + 8, prim + 8 + step, prim + 8 + 2 * step, &p, &flag);
 }
 
@@ -142,17 +142,17 @@ void Rtp3(unsigned char* prim, unsigned step) {
 // RotTrans writing its translation at +0x14.
 struct Matrix {
     short m[10];
-    long t[3];
+    std::int32_t t[3];
 };
 
 void SetMatrix(const short* angles, const short* v) {
     Matrix m;
-    long flag;
+    std::int32_t flag;
     S04_AS(RotTransFn, Gte_RotTrans)(v, m.t, &flag);
     MH_CALL(Gte_RotMatrix)(angles, m.m);
     MH_CALL(Gte_MulMatrix0)(Camera_Matrix, m.m, m.m);
-    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&m));
-    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&m));
+    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
+    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
 }
 
 // ((+0x34 sar 9) - 0x4000, (+0x38 sar 9) - 0x4000, height): the task's point in
@@ -826,7 +826,7 @@ S04_EXPORT void __cdecl KickImage_PushMatrixGround(void) {
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
     short v[4];
     GroundPoint(s, 0, v);
-    const long ground = MH_CALL(AreaMap_Elevation)(ts->x, ts->z);
+    const std::int32_t ground = MH_CALL(AreaMap_Elevation)(ts->x, ts->z);
     v[2] = static_cast<short>(-Half(static_cast<short>(ground)));
     SetMatrix(angles, v);
 }

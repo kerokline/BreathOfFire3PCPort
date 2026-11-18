@@ -296,11 +296,11 @@ extern "C" void __cdecl EffectKind69_PushPointMatrix(void) {
     short v[4];
     PointVector(s, v);
     alignas(4) unsigned char m[0x20];
-    SH_CALL(Gte_RotTrans)(v, reinterpret_cast<long*>(m + 0x14));
+    SH_CALL(Gte_RotTrans)(v, reinterpret_cast<std::int32_t*>(m + 0x14));
     SH_CALL(Gte_RotMatrix)(angles, reinterpret_cast<short*>(m));
     SH_CALL(Gte_MulMatrix0)(Camera_Matrix, reinterpret_cast<short*>(m), reinterpret_cast<short*>(m));
-    SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(m));
-    SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(m));
+    SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(m));
+    SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(m));
 }
 
 // original 0x482CE0 (part 0 step 0): +0xB = Rand() & 0xF, +9 = +0xA = 0, the
@@ -315,7 +315,7 @@ extern "C" void __cdecl EffectKind69_Part0Place(void) {
     s[0xA] = 0;
     so->x = UL(Parent() + 0x34);
     so->z = UL(Parent() + 0x38);
-    const long h = SH_CALL(AreaMap_Elevation)(rv::Current<records::EffectObject>()->x, rv::Current<records::EffectObject>()->z);
+    const std::int32_t h = SH_CALL(AreaMap_Elevation)(rv::Current<records::EffectObject>()->x, rv::Current<records::EffectObject>()->z);
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->height_whole, static_cast<U>(h));
     S()[3] = static_cast<unsigned char>(S()[3] + 1);
 }
@@ -411,7 +411,7 @@ extern "C" void __cdecl EffectKind69_DrawColumn(unsigned width, unsigned base, u
     const U d2 = (2 * width) & 0xFFFF;
     const auto shade = [] { return SharedScratch.b_08; };
     const auto quad = [](unsigned char* p) {
-        long depth;
+        std::int32_t depth;
         SH_CALL(Gte_RotTransPers4)(reinterpret_cast<const short*>(At(::bof3::Img(Prim_VertexScratch_addr))), reinterpret_cast<const short*>(At(::bof3::Img(Prim_VertexScratch_addr) + 0x8)),
                                    reinterpret_cast<const short*>(At(::bof3::Img(Prim_VertexScratch_addr) + 0x10)), reinterpret_cast<const short*>(At(::bof3::Img(Prim_VertexScratch_addr) + 0x18)),
                                    reinterpret_cast<float*>(p + 8), reinterpret_cast<float*>(p + 0x18),
@@ -625,8 +625,8 @@ extern "C" void __cdecl EffectKind69_DrawLines(void) {
         unsigned char* const p = Gfx_PacketNext;
         SH_CALL(Gpu_SetLineG2)(p);
         SH_CALL(Gpu_SetSemiTrans)(p, 1);
-        long depth;
-        SH_CALL(Gte_RotTransPers)(reinterpret_cast<short*>(Prim_VertexScratch), reinterpret_cast<unsigned long*>(p + 8), &depth);
+        std::int32_t depth;
+        SH_CALL(Gte_RotTransPers)(reinterpret_cast<short*>(Prim_VertexScratch), reinterpret_cast<std::uint32_t*>(p + 8), &depth);
         SH_CALL(Gte_StoreDepthF)(reinterpret_cast<float*>(p + 0x10));
         if ((SH_CALL(Rand)() & 1) != 0)
             at::kLineAmp = (static_cast<U>(SH_CALL(Rand)()) & 0x3Fu) + 0x80u;
@@ -639,7 +639,7 @@ extern "C" void __cdecl EffectKind69_DrawLines(void) {
         const U sn = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(angle)));
         SetWord(v + 2, Sar(sn * static_cast<std::uint32_t>(at::kLineAmp), 12));
         SetWord(v + 4, (0u - i) << 6);
-        SH_CALL(Gte_RotTransPers)(reinterpret_cast<short*>(Prim_VertexScratch), reinterpret_cast<unsigned long*>(p + 0x18), &depth);
+        SH_CALL(Gte_RotTransPers)(reinterpret_cast<short*>(Prim_VertexScratch), reinterpret_cast<std::uint32_t*>(p + 0x18), &depth);
         SH_CALL(Gte_StoreDepthF)(reinterpret_cast<float*>(p + 0x20));
         p[4] = at::kLineShade;
         p[5] = at::kLineShade;
@@ -706,8 +706,8 @@ extern "C" void __cdecl EffectKind69_UpdateScreenXY(void) {
     short v[4];
     PointVector(S(), v);
     SH_CALL(Gpu_SetTile1)(p);
-    long depth;
-    SH_CALL(Gte_RotTransPers)(v, reinterpret_cast<unsigned long*>(p + 8), &depth);
+    std::int32_t depth;
+    SH_CALL(Gte_RotTransPers)(v, reinterpret_cast<std::uint32_t*>(p + 8), &depth);
     SH_CALL(Gte_StoreDepthF)(reinterpret_cast<float*>(p + 0x10));
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, FldFtol(p + 8));
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, FldFtol(p + 0xC));

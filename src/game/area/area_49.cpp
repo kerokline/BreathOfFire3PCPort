@@ -112,7 +112,7 @@ extern "C" void __cdecl Area49_ChoiceMessage(void) {
 // original 0x409440 (Area_StepHook's case for area 49, `(x, z)` answering in
 // al): a step at x exactly 0x4D8000 with Cond_ByteFD 0 runs
 // Area49_SwapFlags2To3. Answers 0.
-extern "C" int __cdecl Area49_StepHook(long x, long) {
+extern "C" int __cdecl Area49_StepHook(std::int32_t x, std::int32_t) {
     if (x == 0x4D8000 && Cond_ByteFD == 0) AH_CALL(Area49_SwapFlags2To3)();
     return 0;
 }
@@ -232,7 +232,7 @@ extern "C" unsigned char __cdecl Area49_MemberZone(unsigned member) {
 // are the cell's and whose pose is the leader's byte +8; none: 0. Story flag
 // 0x1C set: 0. Else its story flag toggled (0x57C160), 0x469FE0(0xF),
 // Sound_PlayEffect(0x202), answer 1.
-extern "C" int __cdecl Area49_CellHook(long x, long z) {
+extern "C" int __cdecl Area49_CellHook(std::int32_t x, std::int32_t z) {
     const unsigned char pose = B(::bof3::Img(ObjTrio_addr) + 0x8);
     unsigned i = 0;
     for (; i < at::kArea49CellSwitchCount; ++i) {

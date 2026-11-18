@@ -170,7 +170,7 @@ std::uint32_t Shorts9(const short* m) {
     return h;
 }
 
-void __cdecl StubDrawMode(unsigned char* prim, int dfe, int dtd, unsigned tpage, unsigned long tw) {
+void __cdecl StubDrawMode(unsigned char* prim, int dfe, int dtd, unsigned tpage, std::uint32_t tw) {
     Record(1, Address(prim), static_cast<std::uint32_t>(dfe), static_cast<std::uint32_t>(dtd), tpage, tw);
     if (Hash() % 2) SetLong(prim + 4, static_cast<std::int32_t>(0xE8000000u | tpage));
     Disturb();
@@ -217,28 +217,28 @@ unsigned __cdecl StubClut(int x, int y) {
     Disturb();
     return Hash();
 }
-long __cdecl StubRtp(const short* v, float* sxy, long* depth, long*) {
+std::int32_t __cdecl StubRtp(const short* v, float* sxy, std::int32_t* depth, std::int32_t*) {
     Record(10, Shorts3(v), Address(sxy));
     PutFloatBits(sxy);
     PutFloatBits(sxy + 1);
-    *depth = static_cast<long>(Hash());
+    *depth = static_cast<std::int32_t>(Hash());
     Disturb();
-    return static_cast<long>(Hash());
+    return static_cast<std::int32_t>(Hash());
 }
-long __cdecl StubRtp3(const short* v0, const short* v1, const short* v2, float* s0, float* s1, float* s2, long* depth,
-                      long*) {
+std::int32_t __cdecl StubRtp3(const short* v0, const short* v1, const short* v2, float* s0, float* s1, float* s2, std::int32_t* depth,
+                      std::int32_t*) {
     Record(11, Address(v0), Address(v1), Address(v2), Address(s0), Address(s1) ^ (Address(s2) << 8));
     Record(12, Shorts3(v0), Shorts3(v1), Shorts3(v2));
     for (float* s : {s0, s1, s2}) {
         PutFloatBits(s);
         PutFloatBits(s + 1);
     }
-    *depth = static_cast<long>(Hash());
+    *depth = static_cast<std::int32_t>(Hash());
     Disturb();
-    return static_cast<long>(Hash());
+    return static_cast<std::int32_t>(Hash());
 }
-long __cdecl StubRtp4(const short* v0, const short* v1, const short* v2, const short* v3, float* s0, float* s1,
-                      float* s2, float* s3, long* depth, long*) {
+std::int32_t __cdecl StubRtp4(const short* v0, const short* v1, const short* v2, const short* v3, float* s0, float* s1,
+                      float* s2, float* s3, std::int32_t* depth, std::int32_t*) {
     Record(13, Address(v0), Address(v1), Address(v2), Address(v3));
     Record(14, Address(s0), Address(s1), Address(s2), Address(s3));
     Record(15, Shorts3(v0), Shorts3(v1), Shorts3(v2), Shorts3(v3));
@@ -246,9 +246,9 @@ long __cdecl StubRtp4(const short* v0, const short* v1, const short* v2, const s
         PutFloatBits(s);
         PutFloatBits(s + 1);
     }
-    *depth = static_cast<long>(Hash());
+    *depth = static_cast<std::int32_t>(Hash());
     Disturb();
-    return static_cast<long>(Hash());
+    return static_cast<std::int32_t>(Hash());
 }
 void __cdecl StubDepths3(unsigned char* prim) {
     Record(16, Address(prim));
@@ -276,10 +276,10 @@ void __cdecl StubPushMatrix() {
     Record(19);
     Disturb();
 }
-void __cdecl StubRotTrans(const short* v, long* t, long*) {
+void __cdecl StubRotTrans(const short* v, std::int32_t* t, std::int32_t*) {
     Record(20, Shorts3(v));
     g_trans = reinterpret_cast<const unsigned char*>(t);
-    for (int i = 0; i < 3; ++i) t[i] = static_cast<long>(Hash() + static_cast<std::uint32_t>(i));
+    for (int i = 0; i < 3; ++i) t[i] = static_cast<std::int32_t>(Hash() + static_cast<std::uint32_t>(i));
     Disturb();
 }
 short* __cdecl StubRotMatrix(const short* angles, short* m) {
@@ -295,11 +295,11 @@ short* __cdecl StubMulMatrix0(const short* a, const short* b, short* out) {
     Disturb();
     return out;
 }
-void __cdecl StubSetRot(const unsigned long* m) {
+void __cdecl StubSetRot(const std::uint32_t* m) {
     Record(23, Address(m) - Address(g_matrix), Shorts9(reinterpret_cast<const short*>(m)));
     Disturb();
 }
-void __cdecl StubSetTrans(const unsigned long* m) {
+void __cdecl StubSetTrans(const std::uint32_t* m) {
     Record(24, Address(m) - Address(g_matrix), m[5], m[6], m[7]);
     Disturb();
 }
@@ -360,10 +360,10 @@ unsigned __cdecl StubFindData(const unsigned char* wave, const unsigned char** d
     Disturb();
     return Hash();
 }
-long __cdecl StubWrite(void* buffer, const void* src, unsigned offset, unsigned size) {
+std::int32_t __cdecl StubWrite(void* buffer, const void* src, unsigned offset, unsigned size) {
     Record(36, Address(buffer), Address(src), offset, size);
     Disturb();
-    return static_cast<long>(Hash());
+    return static_cast<std::int32_t>(Hash());
 }
 void __cdecl StubFree() {
     Record(37, Address(Pointer(BattleItems_SparkleCurrent_addr)));
@@ -375,34 +375,34 @@ template <unsigned N> void __cdecl StubType() {
 }
 
 // The fake buffer's methods (__stdcall, `this` first).
-long __stdcall FakeSetPosition(void* self, unsigned long position) {
+std::int32_t __stdcall FakeSetPosition(void* self, std::uint32_t position) {
     Record(50, Address(self), position);
     Disturb();
-    return static_cast<long>(Hash());
+    return static_cast<std::int32_t>(Hash());
 }
-long __stdcall FakePlay(void* self, unsigned long a, unsigned long b, unsigned long c) {
+std::int32_t __stdcall FakePlay(void* self, std::uint32_t a, std::uint32_t b, std::uint32_t c) {
     Record(51, Address(self), a, b, c);
     Disturb();
     const std::uint32_t h = Hash();
-    return h % 2 ? static_cast<long>(0x88780096u) : h % 3 == 0 ? static_cast<long>(0x88780097u) : 0;
+    return h % 2 ? static_cast<std::int32_t>(0x88780096u) : h % 3 == 0 ? static_cast<std::int32_t>(0x88780097u) : 0;
 }
-long __stdcall FakeGetStatus(void* self, unsigned long* status) {
+std::int32_t __stdcall FakeGetStatus(void* self, std::uint32_t* status) {
     Record(52, Address(self));
     *status = Hash();
     Disturb();
     return 0;
 }
-long __stdcall FakeStop(void* self) {
+std::int32_t __stdcall FakeStop(void* self) {
     Record(53, Address(self));
     Disturb();
     return 0;
 }
-unsigned long __stdcall FakeRelease(void* self) {
+std::uint32_t __stdcall FakeRelease(void* self) {
     Record(54, Address(self));
     Disturb();
     return Hash();
 }
-long __stdcall FakeOther(void* self) {
+std::int32_t __stdcall FakeOther(void* self) {
     Record(55, Address(self));
     return 0;
 }

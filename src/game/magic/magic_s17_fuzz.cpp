@@ -37,7 +37,7 @@ constexpr unsigned kPrimReserve = 0x700;   // the most a draw writes past Gfx_Pa
 struct Own {
     unsigned char prims[kPrimBytes];
     std::uint32_t edge_v[8];   // LeechShell_Edge's four SVECTORs, by value
-    long edge_out;
+    std::int32_t edge_out;
     std::uint32_t pad;
 };
 alignas(16) Own g_own;
@@ -97,25 +97,25 @@ std::uint32_t __cdecl RecSetTint(unsigned char* sprite, std::uint32_t r, std::ui
 // by address (they are the primitive's); x, y (and the depth for the first)
 // written at each output, the depth cue to *p.
 std::uint32_t Project4(std::uint32_t address, const short* v0, const short* v1, const short* v2, const short* v3, float* o0,
-                       float* o1, float* o2, float* o3, long* p, unsigned out_bytes) {
+                       float* o1, float* o2, float* o3, std::int32_t* p, unsigned out_bytes) {
     mh::Record(address, H6(v0) ^ Key(o0), H6(v1) ^ Key(o1), H6(v2) ^ Key(o2), H6(v3) ^ Key(o3));
     Fill(o0, out_bytes, 1);
     Fill(o1, out_bytes, 2);
     Fill(o2, out_bytes, 3);
     Fill(o3, out_bytes, 4);
-    *p = static_cast<long>(mh::Noise() ^ 5);
+    *p = static_cast<std::int32_t>(mh::Noise() ^ 5);
     mh::Stir();
     return mh::Noise();
 }
-long __cdecl RecRotAverage4(const short* v0, const short* v1, const short* v2, const short* v3, float* o0, float* o1, float* o2,
-                            float* o3, long* p) {
-    return static_cast<long>(Project4(bof3::addr::Gte_RotAverage4, v0, v1, v2, v3, o0, o1, o2, o3, p, 12));
+std::int32_t __cdecl RecRotAverage4(const short* v0, const short* v1, const short* v2, const short* v3, float* o0, float* o1, float* o2,
+                            float* o3, std::int32_t* p) {
+    return static_cast<std::int32_t>(Project4(bof3::addr::Gte_RotAverage4, v0, v1, v2, v3, o0, o1, o2, o3, p, 12));
 }
-long __cdecl RecRotTransPers4(const short* v0, const short* v1, const short* v2, const short* v3, float* o0, float* o1, float* o2,
-                              float* o3, long* p) {
-    return static_cast<long>(Project4(bof3::addr::Gte_RotTransPers4, v0, v1, v2, v3, o0, o1, o2, o3, p, 8));
+std::int32_t __cdecl RecRotTransPers4(const short* v0, const short* v1, const short* v2, const short* v3, float* o0, float* o1, float* o2,
+                              float* o3, std::int32_t* p) {
+    return static_cast<std::int32_t>(Project4(bof3::addr::Gte_RotTransPers4, v0, v1, v2, v3, o0, o1, o2, o3, p, 8));
 }
-void __cdecl RecRotTrans(const short* v, long* out) {
+void __cdecl RecRotTrans(const short* v, std::int32_t* out) {
     mh::Record(bof3::addr::Gte_RotTrans, H6(v), 0, 0, 0);
     Fill(out, 12, 6);
     mh::Stir();
@@ -132,11 +132,11 @@ short* __cdecl RecMulMatrix0(const short* a, const short* b, short* out) {
     mh::Stir();
     return out;
 }
-void __cdecl RecSetRot(const unsigned long* m) {
+void __cdecl RecSetRot(const std::uint32_t* m) {
     mh::Record(bof3::addr::Gte_SetRotMatrix, mh::HashBytes(m, 18), 0, 0, 0);
     mh::Stir();
 }
-void __cdecl RecSetTrans(const unsigned long* m) {
+void __cdecl RecSetTrans(const std::uint32_t* m) {
     mh::Record(bof3::addr::Gte_SetTransMatrix, mh::HashBytes(reinterpret_cast<const unsigned char*>(m) + 0x14, 12), 0, 0, 0);
     mh::Stir();
 }
@@ -146,7 +146,7 @@ int __cdecl RecRatan2(std::uint32_t y, std::uint32_t x) {
     const std::uint32_t h = mh::Noise();
     return static_cast<int>(h % 2 ? g_ratan_hint ^ (h & ~0xFC0u & 0x7F03Fu) : h);
 }
-void __cdecl RecSort(std::uint32_t x, std::uint32_t z, long* depths, unsigned char* prims, std::uint32_t count,
+void __cdecl RecSort(std::uint32_t x, std::uint32_t z, std::int32_t* depths, unsigned char* prims, std::uint32_t count,
                      std::uint32_t stride, std::uint32_t dy) {
     mh::Record(kSortPrims, x, z, Key(prims) ^ mh::HashBytes(depths, 4 * (count & 0xFF)),
                (count & 0xFF) | (stride & 0xFF) << 8 | (dy & 0xFF) << 16);
@@ -175,11 +175,11 @@ void __cdecl RecMoteDispatch() {
                Sprite_Current[1], 0);
     mh::Stir();
 }
-void __cdecl RecEdge(unsigned char* prim, long* out, std::uint32_t a0, std::uint32_t a1, std::uint32_t a2, std::uint32_t a3,
+void __cdecl RecEdge(unsigned char* prim, std::int32_t* out, std::uint32_t a0, std::uint32_t a1, std::uint32_t a2, std::uint32_t a3,
                      std::uint32_t a4, std::uint32_t a5, std::uint32_t a6, std::uint32_t a7) {
     const std::uint32_t v[8] = {a0, a1, a2, a3, a4, a5, a6, a7};
     mh::Record(bof3::addr::LeechShell_Edge, Key(prim), H6(v) ^ (H6(v + 2) * 3), H6(v + 4) ^ (H6(v + 6) * 5), 0);
-    *out = static_cast<long>(mh::Noise() ^ 9);
+    *out = static_cast<std::int32_t>(mh::Noise() ^ 9);
     mh::Stir();
 }
 

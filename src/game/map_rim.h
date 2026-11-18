@@ -82,7 +82,7 @@ int Walk(unsigned read_inset);
 // Layer -1 (grown row 0): a DrawLayers-shaped record of ours, 12 dwords - three
 // (first, last) pairs per display buffer, interleaved as Capcom's - and its
 // draw-table cells, which DrawTable's layer byte cannot key.
-unsigned long* ExtraLayer();
+std::uint32_t* ExtraLayer();
 void ExtraReset(unsigned buffer_index);   // DrawLayers_Reset's for the record
 void ExtraTablePush(unsigned key, unsigned item);
 void ExtraTableSort();

@@ -515,7 +515,7 @@ void DumpPcm(const char* file_name, const Run& capcom, const Run& ours) {
     for (const char* p = names; *p;) {
         const char* end = p;
         while (*end && *end != ',') ++end;
-        if (static_cast<std::size_t>(end - p) == len && _strnicmp(p, file_name, len) == 0) listed = true;
+        if (static_cast<std::size_t>(end - p) == len && bof3::os::SameNameN(p, file_name, len)) listed = true;
         p = *end ? end + 1 : end;
     }
     if (!listed) return;

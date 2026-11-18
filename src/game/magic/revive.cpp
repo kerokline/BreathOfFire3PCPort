@@ -100,7 +100,7 @@ void DrawMode(unsigned tpage) { MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, t
 void LinkAtActor(int dy, unsigned size) {
     const unsigned char* const sc = Sprite_Current;
     const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tsc->x), static_cast<unsigned long>(tsc->z), dy,
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(tsc->x), static_cast<std::uint32_t>(tsc->z), dy,
                                 size);
 }
 

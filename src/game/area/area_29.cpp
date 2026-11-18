@@ -66,8 +66,8 @@ const Callees kOriginals = {
     Gpu_SetPolyFT4,
     Gpu_SetShadeTex,
     Gpu_SetSemiTrans,
-    As<long (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*, long*,
-                       long*)>(&Gte_RotTransPers4),
+    As<std::int32_t (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*, std::int32_t*,
+                       std::int32_t*)>(&Gte_RotTransPers4),
     Gte_PrimDepths4_10,
     Prim_SetTexture,
     Gfx_CommitPrim,
@@ -108,7 +108,7 @@ extern "C" void __cdecl Area29_PickFieldObject(void) {
         const U z = static_cast<std::uint32_t>(Area29_Cells[cell * 2 + 1]) << 16;
         o->x = static_cast<std::int32_t>(x);
         o->z = static_cast<std::int32_t>(z);
-        const long height = g.elevation(o->x, static_cast<long>(z));
+        const std::int32_t height = g.elevation(o->x, static_cast<std::int32_t>(z));
         o->height_whole = static_cast<unsigned>(height);
     }
     Field_StepCount = static_cast<unsigned short>(Long(At(::bof3::Img(ObjTrio_addr) + 0x134)) - 5);

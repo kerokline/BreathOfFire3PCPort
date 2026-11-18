@@ -98,7 +98,7 @@ void Tick() {
 
 using Fn = void (__cdecl*)();
 
-Fn HandlerFrameCallees(unsigned long entry) { return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(entry)); }
+Fn HandlerFrameCallees(std::uint32_t entry) { return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(entry)); }
 
 // `cdq` / `idiv`: the original's signed division, faults included - a zero
 // divisor raises the same #DE at the same point of the same computation,
@@ -302,12 +302,12 @@ extern "C" void __cdecl CameraTurn_Start(void) {
     const std::int32_t x = Camera_Angles[0], z = Camera_Angles[2];
     unsigned char* const object = Sprite_Current;
     const std::int32_t y = Camera_Angles[1];
-    CameraTurn_Angles[0] = static_cast<long>(static_cast<std::uint32_t>(x) << 16);
-    CameraTurn_Angles[1] = static_cast<long>(static_cast<std::uint32_t>(y) << 16);
-    CameraTurn_Angles[2] = static_cast<long>(static_cast<std::uint32_t>(z) << 16);
+    CameraTurn_Angles[0] = static_cast<std::int32_t>(static_cast<std::uint32_t>(x) << 16);
+    CameraTurn_Angles[1] = static_cast<std::int32_t>(static_cast<std::uint32_t>(y) << 16);
+    CameraTurn_Angles[2] = static_cast<std::int32_t>(static_cast<std::uint32_t>(z) << 16);
     const auto step = [object](unsigned at, std::int32_t angle) {
         const std::uint32_t diff = static_cast<std::uint32_t>(move_script::Long(object + at)) - static_cast<std::uint32_t>(angle);
-        return static_cast<long>(Idiv(static_cast<std::int32_t>(diff << 16), object[9]).quot);
+        return static_cast<std::int32_t>(Idiv(static_cast<std::int32_t>(diff << 16), object[9]).quot);
     };
     CameraTurn_Steps[0] = step(0x64, x);
     CameraTurn_Steps[1] = step(0x68, y);
@@ -330,9 +330,9 @@ extern "C" void __cdecl CameraTurn_Step(void) {
     const std::uint32_t x = static_cast<std::uint32_t>(CameraTurn_Angles[0]) + static_cast<std::uint32_t>(CameraTurn_Steps[0]);
     const std::uint32_t y = static_cast<std::uint32_t>(CameraTurn_Angles[1]) + static_cast<std::uint32_t>(CameraTurn_Steps[1]);
     const std::uint32_t z = static_cast<std::uint32_t>(CameraTurn_Angles[2]) + static_cast<std::uint32_t>(CameraTurn_Steps[2]);
-    CameraTurn_Angles[0] = static_cast<long>(x);
-    CameraTurn_Angles[1] = static_cast<long>(y);
-    CameraTurn_Angles[2] = static_cast<long>(z);
+    CameraTurn_Angles[0] = static_cast<std::int32_t>(x);
+    CameraTurn_Angles[1] = static_cast<std::int32_t>(y);
+    CameraTurn_Angles[2] = static_cast<std::int32_t>(z);
     Camera_Angles[0] = static_cast<short>(x >> 16);
     Camera_Angles[1] = static_cast<short>(y >> 16);
     Camera_Angles[2] = static_cast<short>(z >> 16);

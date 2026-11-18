@@ -46,7 +46,6 @@
 
 #include <filesystem>
 #include <system_error>
-#include <windows.h>
 
 #include <cstdint>
 #include <cstdio>
@@ -63,6 +62,7 @@
 #include "hook/input_script.h"
 #include "hook/log.h"
 #include "hook/snapshot.h"
+#include "input/key_codes.h"
 #include "os/os.h"
 
 namespace {
@@ -287,8 +287,8 @@ void ListsSelfTest() {
     const char sep = static_cast<char>(std::filesystem::path::preferred_separator);
     const std::string tmp = tmp_dir.back() == sep ? tmp_dir : tmp_dir + sep;
     char dir_a[bof3::os::kMaxPath], dir_b[bof3::os::kMaxPath];
-    std::snprintf(dir_a, sizeof dir_a, "%sbof3x_qm_a_%lu\\", tmp.c_str(), static_cast<unsigned long>(bof3::os::ProcessId()));
-    std::snprintf(dir_b, sizeof dir_b, "%sbof3x_qm_b_%lu\\", tmp.c_str(), static_cast<unsigned long>(bof3::os::ProcessId()));
+    std::snprintf(dir_a, sizeof dir_a, "%sbof3x_qm_a_%u\\", tmp.c_str(), static_cast<std::uint32_t>(bof3::os::ProcessId()));
+    std::snprintf(dir_b, sizeof dir_b, "%sbof3x_qm_b_%u\\", tmp.c_str(), static_cast<std::uint32_t>(bof3::os::ProcessId()));
     std::filesystem::create_directories(bof3::os::Path(dir_a), ec);
     std::filesystem::create_directories(bof3::os::Path(dir_b), ec);
     std::vector<std::string> made;
@@ -453,13 +453,13 @@ void CursorSelfTest() {
 
 namespace bof3 {
 
-bool QuickMenu_Key(unsigned vk, long lparam) {
+bool QuickMenu_Key(unsigned vk, std::int32_t lparam) {
     const bool repeat = (lparam & (1L << 30)) != 0;
     if (g_open) {
-        if (vk == VK_F5 && !repeat) Close("F5");
+        if (vk == bof3x::input::kVkF5 && !repeat) Close("F5");
         return true;   // every key is the menu's while it is open
     }
-    if (vk != VK_F5) return false;
+    if (vk != bof3x::input::kVkF5) return false;
     if (repeat) return true;
     if (Frame_Counter == 0) return false;   // before the loop's first frame (the intro videos): F5 is nothing, as before
     Open();

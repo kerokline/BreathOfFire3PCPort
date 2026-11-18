@@ -317,7 +317,7 @@ extern "C" void __cdecl BattleObj_StateInit(void) {
     rv::As<records::PartyMember>(S())->direction = battle_obj_states::At(::bof3::Img(battle_obj_states::at::kPoseBase.v))[0];
     S()[0x48] = 0;
     auto* const member_s = rv::As<records::PartyMember>(S());
-    const long h = battle_obj_states::g.elevation(member_s->x, member_s->z);
+    const std::int32_t h = battle_obj_states::g.elevation(member_s->x, member_s->z);
     rv::Store<unsigned>(rv::As<records::PartyMember>(S())->height_whole, static_cast<unsigned>(h));
     S()[0x2B] = 0;
     rv::As<records::PartyMember>(S())->state = 2;

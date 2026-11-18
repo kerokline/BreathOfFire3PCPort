@@ -158,7 +158,7 @@ extern "C" void __cdecl EffectKind81_DrawDrop(unsigned char* drop) {
     if (drop[3] == 0) return;
     unsigned char* const p = Gfx_PacketNext;
     SH_CALL(Gpu_SetTile1)(p);
-    SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(drop + 4), reinterpret_cast<float*>(p + 8));
+    SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const std::int32_t*>(drop + 4), reinterpret_cast<float*>(p + 8));
     p[6] = 0;
     p[5] = 0;
     p[4] = 0;
@@ -169,7 +169,7 @@ extern "C" void __cdecl EffectKind81_DrawDrop(unsigned char* drop) {
     unsigned char* const t = Gfx_PacketNext;
     SH_CALL(Gpu_SetTile)(t);
     SH_CALL(Gpu_SetSemiTrans)(t, 1);
-    SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(drop + 4), reinterpret_cast<float*>(t + 8));
+    SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const std::int32_t*>(drop + 4), reinterpret_cast<float*>(t + 8));
     FldSub(t + 8, t + 8, At(at::kOne));
     SetBits(t + 0x14, 0x40400000u);   // 3.0f
     SetBits(t + 0x18, 0x40400000u);
@@ -196,7 +196,7 @@ extern "C" void __cdecl EffectKind81_PlaceSources(void) {
         const U x = static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(B(::bof3::Img(at::kSourceCells.v) + 2 * i)))) << 16;
         SetUL(src + 4, x);
         SetUL(src + 8, z);
-        const long ground = SH_CALL(AreaMap_Elevation)(static_cast<long>(x), static_cast<long>(z));
+        const std::int32_t ground = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z));
         SetUL(src + 0xC, static_cast<U>(S16(static_cast<U>(ground))) << 16);
     }
 }

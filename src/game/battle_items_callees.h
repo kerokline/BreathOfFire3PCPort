@@ -89,7 +89,7 @@ constexpr ::bof3::image::CodeVa kSetTint{bof3::addr::Sprite_SetTint};
 constexpr ::bof3::image::CodeVa kPlayById{bof3::addr::Sound_PlayById};
 
 struct Callees {
-    void (__cdecl* set_draw_mode)(unsigned char*, int, int, unsigned, unsigned long);   // Gpu_SetDrawMode (ours)
+    void (__cdecl* set_draw_mode)(unsigned char*, int, int, unsigned, std::uint32_t);   // Gpu_SetDrawMode (ours)
     void (__cdecl* commit)(unsigned, unsigned);                                         // Gfx_CommitPrim (ours)
     void (__cdecl* commit_sorted)(unsigned, unsigned, unsigned, unsigned);              // 0x572FA0
     int (__cdecl* sin)(int);                                                            // Math_Sin (ours)
@@ -103,19 +103,19 @@ struct Callees {
     unsigned (__cdecl* get_tpage)(unsigned, unsigned, int, int);                        // Gpu_GetTPage (ours)
     unsigned (__cdecl* get_clut)(int, int);                                             // Gpu_GetClut (ours)
     // The three projections get the flag pointer libgte has; the port's do not read it.
-    long (__cdecl* rtp)(const short*, float*, long*, long*);                            // Gte_RotTransPers (ours)
-    long (__cdecl* rtp3)(const short*, const short*, const short*, float*, float*, float*, long*, long*);
-    long (__cdecl* rtp4)(const short*, const short*, const short*, const short*, float*, float*, float*, float*,
-                         long*, long*);                                                 // Gte_RotTransPers3 / 4 (ours)
+    std::int32_t (__cdecl* rtp)(const short*, float*, std::int32_t*, std::int32_t*);                            // Gte_RotTransPers (ours)
+    std::int32_t (__cdecl* rtp3)(const short*, const short*, const short*, float*, float*, float*, std::int32_t*, std::int32_t*);
+    std::int32_t (__cdecl* rtp4)(const short*, const short*, const short*, const short*, float*, float*, float*, float*,
+                         std::int32_t*, std::int32_t*);                                                 // Gte_RotTransPers3 / 4 (ours)
     void (__cdecl* depths3)(unsigned char*);                                            // Gte_PrimDepths3_10B (ours)
     void (__cdecl* depths4)(unsigned char*);                                            // Gte_PrimDepths4_14 (ours)
     void (__cdecl* store_depth)(float*);                                                // Gte_StoreDepthF (ours)
     void (__cdecl* push_matrix)();                                                      // Gte_PushMatrix (ours)
-    void (__cdecl* rot_trans)(const short*, long*, long*);                              // Gte_RotTrans (ours)
+    void (__cdecl* rot_trans)(const short*, std::int32_t*, std::int32_t*);                              // Gte_RotTrans (ours)
     short* (__cdecl* rot_matrix)(const short*, short*);                                 // Gte_RotMatrix (ours)
     short* (__cdecl* mul_matrix0)(const short*, const short*, short*);                  // Gte_MulMatrix0 (ours)
-    void (__cdecl* set_rot)(const unsigned long*);                                      // Gte_SetRotMatrix (ours)
-    void (__cdecl* set_trans)(const unsigned long*);                                    // Gte_SetTransMatrix (ours)
+    void (__cdecl* set_rot)(const std::uint32_t*);                                      // Gte_SetRotMatrix (ours)
+    void (__cdecl* set_trans)(const std::uint32_t*);                                    // Gte_SetTransMatrix (ours)
     int (__cdecl* rand)();                                                              // Rand, the CRT's
     void (__cdecl* set_animation)(unsigned);                                            // Sprite_SetAnimation (ours), a whole dword
     void (__cdecl* enemy_animation)(unsigned, unsigned);                                // 0x435A20
@@ -127,7 +127,7 @@ struct Callees {
     void (__cdecl* stream_stop)();                                                      // SndStream_Stop (ours, here)
     void* (__cdecl* create_from_wave)(const unsigned char*);                            // SndBuf_CreateFromWave (ours)
     unsigned (__cdecl* find_data)(const unsigned char*, const unsigned char**);         // Wave_FindData (ours)
-    long (__cdecl* buffer_write)(void*, const void*, unsigned, unsigned);               // SndBuf_Write (ours)
+    std::int32_t (__cdecl* buffer_write)(void*, const void*, unsigned, unsigned);               // SndBuf_Write (ours)
     void (__cdecl* sparkle_free)();                                                     // Sparkle_Free (ours, here)
 };
 

@@ -42,7 +42,7 @@ struct Callees {
     const std::uint32_t* member_states;
     // Member_Start
     void (__cdecl* clear_steps)();
-    long (__cdecl* ground_at)(long, long);
+    std::int32_t (__cdecl* ground_at)(std::int32_t, std::int32_t);
     void (__cdecl* set_animation)(unsigned char);
     // Member_Control
     const std::uint32_t* control_states;
@@ -67,13 +67,13 @@ struct Callees {
     unsigned char (__cdecl* test_534920)();           // V2
     void (__cdecl* follow)();                         // Member_Follow
     // Member_FollowStep
-    void (__cdecl* catch_up)(long, long);             // Member_CatchUp
-    void (__cdecl* direction_to)(long, long, unsigned char*);   // Field_DirectionTo
+    void (__cdecl* catch_up)(std::int32_t, std::int32_t);             // Member_CatchUp
+    void (__cdecl* direction_to)(std::int32_t, std::int32_t, unsigned char*);   // Field_DirectionTo
     unsigned char (__cdecl* step_ahead)();            // Member_StepAhead
-    unsigned char (__cdecl* blocked_at)(long, long, unsigned, long);   // 0x535610, nobody's
+    unsigned char (__cdecl* blocked_at)(std::int32_t, std::int32_t, unsigned, std::int32_t);   // 0x535610, nobody's
     // Member_StepAhead
     unsigned char (__cdecl* cell_ahead)();            // Field_CellAhead
-    long (__cdecl* object_at)(long, long, unsigned);  // 0x5725C0, M
+    std::int32_t (__cdecl* object_at)(std::int32_t, std::int32_t, unsigned);  // 0x5725C0, M
     // Member_CatchUp
     unsigned char (__cdecl* map_cell)(unsigned, unsigned);   // 0x592890, nobody's
     // Member_Idle
@@ -92,7 +92,7 @@ struct Callees {
     // Field_CellKind
     unsigned char (__cdecl* byte_at)(short, short);   // AreaMap_ByteAt
     unsigned char (__cdecl* cell_facing)(unsigned);   // Field_CellFacing
-    unsigned char (__cdecl* object_ahead)(long, long);   // Field_ObjectAhead
+    unsigned char (__cdecl* object_ahead)(std::int32_t, std::int32_t);   // Field_ObjectAhead
 };
 
 extern const Callees kOriginals;

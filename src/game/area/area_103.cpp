@@ -91,10 +91,10 @@ extern "C" void __cdecl Area103_CountIfLeader89Zero(void) {
 // MapView_Elevation + Area103_Shake[Frame_Counter & 3] (signed) * 8.
 extern "C" void __cdecl Area103_ShakeElevation(void) {
     const unsigned f = Frame_Counter & 3;
-    const long now = MapView_Elevation;
+    const std::int32_t now = MapView_Elevation;
     MapView_Redraw = 2;
     const auto step = static_cast<std::int32_t>(static_cast<signed char>(B(::bof3::Img(Area103_Shake_addr) + f)));
-    MapView_Elevation = static_cast<long>(static_cast<U>(now) + static_cast<U>(step) * 8u);
+    MapView_Elevation = static_cast<std::int32_t>(static_cast<U>(now) + static_cast<U>(step) * 8u);
 }
 
 // original 0x414620 (area 103 +0x3C[4]; PSX 0x801F57FC): the running object's
@@ -102,7 +102,7 @@ extern "C" void __cdecl Area103_ShakeElevation(void) {
 extern "C" void __cdecl Area103_Ground(void) {
     const unsigned char* const cur = Sprite_Current;
     const auto* const tCur = rv::AsConst<records::SpriteObject>(cur);
-    const long ground = AH_CALL(AreaMap_Elevation)(tCur->x, tCur->z);
+    const std::int32_t ground = AH_CALL(AreaMap_Elevation)(tCur->x, tCur->z);
     rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, static_cast<unsigned>(ground));
 }
 

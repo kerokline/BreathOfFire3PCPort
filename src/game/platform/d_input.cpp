@@ -100,7 +100,7 @@ void LoadPadMap() {
         bof3::Log("pad: BOF3X_PAD - %d items understood, %u inputs bound, layout %s", understood,
                   static_cast<unsigned>(pad.size()), input::LayoutName(layout));
     } else if (n >= sizeof text) {
-        bof3::Log("pad: BOF3X_PAD too long (%lu); the default map", static_cast<unsigned long>(n));
+        bof3::Log("pad: BOF3X_PAD too long (%u); the default map", static_cast<std::uint32_t>(n));
     }
     pad_read::g_layout = LayoutFromEnv(layout);
 }
@@ -121,7 +121,7 @@ void LoadKeyTable() {
     const DWORD n = bof3::os::GetEnv("BOF3X_KEYS", text, sizeof text);
     if (n == 0) return;
     if (n >= sizeof text) {
-        bof3::Log("pad: BOF3X_KEYS too long (%lu); the game's own table", static_cast<unsigned long>(n));
+        bof3::Log("pad: BOF3X_KEYS too long (%u); the game's own table", static_cast<std::uint32_t>(n));
         return;
     }
     std::vector<input::KeyBinding> keys;
@@ -170,8 +170,8 @@ extern "C" void __cdecl DInput_Init(void* hinstance, void* hwnd) {
     const HRESULT created = create ? create(static_cast<HINSTANCE>(hinstance), DIRECTINPUT_VERSION, &di, nullptr)
                                    : static_cast<HRESULT>(E_FAIL);
     if (created != DI_OK || !di) {
-        bof3::Log("pad: DirectInputCreateA failed (dinput.dll %p, entry %p, hinstance %p, hr %#lx) - no keyboard through DirectInput",
-                  static_cast<void*>(dinput), reinterpret_cast<void*>(create), hinstance, static_cast<unsigned long>(created));
+        bof3::Log("pad: DirectInputCreateA failed (dinput.dll %p, entry %p, hinstance %p, hr %#x) - no keyboard through DirectInput",
+                  static_cast<void*>(dinput), reinterpret_cast<void*>(create), hinstance, static_cast<std::uint32_t>(created));
         StartSdl();
         return;
     }

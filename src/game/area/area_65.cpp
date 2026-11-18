@@ -54,7 +54,7 @@ void PlaceOneObject(std::uint32_t positions, std::uint32_t weights) {
         const std::int32_t x = static_cast<std::int32_t>(static_cast<std::uint32_t>(B(positions + r * 2)) << 16);
         tObject->x = x;
         tObject->z = z;
-        const long ground = AH_CALL(AreaMap_Elevation)(tObject->x, z);
+        const std::int32_t ground = AH_CALL(AreaMap_Elevation)(tObject->x, z);
         rv::Store<unsigned>(rv::As<records::SpriteObject>(object)->height_whole, static_cast<unsigned>(ground));
     }
     Field_StepCount = static_cast<unsigned short>(Long(Mem(::bof3::Img(ObjTrio_addr) + 0x134)) - 5);
@@ -680,10 +680,10 @@ extern "C" void __cdecl Area65_DrawDrift(void) {
     rv::Store<unsigned>(rv::As<records::SVector>(v)[1].z, 0xFD00);
     rv::Store<unsigned>(rv::As<records::SVector>(v)[2].z, 0xFD00);
     rv::Store<unsigned>(rv::As<records::SVector>(v)[3].z, 0xFD00);
-    long depth = 0, flag = 0;
+    std::int32_t depth = 0, flag = 0;
     const auto* const sv = reinterpret_cast<const short*>(v);
-    using Pers4 = long (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*,
-                                  long*, long*);
+    using Pers4 = std::int32_t (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*,
+                                  std::int32_t*, std::int32_t*);
     AH_AT(Pers4, bof3::addr::Gte_RotTransPers4)(sv, sv + 4, sv + 8, sv + 12, reinterpret_cast<float*>(prim + 8),
                                                 reinterpret_cast<float*>(prim + 0x18), reinterpret_cast<float*>(prim + 0x28),
                                                 reinterpret_cast<float*>(prim + 0x38), &depth, &flag);

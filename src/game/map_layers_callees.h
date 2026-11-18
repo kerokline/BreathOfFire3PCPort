@@ -18,36 +18,36 @@ struct Callees {
     void (__cdecl* rows_prev)();
     void (__cdecl* place_runs)();
     short* (__cdecl* rot_matrix)(const short*, short*);
-    void (__cdecl* apply_matrix)(const short*, const short*, long*);
-    void (__cdecl* set_rot)(const unsigned long*);
-    void (__cdecl* set_trans)(const unsigned long*);
+    void (__cdecl* apply_matrix)(const short*, const short*, std::int32_t*);
+    void (__cdecl* set_rot)(const std::uint32_t*);
+    void (__cdecl* set_trans)(const std::uint32_t*);
     void (__cdecl* build)();
     // MapView_Build
     void (__cdecl* layers_reset)();
-    void (__cdecl* load_vertex)(const unsigned long*);
+    void (__cdecl* load_vertex)(const std::uint32_t*);
     void (__cdecl* rtps)();
-    void (__cdecl* store_xy)(unsigned long*);
+    void (__cdecl* store_xy)(std::uint32_t*);
     unsigned (__cdecl* cell_textures)(unsigned, unsigned, unsigned char*, unsigned);
     unsigned short (__cdecl* alloc)();
-    void (__cdecl* load_vertices3)(const unsigned long*);
+    void (__cdecl* load_vertices3)(const std::uint32_t*);
     void (__cdecl* rtpt)();
-    void (__cdecl* link)(unsigned long*, unsigned long);
-    void (__cdecl* store_xy3)(unsigned long*, unsigned long*, unsigned long*);
+    void (__cdecl* link)(std::uint32_t*, std::uint32_t);
+    void (__cdecl* store_xy3)(std::uint32_t*, std::uint32_t*, std::uint32_t*);
     void (__cdecl* depths4)(void*);
     void (__cdecl* depth_f3)(float*, float*, float*);
     void (__cdecl* release_cell)(unsigned char*);
     void (__cdecl* sort)();
     // MapView_CellTextures
-    void (__cdecl* set_texture)(unsigned long, unsigned char*, int);
+    void (__cdecl* set_texture)(std::uint32_t, unsigned char*, int);
     unsigned (__cdecl* release)(unsigned short);
     // MapCell_DrawWalls
     void (__cdecl* set_poly_ft4)(unsigned char*);
     void (__cdecl* set_shade_tex)(unsigned char*, unsigned);
-    long (__cdecl* rot_trans_pers4)(const short*, const short*, const short*, const short*, float*, float*, float*,
-                                    float*, long*);
+    std::int32_t (__cdecl* rot_trans_pers4)(const short*, const short*, const short*, const short*, float*, float*, float*,
+                                    float*, std::int32_t*);
     void (__cdecl* commit)(unsigned, unsigned);
     // AreaMap_ClutCycle
-    unsigned char (__cdecl* test)(unsigned long);
+    unsigned char (__cdecl* test)(std::uint32_t);
 };
 
 extern const Callees kOriginals;

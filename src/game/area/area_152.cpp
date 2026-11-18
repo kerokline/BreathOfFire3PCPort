@@ -527,10 +527,10 @@ void DrawDrift(const WorldMapTables& t) {
     rv::Store<unsigned>(rv::As<records::SVector>(v)[1].z, 0xFD00);
     rv::Store<unsigned>(rv::As<records::SVector>(v)[2].z, 0xFD00);
     rv::Store<unsigned>(rv::As<records::SVector>(v)[3].z, 0xFD00);
-    long depth = 0, flag = 0;
+    std::int32_t depth = 0, flag = 0;
     const auto* const sv = reinterpret_cast<const short*>(v);
-    using Pers4 = long (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*,
-                                  long*, long*);
+    using Pers4 = std::int32_t (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*,
+                                  std::int32_t*, std::int32_t*);
     AH_AT(Pers4, bof3::addr::Gte_RotTransPers4)(sv, sv + 4, sv + 8, sv + 12, reinterpret_cast<float*>(prim + 8),
                                                 reinterpret_cast<float*>(prim + 0x18), reinterpret_cast<float*>(prim + 0x28),
                                                 reinterpret_cast<float*>(prim + 0x38), &depth, &flag);
@@ -697,8 +697,8 @@ extern "C" void __cdecl Area152_Record8Spawn(void) {
         if (slot >= at::kEffectCount)
             bof3::Fatal("Area152_Record8Spawn: Effect_FindFree's slot %u is past Effect_Objects' %u", slot, at::kEffectCount);
         unsigned char* const e = At(::bof3::Img(Effect_Objects_addr) + slot * at::kEffectStride);
-        const long z = ObjTrio[0].z;
-        const long x = ObjTrio[0].x;
+        const std::int32_t z = ObjTrio[0].z;
+        const std::int32_t x = ObjTrio[0].x;
         e[0] = 1;
         e[5] = 0x16;
         e[1] = 1;

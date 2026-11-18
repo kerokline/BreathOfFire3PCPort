@@ -32,7 +32,7 @@ unsigned char* StoryFlags() { return Mem(::bof3::Img(Cond_Flags_addr) + 0xa0); }
 // x's low byte, whose z byte is z's, and whose direction (the third byte's low
 // nibble) is the leader's direction byte (the whole byte: 0x10 or more matches
 // none); `count` when none - the search the three cell hooks open with.
-unsigned FindCell(U table, unsigned count, unsigned stride, long x, long z) {
+unsigned FindCell(U table, unsigned count, unsigned stride, std::int32_t x, std::int32_t z) {
     const unsigned char pose = B(::bof3::Img(ObjTrio_addr) + 0x8);
     for (unsigned i = 0; i < count; ++i) {
         const unsigned char* const e = Mem(table + i * stride);
@@ -58,7 +58,7 @@ extern "C" void __cdecl Area139_FlagIfLeader89Is5(void) {
 // original 0x41F550 (Area_CellHooks, area 0x8B): FindCell over
 // Area139_CellEntries; a match: Flags_Toggle(story, its flag byte),
 // Sound_PlayEffect(0x204), al 1; none: al 0.
-extern "C" unsigned char __cdecl Area139_CellHook(long x, long z) {
+extern "C" unsigned char __cdecl Area139_CellHook(std::int32_t x, std::int32_t z) {
     const unsigned i = FindCell(::bof3::Img(Area139_CellEntries_addr), at::kArea139CellCount, 4, x, z);
     if (i == at::kArea139CellCount) return 0;
     AH_CALL(Flags_Toggle)(StoryFlags(), B(::bof3::Img(Area139_CellEntries_addr) + i * 4 + 3));

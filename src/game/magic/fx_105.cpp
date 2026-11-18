@@ -119,7 +119,7 @@ float* Xy(unsigned char* prim, unsigned offset) { return reinterpret_cast<float*
 // The four-vertex projection every POLY_G4 of the group makes: a b c d into
 // the primitive's four points, then its depth.
 void Project4(unsigned char* p) {
-    long depth;
+    std::int32_t depth;
     MH_CALL(Gte_RotTransPers4)(Vec(::bof3::Img(Prim_VertexScratch_addr)), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x8), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x10), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x18), Xy(p, 8), Xy(p, 0x18), Xy(p, 0x28), Xy(p, 0x38), &depth);
     MH_CALL(Gte_PrimDepths4_10B)(p);
 }
@@ -130,11 +130,11 @@ struct Matrix { short m[3][3]; short pad; std::int32_t t[3]; };
 
 void PushMatrix(const short vector[3], const short angles[3]) {
     Matrix m;
-    MH_CALL(Gte_RotTrans)(vector, reinterpret_cast<long*>(m.t));
+    MH_CALL(Gte_RotTrans)(vector, reinterpret_cast<std::int32_t*>(m.t));
     MH_CALL(Gte_RotMatrix)(angles, &m.m[0][0]);
     MH_CALL(Gte_MulMatrix0)(Camera_Matrix, &m.m[0][0], &m.m[0][0]);
-    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&m));
-    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&m));
+    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
+    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
 }
 
 // The effect point as the GTE takes it: (x >> 9) - 0x4000, (z >> 9) - 0x4000,
@@ -378,7 +378,7 @@ S24_EXPORT void __cdecl Fx105_DrawOrb(void) {
         const std::int32_t x = Add(Shl(ax, 9), rv::As<records::BattleTask>(s)->x);
         const std::int32_t z = Add(Shl(az, 9), rv::As<records::BattleTask>(s)->z);
         MH_CALL(Gpu_SetDrawMode)(mode, 0, 1, 0x35, 0);
-        MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), 2, 0xC);
+        MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), 2, 0xC);
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyG4)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
@@ -395,7 +395,7 @@ S24_EXPORT void __cdecl Fx105_DrawOrb(void) {
         p[0x35] = Mem(::bof3::Img(Scratch_Swap_addr))[0];
         p[0x36] = Mem(::bof3::Img(kWE.v))[0];
         Project4(p);
-        MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), 2, 0x44);
+        MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), 2, 0x44);
     }
 }
 
@@ -439,7 +439,7 @@ S24_EXPORT void __cdecl Fx105_MoteStart(void) {
     rv::Store(rv::Current<records::BattleTask>()->z, Add(t, rv::As<records::SpriteHead>(Owner())->z));
     rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, rv::As<records::SpriteHead>(Owner())->height_whole + Word(Mem(::bof3::Img(kR2.v))) - 0x20u);
     sc = Sprite_Current;
-    const long ground = MH_CALL(AreaMap_Elevation)(rv::As<records::BattleTask>(sc)->x, rv::As<records::BattleTask>(sc)->z);
+    const std::int32_t ground = MH_CALL(AreaMap_Elevation)(rv::As<records::BattleTask>(sc)->x, rv::As<records::BattleTask>(sc)->z);
     rv::Store(rv::Current<records::BattleTask>()->step_y, static_cast<short>(ground));
     Sprite_Current[0x25] = 0x1D;
     Sprite_Current[0x26] = 0;

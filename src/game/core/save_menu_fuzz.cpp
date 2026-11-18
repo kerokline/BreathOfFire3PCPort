@@ -208,7 +208,7 @@ void* __cdecl StubMalloc(unsigned n) {
     return g_heap + (Hash(0x3A1) % 8) * 4;
 }
 void __cdecl StubFree(void* p) { Record(0x07, Addr(p)); }
-int __cdecl StubSprintf(char* dst, const char* fmt, ...) {
+int StubSprintf(char* dst, const char* fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
     const U arg = va_arg(ap, U);
@@ -220,7 +220,7 @@ int __cdecl StubSprintf(char* dst, const char* fmt, ...) {
     dst[8] = 0;
     return 8;
 }
-long __cdecl StubFindFirst(const char* pattern, void* found) {
+std::int32_t __cdecl StubFindFirst(const char* pattern, void* found) {
     Record(0x09, Addr(pattern), 0);
     const U h = Hash(0xF1F);
     if (h % 6 == 0) return -1;
@@ -229,9 +229,9 @@ long __cdecl StubFindFirst(const char* pattern, void* found) {
     const U len = Hash(0xF1E) % 5 == 0 ? Hash(0xF1D) % 0x28 : 8 + Hash(0xF1D) % 8;
     for (U i = 0; i < len; ++i) f[0x14 + i] = static_cast<unsigned char>(0x21 + Hash(0x200 + i) % 0x5E);
     f[0x14 + len] = 0;
-    return static_cast<long>(h | 1);
+    return static_cast<std::int32_t>(h | 1);
 }
-int __cdecl StubFindNext(long handle, void* found) {
+int __cdecl StubFindNext(std::int32_t handle, void* found) {
     Record(0x0A, static_cast<U>(handle));
     if (g_find_left == 0) return static_cast<int>(Hash(0xF2E) | 1);
     --g_find_left;
@@ -365,7 +365,7 @@ void __cdecl StubSetSprt(unsigned char* p) {
     for (U i = 0; i < 0x20; ++i) p[i] = static_cast<unsigned char>(Hash(0x280 + i));
 }
 void __cdecl StubSetSemi(unsigned char* p, unsigned abe) { Record(0x29, Addr(p), abe); }
-void __cdecl StubSetDrawMode(unsigned char* p, int dfe, int dtd, unsigned tpage, unsigned long tw) {
+void __cdecl StubSetDrawMode(unsigned char* p, int dfe, int dtd, unsigned tpage, std::uint32_t tw) {
     Record(0x2A, Addr(p), static_cast<U>(dfe), static_cast<U>(dtd), tpage, static_cast<U>(tw));
 }
 unsigned __cdecl StubGetTPage(unsigned tp, unsigned abr, int x, int y) {
@@ -488,13 +488,13 @@ const Target* TargetTable() {
 // --- The fake DirectSound buffer ------------------------------------------------
 struct Fake { const void* const* vtable; };
 Fake g_buffer;
-long __stdcall FakeGetStatus(void* self, U* status) {
+std::int32_t __stdcall FakeGetStatus(void* self, U* status) {
     Record(0x50, self == &g_buffer ? 1 : 0);
     const U h = Hash(0x50A);
     if (h % 3) *status = Hash(0x50B);   // a failure leaves it as it was
-    return static_cast<long>(h % 3 ? 0 : 0x88780096u);
+    return static_cast<std::int32_t>(h % 3 ? 0 : 0x88780096u);
 }
-template <int S> long __stdcall FakeUnexpected(void*) {
+template <int S> std::int32_t __stdcall FakeUnexpected(void*) {
     bof3::Fatal("save_menu: self-test reached DirectSound slot %d, which nothing fakes", S);
 }
 const void* g_vtable[16];

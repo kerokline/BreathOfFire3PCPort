@@ -803,7 +803,7 @@ extern "C" void __cdecl Scena07_Scene6(void) {
         rv::As<records::EffectObject>(p)->x = 0x390000;
         rv::As<records::EffectObject>(p)->z = 0x410000;
         rv::As<records::EffectObject>(p)->step_z = 0x410000;
-        const long e = SH_CALL(AreaMap_Elevation)(x, 0x410000);
+        const std::int32_t e = SH_CALL(AreaMap_Elevation)(x, 0x410000);
         rv::As<records::EffectObject>(p)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<int>(static_cast<short>(e))) << 16);
         SetTimer(8);
         SetStep(0x10);

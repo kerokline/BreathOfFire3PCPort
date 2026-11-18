@@ -137,7 +137,7 @@ U ULRest3e(U a) { return ULRest3e(move_script::At(a)); }
 // imul r32, r32: the product's low 32 bits.
 U Mul(U a, U b) { return a * b; }
 
-const long* Point(const unsigned char* p) { return reinterpret_cast<const long*>(p); }
+const std::int32_t* Point(const unsigned char* p) { return reinterpret_cast<const std::int32_t*>(p); }
 
 float* Out(unsigned char* p) { return reinterpret_cast<float*>(p); }
 
@@ -277,15 +277,15 @@ extern "C" void __cdecl EffectKind21_ArmPoints(unsigned char* arm) {
     SH_CALL(EffectGte_SetDiagonalOne)(m);
     SH_CALL(Gte_RotMatrixY)(SW(arm + 0x4E), m);
     SH_CALL(Gte_RotMatrixZ)(SW(arm + 0x50), m);
-    long v[3] = {0, 0, 0};
-    long out[3];
+    std::int32_t v[3] = {0, 0, 0};
+    std::int32_t out[3];
     SH_CALL(Gte_ApplyMatrixLV)(m, v, out);
     for (unsigned i = 0; i < 4; ++i) {
         switch (i) {
         case 0: v[0] = 0; v[1] = 0; break;
-        case 1: v[0] = static_cast<long>(c); v[1] = static_cast<long>(s); break;
-        case 2: v[0] = static_cast<long>(c); v[1] = 0; break;
-        default: v[0] = static_cast<long>(c); v[1] = static_cast<long>(0u - s); break;
+        case 1: v[0] = static_cast<std::int32_t>(c); v[1] = static_cast<std::int32_t>(s); break;
+        case 2: v[0] = static_cast<std::int32_t>(c); v[1] = 0; break;
+        default: v[0] = static_cast<std::int32_t>(c); v[1] = static_cast<std::int32_t>(0u - s); break;
         }
         v[2] = 0;
         SH_CALL(Gte_ApplyMatrixLV)(m, v, out);
@@ -403,9 +403,9 @@ extern "C" void __cdecl EffectKind25_Start(void) {
     const std::int32_t height = static_cast<std::int16_t>(ObjTrio[0].height_whole);
     Prim_VertexScratch[0].z = static_cast<short>(-(height / 2));
     Prim_VertexScratch[0].y = static_cast<short>(Sar(z, 9) - 0x4000u);
-    long depth = 0;
-    const long answer =
-        SH_CALL(Gte_RotTransPers)(reinterpret_cast<short*>(Prim_VertexScratch), reinterpret_cast<unsigned long*>(MapView_ScreenXY), &depth);
+    std::int32_t depth = 0;
+    const std::int32_t answer =
+        SH_CALL(Gte_RotTransPers)(reinterpret_cast<short*>(Prim_VertexScratch), reinterpret_cast<std::uint32_t*>(MapView_ScreenXY), &depth);
     rv::Current<records::EffectObject>()->depth = static_cast<U>(answer);
     const auto* const screen = reinterpret_cast<const unsigned char*>(MapView_ScreenXY);
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, Ftol16(screen));

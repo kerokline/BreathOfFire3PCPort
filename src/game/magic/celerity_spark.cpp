@@ -132,7 +132,7 @@ float* Fl(unsigned char* p) { return reinterpret_cast<float*>(p); }
 
 // A .data dispatch table read in place: the cell called, the index checked
 // (the originals' is not).
-void CallCell(const unsigned long* table, unsigned entries, unsigned index, const char* who) {
+void CallCell(const std::uint32_t* table, unsigned entries, unsigned index, const char* who) {
     if (index >= entries) bof3::Fatal("%s: index %u, past the %u-entry table", who, index, entries);
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
 }
@@ -155,29 +155,29 @@ void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
 
 // The GTE calls as the originals push them: one pointer more than
 // symbols.toml's prototypes carry (a flag word the callee may write).
-using Rtp3Fn = long (__cdecl*)(const short*, const short*, const short*, float*, float*, float*, long*, long*);
+using Rtp3Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, float*, float*, float*, std::int32_t*, std::int32_t*);
 
-using Rtp4Fn = long (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*,
-                               long*, long*);
+using Rtp4Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*,
+                               std::int32_t*, std::int32_t*);
 
-using Avg3Fn = long (__cdecl*)(const short*, const short*, const short*, float*, float*, float*, long*, long*);
+using Avg3Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, float*, float*, float*, std::int32_t*, std::int32_t*);
 
 template <typename T, typename F> T As(F* f) { return reinterpret_cast<T>(reinterpret_cast<void*>(f)); }
 
-long Rtp3(unsigned char* p) {
-    long depth = 0, flag = 0;
+std::int32_t Rtp3(unsigned char* p) {
+    std::int32_t depth = 0, flag = 0;
     return MH_CALL(As<Rtp3Fn>(&::Gte_RotTransPers3))(VxP(0), VxP(8), VxP(0x10), Fl(p + 8), Fl(p + 0x18), Fl(p + 0x28), &depth,
                                                      &flag);
 }
 
-long Rtp4(unsigned char* p) {
-    long depth = 0, flag = 0;
+std::int32_t Rtp4(unsigned char* p) {
+    std::int32_t depth = 0, flag = 0;
     return MH_CALL(As<Rtp4Fn>(&::Gte_RotTransPers4))(VxP(0), VxP(8), VxP(0x10), VxP(0x18), Fl(p + 8), Fl(p + 0x18),
                                                      Fl(p + 0x28), Fl(p + 0x38), &depth, &flag);
 }
 
-long Avg3(unsigned char* p) {
-    long depth = 0, flag = 0;
+std::int32_t Avg3(unsigned char* p) {
+    std::int32_t depth = 0, flag = 0;
     return MH_CALL(As<Avg3Fn>(&::Gte_RotAverage3))(VxP(0), VxP(8), VxP(0x10), Fl(p + 8), Fl(p + 0x18), Fl(p + 0x28), &depth,
                                                    &flag);
 }
@@ -195,7 +195,7 @@ void DrawModeCommit(unsigned tpage, unsigned layer) {
 void LinkAt(unsigned dy, unsigned size) {
     const unsigned char* const sc = SC();
     const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tsc->x), static_cast<unsigned long>(tsc->z),
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(tsc->x), static_cast<std::uint32_t>(tsc->z),
                                 static_cast<int>(dy), size);
 }
 
@@ -271,7 +271,7 @@ void SparkRow(const unsigned char* colors, bool first, int (&depths)[4]) {
         SetVx(0x12, static_cast<unsigned>(MulSar(r, Ds(0), 12)));
         MH_CALL(Gpu_SetPolyG3)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 0);
-        const long depth = Avg3(p);
+        const std::int32_t depth = Avg3(p);
         const int k = (a - SC()[9]) / 8;
         a += 8;
         // The original stores into its four-entry stack array by this index,
@@ -356,7 +356,7 @@ MS12_EXPORT void __cdecl Celerity_Start(void) {
 // (Sprite_ReleaseTint) and gets a new one, Sprite_SetTint(object, 0, 0, 0, 1),
 // whose index (al) becomes +0xA; then +9 = 8 and the next state. Sprite_Current
 // is read again for each store. eax is Sprite_Current as last read.
-extern "C" unsigned long __cdecl BattleFx_TintActor(void) {
+extern "C" std::uint32_t __cdecl BattleFx_TintActor(void) {
     const U object = BattleOdds_ActorObject;
     unsigned char* s = Sprite();
     s[9] = static_cast<unsigned char>(s[9] - 1);
@@ -376,7 +376,7 @@ extern "C" unsigned long __cdecl BattleFx_TintActor(void) {
 // each; no bound) stepped up by one; then the countdown +9 down, and at 0 the
 // next state. Sprite_Current is read once for all of that and once more for
 // the test. eax Sprite_Current.
-extern "C" unsigned long __cdecl BattleFx_Brighten(void) {
+extern "C" std::uint32_t __cdecl BattleFx_Brighten(void) {
     unsigned char* const s = Sprite();
     for (U k = 2; k <= 4; ++k) {
         unsigned char* const c = AtBattleOdds(battle_odds::at::TintRecordsAt() + s[0xA] * 12u + k);

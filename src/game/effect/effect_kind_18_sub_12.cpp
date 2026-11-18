@@ -91,7 +91,7 @@ void SetCorner(U index, U v) { SetUL(At(AddressOf(&AreaMap_Corners) + 4 * index)
 // The four vertices in Prim_VertexScratch projected into a quad's four screen
 // points at the given offsets (the depth out a local nothing reads).
 void Project4Effect5c(unsigned char* prim, unsigned o0, unsigned o1, unsigned o2, unsigned o3) {
-    long depth = 0;
+    std::int32_t depth = 0;
     SH_CALL(Gte_RotTransPers4)(VX(0), VX(8), VX(0x10), VX(0x18), F(prim + o0), F(prim + o1), F(prim + o2), F(prim + o3),
                                &depth);
 }
@@ -203,7 +203,7 @@ void WindowMode(U x, U w) {
 struct Matrix {
     short m[9];
     short pad;
-    long t[3];
+    std::int32_t t[3];
 };
 
 // Math_Cos(((frame + k) << 9) & 0xFFF) * scale >> 11, + 0x80: a shade byte.
@@ -520,13 +520,13 @@ extern "C" void __cdecl EffectKind18Sub15_LinkLayer(unsigned size) {
     if (g_link_first_node) {
         // Layer 0's frame node: its last pointer for this buffer is DrawLayers
         // dword 9 + 2 * buffer (layer 15's, below, is dword 0xBD + 2 * buffer).
-        unsigned long& last = DrawLayers[9u + 2u * (buffer & 1u)];
-        SH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(last)), AddressOf(next));
+        std::uint32_t& last = DrawLayers[9u + 2u * (buffer & 1u)];
+        SH_CALL(Gpu_LinkPrim)(reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(last)), AddressOf(next));
         last = AddressOf(next);
         Gfx_PacketNext = next + bytes;
         return;
     }
-    SH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(UL(At(::bof3::Img(DrawLayers_addr) + 0x2f4 + 8 * buffer)))),
+    SH_CALL(Gpu_LinkPrim)(reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(UL(At(::bof3::Img(DrawLayers_addr) + 0x2f4 + 8 * buffer)))),
                           AddressOf(next));
     unsigned char* const now = Gfx_PacketNext;
     SetUL(At(::bof3::Img(DrawLayers_addr) + 0x2f4 + 8u * Gfx_BufferIndex), AddressOf(now));
@@ -561,8 +561,8 @@ extern "C" void __cdecl EffectKind18Sub16_Run(void) {
     SH_CALL(Gte_RotTrans)(point, m.t);
     SH_CALL(Gte_RotMatrix)(angles, m.m);
     SH_CALL(Gte_MulMatrix0)(Camera_Matrix, m.m, m.m);
-    SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&m));
-    SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&m));
+    SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
+    SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
     for (U b = 0; b < 0x10; ++b) {
         unsigned char* const prim = Gfx_PacketNext;
         SH_CALL(Gpu_SetPolyGT4)(prim);

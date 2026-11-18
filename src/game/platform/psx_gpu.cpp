@@ -61,12 +61,12 @@ void FuzzValue(const char* name, ValueFn theirs, ValueFn ours, unsigned rounds, 
     }
 }
 
-using AddFn = void (__cdecl*)(unsigned long*, unsigned long*, unsigned long*);
+using AddFn = void (__cdecl*)(std::uint32_t*, std::uint32_t*, std::uint32_t*);
 void FuzzAddPrim(AddFn theirs, AddFn ours) {
     for (unsigned round = 0; round < 4000; ++round, ++g_rounds) {
         // Three cells of one small buffer, so that ot, prim and link_out
         // coincide as often as not - link_out IS prim in an ordinary AddPrim.
-        unsigned long input[4], a[4], b[4];
+        std::uint32_t input[4], a[4], b[4];
         for (auto& x : input) x = Rng();
         const unsigned i = Rng() % 4, j = Rng() % 4, k = Rng() % 2 ? j : Rng() % 4;
         std::memcpy(a, input, sizeof a);
@@ -75,8 +75,8 @@ void FuzzAddPrim(AddFn theirs, AddFn ours) {
         ours(b + i, b + j, b + k);
         // what was stored is an address in its own buffer: compare as offsets
         for (unsigned c = 0; c < 4; ++c) {
-            const auto rebase = [](unsigned long v, const unsigned long* base) {
-                const unsigned long low = v & ~kLinkFlag, from = Low32(base);
+            const auto rebase = [](std::uint32_t v, const std::uint32_t* base) {
+                const std::uint32_t low = v & ~kLinkFlag, from = Low32(base);
                 return low >= from && low < from + 16 ? (v & kLinkFlag) | (low - from) | 0x40000000ul : v;
             };
             if (rebase(a[c], a) != rebase(b[c], b)) { Mismatch("Gpu_AddPrim", round); break; }
@@ -84,12 +84,12 @@ void FuzzAddPrim(AddFn theirs, AddFn ours) {
     }
 }
 
-using ClearFn = void (__cdecl*)(unsigned long*, int);
+using ClearFn = void (__cdecl*)(std::uint32_t*, int);
 void FuzzClearOTagR(ClearFn theirs, ClearFn ours) {
     for (unsigned round = 0; round < 2000; ++round, ++g_rounds) {
         // The same buffer for both, since what is stored are its addresses.
         // n from -1: the original stores the terminator at ot[n - 1] for n < 2.
-        static unsigned long table[72], input[72], their_out[72];
+        static std::uint32_t table[72], input[72], their_out[72];
         for (auto& x : input) x = Rng();
         const int n = static_cast<int>(Rng() % 68) - 1;
         std::memcpy(table, input, sizeof table);

@@ -22,7 +22,7 @@ extern "C" {
 // (Camera_ShiftX, Camera_ShiftY, Camera_Distance + 0x1194); both loaded
 // (Gte_SetRotMatrix, Gte_SetTransMatrix). Takes nothing. Answers in eax the
 // translation's z, as the original leaves it (no caller found reading it).
-long __cdecl EffectGte_LoadMapCamera(void);
+std::int32_t __cdecl EffectGte_LoadMapCamera(void);
 
 // original 0x494110 (PSX twin 0x801B0EFC): `point` projected through the
 // current GTE matrix. The camera vector is (x >> 9) - 0x4000, (z >> 9) -
@@ -31,7 +31,7 @@ long __cdecl EffectGte_LoadMapCamera(void);
 // 16384 to out[2]. `point` is read whole before `out` is written, so the two
 // may overlap. Answers in eax out + 2, as the original leaves it (no caller
 // found reading it).
-float* __cdecl EffectGte_ProjectPoint(const long* point, float* out);
+float* __cdecl EffectGte_ProjectPoint(const std::int32_t* point, float* out);
 
 // original 0x494180 (PSX twin 0x801B0F5C): the nine s16 of a MATRIX's rotation
 // set to 1 on the diagonal and 0 elsewhere, in order; the padding and the
@@ -50,7 +50,7 @@ short* __cdecl EffectGte_SetDiagonalOne(short* matrix);
 // place). A depth of 0 is the original's divide fault: ours aborts with a
 // message. Answers in eax the second quotient, all 32 bits (no caller found
 // reading it).
-long __cdecl EffectGte_ProjectSize(const long* point, const short* size, short* out);
+std::int32_t __cdecl EffectGte_ProjectSize(const std::int32_t* point, const short* size, short* out);
 
 }  // extern "C"
 

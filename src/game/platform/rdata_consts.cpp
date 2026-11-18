@@ -75,13 +75,13 @@ void VerifyKeyboardFormat() {
     Theirs(kKeyboardFormat.v, &theirs, sizeof theirs);
     if (mine.size != theirs.size || mine.obj_size != theirs.obj_size || mine.flags != theirs.flags ||
         mine.data_size != theirs.data_size || mine.num_objs != theirs.num_objs)
-        bof3::Fatal("rdata: c_dfDIKeyboard's header (0x%lX 0x%lX 0x%lX 0x%lX %lu) is not BOF3.exe's at 0x%06X "
-                    "(0x%lX 0x%lX 0x%lX 0x%lX %lu)", static_cast<unsigned long>(mine.size),
-                    static_cast<unsigned long>(mine.obj_size), static_cast<unsigned long>(mine.flags),
-                    static_cast<unsigned long>(mine.data_size), static_cast<unsigned long>(mine.num_objs),
-                    kKeyboardFormat.v, static_cast<unsigned long>(theirs.size),
-                    static_cast<unsigned long>(theirs.obj_size), static_cast<unsigned long>(theirs.flags),
-                    static_cast<unsigned long>(theirs.data_size), static_cast<unsigned long>(theirs.num_objs));
+        bof3::Fatal("rdata: c_dfDIKeyboard's header (0x%X 0x%X 0x%X 0x%X %u) is not BOF3.exe's at 0x%06X "
+                    "(0x%X 0x%X 0x%X 0x%X %u)", static_cast<std::uint32_t>(mine.size),
+                    static_cast<std::uint32_t>(mine.obj_size), static_cast<std::uint32_t>(mine.flags),
+                    static_cast<std::uint32_t>(mine.data_size), static_cast<std::uint32_t>(mine.num_objs),
+                    kKeyboardFormat.v, static_cast<std::uint32_t>(theirs.size),
+                    static_cast<std::uint32_t>(theirs.obj_size), static_cast<std::uint32_t>(theirs.flags),
+                    static_cast<std::uint32_t>(theirs.data_size), static_cast<std::uint32_t>(theirs.num_objs));
     const std::uint32_t table = theirs.rgodf;
     for (DWORD i = 0; i < ours.dwNumObjs; ++i) {
         ImageObjectFormat obj;
@@ -94,9 +94,9 @@ void VerifyKeyboardFormat() {
             (at == 0) == (mine.pguid == nullptr) && (!at || std::memcmp(&guid, mine.pguid, sizeof guid) == 0);
         if (!guid_same || obj.ofs != mine.dwOfs || obj.type != mine.dwType || obj.flags != mine.dwFlags)
             bof3::Fatal("rdata: c_dfDIKeyboard's object %lu (offset %lu, type 0x%lX, flags 0x%lX) is not BOF3.exe's at "
-                        "0x%06X (offset %lu, type 0x%lX, flags 0x%lX, the GUID %s)", i, mine.dwOfs, mine.dwType,
-                        mine.dwFlags, (unsigned)(table + 16 * i), static_cast<unsigned long>(obj.ofs),
-                        static_cast<unsigned long>(obj.type), static_cast<unsigned long>(obj.flags),
+                        "0x%06X (offset %u, type 0x%X, flags 0x%X, the GUID %s)", i, mine.dwOfs, mine.dwType,
+                        mine.dwFlags, (unsigned)(table + 16 * i), static_cast<std::uint32_t>(obj.ofs),
+                        static_cast<std::uint32_t>(obj.type), static_cast<std::uint32_t>(obj.flags),
                         guid_same ? "equal" : "different");
     }
     bof3::Log("rdata: the keyboard format is the SDK's c_dfDIKeyboard, equal to BOF3.exe's at 0x%06X (its %lu objects "

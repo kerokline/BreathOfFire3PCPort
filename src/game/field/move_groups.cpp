@@ -65,7 +65,7 @@ constexpr unsigned kBuf = 0x100, kScript = 0x10010, kLog = 128;
 unsigned char g_object[kBuf], g_sprite[kBuf], g_field[0x200], g_script[kScript];
 unsigned char g_descriptor[0x44];
 unsigned char* g_scripts18[256];
-long g_handle_buffer[4];
+std::int32_t g_handle_buffer[4];
 struct Entry { std::uint32_t what, a, b, c, d; };
 Entry g_log[kLog];
 unsigned g_log_n, g_seed;
@@ -114,7 +114,7 @@ unsigned char __cdecl StubTint(unsigned char* s, unsigned char r, unsigned char 
 void __cdecl StubTintRelease(unsigned char* s) { Record(7, Id(s)); }
 void __cdecl StubSetAnimation(unsigned char a) { Record(8, a); Disturb(); }
 unsigned char __cdecl StubAnimationBank(unsigned short b) { Record(9, b); Disturb(); return 0; }   // op CB ignores the result
-long __cdecl StubElevation(long x, long z) { Record(10, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z)); return static_cast<long>(Hash()); }
+std::int32_t __cdecl StubElevation(std::int32_t x, std::int32_t z) { Record(10, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z)); return static_cast<std::int32_t>(Hash()); }
 void __cdecl StubSetElevation(int v) { Record(11, static_cast<std::uint32_t>(v)); }
 unsigned short __cdecl StubPeek() {
     Record(12);
@@ -142,17 +142,17 @@ unsigned char __cdecl StubEffectSpawn(unsigned char k, signed char a, signed cha
     Disturb();
     return Byte();
 }
-unsigned char __cdecl StubEffectSpawnAt(unsigned char k, signed char a, signed char b, long x, long y, long z) {
+unsigned char __cdecl StubEffectSpawnAt(unsigned char k, signed char a, signed char b, std::int32_t x, std::int32_t y, std::int32_t z) {
     Record(24, k | static_cast<std::uint8_t>(a) << 8 | static_cast<std::uint8_t>(b) << 16, static_cast<std::uint32_t>(x),
            static_cast<std::uint32_t>(y), static_cast<std::uint32_t>(z));
     Disturb();
     return Byte();
 }
 // Fills the caller's buffer, or returns a buffer of its own: the handler must use what it returns.
-long* __cdecl StubHandlePosition(long* out, unsigned char h, unsigned char b) {
+std::int32_t* __cdecl StubHandlePosition(std::int32_t* out, unsigned char h, unsigned char b) {
     Record(25, h, b);
-    long* const to = Hash() % 2 ? out : g_handle_buffer;
-    for (unsigned i = 0; i < 4; ++i) to[i] = static_cast<long>(Hash() * (i + 1));
+    std::int32_t* const to = Hash() % 2 ? out : g_handle_buffer;
+    for (unsigned i = 0; i < 4; ++i) to[i] = static_cast<std::int32_t>(Hash() * (i + 1));
     return to;
 }
 void __cdecl StubOp87() { Record(26); }
@@ -344,8 +344,8 @@ void Seed(unsigned char op, unsigned char* p) {
     case 0x85:
         if (Next() % 2) { Field_Kind2X = Long(rv::Bytes(ObjTrio) + 0x34); Field_Kind2Z = Long(rv::Bytes(ObjTrio) + 0x38); }
         else if (Often()) {
-            Field_Kind2X = Long(rv::Bytes(ObjTrio) + 0x34) + static_cast<long>(Next() % 0x10000) - 0x8000;
-            Field_Kind2Z = Long(rv::Bytes(ObjTrio) + 0x38) + static_cast<long>(Next() % 0x10000) - 0x8000;
+            Field_Kind2X = Long(rv::Bytes(ObjTrio) + 0x34) + static_cast<std::int32_t>(Next() % 0x10000) - 0x8000;
+            Field_Kind2Z = Long(rv::Bytes(ObjTrio) + 0x38) + static_cast<std::int32_t>(Next() % 0x10000) - 0x8000;
         }
         if (Often()) Field_Kind2Hold = 0;
         break;

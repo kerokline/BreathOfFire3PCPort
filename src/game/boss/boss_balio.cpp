@@ -106,7 +106,7 @@ void HpFloor() {
 }  // namespace
 
 // original 0x439B10: BossKind_Table[13]: by +1 through BossBalio_Steps (12).
-extern "C" unsigned long __cdecl BossBalio_Dispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl BossBalio_Dispatch(std::uint32_t through) {
     return DispatchBossSc("BossBalio_Dispatch", ::bof3::Img(0x64CCD0), 12, 1, through);
 }
 
@@ -116,7 +116,7 @@ extern "C" void __cdecl BossBalio_Enter(void) { BalioSunderEnter(::bof3::Img(0x6
 
 // original 0x439BC0: the +0xF4 hook: by the word's low byte through
 // BossBalio_Hooks (3: BossBalio_HookAct, BossBalio_HookHit, BareRet).
-extern "C" unsigned long __cdecl BossBalio_Hook(unsigned long word) { return HookDispatchBossSc("BossBalio_Hook", ::bof3::Img(0x64CD00), word); }
+extern "C" std::uint32_t __cdecl BossBalio_Hook(std::uint32_t word) { return HookDispatchBossSc("BossBalio_Hook", ::bof3::Img(0x64CD00), word); }
 
 // original 0x439BD0: hook entry 0 (the action pick, 0x435BF5): in fight 16
 // (0x904AAA 0x10), by the fight's bits 0x904AAD (read once): bit 0 without

@@ -109,10 +109,10 @@ bool LeaderAt(const unsigned char* s, bool z_first, std::int32_t first, std::int
 }
 
 // A vertex's ground point: (s16 + 0x4000) << 9, the 16.16 the map reads.
-long Ground(const unsigned char* word) { return static_cast<long>(static_cast<U>(S16(word) + 0x4000) << 9); }
+std::int32_t Ground(const unsigned char* word) { return static_cast<std::int32_t>(static_cast<U>(S16(word) + 0x4000) << 9); }
 
 // -(height / 2) - +0x3E, the low word (movsx; cdq; sub; sar 1; neg; sub ax).
-U Lift(long height, const unsigned char* s) {
+U Lift(std::int32_t height, const unsigned char* s) {
     const std::int32_t half = static_cast<std::int16_t>(static_cast<U>(height) & 0xFFFFu) / 2;
     return 0u - static_cast<U>(half) - Word(s + 0x3E);
 }
@@ -122,11 +122,11 @@ U Lift(long height, const unsigned char* s) {
 // above), corners 1 and 3 at vertex 1's, Sprite_Current read after each call.
 void Grounded() {
     unsigned char* const v = Vertices();
-    const long x0 = Ground(v), y0 = Ground(v + 2);
-    long h = SH_CALL(AreaMap_Elevation)(x0, y0);
+    const std::int32_t x0 = Ground(v), y0 = Ground(v + 2);
+    std::int32_t h = SH_CALL(AreaMap_Elevation)(x0, y0);
     rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->z, Lift(h, S()) - 0x180u);
     h = SH_CALL(AreaMap_Elevation)(x0, y0);
-    const long x1 = Ground(v + 8), y1 = Ground(v + 0xA);
+    const std::int32_t x1 = Ground(v + 8), y1 = Ground(v + 0xA);
     rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].z, Lift(h, S()));
     h = SH_CALL(AreaMap_Elevation)(x1, y1);
     rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].z, Lift(h, S()) - 0x180u);
@@ -138,7 +138,7 @@ void Grounded() {
 // The original also pushes a tenth pointer (a flag local) the projection
 // does not read.
 void Project(unsigned char* p) {
-    long depth;
+    std::int32_t depth;
     SH_CALL(Gte_RotTransPers4)(Vertex(0), Vertex(1), Vertex(2), Vertex(3), reinterpret_cast<float*>(p + 8),
                                reinterpret_cast<float*>(p + 0x18), reinterpret_cast<float*>(p + 0x28),
                                reinterpret_cast<float*>(p + 0x38), &depth);
@@ -188,7 +188,7 @@ extern "C" void __cdecl EffectKind18Sub2B_Place(void) {
     const U v = Variant("EffectKind18Sub2B_Place", s, at::kSub2BVariants);
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, At(::bof3::Img(at::kSub2BCells.v) + 2 * v)[0]);
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole, At(::bof3::Img(at::kSub2BCells.v) + 2 * v + 1)[0]);
-    const long h = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(s)->x, rv::As<records::EffectObject>(s)->z);
+    const std::int32_t h = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(s)->x, rv::As<records::EffectObject>(s)->z);
     const U height = Word(At(::bof3::Img(at::kSub2BHeights.v) + 2 * v));
     const std::int32_t half = static_cast<std::int16_t>(static_cast<U>(h) & 0xFFFFu) / 2;
     s = S();

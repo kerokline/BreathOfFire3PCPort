@@ -113,30 +113,30 @@ void Call1(std::uint32_t address, int a) { MH_WORD(Fn1, address)(a); }
 
 // The projections with the arguments the originals push: the depth and a
 // flag pointer after the outputs (the flag one more than the callee takes).
-using Rtp1Fn = long (__cdecl*)(const short*, unsigned char*, long*, long*);
+using Rtp1Fn = std::int32_t (__cdecl*)(const short*, unsigned char*, std::int32_t*, std::int32_t*);
 
-using Rtp3Fn = long (__cdecl*)(const short*, const short*, const short*, unsigned char*, unsigned char*, unsigned char*,
-                               long*, long*);
+using Rtp3Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, unsigned char*, unsigned char*, unsigned char*,
+                               std::int32_t*, std::int32_t*);
 
-using Rtp4Fn = long (__cdecl*)(const short*, const short*, const short*, const short*, unsigned char*, unsigned char*,
-                               unsigned char*, unsigned char*, long*, long*);
+using Rtp4Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, const short*, unsigned char*, unsigned char*,
+                               unsigned char*, unsigned char*, std::int32_t*, std::int32_t*);
 
 #define S35_AS(type, name) ::magic_harness::Call(reinterpret_cast<type>(reinterpret_cast<void*>(&::name)))
 
 void Rtp1(unsigned char* sxy) {
-    long p, flag;
+    std::int32_t p, flag;
     S35_AS(Rtp1Fn, Gte_RotTransPers)(VP(0), sxy, &p, &flag);
 }
 
 // Three points at +8, +0x18, +0x28 (a gouraud triangle's).
 void Rtp3(unsigned char* prim) {
-    long p, flag;
+    std::int32_t p, flag;
     S35_AS(Rtp3Fn, Gte_RotTransPers3)(VP(0), VP(8), VP(0x10), prim + 8, prim + 0x18, prim + 0x28, &p, &flag);
 }
 
 // Four points at +8, +0x18, +0x28, +0x38 (a gouraud quad's).
 void Rtp4(unsigned char* prim) {
-    long p, flag;
+    std::int32_t p, flag;
     S35_AS(Rtp4Fn, Gte_RotTransPers4)(VP(0), VP(8), VP(0x10), VP(0x18), prim + 8, prim + 0x18, prim + 0x28, prim + 0x38,
                                      &p, &flag);
 }
@@ -151,7 +151,7 @@ int SinSD0(int angle) {
 void DrawMode(unsigned tpage) { MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, tpage, 0); }
 
 void Link(std::int32_t x, std::int32_t z, int dy, unsigned size) {
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), dy, size);
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), dy, size);
 }
 
 }  // namespace

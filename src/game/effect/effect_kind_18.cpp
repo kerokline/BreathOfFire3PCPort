@@ -86,7 +86,7 @@ void Vertex(unsigned k, U x, U y, U z) {
 // Capcom pushes, a second local, is read by no Gte_RotTransPers4 of ours),
 // then Gte_PrimDepths4_10.
 void Project4(unsigned char* p) {
-    long depth;
+    std::int32_t depth;
     SH_CALL(Gte_RotTransPers4)(reinterpret_cast<const short*>(At(::bof3::Img(Prim_VertexScratch_addr))), reinterpret_cast<const short*>(At(::bof3::Img(Prim_VertexScratch_addr) + 8)),
                                reinterpret_cast<const short*>(At(::bof3::Img(Prim_VertexScratch_addr) + 0x10)), reinterpret_cast<const short*>(At(::bof3::Img(Prim_VertexScratch_addr) + 0x18)),
                                reinterpret_cast<float*>(p + 8), reinterpret_cast<float*>(p + 0x18),
@@ -110,11 +110,11 @@ unsigned char* BeginQuad() {
 void PushMatrix(const short* point, const short* angles) {
     SH_CALL(Gte_PushMatrix)();
     alignas(4) unsigned char m[0x20];
-    SH_CALL(Gte_RotTrans)(point, reinterpret_cast<long*>(m + 0x14));
+    SH_CALL(Gte_RotTrans)(point, reinterpret_cast<std::int32_t*>(m + 0x14));
     SH_CALL(Gte_RotMatrix)(angles, reinterpret_cast<short*>(m));
     SH_CALL(Gte_MulMatrix0)(Camera_Matrix, reinterpret_cast<short*>(m), reinterpret_cast<short*>(m));
-    SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(m));
-    SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(m));
+    SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(m));
+    SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(m));
 }
 
 // --- x87 as the original has it (the game's control word) ---------------------
@@ -243,7 +243,7 @@ extern "C" void __cdecl EffectKind18_04_Open(void) {
 // angle's word about z: a POLY_FT4 of (0, 0x80, -0x17E), (0, 0, -0x17E),
 // (0, 0x80, 0), (0, 0, 0); the matrix popped, then the texture. Answers the
 // primitive.
-extern "C" unsigned char* __cdecl EffectKind18_04_DrawPanel(const short* point, unsigned angle, unsigned long texture) {
+extern "C" unsigned char* __cdecl EffectKind18_04_DrawPanel(const short* point, unsigned angle, std::uint32_t texture) {
     short angles[4];
     angles[0] = 0;
     angles[1] = 0;
@@ -572,7 +572,7 @@ extern "C" void __cdecl EffectKind18_06_SetMap(void) {
     r = rect(s);
     for (U x = T(r); x < T(r + 2);) {
         for (U z = T(r + 1); z < T(r + 3);) {
-            const long h = SH_CALL(AreaMap_Elevation)(static_cast<long>(x << 16), static_cast<long>(z << 16));
+            const std::int32_t h = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(x << 16), static_cast<std::int32_t>(z << 16));
             s = S();
             std::int32_t v = -static_cast<std::int32_t>(static_cast<std::int16_t>(h)) - 2 * static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(s)->height_whole));
             v = (v + ((v >> 31) & 0x1F)) >> 5;
@@ -788,8 +788,8 @@ extern "C" void __cdecl EffectKind18_08_Crash(void) {
         Prim_VertexScratch[0].x = vx & 0xFFFF;
         Prim_VertexScratch[0].y = vy & 0xFFFF;
         Prim_VertexScratch[0].z = Word(s + 0x3E);
-        long depth;
-        SH_CALL(Gte_RotTransPers)(reinterpret_cast<const short*>(At(::bof3::Img(Prim_VertexScratch_addr))), reinterpret_cast<unsigned long*>(At(::bof3::Img(0x903820))), &depth);
+        std::int32_t depth;
+        SH_CALL(Gte_RotTransPers)(reinterpret_cast<const short*>(At(::bof3::Img(Prim_VertexScratch_addr))), reinterpret_cast<std::uint32_t*>(At(::bof3::Img(0x903820))), &depth);
         SH_CALL(Gte_PrimDepthFlat4_10)(p);
         FildSubr2(S()[9], At(::bof3::Img(0x903820)), p + 0x28, p + 8);
         FildSubr2(S()[9], At(::bof3::Img(0x903824)), p + 0x1C, p + 0xC);

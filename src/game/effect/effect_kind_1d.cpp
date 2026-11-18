@@ -73,17 +73,17 @@ void RingMode(int dtd) {
 // +0x3C + (+0x30 << 16) (out2), the point (x, z) at angle `angle` and radius
 // +0x2E round (+0x34, +0x38). Sprite_Current read after each call, as the
 // originals read it.
-void RingPoints(U angle, long* point, float* out1, float* out2) {
+void RingPoints(U angle, std::int32_t* point, float* out1, float* out2) {
     const int c = SH_CALL(Math_Cos)(static_cast<int>(angle));
     const unsigned char* s = Cur();
-    point[0] = static_cast<long>(Arm(c, static_cast<std::int16_t>(rv::As<records::EffectWork>(s)->work_2e), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x)));
+    point[0] = static_cast<std::int32_t>(Arm(c, static_cast<std::int16_t>(rv::As<records::EffectWork>(s)->work_2e), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x)));
     const int n = SH_CALL(Math_Sin)(static_cast<int>(angle));
     s = Cur();
-    point[1] = static_cast<long>(Arm(n, static_cast<std::int16_t>(rv::As<records::EffectWork>(s)->work_2e), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z)));
+    point[1] = static_cast<std::int32_t>(Arm(n, static_cast<std::int16_t>(rv::As<records::EffectWork>(s)->work_2e), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z)));
     point[2] = rv::As<records::EffectObject>(s)->height;
     SH_CALL(EffectGte_ProjectPoint)(point, out1);
     s = Cur();
-    point[2] = static_cast<long>((static_cast<U>(static_cast<int>(SW(s + 0x30))) << 16) + static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height));
+    point[2] = static_cast<std::int32_t>((static_cast<U>(static_cast<int>(SW(s + 0x30))) << 16) + static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height));
     SH_CALL(EffectGte_ProjectPoint)(point, out2);
 }
 
@@ -179,7 +179,7 @@ extern "C" void __cdecl EffectKind1D_End(void) {
 // 8..0x17, up 8 for the others. No second draw mode.
 extern "C" void __cdecl EffectKind1D_DrawRing(unsigned brightness) {
     SH_CALL(EffectGte_LoadMapCamera)();
-    long point[3];
+    std::int32_t point[3];
     float out1[3], out2[3];
     RingPoints(0, point, out1, out2);
     unsigned char shade = static_cast<unsigned char>(((Frame_Counter & 1) + 0x10) << 2);

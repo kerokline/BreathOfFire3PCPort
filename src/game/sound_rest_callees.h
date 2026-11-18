@@ -31,14 +31,14 @@ constexpr std::uint32_t kChannelsEnd = 0x6BC924;
 // --- DirectSound, beyond what sound_callees.h names -------------------------
 constexpr unsigned kSetCooperativeLevel = 0x18;   // IDirectSound
 constexpr unsigned kSetFormat = 0x38;             // IDirectSoundBuffer
-constexpr unsigned long kExclusive = 3;           // DSSCL_EXCLUSIVE
-constexpr unsigned long kPrimaryBuffer = 1;       // DSBCAPS_PRIMARYBUFFER
-constexpr unsigned long kLooping = 1;             // DSBPLAY_LOOPING
+constexpr std::uint32_t kExclusive = 3;           // DSSCL_EXCLUSIVE
+constexpr std::uint32_t kPrimaryBuffer = 1;       // DSBCAPS_PRIMARYBUFFER
+constexpr std::uint32_t kLooping = 1;             // DSBPLAY_LOOPING
 // Snd_Init's answers.
 constexpr int kNoDevice = 100, kNoCooperation = 101, kNoPrimary = 102, kNoFormat = 103;
 
-using ComCooperate = long (__stdcall*)(void*, void*, unsigned long);
-using ComFormat = long (__stdcall*)(void*, const void*);
+using ComCooperate = std::int32_t (__stdcall*)(void*, void*, std::uint32_t);
+using ComFormat = std::int32_t (__stdcall*)(void*, const void*);
 
 struct Callees {
     void (__cdecl* sndbuf_stop)(void*);                    // SndBuf_Stop (ours, sound.cpp)
@@ -46,7 +46,7 @@ struct Callees {
     int (__cdecl* halt)();                                 // Music_Halt: Sound_StopMusic's and Sound_PauseAll's jmp
     int (__cdecl* resume)();                               // Music_Resume: Sound_ResumeAll's jmp
     int (__cdecl* music_playing)();                        // Music_IsPlaying (ours, save_menu.cpp): 0x587C20's jmp
-    long (__stdcall* create)(const void*, void**, void*);  // DirectSoundCreate, through its thunk
+    std::int32_t (__stdcall* create)(const void*, void**, void*);  // DirectSoundCreate, through its thunk
 };
 // The thunks' jumps read these three by offset (sound_rest.cpp): the i686
 // operands are the literal 8, 12, 16 of a table of 4-byte pointers; the

@@ -49,9 +49,9 @@ constexpr std::uint32_t kWorkingStride = 0x14C;
 
 struct Callees {
     unsigned (__cdecl* window_alloc)(unsigned, unsigned);                              // Window_Alloc
-    int (__cdecl* sprintf_)(char*, const char*, ...);                                  // Crt_sprintf
+    int (*sprintf_)(char*, const char*, ...);                                  // Crt_sprintf
     unsigned (__cdecl* get_tpage)(unsigned, unsigned, int, int);                       // Gpu_GetTPage
-    void (__cdecl* draw_mode)(unsigned char*, int, int, unsigned, unsigned long);      // Gpu_SetDrawMode
+    void (__cdecl* draw_mode)(unsigned char*, int, int, unsigned, std::uint32_t);      // Gpu_SetDrawMode
     void (__cdecl* commit)(unsigned, unsigned);                                        // Gfx_CommitPrim
     unsigned (__cdecl* get_clut)(int, int);                                            // Gpu_GetClut
     void (__cdecl* set_sprt)(unsigned char*);                                          // Gpu_SetSprt

@@ -77,7 +77,7 @@ void FldCopy3(const void* a, void* o1, void* o2, void* o3) {
 struct Matrix {
     short m[9];
     short pad;
-    long t[3];
+    std::int32_t t[3];
 };
 
 // mov ecx, [Sprite_Current]; xor eax, eax; mov al, [ecx + 1]; jmp [table + eax
@@ -127,7 +127,7 @@ unsigned char Clamp(std::int32_t v) { return v < 0 ? 0 : v > 0xFF ? 0xFF : stati
 // read's).
 void Kind97Ring() {
     unsigned char* const s = S();
-    SH_CALL(EffectKind97_DrawRing)(reinterpret_cast<const long*>(s + 0x34), rv::As<records::EffectWork>(s)->work_2e, 7);
+    SH_CALL(EffectKind97_DrawRing)(reinterpret_cast<const std::int32_t*>(s + 0x34), rv::As<records::EffectWork>(s)->work_2e, 7);
 }
 
 // The two burst states' opening: +6 up, and a spark emitted when it was a
@@ -147,7 +147,7 @@ void Kind98Project() {
     SH_CALL(EffectGte_LoadMapCamera)();
     unsigned char* const s = S();
     auto* const so = rv::As<records::EffectObject>(s);
-    long point[4];
+    std::int32_t point[4];
     point[0] = so->x;
     point[1] = so->z;
     point[2] = so->height;
@@ -313,7 +313,7 @@ extern "C" void __cdecl EffectKind98_Fall(void) {
 // added through the FPU); the depth at all three; the centre coloured (bit 2,
 // bit 1, bit 0 of the shade's low byte each 0x40), the rim black; committed at
 // slot 2 (0x34).
-extern "C" void __cdecl EffectKind97_DrawRing(const long* point, int size, int shade) {
+extern "C" void __cdecl EffectKind97_DrawRing(const std::int32_t* point, int size, int shade) {
     DrawMode(1, 0x2C0, 0x100);
     SH_CALL(Gfx_CommitPrim)(2, 0xC);
     SH_CALL(EffectGte_LoadMapCamera)();
@@ -421,7 +421,7 @@ extern "C" void __cdecl EffectKind97_DrawSpark(unsigned char* spark) {
     wide[0] = static_cast<short>(Word(spark + 0x14));
     wide[1] = wide[0];   // the original's stale stack word (docs/effect_4d.md section 6)
     short out[2];
-    const long* const point = reinterpret_cast<const long*>(spark + 4);
+    const std::int32_t* const point = reinterpret_cast<const std::int32_t*>(spark + 4);
     SH_CALL(EffectGte_ProjectSize)(point, wide, out);
     float p[3];
     SH_CALL(EffectGte_ProjectPoint)(point, p);
@@ -516,7 +516,7 @@ extern "C" void __cdecl EffectKind97_DebrisDraw(unsigned char* d) {
     unsigned char* const prim = Gfx_PacketNext;
     SH_CALL(Gpu_SetPolyG3)(prim);
     SH_CALL(Gpu_SetSemiTrans)(prim, 1);
-    SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(d), reinterpret_cast<float*>(prim + 8));
+    SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const std::int32_t*>(d), reinterpret_cast<float*>(prim + 8));
     for (U edge = 0x10, out = 0x18; edge <= 0x18; edge += 8, out += 0x10) {
         const U c1 = static_cast<U>(SH_CALL(Math_Cos)(SW(d + 0x24)));
         U e = Mul(c1, SW(d + edge));
@@ -527,10 +527,10 @@ extern "C" void __cdecl EffectKind97_DebrisDraw(unsigned char* d) {
         U f = Mul(s2, SW(d + edge));
         const U c2 = static_cast<U>(SH_CALL(Math_Cos)(SW(d + 0x24)));
         f += Mul(c2, SW(d + edge + 2));
-        long q[3];
-        q[0] = static_cast<long>(e + UL(d + 0));
-        q[2] = static_cast<long>(Mul(static_cast<U>(SW(d + edge + 4)) << 12, scale) + UL(d + 8));
-        q[1] = static_cast<long>(Mul(Sar(f, 8), scale) + UL(d + 4));
+        std::int32_t q[3];
+        q[0] = static_cast<std::int32_t>(e + UL(d + 0));
+        q[2] = static_cast<std::int32_t>(Mul(static_cast<U>(SW(d + edge + 4)) << 12, scale) + UL(d + 8));
+        q[1] = static_cast<std::int32_t>(Mul(Sar(f, 8), scale) + UL(d + 4));
         SH_CALL(EffectGte_ProjectPoint)(q, reinterpret_cast<float*>(prim + out));
     }
     const unsigned char v = Clamp(SW(d + 0x2A));

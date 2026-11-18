@@ -30,13 +30,13 @@ constexpr unsigned kWindow = 0x40;
 struct State {
     unsigned char layers[kOwned];
     unsigned char* packet_next;
-    unsigned long* ot[8];
+    std::uint32_t* ot[8];
     unsigned char buffer_index, slot;
-    unsigned long tails[8];
+    std::uint32_t tails[8];
     unsigned char window[kWindow];   // the pool, from packet_next as it was on the way in
 };
 
-unsigned long g_tails[8];
+std::uint32_t g_tails[8];
 
 void Capture(State& s, const unsigned char* window_at) {
     std::memcpy(s.layers, DrawLayers, kOwned);
@@ -86,8 +86,8 @@ void SelfTest(Fn their_commit, Fn their_close) {
         // A layer's second list: empty a third of the time.
         const unsigned layer = next() % kLayers;
         const bool is_close = round % 2 == 1;
-        unsigned long* const cell =
-            reinterpret_cast<unsigned long*>(input.layers) + layer * kLayerDwords + kSecondList + input.buffer_index * 2u;
+        std::uint32_t* const cell =
+            reinterpret_cast<std::uint32_t*>(input.layers) + layer * kLayerDwords + kSecondList + input.buffer_index * 2u;
         if (reinterpret_cast<unsigned char*>(cell) + 8 <= input.layers + kOwned && next() % 3 == 0) cell[0] = 0;
         // Noise above the byte each reads; the slot itself one of the eight
         // there are, since the ninth is somebody else's memory.
@@ -171,8 +171,8 @@ struct OpenState {
     unsigned short cells[1568];
     short row, column;
     unsigned char inset, input_flags, buffer_index;
-    unsigned long* slot6;
-    unsigned long tails[8];
+    std::uint32_t* slot6;
+    std::uint32_t tails[8];
     OpenLog log;
 };
 
@@ -211,12 +211,12 @@ void SelfTestOpen(OpenFn theirs) {
     constexpr unsigned kRounds = 12000;
     static OpenState saved, input, their_out, our_out;
     OpenCapture(saved);
-    unsigned long saved_handlers[77];
+    std::uint32_t saved_handlers[77];
     std::memcpy(saved_handlers, MapCell_Handlers, sizeof saved_handlers);
     // Our stand-ins' own addresses in the game's handler table, not places
     // (common/image_base.h): put back before the self-test returns, and the
     // shadow self-test runs hosted only (exe_host.cpp refuses BOF3X_SHADOW).
-    const unsigned long stand_ins[4] = {
+    const std::uint32_t stand_ins[4] = {
         Low32(&OpenStandIn0),
         Low32(&OpenStandIn1),
         Low32(&OpenStandIn2),

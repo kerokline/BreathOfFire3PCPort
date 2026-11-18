@@ -84,8 +84,8 @@ extern "C" void __cdecl MoveCmd_Detach(void) {
 extern "C" void __cdecl MoveCmd_AttachMove(unsigned char t) {
     const unsigned char offset = Sprite_Current[0x1C];
     const unsigned char handle = Sprite_Current[0x18];
-    long buffer[4];
-    const long* const at = move_cmds::g.handle_position(buffer, handle, offset);
+    std::int32_t buffer[4];
+    const std::int32_t* const at = move_cmds::g.handle_position(buffer, handle, offset);
     const std::int32_t x = at[0], z = at[1], y = at[2];
     const unsigned char count = t ? t : 1;
     rv::Current<records::SpriteHead>()->step_frames = count;

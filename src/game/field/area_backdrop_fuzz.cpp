@@ -93,7 +93,7 @@ alignas(4) unsigned char g_packets[0x400];
 std::uint32_t Packet(const void* p) { return Address(p) - Address(g_packets); }
 constexpr std::uint32_t kPointZeroOne = 0x3C23D70Au;
 
-void __cdecl StubDrawMode(unsigned char* prim, int dfe, int dtd, unsigned tpage, unsigned long tw) {
+void __cdecl StubDrawMode(unsigned char* prim, int dfe, int dtd, unsigned tpage, std::uint32_t tw) {
     Record(1, Packet(prim), static_cast<std::uint32_t>(dfe) | static_cast<std::uint32_t>(dtd) << 16, tpage);
     Record(1, static_cast<std::uint32_t>(tw));
     SetDword(prim + 4, 0xE8000000u | (tpage & 0xFFFFu));
@@ -124,14 +124,14 @@ void __cdecl StubSetSemi(unsigned char* prim, unsigned abe) {
 }
 // Only the low 16 bits reach the real one: the original pushes ax with
 // stale bits above.
-unsigned char __cdecl StubTest(unsigned long code) {
+unsigned char __cdecl StubTest(std::uint32_t code) {
     Record(5, static_cast<std::uint32_t>(code) & 0xFFFFu);
     const std::uint32_t h = Hash();
     return static_cast<unsigned char>(h % 3 == 0 ? 0 : h % 3 == 1 ? 1 : h >> 8);
 }
 // The rect is the caller's local: its bytes are logged, not where it is.
-unsigned char* __cdecl StubSetDrawMove(unsigned char* prim, const unsigned char* rect, unsigned long x,
-                                       unsigned long y) {
+unsigned char* __cdecl StubSetDrawMove(unsigned char* prim, const unsigned char* rect, std::uint32_t x,
+                                       std::uint32_t y) {
     Record(6, Packet(prim), Dword(rect), Dword(rect + 4));
     Record(6, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
     SetDword(prim + 4, 0xEC000000u);
@@ -300,8 +300,8 @@ void SelfTestBackdrop(void (__cdecl* theirs)(const unsigned char*)) {
             }
         };
         const int fx = focus(x0, x1), fz = focus(z0, z1);
-        MapView_FocusX = static_cast<long>(0x7FFFu - (static_cast<std::uint32_t>(fx) << 8) - Next() % 0x100);
-        MapView_FocusZ = static_cast<long>(0x8000u - (static_cast<std::uint32_t>(fz) << 8) - Next() % 0x100);
+        MapView_FocusX = static_cast<std::int32_t>(0x7FFFu - (static_cast<std::uint32_t>(fx) << 8) - Next() % 0x100);
+        MapView_FocusZ = static_cast<std::int32_t>(0x8000u - (static_cast<std::uint32_t>(fz) << 8) - Next() % 0x100);
         if (OneIn(2)) Cond_ByteFF = 0;
         Gfx_PacketNext = g_packets + 4 * (Next() % 0x80);
         Pair("AreaMap_DrawBackdrop", round, r, n, [&] { theirs(g_entry); }, [&] { AreaMap_DrawBackdrop(g_entry); },

@@ -190,8 +190,8 @@ void ShapePoint(unsigned out, unsigned radius, unsigned angle) {
 
 // Gte_RotTransPers3 with the eight words the original pushes (the depth and
 // flag, its own stack; ours reads the first seven).
-using Rtp3Fn = long (__cdecl*)(const short*, const short*, const short*, unsigned char*, unsigned char*, unsigned char*,
-                               long*, long*);
+using Rtp3Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, unsigned char*, unsigned char*, unsigned char*,
+                               std::int32_t*, std::int32_t*);
 
 #define S13_AS(type, name) ::magic_harness::Call(reinterpret_cast<type>(reinterpret_cast<void*>(&::name)))
 
@@ -199,7 +199,7 @@ using Rtp3Fn = long (__cdecl*)(const short*, const short*, const short*, unsigne
 // writing its translation at +0x14.
 struct Matrix {
     short m[10];
-    long t[3];
+    std::int32_t t[3];
 };
 
 }  // namespace
@@ -483,15 +483,15 @@ S13_EXPORT void __cdecl SuddenDeathMote_PushMatrix(void) {
     v[2] = static_cast<short>(-(S16(m + 0x1A) / 2));
     v[3] = 0;
     Matrix mx;
-    long flag;
+    std::int32_t flag;
     // The original pushes a third argument (the flag) to Gte_RotTrans, which
     // takes two (cdecl: the caller pops it).
-    using RotTransFn = void (__cdecl*)(const short*, long*, long*);
+    using RotTransFn = void (__cdecl*)(const short*, std::int32_t*, std::int32_t*);
     S13_AS(RotTransFn, Gte_RotTrans)(v, mx.t, &flag);
     MH_CALL(Gte_RotMatrix)(rot, mx.m);
     MH_CALL(Gte_MulMatrix0)(Camera_Matrix, mx.m, mx.m);
-    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&mx));
-    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&mx));
+    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(&mx));
+    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(&mx));
 }
 
 // original 0x4B3840: a draw-mode packet (tpage 0x35) linked at the mote; its
@@ -535,7 +535,7 @@ S13_EXPORT void __cdecl SuddenDeathMote_Draw(void) {
             SetVW(0x14, lift);
         }
         {
-            long depth, flag;
+            std::int32_t depth, flag;
             S13_AS(Rtp3Fn, Gte_RotTransPers3)(VP(0), VP(8), VP(0x10), p + 8, p + 0x18, p + 0x28, &depth, &flag);
         }
         MH_CALL(Gte_PrimDepths3_10B)(p);

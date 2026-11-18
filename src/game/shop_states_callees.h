@@ -100,7 +100,7 @@ struct Callees {
     void (__cdecl* transition)(unsigned char);                                       // Transition_Start
     void (__cdecl* face)(unsigned char);                                             // Sprite_FaceDirection
     void (__cdecl* reset_windows)();                                                 // Window_ResetAll
-    int (__cdecl* sprintf_)(char*, const char*, ...);                                // Crt_sprintf
+    int (*sprintf_)(char*, const char*, ...);                                // Crt_sprintf
     void (__cdecl* text_record)(unsigned, unsigned, const unsigned char*);           // TextRecord_Set
     void (__cdecl* choices)(int, int);                                               // SaveMenu_DrawChoices
     void (__cdecl* black)();                                                         // Menu_DrawBlackScreen

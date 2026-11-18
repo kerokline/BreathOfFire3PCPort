@@ -238,7 +238,7 @@ void PiecePage(int page_x) {
 // the window colour with the entry's ecx above it (Menu_DrawBox reads the
 // byte); the level to Menu_DrawExpBar with Menu_DrawPieces' eax above it, which
 // ours hands on as it is. Every field is read after the call before it.
-extern "C" unsigned long __cdecl Menu_DrawMemberStatus(int x, int y, unsigned member, unsigned highlight) {
+extern "C" std::uint32_t __cdecl Menu_DrawMemberStatus(int x, int y, unsigned member, unsigned highlight) {
     const bool lit = (highlight & 0xFFu) != 0;
     const U bl = lit ? 7u : 0u;
     U colour = bl;
@@ -587,7 +587,7 @@ extern "C" void __cdecl Menu_DrawTile16(int x, int y, unsigned u, unsigned dim) 
 // byte `shade` in all three channels; Gpu_SetSemiTrans(0) and
 // Gfx_CommitPrim(1, 0x18), whose eax is returned. 8 E8 callers (0x461DB1,
 // 0x461DD7, 0x461DFD, 0x57437E, 0x5750B7, 0x599C17 among them).
-extern "C" unsigned long __cdecl Menu_DrawCell8(unsigned x, unsigned y, unsigned u, unsigned v, unsigned clut,
+extern "C" std::uint32_t __cdecl Menu_DrawCell8(unsigned x, unsigned y, unsigned u, unsigned v, unsigned clut,
                                                 unsigned shade) {
     unsigned char* const prim = PacketNext();
     map_field_objects::g.set_sprt8(prim);
@@ -669,7 +669,7 @@ extern "C" void __cdecl Menu_DrawMoneyBox(int x, int y, int, unsigned value) {
 // mov al, i) - ours takes the callee's eax as the original does, so i * 8 is
 // off by eax's high word << 19, which Menu_DrawPieces' 16-bit piece draws do
 // not see.
-extern "C" unsigned long __cdecl Menu_DrawPlayTime(int x, int y) {
+extern "C" std::uint32_t __cdecl Menu_DrawPlayTime(int x, int y) {
     map_field_objects::g.draw_box(x + 3, y + 3, 0x55, 0x10, 0, static_cast<unsigned char>(Config_WindowColour));
     char* const buffer = reinterpret_cast<char*>(AtMapFieldObjects(::bof3::Img(kPrintBuf)));
     const auto* const text = reinterpret_cast<const unsigned char*>(buffer);

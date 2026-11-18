@@ -22,7 +22,7 @@ void __cdecl EffectKind28_Beam(void);
 void __cdecl EffectKind28_PushParty(void);
 // original 0x470470: the beam from `a` to `b` (each three dwords: x, z, height)
 // - a line, a half-fan at each end and two quads joining the fans.
-void __cdecl EffectKind28_DrawBeam(const long* a, const long* b);
+void __cdecl EffectKind28_DrawBeam(const std::int32_t* a, const std::int32_t* b);
 // original 0x470640: eight semi-transparent Gouraud triangles round (x, y) of
 // radius `radius` from `angle` (each read as its low word).
 void __cdecl EffectKind28_DrawEnd(unsigned x, unsigned y, unsigned radius, unsigned angle);
@@ -57,7 +57,7 @@ void __cdecl EffectKind2A_Start(void);
 void __cdecl EffectKind2A_Beam(void);
 void __cdecl EffectKind2A_Beams(void);
 void __cdecl EffectKind2A_PushParty(void);
-void __cdecl EffectKind2A_DrawBeam(const long* a, const long* b);
+void __cdecl EffectKind2A_DrawBeam(const std::int32_t* a, const std::int32_t* b);
 void __cdecl EffectKind2A_DrawEnd(unsigned x, unsigned y, unsigned radius, unsigned angle);
 void __cdecl EffectKind2A_DrawSides(unsigned x0, unsigned y0, unsigned r0, unsigned a0, unsigned x1, unsigned y1,
                                     unsigned r1, unsigned a1);

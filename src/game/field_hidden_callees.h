@@ -86,10 +86,10 @@ struct Callees {
     void (__cdecl* set_animation)(unsigned);                             // Sprite_SetAnimation (a byte)
     std::uint32_t (__cdecl* ensure_animation)(unsigned);                 // Sprite_EnsureAnimation (a byte)
     Byte0 target_ahead;                                                 // PartyAction_TargetAhead (R0A's)
-    long (__cdecl* slope_at)(long, long, unsigned long);                 // MapView_SlopeAt
-    long (__cdecl* ground_at)(long, long);                               // MapView_GroundAt
+    std::int32_t (__cdecl* slope_at)(std::int32_t, std::int32_t, std::uint32_t);                 // MapView_SlopeAt
+    std::int32_t (__cdecl* ground_at)(std::int32_t, std::int32_t);                               // MapView_GroundAt
     void (__cdecl* play_effect)(unsigned);                               // Sound_PlayEffect (a word)
-    std::uint32_t (__cdecl* object_at)(long, long, unsigned);            // Sprite_ObjectAt
+    std::uint32_t (__cdecl* object_at)(std::int32_t, std::int32_t, unsigned);            // Sprite_ObjectAt
     std::uint32_t (__cdecl* cell_pickup)(unsigned, unsigned);            // Field_CellPickup (ours)
     std::uint32_t (__cdecl* byte_at)(unsigned, unsigned);                // AreaMap_ByteAt (two words)
     void (__cdecl* spawn_at_cell)(unsigned, unsigned, unsigned);         // 0x524870, nobody's
@@ -102,7 +102,7 @@ struct Callees {
     unsigned char* (__cdecl* frame_upload)(unsigned);                    // Sprite_SetFrameQueueUpload
     void (__cdecl* script_start)(unsigned);                              // Sprite_ScriptStart (a word)
     void (__cdecl* copy_frames)(unsigned, unsigned char*, unsigned);     // Sprite_CopyFrames (ours)
-    long (__cdecl* elevation)(long, long);                               // AreaMap_Elevation
+    std::int32_t (__cdecl* elevation)(std::int32_t, std::int32_t);                               // AreaMap_Elevation
     Byte0 pick_row;                                                      // Encounter_PickRow (ours)
     std::uint32_t (__cdecl* fill_slots)(const unsigned char*);           // Encounter_FillSlots (ours)
     Byte0 place_party;                                                   // Encounter_PlaceParty
@@ -112,7 +112,7 @@ struct Callees {
     void (__cdecl* pop_matrix)();                                        // Gte_PopMatrix
     void (__cdecl* aim_camera)(unsigned);                                // Encounter_AimCamera (a byte)
     std::uint32_t (__cdecl* party_count)(unsigned);                      // Party_Count
-    std::uint32_t (__cdecl* on_screen)(long, long, unsigned, unsigned);  // Encounter_OnScreen (two bytes)
+    std::uint32_t (__cdecl* on_screen)(std::int32_t, std::int32_t, unsigned, unsigned);  // Encounter_OnScreen (two bytes)
 };
 
 extern const Callees kOriginals;

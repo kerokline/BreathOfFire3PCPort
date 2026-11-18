@@ -192,7 +192,7 @@ void __cdecl StubInheritKey() {
     if (h % 5 == 0) SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(Hash() * 3));
     if (h % 7 == 0) Sprite_Current = Pool(h >> 12);   // what the projection reads next
 }
-void __cdecl StubLoadVertex(const unsigned long* v) {   // x, y, z - not the pad (DIV-0023)
+void __cdecl StubLoadVertex(const std::uint32_t* v) {   // x, y, z - not the pad (DIV-0023)
     const auto* s = reinterpret_cast<const std::uint16_t*>(v);
     Record(29, s[0] | static_cast<std::uint32_t>(s[1]) << 16, s[2]);
 }
@@ -218,7 +218,7 @@ std::uint32_t ScreenFloat(unsigned axis) {
     static const float kFraction[] = {0.0f, 0.5f, -0.5f, 0.999f, -0.999f};
     return FloatOf(static_cast<float>(near) + kFraction[(h >> 12) % 5]);
 }
-void __cdecl StubStoreXY(unsigned long* out) {
+void __cdecl StubStoreXY(std::uint32_t* out) {
     Record(31);
     out[0] = ScreenFloat(0);
     out[1] = ScreenFloat(1);
@@ -226,9 +226,9 @@ void __cdecl StubStoreXY(unsigned long* out) {
     if (h % 5 == 0) Sprite_Current = Pool(h >> 8);   // it is re-read for the depth's address
     if (h % 7 == 0) Sprite_DrawListCount = static_cast<unsigned char>(0x26 + (h >> 16) % 4);
 }
-void __cdecl StubStoreDepth(long* out) {
+void __cdecl StubStoreDepth(std::int32_t* out) {
     Record(32, Address(out));
-    *out = static_cast<long>(Hash());
+    *out = static_cast<std::int32_t>(Hash());
     const std::uint32_t h = Hash();
     if (h % 5 == 0) Sprite_Current = Pool(h >> 8);   // it is re-read for the stores
 }
@@ -259,7 +259,7 @@ const field_frame::CalleesFieldFrame kStubs = {
     StubTurnTarget, Cast<void (__cdecl*)(unsigned char)>(&StubFace), StubObject<22>, StubVoid<23>,
     StubObject<24>, StubTick<25>, StubTick<26>,
     StubInheritKey, StubLoadVertex, StubVoid<30>, StubStoreXY, StubStoreDepth,
-    StubVoid<33>, StubVoid<34>, StubVoid<35>, Cast<void (__cdecl*)(unsigned long, unsigned long)>(&StubSwap),
+    StubVoid<33>, StubVoid<34>, StubVoid<35>, Cast<void (__cdecl*)(std::uint32_t, std::uint32_t)>(&StubSwap),
     StubSpriteDraw,
 };
 using Raw = const void*;
@@ -519,7 +519,7 @@ void SelfTest(void* const (&theirs)[kCount]) {
     if (region_bytes != kRegionBytes) bof3::Fatal("field_frame: regions are %u bytes, the state holds %u", region_bytes, kRegionBytes);
     static State saved, input, their_out, our_out;
     Capture(saved);
-    unsigned long saved_handlers[11];
+    std::uint32_t saved_handlers[11];
     std::memcpy(saved_handlers, Field_ObjectHandlers, sizeof saved_handlers);
     for (unsigned k = 0; k < 11; ++k) Field_ObjectHandlers[k] = Address(kHandlerStubs[k]);
     field_frame::g = kStubs;

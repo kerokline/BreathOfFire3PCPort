@@ -58,9 +58,9 @@ void Rgb(unsigned char* p, unsigned at_, unsigned char v) { p[at_] = p[at_ + 1] 
 // through the dword after: docs/battle_e1.md section 7). The jmp leaves the
 // caller's stack word and the entry's eax in place: ours hands the word on
 // and answers the entry's eax (round 11 doc section 5.1).
-using Entry = unsigned long (__cdecl*)(unsigned long);
+using Entry = std::uint32_t (__cdecl*)(std::uint32_t);
 
-unsigned long Dispatch(const char* who, U table, unsigned index, unsigned entries, unsigned long through) {
+std::uint32_t Dispatch(const char* who, U table, unsigned index, unsigned entries, std::uint32_t through) {
     if (index >= entries)
         bof3::Fatal("%s: the step byte is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/battle_e1.md section 7)",
@@ -127,7 +127,7 @@ void LossMember(U index) {
 
 // original 0x432430 (0x64AF70[2]): by 0x904AA3 through BattleLoss_Steps
 // 0x64AFD8 (5).
-extern "C" unsigned long __cdecl BattleLoss_Dispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl BattleLoss_Dispatch(std::uint32_t through) {
     return Dispatch("BattleLoss_Dispatch", ::bof3::Img(BattleLoss_Steps_addr), BattleE4_Step3, 5, through);
 }
 

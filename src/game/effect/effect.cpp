@@ -549,7 +549,7 @@ void HpLessDefence(int divisor) {
 // then 0x44B920, whose eax is returned. The row index is handed on as a dword
 // whose upper bytes are the caller's ecx (the original keeps it in its pushed
 // ecx slot); both callees read its low byte.
-extern "C" unsigned long __cdecl EnemyAI_TurnCheck(void) {
+extern "C" std::uint32_t __cdecl EnemyAI_TurnCheck(void) {
     static constexpr battle_misc::U kMasks[9] = {1, 2, 4, 8, 0x10, 0x20, 0x40, 0x100, 0x80};
     for (battle_misc::U i = 0; i < 4; ++i) {
         const battle_misc::U actor = CurrentEnemy();
@@ -1093,7 +1093,7 @@ extern "C" void __cdecl EffectSlot07_Heal(void) {
 // original 0x44C140 (Effect_Handlers slot 8): the result record's HP delta
 // (word +4 of *kResult) = -20, a heal of 20 (positive is damage,
 // Effect_ApplyResult). eax the record pointer.
-extern "C" unsigned long __cdecl Effect_Heal20(void) {
+extern "C" std::uint32_t __cdecl Effect_Heal20(void) {
     const battle_odds::U result = BattleDamage_Result;
     rv::Store<battle_odds::U>(rv::As<records::ActionRecord>(AtBattleOdds(result))->hp_change, 0xFFEC);  // the result record (records::ActionRecord)
     return result;
@@ -1272,7 +1272,7 @@ extern "C" void __cdecl EffectSlot30_HalfHitInflict8(void) { HalfHitInflict(8); 
 // upper bits are the entry's (mov al / mov cl); Battle_CalcDamage reads their
 // low bytes only. eax is Battle_CalcDamage's with the low word halved; the
 // result pointer is read after the call.
-extern "C" unsigned long __cdecl Effect_HalfAttack(void) {
+extern "C" std::uint32_t __cdecl Effect_HalfAttack(void) {
     const battle_odds::U target = AtBattleOdds(::bof3::Img(kTarget.v))[0];
     const battle_odds::U actor = AtBattleOdds(::bof3::Img(kActing.v))[0];
     const battle_odds::U amount = battle_odds::g.calc_damage(actor, target, 0xFFFF);

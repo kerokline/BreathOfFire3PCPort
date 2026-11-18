@@ -71,7 +71,7 @@ void Dispatch(const char* who, U table, unsigned entries) {
 // The original also pushes a tenth pointer (a flag local) the projection does
 // not read.
 void Project(unsigned char* p) {
-    long depth;
+    std::int32_t depth;
     SH_CALL(Gte_RotTransPers4)(Vertex(0), Vertex(1), Vertex(2), Vertex(3), reinterpret_cast<float*>(p + 8),
                                reinterpret_cast<float*>(p + 0x18), reinterpret_cast<float*>(p + 0x28),
                                reinterpret_cast<float*>(p + 0x38), &depth);
@@ -409,11 +409,11 @@ extern "C" void __cdecl EffectKind18Sub41_Draw(unsigned variant, int angle) {
     SetWord(point + 2, 0xD240);
     SetWord(point + 4, 0xFB80);
     SH_CALL(Gte_PushMatrix)();
-    SH_CALL(Gte_RotTrans)(reinterpret_cast<const short*>(point), reinterpret_cast<long*>(matrix + 0x14));
+    SH_CALL(Gte_RotTrans)(reinterpret_cast<const short*>(point), reinterpret_cast<std::int32_t*>(matrix + 0x14));
     SH_CALL(Gte_RotMatrix)(reinterpret_cast<const short*>(angles), reinterpret_cast<short*>(matrix));
     SH_CALL(Gte_MulMatrix0)(Camera_Matrix, reinterpret_cast<const short*>(matrix), reinterpret_cast<short*>(matrix));
-    SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(matrix));
-    SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(matrix));
+    SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(matrix));
+    SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(matrix));
     if (variant >= at::kSub41Variants)
         bof3::Fatal("EffectKind18Sub41_Draw: variant %u, past the %u rows of 0x%X - the original reads on into the "
                     "texture words (docs/effect_6b.md section 7)",
@@ -460,7 +460,7 @@ extern "C" void __cdecl EffectKind18Sub41_DrawPanels(unsigned lift, unsigned tex
             rv::As<records::SVector>(v)[k].y = (static_cast<U>(b[1]) << 7) - 0x2DC0u;
             rv::As<records::SVector>(v)[k].z = 0xFFFFFC08u - static_cast<U>(b[2]) * lift;
         }
-        long depth;
+        std::int32_t depth;
         const short* const vs = reinterpret_cast<short*>(Prim_VertexScratch);
         SH_CALL(Gte_RotTransPers4)(vs, vs + 4, vs + 8, vs + 12, reinterpret_cast<float*>(p + 8),
                                    reinterpret_cast<float*>(p + 0x18), reinterpret_cast<float*>(p + 0x28),
@@ -490,10 +490,10 @@ extern "C" void __cdecl EffectKind18Sub41_DrawRings(int size) {
     rv::As<records::SVector>(v)->z = 0xFC08;
     U radius_arg = static_cast<U>(size);
     U colour = (0x28u - static_cast<U>(size)) * 5u;
-    long p_out;
+    std::int32_t p_out;
     // A line's two ends projected into p + 8 / p + 0x14, each depth after it.
     auto end = [&](unsigned char* p, unsigned at_xy, unsigned at_depth) {
-        SH_CALL(Gte_RotTransPers)(v0, reinterpret_cast<unsigned long*>(p + at_xy), &p_out);
+        SH_CALL(Gte_RotTransPers)(v0, reinterpret_cast<std::uint32_t*>(p + at_xy), &p_out);
         SH_CALL(Gte_StoreDepthF)(reinterpret_cast<float*>(p + at_depth));
     };
     for (unsigned ring = 3; ring != 0; --ring) {
@@ -580,8 +580,8 @@ extern "C" void __cdecl EffectKind18Sub41_DrawRings(int size) {
 // Camera_ShiftY and Camera_Distance + 0x1194, as the translation; the matrix
 // set; with MapView_Redraw, AreaMapBD_BuildView and MapView_Redraw down.
 extern "C" void __cdecl AreaMap_FrameAreaBD(void) {
-    MapView_FocusX = static_cast<long>(SarRest3g(0x800000u - static_cast<U>(Field_Kind2X), 8));
-    MapView_FocusZ = static_cast<long>(SarRest3g(0x800000u - static_cast<U>(Field_Kind2Z), 8));
+    MapView_FocusX = static_cast<std::int32_t>(SarRest3g(0x800000u - static_cast<U>(Field_Kind2X), 8));
+    MapView_FocusZ = static_cast<std::int32_t>(SarRest3g(0x800000u - static_cast<U>(Field_Kind2Z), 8));
     {
         unsigned char* const angles = reinterpret_cast<unsigned char*>(Camera_Angles);
         unsigned char* const drawn = reinterpret_cast<unsigned char*>(Camera_AnglesDrawn);
@@ -597,14 +597,14 @@ extern "C" void __cdecl AreaMap_FrameAreaBD(void) {
     vector[0] = static_cast<short>((((static_cast<U>(MapView_FocusX) >> 1) - 0x4000u) & 0x7FFFu) - 0x4000u);
     vector[1] = static_cast<short>((((static_cast<U>(MapView_FocusZ) >> 1) - 0x4000u) & 0x7FFFu) - 0x4000u);
     vector[2] = static_cast<short>(static_cast<U>(MapView_Elevation) >> 1);
-    long moved[3];
+    std::int32_t moved[3];
     SH_CALL(Gte_ApplyMatrix)(Camera_Matrix, vector, moved);
     unsigned char* const matrix = reinterpret_cast<unsigned char*>(Camera_Matrix);
     SetULRest3g(matrix + 0x14, static_cast<U>(static_cast<int>(Camera_ShiftX)) + static_cast<U>(moved[0]));
     SetULRest3g(matrix + 0x18, static_cast<U>(static_cast<int>(Camera_ShiftY)) + static_cast<U>(moved[1]));
     SetULRest3g(matrix + 0x1C, static_cast<U>(static_cast<int>(Camera_Distance)) + static_cast<U>(moved[2]) + 0x1194u);
-    SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(Camera_Matrix));
-    SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(Camera_Matrix));
+    SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(Camera_Matrix));
+    SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(Camera_Matrix));
     if (MapView_Redraw == 0) return;
     SH_CALL(AreaMapBD_BuildView)();
     MapView_Redraw = static_cast<unsigned char>(MapView_Redraw - 1);
@@ -674,9 +674,9 @@ extern "C" void __cdecl AreaMapBD_BuildView(void) {
             unsigned char* corner = reinterpret_cast<unsigned char*>(&AreaMap_Corners) + cell * 4;
             MapView_CornerPtr = corner;
             rv::As<records::SVector>(v)->z = (0u - static_cast<U>(S8Rest3g(corner[0]))) << 4;
-            SH_CALL(Gte_LoadVertex)(reinterpret_cast<const unsigned long*>(Prim_VertexScratch));
+            SH_CALL(Gte_LoadVertex)(reinterpret_cast<const std::uint32_t*>(Prim_VertexScratch));
             SH_CALL(Gte_Rtps)();
-            SH_CALL(Gte_StoreScreenXY)(reinterpret_cast<unsigned long*>(MapView_ScreenXY));
+            SH_CALL(Gte_StoreScreenXY)(reinterpret_cast<std::uint32_t*>(MapView_ScreenXY));
             // x87 fcomp against the operands' floats: an unordered compare sets
             // C0 and C3 both.
             const float sx = Fl(AddressOf(MapView_ScreenXY)), sy = Fl(AddressOf(MapView_ScreenXY) + 4);
@@ -697,7 +697,7 @@ extern "C" void __cdecl AreaMapBD_BuildView(void) {
                 const U header = ULRest3g(AreaMap_Header);
                 const U product = ((header >> 8) & 0xFFu) * (header & 0xFFu) + 1u;
                 const U index = static_cast<U>(I(product) / 2) + offset + tile;
-                SH_CALL(AreaMapBD_CellTexture)(static_cast<unsigned long>(ULRest3g(AreaMap_Header + index * 4u)), quad);
+                SH_CALL(AreaMapBD_CellTexture)(static_cast<std::uint32_t>(ULRest3g(AreaMap_Header + index * 4u)), quad);
             }
             FpuCopy(item + Gfx_BufferIndex * 0x48u + 8, MapView_ScreenXY);
             FpuCopy(item + Gfx_BufferIndex * 0x48u + 0xC, MapView_ScreenXY + 1);
@@ -717,18 +717,18 @@ extern "C" void __cdecl AreaMapBD_BuildView(void) {
                 rv::As<records::SVector>(v)[3].y = y1;
                 rv::As<records::SVector>(v)[3].z = (0u - static_cast<U>(S8Rest3g(static_cast<unsigned char>(ULRest3g(corner) >> 24))) ) << 4;
             }
-            SH_CALL(Gte_LoadVertices3)(reinterpret_cast<const unsigned long*>(v + 8));
+            SH_CALL(Gte_LoadVertices3)(reinterpret_cast<const std::uint32_t*>(v + 8));
             SH_CALL(Gte_Rtpt)();
             {
                 const U last = ::bof3::Img(at::kLayerLast.v) + (Gfx_BufferIndex - row * 6u) * 8u;
                 unsigned char* const quad = item + Gfx_BufferIndex * 0x48u;
-                SH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(ULRest3g(last))), AddressOf(quad));
+                SH_CALL(Gpu_LinkPrim)(reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(ULRest3g(last))), AddressOf(quad));
             }
             SetULRest3g(::bof3::Img(at::kLayerLast.v) + (Gfx_BufferIndex - row * 6u) * 8u, AddressOf(item + Gfx_BufferIndex * 0x48u));
             {
                 unsigned char* const quad = item + Gfx_BufferIndex * 0x48u;
-                SH_CALL(Gte_StoreScreenXY3)(reinterpret_cast<unsigned long*>(quad + 0x18), reinterpret_cast<unsigned long*>(quad + 0x28),
-                                            reinterpret_cast<unsigned long*>(quad + 0x38));
+                SH_CALL(Gte_StoreScreenXY3)(reinterpret_cast<std::uint32_t*>(quad + 0x18), reinterpret_cast<std::uint32_t*>(quad + 0x28),
+                                            reinterpret_cast<std::uint32_t*>(quad + 0x38));
             }
             SH_CALL(Gte_PrimDepths4_10)(item + Gfx_BufferIndex * 0x48u);
         }
@@ -740,7 +740,7 @@ extern "C" void __cdecl AreaMapBD_BuildView(void) {
 // transparent; its colour 0x80 x 3; its CLUT word ((texture sar 24) & 0xF) +
 // 0x1E3 << 6, its page word 0x95; the 16 x 16 tile of the texture's low byte -
 // u (texture & 0xF) << 4 to + 0xF, v texture & 0xF0 to + 0xF.
-extern "C" void __cdecl AreaMapBD_CellTexture(unsigned long texture, unsigned char* quad) {
+extern "C" void __cdecl AreaMapBD_CellTexture(std::uint32_t texture, unsigned char* quad) {
     SH_CALL(Gpu_SetSemiTrans)(quad, 0);
     quad[6] = 0x80;
     quad[5] = 0x80;
@@ -814,8 +814,8 @@ extern "C" void __cdecl EffectKind18Sub44_Follow(void) {
     SetV(0, Sar(((static_cast<U>(Field_Kind2X) - 1u) & 0xFFFFFFu) + 1u, 9) - 0x4000u);
     SetV(4, 0u - DivP2(static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(ObjTrio[0].height_whole))), 1));
     SetV(2, Sar(((static_cast<U>(Field_Kind2Z) - 1u) & 0xFFFFFFu) + 1u, 9) - 0x4000u);
-    long p;
-    SH_CALL(Gte_RotTransPers)(Vx(0), reinterpret_cast<unsigned long*>(MapView_ScreenXY), &p);
+    std::int32_t p;
+    SH_CALL(Gte_RotTransPers)(Vx(0), reinterpret_cast<std::uint32_t*>(MapView_ScreenXY), &p);
     rv::Current<records::EffectObject>()->screen_xf = 0x43200000u; // 160.0f
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, 0xA0);
     if (static_cast<std::uint32_t>(ObjTrio[0].step_y) != 0) {
@@ -1236,7 +1236,7 @@ extern "C" void __cdecl EffectKind18Sub44_Commit(unsigned size) {
     const U bytes = size & 0xFFu;
     const U limit = (static_cast<U>(buffer) << 16) + ::bof3::Img(at::kPoolLimit);
     if (limit <= AddressOf(next) + bytes) return;
-    SH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(ULEffect6c(::bof3::Img(at::kLayerTails.v) + 8 * buffer))),
+    SH_CALL(Gpu_LinkPrim)(reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(ULEffect6c(::bof3::Img(at::kLayerTails.v) + 8 * buffer))),
                           AddressOf(next));
     unsigned char* const now = Gfx_PacketNext;
     SetUL(::bof3::Img(at::kLayerTails.v) + 8u * Gfx_BufferIndex, AddressOf(now));
@@ -1251,7 +1251,7 @@ extern "C" void __cdecl EffectKind18Sub44_Commit(unsigned size) {
 // lower triangle (fx + fz <= 0x10000) from c0, toward c1 along x and c2 along
 // z; the upper from c3. Each product divided by 0x10000 toward zero. Answers
 // the height << 5 in eax (the callers keep ax).
-extern "C" long __cdecl AreaMap_CornerHeight(long x, long z) {
+extern "C" std::int32_t __cdecl AreaMap_CornerHeight(std::int32_t x, std::int32_t z) {
     const U ux = static_cast<U>(x), uz = static_cast<U>(z);
     const U xi = Sar(ux + 0x8000u, 16) & 0xFF, zi = Sar(uz + 0x8000u, 16) & 0xFF;
     const U block = At(::bof3::Img(at::kBlockMap.v))[((xi >> 4) & 0xF) | (zi & 0xF0)];
@@ -1272,7 +1272,7 @@ extern "C" long __cdecl AreaMap_CornerHeight(long x, long z) {
         const U from_z = DivP2(static_cast<U>(c3 - c2) * (0x10000u - fx), 16);
         h = static_cast<U>(c3) - from_z - from_x;
     }
-    return static_cast<long>(h << 5);
+    return static_cast<std::int32_t>(h << 5);
 }
 
 // original 0x511D50 (called by EffectKind18Sub44_DrawStars after each star):

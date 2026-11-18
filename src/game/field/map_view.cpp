@@ -126,7 +126,7 @@ void SelfTestSetElevation(SetElevationFn theirs) {
     constexpr unsigned kRounds = 8000;
     unsigned char saved_fixed[2];
     std::memcpy(saved_fixed, AreaMap_Header + 0x1E, 2);
-    const long saved_elevation = MapView_Elevation;
+    const std::int32_t saved_elevation = MapView_Elevation;
     const unsigned short saved_offset = MapView_ElevationOffset;
     const unsigned char saved_redraw = MapView_Redraw;
 
@@ -135,13 +135,13 @@ void SelfTestSetElevation(SetElevationFn theirs) {
         const bool fixed = Rng() % 3 == 0;
         const std::uint16_t fixed_word = fixed ? static_cast<std::uint16_t>(Rng() | 1u) : 0;
         std::memcpy(AreaMap_Header + 0x1E, &fixed_word, 2);
-        const long elevation_in = static_cast<long>(Rng() % 2 ? static_cast<short>(Rng()) : static_cast<std::int32_t>(Rng()));
+        const std::int32_t elevation_in = static_cast<std::int32_t>(Rng() % 2 ? static_cast<short>(Rng()) : static_cast<std::int32_t>(Rng()));
         const unsigned short offset_in = static_cast<unsigned short>(Rng());
         const int value = Rng() % 2 ? static_cast<short>(Rng()) : static_cast<int>(Rng());
         fixed_rounds += fixed;
         if (value != static_cast<short>(value)) ++wide;
 
-        long elevation[2];
+        std::int32_t elevation[2];
         unsigned short offset[2];
         unsigned char redraw[2];
         for (int pass = 0; pass < 2; ++pass) {
@@ -154,7 +154,7 @@ void SelfTestSetElevation(SetElevationFn theirs) {
             redraw[pass] = MapView_Redraw;
         }
         if ((elevation[0] != elevation[1] || offset[0] != offset[1] || redraw[0] != redraw[1]) && ++bad <= 8)
-            bof3::Log("shadow      MapView_SetElevation self-test MISMATCH round %u: value 0x%08X: elevation %ld vs %ld, "
+            bof3::Log("shadow      MapView_SetElevation self-test MISMATCH round %u: value 0x%08X: elevation %d vs %d, "
                       "offset 0x%04X vs 0x%04X", round, static_cast<unsigned>(value), elevation[0], elevation[1],
                       offset[0], offset[1]);
     }

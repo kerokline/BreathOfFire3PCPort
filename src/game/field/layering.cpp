@@ -60,7 +60,7 @@ int EnvInt(const char* name, int fallback, int lo, int hi) {
     const std::uint32_t n = bof3::os::GetEnv(name, text, sizeof text);
     if (n == 0 || n >= sizeof text) return fallback;
     char* end = nullptr;
-    const long v = std::strtol(text, &end, 10);
+    const std::int32_t v = std::strtol(text, &end, 10);
     if (end == nullptr || *end != '\0' || v < lo || v > hi) bof3::Fatal("%s must be %d..%d", name, lo, hi);
     return static_cast<int>(v);
 }
@@ -183,7 +183,7 @@ bool Stops(std::uint32_t prim, const Box& feet_box, const Box& whole_box, int fe
 // nodes): false when a primitive of it stops the sprite (Stops).
 bool ListClear(unsigned layer, unsigned which, const Box& feet_box, const Box& whole_box, int feet, Need need,
                const Height* table = nullptr) {
-    const unsigned long* const list = DrawLayers + which * 4u + (Gfx_BufferIndex + layer * 6u) * 2u;   // first, last
+    const std::uint32_t* const list = DrawLayers + which * 4u + (Gfx_BufferIndex + layer * 6u) * 2u;   // first, last
     std::uint32_t at = list[0];
     for (unsigned steps = 0; at != 0; ++steps) {
         if (steps == 256) return false;
@@ -450,7 +450,7 @@ Box g_faerie_reach;                          // their union box
 // Each primitive of one of a layer's lists, as ListClear walks it.
 template <typename F>
 void ForEachInList(unsigned layer, unsigned which, F&& f) {
-    const unsigned long* const list = DrawLayers + which * 4u + (Gfx_BufferIndex + layer * 6u) * 2u;   // first, last
+    const std::uint32_t* const list = DrawLayers + which * 4u + (Gfx_BufferIndex + layer * 6u) * 2u;   // first, last
     std::uint32_t at = list[0];
     for (unsigned steps = 0; at != 0 && steps < 256; ++steps) {
         f(at);
@@ -517,7 +517,7 @@ unsigned LayerFor(unsigned index, unsigned layer) {
             }
         }
         for (unsigned item = 0; item < DrawTable_Count; ++item) {
-            const unsigned long entry = DrawTable[item];
+            const std::uint32_t entry = DrawTable[item];
             if ((entry >> 24) != next - 1) continue;
             const std::uint32_t prim =
                 Address(draw_pool::Items() + (Gfx_BufferIndex + (entry & 0xFFFu) * 2u) * 0x48u);
@@ -726,7 +726,7 @@ void AfterSprite(const unsigned char* sprite) {
     g_faerie = nullptr;   // once a pass
 }
 
-void AfterModel(const unsigned char* object, const unsigned long* records, unsigned count) {
+void AfterModel(const unsigned char* object, const std::uint32_t* records, unsigned count) {
     // The quads' screen points (Sprite_AddDrawRecords: four at +8, +0x18,
     // +0x28, +0x38 of each POLY_FT4), their union box.
     Box box = {1e9f, 1e9f, -1e9f, -1e9f};

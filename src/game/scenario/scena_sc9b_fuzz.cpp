@@ -159,7 +159,7 @@ void __cdecl TSetElevation(int v) { Stub(MapView_SetElevation)(v); }
 void __cdecl TMusicPlay(unsigned t, int f) { Stub(Music_Play)(t, f); }
 void __cdecl TClear40() { Stub(ScriptFlags_Clear40)(); }
 void __cdecl TFlagsSet(unsigned char* b, unsigned i) { Stub(Flags_Set)(b, i); }
-long __cdecl TElevation(long x, long z) { return Stub(AreaMap_Elevation)(x, z); }
+std::int32_t __cdecl TElevation(std::int32_t x, std::int32_t z) { return Stub(AreaMap_Elevation)(x, z); }
 void __cdecl TResumeAll() { Stub(Sound_ResumeAll)(); }
 void __cdecl TMsg(unsigned short id) { Stub(Msg_OpenScript)(id); }
 

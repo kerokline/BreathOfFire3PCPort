@@ -54,7 +54,7 @@ void __cdecl EffectKind26_Widen(void);
 // original 0x46FFB0: sixteen Gouraud quads of the band between the polar
 // angles t - 0x100 and t (at most 0x400) of a dome at the world point (x, z,
 // height). `t` is read as its low word.
-void __cdecl EffectKind26_DrawBand(long x, long z, long height, unsigned t);
+void __cdecl EffectKind26_DrawBand(std::int32_t x, std::int32_t z, std::int32_t height, unsigned t);
 
 // Kind 0x27: kind-0x26 bands emitted every 16 frames for 0x1000; Effect_KindHandlers[0x27].
 void __cdecl EffectKind27_Run(void);

@@ -142,7 +142,7 @@ extern "C" void __cdecl EffectKindBA_Line(void) {
         rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, static_cast<std::uint32_t>(Sprite_ObjectsExtra[1].x) - (static_cast<U>(S16(s + 0x2E)) << 15) + d1);
         rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_10, static_cast<std::uint32_t>(Sprite_ObjectsExtra[1].z) + d2);
         SetULRest3g(s + 0x14, static_cast<std::uint32_t>(Sprite_ObjectsExtra[1].height) + 0x1000000u);
-        SH_CALL(EffectKindBA_DrawLine)(reinterpret_cast<const long*>(s + 0x34), reinterpret_cast<const long*>(s + 0xC),
+        SH_CALL(EffectKindBA_DrawLine)(reinterpret_cast<const std::int32_t*>(s + 0x34), reinterpret_cast<const std::int32_t*>(s + 0xC),
                                        0x40);
     }
     rv::As<records::EffectObject>(S())->screen_x = static_cast<std::uint16_t>(rv::As<records::EffectObject>(S())->screen_x) + 1u;
@@ -155,7 +155,7 @@ extern "C" void __cdecl EffectKindBA_Line(void) {
 // record's +0x34 and +0xC and 0x40): a draw mode (Gpu_GetTPage(0, 1, 0x3C0, 0),
 // dtd 1, committed to slot 1); the map camera; a semi-transparent LINE_F2 from
 // `from` projected to `to` projected, (shade, shade, 0), committed 0x20 to slot 1.
-extern "C" void __cdecl EffectKindBA_DrawLine(const long* from, const long* to, unsigned shade) {
+extern "C" void __cdecl EffectKindBA_DrawLine(const std::int32_t* from, const std::int32_t* to, unsigned shade) {
     DrawMode(1, 0x3C0, 0, 1, 1);
     SH_CALL(EffectGte_LoadMapCamera)();
     unsigned char* const p = Gfx_PacketNext;

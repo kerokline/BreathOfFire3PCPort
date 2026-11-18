@@ -55,24 +55,24 @@ constexpr int kDrawPrimitive = 28;
 
 U Returned() { return ComResult(g_log ? g_log->n - 1u : 0u); }
 
-template <int S> long __stdcall Com1(void*) {
+template <int S> std::int32_t __stdcall Com1(void*) {
     Record(0x100 + S);
-    return static_cast<long>(Returned());
+    return static_cast<std::int32_t>(Returned());
 }
-template <int S> long __stdcall Com3(void*, U a, U b) {
+template <int S> std::int32_t __stdcall Com3(void*, U a, U b) {
     Record(0x100 + S, a, b);
-    return static_cast<long>(Returned());
+    return static_cast<std::int32_t>(Returned());
 }
-template <int S> long __stdcall Com4(void*, U a, U b, U c) {
+template <int S> std::int32_t __stdcall Com4(void*, U a, U b, U c) {
     Record(0x100 + S, a, b, c);
-    return static_cast<long>(Returned());
+    return static_cast<std::int32_t>(Returned());
 }
-template <int S> long __stdcall Trap(void*) {
+template <int S> std::int32_t __stdcall Trap(void*) {
     bof3::Fatal("d3d_fuzz: the fake device's slot %d (vtable +0x%X) was called, and nothing records it", S,
                 S * 4);
 }
 
-long __stdcall DrawPrimitive(void*, U type, U fvf, U vertices, U count, U flags) {
+std::int32_t __stdcall DrawPrimitive(void*, U type, U fvf, U vertices, U count, U flags) {
     Record(0x100 + kDrawPrimitive, type, fvf, vertices, count, flags);
     if (g_log->n <= kMaxCalls && g_log->n_snaps < kMaxSnaps) {
         U bytes = count * 0x20u;
@@ -82,7 +82,7 @@ long __stdcall DrawPrimitive(void*, U type, U fvf, U vertices, U count, U flags)
         g_log->calls[g_log->n - 1].snap = static_cast<int>(g_log->n_snaps);
         ++g_log->n_snaps;
     }
-    return static_cast<long>(Returned());
+    return static_cast<std::int32_t>(Returned());
 }
 
 template <int S> void* Entry() {

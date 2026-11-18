@@ -114,7 +114,7 @@ void CopyPosition(unsigned char* to, const unsigned char* from) {
 void LinkAtCurrent(unsigned size) {
     const unsigned char* const sc = Sprite_Current;
     const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tsc->x), static_cast<unsigned long>(tsc->z), 2, size);
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(tsc->x), static_cast<std::uint32_t>(tsc->z), 2, size);
 }
 
 }  // namespace
@@ -320,7 +320,7 @@ S20_EXPORT void __cdecl Magic088_DrawFan(void) {
         SetWord(Vtx(4), 0);
         MH_CALL(Gpu_SetPolyG3)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
-        long depth;
+        std::int32_t depth;
         MH_CALL(Gte_RotTransPers3)(VtxP(0), VtxP(8), VtxP(0x10), reinterpret_cast<float*>(p + 8), reinterpret_cast<float*>(p + 0x18),
                                    reinterpret_cast<float*>(p + 0x28), &depth);
         MH_CALL(Gte_PrimDepths3_10B)(p);
@@ -435,7 +435,7 @@ S20_EXPORT void __cdecl Magic088_DrawWave(void) {
             SetWord(Vtx(0x1C), WaveZ(v));
             MH_CALL(Gpu_SetPolyF4)(p);
             MH_CALL(Gpu_SetSemiTrans)(p, 1);
-            long depth;
+            std::int32_t depth;
             MH_CALL(Gte_RotTransPers4)(VtxP(0), VtxP(8), VtxP(0x10), VtxP(0x18), reinterpret_cast<float*>(p + 8),
                                        reinterpret_cast<float*>(p + 0x14), reinterpret_cast<float*>(p + 0x20),
                                        reinterpret_cast<float*>(p + 0x2C), &depth);

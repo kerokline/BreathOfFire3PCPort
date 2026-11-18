@@ -47,7 +47,7 @@ unsigned char* Bank() { return At(::bof3::Img(Cond_Flags_addr) + 0xa0); }
 unsigned char* Bank904000() { return At(::bof3::Img(Cond_Flags_addr) + 0x70); }
 
 // The high word of a 16.16 position, as the hooks read it (a word at +2).
-std::uint16_t High(long v) { return static_cast<std::uint16_t>(static_cast<U>(v) >> 16); }
+std::uint16_t High(std::int32_t v) { return static_cast<std::uint16_t>(static_cast<U>(v) >> 16); }
 
 void SetMessage(unsigned id) { SetWord(At(::bof3::Img(at::kMessage.v)), id); }
 
@@ -549,10 +549,10 @@ void DrawDrift(const WorldMapTables& t) {
     rv::Store<unsigned>(rv::As<records::SVector>(v)[1].z, 0xFD00);
     rv::Store<unsigned>(rv::As<records::SVector>(v)[2].z, 0xFD00);
     rv::Store<unsigned>(rv::As<records::SVector>(v)[3].z, 0xFD00);
-    long depth = 0, flag = 0;
+    std::int32_t depth = 0, flag = 0;
     const auto* const sv = reinterpret_cast<const short*>(v);
-    using Pers4 = long (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*,
-                                  long*, long*);
+    using Pers4 = std::int32_t (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*,
+                                  std::int32_t*, std::int32_t*);
     AH_AT(Pers4, bof3::addr::Gte_RotTransPers4)(sv, sv + 4, sv + 8, sv + 12, reinterpret_cast<float*>(prim + 8),
                                                 reinterpret_cast<float*>(prim + 0x18), reinterpret_cast<float*>(prim + 0x28),
                                                 reinterpret_cast<float*>(prim + 0x38), &depth, &flag);
@@ -706,7 +706,7 @@ extern "C" void __cdecl Area150_Tail58(void) {
 // original 0x423910 (Area_StepHook's case for area 150, 0x56E1B2): x's high
 // word 0x17..0x1C and z's 0x33..0x38 (16-bit): ScriptFlags_Set40, tail kind 58
 // at state 0xA, al 1. Else al 0.
-extern "C" unsigned char __cdecl Area150_StepHook(long x, long z) {
+extern "C" unsigned char __cdecl Area150_StepHook(std::int32_t x, std::int32_t z) {
     if (static_cast<std::uint16_t>(High(x) - 0x17) >= 6) return 0;
     if (static_cast<std::uint16_t>(High(z) - 0x33) >= 6) return 0;
     AH_CALL(ScriptFlags_Set40)();

@@ -102,20 +102,20 @@ void Call3(std::uint32_t address, int a, int b, int c) { MH_WORD(Fn3, address)(a
 
 // The callees with the arguments the originals push. Gte_RotTransPers3 / 4
 // get the depth and flag pointers the originals pass; ours reads the first.
-using Rtp1Fn = long (__cdecl*)(const short*, unsigned char*, long*, long*);
+using Rtp1Fn = std::int32_t (__cdecl*)(const short*, unsigned char*, std::int32_t*, std::int32_t*);
 
-using Rtp4Fn = long (__cdecl*)(const short*, const short*, const short*, const short*, unsigned char*, unsigned char*,
-                               unsigned char*, unsigned char*, long*, long*);
+using Rtp4Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, const short*, unsigned char*, unsigned char*,
+                               unsigned char*, unsigned char*, std::int32_t*, std::int32_t*);
 
 #define S22_AS(type, name) ::magic_harness::Call(reinterpret_cast<type>(reinterpret_cast<void*>(&::name)))
 
 void Rtp1(unsigned v, unsigned char* sxy) {
-    long p, flag;
+    std::int32_t p, flag;
     S22_AS(Rtp1Fn, Gte_RotTransPers)(VP(v), sxy, &p, &flag);
 }
 
 void Rtp4(unsigned char* prim) {
-    long p, flag;
+    std::int32_t p, flag;
     S22_AS(Rtp4Fn, Gte_RotTransPers4)(VP(0), VP(8), VP(0x10), VP(0x18), prim + 8, prim + 0x18, prim + 0x28, prim + 0x38,
                                      &p, &flag);
 }
@@ -123,7 +123,7 @@ void Rtp4(unsigned char* prim) {
 void LinkAtSprite(unsigned size) {
     const unsigned char* const s = Sc();
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->z), 2,
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(ts->x), static_cast<std::uint32_t>(ts->z), 2,
                                 size);
 }
 
@@ -158,18 +158,18 @@ void PushTaskMatrix(bool tilt) {
     v[3] = 0;
     struct Matrix {
         short m[10];
-        long t[3];
+        std::int32_t t[3];
     } m;
     static_assert(sizeof(Matrix) == 0x20, "MATRIX layout");
-    long flag;
+    std::int32_t flag;
     // The original pushes a third argument (the flag) to Gte_RotTrans, which
     // takes two (cdecl: the caller pops it).
-    using RotTransFn = void (__cdecl*)(const short*, long*, long*);
+    using RotTransFn = void (__cdecl*)(const short*, std::int32_t*, std::int32_t*);
     S22_AS(RotTransFn, Gte_RotTrans)(v, m.t, &flag);
     MH_CALL(Gte_RotMatrix)(rot, m.m);
     MH_CALL(Gte_MulMatrix0)(Camera_Matrix, m.m, m.m);
-    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&m));
-    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&m));
+    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
+    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
 }
 
 // Jolt_Start / Lightning_Start: +0xB 0; a bolt (kind 1, `parameter`) on every

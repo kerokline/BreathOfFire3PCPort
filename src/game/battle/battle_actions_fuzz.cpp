@@ -205,14 +205,14 @@ const unsigned char* __cdecl StubMsg(unsigned id) {
     return g_text + (Hash() >> 5) % 0x100;
 }
 // The banner hashes what the name buffer holds when it is given it.
-unsigned long __cdecl StubBanner(unsigned kind, unsigned b2, unsigned layer, unsigned timer, const char* text) {
+std::uint32_t __cdecl StubBanner(unsigned kind, unsigned b2, unsigned layer, unsigned timer, const char* text) {
     const unsigned char* const t = reinterpret_cast<const unsigned char*>(text);
     Record(46, (kind & 0xFF) | (b2 & 0xFF) << 8 | (layer & 0xFF) << 16 | (timer & 0xFF) << 24, Id(text),
            Address(text) == at::kNameBuf.v ? Bytes(t, 16) : 0);
     Disturb();
     return Hash();
 }
-unsigned long __cdecl StubSetBit(unsigned a) {
+std::uint32_t __cdecl StubSetBit(unsigned a) {
     Record(47, a & 31);
     // re-read after it: the actor, the object and record pointers, the id
     const std::uint32_t h = Hash();
@@ -302,7 +302,7 @@ unsigned char __cdecl StubSettle() {
     Disturb();
     return static_cast<unsigned char>(Hash() % 2 ? 0 : Hash() >> 8);
 }
-unsigned long __cdecl StubQueuePush(unsigned a, unsigned b, unsigned long value) {
+std::uint32_t __cdecl StubQueuePush(unsigned a, unsigned b, std::uint32_t value) {
     Record(66, a & 0xFF, b & 0xFF, Id(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(value))));
     if (Hash() % 2) At(BattleE5_EnemyMessageCount_addr)[0] = static_cast<unsigned char>((Hash() >> 8) % 9);
     Disturb();

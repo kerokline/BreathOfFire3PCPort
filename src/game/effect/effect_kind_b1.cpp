@@ -72,12 +72,12 @@ extern "C" void __cdecl EffectKindB1_Start(void) {
     const U a0 = SW(reinterpret_cast<const unsigned char*>(Camera_Angles));
     const U a1 = SW(reinterpret_cast<const unsigned char*>(Camera_Angles + 1));
     const U a2 = SW(reinterpret_cast<const unsigned char*>(Camera_Angles + 2));
-    CameraTurn_Angles[0] = static_cast<long>(a0 << 16);
+    CameraTurn_Angles[0] = static_cast<std::int32_t>(a0 << 16);
     CameraTurn_Steps[0] = 0;
     CameraTurn_Steps[1] = 0;
     CameraTurn_Steps[2] = 0;
-    CameraTurn_Angles[1] = static_cast<long>(a1 << 16);
-    CameraTurn_Angles[2] = static_cast<long>(a2 << 16);
+    CameraTurn_Angles[1] = static_cast<std::int32_t>(a1 << 16);
+    CameraTurn_Angles[2] = static_cast<std::int32_t>(a2 << 16);
     unsigned char* const s = S();
     MapView_Redraw = s[9];
     s[1] = 1;

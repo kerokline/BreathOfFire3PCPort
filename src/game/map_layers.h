@@ -47,7 +47,7 @@ void ArmSideDup();
 struct InsetPair {
     std::uint32_t original, lowered;
 };
-InsetPair ComputeInset(unsigned long angle, short distance, unsigned char input_flags, unsigned char byte_fe,
+InsetPair ComputeInset(std::uint32_t angle, short distance, unsigned char input_flags, unsigned char byte_fe,
                        unsigned wide_columns);
 
 }  // namespace map_layers

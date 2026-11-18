@@ -136,7 +136,7 @@ void CopyPosition(unsigned char* to, const unsigned char* from) {
 void LinkAtCurrent(unsigned size) {
     const unsigned char* const sc = Sprite_Current;
     const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tsc->x), static_cast<unsigned long>(tsc->z), 2, size);
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(tsc->x), static_cast<std::uint32_t>(tsc->z), 2, size);
 }
 
 // Bytes +0..+4 of Sprite_Current cleared, the pointer read again for each:
@@ -565,14 +565,14 @@ S20_EXPORT void __cdecl Magic087_PushMatrix(void) {
     v[3] = 0;
     struct Matrix {
         short m[10];
-        long t[3];
+        std::int32_t t[3];
     } m;
     static_assert(offsetof(Matrix, t) == 0x14 && sizeof(Matrix) == 0x20, "MATRIX layout");
     MH_CALL(Gte_RotTrans)(v, m.t);
     MH_CALL(Gte_RotMatrix)(rot, m.m);
     MH_CALL(Gte_MulMatrix0)(Camera_Matrix, m.m, m.m);
-    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&m));
-    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&m));
+    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
+    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
 }
 
 // original 0x4C4110: the mote - a triangle outline in two three-point gouraud
@@ -590,7 +590,7 @@ S20_EXPORT void __cdecl Magic087_DrawTriangle(void) {
     Corner(0, 0x200);
     Corner(8, 0x600);
     Corner(0x10, 0xA00);
-    long depth;
+    std::int32_t depth;
     MH_CALL(Gte_RotTransPers3)(VtxP(0), VtxP(8), VtxP(0x10), reinterpret_cast<float*>(p + 8), reinterpret_cast<float*>(p + 0x18),
                                reinterpret_cast<float*>(p + 0x28), &depth);
     MH_CALL(Gte_PrimDepths3_10C)(p);

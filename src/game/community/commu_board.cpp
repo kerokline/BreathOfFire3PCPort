@@ -200,7 +200,7 @@ int S16Rest4c(U v) { return static_cast<std::int16_t>(v & 0xFFFF); }
 // jmp [table + 4 * byte]: the table's `entries` handlers, read in place (the
 // fuzz swaps the cells for recorders); a Fatal past them, where the original
 // jumps through the dword after.
-void Dispatch(const char* who, const unsigned long* table, unsigned entries, U byte_address) {
+void Dispatch(const char* who, const std::uint32_t* table, unsigned entries, U byte_address) {
     const unsigned index = BRest4c(byte_address);
     if (index >= entries)
         bof3::Fatal("%s: the byte 0x%X is %u, past the %u entries of 0x%X - the original jumps through the dword after "

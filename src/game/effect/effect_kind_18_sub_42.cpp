@@ -55,7 +55,7 @@ std::int32_t Abs(U v) {
 }
 
 // movsx eax, ax; cdq; sub eax, edx; sar eax, 1: half the height, toward zero
-U Half(long e) { return static_cast<U>(S16(static_cast<U>(e)) / 2); }
+U Half(std::int32_t e) { return static_cast<U>(S16(static_cast<U>(e)) / 2); }
 
 unsigned char* Vertex(U a) { return At(a); }
 
@@ -131,7 +131,7 @@ void Closed() {
 // into the packet's four screen points (the original pushes a tenth word, a
 // local, which Gte_RotTransPers4 does not read).
 void Project(unsigned char* p) {
-    long depth;
+    std::int32_t depth;
     SH_CALL(Gte_RotTransPers4)(reinterpret_cast<const short*>(Vertex(::bof3::Img(Prim_VertexScratch_addr))), reinterpret_cast<const short*>(Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x8)),
                                reinterpret_cast<const short*>(Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x10)), reinterpret_cast<const short*>(Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x18)),
                                reinterpret_cast<float*>(p + 8), reinterpret_cast<float*>(p + 0x18),
@@ -139,7 +139,7 @@ void Project(unsigned char* p) {
     SH_CALL(Gte_PrimDepths4_10)(p);
 }
 
-long Elevation(U x, U z) { return SH_CALL(AreaMap_Elevation)(static_cast<long>(x), static_cast<long>(z)); }
+std::int32_t Elevation(U x, U z) { return SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z)); }
 
 U GroundOf(U word) { return static_cast<U>(S16(word) + 0x4000) << 9; }
 
@@ -151,7 +151,7 @@ void GroundFixed(U low, U high) {
     unsigned char* const v0 = Vertex(::bof3::Img(Prim_VertexScratch_addr));
     unsigned char* const v1 = Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x8);
     U gx = GroundOf(Word(v0)), gz = GroundOf(static_cast<std::uint16_t>(rv::As<records::SVector>(v0)->y));
-    long e = Elevation(gx, gz);
+    std::int32_t e = Elevation(gx, gz);
     rv::Store<std::uint32_t>(rv::As<records::SVector>(v0)->z, low - Half(e));
     e = Elevation(gx, gz);
     gz = GroundOf(static_cast<std::uint16_t>(rv::As<records::SVector>(v1)->y));
@@ -312,8 +312,8 @@ extern "C" void __cdecl EffectKind18Sub42_WaitFlag(void) {
     const unsigned char set = SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), s[0xB]);
     s = S();
     if (static_cast<unsigned char>(set ^ s[8]) == 0) return;
-    const unsigned char who = SH_CALL(EffectKind18Sub42_MemberNear)(static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x) | 0x8000u),
-                                                                    static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z) | 0x8000u));
+    const unsigned char who = SH_CALL(EffectKind18Sub42_MemberNear)(static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x) | 0x8000u),
+                                                                    static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z) | 0x8000u));
     if (static_cast<signed char>(who) >= 0) return;
     s = S();
     SH_CALL(MoveCmd_TestFB)(static_cast<short>(rv::As<records::EffectObject>(s)->x_whole + 1), static_cast<short>(rv::As<records::EffectObject>(s)->z_whole + 1));
@@ -357,7 +357,7 @@ extern "C" void __cdecl EffectKind18Sub42_Mark(void) {
         const U word = Word(AreaMap_Header + cell * 2);
         const U half = static_cast<U>(static_cast<std::int32_t>(static_cast<std::uint32_t>(AreaMap_Header[1]) * width + 1) / 2);
         const U texture = ::bof3::Img(at::kMapTextures.v) + 4 * (half + W(::bof3::Img(at::kMapCellBase.v)) + word);
-        const U item = static_cast<U>(SH_CALL(MapView_ItemAt)(static_cast<long>(x), static_cast<long>(z)));
+        const U item = static_cast<U>(SH_CALL(MapView_ItemAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z)));
         s = S();
         if (item >= draw_pool::Count())
             bof3::Fatal("EffectKind18Sub42_Mark: MapView_ItemAt answered %u, past the %u draw items - the original "
@@ -455,7 +455,7 @@ extern "C" void __cdecl EffectKind18Sub42_Draw(unsigned variant, int height) {
 // for each of the Field_MemberCount ObjTrio records in use, its point moved by
 // its velocity (+0xC, +0x10) times +9, within ((+0x70 byte) + 3) << 15 on both
 // axes. Answers the member in al, 0xFF for none.
-extern "C" unsigned char __cdecl EffectKind18Sub42_MemberNear(long x, long z) {
+extern "C" unsigned char __cdecl EffectKind18Sub42_MemberNear(std::int32_t x, std::int32_t z) {
     const U count = Field_MemberCount;
     for (U i = 0; i < count; ++i) {
         if (i >= at::kObjTrioCount)

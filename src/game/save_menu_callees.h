@@ -152,9 +152,9 @@ struct Callees {
     void (__cdecl* file_close)(int);                           // File_Close (ours)
     void* (__cdecl* malloc)(unsigned);                         // Crt_malloc
     void (__cdecl* free)(void*);                               // Crt_free
-    int (__cdecl* sprintf)(char*, const char*, ...);           // Crt_sprintf
-    long (__cdecl* find_first)(const char*, void*);            // _findfirst
-    int (__cdecl* find_next)(long, void*);                     // _findnext
+    int (*sprintf)(char*, const char*, ...);           // Crt_sprintf
+    std::int32_t (__cdecl* find_first)(const char*, void*);            // _findfirst
+    int (__cdecl* find_next)(std::int32_t, void*);                     // _findnext
     int (__cdecl* rand)();                                     // Rand
     // Sound
     void (__cdecl* load_bank)(unsigned, const void*, unsigned);   // Snd_LoadBank (ours)
@@ -190,7 +190,7 @@ struct Callees {
     void (__cdecl* set_tile)(unsigned char*);                  // Gpu_SetTile (ours)
     void (__cdecl* set_sprt)(unsigned char*);                  // Gpu_SetSprt (ours)
     void (__cdecl* set_semi)(unsigned char*, unsigned);        // Gpu_SetSemiTrans (ours)
-    void (__cdecl* set_draw_mode)(unsigned char*, int, int, unsigned, unsigned long);   // Gpu_SetDrawMode (ours)
+    void (__cdecl* set_draw_mode)(unsigned char*, int, int, unsigned, std::uint32_t);   // Gpu_SetDrawMode (ours)
     unsigned (__cdecl* get_tpage)(unsigned, unsigned, int, int);   // Gpu_GetTPage (ours)
     unsigned (__cdecl* get_clut)(int, int);                    // Gpu_GetClut (ours)
     void (__cdecl* commit)(unsigned, unsigned);                // Gfx_CommitPrim (ours)

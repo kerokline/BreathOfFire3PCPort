@@ -164,7 +164,7 @@ extern "C" void __cdecl EffectKind8A_Lines(void) {
         s = S();
         rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->step_y, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_20));
         s = S();
-        SH_CALL(EffectKind8A_DrawSegment)(reinterpret_cast<const long*>(s + 0xC), reinterpret_cast<const long*>(s + 0x18));
+        SH_CALL(EffectKind8A_DrawSegment)(reinterpret_cast<const std::int32_t*>(s + 0xC), reinterpret_cast<const std::int32_t*>(s + 0x18));
     }
     if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x91) != 0) S()[1] = 2;
 }
@@ -185,7 +185,7 @@ extern "C" void __cdecl EffectKind8A_Unblock(void) {
 // out's dword plus Frame_Counter & 1 (read after each);
 // EffectKind8A_DrawRibbon(the four screen words through _ftol, the sizes, the
 // angle + 0x400 and + 0xC00).
-extern "C" void __cdecl EffectKind8A_DrawSegment(const long* a, const long* b) {
+extern "C" void __cdecl EffectKind8A_DrawSegment(const std::int32_t* a, const std::int32_t* b) {
     DrawMode(1, 0x3C0, 0, 1);
     unsigned char* s = S();
     SH_CALL(MapView_LinkPrimAt)(rv::As<records::EffectWork>(s)->work_0c, rv::As<records::EffectWork>(s)->work_10, 1, 0xC);

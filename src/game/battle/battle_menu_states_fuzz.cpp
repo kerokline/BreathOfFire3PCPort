@@ -133,14 +133,14 @@ unsigned char __cdecl StubPrevTarget(unsigned a) {
     Disturb();
     return static_cast<unsigned char>(Hash() >> 9);
 }
-long __cdecl StubWrap(long high, long low, long value) {
+std::int32_t __cdecl StubWrap(std::int32_t high, std::int32_t low, std::int32_t value) {
     Record(3, static_cast<std::uint32_t>(high), static_cast<std::uint32_t>(low), static_cast<std::uint32_t>(value));
     MoveCommand();
     Disturb();
     const std::uint32_t h = Hash();
-    return h % 2 ? static_cast<long>(value) : static_cast<long>(h);
+    return h % 2 ? static_cast<std::int32_t>(value) : static_cast<std::int32_t>(h);
 }
-unsigned long __cdecl StubBanner(unsigned msg, unsigned b2) {
+std::uint32_t __cdecl StubBanner(unsigned msg, unsigned b2) {
     Record(4, msg, b2);
     if (Hash() % 2) At(BattleE4_Step3_addr)[0] = static_cast<unsigned char>(Hash() >> 8);
     Disturb();
@@ -169,18 +169,18 @@ const unsigned char* __cdecl StubSystemPtr(unsigned id) {
     Disturb();
     return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(Hash()));
 }
-unsigned long __cdecl StubQueuePush(unsigned a, unsigned b, unsigned long value) {
+std::uint32_t __cdecl StubQueuePush(unsigned a, unsigned b, std::uint32_t value) {
     Record(8, a, b, static_cast<std::uint32_t>(value));
     Disturb();
     return Hash();
 }
-unsigned long __cdecl StubSetup() {
+std::uint32_t __cdecl StubSetup() {
     Record(9);
     if (Hash() % 2) At(BattleE4_Step3_addr)[0] = static_cast<unsigned char>(Hash() >> 8);
     Disturb();
     return Hash();
 }
-unsigned long __cdecl StubFree() { Record(10); Disturb(); return Hash(); }
+std::uint32_t __cdecl StubFree() { Record(10); Disturb(); return Hash(); }
 // The three below read their arguments' low bytes (Item_HelpMessage and 0x591810 by
 // `and eax, 0xFF`, Item_CanUse by its evidence), so they are recorded so.
 unsigned __cdecl StubPrice(unsigned category, unsigned item) {

@@ -58,7 +58,7 @@ U DispatchBossSh(const char* who, U table, unsigned entries, unsigned at, U thro
 // original 0x43EB80: the kind-3 dispatcher's slot 3 (BattleBossFx_Dispatch by
 // the slot's +5): jmp [BossAnglerFx_States + 4 * +1] - one entry,
 // BossAnglerFx_Run.
-extern "C" unsigned long __cdecl BossAnglerFx_Dispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl BossAnglerFx_Dispatch(std::uint32_t through) {
     return DispatchBossSh("BossAnglerFx_Dispatch", AddressOf(BossAnglerFx_States), 1, 1, through);
 }
 
@@ -66,7 +66,7 @@ extern "C" unsigned long __cdecl BossAnglerFx_Dispatch(unsigned long through) {
 // the stack - BossAnglerFx_Start, BattleFx_ScriptUntilDone, BattleFx_FreeTask;
 // `call [esp + 4 * +2]`, unchecked (past 2 the original calls whatever the
 // stack holds above the table: ours aborts). The entry's eax the answer.
-extern "C" unsigned long __cdecl BossAnglerFx_Run(void) {
+extern "C" std::uint32_t __cdecl BossAnglerFx_Run(void) {
     const unsigned step = Sprite_Current[2];
     using Step = U (__cdecl*)();
     switch (step) {

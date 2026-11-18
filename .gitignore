@@ -66,6 +66,9 @@ layout.bin
 !/analysis/data_census.tsv
 # ...and the OS-service census (tools/os_census.py): same inputs, same rule.
 !/analysis/os_census.tsv
+# The source files that do not compile for x86-64 Linux yet, with the reason
+# (tools/linux_probe/linux_tree.py; file names and reasons only).
+!/analysis/linux_tree.tsv
 # ...and the ledger's switch inventory: names and file:line from src/ and
 # docs/DIVERGENCE.md only (tools/ledger_switches.py, the ledger-fields round).
 !/analysis/ledger_switches.tsv

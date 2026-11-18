@@ -681,7 +681,7 @@ extern "C" void __cdecl CommuSim_PlaceLoose(unsigned record, unsigned object) {
     rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->x_frac, 0);
     rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->z_whole, At(::bof3::Img(at::kObjectPlaces.v) + 3 * o + 1)[0]);
     rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->z_frac, 0);
-    const long height = SH_CALL(AreaMap_Elevation)(rv::As<records::SpriteObject>(base)->x, rv::As<records::SpriteObject>(base)->z);
+    const std::int32_t height = SH_CALL(AreaMap_Elevation)(rv::As<records::SpriteObject>(base)->x, rv::As<records::SpriteObject>(base)->z);
     rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->height_whole, static_cast<unsigned>(height));
     Sprite_Current[5] = static_cast<unsigned char>(record);
     BankAndFace();
@@ -711,7 +711,7 @@ extern "C" void __cdecl CommuSim_PlaceResident(unsigned record, unsigned object)
     rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->z_whole, At(::bof3::Img(at::kResidentPlaces.v) + 3 * (Count(building) + row) + 1)[0]);
     rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->z_frac, 0);
     unsigned char* const s = Sprite_Current;
-    const long height = SH_CALL(AreaMap_Elevation)(rv::As<records::SpriteObject>(s)->x, rv::As<records::SpriteObject>(s)->z);
+    const std::int32_t height = SH_CALL(AreaMap_Elevation)(rv::As<records::SpriteObject>(s)->x, rv::As<records::SpriteObject>(s)->z);
     rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->height_whole, static_cast<unsigned>(height));
     const unsigned char facing = At(::bof3::Img(at::kResidentPlaces.v) + 3 * (Count(building) + row) + 2)[0];
     Sprite_Current[8] = facing;

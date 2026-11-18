@@ -114,7 +114,7 @@ void ShiftCamera(int by) {
 // whose pose is the leader's byte +8 (read after the flag test); none: 0.
 // Story flag 0x1C set: 0. Else its story flag toggled (0x57C160),
 // Sound_PlayEffect(0x201), 0x469FE0(0xF), answer 1.
-extern "C" int __cdecl Area77_CellHook(long x, long z) {
+extern "C" int __cdecl Area77_CellHook(std::int32_t x, std::int32_t z) {
     if (AH_CALL(Flags_Test)(Mem(::bof3::Img(Cond_Flags_addr) + 0x30), 0x2C)) return 0;
     const unsigned char pose = B(::bof3::Img(ObjTrio_addr) + 0x8);
     unsigned i = 0;
@@ -244,7 +244,7 @@ extern "C" void __cdecl Area77_LeapStep(void) {
     if (operand == 4) {
         const unsigned char* const cur = Sprite_Current;
         const auto* const tCur = rv::AsConst<records::SpriteObject>(cur);
-        const long ground = AH_CALL(AreaMap_Elevation)(tCur->x, tCur->z);
+        const std::int32_t ground = AH_CALL(AreaMap_Elevation)(tCur->x, tCur->z);
         rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, static_cast<unsigned>(ground));
         AH_CALL(Sprite_SetAnimation)(0);
     }

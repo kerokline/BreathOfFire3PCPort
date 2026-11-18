@@ -21,7 +21,7 @@ struct CalleesKind2Object {
     const ::bof3::CodeSlot<HandlerKind2Object>* run_table;     // 32-bit code words in the image
     const ::bof3::CodeSlot<HandlerKind2Object>* state_table;
     unsigned char (__cdecl* step)(unsigned char*, const unsigned char*);
-    long (__cdecl* elevation)(long, long);
+    std::int32_t (__cdecl* elevation)(std::int32_t, std::int32_t);
     void (__cdecl* set_elevation)(int);
     void (__cdecl* view_reset)();
     void (__cdecl* script)();   // Kind2_Move's tail jump

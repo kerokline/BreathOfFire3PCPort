@@ -64,7 +64,7 @@ namespace {
 // so ours reads exactly what the original's jmp would.
 using Handler = void (__cdecl*)();
 
-void Dispatch(const unsigned long* table, unsigned index) { reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))(); }
+void Dispatch(const std::uint32_t* table, unsigned index) { reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))(); }
 
 using move_script::At;
 
@@ -2096,7 +2096,7 @@ extern "C" unsigned __cdecl CharId_ToRosterIndex(unsigned id) {
 // `low` gives `high`, above `high` gives `low`, else itself - signed compares,
 // whole dwords. 24 call sites, all in the item and skill menus' handlers after
 // 0x447840, which push the result on to 0x445730 / 0x4457F0 or store its al.
-extern "C" long __cdecl Battle_WrapIndex(long high, long low, long value) {
+extern "C" std::int32_t __cdecl Battle_WrapIndex(std::int32_t high, std::int32_t low, std::int32_t value) {
     if (value < low) return high;
     if (value <= high) return value;
     return low;
@@ -2124,7 +2124,7 @@ extern "C" void __cdecl Battle_PulseStep(void) {
 // The id is pushed in ecx, whose upper half is the record pointer's (mov cx,
 // [..]); Sound_PlayEffect reads the low word. Returns its eax, which one of the
 // thirteen callers (0x4FC079) returns on.
-extern "C" unsigned long __cdecl Battle_PlayActorCue(unsigned cue) {
+extern "C" std::uint32_t __cdecl Battle_PlayActorCue(unsigned cue) {
     const battle_misc::U record = LongBattleMisc(AtBattleMisc(battle_misc::at::Field_StateAt()));
     const battle_misc::U index = WordBattleMisc(AtBattleMisc(record + 0x2C)) + (cue & 0xFF) * 3;
     const battle_misc::U id = (record & 0xFFFF0000u) | WordBattleMisc(AtBattleMisc(::bof3::Img(kCueTable.v) + index * 2));
@@ -2178,7 +2178,7 @@ extern "C" void __cdecl Battle_PickEnemyTarget(void) {
     B(::bof3::Img(battle_e4::at::kTarget.v)) = pick;
 }
 
-extern "C" __attribute__((naked)) unsigned long __cdecl Battle_StatusTint(unsigned) {
+extern "C" __attribute__((naked)) std::uint32_t __cdecl Battle_StatusTint(unsigned) {
 #if defined(__i386__)
     asm("testb $0x80, 4(%esp)\n\t"
         "jne " BOF3_SYM(BattleMisc_StatusTintBody) "\n\t"
@@ -2349,13 +2349,13 @@ extern "C" int __cdecl Stat_PercentCap100(int value, int percent) { return Perce
 // Battle_ClearActorBit): bit (actor & 31) of the u16 kActorBits set or cleared -
 // the x86 shift count, as the PSX sllv's. eax is 1 << n, or its complement,
 // which callers such as 0x42FBE0 push on with a word written over the low half.
-extern "C" unsigned long __cdecl Battle_SetActorBit(unsigned actor) {
+extern "C" std::uint32_t __cdecl Battle_SetActorBit(unsigned actor) {
     const battle_misc::U bit = 1u << (actor & 31);
     BattleActions_Pending = static_cast<std::uint32_t>(BattleActions_Pending) | bit;
     return bit;
 }
 
-extern "C" unsigned long __cdecl Battle_ClearActorBit(unsigned actor) {
+extern "C" std::uint32_t __cdecl Battle_ClearActorBit(unsigned actor) {
     const battle_misc::U mask = ~(1u << (actor & 31));
     BattleActions_Pending = static_cast<std::uint32_t>(BattleActions_Pending) & mask;
     return mask;
@@ -2372,7 +2372,7 @@ extern "C" unsigned long __cdecl Battle_ClearActorBit(unsigned actor) {
 // (0x42E9C7, a state of the battle task) returns on: the last actor's (index 10)
 // context pointer, or 0x4456C0's eax when that actor was passed over, with
 // al = 11.
-extern "C" unsigned long __cdecl Battle_SpawnActorCopies(void) {
+extern "C" std::uint32_t __cdecl Battle_SpawnActorCopies(void) {
     battle_misc::U eax = 0;
     for (battle_misc::U index = 0; index <= 10; ++index) {
         battle_misc::U object;

@@ -178,27 +178,27 @@ u32 __cdecl StubPartyCount(unsigned slot) {
     const unsigned n = (h >> 8) % 8 < 6 ? (h >> 12) % 4 : (h >> 12) % 9;
     return (h & 0xFFFFFF00u) | n;
 }
-long __cdecl StubElevation(long x, long y) {
+std::int32_t __cdecl StubElevation(std::int32_t x, std::int32_t y) {
     Record(2, static_cast<u32>(x), static_cast<u32>(y));
     Disturb();
-    return static_cast<long>(Hash(4));
+    return static_cast<std::int32_t>(Hash(4));
 }
-u32 __cdecl StubObjectAt(long x, long y, unsigned margin) {
+u32 __cdecl StubObjectAt(std::int32_t x, std::int32_t y, unsigned margin) {
     Record(3, static_cast<u32>(x), static_cast<u32>(y), margin & 0xFF);
     Disturb();
     const u32 h = Hash(5);
     return h % 3 == 0 ? h : (h | 0xFF);
 }
-void WritePoint(unsigned long* sxy, u32 h) {
+void WritePoint(std::uint32_t* sxy, u32 h) {
     const float f[2] = {PickFloat(false, h), PickFloat(true, h >> 5)};
     std::memcpy(sxy, f, sizeof f);
 }
-long __cdecl StubRotTransPers(const short* v, unsigned long* sxy, long* p) {
+std::int32_t __cdecl StubRotTransPers(const short* v, std::uint32_t* sxy, std::int32_t* p) {
     Record(4, static_cast<std::uint16_t>(v[0]), static_cast<std::uint16_t>(v[1]), static_cast<std::uint16_t>(v[2]));
     WritePoint(sxy, Hash(6));
-    *p = static_cast<long>(Hash(7));
+    *p = static_cast<std::int32_t>(Hash(7));
     Disturb();
-    return static_cast<long>(Hash(8));
+    return static_cast<std::int32_t>(Hash(8));
 }
 u32 Pack(const short* s, unsigned i) {
     return static_cast<std::uint16_t>(s[i]) | static_cast<u32>(static_cast<std::uint16_t>(s[i + 1])) << 16;
@@ -211,24 +211,24 @@ short* __cdecl StubRotMatrix(const short* angles, short* m) {
     Disturb();
     return m;
 }
-void __cdecl StubApplyMatrix(const short* m, const short* v, long* out) {
+void __cdecl StubApplyMatrix(const short* m, const short* v, std::int32_t* out) {
     RecordMatrix(6, m);
     Record(7, static_cast<std::uint16_t>(v[0]), static_cast<std::uint16_t>(v[1]), static_cast<std::uint16_t>(v[2]));
     const u32 h = Hash(10);
-    for (unsigned i = 0; i < 3; ++i) out[i] = static_cast<long>(h * (2 * i + 5));
+    for (unsigned i = 0; i < 3; ++i) out[i] = static_cast<std::int32_t>(h * (2 * i + 5));
     Disturb();
 }
 // The MATRIX: nine shorts, two bytes of padding nobody writes, three longs at +0x14.
-void RecordTranslation(u32 what, const unsigned long* matrix) {
+void RecordTranslation(u32 what, const std::uint32_t* matrix) {
     const auto* const b = reinterpret_cast<const unsigned char*>(matrix);
     Record(what, static_cast<u32>(Long(b + 0x14)), static_cast<u32>(Long(b + 0x18)), static_cast<u32>(Long(b + 0x1C)));
 }
-void __cdecl StubSetRot(const unsigned long* matrix) {
+void __cdecl StubSetRot(const std::uint32_t* matrix) {
     RecordMatrix(8, reinterpret_cast<const short*>(matrix));
     RecordTranslation(9, matrix);
     Disturb();
 }
-void __cdecl StubSetTrans(const unsigned long* matrix) {
+void __cdecl StubSetTrans(const std::uint32_t* matrix) {
     RecordMatrix(10, reinterpret_cast<const short*>(matrix));
     RecordTranslation(11, matrix);
     Disturb();
@@ -238,10 +238,10 @@ int __cdecl StubRand() {
     Disturb();
     return static_cast<int>(Hash(11));
 }
-long __cdecl StubGroundAt(long x, long z) {
+std::int32_t __cdecl StubGroundAt(std::int32_t x, std::int32_t z) {
     Record(13, static_cast<u32>(x), static_cast<u32>(z));
     Disturb();
-    return static_cast<long>(Hash(12));
+    return static_cast<std::int32_t>(Hash(12));
 }
 u32 __cdecl StubEffectFree() {
     Record(14);
@@ -291,7 +291,7 @@ u32 __cdecl StubMemberStands(unsigned m) {
     Disturb();
     return Yes(19);
 }
-u32 __cdecl StubEnemyClear(unsigned count, long x, long z, unsigned size) {
+u32 __cdecl StubEnemyClear(unsigned count, std::int32_t x, std::int32_t z, unsigned size) {
     Record(24, count & 0xFF, static_cast<u32>(x), static_cast<u32>(z), size & 0xFF);
     Disturb();
     return Yes(20);
@@ -306,18 +306,18 @@ u32 __cdecl StubNibble(unsigned x, unsigned z) {
     default: return (h & 0xFFFFFF00u) | ((g_hint + (h >> 12) % 7 - 1) & 0xFF);
     }
 }
-long __cdecl StubProject(long x, long z, long y, unsigned long* sxy) {
+std::int32_t __cdecl StubProject(std::int32_t x, std::int32_t z, std::int32_t y, std::uint32_t* sxy) {
     Record(26, static_cast<u32>(x), static_cast<u32>(z), static_cast<u32>(y));
     WritePoint(sxy, Hash(22));
     Disturb();
-    return static_cast<long>(Hash(23));
+    return static_cast<std::int32_t>(Hash(23));
 }
-u32 __cdecl StubApart(long x0, long z0, long x1, long z1, unsigned s0, unsigned s1) {
+u32 __cdecl StubApart(std::int32_t x0, std::int32_t z0, std::int32_t x1, std::int32_t z1, unsigned s0, unsigned s1) {
     Record(27, static_cast<u32>(x0), static_cast<u32>(z0), static_cast<u32>(x1), static_cast<u32>(z1), (s0 & 0xFF) | (s1 & 0xFF) << 8);
     Disturb();
     return Yes(24);
 }
-u32 __cdecl StubCellFits(long x, long z, unsigned size) {
+u32 __cdecl StubCellFits(std::int32_t x, std::int32_t z, unsigned size) {
     Record(28, static_cast<u32>(x), static_cast<u32>(z), size & 0xFF);
     Disturb();
     return Yes(25);

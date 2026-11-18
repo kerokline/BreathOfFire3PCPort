@@ -111,7 +111,7 @@ struct Callees {
     void (__cdecl* sound)(unsigned short);                  // Sound_PlayEffect
     void (__cdecl* window_reset)();                         // Window_ResetAll
     void (__cdecl* member_body)(int, int, unsigned, unsigned, int);                        // 0x573560
-    void (__cdecl* draw_mode)(unsigned char*, int, int, unsigned, unsigned long);        // Gpu_SetDrawMode
+    void (__cdecl* draw_mode)(unsigned char*, int, int, unsigned, std::uint32_t);        // Gpu_SetDrawMode
     void (__cdecl* commit)(unsigned, unsigned);                                           // Gfx_CommitPrim
     unsigned (__cdecl* get_clut)(int, int);                                               // Gpu_GetClut
     void (__cdecl* member_face)(int, int, unsigned, unsigned, unsigned, unsigned);        // 0x5744B0

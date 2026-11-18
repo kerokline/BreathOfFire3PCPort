@@ -1578,7 +1578,7 @@ extern "C" void __cdecl Gfx_CommitPrim(unsigned slot, unsigned size) {
     // pass's verdicts; only while DrawLayer_Open runs a record under mode 1.
     if (layering::g_in_run) layering::RunPrim(Gfx_PacketNext, size);
     Gpu_LinkPrim(Gfx_OtPointers[slot], next);
-    Gfx_OtPointers[slot] = reinterpret_cast<unsigned long*>(Gfx_PacketNext.Native());
+    Gfx_OtPointers[slot] = reinterpret_cast<std::uint32_t*>(Gfx_PacketNext.Native());
     Gfx_PacketNext = Gfx_PacketNext + size;
 }
 
@@ -1626,9 +1626,9 @@ extern "C" void __cdecl Gfx_FlushUploadQueue(void) {
             static int on = -1;
             if (on < 0) { char v[8]; on = bof3::os::GetEnv("BOF3X_POSELOG", v, sizeof v) != 0 && v[0] == '1'; }
             if (on == 1)
-                bof3::Log("poselog     frame %lu upload %u/%u at %d,%d size %dx%d kind %lu record %08lX", static_cast<unsigned long>(Frame_Counter),
+                bof3::Log("poselog     frame %u upload %u/%u at %d,%d size %dx%d kind %u record %08X", static_cast<std::uint32_t>(Frame_Counter),
                           static_cast<unsigned>(i), static_cast<unsigned>(Gfx_UploadQueueCount), rect[0], rect[1], rect[2], rect[3],
-                          static_cast<unsigned long>(kind), static_cast<unsigned long>(Low32(record)));
+                          static_cast<std::uint32_t>(kind), static_cast<std::uint32_t>(Low32(record)));
         }
         if (kind == 1) Gfx_UploadPacked5(record + 8, rect);
         else if (kind == 2) Gfx_UploadLzss(record + 8, rect);

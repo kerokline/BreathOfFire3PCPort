@@ -541,12 +541,12 @@ C2_EXPORT void __cdecl HolocaustSpark_Run(void) {
     if (s[0] == 0 || s[2] == 0) return;
     MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
     s = Sc();
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(rv::As<records::BattleTask>(s)->x), static_cast<unsigned long>(rv::As<records::BattleTask>(s)->z), 2, 0xC);
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->x), static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->z), 2, 0xC);
     MH_CALL(BattleActor_UpdateScreenXY)();
     Call0(addr::HolocaustSpark_Draw);
     MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x15, 0);
     s = Sc();
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(rv::As<records::BattleTask>(s)->x), static_cast<unsigned long>(rv::As<records::BattleTask>(s)->z), 2, 0xC);
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->x), static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->z), 2, 0xC);
 }
 
 // original 0x4E40B0: +9 (the delay) down; at 0 the spark starts: rising (+0x14
@@ -640,7 +640,7 @@ C2_EXPORT void __cdecl HolocaustSpark_Draw(void) {
             p[0x24 + k] = 1;
         }
         s = Sc();
-        MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(rv::As<records::BattleTask>(s)->x), static_cast<unsigned long>(rv::As<records::BattleTask>(s)->z), 2,
+        MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->x), static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->z), 2,
                                     0x34);
     }
 }

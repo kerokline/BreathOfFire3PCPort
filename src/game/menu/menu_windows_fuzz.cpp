@@ -199,7 +199,7 @@ const unsigned char* __cdecl StubYesNoLine(unsigned id) {
 }
 void __cdecl StubReset() { Record(6); Disturb(); }
 void __cdecl StubSound(unsigned id) { Record(7, id & 0xFFFF); Disturb(); }
-void __cdecl StubDrawMode(unsigned char* prim, int dfe, int dtd, unsigned tpage, unsigned long tw) {
+void __cdecl StubDrawMode(unsigned char* prim, int dfe, int dtd, unsigned tpage, std::uint32_t tw) {
     Record(8, Id(prim), dfe != 0, dtd != 0, tpage, Id(reinterpret_cast<const void*>(tw)));
     PutDword(prim + 4, 0xE8000000u | (tpage & 0xFFFFu));
     if (dfe) prim[6] = static_cast<unsigned char>(prim[6] | 1);
@@ -257,7 +257,7 @@ unsigned char __cdecl StubAreaByte(int x, int y) {
 }
 // sprintf: the conversions the format names (1 or 2 here), written into the
 // buffer as hex - nothing of the CRT.
-int __cdecl StubSprintf(char* dst, const char* fmt, ...) {
+int StubSprintf(char* dst, const char* fmt, ...) {
     unsigned n = 0;
     for (const char* p = fmt; *p; ++p)
         if (p[0] == '%' && p[1] != '%') ++n;

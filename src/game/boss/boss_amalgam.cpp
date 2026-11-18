@@ -94,7 +94,7 @@ U HookDispatchBossSc(const char* who, U table, U word) {
 }  // namespace
 
 // original 0x4396B0: BossKind_Table[12]: by +1 through BossAmalgam_Steps (12).
-extern "C" unsigned long __cdecl BossAmalgam_Dispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl BossAmalgam_Dispatch(std::uint32_t through) {
     return DispatchBossSc("BossAmalgam_Dispatch", ::bof3::Img(0x64CC24), 12, 1, through);
 }
 
@@ -112,13 +112,13 @@ extern "C" unsigned char __cdecl BossAmalgam_Enter(void) {
 // original 0x439730: BossAmalgam_Steps 6: by +2 through BossAmalgam_ActSubs
 // (6: EnemyOp_ActBegin, EnemyOp_HitDispatch, EnemyOp_ActBegin, EnemyOp_Act3Dispatch,
 // BossAmalgam_DeathDispatch, EnemyOp_Act5Dispatch - EnemyOp_ActSubs with the death at 4).
-extern "C" unsigned long __cdecl BossAmalgam_ActDispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl BossAmalgam_ActDispatch(std::uint32_t through) {
     return DispatchBossSc("BossAmalgam_ActDispatch", ::bof3::Img(0x64CC54), 6, 2, through);
 }
 
 // original 0x439750: BossAmalgam_ActSubs 4: by +3 through BossAmalgam_DeathSteps
 // (4: Tick, Start, Melt, End).
-extern "C" unsigned long __cdecl BossAmalgam_DeathDispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl BossAmalgam_DeathDispatch(std::uint32_t through) {
     return DispatchBossSc("BossAmalgam_DeathDispatch", ::bof3::Img(0x64CC6C), 4, 3, through);
 }
 
@@ -185,7 +185,7 @@ extern "C" void __cdecl BossAmalgam_DeathEnd(void) {
 
 // original 0x4398D0: the +0xF4 hook: by the word's low byte through
 // BossAmalgam_Hooks (3, all BareRet).
-extern "C" unsigned long __cdecl BossAmalgam_Hook(unsigned long word) {
+extern "C" std::uint32_t __cdecl BossAmalgam_Hook(std::uint32_t word) {
     return HookDispatchBossSc("BossAmalgam_Hook", ::bof3::Img(0x64CC7C), word);
 }
 

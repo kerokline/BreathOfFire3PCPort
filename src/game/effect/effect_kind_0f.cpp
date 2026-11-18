@@ -756,8 +756,8 @@ extern "C" void __cdecl EffectHud_DrawGauge(int x, int y) {
     SH_CALL(EffectHud_Bar)(x + 0x58, y + 8, 4);
     U marker = uy;
     if (Effect_Objects[0].state != 0) {
-        const long h = SH_CALL(AreaMap_Elevation)(static_cast<long>(static_cast<std::uint32_t>(Effect_Objects[0].x)),
-                                                  static_cast<long>(static_cast<std::uint32_t>(Effect_Objects[0].z)));
+        const std::int32_t h = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(static_cast<std::uint32_t>(Effect_Objects[0].x)),
+                                                  static_cast<std::int32_t>(static_cast<std::uint32_t>(Effect_Objects[0].z)));
         const std::int32_t lift = static_cast<std::int16_t>(h) / 32;
         marker = uy - static_cast<U>(lift);
         if (static_cast<std::int16_t>(marker) < static_cast<std::int16_t>(uy)) marker = uy;
@@ -1023,7 +1023,7 @@ extern "C" void __cdecl EffectKind05_Start(void) {
     rv::Store<U>(rv::Current<records::EffectObject>()->x, static_cast<std::uint32_t>(ObjTrio[0].x));
     rv::Store<U>(rv::Current<records::EffectObject>()->z, static_cast<std::uint32_t>(ObjTrio[0].z) - 0x8000u);
     unsigned char* s = S();
-    const long h = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(s)->x, rv::As<records::EffectObject>(s)->z);
+    const std::int32_t h = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(s)->x, rv::As<records::EffectObject>(s)->z);
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->height_whole, static_cast<U>(h) + 0x100);
     const unsigned char* const script = PtrAt(::bof3::Img(at::kPanelScript.v));
     const auto product = static_cast<std::int32_t>(script[2] * L(::bof3::Img(at::kRecord2.v) + 0xC));

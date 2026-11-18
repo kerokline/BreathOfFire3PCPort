@@ -36,16 +36,16 @@ template <typename T> U AddressOf(T* p) { return Low32(p); }
 
 // A table entry as the original's jmp reaches it: the word its caller left on
 // the stack, eax back.
-using Entry = unsigned long (__cdecl*)(unsigned);
+using Entry = std::uint32_t (__cdecl*)(unsigned);
 
-unsigned long CallEntry(U table, unsigned index, unsigned word) {
+std::uint32_t CallEntry(U table, unsigned index, unsigned word) {
     // the entry as read: the fuzz swaps the table's cells for its recorders
     return reinterpret_cast<Entry>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(table + 4 * index)))))(word);
 }
 
 // jmp [table + 4 * Sprite_Current[at]]: the table's `entries` handlers, a
 // Fatal past them (the original jumps through the dword after).
-unsigned long DispatchBossSb(const char* who, U table, unsigned entries, unsigned at, unsigned word) {
+std::uint32_t DispatchBossSb(const char* who, U table, unsigned entries, unsigned at, unsigned word) {
     const unsigned state = Sprite_Current[at];
     if (state >= entries)
         bof3::Fatal("%s: state byte +%u is %u, past the %u entries of 0x%X - the original jumps through the dword after "
@@ -57,7 +57,7 @@ unsigned long DispatchBossSb(const char* who, U table, unsigned entries, unsigne
 // mov eax, [esp + 4]; and eax, 0xFF; jmp [table + 4 * eax]: an enemy's +0xF4
 // hook by its word's low byte (3 entries in every table of the group), the
 // word itself left for the entry.
-unsigned long HookDispatchBossSb(const char* who, U table, unsigned word) {
+std::uint32_t HookDispatchBossSb(const char* who, U table, unsigned word) {
     const unsigned index = word & 0xFF;
     if (index >= 3)
         bof3::Fatal("%s: hook word %u is past the 3 entries of 0x%X - the original jumps through the dword after "
@@ -84,7 +84,7 @@ unsigned char Enter(U fc, U hook, U f8) {
 
 // original 0x438290: BossKind_Table[3]: by Sprite_Current +1 through
 // BossEngineer_Steps (12).
-extern "C" unsigned long __cdecl BossEngineer_Dispatch(unsigned word) {
+extern "C" std::uint32_t __cdecl BossEngineer_Dispatch(unsigned word) {
     return DispatchBossSb("BossEngineer_Dispatch", AddressOf(BossEngineer_Steps), 12, 1, word);
 }
 
@@ -96,13 +96,13 @@ extern "C" unsigned char __cdecl BossEngineer_Enter(void) {
 
 // original 0x4382F0: BossEngineer_Steps 6: by +2 through BossEngineer_ActSubs
 // (6: EnemyOp_ActSubs with BossOp_Death at 4).
-extern "C" unsigned long __cdecl BossEngineer_ActDispatch(unsigned word) {
+extern "C" std::uint32_t __cdecl BossEngineer_ActDispatch(unsigned word) {
     return DispatchBossSb("BossEngineer_ActDispatch", AddressOf(BossEngineer_ActSubs), 6, 2, word);
 }
 
 // original 0x438310: BossEngineer_Steps 11: by +2 through
 // BossEngineer_HitSteps (3: HitStart, HitStep, BossOp_ScriptTick).
-extern "C" unsigned long __cdecl BossEngineer_HitDispatch(unsigned word) {
+extern "C" std::uint32_t __cdecl BossEngineer_HitDispatch(unsigned word) {
     return DispatchBossSb("BossEngineer_HitDispatch", AddressOf(BossEngineer_HitSteps), 3, 2, word);
 }
 
@@ -130,7 +130,7 @@ extern "C" unsigned char __cdecl BossEngineer_HitStep(void) {
         unsigned char* const axis = Sprite_Current + (fight5 ? 0x38 : 0x34);
         SetLong(axis, static_cast<std::int32_t>(static_cast<U>(Long(axis)) + 0x18000u));
         auto* const cur_enemy = rv::Current<records::BattleEnemy>();
-        const long ground = BH_CALL(AreaMap_Elevation)(cur_enemy->x, cur_enemy->z);
+        const std::int32_t ground = BH_CALL(AreaMap_Elevation)(cur_enemy->x, cur_enemy->z);
         rv::Store<unsigned>(rv::Current<records::BattleEnemy>()->height_whole, static_cast<unsigned>(ground) & 0xFFFF);
         rv::As<records::BattleEnemy>(Enemy())->anim_table = static_cast<std::int32_t>(AddressOf(BossEngineer_AnimsHit));
         BH_CALL(Sprite_SetAnimation)(1);
@@ -145,7 +145,7 @@ extern "C" unsigned char __cdecl BossEngineer_HitStep(void) {
 
 // original 0x438420: kind 3's +0xF4 hook: by the word through
 // BossEngineer_Hooks (3, all BareRet).
-extern "C" unsigned long __cdecl BossEngineer_Hook(unsigned word) {
+extern "C" std::uint32_t __cdecl BossEngineer_Hook(unsigned word) {
     return HookDispatchBossSb("BossEngineer_Hook", AddressOf(BossEngineer_Hooks), word);
 }
 

@@ -185,7 +185,7 @@ void RestoreBody(const char* who, unsigned char* o, bool keep8) {
     {
         unsigned char* const t = Task(owner_rec->actor);
         auto* const task_rec = rv::As<records::BattleTask>(t);
-        const long ground = BH_CALL(AreaMap_Elevation)(task_rec->x, task_rec->z);
+        const std::int32_t ground = BH_CALL(AreaMap_Elevation)(task_rec->x, task_rec->z);
         rv::Store<U>(rv::As<records::BattleTask>(Task(owner_rec->actor))->height, static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(ground))) << 16);
     }
     const unsigned char character = rv::As<records::PartyMember>(rec())->char_id;

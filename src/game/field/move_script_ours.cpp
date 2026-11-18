@@ -120,9 +120,9 @@ int __cdecl StubVariable(unsigned char index) {
 }
 void __cdecl StubTrioClear() { Record(23); }
 void __cdecl StubTrioSet() { Record(24); }
-long __cdecl StubElevation(long x, long y) {
+std::int32_t __cdecl StubElevation(std::int32_t x, std::int32_t y) {
     Record(25, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
-    return static_cast<long>(Hash());
+    return static_cast<std::int32_t>(Hash());
 }
 void __cdecl StubSetAnimation(unsigned char a) { Record(26, a); }
 void __cdecl StubSetAnimationAt(unsigned char a, unsigned short s) { Record(27, a, s); }
@@ -153,7 +153,7 @@ unsigned short __cdecl StubPeek() {
     }
 }
 void __cdecl StubSound(unsigned short id) { Record(33, id); }
-void __cdecl StubOpF7(long x, long z, unsigned char c, unsigned char* object) {
+void __cdecl StubOpF7(std::int32_t x, std::int32_t z, unsigned char c, unsigned char* object) {
     Record(34, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), c, Rel(object));
     Nudge(object);
 }

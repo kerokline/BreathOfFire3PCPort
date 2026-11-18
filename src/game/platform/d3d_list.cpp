@@ -18,7 +18,7 @@
 namespace d3d_list {
 
 namespace {
-using Handler = long(__cdecl*)(const unsigned char*);
+using Handler = std::int32_t(__cdecl*)(const unsigned char*);
 Handler H(U address) { return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(::bof3::CodePlace(address))); }
 }  // namespace
 

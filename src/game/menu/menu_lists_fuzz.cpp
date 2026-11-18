@@ -208,7 +208,7 @@ void __cdecl StubMemberBody(int x, int y, unsigned record, unsigned flag, int ze
     MoveArgRecord();
     Disturb();
 }
-void __cdecl StubDrawMode(unsigned char* prim, int dfe, int dtd, unsigned tpage, unsigned long tw) {
+void __cdecl StubDrawMode(unsigned char* prim, int dfe, int dtd, unsigned tpage, std::uint32_t tw) {
     Record(52, Id(prim), static_cast<std::uint32_t>(dfe), static_cast<std::uint32_t>(dtd), tpage, static_cast<std::uint32_t>(tw));
     Disturb();
 }

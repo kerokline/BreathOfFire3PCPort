@@ -118,12 +118,12 @@ U ULRest3e(const unsigned char* p) { return static_cast<U>(move_script::Long(p))
 
 U ULRest3e(U a) { return ULRest3e(move_script::At(a)); }
 
-const long* Point(const unsigned char* p) { return reinterpret_cast<const long*>(p); }
+const std::int32_t* Point(const unsigned char* p) { return reinterpret_cast<const std::int32_t*>(p); }
 
 // The moving states' draw: R3F's 0x480300(the point, 0x20 unread, the wobble 8,
 // the dy `last`).
 void Ring(U last) {
-    SH_AT(void (__cdecl*)(const long*, unsigned, unsigned, unsigned), at::kR3FRing.v)(Point(S() + 0x34), 0x20, 8, last);
+    SH_AT(void (__cdecl*)(const std::int32_t*, unsigned, unsigned, unsigned), at::kR3FRing.v)(Point(S() + 0x34), 0x20, 8, last);
 }
 
 void Add(U offset, U by) { SetUL(S() + offset, ULRest3e(S() + offset) + by); }
@@ -159,7 +159,7 @@ void StF(unsigned char* p, LD v) {
     std::memcpy(p, &f, sizeof f);
 }
 
-long* PointRest3f(unsigned char* p) { return reinterpret_cast<long*>(p); }
+std::int32_t* PointRest3f(unsigned char* p) { return reinterpret_cast<std::int32_t*>(p); }
 
 // Gpu_GetTPage(0, abr, x, y), then Gpu_SetDrawMode(cursor, 0, dtd, the page's
 // low word, 0 - the fifth word the leftover of GetTPage's five pushes).
@@ -236,7 +236,7 @@ extern "C" void __cdecl EffectKind5F_Bounce(void) {
     rv::As<records::EffectObject>(S())->x = 0x4B0000;
     rv::As<records::EffectObject>(S())->z = 0x4B0000;
     const U ground = static_cast<U>(static_cast<std::int16_t>(
-                         SH_CALL(AreaMap_Elevation)(static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->x)), static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->z)))))
+                         SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->x)), static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->z)))))
                      << 16;
     rv::As<records::EffectObject>(S())->height = ground;
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->step_x, 0xFFFF4925u);
@@ -353,10 +353,10 @@ extern "C" void __cdecl EffectKind60_SlideEnd(void) {
 // where sinA / sinB are (Math_Sin(angle) << 4) sar 12 (called twice) and b is
 // the wobble's low word, negated every row; linked 0x20 at the point; the angle
 // up Rand & 0xFF. The second word is not read.
-extern "C" void __cdecl EffectKind5F_DrawLineDisc(const long* point, unsigned unused, unsigned wobble, unsigned dy) {
+extern "C" void __cdecl EffectKind5F_DrawLineDisc(const std::int32_t* point, unsigned unused, unsigned wobble, unsigned dy) {
     (void)unused;
     SetMode(0, 0x3C0, 0x100, 0);
-    SH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(point[0]), static_cast<unsigned long>(point[1]),
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(point[0]), static_cast<std::uint32_t>(point[1]),
                                 static_cast<int>(dy), 0xC);
     SH_CALL(EffectGte_LoadMapCamera)();
     alignas(4) unsigned char o[12];
@@ -392,7 +392,7 @@ extern "C" void __cdecl EffectKind5F_DrawLineDisc(const long* point, unsigned un
         p[4] = 0;
         p[5] = 0;
         p[6] = 0;
-        SH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(point[0]), static_cast<unsigned long>(point[1]),
+        SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(point[0]), static_cast<std::uint32_t>(point[1]),
                                     static_cast<int>(dy), 0x20);
         angle += static_cast<U>(SH_CALL(Rand)()) & 0xFFu;
         b = 0u - b;
@@ -403,7 +403,7 @@ extern "C" void __cdecl EffectKind5F_DrawLineDisc(const long* point, unsigned un
 // original 0x4804C0: a draw mode (Gpu_GetTPage(0, 1, 0x3C0, 0x100), committed
 // to slot 1); a semi-transparent LINE_G2 from `from` projected (grey 0x40) to
 // `to` projected (black), committed 0x24 to slot 1.
-extern "C" void __cdecl EffectKind60_DrawLine(const long* from, const long* to) {
+extern "C" void __cdecl EffectKind60_DrawLine(const std::int32_t* from, const std::int32_t* to) {
     DrawMode(1, 0x3C0, 0x100, 0, 1);
     unsigned char* const p = Gfx_PacketNext;
     SH_CALL(Gpu_SetLineG2)(p);

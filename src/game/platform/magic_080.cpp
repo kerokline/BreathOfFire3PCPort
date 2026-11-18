@@ -114,7 +114,7 @@ namespace {
 
 unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 
-unsigned long* Longs(U address) { return reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(address)); }
+std::uint32_t* Longs(U address) { return reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(address)); }
 
 U Addr(const volatile void* p) { return Low32(p); }
 
@@ -283,8 +283,8 @@ bool LoadPlacement(RECT& r) {
     if (path.empty()) return false;
     FILE* f = _wfopen(path.c_str(), L"r");
     if (!f) return false;
-    long v[4];
-    const bool ok = fscanf(f, "%ld %ld %ld %ld", &v[0], &v[1], &v[2], &v[3]) == 4;
+    std::int32_t v[4];
+    const bool ok = fscanf(f, "%d %d %d %d", &v[0], &v[1], &v[2], &v[3]) == 4;
     fclose(f);
     if (!ok || v[2] - v[0] < 64 || v[3] - v[1] < 64) return false;
     r = {v[0], v[1], v[2], v[3]};
@@ -381,8 +381,8 @@ void PadReset_Frame() {
     }
     g_pad_reset_held = 0;
     Game_RestartFlag = 1;
-    bof3::Log("DIV-0152    Start + Select held 60 frames: back to the title at Frame_Counter %lu",
-              static_cast<unsigned long>(Frame_Counter));
+    bof3::Log("DIV-0152    Start + Select held 60 frames: back to the title at Frame_Counter %u",
+              static_cast<std::uint32_t>(Frame_Counter));
 }
 
 }  // namespace
@@ -445,7 +445,7 @@ C1_EXPORT void __cdecl Magic080_Start(void) {
     rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(Field_Kind2Z));
     const unsigned char* const s = Sc();
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-    const long h = MH_CALL(AreaMap_Elevation)(ts->x, ts->z);
+    const std::int32_t h = MH_CALL(AreaMap_Elevation)(ts->x, ts->z);
     rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, static_cast<unsigned>(h));
     const std::uint32_t r = RandCall();
     Sc()[0xB] = static_cast<unsigned char>(r & 0x3F);
@@ -559,7 +559,7 @@ extern "C" void __cdecl Input_Latch(void) {
     Input2_Pressed = static_cast<std::uint16_t>((was2 ^ now2) & now2);
 }
 
-extern "C" long __stdcall Game_WndProc(void* hwnd_, unsigned int msg, unsigned int wparam, long lparam) {
+extern "C" std::int32_t __stdcall Game_WndProc(void* hwnd_, unsigned int msg, unsigned int wparam, std::int32_t lparam) {
     HWND hwnd = static_cast<HWND>(hwnd_);
     switch (msg) {
     case WM_DESTROY:
@@ -582,8 +582,8 @@ extern "C" long __stdcall Game_WndProc(void* hwnd_, unsigned int msg, unsigned i
         PostQuitMessage(0);
         return 0;
     case WM_MOVE:
-        Display_WindowMoved(static_cast<int>(static_cast<unsigned long>(lparam) & 0xFFFF),
-                            static_cast<int>(static_cast<unsigned long>(lparam) >> 16));
+        Display_WindowMoved(static_cast<int>(static_cast<std::uint32_t>(lparam) & 0xFFFF),
+                            static_cast<int>(static_cast<std::uint32_t>(lparam) >> 16));
         return 0;
     case WM_SIZING: {
         // DIV-0042: a windowed drag keeps the picture's shape. With snap the
@@ -620,7 +620,7 @@ extern "C" long __stdcall Game_WndProc(void* hwnd_, unsigned int msg, unsigned i
     case WM_SIZE:
         // DIV-0042: the target follows the client, between frames.
         if (wparam != SIZE_MINIMIZED && DisplaySetup_TargetScale() != 0) {
-            const unsigned cw = static_cast<unsigned long>(lparam) & 0xFFFF, ch = static_cast<unsigned long>(lparam) >> 16;
+            const unsigned cw = static_cast<std::uint32_t>(lparam) & 0xFFFF, ch = static_cast<std::uint32_t>(lparam) >> 16;
             if (cw && ch) render::RequestScale(DisplaySetup_ScaleForClient(cw, ch));
         }
         return 0;
@@ -653,10 +653,10 @@ extern "C" long __stdcall Game_WndProc(void* hwnd_, unsigned int msg, unsigned i
         }
         return 0;
     case WM_KEYDOWN: {
-        bof3::InputScript_RecordKey(static_cast<unsigned>(wparam), static_cast<long>(lparam));   // BOF3X_RECORD only
+        bof3::InputScript_RecordKey(static_cast<unsigned>(wparam), static_cast<std::int32_t>(lparam));   // BOF3X_RECORD only
         // DIVERGENCE (the quicksave round's draft D, docs/quicksave.md, section QM): F5
         // opens the quick menu, pausing; while it is open every key is its own.
-        if (bof3::QuickMenu_Key(static_cast<unsigned>(wparam), static_cast<long>(lparam))) return 0;
+        if (bof3::QuickMenu_Key(static_cast<unsigned>(wparam), static_cast<std::int32_t>(lparam))) return 0;
         const bool was_paused = Game_Paused != 0;
         if (was_paused && wparam != VK_F9) {
             Game_Paused = 0;
@@ -724,7 +724,7 @@ extern "C" long __stdcall Game_WndProc(void* hwnd_, unsigned int msg, unsigned i
                 g_speed_scripted = false;
                 Overlay_Frames = kOverlayFrames;
                 Overlay_Text = g_speed == 2 ? kStrSpeed2 : kStrSpeed1;
-                bof3::Log("DIV-0048    speed x%d (F1) at Frame_Counter %lu", g_speed, static_cast<unsigned long>(Frame_Counter));
+                bof3::Log("DIV-0048    speed x%d (F1) at Frame_Counter %u", g_speed, static_cast<std::uint32_t>(Frame_Counter));
             }
             return 0;
         }
@@ -739,12 +739,12 @@ extern "C" long __stdcall Game_WndProc(void* hwnd_, unsigned int msg, unsigned i
         break;
     }
     case WM_POWERBROADCAST:
-        if (wparam == 0) return static_cast<long>(BROADCAST_QUERY_DENY);   // PBT_APMQUERYSUSPEND
+        if (wparam == 0) return static_cast<std::int32_t>(BROADCAST_QUERY_DENY);   // PBT_APMQUERYSUSPEND
         break;
     default:
         break;
     }
-    return static_cast<long>(DefWindowProcA(hwnd, msg, wparam, lparam));
+    return static_cast<std::int32_t>(DefWindowProcA(hwnd, msg, wparam, lparam));
 }
 
 extern "C" void __cdecl Cursor_Sync(void) {
@@ -782,7 +782,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
         const DWORD sn = bof3::os::GetEnv("BOF3X_SPEED", text, sizeof text);
         if (sn > 0) {
             char* end = nullptr;
-            const long v = sn < sizeof text ? std::strtol(text, &end, 10) : 0;
+            const std::int32_t v = sn < sizeof text ? std::strtol(text, &end, 10) : 0;
             if (end == nullptr || *end != '\0' || v < 1 || v > 64) bof3::Fatal("BOF3X_SPEED must be 1..64");
             g_speed = static_cast<int>(v);
             g_speed_scripted = g_speed != 1;
@@ -871,7 +871,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
         char fps[0x50] = {};
         int frames_drawn = 0;
         DWORD last_fps_tick = 0;
-        unsigned long logic_at_fps_tick = 0;
+        std::uint32_t logic_at_fps_tick = 0;
         // BOF3X_FPS_LOG: time inside the draw branch (present included) and
         // inside the logic, QueryPerformanceCounter ticks, per second.
         std::int64_t q0 = 0, q1 = 0, q2 = 0;
@@ -927,8 +927,8 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                 bool stream_hold = g_speed_scripted && bof3::RunSpeed_StreamPlaying();
                 stream_hold_frames = stream_hold ? stream_hold_frames + 1 : 0;
                 if (stream_hold_frames > 3600) {
-                    bof3::Log("DIV-0048    BOF3X_SPEED: a stream still playing after 3600 frames at Frame_Counter %lu; held no longer",
-                              static_cast<unsigned long>(Frame_Counter));
+                    bof3::Log("DIV-0048    BOF3X_SPEED: a stream still playing after 3600 frames at Frame_Counter %u; held no longer",
+                              static_cast<std::uint32_t>(Frame_Counter));
                     bof3::RunSpeed_StreamForget();
                     stream_hold = false;
                     stream_hold_frames = 0;
@@ -945,8 +945,8 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                 double deadline = deadline_base + static_cast<double>(deadline_frames) * (g_frame_ms / speed);
                 // DIV-0034: the debt clamp.
                 if (now - deadline > kMaxDebtMs) {
-                    bof3::Log("DIV-0034    frame deadline %.0f ms behind at Frame_Counter %lu: restarted",
-                              now - deadline, static_cast<unsigned long>(Frame_Counter));
+                    bof3::Log("DIV-0034    frame deadline %.0f ms behind at Frame_Counter %u: restarted",
+                              now - deadline, static_cast<std::uint32_t>(Frame_Counter));
                     deadline_base = now + kFirstFrameMs;
                     deadline_frames = 0;
                     deadline = deadline_base;
@@ -1000,7 +1000,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                     Gpu_PutDrawEnv(env + 0x14);
                     Gfx_FlushDirtyStrip();
                     Gfx_FlushUploadQueue();
-                    Gfx_DrawOTag(reinterpret_cast<unsigned long*>(env + 0x8C));
+                    Gfx_DrawOTag(reinterpret_cast<std::uint32_t*>(env + 0x8C));
                     if (Overlay_Frames != 0) {
                         Overlay(Overlay_Text);
                         Overlay_Frames -= 1;
@@ -1034,8 +1034,8 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                     Crt_sprintf(fps, StrWinMain(::bof3::Img(kStrFrameRate.v)), frames_drawn);
                     if (g_fps_log) {
                         const double ms = 1000.0 / static_cast<double>(qpf);
-                        const unsigned long logic = static_cast<unsigned long>(Frame_Counter - logic_at_fps_tick);
-                        bof3::Log("fps         %d drawn, %lu logic, speed x%d; draw %.2f ms each, logic %.2f ms each", frames_drawn,
+                        const std::uint32_t logic = static_cast<std::uint32_t>(Frame_Counter - logic_at_fps_tick);
+                        bof3::Log("fps         %d drawn, %u logic, speed x%d; draw %.2f ms each, logic %.2f ms each", frames_drawn,
                                   logic, speed, frames_drawn ? static_cast<double>(draw_ticks) * ms / frames_drawn : 0.0,
                                   logic ? static_cast<double>(logic_ticks) * ms / logic : 0.0);
                         draw_ticks = logic_ticks = 0;
@@ -1051,7 +1051,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                 Gfx_BufferIndex ^= 1;
                 unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride));
                 Gfx_CurrentEnv = env;
-                Gpu_ClearOTagR(reinterpret_cast<unsigned long*>(env + 0x70), 8);
+                Gpu_ClearOTagR(reinterpret_cast<std::uint32_t*>(env + 0x70), 8);
                 Gfx_BeginFrame();
                 SpriteCell_Reset();
                 if (g_fps_log) q2 = static_cast<std::int64_t>(bof3::os::Counter());
@@ -1152,7 +1152,7 @@ extern "C" void __cdecl Game_Init(void) {
 // byte (+0x2C) 1 and clear colour (+0x2D..+0x2F) black. The eax the original
 // leaves (Gpu_ClearOTagR's, al 0) is not read by its caller.
 extern "C" void __cdecl Gfx_InitBufferBlock(unsigned char* block) {
-    shell::g.clear_otag_r(reinterpret_cast<unsigned long*>(block + kBlockOt), kOtSlots);
+    shell::g.clear_otag_r(reinterpret_cast<std::uint32_t*>(block + kBlockOt), kOtSlots);
     block[0x2C] = 1;
     block[0x2D] = 0;
     block[0x2E] = 0;
@@ -1182,7 +1182,7 @@ extern "C" void __cdecl Gfx_BeginFrame(void) {
 
     Gfx_PacketNext = Gfx_PacketPools + (b << 16);
 
-    unsigned long* head = Gfx_OtHeads + ((b << 5) >> 2);
+    std::uint32_t* head = Gfx_OtHeads + ((b << 5) >> 2);
     for (unsigned k = 0; k < Gfx_OtPointers_count; ++k) Gfx_OtPointers[k] = head + k;
 
     // The walk starts 8 bytes into the block per buffer, not one record: the

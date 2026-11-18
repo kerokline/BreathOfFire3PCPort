@@ -227,7 +227,7 @@ extern "C" void __cdecl Area193_Tail57(void) {
 // original 0x42C700 (Area_StepHook's case for area 0xC1): x or z (whole
 // dwords) exactly 0x18000, then either exactly 0x338000 (in that order):
 // ScriptFlags_Set40, tail kind 0x39 at state 0xA, al 1; else al 0.
-extern "C" unsigned char __cdecl Area193_StepHook(long x, long z) {
+extern "C" unsigned char __cdecl Area193_StepHook(std::int32_t x, std::int32_t z) {
     const U ux = static_cast<U>(x), uz = static_cast<U>(z);
     if (ux != 0x18000 && uz != 0x18000 && ux != 0x338000 && uz != 0x338000) return 0;
     ArmTail(0x39, 0xA);

@@ -136,7 +136,7 @@ extern "C" void __cdecl Area95_LeapArc(void) {
     const U n = cur[9];
     const U x = static_cast<U>(tCur->step_x) * n + static_cast<U>(tCur->x);
     const U z = static_cast<U>(tCur->step_z) * n + static_cast<U>(tCur->z);
-    const auto ground = static_cast<std::int16_t>(AH_CALL(AreaMap_Elevation)(static_cast<long>(x), static_cast<long>(z)));
+    const auto ground = static_cast<std::int16_t>(AH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z)));
     unsigned char* const obj = Sprite_Current;
     auto* const tObj = rv::As<records::SpriteObject>(obj);
     const std::int32_t rise = static_cast<std::int32_t>(ground) - static_cast<std::int16_t>(Word(obj + 0x3E)) + 0xE0;

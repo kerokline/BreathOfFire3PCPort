@@ -48,6 +48,14 @@ inline constexpr std::size_t kMaxPath = 260;
 std::filesystem::path Path(const char* narrow) noexcept;
 std::string Narrow(const std::filesystem::path& path) noexcept;
 
+// A UTF-8 name as a path - one that came from a wide source and is held as
+// UTF-8 (BOF3X_EXEIMAGE's directory, read by GetEnvW and ToUtf8), so a name
+// outside the ANSI code page opens whole on Windows. A backslash reads as a
+// separator on both systems, as in Path. Empty when the bytes are not UTF-8
+// (Windows: MultiByteToWideChar with MB_ERR_INVALID_CHARS; POSIX: a check of
+// the bytes), or on any failure. Not for a narrow name: that is Path's.
+std::filesystem::path PathOfUtf8(const char* utf8) noexcept;
+
 // Whether a narrow name is a directory / a regular file. The standard calls
 // throw on an error unless given an error_code; these answer false instead.
 inline bool IsDirectory(const char* narrow) noexcept {

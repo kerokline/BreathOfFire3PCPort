@@ -174,10 +174,10 @@ void Disturb(std::uint32_t salt) {
 void __cdecl StubRestoreClut() { Record(1, Address(Sprite_Current)); Disturb(1); }
 void __cdecl StubCopyInput() { Record(2, Address(Sprite_Current)); Disturb(2); }
 void __cdecl StubClearSteps() { Record(3, Address(Sprite_Current)); Disturb(3); }
-long __cdecl StubGroundAt(long x, long z) {
+std::int32_t __cdecl StubGroundAt(std::int32_t x, std::int32_t z) {
     Record(4, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), Address(Sprite_Current));
     Disturb(4);
-    return static_cast<long>(Hash(40));
+    return static_cast<std::int32_t>(Hash(40));
 }
 unsigned char __cdecl StubLeaderAnimation(unsigned animation) {
     Record(5, animation & 0xFF, Address(Sprite_Current));
@@ -242,13 +242,13 @@ void __cdecl StubMemberSprite(unsigned member, unsigned slot) { Record(25, membe
 void __cdecl StubPartyLoad(unsigned slot) { Record(26, slot & 0xFF); Disturb(26); }
 void __cdecl StubReleaseTint(unsigned char* sprite) { Record(27, Address(sprite)); Disturb(27); }
 void __cdecl StubLoadPalette(unsigned short* dst, unsigned index) { Record(28, Address(dst), index & 0xFF, Address(Sprite_Current)); Disturb(28); }
-void __cdecl StubPosition(long x, long z, unsigned flags) {
+void __cdecl StubPosition(std::int32_t x, std::int32_t z, unsigned flags) {
     Record(29, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), flags & 0xFF);
     Disturb(29);
     if (Hash(290) % 3 == 0) SetLong(rv::Bytes(ObjTrio) + 0x34 + (Hash(291) % 2) * 4, static_cast<std::int32_t>(Hash(292)));
 }
 // 0x533690 is unread: its whole dword is compared (Field_PartySetUp hands on the caller's).
-void __cdecl StubPositionAlt(long x, long z, unsigned flags) {
+void __cdecl StubPositionAlt(std::int32_t x, std::int32_t z, unsigned flags) {
     Record(30, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), flags);
     Disturb(30);
     if (Hash(300) % 3 == 0) SetLong(rv::Bytes(ObjTrio) + 0x34 + (Hash(301) % 2) * 4, static_cast<std::int32_t>(Hash(302)));
@@ -297,10 +297,10 @@ void __cdecl StubHeightCheck() {
     Disturb(47);
     if (Hash(470) % 2) MapView_HeightScale = static_cast<unsigned char>(Hash(471) % 2);
 }
-long __cdecl StubElevation(long x, long z) {
+std::int32_t __cdecl StubElevation(std::int32_t x, std::int32_t z) {
     Record(48, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), MapView_HeightScale);
     Disturb(48);
-    return static_cast<long>(Hash(480));
+    return static_cast<std::int32_t>(Hash(480));
 }
 void __cdecl StubTintRelease(unsigned index) { Record(49, index & 0xFF); Disturb(49); }
 template <unsigned N> void __cdecl StubEntry() {

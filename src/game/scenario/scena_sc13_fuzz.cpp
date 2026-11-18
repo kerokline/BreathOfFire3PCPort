@@ -48,7 +48,7 @@ unsigned char __cdecl TSpawn(unsigned kind, unsigned x, unsigned y, unsigned z, 
 }
 void __cdecl TSound(unsigned short id) { Stub(Sound_PlayEffect)(id); }
 void __cdecl TArea141c() { StubAt<VoidFn>(at::kArea141c.v)(); }
-long __cdecl TElevation(long x, long z) { return Stub(AreaMap_Elevation)(x, z); }
+std::int32_t __cdecl TElevation(std::int32_t x, std::int32_t z) { return Stub(AreaMap_Elevation)(x, z); }
 unsigned char __cdecl TFindFree() { return Stub(Effect_FindFree)(); }
 void __cdecl TViewReset() { Stub(Field_ViewReset)(); }
 

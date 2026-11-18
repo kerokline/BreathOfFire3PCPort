@@ -188,7 +188,7 @@ static void FxAtCell(unsigned slot, unsigned char kind) {
     const std::uint32_t x = *reinterpret_cast<std::uint32_t*>(e + 0x34);
     e[0] = 1;
     e[5] = kind;
-    const std::int32_t h = static_cast<std::int16_t>(SH_CALL(AreaMap_Elevation)(static_cast<long>(x), static_cast<long>(z)));
+    const std::int32_t h = static_cast<std::int16_t>(SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z)));
     *reinterpret_cast<std::uint32_t*>(e + 0x3C) = static_cast<std::uint32_t>(h + 0x80) << 16;
 }
 
@@ -1057,14 +1057,14 @@ SC13_EXPORT void __cdecl Scena14_ScrollView(void) {
     const std::uint32_t fz = static_cast<std::uint32_t>(Field_Kind2Z);
     MapView_FocusX = 0x63FF;
     Field_Kind2X = fx + 0x140000;
-    const long h = SH_CALL(AreaMap_Elevation)(static_cast<long>(fx + 0x140000), static_cast<long>(fz));
+    const std::int32_t h = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(fx + 0x140000), static_cast<std::int32_t>(fz));
     kind2->height_whole = static_cast<std::uint16_t>(h);
     SH_CALL(MapView_SetElevation)(static_cast<int>(h));
     SH_AT(VoidFn, scena_sc13::at::kViewShift.v)();
     const std::uint32_t ex = static_cast<std::uint32_t>(xobj0->x) + 0x140000;
     const std::uint32_t ez = static_cast<std::uint32_t>(xobj0->z);
     xobj0->x = ex;
-    xobj0->height_whole = static_cast<std::uint16_t>(SH_CALL(AreaMap_Elevation)(static_cast<long>(ex), static_cast<long>(ez)));
+    xobj0->height_whole = static_cast<std::uint16_t>(SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(ex), static_cast<std::int32_t>(ez)));
 }
 
 // original 0x566090: run 5, steps 0..2, 5..7, 0xA..0xE, 0x10, 0x14, 0x15,

@@ -202,7 +202,7 @@ extern "C" void __cdecl EffectKind29_DrawFace(unsigned i0, unsigned i1, unsigned
         if (index[k] >= at::kBoxPointCount)
             bof3::Fatal("EffectKind29_DrawFace: corner %u is %u, past the eight at 0x676080 (docs/effect_2a.md section 2)",
                         k, index[k]);
-        SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(At(::bof3::Img(at::kBoxPoints.v) + 0x10 * index[k])),
+        SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const std::int32_t*>(At(::bof3::Img(at::kBoxPoints.v) + 0x10 * index[k])),
                                         reinterpret_cast<float*>(p + 8 + 0x10 * k));
     }
     const auto bit = static_cast<unsigned char>(Frame_Counter & 1u);
@@ -255,10 +255,10 @@ extern "C" void __cdecl EffectKind29_DrawSegments(unsigned t, unsigned shade) {
         unsigned char* const p = Gfx_PacketNext;
         SH_CALL(Gpu_SetLineG2)(p);
         SH_CALL(Gpu_SetSemiTrans)(p, 1);
-        long point[3];
+        std::int32_t point[3];
         for (unsigned i = 0; i < 3; ++i)
-            point[i] = static_cast<long>(Sar((UL(b + 4 * i) - UL(a + 4 * i)) * tt, 4) + UL(a + 4 * i));
-        SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(a), reinterpret_cast<float*>(p + 8));
+            point[i] = static_cast<std::int32_t>(Sar((UL(b + 4 * i) - UL(a + 4 * i)) * tt, 4) + UL(a + 4 * i));
+        SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const std::int32_t*>(a), reinterpret_cast<float*>(p + 8));
         SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(p + 0x18));
         const U bit = Frame_Counter & 1u;
         const auto near = static_cast<unsigned char>((((bit + 0x20u) * level) << 2) >> 8);

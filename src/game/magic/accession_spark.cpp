@@ -90,12 +90,12 @@ void Call2(std::uint32_t address, unsigned a, unsigned b) { MH_WORD(Fn2, address
 // The callees with the arguments the originals push. Gte_RotTransPers gets the
 // flag pointer the originals pass; the four-point projection the depth and
 // flag pointers.
-using Rtp1Fn = long (__cdecl*)(const short*, unsigned char*, long*, long*);
+using Rtp1Fn = std::int32_t (__cdecl*)(const short*, unsigned char*, std::int32_t*, std::int32_t*);
 
 #define S33_AS(type, name) ::magic_harness::Call(reinterpret_cast<type>(reinterpret_cast<void*>(&::name)))
 
 void Rtp1(unsigned v, unsigned char* sxy) {
-    long p, flag;
+    std::int32_t p, flag;
     S33_AS(Rtp1Fn, Gte_RotTransPers)(VP(v), sxy, &p, &flag);
 }
 

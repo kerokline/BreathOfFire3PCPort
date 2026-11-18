@@ -136,10 +136,10 @@ int __cdecl StubRand() {
     }
     return h % 4 == 0 ? static_cast<int>(h) : static_cast<int>(h >> 1) & 0x7FFF;
 }
-long __cdecl StubElevation(long x, long z) {
+std::int32_t __cdecl StubElevation(std::int32_t x, std::int32_t z) {
     Record(2, static_cast<U>(x), static_cast<U>(z));
     Disturb();
-    return static_cast<long>(Hash());
+    return static_cast<std::int32_t>(Hash());
 }
 void __cdecl StubSetCell(int x, int z, int value) {
     Record(3, static_cast<U>(x) & 0xFFFF, static_cast<U>(z) & 0xFFFF, static_cast<U>(value) & 0xFF);
@@ -204,8 +204,8 @@ void __cdecl StubSetSemiTrans(unsigned char* prim, unsigned abe) {
 // Gte_RotTransPers4 with the ten arguments the original pushes: records the
 // four vectors' words and the corner pointers, writes the corners and the two
 // locals.
-long __cdecl StubRotTransPers4(const short* v0, const short* v1, const short* v2, const short* v3, float* s0, float* s1,
-                               float* s2, float* s3, long* p, long* flag) {
+std::int32_t __cdecl StubRotTransPers4(const short* v0, const short* v1, const short* v2, const short* v3, float* s0, float* s1,
+                               float* s2, float* s3, std::int32_t* p, std::int32_t* flag) {
     const auto w = [](const short* v, unsigned i) { return static_cast<U>(Word(reinterpret_cast<const unsigned char*>(v) + i * 2)); };
     Record(22, Address(v0), w(v0, 0) | w(v0, 1) << 16, w(v0, 2) | w(v0, 3) << 16, Address(v1), w(v1, 0) | w(v1, 1) << 16);
     Record(23, w(v1, 2) | w(v1, 3) << 16, Address(v2), w(v2, 0) | w(v2, 1) << 16, w(v2, 2) | w(v2, 3) << 16, Address(v3));
@@ -217,10 +217,10 @@ long __cdecl StubRotTransPers4(const short* v0, const short* v1, const short* v2
         SetLong(reinterpret_cast<unsigned char*>(c), static_cast<std::int32_t>(Hash() + k++));
         SetLong(reinterpret_cast<unsigned char*>(c) + 4, static_cast<std::int32_t>(Hash() + k++));
     }
-    *p = static_cast<long>(Hash() ^ 1);
-    *flag = static_cast<long>(Hash() ^ 2);
+    *p = static_cast<std::int32_t>(Hash() ^ 1);
+    *flag = static_cast<std::int32_t>(Hash() ^ 2);
     Disturb();
-    return static_cast<long>(Hash());
+    return static_cast<std::int32_t>(Hash());
 }
 void __cdecl StubPrimDepths(void* prim) {
     Record(26, Address(prim));
@@ -228,7 +228,7 @@ void __cdecl StubPrimDepths(void* prim) {
     for (unsigned z = 0x10; z <= 0x40; z += 0x10) SetLong(q + z, static_cast<std::int32_t>(Hash() + z));
     Disturb();
 }
-void __cdecl StubSetTexture(unsigned long texture, unsigned char* prim, int count) {
+void __cdecl StubSetTexture(std::uint32_t texture, unsigned char* prim, int count) {
     Record(27, static_cast<U>(texture), Address(prim), static_cast<U>(count));
     prim[0x16] = static_cast<unsigned char>(texture);
     Disturb();
@@ -240,7 +240,7 @@ void __cdecl StubCommit(unsigned slot, unsigned size) {
 }
 // MapView_ItemHalfAt: a third of the time none, else one of the fuzz's four
 // items (the caller copies its corners).
-unsigned char* __cdecl StubItemHalfAt(long x, long y) {
+unsigned char* __cdecl StubItemHalfAt(std::int32_t x, std::int32_t y) {
     Record(29, static_cast<U>(x), static_cast<U>(y));
     Disturb();
     const U h = Hash();
@@ -249,7 +249,7 @@ unsigned char* __cdecl StubItemHalfAt(long x, long y) {
 }
 // MapView_LinkPrimAt: the primitive appended - the cursor moved on by the
 // size, now and then not (a full row or pool).
-void __cdecl StubLinkPrimAt(unsigned long x, unsigned long z, int dy, unsigned size) {
+void __cdecl StubLinkPrimAt(std::uint32_t x, std::uint32_t z, int dy, unsigned size) {
     Record(30, static_cast<U>(x), static_cast<U>(z), static_cast<U>(dy), size, Address(Gfx_PacketNext));
     if (Hash() % 5) Advance(size & 0xFF);
     Disturb();

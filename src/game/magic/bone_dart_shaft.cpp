@@ -133,7 +133,7 @@ static void BoneDartShadowFollow(unsigned step) {
         ts->x = Long(TaskSlot(s[0xB]) + 0x34);
         ts->z = Long(TaskSlot(s[0xB]) + 0x38);
     }
-    const long ground = MH_CALL(AreaMap_Elevation)(rv::Current<records::BattleTask>()->x, rv::Current<records::BattleTask>()->z);
+    const std::int32_t ground = MH_CALL(AreaMap_Elevation)(rv::Current<records::BattleTask>()->x, rv::Current<records::BattleTask>()->z);
     rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, static_cast<std::uint32_t>(ground) & 0xFFFF);
     unsigned char* const s = Sc();
     {

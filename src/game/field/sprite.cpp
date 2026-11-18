@@ -258,8 +258,8 @@ static void PoseLog(const char* what, const void* object, unsigned a, unsigned b
     std::uint32_t anim_data, script;
     std::memcpy(&anim_data, s + 0x4C, 4);
     std::memcpy(&script, s + 0x50, 4);
-    bof3::Log("poselog     frame %lu %s trio %u a %u b %u | flags %02X type %u facing %u draw %02X slot %u row %u flip %u col %u anim %u data %08X script %08X",
-              static_cast<unsigned long>(Frame_Counter), what, static_cast<unsigned>((o - ::bof3::Img(0x802D40u)) / 0x14Cu), a, b,
+    bof3::Log("poselog     frame %u %s trio %u a %u b %u | flags %02X type %u facing %u draw %02X slot %u row %u flip %u col %u anim %u data %08X script %08X",
+              static_cast<std::uint32_t>(Frame_Counter), what, static_cast<unsigned>((o - ::bof3::Img(0x802D40u)) / 0x14Cu), a, b,
               s[0], s[6], s[8], s[0x24], s[0x25], s[0x26], s[0x2A], s[0x2C], s[0x4B], anim_data, script);
 }
 
@@ -352,9 +352,9 @@ extern "C" void __cdecl Sprite_UpdateScreen(void) {
     vertex[0] = static_cast<short>((sprite->x >> 9) - 0x4000);
     vertex[1] = static_cast<short>((sprite->z >> 9) - 0x4000);
     vertex[2] = static_cast<short>(-(static_cast<std::int16_t>(sprite->height_whole) / 2));
-    unsigned long screen[2];
-    long depth_cue;
-    const long depth = sprite_screen::g.project(vertex, screen, &depth_cue);
+    std::uint32_t screen[2];
+    std::int32_t depth_cue;
+    const std::int32_t depth = sprite_screen::g.project(vertex, screen, &depth_cue);
     rv::Current<records::SpriteHead>()->depth = depth;
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->screen_xf, static_cast<std::int32_t>(ThroughX87(static_cast<std::uint32_t>(screen[0]))));
     rv::Store<unsigned>(rv::Current<records::SpriteHead>()->screen_x, Ftol16(static_cast<std::uint32_t>(screen[0])));

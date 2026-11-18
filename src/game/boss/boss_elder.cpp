@@ -111,7 +111,7 @@ void EndStepBossSi(unsigned step) {
 }  // namespace
 
 // original 0x43EC30: BossKind_Table[44]: jmp [BossElder_States + 4 * +1] (12).
-extern "C" unsigned long __cdecl BossElder_Dispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl BossElder_Dispatch(std::uint32_t through) {
     return DispatchBossSh("BossElder_Dispatch", AddressOf(BossElder_States), 12, 1, through);
 }
 
@@ -122,7 +122,7 @@ extern "C" unsigned char __cdecl BossElder_Enter(void) {
 }
 
 // original 0x43ECB0: the +0xF4 hook through BossElder_Hooks (3, all BareRet).
-extern "C" unsigned long __cdecl BossElder_Hook(unsigned long word) {
+extern "C" std::uint32_t __cdecl BossElder_Hook(std::uint32_t word) {
     return HookDispatchBossSh("BossElder_Hook", AddressOf(BossElder_Hooks), word);
 }
 

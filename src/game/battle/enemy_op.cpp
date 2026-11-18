@@ -671,7 +671,7 @@ extern "C" void __cdecl EnemyOp_ScaleInStep(void) {
 // original 0x436270 (PSX 0x801E33B0, gap44; hidden in 0x4360C0's catalogue
 // extent): EnemyOp_EnterSubs 1 - through EnemyOp_EnterSubs2 0x64B1E4 by +3
 // (2 entries; ours aborts past them).
-extern "C" unsigned long __cdecl EnemyOp_SlideDispatch(unsigned long word) {
+extern "C" std::uint32_t __cdecl EnemyOp_SlideDispatch(std::uint32_t word) {
     return Dispatch("EnemyOp_SlideDispatch", AddressOf(EnemyOp_EnterSubs2), 2, 3, word);
 }
 
@@ -709,7 +709,7 @@ extern "C" void __cdecl EnemyOp_SlideStep(void) {
     BH_CALL(BattleEnemy_ScriptTick)();
     rv::Current<records::BattleEnemy>()->x = static_cast<U>(rv::Current<records::BattleEnemy>()->x) + static_cast<U>(rv::Current<records::BattleEnemy>()->step_x);
     rv::Current<records::BattleEnemy>()->z = static_cast<U>(rv::Current<records::BattleEnemy>()->z) + static_cast<U>(rv::Current<records::BattleEnemy>()->step_z);
-    const long ground = BH_CALL(AreaMap_Elevation)(rv::Current<records::BattleEnemy>()->x, rv::Current<records::BattleEnemy>()->z);
+    const std::int32_t ground = BH_CALL(AreaMap_Elevation)(rv::Current<records::BattleEnemy>()->x, rv::Current<records::BattleEnemy>()->z);
     rv::Store<unsigned>(rv::Current<records::BattleEnemy>()->height_whole, static_cast<unsigned>(ground));
     unsigned char* const s = Sprite_Current;
     auto* const cur_enemy = rv::As<records::BattleEnemy>(s);
@@ -821,7 +821,7 @@ extern "C" void __cdecl EnemyOp_TurnStart(void) {
 // original 0x436620 (PSX 0x801E3978, gap44): EnemyOp_Steps 5 (and every
 // kind's Steps 5) - through EnemyOp_Step5Subs 0x64B1F4 by +2 (2 entries; ours
 // aborts past them).
-extern "C" unsigned long __cdecl EnemyOp_CueDispatch(unsigned long word) {
+extern "C" std::uint32_t __cdecl EnemyOp_CueDispatch(std::uint32_t word) {
     return Dispatch("EnemyOp_CueDispatch", AddressOf(EnemyOp_Step5Subs), 2, 2, word);
 }
 
@@ -850,13 +850,13 @@ extern "C" void __cdecl EnemyOp_PlayCreatureCue(void) {
 // BattleEnemy_ScriptTick answers its end, Battle_SetTargetFlag40(0x904B44),
 // 0x4376F0, the round flags |= 4 and a tail jmp to 0x4376A0 (both BE3's).
 // Answers the tick's answer, or 0x4376A0's.
-extern "C" unsigned long __cdecl EnemyOp_CueEnd(void) {
+extern "C" std::uint32_t __cdecl EnemyOp_CueEnd(void) {
     const auto done = BH_CALL(BattleEnemy_ScriptTick)();
     if (done == 0) return done;
     BH_CALL(Battle_SetTargetFlag40)(B(::bof3::Img(battle_e2::at::kTarget.v)));
     BH_AT(void (__cdecl*)(), battle_e2::at::kEnemyTaskChance.v)();
     B(::bof3::Img(battle_e2::at::kRoundFlags.v)) = static_cast<unsigned char>(B(::bof3::Img(battle_e2::at::kRoundFlags.v)) | 4);
-    return BH_AT(unsigned long (__cdecl*)(), battle_e2::at::kEnemyOpEnd.v)();
+    return BH_AT(std::uint32_t (__cdecl*)(), battle_e2::at::kEnemyOpEnd.v)();
 }
 
 // original 0x4366E0 (PSX 0x801E3AE0): step 6 - through EnemyOp_ActSubs
@@ -1080,7 +1080,7 @@ extern "C" unsigned char __cdecl BattleEnemy_Chance70(void) {
 // original 0x436BC0 (PSX 0x801E43E8, table-anchored; hidden in 0x436B50's
 // catalogue extent): EnemyOp_ActSubs 3 (and the kinds' ActSubs 3) - through
 // EnemyOp_Act3Subs 0x64B220 by +3 (5 entries; ours aborts past them).
-extern "C" unsigned long __cdecl EnemyOp_Act3Dispatch(unsigned long word) {
+extern "C" std::uint32_t __cdecl EnemyOp_Act3Dispatch(std::uint32_t word) {
     return Dispatch("EnemyOp_Act3Dispatch", AddressOf(EnemyOp_Act3Subs), 5, 3, word);
 }
 
@@ -1220,7 +1220,7 @@ extern "C" void __cdecl EnemyOp_DeathSquash(void) {
 // original 0x436F00 (PSX 0x801E4880, table-anchored; hidden in 0x436B50's
 // extent): EnemyOp_ActSubs 5 (and the kinds' ActSubs 5) - through
 // EnemyOp_Act5Subs 0x64B244 by +3 (3 entries; ours aborts past them).
-extern "C" unsigned long __cdecl EnemyOp_Act5Dispatch(unsigned long word) {
+extern "C" std::uint32_t __cdecl EnemyOp_Act5Dispatch(std::uint32_t word) {
     return Dispatch("EnemyOp_Act5Dispatch", AddressOf(EnemyOp_Act5Subs), 3, 3, word);
 }
 

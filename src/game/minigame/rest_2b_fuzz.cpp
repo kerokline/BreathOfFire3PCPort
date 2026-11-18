@@ -439,7 +439,7 @@ void Disturb(U h) {
     case 8: SetLong(Mem(Rest2b_ModelBY_addr), Signed(v)); break;
     case 9: Game_Step = static_cast<unsigned short>(v); break;
     case 10: sh::SetPointer(Rest2b_ModelFile_addr, File() + (b & 1 ? 0 : 0x10)); break;
-    case 11: if (b & 1) Field_Kind2X = static_cast<long>(v); else Field_Kind2Z = static_cast<long>(v); break;
+    case 11: if (b & 1) Field_Kind2X = static_cast<std::int32_t>(v); else Field_Kind2Z = static_cast<std::int32_t>(v); break;
     case 12: SetLong(Mem(Rest2b_ModelBAngle_addr), Signed(v)); break;
     default: break;
     }

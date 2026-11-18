@@ -79,16 +79,16 @@ using move_script::SetLong;
 // original 0x5A7540. Puts prim at the head of the list ot heads: the old head
 // goes to link_out - prim's own link, for the game's callers - and the new
 // head carries bit 31 of what prim's first dword held. Both reads first.
-extern "C" void __cdecl Gpu_AddPrim(unsigned long* ot, unsigned long* prim, unsigned long* link_out) {
-    const unsigned long flag = *prim & kLinkFlag;
-    const unsigned long head = *ot;
+extern "C" void __cdecl Gpu_AddPrim(std::uint32_t* ot, std::uint32_t* prim, std::uint32_t* link_out) {
+    const std::uint32_t flag = *prim & kLinkFlag;
+    const std::uint32_t head = *ot;
     *link_out = head;
     *ot = flag | Low32(prim);
 }
 
 // original 0x5A7560. One store: the list's last link now names `item`. The
 // caller makes `item` the new tail. 892,889 calls in the attract run.
-extern "C" void __cdecl Gpu_LinkPrim(unsigned long* tail, unsigned long item) { *tail = item; }
+extern "C" void __cdecl Gpu_LinkPrim(std::uint32_t* tail, std::uint32_t item) { *tail = item; }
 
 // original 0x5A7570. libgpu SetPolyF3 by its code: byte +7 = 0x20, and 0.01 to
 // the three vertices' depth floats at a 0xC stride. The size byte +3 is left
@@ -229,7 +229,7 @@ extern "C" void __cdecl Gpu_SetShadeTex(unsigned char* prim, unsigned tge) {
 // original 0x5A77C0. A draw-mode primitive: 0xE8000000 with the texture page
 // in the low word and the two flags in bits 16 and 17 - not the PSX GPU's
 // 0xE1 packet - and the texture window word after it.
-extern "C" void __cdecl Gpu_SetDrawMode(unsigned char* prim, int dfe, int dtd, unsigned tpage, unsigned long tw) {
+extern "C" void __cdecl Gpu_SetDrawMode(unsigned char* prim, int dfe, int dtd, unsigned tpage, std::uint32_t tw) {
     PutDword(prim + 4, 0xE8000000u | (tpage & 0xFFFFu));
     if (dfe) prim[6] |= 1;
     if (dtd) prim[6] |= 2;

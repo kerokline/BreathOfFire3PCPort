@@ -152,14 +152,14 @@ void Dispatch(const std::uint32_t* table, unsigned entries, unsigned phase, cons
     magic_harness::Phase(table[phase])();
 }
 
-using Rtp4Fn = long (__cdecl*)(const short*, const short*, const short*, const short*, unsigned char*, unsigned char*,
-                               unsigned char*, unsigned char*, long*, long*);
+using Rtp4Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, const short*, unsigned char*, unsigned char*,
+                               unsigned char*, unsigned char*, std::int32_t*, std::int32_t*);
 
 #define S10_AS(type, name) ::magic_harness::Call(reinterpret_cast<type>(reinterpret_cast<void*>(&::name)))
 
 // All four projected to +8, +8 + step, +8 + 2 step, +8 + 3 step.
 void Rtp4(unsigned char* prim, unsigned step) {
-    long p, flag;
+    std::int32_t p, flag;
     S10_AS(Rtp4Fn, Gte_RotTransPers4)(VP(0), VP(8), VP(0x10), VP(0x18), prim + 8, prim + 8 + step, prim + 8 + 2 * step,
                                      prim + 8 + 3 * step, &p, &flag);
 }
@@ -191,15 +191,15 @@ const Callees kOriginals = {
     Gpu_SetSemiTrans,
     Gpu_GetTPage,
     Gpu_GetClut,
-    As<long (__cdecl*)(const short*, float*, long*, long*)>(&Gte_RotTransPers),
-    As<long (__cdecl*)(const short*, const short*, const short*, float*, float*, float*, long*, long*)>(&Gte_RotTransPers3),
-    As<long (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*, long*,
-                       long*)>(&Gte_RotTransPers4),
+    As<std::int32_t (__cdecl*)(const short*, float*, std::int32_t*, std::int32_t*)>(&Gte_RotTransPers),
+    As<std::int32_t (__cdecl*)(const short*, const short*, const short*, float*, float*, float*, std::int32_t*, std::int32_t*)>(&Gte_RotTransPers3),
+    As<std::int32_t (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*, std::int32_t*,
+                       std::int32_t*)>(&Gte_RotTransPers4),
     As<void (__cdecl*)(unsigned char*)>(&Gte_PrimDepths3_10B),
     As<void (__cdecl*)(unsigned char*)>(&Gte_PrimDepths4_14),
     Gte_StoreDepthF,
     Gte_PushMatrix,
-    As<void (__cdecl*)(const short*, long*, long*)>(&Gte_RotTrans),
+    As<void (__cdecl*)(const short*, std::int32_t*, std::int32_t*)>(&Gte_RotTrans),
     Gte_RotMatrix,
     Gte_MulMatrix0,
     Gte_SetRotMatrix,
@@ -417,8 +417,8 @@ S10_EXPORT void __cdecl EbonfireRing_Draw(void) {
         SetVW(0x1A, static_cast<unsigned>(Mul12(v, SS(4))));
         const std::uint32_t lean = Shl(VS(8), 9);
         SetVW(0x1C, 0);
-        const auto x = static_cast<unsigned long>(static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->x) + lean);
-        const auto z = static_cast<unsigned long>(static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->z) + lean);
+        const auto x = static_cast<std::uint32_t>(static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->x) + lean);
+        const auto z = static_cast<std::uint32_t>(static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->z) + lean);
         MH_CALL(Gpu_SetDrawMode)(p, 0, 1, 0x55, 0);
         MH_CALL(MapView_LinkPrimAt)(x, z, 2, 0xC);
         p = Gfx_PacketNext;
@@ -476,7 +476,7 @@ extern "C" void __cdecl MagicFx_DrawFan(void) {
         battle_items::SetWord(Vtx(0x10), static_cast<unsigned>(Mul12(s, S16BattleItems(Scr(0)))));
         co = battle_items::g.cos(a);
         battle_items::SetWord(Vtx(0x12), static_cast<unsigned>(Mul12(co, S16BattleItems(Scr(0)))));
-        long depth, flag;
+        std::int32_t depth, flag;
         battle_items::g.rtp3(VtxP(0), VtxP(8), VtxP(0x10), reinterpret_cast<float*>(p + 8), reinterpret_cast<float*>(p + 0x18),
                reinterpret_cast<float*>(p + 0x28), &depth, &flag);
         battle_items::g.depths3(p);

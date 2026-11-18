@@ -249,7 +249,7 @@ extern "C" void __cdecl EffectKind18Sub59_DrawRing(int glow_word) {
                 SetV(c.at + 2, Ftol(Fi(Sar(cosine, 8) * *At(c.radius)) + D(::bof3::Img(at::kScreenY.v))));
                 SetV(c.at + 4, 0u - (static_cast<U>(*At(c.height)) << 5));
             }
-            long depth;
+            std::int32_t depth;
             SH_CALL(Gte_RotTransPers4)(Vx(0), Vx(1), Vx(2), Vx(3), Fp(p + 8), Fp(p + 0x1C), Fp(p + 0x30), Fp(p + 0x44), &depth);
             SH_CALL(Gte_PrimDepths4_14)(p);
             auto dress = [&](unsigned char* q, U page, U clut) {
@@ -304,8 +304,8 @@ extern "C" void __cdecl EffectKind18Sub59_DrawRing(int glow_word) {
             const U cosine = static_cast<U>(SH_CALL(Math_Cos)(I(e)));
             SetV(0x12, Ftol(Fi(Sar(cosine, 8) * *At(::bof3::Img(at::kRadii59.v) + 8)) + D(::bof3::Img(at::kScreenY.v))));
             SetV(0x14, 0u - (static_cast<U>(*At(::bof3::Img(at::kHeights59.v) + 8)) << 5));
-            long a;
-            SH_CALL(Gte_RotTransPers)(Vx(2), reinterpret_cast<unsigned long*>(At(::bof3::Img(Effect6c_GlowXY_addr))), &a);
+            std::int32_t a;
+            SH_CALL(Gte_RotTransPers)(Vx(2), reinterpret_cast<std::uint32_t*>(At(::bof3::Img(Effect6c_GlowXY_addr))), &a);
             const std::int32_t divisor = static_cast<std::int16_t>(Camera_Distance) + 0x1194;
             if (divisor == 0)
                 bof3::Fatal("EffectKind18Sub59_DrawRing: Camera_Distance is -0x1194, the glow's divisor 0 - the original "

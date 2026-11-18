@@ -65,8 +65,8 @@ constexpr ::bof3::image::CodeVa kSkillList{bof3::addr::Char_AbilityList};     //
 
 struct Callees {
     // the Direct3D helpers (ours, d3d_draw.cpp) and the bare ret
-    void (__cdecl* prim_color)(unsigned, unsigned, unsigned, unsigned, unsigned, unsigned long*,
-                               unsigned long*);                            // D3d_PrimColor 0x59FBA0
+    void (__cdecl* prim_color)(unsigned, unsigned, unsigned, unsigned, unsigned, std::uint32_t*,
+                               std::uint32_t*);                            // D3d_PrimColor 0x59FBA0
     void (__cdecl* ret_only)(unsigned);                                    // 0x437CC0
     void (__cdecl* set_blend)(unsigned, unsigned);                         // D3d_SetBlend 0x59FCA0
     void (__cdecl* set_shade)(unsigned);                                   // D3d_SetShadeMode 0x59FD80
@@ -79,7 +79,7 @@ struct Callees {
     unsigned char (__cdecl* char_count)(const unsigned char*);             // Text_CharCount 0x57D800
     const unsigned char* (__cdecl* text_draw_at)(int, int, int, int, const unsigned char*);  // Text_DrawAt 0x516B30
     unsigned char (__cdecl* count_used)(unsigned);                         // Inventory_CountUsed 0x591A80
-    int (__cdecl* sprintf_)(char*, const char*, ...);                      // Crt_sprintf 0x5B9380
+    int (*sprintf_)(char*, const char*, ...);                      // Crt_sprintf 0x5B9380
     void (__cdecl* font8)(int, int, int, const unsigned char*);            // Text_DrawFont8 0x517090
     void (__cdecl* pieces)(int, int, const unsigned char*, int);           // Menu_DrawPieces 0x57D910
     void (__cdecl* piece)(int, int, unsigned, unsigned);                   // Menu_DrawPiece 0x57D860
@@ -92,7 +92,7 @@ struct Callees {
     unsigned (__cdecl* skill_cost)(unsigned, unsigned, unsigned);          // 0x591DB0
     const unsigned char* (__cdecl* skill_list)(unsigned, unsigned, unsigned);  // 0x591E50
     // the area palette's (ours, field_misc.cpp and map_scroll.cpp)
-    long (__cdecl* clut_adjust)(int, int, int, int, int);                  // Gfx_ClutAdjust 0x5718F0
+    std::int32_t (__cdecl* clut_adjust)(int, int, int, int, int);                  // Gfx_ClutAdjust 0x5718F0
     void (__cdecl* clut_cycle)();                                          // AreaMap_ClutCycleStart 0x5717B0
 };
 extern const Callees kOriginals;

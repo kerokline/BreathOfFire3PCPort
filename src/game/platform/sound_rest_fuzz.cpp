@@ -136,54 +136,54 @@ void Disturb() {
     }
 }
 
-long Answer(std::uint32_t h) {
+std::int32_t Answer(std::uint32_t h) {
     switch (h % 9) {
-    case 0: return static_cast<long>(0x88780096u);   // DSERR_BUFFERLOST
-    case 1: return static_cast<long>(0x80004005u);   // E_FAIL
+    case 0: return static_cast<std::int32_t>(0x88780096u);   // DSERR_BUFFERLOST
+    case 1: return static_cast<std::int32_t>(0x80004005u);   // E_FAIL
     case 2: return 1;                                  // S_FALSE: a success the originals call a failure
     default: return 0;
     }
 }
 
-long __stdcall FakeRelease(void* self) { Record(0x102, Id(self)); Disturb(); return static_cast<long>(Hash() % 3); }
-long __stdcall FakeCreate(void* self, void* desc, void** out, void* outer) {
+std::int32_t __stdcall FakeRelease(void* self) { Record(0x102, Id(self)); Disturb(); return static_cast<std::int32_t>(Hash() % 3); }
+std::int32_t __stdcall FakeCreate(void* self, void* desc, void** out, void* outer) {
     Record(0x103, Id(self), Bytes(desc, 0x24), Address(desc) ^ (Address(out) << 1), Address(outer));
     const std::uint32_t h = Hash();
-    const long r = Answer(h);
+    const std::int32_t r = Answer(h);
     if (r == 0 || r == 1 || h % 5 == 0) *out = AnyBuffer(h >> 8);   // S_FALSE writes it; a failure may too
     Disturb();
     return r;
 }
-long __stdcall FakeCooperate(void* self, void* hwnd, unsigned long level) {
+std::int32_t __stdcall FakeCooperate(void* self, void* hwnd, std::uint32_t level) {
     Record(0x118, Id(self), Address(hwnd), level);
     Disturb();
     return Answer(Hash());
 }
-long __stdcall FakeGetStatus(void* self, unsigned long* status) {
+std::int32_t __stdcall FakeGetStatus(void* self, std::uint32_t* status) {
     Record(0x124, Id(self));
     const std::uint32_t h = Hash();
     Disturb();
     switch (h % 6) {
-    case 0: return static_cast<long>(0x80004005u);     // fails, the out unwritten
+    case 0: return static_cast<std::int32_t>(0x80004005u);     // fails, the out unwritten
     case 1: return 0;                                   // "succeeds", the out unwritten
     case 2: *status = h | 1; return 0;
     case 3: *status = (h & ~0x1FFu) | 0x100; return 0;  // bit 8, not bit 0
     default: *status = h >> 9; return Answer(h >> 4);
     }
 }
-long __stdcall FakePlay(void* self, unsigned long a, unsigned long b, unsigned long flags) {
+std::int32_t __stdcall FakePlay(void* self, std::uint32_t a, std::uint32_t b, std::uint32_t flags) {
     Record(0x130, Id(self), a, b, flags);
     Disturb();
     return Answer(Hash());
 }
-long __stdcall FakeSetFormat(void* self, const void* format) {
+std::int32_t __stdcall FakeSetFormat(void* self, const void* format) {
     Record(0x138, Id(self), Address(format), Bytes(format, 0x12));
     Disturb();
     return Answer(Hash());
 }
-long __stdcall FakeSetVolume(void* self, unsigned long v) { Record(0x13C, Id(self), v); Disturb(); return Answer(Hash()); }
-long __stdcall FakeStop(void* self) { Record(0x148, Id(self)); Disturb(); return Answer(Hash()); }
-long __stdcall FakeUnexpected(void* self) {
+std::int32_t __stdcall FakeSetVolume(void* self, std::uint32_t v) { Record(0x13C, Id(self), v); Disturb(); return Answer(Hash()); }
+std::int32_t __stdcall FakeStop(void* self) { Record(0x148, Id(self)); Disturb(); return Answer(Hash()); }
+std::int32_t __stdcall FakeUnexpected(void* self) {
     bof3::Fatal("sound_rest: self-test reached a DirectSound method it does not fake (object %u)", (unsigned)Id(self));
 }
 
@@ -210,10 +210,10 @@ void BuildFakes() {
 // --- The recorders --------------------------------------------------------------
 void __cdecl StubSndStop(void* buffer) { Record(1, Address(buffer)); Disturb(); }
 void __cdecl StubStreamStop() { Record(2); Disturb(); }
-long __stdcall StubCreate(const void* guid, void** out, void* outer) {
+std::int32_t __stdcall StubCreate(const void* guid, void** out, void* outer) {
     Record(3, Address(guid), Address(out), Address(outer));
     const std::uint32_t h = Hash();
-    const long r = Answer(h);
+    const std::int32_t r = Answer(h);
     if (r == 0 || r == 1 || h % 4 == 0) *out = AnyDevice(h >> 8);   // S_FALSE writes it; a failure may too
     Disturb();
     return r;

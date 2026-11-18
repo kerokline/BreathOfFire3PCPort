@@ -201,11 +201,11 @@ extern "C" void __cdecl EffectKind80_TrailStep(unsigned char* pool) {
     SH_CALL(EffectGte_LoadMapCamera)();
     for (U i = 0; i < at::kTrailPoints; ++i) {
         unsigned char* const p = pool + at::kTrailStride * i;
-        SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(p), reinterpret_cast<float*>(p + 0x10));
+        SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const std::int32_t*>(p), reinterpret_cast<float*>(p + 0x10));
         const auto w = static_cast<short>(W(pool + 0x43E));
         short size[2] = {w, w};
         short out[2];
-        SH_CALL(EffectGte_ProjectSize)(reinterpret_cast<const long*>(p), size, out);
+        SH_CALL(EffectGte_ProjectSize)(reinterpret_cast<const std::int32_t*>(p), size, out);
         SetWord(p + 0x1E, static_cast<U>(static_cast<std::uint16_t>(out[0])));
     }
     unsigned char* const angles = pool + 0x400;
@@ -240,7 +240,7 @@ extern "C" void __cdecl EffectKind80_TrailStep(unsigned char* pool) {
     }
     SetWord(pool + 0x1C, W(angles));
     for (U i = 0; i + 1 < n; ++i) {
-        const long mean = SH_CALL(EffectAngle_Mean)(W(angles + 2 * i), W(angles + 2 * (i + 1)));
+        const std::int32_t mean = SH_CALL(EffectAngle_Mean)(W(angles + 2 * i), W(angles + 2 * (i + 1)));
         SetWord(pool + at::kTrailStride * (i + 1) + 0x1C, static_cast<U>(mean) & 0xFFFFu);
     }
     SetWord(pool + at::kTrailStride * (at::kTrailPoints - 1) + 0x1C, W(angles + 2 * (n - 1)));

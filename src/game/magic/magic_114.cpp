@@ -99,31 +99,31 @@ void Turn() { MH_AT(void (__cdecl*)(unsigned char*), kTurnOffset.v)(Sc()); }
 // The GTE and GPU callees with the arguments the originals push: the
 // projections get the depth and flag pointers the originals pass (the
 // symbols' prototypes stop one short; cdecl, the caller pops).
-using Ra3Fn = long (__cdecl*)(const short*, const short*, const short*, unsigned char*, unsigned char*, unsigned char*,
-                              long*, long*);
+using Ra3Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, unsigned char*, unsigned char*, unsigned char*,
+                              std::int32_t*, std::int32_t*);
 
-using Ra4Fn = long (__cdecl*)(const short*, const short*, const short*, const short*, unsigned char*, unsigned char*,
-                              unsigned char*, unsigned char*, long*, long*);
+using Ra4Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, const short*, unsigned char*, unsigned char*,
+                              unsigned char*, unsigned char*, std::int32_t*, std::int32_t*);
 
-using Rtp1Fn = long (__cdecl*)(const short*, unsigned char*, long*, long*);
+using Rtp1Fn = std::int32_t (__cdecl*)(const short*, unsigned char*, std::int32_t*, std::int32_t*);
 
-using RotTransFn = void (__cdecl*)(const short*, long*, long*);
+using RotTransFn = void (__cdecl*)(const short*, std::int32_t*, std::int32_t*);
 
 #define S26_AS(type, name) ::magic_harness::Call(reinterpret_cast<type>(reinterpret_cast<void*>(&::name)))
 
-long Average3(unsigned char* prim) {
-    long p, flag;
+std::int32_t Average3(unsigned char* prim) {
+    std::int32_t p, flag;
     return S26_AS(Ra3Fn, Gte_RotAverage3)(VP(0), VP(8), VP(0x10), prim + 8, prim + 0x18, prim + 0x28, &p, &flag);
 }
 
 void Average4(unsigned char* prim) {
-    long p, flag;
+    std::int32_t p, flag;
     S26_AS(Ra4Fn, Gte_RotAverage4)(VP(0), VP(8), VP(0x10), VP(0x18), prim + 8, prim + 0x18, prim + 0x28, prim + 0x38, &p,
                                   &flag);
 }
 
 void Rtp1(unsigned char* sxy) {
-    long p, flag;
+    std::int32_t p, flag;
     S26_AS(Rtp1Fn, Gte_RotTransPers)(VP(0), sxy, &p, &flag);
 }
 
@@ -134,15 +134,15 @@ void DrawMode(unsigned tpage) { MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, t
 void PushMatrixAt(const short* rot, const short* v) {
     struct Matrix {
         short m[10];
-        long t[3];
+        std::int32_t t[3];
     } m;
     static_assert(sizeof(Matrix) == 0x20, "MATRIX layout");
-    long flag;
+    std::int32_t flag;
     S26_AS(RotTransFn, Gte_RotTrans)(v, m.t, &flag);
     MH_CALL(Gte_RotMatrix)(rot, m.m);
     MH_CALL(Gte_MulMatrix0)(Camera_Matrix, m.m, m.m);
-    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&m));
-    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&m));
+    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
+    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
 }
 
 // The vertex word triple of the task's position moved by its +0xC / +0x10
@@ -322,7 +322,7 @@ S26_EXPORT void __cdecl Magic114_DrawTriangle(int* keys) {
         const int lift = s[0xA] * 3;
         SetVW(0x14, static_cast<unsigned>(s[0xB] < 4 ? lift : -lift));
     }
-    const long depth = Average3(p);
+    const std::int32_t depth = Average3(p);
     s = Sc();
     keys[s[0xB]] = static_cast<int>(depth);
     const unsigned char dl = 0xC0;
@@ -493,7 +493,7 @@ S26_EXPORT void __cdecl Magic114_DrawTrail(void) {
     const std::int32_t x = AddL(rv::As<records::BattleTask>(s)->step_x, Field_Kind2X);
     const std::int32_t z = AddL(rv::As<records::BattleTask>(s)->step_z, Field_Kind2Z);
     DrawMode(0xB5);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), 0, 0xC);
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), 0, 0xC);
     unsigned char* const p = Gfx_PacketNext;
     MH_CALL(Gpu_SetPolyG4)(p);
     MH_CALL(Gpu_SetSemiTrans)(p, 1);
@@ -530,7 +530,7 @@ S26_EXPORT void __cdecl Magic114_DrawTrail(void) {
     p[0x34] = 1;
     p[0x35] = 1;
     p[0x36] = 1;
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), 0, 0x44);
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), 0, 0x44);
 }
 
 // original 0x4D8530: the beam child, a call through Magic114_BeamPhases (three
@@ -880,8 +880,8 @@ S26_EXPORT void __cdecl Magic114_DrawRays(void) {
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
     const unsigned radius = static_cast<unsigned char>(~s[9]) & 0x1Fu;
     const int dy = s[8] > 1 ? 0xFE : 0;   // a byte: the callee reads it signed
-    const unsigned long x = static_cast<unsigned long>(static_cast<std::uint32_t>(ts->x));
-    const unsigned long z = static_cast<unsigned long>(static_cast<std::uint32_t>(ts->z));
+    const std::uint32_t x = static_cast<std::uint32_t>(static_cast<std::uint32_t>(ts->x));
+    const std::uint32_t z = static_cast<std::uint32_t>(static_cast<std::uint32_t>(ts->z));
     const auto grey = static_cast<unsigned char>(0x80 - (radius << 4));
     const auto scaled = [radius](int v) { return (static_cast<std::uint32_t>(v) * radius) << 4 >> 0xC; };
     for (unsigned angle = 0; angle < 0x1000;) {

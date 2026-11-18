@@ -50,7 +50,7 @@ void PlaceOneObject(std::uint32_t positions, std::uint32_t weights) {
         const std::int32_t x = static_cast<std::int32_t>(static_cast<std::uint32_t>(B(positions + r * 2)) << 16);
         tObject->x = x;
         tObject->z = z;
-        const long ground = AH_CALL(AreaMap_Elevation)(tObject->x, z);
+        const std::int32_t ground = AH_CALL(AreaMap_Elevation)(tObject->x, z);
         rv::Store<unsigned>(rv::As<records::SpriteObject>(object)->height_whole, static_cast<unsigned>(ground));
     }
     Field_StepCount = static_cast<unsigned short>(Long(Mem(::bof3::Img(ObjTrio_addr) + 0x134)) - 5);

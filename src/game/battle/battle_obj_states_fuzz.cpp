@@ -149,11 +149,11 @@ template <unsigned N> void __cdecl StubHandler() { Record(100 + N, Who(), Obj())
 unsigned __cdecl StubPickPose() { Record(1, Who(), Obj()); Disturb(); return Hash(); }
 unsigned char __cdecl StubTick() { Record(2, Who(), Obj()); MoveSprite(); Disturb(); return Answer(3); }
 unsigned char __cdecl StubTickOnce() { Record(3, Who(), Obj()); MoveSprite(); Disturb(); return Answer(5); }
-long __cdecl StubElevation(long x, long y) {
+std::int32_t __cdecl StubElevation(std::int32_t x, std::int32_t y) {
     Record(4, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y), Who());
     MoveSprite();
     Disturb();
-    return static_cast<long>(Hash());   // the whole dword: the caller keeps 16 bits
+    return static_cast<std::int32_t>(Hash());   // the whole dword: the caller keeps 16 bits
 }
 unsigned char __cdecl StubEnsure(unsigned char a) { Record(5, a, Who(), Obj()); Disturb(); return static_cast<unsigned char>(Hash()); }
 unsigned char __cdecl StubSetTint(unsigned char* p, unsigned char r, unsigned char g_, unsigned char b, unsigned char a) {
@@ -184,7 +184,7 @@ int __cdecl StubRand() {
     default: return base + static_cast<int>(edge);
     }
 }
-unsigned long __cdecl StubCue(unsigned cue) { Record(10, cue & 0xFF, Who()); MoveField(); Disturb(); return Hash(); }
+std::uint32_t __cdecl StubCue(unsigned cue) { Record(10, cue & 0xFF, Who()); MoveField(); Disturb(); return Hash(); }
 unsigned char __cdecl StubTaskCreate(unsigned kind, unsigned parameter) {
     Record(11, kind & 0xFF, parameter & 0xFF, Who());
     Disturb();
@@ -198,7 +198,7 @@ unsigned char __cdecl StubLoadSound(unsigned key, unsigned set) {
     Disturb();
     return Answer(9);
 }
-unsigned long __cdecl StubClearBit(unsigned actor) { Record(15, actor & 0xFF, Who()); MoveField(); Disturb(); return Hash(); }
+std::uint32_t __cdecl StubClearBit(unsigned actor) { Record(15, actor & 0xFF, Who()); MoveField(); Disturb(); return Hash(); }
 void __cdecl StubEndAction() { Record(16, Who(), Obj()); Disturb(); }
 
 // --- the tables of recorders -------------------------------------------------

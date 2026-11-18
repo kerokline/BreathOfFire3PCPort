@@ -93,11 +93,11 @@ void StF(unsigned char* p, LD v) {
     std::memcpy(p, &f, sizeof f);
 }
 
-long* Point(unsigned char* p) { return reinterpret_cast<long*>(p); }
+std::int32_t* Point(unsigned char* p) { return reinterpret_cast<std::int32_t*>(p); }
 
 float* Out(unsigned char* p) { return reinterpret_cast<float*>(p); }
 
-const unsigned char* Bytes(const long* p) { return reinterpret_cast<const unsigned char*>(p); }
+const unsigned char* Bytes(const std::int32_t* p) { return reinterpret_cast<const unsigned char*>(p); }
 
 // mov ecx, [Sprite_Current]; xor eax, eax; mov al, [ecx + 1]; jmp [table + eax * 4]:
 // the table's `entries` handlers read in place (the fuzz swaps the cells for
@@ -805,7 +805,7 @@ extern "C" void __cdecl EffectKind62_DrawRay(unsigned char* ray) {
 // << 4 (black), (cos, sin) * r sar 8 at 0x80 steps from the angle 0x80 (the
 // first edge at angle 0 as x + r << 4), the height point's; each committed 0x44
 // to slot 2. Answers 0 in al.
-extern "C" unsigned char __cdecl EffectKind62_DrawRing(const long* point, int inner, int outer) {
+extern "C" unsigned char __cdecl EffectKind62_DrawRing(const std::int32_t* point, int inner, int outer) {
     DrawMode(1, 0x2C0, 0x100, 0, 2);
     SH_CALL(EffectGte_LoadMapCamera)();
     const unsigned char* const pt = Bytes(point);
@@ -865,7 +865,7 @@ extern "C" unsigned char __cdecl EffectKind62_DrawRing(const long* point, int in
 // sar 12 from the angle 0x80 by 0x80 (the first rim point o.x + r); each
 // committed 0x34 to slot 2. The rim's depth is a stack word the original never
 // writes; ours gives it the centre's, o's (DIV-0068).
-extern "C" void __cdecl EffectKind64_DrawGlow(const long* point, unsigned size, unsigned colour) {
+extern "C" void __cdecl EffectKind64_DrawGlow(const std::int32_t* point, unsigned size, unsigned colour) {
     DrawMode(1, 0x2C0, 0x100, 1, 2);
     SH_CALL(EffectGte_LoadMapCamera)();
     alignas(4) unsigned char o[12];
@@ -918,7 +918,7 @@ extern "C" void __cdecl EffectKind64_DrawGlow(const long* point, unsigned size, 
 // 0x5C41B8 - each committed 0x44 to slot 2; then up to eight TILE_1 dots,
 // (shade, shade, 0), from `to` less (Frame_Counter & 0xF) << 12 on x and << 10
 // on z, stepping 0x10000 and 0x4000 back, while x is not below from's.
-extern "C" void __cdecl EffectKind64_DrawTrail(const long* from, const long* to, unsigned shade) {
+extern "C" void __cdecl EffectKind64_DrawTrail(const std::int32_t* from, const std::int32_t* to, unsigned shade) {
     const unsigned char* const a = Bytes(from);
     const unsigned char* const b = Bytes(to);
     const LD half = F(At(at::kHalf));

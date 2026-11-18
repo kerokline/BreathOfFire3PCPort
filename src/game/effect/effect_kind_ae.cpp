@@ -87,11 +87,11 @@ void FldSub(unsigned char* to, const unsigned char* a, const unsigned char* b) {
                      : "m"(*reinterpret_cast<const float*>(a)), "m"(*reinterpret_cast<const float*>(b)));
 }
 
-long* Point(unsigned char* p) { return reinterpret_cast<long*>(p); }
+std::int32_t* Point(unsigned char* p) { return reinterpret_cast<std::int32_t*>(p); }
 
 float* Out(unsigned char* p) { return reinterpret_cast<float*>(p); }
 
-const unsigned char* Bytes(const long* p) { return reinterpret_cast<const unsigned char*>(p); }
+const unsigned char* Bytes(const std::int32_t* p) { return reinterpret_cast<const unsigned char*>(p); }
 
 using Handler = scenario_harness::Handler;
 
@@ -162,7 +162,7 @@ extern "C" void __cdecl EffectKindAD_Run(void) {
 extern "C" void __cdecl EffectKindAD_Start(void) {
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->x, static_cast<std::uint32_t>(ObjTrio[2].x));
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->z, static_cast<std::uint32_t>(ObjTrio[2].z));
-    const long h = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(S())->x, rv::As<records::EffectObject>(S())->z);
+    const std::int32_t h = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(S())->x, rv::As<records::EffectObject>(S())->z);
     unsigned char* const s = S();
     rv::As<records::EffectObject>(s)->height = static_cast<U>(static_cast<std::int16_t>(h)) << 16;
     rv::As<records::EffectWork>(s)->work_0c = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x);
@@ -180,7 +180,7 @@ extern "C" void __cdecl EffectKindAD_Rise(void) {
     {
         unsigned char* const s = S();
         rv::As<records::EffectObject>(s)->height = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height) + 0x800000u;
-        SH_CALL(EffectKindAD_DrawArc)(reinterpret_cast<const long*>(s + 0x34), reinterpret_cast<const long*>(s + 0xC),
+        SH_CALL(EffectKindAD_DrawArc)(reinterpret_cast<const std::int32_t*>(s + 0x34), reinterpret_cast<const std::int32_t*>(s + 0xC),
                                       s[0x5D], s[0x5E]);
     }
     if (At(::bof3::Img(rest_3g::at::kCounter.v))[0] == 0xB) S()[1] = static_cast<unsigned char>(S()[1] + 1);
@@ -204,7 +204,7 @@ extern "C" void __cdecl EffectKindAE_Run(void) {
 extern "C" void __cdecl EffectKindAE_Start(void) {
     rv::As<records::EffectObject>(S())->x = 0x188000u;
     rv::As<records::EffectObject>(S())->z = 0x120000u;
-    const long h = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(S())->x, rv::As<records::EffectObject>(S())->z);
+    const std::int32_t h = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(S())->x, rv::As<records::EffectObject>(S())->z);
     {
         unsigned char* const s = S();
         rv::As<records::EffectObject>(s)->height = static_cast<U>(static_cast<std::int16_t>(h) + 0x800) << 16;
@@ -215,7 +215,7 @@ extern "C" void __cdecl EffectKindAE_Start(void) {
         s[1] = static_cast<unsigned char>(s[1] + 1);
     }
     SH_CALL(EffectGte_LoadMapCamera)();
-    long point[3];
+    std::int32_t point[3];
     {
         const unsigned char* const s = S();
         point[0] = rv::As<records::EffectObject>(s)->x;
@@ -224,7 +224,7 @@ extern "C" void __cdecl EffectKindAE_Start(void) {
     }
     float a[3], b[3];
     SH_CALL(EffectGte_ProjectPoint)(point, a);
-    point[2] = static_cast<long>(static_cast<U>(point[2]) - 0x1000000u);
+    point[2] = static_cast<std::int32_t>(static_cast<U>(point[2]) - 0x1000000u);
     SH_CALL(EffectGte_ProjectPoint)(point, b);
     const float dx = static_cast<float>(static_cast<long double>(b[0]) - static_cast<long double>(a[0]));
     const float dy = static_cast<float>(static_cast<long double>(b[1]) - static_cast<long double>(a[1]));
@@ -448,7 +448,7 @@ extern "C" void __cdecl EffectKindAB_PlaceSources(void) {
         const U x = static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(B(::bof3::Img(at::kSourceCells.v) + 2 * i)))) << 16;
         SetUL(src + 4, x);
         SetUL(src + 8, z);
-        const long ground = SH_CALL(AreaMap_Elevation)(static_cast<long>(x), static_cast<long>(z));
+        const std::int32_t ground = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z));
         SetUL(src + 0xC, Sx16(static_cast<U>(ground)) << 16);
     }
 }
@@ -494,7 +494,7 @@ extern "C" unsigned char __cdecl EffectKindAB_Emit(void) {
 // the new two, shaded `inner` at a's and `outer` at b's, committed 0x44 to slot
 // 1. The second vertex's depth (+0x20) is b's projection's y, not its depth: the
 // original copies the y twice (docs/effect_4f.md section 6, a latent defect kept).
-extern "C" void __cdecl EffectKindAD_DrawArc(const long* a, const long* b, unsigned inner, unsigned outer) {
+extern "C" void __cdecl EffectKindAD_DrawArc(const std::int32_t* a, const std::int32_t* b, unsigned inner, unsigned outer) {
     DrawMode(1, 0x380, 0x100, 1, 1);
     const unsigned char* const pa = Bytes(a);
     const unsigned char* const pb = Bytes(b);
@@ -586,7 +586,7 @@ extern "C" void __cdecl EffectKindAE_Draw(void) {
 // rim at the ellipse (cos a * rx, sin a * ry) sar 12 (each an s16) turned by
 // `angle`, a from 0 by 0x100 - the centre (shade, shade, f ? shade : 0), the rim
 // (rim, rim, f ? rim : 0); each committed 0x34 to slot 1.
-extern "C" void __cdecl Effect_DrawEllipse(const long* point, unsigned w, unsigned h, unsigned angle, unsigned shade,
+extern "C" void __cdecl Effect_DrawEllipse(const std::int32_t* point, unsigned w, unsigned h, unsigned angle, unsigned shade,
                                            unsigned rim) {
     SH_CALL(EffectGte_LoadMapCamera)();
     alignas(4) unsigned char o[12];

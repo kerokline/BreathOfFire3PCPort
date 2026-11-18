@@ -136,7 +136,7 @@ unsigned FuzzStrip(Fn theirs) {
     constexpr unsigned kRounds = 300;
     struct Row { std::uint32_t generation; ::bof3::Slot32<void> pixels; };   // gfx_clut.cpp's ClutRow: 8 bytes on every width
     auto* rows = reinterpret_cast<Row*>(Gfx_ClutRows) + 480;
-    const unsigned long format_8888[8] = {0x04000000, 0, 8, 16, 0xFF0000, 0x00FF00, 0x0000FF, 0xFF000000};
+    const std::uint32_t format_8888[8] = {0x04000000, 0, 8, 16, 0xFF0000, 0x00FF00, 0x0000FF, 0xFF000000};
     std::memcpy(Gfx_PixelFormat, format_8888, sizeof format_8888);
 
     unsigned bad = 0, dirty_rounds = 0;

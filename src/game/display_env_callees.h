@@ -46,20 +46,20 @@ constexpr U kChannelsEnd = 0x6BC924;
 constexpr unsigned kBlt = 0x14, kFlip = 0x2C, kRestore = 0x6C;
 constexpr unsigned kSetBackground = 0x20, kClear = 0x30;
 constexpr unsigned kSetMaterial = 0x0C;
-constexpr long kSurfaceLost = static_cast<long>(0x887601C2u);   // DDERR_SURFACELOST
+constexpr std::int32_t kSurfaceLost = static_cast<std::int32_t>(0x887601C2u);   // DDERR_SURFACELOST
 constexpr unsigned kBltWait = 0x1000000, kBltColorFill = 0x400;  // DDBLT_WAIT, DDBLT_COLORFILL
 constexpr unsigned kFlipWait = 1;                                 // DDFLIP_WAIT
 constexpr unsigned kClearTarget = 1;                              // D3DCLEAR_TARGET
 constexpr unsigned kBltFxBytes = 0x64;                            // sizeof(DDBLTFX)
 constexpr unsigned kMaterialBytes = 0x50;                         // sizeof(D3DMATERIAL)
 
-using ComCall = long (__stdcall*)(void*);
-using ComBlt = long (__stdcall*)(void*, const void* dst_rect, void* src, const void* src_rect, unsigned long flags,
+using ComCall = std::int32_t (__stdcall*)(void*);
+using ComBlt = std::int32_t (__stdcall*)(void*, const void* dst_rect, void* src, const void* src_rect, std::uint32_t flags,
                                  void* fx);
-using ComFlip = long (__stdcall*)(void*, void* target, unsigned long flags);
-using ComClear = long (__stdcall*)(void*, unsigned long count, const void* rects, unsigned long flags);
-using ComValue = long (__stdcall*)(void*, unsigned long);
-using ComPointer = long (__stdcall*)(void*, void*);
+using ComFlip = std::int32_t (__stdcall*)(void*, void* target, std::uint32_t flags);
+using ComClear = std::int32_t (__stdcall*)(void*, std::uint32_t count, const void* rects, std::uint32_t flags);
+using ComValue = std::int32_t (__stdcall*)(void*, std::uint32_t);
+using ComPointer = std::int32_t (__stdcall*)(void*, void*);
 
 template <class Fn>
 inline Fn Method(void* object, unsigned offset) {

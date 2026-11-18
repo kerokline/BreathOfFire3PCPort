@@ -111,7 +111,7 @@ extern "C" unsigned char __cdecl EffectSpecks_Move(void) {
 // speck's x, z by MapView_LinkPrimAt(x, z, 0, 0x14).
 extern "C" void __cdecl EffectSpecks_Draw(const unsigned char* speck) {
     float screen[3];
-    SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(speck + 4), screen);
+    SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const std::int32_t*>(speck + 4), screen);
     unsigned char* const p = Gfx_PacketNext;
     SH_CALL(Gpu_SetTile1)(p);
     SH_CALL(Gpu_SetSemiTrans)(p, 0);

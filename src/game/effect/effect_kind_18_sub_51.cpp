@@ -219,7 +219,7 @@ extern "C" void __cdecl EffectKind18Sub51_Fade(void) {
 extern "C" void __cdecl EffectKind18Sub53_Run(void) {
     if (S()[2] == 0) {
         const unsigned char* const s = S();
-        const long h = SH_CALL(AreaMap_Elevation)(Long(s + 0x34), Long(s + 0x38));
+        const std::int32_t h = SH_CALL(AreaMap_Elevation)(Long(s + 0x34), Long(s + 0x38));
         rv::Store<U>(rv::Current<records::EffectObject>()->height, static_cast<U>(static_cast<std::int16_t>(static_cast<U>(h) & 0xFFFF)));
         S()[2] = static_cast<unsigned char>(S()[2] + 1);
     }
@@ -251,8 +251,8 @@ extern "C" void __cdecl EffectKind18Sub53_Run(void) {
                 const U lift = (static_cast<U>(s[9]) - (k << 4)) & 0xFF;
                 SetV(4, (0u - DivP2(ULEffect6c(s + 0x3C), 1)) - (lift << 1));
             }
-            long a;
-            SH_CALL(Gte_RotTransPers)(Vx(0), reinterpret_cast<unsigned long*>(p + 8), &a);
+            std::int32_t a;
+            SH_CALL(Gte_RotTransPers)(Vx(0), reinterpret_cast<std::uint32_t*>(p + 8), &a);
             SH_CALL(Gte_StoreDepthF)(Fp(p + 0x10));
             unsigned char* const s = S();
             SH_CALL(MapView_LinkPrimAt)(ULEffect6c(s + 0x34), ULEffect6c(s + 0x38), 1, 0x14);

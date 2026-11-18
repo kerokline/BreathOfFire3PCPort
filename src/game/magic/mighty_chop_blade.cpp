@@ -284,7 +284,7 @@ S33_EXPORT void __cdecl MightyChopCopy_Run(void) {
 
 // original 0x4ED5C0: +9 = BattleActor_FxSize() (al; Sprite_Current read after
 // the call), then +2 stepped (read again). eax Sprite_Current.
-extern "C" unsigned long __cdecl BattleFx_SetSize(void) {
+extern "C" std::uint32_t __cdecl BattleFx_SetSize(void) {
     const U size = g.fx_size();
     Sprite()[9] = static_cast<unsigned char>(size);
     unsigned char* const s = Sprite();

@@ -232,7 +232,7 @@ unsigned __cdecl StubGetTPage(unsigned tp, unsigned abr, int x, int y) {
     return Hash();   // the whole dword: the caller keeps 16 bits
 }
 constexpr std::uint32_t kPointZeroOne = 0x3C23D70Au;
-void __cdecl StubDrawMode(unsigned char* prim, int dfe, int dtd, unsigned tpage, unsigned long tw) {
+void __cdecl StubDrawMode(unsigned char* prim, int dfe, int dtd, unsigned tpage, std::uint32_t tw) {
     Record(21, Id(prim), static_cast<std::uint32_t>(dfe) | static_cast<std::uint32_t>(dtd) << 16, tpage, static_cast<std::uint32_t>(tw));
     SetLong(prim + 4, static_cast<std::int32_t>(0xE8000000u | (tpage & 0xFFFFu)));
     SetLong(prim + 8, static_cast<std::int32_t>(tw));
@@ -270,7 +270,7 @@ void __cdecl StubFieldFrame() { Record(29); Disturb(); }
 void __cdecl StubEffectClear() { Record(30); Disturb(); }
 void __cdecl StubMusicPlay(unsigned track, int unknown) { Record(31, track, static_cast<std::uint32_t>(unknown)); Disturb(); }
 void __cdecl StubLoadDat(int index) { Record(32, static_cast<std::uint32_t>(index)); Disturb(); }
-void __cdecl StubPartySetUp(long x, long z, unsigned flags) {
+void __cdecl StubPartySetUp(std::int32_t x, std::int32_t z, unsigned flags) {
     Record(33, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), flags);
     Disturb();
 }
@@ -282,7 +282,7 @@ unsigned char __cdecl StubZoneId(unsigned x, unsigned z) {
 void __cdecl StubViewReset() { Record(35); Disturb(); }
 // Area_Enter re-reads the descriptor after it: move the area, among those
 // with a colour matrix of their own (see Disturb), half the time.
-void __cdecl StubColourMatrix(const unsigned long* m) {
+void __cdecl StubColourMatrix(const std::uint32_t* m) {
     Record(36, Id(m));
     if (!g_area_wild && Hash() % 2) Game_AreaNumber = static_cast<std::uint16_t>((Hash() >> 8) % 3);
     Disturb();

@@ -99,7 +99,7 @@ extern "C" void __cdecl EffectKind27_Emit(void) {
             eo->z = static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->z);
             const unsigned char* const s = S();
             auto* const so = rv::AsConst<records::EffectObject>(s);
-            const long ground = SH_CALL(AreaMap_Elevation)(so->x, so->z);
+            const std::int32_t ground = SH_CALL(AreaMap_Elevation)(so->x, so->z);
             eo->height = static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(ground))) << 16;
         }
     }
@@ -123,7 +123,7 @@ extern "C" void __cdecl EffectKind27_Emit(void) {
 // ((3 sin(u) sin(p)) sar 8, cleared likewise), height + (3 cos(p) << 12)) for
 // (u, p) = (a, ro), (a, ri), (b, ro), (b, ri), shaded outer, inner, outer,
 // inner; committed 0x44. Each Math_* is called in the original's order (below).
-extern "C" void __cdecl EffectKind26_DrawBand(long x, long z, long height, unsigned t) {
+extern "C" void __cdecl EffectKind26_DrawBand(std::int32_t x, std::int32_t z, std::int32_t height, unsigned t) {
     const unsigned tpage = SH_CALL(Gpu_GetTPage)(0, 1, 0x3C0, 0);
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, tpage & 0xFFFFu, 0);
     SH_CALL(Gfx_CommitPrim)(1, 0xC);
@@ -146,7 +146,7 @@ extern "C" void __cdecl EffectKind26_DrawBand(long x, long z, long height, unsig
     const U ux = static_cast<U>(x), uz = static_cast<U>(z), uh = static_cast<U>(height);
     // The original's point: three dwords on its stack (x, z, height), rewritten
     // before each projection.
-    long point[3];
+    std::int32_t point[3];
     auto horizontal = [](U trig, U polar) { return Sar(trig * polar * 3u, 8) & 0xFFFFFFF0u; };
     auto Cos = [](U angle) { return static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(angle))); };
     auto Sin = [](U angle) { return static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(angle))); };
@@ -160,11 +160,11 @@ extern "C" void __cdecl EffectKind26_DrawBand(long x, long z, long height, unsig
         {
             const U cu = Cos(a16);
             const U sp = Sin(ro);
-            point[0] = static_cast<long>(horizontal(cu, sp) + ux);
+            point[0] = static_cast<std::int32_t>(horizontal(cu, sp) + ux);
             const U su = Sin(a16);
             const U sp2 = Sin(ro);
-            point[1] = static_cast<long>(horizontal(su, sp2) + uz);
-            point[2] = static_cast<long>((Cos(ro) * 3u << 12) + uh);
+            point[1] = static_cast<std::int32_t>(horizontal(su, sp2) + uz);
+            point[2] = static_cast<std::int32_t>((Cos(ro) * 3u << 12) + uh);
             SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(prim + 8));
             prim[4] = prim[5] = prim[6] = outer_shade;
         }
@@ -172,11 +172,11 @@ extern "C" void __cdecl EffectKind26_DrawBand(long x, long z, long height, unsig
         {
             const U sp = Sin(ri);
             const U cu = Cos(a16);
-            point[0] = static_cast<long>(horizontal(cu, sp) + ux);
+            point[0] = static_cast<std::int32_t>(horizontal(cu, sp) + ux);
             const U sp2 = Sin(ri);
             const U su = Sin(a16);
-            point[1] = static_cast<long>(horizontal(su, sp2) + uz);
-            point[2] = static_cast<long>((Cos(ri) * 3u << 12) + uh);
+            point[1] = static_cast<std::int32_t>(horizontal(su, sp2) + uz);
+            point[2] = static_cast<std::int32_t>((Cos(ri) * 3u << 12) + uh);
             SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(prim + 0x18));
             prim[0x14] = prim[0x15] = prim[0x16] = inner_shade;
         }
@@ -186,11 +186,11 @@ extern "C" void __cdecl EffectKind26_DrawBand(long x, long z, long height, unsig
         {
             const U cu = Cos(b16);
             const U sp = Sin(ro);
-            point[0] = static_cast<long>(horizontal(cu, sp) + ux);
+            point[0] = static_cast<std::int32_t>(horizontal(cu, sp) + ux);
             const U su = Sin(b16);
             const U sp2 = Sin(ro);
-            point[1] = static_cast<long>(horizontal(su, sp2) + uz);
-            point[2] = static_cast<long>((Cos(ro) * 3u << 12) + uh);
+            point[1] = static_cast<std::int32_t>(horizontal(su, sp2) + uz);
+            point[2] = static_cast<std::int32_t>((Cos(ro) * 3u << 12) + uh);
             SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(prim + 0x28));
             prim[0x24] = prim[0x25] = prim[0x26] = outer_shade;
         }
@@ -198,11 +198,11 @@ extern "C" void __cdecl EffectKind26_DrawBand(long x, long z, long height, unsig
         {
             const U cu = Cos(b16);
             const U sp = Sin(ri);
-            point[0] = static_cast<long>(horizontal(cu, sp) + ux);
+            point[0] = static_cast<std::int32_t>(horizontal(cu, sp) + ux);
             const U su = Sin(b16);
             const U sp2 = Sin(ri);
-            point[1] = static_cast<long>(horizontal(su, sp2) + uz);
-            point[2] = static_cast<long>((Cos(ri) * 3u << 12) + uh);
+            point[1] = static_cast<std::int32_t>(horizontal(su, sp2) + uz);
+            point[2] = static_cast<std::int32_t>((Cos(ri) * 3u << 12) + uh);
             SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(prim + 0x38));
             prim[0x34] = prim[0x35] = prim[0x36] = inner_shade;
         }

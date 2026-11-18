@@ -180,17 +180,17 @@ void RunCell(unsigned word, int layer, unsigned row, unsigned column, bool band,
 // -1 (DIV-0041's grown ring only) is map_rim's record.
 void LinkFirst(int layer) {
     const std::uint32_t first = static_cast<std::uint32_t>(layer) * 6u;
-    const auto at = [&]() -> unsigned long* {
+    const auto at = [&]() -> std::uint32_t* {
         if (layer < 0) return map_rim::ExtraLayer() + Gfx_BufferIndex * 2u;
         return DrawLayers + (Gfx_BufferIndex + first) * 2u;
     };
-    unsigned long* cell = at();
+    std::uint32_t* cell = at();
     if (cell[0] != 0) {
         if (draw_order::g_on) draw_order::TagList(cell[0], cell[1], draw_order::kList0, static_cast<unsigned>(layer), 6);
         Gpu_LinkPrim(Gfx_OtPointers[6], cell[0]);
         // The index is read again after the call, as the original reads it.
         cell = at();
-        Gfx_OtPointers[6] = reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(cell[1]));
+        Gfx_OtPointers[6] = reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(cell[1]));
     }
 }
 
@@ -312,7 +312,7 @@ void QuadVertex(short* v, U dword, U x0, U y0) {
 // POLY_G4 at prim as the originals order them - v1, v2, v3, then v0 to the
 // first point - and their depths.
 void Project4(short* v, unsigned char* prim) {
-    long unused;
+    std::int32_t unused;
     SH_CALL(Gte_RotTransPers4)(v + 4, v + 8, v + 12, v, reinterpret_cast<float*>(prim + 0x18), reinterpret_cast<float*>(prim + 0x28),
                                reinterpret_cast<float*>(prim + 0x38), reinterpret_cast<float*>(prim + 8), &unused);
     SH_CALL(Gte_StoreDepthF4)(reinterpret_cast<float*>(prim + 0x20), reinterpret_cast<float*>(prim + 0x30),
@@ -456,10 +456,10 @@ static void DrawQuads(const unsigned char* record, unsigned b1, unsigned b0) {
     for (const unsigned char* sub = record + 4;; sub += 0x14) {
         alignas(4) short first[4];
         QuadVertexMapCells(first, Get<std::uint32_t>(sub, 0), x0, y0);
-        Gte_LoadVertex(reinterpret_cast<const unsigned long*>(first));
+        Gte_LoadVertex(reinterpret_cast<const std::uint32_t*>(first));
         Gte_Rtps();
         unsigned char* const prim = Gfx_PacketNext;
-        Gte_StoreScreenXY(reinterpret_cast<unsigned long*>(prim + 8));
+        Gte_StoreScreenXY(reinterpret_cast<std::uint32_t*>(prim + 8));
         const float sx = Get<float>(prim, 8), sy = Get<float>(prim, 0xC);
         const float cull = static_cast<float>(Widescreen_Fill());   // DIV-0041: the x cull out by the columns
         if (sx > -100.0f - cull && sx < 420.0f + cull && sy > -150.0f && sy < 300.0f) {
@@ -467,7 +467,7 @@ static void DrawQuads(const unsigned char* record, unsigned b1, unsigned b0) {
             Gpu_SetShadeTex(prim, 0);
             alignas(4) short rest[12];
             for (unsigned k = 0; k < 3; ++k) QuadVertexMapCells(rest + 4 * k, Get<std::uint32_t>(sub, 4 + 4 * k), x0, y0);
-            Gte_LoadVertices3(reinterpret_cast<const unsigned long*>(rest));
+            Gte_LoadVertices3(reinterpret_cast<const std::uint32_t*>(rest));
             const std::uint32_t texture = Get<std::uint32_t>(sub, 0x10);
             Prim_SetTexture(texture, prim, 1);
             Gte_Rtpt();
@@ -476,8 +476,8 @@ static void DrawQuads(const unsigned char* record, unsigned b1, unsigned b0) {
             else slot = texture & 0x40000000u ? 6u : Draw_OtSlot;
             if (draw_order::g_on) draw_order::g_ctx.texture = texture;   // BOF3X_DRAWORDER, diagnostic only
             Gfx_CommitPrim(slot, kPrimBytes);
-            Gte_StoreScreenXY3(reinterpret_cast<unsigned long*>(prim + 0x18), reinterpret_cast<unsigned long*>(prim + 0x28),
-                               reinterpret_cast<unsigned long*>(prim + 0x38));
+            Gte_StoreScreenXY3(reinterpret_cast<std::uint32_t*>(prim + 0x18), reinterpret_cast<std::uint32_t*>(prim + 0x28),
+                               reinterpret_cast<std::uint32_t*>(prim + 0x38));
             Gte_PrimDepths4_10(prim);
         }
         count += 5;
@@ -506,7 +506,7 @@ static void DrawQuads(const unsigned char* record, unsigned b1, unsigned b0) {
 // for a cell only DIV-0041's lowered inset adds. Narrow, always Rand.
 static void DrawRising(const unsigned char* record, unsigned b1, unsigned b0) {
     static_cast<void>(record);
-    const long elevation = AreaMap_Elevation(static_cast<long>((b1 << 16) - 0x10000u), static_cast<long>(b0 << 16));
+    const std::int32_t elevation = AreaMap_Elevation(static_cast<std::int32_t>((b1 << 16) - 0x10000u), static_cast<std::int32_t>(b0 << 16));
     const int base = -(static_cast<short>(elevation) / 2);
     const unsigned phase = Frame_Counter & 7u;
     const std::uint32_t x0 = (b1 - 0x81u) << 7, y0 = (b0 - 0x80u) << 7;
@@ -526,7 +526,7 @@ static void DrawRising(const unsigned char* record, unsigned b1, unsigned b0) {
         v[4] = right;  v[5] = top;     v[6] = depth;
         v[8] = left;   v[9] = bottom;  v[10] = depth;
         v[12] = right; v[13] = bottom; v[14] = depth;
-        long unused;
+        std::int32_t unused;
         Gte_RotTransPers4(v + 4, v + 8, v + 12, v, reinterpret_cast<float*>(prim + 0x18), reinterpret_cast<float*>(prim + 0x28),
                           reinterpret_cast<float*>(prim + 0x38), reinterpret_cast<float*>(prim + 8), &unused);
         Gte_StoreDepthF4(reinterpret_cast<float*>(prim + 0x20), reinterpret_cast<float*>(prim + 0x30),
@@ -547,8 +547,8 @@ struct LiveState {
     unsigned char gte[kLiveGte];
     unsigned char scratch[0x20];
     unsigned char* packet_next;
-    unsigned long* ot[8];
-    unsigned long tails[8];
+    std::uint32_t* ot[8];
+    std::uint32_t tails[8];
     std::uint32_t seed;
     std::uint32_t band_seed;   // DIV-0041's random split: the draw-only generator's (wide_rand.h)
     unsigned char window[kLiveWindow];
@@ -567,7 +567,7 @@ unsigned LiveGteSize() {
 // The tails are read through `tails_at` - the input's pointers - on every
 // capture, so that each side's links are seen where they were made.
 void LiveCapture(LiveState& s, unsigned char* window_at, unsigned window, std::uint32_t* seed,
-                 unsigned long* const* tails_at) {
+                 std::uint32_t* const* tails_at) {
     std::memset(&s, 0, sizeof s);
     std::memcpy(s.gte, LiveGte(), LiveGteSize());
     std::memcpy(s.scratch, Prim_VertexScratch, sizeof s.scratch);
@@ -601,7 +601,7 @@ void Live(unsigned which, HandlerFn theirs, void (*ours)(const unsigned char*, u
     const auto room = static_cast<unsigned>(Gfx_PacketPools + 0x20000 - window_at);
     const unsigned window = room < kLiveWindow ? room : kLiveWindow;
     auto* seed = crt_rest::RandSeedCell();
-    unsigned long* tails_at[8];
+    std::uint32_t* tails_at[8];
     for (unsigned k = 0; k < 8; ++k) tails_at[k] = Gfx_OtPointers[k];
 
     LiveCapture(input, window_at, window, seed, tails_at);
@@ -734,12 +734,12 @@ unsigned char* Quad(unsigned index, unsigned buffer) { return draw_pool::Items()
 // DrawLayers dword `slot * 2 + 1`: the last link of list (slot - buffer) / 2
 // mod 3 of layer slot / 6 - the layers are six (first, last) pairs, three
 // lists by two buffers.
-unsigned long& Last(std::uint32_t slot) { return DrawLayers[slot * 2u + 1u]; }
+std::uint32_t& Last(std::uint32_t slot) { return DrawLayers[slot * 2u + 1u]; }
 
 // The same by layer and list-and-buffer `sub` (list * 2 + buffer): layer -1,
 // the grown ring's row above Capcom's (DIV-0041, wide-ring), is map_rim's
 // record of the same shape; narrow no layer is below 0.
-unsigned long& LastOf(int layer, std::uint32_t sub) {
+std::uint32_t& LastOf(int layer, std::uint32_t sub) {
     if (layer < 0) return map_rim::ExtraLayer()[sub * 2u + 1u];
     return Last(static_cast<std::uint32_t>(layer) * 6u + sub);
 }
@@ -748,7 +748,7 @@ unsigned long& LastOf(int layer, std::uint32_t sub) {
 // for the wide build's peak log only.
 unsigned g_table_adds;
 
-unsigned long AsLong(const void* p) { return static_cast<unsigned long>(Address(p)); }
+std::uint32_t AsLong(const void* p) { return static_cast<std::uint32_t>(Address(p)); }
 
 // MapView_Build's inset: columns taken off each side of the view by the
 // camera's angle and distance. The original stores each step's value in
@@ -761,7 +761,7 @@ unsigned long AsLong(const void* p) { return static_cast<unsigned long>(Address(
 std::uint32_t Inset(std::uint32_t* original = nullptr) {
     const map_layers::InsetPair pair =
         map_layers::ComputeInset(Cond_AngleFB, Camera_Distance, Field_InputFlags, Cond_ByteFE, Widescreen_InsetColumns());
-    Scratch_Swap = static_cast<unsigned long>(pair.lowered);
+    Scratch_Swap = static_cast<std::uint32_t>(pair.lowered);
     MapView_Inset = static_cast<unsigned char>(Scratch_Swap);
     wide_rand::NoteInset(pair.original, MapView_Inset);
     if (original) *original = pair.original;
@@ -790,9 +790,9 @@ void BuildCell(unsigned char* cell, int layer, int threshold) {
     unsigned char* corner = Corners() + (cell[1] * Width() + cell[0]) * 4u;
     MapView_CornerPtr = corner;
     s[2] = Height(corner[0]);
-    map_layers::g.load_vertex(reinterpret_cast<const unsigned long*>(s));
+    map_layers::g.load_vertex(reinterpret_cast<const std::uint32_t*>(s));
     map_layers::g.rtps();
-    map_layers::g.store_xy(reinterpret_cast<unsigned long*>(MapView_ScreenXY));
+    map_layers::g.store_xy(reinterpret_cast<std::uint32_t*>(MapView_ScreenXY));
     const float sx = MapView_ScreenXY[0], sy = MapView_ScreenXY[1];
     // x87 fcomp as the original has it: an unordered x or y is culled too.
     // The x bounds are -50 / 370 unless the view is wide (DIV-0041,
@@ -868,7 +868,7 @@ void BuildCell(unsigned char* cell, int layer, int threshold) {
     s[10] = Height(corner[2]);
     s[13] = static_cast<short>(y + 0x80);
     s[14] = Height(corner[3]);
-    map_layers::g.load_vertices3(reinterpret_cast<const unsigned long*>(s + 4));
+    map_layers::g.load_vertices3(reinterpret_cast<const std::uint32_t*>(s + 4));
     unsigned char* const quad = Quad(index, Gfx_BufferIndex);
     map_layers::g.rtpt();
 
@@ -877,11 +877,11 @@ void BuildCell(unsigned char* cell, int layer, int threshold) {
         if (word & 0x4000u) {   // list 0 of the layer before (layer 0 for the first)
             // DIV-0041's grown ring: the first is layer -1, as the PSP's.
             const int before = map_rim::Active() ? (layer >= 0 ? layer - 1 : -1) : (layer != 0 ? layer - 1 : 0);
-            map_layers::g.link(reinterpret_cast<unsigned long*>(LastOf(before, Gfx_BufferIndex)),
+            map_layers::g.link(reinterpret_cast<std::uint32_t*>(LastOf(before, Gfx_BufferIndex)),
                    AsLong(item + Gfx_BufferIndex * 0x48u));
             LastOf(before, Gfx_BufferIndex) = AsLong(item + Gfx_BufferIndex * 0x48u);
         } else {                // list 1 of this layer
-            map_layers::g.link(reinterpret_cast<unsigned long*>(LastOf(layer, 2u + Gfx_BufferIndex)),
+            map_layers::g.link(reinterpret_cast<std::uint32_t*>(LastOf(layer, 2u + Gfx_BufferIndex)),
                    AsLong(item + Gfx_BufferIndex * 0x48u));
             LastOf(layer, 2u + Gfx_BufferIndex) = AsLong(item + Gfx_BufferIndex * 0x48u);
         }
@@ -918,13 +918,13 @@ void BuildCell(unsigned char* cell, int layer, int threshold) {
             ++g_table_adds;
         }
     } else {                    // list 0 of this layer
-        map_layers::g.link(reinterpret_cast<unsigned long*>(LastOf(layer, Gfx_BufferIndex)), AsLong(item + Gfx_BufferIndex * 0x48u));
+        map_layers::g.link(reinterpret_cast<std::uint32_t*>(LastOf(layer, Gfx_BufferIndex)), AsLong(item + Gfx_BufferIndex * 0x48u));
         LastOf(layer, Gfx_BufferIndex) = AsLong(item + Gfx_BufferIndex * 0x48u);
     }
     {
         unsigned char* const mine = item + Gfx_BufferIndex * 0x48u;
-        map_layers::g.store_xy3(reinterpret_cast<unsigned long*>(mine + 0x18), reinterpret_cast<unsigned long*>(mine + 0x28),
-                    reinterpret_cast<unsigned long*>(mine + 0x38));
+        map_layers::g.store_xy3(reinterpret_cast<std::uint32_t*>(mine + 0x18), reinterpret_cast<std::uint32_t*>(mine + 0x28),
+                    reinterpret_cast<std::uint32_t*>(mine + 0x38));
     }
     map_layers::g.depths4(item + Gfx_BufferIndex * 0x48u);
 
@@ -953,12 +953,12 @@ void BuildCell(unsigned char* cell, int layer, int threshold) {
         s[4] = sx0;
         s[5] = static_cast<short>(sy0 + 0x80);
         s[6] = Height(next[2]);
-        map_layers::g.load_vertices3(reinterpret_cast<const unsigned long*>(s));
-        map_layers::g.link(reinterpret_cast<unsigned long*>(LastOf(layer, SideSub(cell, 12))), AsLong(side));
+        map_layers::g.load_vertices3(reinterpret_cast<const std::uint32_t*>(s));
+        map_layers::g.link(reinterpret_cast<std::uint32_t*>(LastOf(layer, SideSub(cell, 12))), AsLong(side));
         map_layers::g.rtpt();
         LastOf(layer, SideSub(cell, 12)) = AsLong(side);
-        map_layers::g.store_xy3(reinterpret_cast<unsigned long*>(side + 0x38), reinterpret_cast<unsigned long*>(side + 0x28),
-                    reinterpret_cast<unsigned long*>(MapView_ScreenXY));
+        map_layers::g.store_xy3(reinterpret_cast<std::uint32_t*>(side + 0x38), reinterpret_cast<std::uint32_t*>(side + 0x28),
+                    reinterpret_cast<std::uint32_t*>(MapView_ScreenXY));
         map_layers::g.depth_f3(reinterpret_cast<float*>(side + 0x40), reinterpret_cast<float*>(side + 0x30), &unused);
     }
     const unsigned below_item = WordMapLayers(item + 0x8E);
@@ -976,12 +976,12 @@ void BuildCell(unsigned char* cell, int layer, int threshold) {
         s[5] = sy0;
         s[4] = static_cast<short>(s[0] + 0x80);
         s[6] = Height(under[1]);
-        map_layers::g.load_vertices3(reinterpret_cast<const unsigned long*>(s));
-        map_layers::g.link(reinterpret_cast<unsigned long*>(LastOf(layer, SideSub(cell, 11))), AsLong(side));
+        map_layers::g.load_vertices3(reinterpret_cast<const std::uint32_t*>(s));
+        map_layers::g.link(reinterpret_cast<std::uint32_t*>(LastOf(layer, SideSub(cell, 11))), AsLong(side));
         map_layers::g.rtpt();
         LastOf(layer, SideSub(cell, 11)) = AsLong(side);
-        map_layers::g.store_xy3(reinterpret_cast<unsigned long*>(side + 0x28), reinterpret_cast<unsigned long*>(side + 0x38),
-                    reinterpret_cast<unsigned long*>(MapView_ScreenXY));
+        map_layers::g.store_xy3(reinterpret_cast<std::uint32_t*>(side + 0x28), reinterpret_cast<std::uint32_t*>(side + 0x38),
+                    reinterpret_cast<std::uint32_t*>(MapView_ScreenXY));
         map_layers::g.depth_f3(reinterpret_cast<float*>(side + 0x30), reinterpret_cast<float*>(side + 0x40), &unused);
     }
 }
@@ -1108,23 +1108,23 @@ Callees g = kOriginals;
 namespace map_field_objects {
 
 const Callees kOriginals = {
-    As<long (__cdecl*)(long, long)>(AreaMap_Elevation),
-    As<long (__cdecl*)(const short*, const short*, const short*, float*, float*, float*, long*)>(Gte_RotTransPers3),
+    As<std::int32_t (__cdecl*)(std::int32_t, std::int32_t)>(AreaMap_Elevation),
+    As<std::int32_t (__cdecl*)(const short*, const short*, const short*, float*, float*, float*, std::int32_t*)>(Gte_RotTransPers3),
     As<void (__cdecl*)(float*, float*, float*)>(Gte_StoreDepthF3),
     As<void (__cdecl*)(unsigned char*)>(Gpu_SetPolyFT4),
     As<void (__cdecl*)(unsigned char*, unsigned)>(Gpu_SetShadeTex),
     As<U (__cdecl*)(unsigned, unsigned)>(Gfx_CommitPrim),
-    As<long (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*, long*)>(
+    As<std::int32_t (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*, std::int32_t*)>(
         Gte_RotTransPers4),
     As<void (__cdecl*)(float*, float*, float*, float*)>(Gte_StoreDepthF4),
     As<void (__cdecl*)(void*)>(Gte_PrimDepths4_10),
-    As<void (__cdecl*)(unsigned long, unsigned char*, int)>(Prim_SetTexture),
+    As<void (__cdecl*)(std::uint32_t, unsigned char*, int)>(Prim_SetTexture),
     As<void (__cdecl*)(int, unsigned)>(MapCell_FlatOverlay),
     As<void (__cdecl*)(const unsigned char*)>(AreaMap_ApplyPatch),
-    As<unsigned char (__cdecl*)(unsigned long)>(Area_TestCondition),
-    As<long (__cdecl*)(const short*, unsigned long*, long*)>(Gte_RotTransPers),
+    As<unsigned char (__cdecl*)(std::uint32_t)>(Area_TestCondition),
+    As<std::int32_t (__cdecl*)(const short*, std::uint32_t*, std::int32_t*)>(Gte_RotTransPers),
     As<void (__cdecl*)(void*)>(Gte_PrimDepthFlat4_10),
-    As<long (__cdecl*)(int, int, int, int, int)>(Gfx_ClutAdjust),
+    As<std::int32_t (__cdecl*)(int, int, int, int, int)>(Gfx_ClutAdjust),
     As<void (__cdecl*)(int, int, int, int, int, int)>(Menu_DrawBox),
     As<void (__cdecl*)(int, int, int, int)>(Menu_DrawItemIcon),
     As<const unsigned char* (__cdecl*)(int, int, int, int, const unsigned char*)>(Text_DrawAt),
@@ -1197,7 +1197,7 @@ extern "C" void __cdecl AreaMap_Frame(void) {
         const auto moved = static_cast<unsigned short>(step * sign);
         MapView_ScrollX = static_cast<unsigned short>(MapView_ScrollX - moved);
         MapView_ElevationOffset = static_cast<unsigned short>(MapView_ElevationOffset - moved);
-        MapView_FocusX = static_cast<long>(focus_x);
+        MapView_FocusX = static_cast<std::int32_t>(focus_x);
     }
     if (dz != 0 || Field_Kind2Hold != 0) {
         if (dz != 0) {
@@ -1207,10 +1207,10 @@ extern "C" void __cdecl AreaMap_Frame(void) {
             const auto moved = static_cast<unsigned short>(step * sign);
             MapView_ScrollX = static_cast<unsigned short>(MapView_ScrollX + moved);
             MapView_ElevationOffset = static_cast<unsigned short>(MapView_ElevationOffset - moved);
-            MapView_FocusZ = static_cast<long>(z);
+            MapView_FocusZ = static_cast<std::int32_t>(z);
         }
         const unsigned short rise = MoveScript_FAWord;
-        MapView_Elevation = static_cast<long>(static_cast<std::uint32_t>(MapView_Elevation) +
+        MapView_Elevation = static_cast<std::int32_t>(static_cast<std::uint32_t>(MapView_Elevation) +
                                               static_cast<std::uint32_t>(static_cast<short>(rise)));
         if (AreaMap_Word1E == 0)
             MapView_ElevationOffset = static_cast<unsigned short>(MapView_ElevationOffset + rise * 0xFFFEu);
@@ -1263,7 +1263,7 @@ extern "C" void __cdecl AreaMap_Frame(void) {
     focus[0] = static_cast<short>(static_cast<std::uint32_t>(MapView_FocusX) >> 1);
     focus[1] = static_cast<short>(static_cast<std::uint32_t>(MapView_FocusZ) >> 1);
     focus[2] = static_cast<short>(static_cast<std::uint32_t>(MapView_Elevation) >> 1);
-    long moved[3];
+    std::int32_t moved[3];
     map_layers::g.apply_matrix(Camera_Matrix, focus, moved);
     auto* const translation = reinterpret_cast<unsigned char*>(Camera_Matrix) + 0x14;
     SetDword(translation, static_cast<std::uint32_t>(moved[0]) + static_cast<std::uint32_t>(static_cast<int>(Camera_ShiftX)));
@@ -1271,8 +1271,8 @@ extern "C" void __cdecl AreaMap_Frame(void) {
              static_cast<std::uint32_t>(moved[1]) + static_cast<std::uint32_t>(static_cast<int>(Camera_ShiftY)));
     SetDword(translation + 8, static_cast<std::uint32_t>(moved[2]) +
                                   static_cast<std::uint32_t>(static_cast<int>(Camera_Distance)) + 0x1194u);
-    map_layers::g.set_rot(reinterpret_cast<const unsigned long*>(Camera_Matrix));
-    map_layers::g.set_trans(reinterpret_cast<const unsigned long*>(Camera_Matrix));
+    map_layers::g.set_rot(reinterpret_cast<const std::uint32_t*>(Camera_Matrix));
+    map_layers::g.set_trans(reinterpret_cast<const std::uint32_t*>(Camera_Matrix));
     if (MapView_Redraw != 0) {
         map_layers::g.build();
         --MapView_Redraw;
@@ -1472,7 +1472,7 @@ extern "C" void __cdecl DrawTable_Sort(void) {
     const unsigned count = DrawTable_Count;
     for (unsigned i = 0; i < count; ++i) {
         for (unsigned j = i + 1; j < count; ++j) {
-            const unsigned long a = DrawTable[i], b = DrawTable[j];
+            const std::uint32_t a = DrawTable[i], b = DrawTable[j];
             if ((a & 0xFFFF0000u) <= (b & 0xFFFF0000u)) continue;
             DrawTable[i] = b;
             Scratch_Swap = a;
@@ -1524,8 +1524,8 @@ extern "C" void __cdecl Field_ViewReset(void) {
     for (const unsigned at : {0x08u, 0x0Cu, 0x18u, 0x1Cu, 0x28u, 0x2Cu, 0x38u, 0x3Cu, 0x50u, 0x54u, 0x60u, 0x64u, 0x70u,
                               0x74u, 0x80u, 0x84u})
         SetDword(draw_pool::Items() + at, 0);
-    MapView_FocusX = static_cast<long>(0x7FFF - (kind2_x >> 8));
-    MapView_FocusZ = static_cast<long>(0x8000 - (kind2_z >> 8));
+    MapView_FocusX = static_cast<std::int32_t>(0x7FFF - (kind2_x >> 8));
+    MapView_FocusZ = static_cast<std::int32_t>(0x8000 - (kind2_z >> 8));
     MapView_Origin[1] = static_cast<short>((kind2_z >> 16) + 3);
     Camera_Distance = 0;
     Camera_ShiftY = 0;
@@ -1536,7 +1536,7 @@ extern "C" void __cdecl Field_ViewReset(void) {
     if (flags & 8) {
         MapView_Elevation = 0;
     } else {
-        const long got = gMapScroll.elevation(kind2_x, kind2_z);
+        const std::int32_t got = gMapScroll.elevation(kind2_x, kind2_z);
         flags = Field_InputFlags;
         elevation = static_cast<short>(got);
         MapView_Elevation = elevation;
@@ -1841,17 +1841,17 @@ extern "C" void __cdecl DrawLayer_Close(int layer) {
     Gpu_SetDrawMode(Gfx_PacketNext, 0, 0, 0x95, 0);
     Gfx_CommitPrim(6, 0xC);
     const std::uint32_t first = static_cast<std::uint32_t>(layer) * 6u;
-    const auto at = [&]() -> unsigned long* {
+    const auto at = [&]() -> std::uint32_t* {
         if (layer < 0) return map_rim::ExtraLayer() + kSecondList + Gfx_BufferIndex * 2u;
         return DrawLayers + kSecondList + (Gfx_BufferIndex + first) * 2u;
     };
-    unsigned long* cell = at();
+    std::uint32_t* cell = at();
     if (cell[0] == 0) return;
     if (draw_order::g_on) draw_order::TagList(cell[0], cell[1], draw_order::kList1, static_cast<unsigned>(layer), Draw_OtSlot);
     Gpu_LinkPrim(Gfx_OtPointers[Draw_OtSlot], cell[0]);
     // The index is read again after the call, as the original reads it.
     cell = at();
-    Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(cell[1]));
+    Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(cell[1]));
 }
 
 // original 0x56FF00 (PSX 0x80156938): a record's condition. The high byte of the u16 `code`
@@ -1866,7 +1866,7 @@ extern "C" void __cdecl DrawLayer_Close(int layer) {
 //   anything else, 0x40 included, code & 1.
 // Only the low 16 bits are read: the callers push ax with stale bits above.
 // The value is al; two callers widen it with movsx, so all eight bits count.
-extern "C" unsigned char __cdecl Area_TestCondition(unsigned long code) {
+extern "C" unsigned char __cdecl Area_TestCondition(std::uint32_t code) {
     const unsigned kind = code & 0xFF00u, operand = code & 0xFFu, low = code & 1u;
     switch (kind) {
         case 0x4000: return static_cast<unsigned char>(low);
@@ -1919,7 +1919,7 @@ extern "C" void __cdecl MapCell_DrawUprights(const unsigned char* record, unsign
     const map_field_objects::U e = ((rec >> 24) & 0xFu) - 1u;
     kScratchX.d_00 = (b1 - 0x81u) << 7;
     kScratchY = (b0 - 0x80u) << 7;
-    const map_field_objects::U elevation = static_cast<map_field_objects::U>(map_field_objects::g.elevation(static_cast<long>((b1 << 16) - 0x10000u), static_cast<long>(b0 << 16)));
+    const map_field_objects::U elevation = static_cast<map_field_objects::U>(map_field_objects::g.elevation(static_cast<std::int32_t>((b1 << 16) - 0x10000u), static_cast<std::int32_t>(b0 << 16)));
     const map_field_objects::U h = static_cast<map_field_objects::U>(-(static_cast<std::int32_t>(S16(elevation)) / 2));
     const map_field_objects::U x = static_cast<std::uint32_t>(kScratchX.d_00);
     Prim_VertexScratch[3].x = x;
@@ -1933,7 +1933,7 @@ extern "C" void __cdecl MapCell_DrawUprights(const unsigned char* record, unsign
     Prim_VertexScratch[1].z = h;
     Prim_VertexScratch[2].z = top;
     Prim_VertexScratch[0].z = top;
-    long p = 0;
+    std::int32_t p = 0;
     map_field_objects::g.rtp3(Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x10), Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x18), Vertex(::bof3::Img(Prim_VertexScratch_addr)), FloatAt(::bof3::Img(MapView_ScreenXY_addr)), FloatAt(::bof3::Img(Effect6c_OffsetX_addr)),
            FloatAt(::bof3::Img(kScreen2)), &p);
     float depth0 = 0, depth1 = 0, depth2 = 0;
@@ -2023,7 +2023,7 @@ extern "C" void __cdecl MapCell_DrawDiagonalWall(const unsigned char* record, un
     unsigned char* const prim = PacketNext();
     map_field_objects::g.set_poly_ft4(prim);
     map_field_objects::g.set_shade_tex(prim, 0);
-    long p = 0;
+    std::int32_t p = 0;
     map_field_objects::g.rtp4(v[0], v[1], v[2], v[3], reinterpret_cast<float*>(prim + 8), reinterpret_cast<float*>(prim + 0x18),
            reinterpret_cast<float*>(prim + 0x28), reinterpret_cast<float*>(prim + 0x38), &p);
     map_field_objects::g.depths4(prim);
@@ -2225,11 +2225,11 @@ extern "C" void __cdecl MapCell_DrawSpinning(const unsigned char* record, unsign
         angles[2] = static_cast<short>((spin[2] + (d & 0x3FFu) * 4u) & 0xFFFu);
         angles[3] = 0;
         alignas(4) unsigned char matrix[0x20];
-        SH_CALL(Gte_RotTrans)(centre, reinterpret_cast<long*>(matrix + 0x14));
+        SH_CALL(Gte_RotTrans)(centre, reinterpret_cast<std::int32_t*>(matrix + 0x14));
         SH_CALL(Gte_RotMatrix)(angles, reinterpret_cast<short*>(matrix));
         SH_CALL(Gte_MulMatrix0)(Camera_Matrix, reinterpret_cast<short*>(matrix), reinterpret_cast<short*>(matrix));
-        SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<unsigned long*>(matrix));
-        SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<unsigned long*>(matrix));
+        SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<std::uint32_t*>(matrix));
+        SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<std::uint32_t*>(matrix));
         unsigned char* const prim = Gfx_PacketNext;
         SH_CALL(Gpu_SetPolyFT4)(prim);
         SH_CALL(Gpu_SetShadeTex)(prim, 0);
@@ -2308,7 +2308,7 @@ extern "C" void __cdecl AreaMap_ApplyPatch(const unsigned char* entry) {
             [[fallthrough]];
         case 1: {
             const field_misc::U face = (LongFieldMisc(record) >> 20) & 0xF;
-            const field_misc::U item = static_cast<field_misc::U>(field_misc::g.item_at(static_cast<long>(x), static_cast<long>(y)));
+            const field_misc::U item = static_cast<field_misc::U>(field_misc::g.item_at(static_cast<std::int32_t>(x), static_cast<std::int32_t>(y)));
             if (item != 0) {
                 field_misc::U index;
                 if (face == 0) index = item;
@@ -2367,9 +2367,9 @@ extern "C" void __cdecl MapCell_DrawAnimated(const unsigned char* record, unsign
     Prim_VertexScratch[0].x = (S8MapFieldObjects(DwordMapFieldObjects(record + 4) >> 24) + ((b1 - 0x80u) << 6)) << 1;
     Prim_VertexScratch[0].y = (S8MapFieldObjects(DwordMapFieldObjects(record + 4) >> 16) + ((b0 - 0x80u) << 6)) << 1;
     Prim_VertexScratch[0].z = WordMapFieldObjects(record + 4);
-    long depth = 0;
+    std::int32_t depth = 0;
     const auto p = static_cast<std::int32_t>(
-        map_field_objects::g.rtp(Vertex(::bof3::Img(Prim_VertexScratch_addr)), reinterpret_cast<unsigned long*>(AtMapFieldObjects(::bof3::Img(MapView_ScreenXY_addr))), &depth));
+        map_field_objects::g.rtp(Vertex(::bof3::Img(Prim_VertexScratch_addr)), reinterpret_cast<std::uint32_t*>(AtMapFieldObjects(::bof3::Img(MapView_ScreenXY_addr))), &depth));
     const float cull = static_cast<float>(Widescreen_Fill());   // DIV-0041, as MapCell_DrawUprights
     if (!(MapView_ScreenXY[0] >= -60.0f - cull)) return;  // fcomp [0x5C4210]; test ah, 1
     if (MapView_ScreenXY[0] > 380.0f + cull) return;      // fcomp [0x5C420C]; test ah, 0x41
@@ -2433,7 +2433,7 @@ extern "C" void __cdecl MapCell_DrawWalls(const unsigned char* record, unsigned 
     short v[4][4] = {};
     v[0][0] = v[2][0] = static_cast<short>(x0);
     v[0][1] = v[2][1] = static_cast<short>(y0);
-    const unsigned long* texture = MapCell_WallTextures + t;
+    const std::uint32_t* texture = MapCell_WallTextures + t;
     for (; count > 0; --count, ++t, ++texture) {
         unsigned char* const prim = Gfx_PacketNext;
         map_layers::g.set_poly_ft4(prim);
@@ -2465,7 +2465,7 @@ extern "C" void __cdecl MapCell_DrawWalls(const unsigned char* record, unsigned 
         v[3][2] = h2;
         v[0][2] = static_cast<short>(h1 - 0x80);
         v[1][2] = static_cast<short>(h2 - 0x80);
-        long depth;
+        std::int32_t depth;
         map_layers::g.rot_trans_pers4(v[0], v[1], v[2], v[3], reinterpret_cast<float*>(prim + 8), reinterpret_cast<float*>(prim + 0x18),
                           reinterpret_cast<float*>(prim + 0x28), reinterpret_cast<float*>(prim + 0x38), &depth);
         map_layers::g.depths4(prim);
@@ -2561,7 +2561,7 @@ extern "C" void __cdecl AreaMap_SetupTint(const unsigned char* entry) {
 // and then clamped to 1..0x1F; bit 15 kept. Then Gfx_ClutStripDirty = 1.
 // Returns the original's eax: `rows` after its twelve halvings. The halvings
 // write the caller's argument slots; the five callers pop them unread.
-extern "C" long __cdecl Gfx_ClutAdjust(int columns, int rows, int red, int green, int blue) {
+extern "C" std::int32_t __cdecl Gfx_ClutAdjust(int columns, int rows, int red, int green, int blue) {
     const auto channel = [](field_misc::U v, int add) -> U {
         if (v == 0) return 0;
         const auto s = static_cast<std::int32_t>(v + static_cast<field_misc::U>(add));
@@ -2844,14 +2844,14 @@ extern "C" void __cdecl MapView_PlaceRuns(void) {
 // Kept as the original has it: past the first quadrant each height is its
 // multiplication's low byte, and each corner-plus-height a byte sum, before
 // they are widened as signed.
-extern "C" long __cdecl AreaMap_Elevation(long x, long y) {
+extern "C" std::int32_t __cdecl AreaMap_Elevation(std::int32_t x, std::int32_t y) {
     std::uint32_t header;
     std::memcpy(&header, AreaMap_Header, 4);
     const auto cx = static_cast<short>(static_cast<std::uint32_t>(x) >> 16);
     const auto cy = static_cast<short>(static_cast<std::uint32_t>(y) >> 16);
     const unsigned width = header & 0xFFu;
     if (cy >= static_cast<short>((header >> 8) & 0xFFu) || cx >= static_cast<short>(width) || cy < 0 || cx < 0)
-        return static_cast<long>(header & 0xFFFF0000u);
+        return static_cast<std::int32_t>(header & 0xFFFF0000u);
     const int cell = cx + cy * static_cast<int>(width);
     const unsigned char* h = AreaMap_Header + static_cast<unsigned>(AreaMap_HeightBase) * 4u + cell;
     const unsigned char* c = reinterpret_cast<const unsigned char*>(&AreaMap_Corners) + cell * 4;
@@ -2919,7 +2919,7 @@ extern "C" long __cdecl AreaMap_Elevation(long x, long y) {
 //    AreaMap_Elevation's.
 //  - Heights are the low byte of height x MapView_HeightScale (imul r/m8), and
 //    corner sums wrap at 8 bits before they are compared or widened.
-extern "C" long __cdecl AreaMap_Slope(long x, long y, unsigned long direction) {
+extern "C" std::int32_t __cdecl AreaMap_Slope(std::int32_t x, std::int32_t y, std::uint32_t direction) {
     const auto ax = static_cast<std::uint32_t>(x), ay = static_cast<std::uint32_t>(y);
     std::uint32_t header;
     std::memcpy(&header, AreaMap_Header, 4);
@@ -2927,7 +2927,7 @@ extern "C" long __cdecl AreaMap_Slope(long x, long y, unsigned long direction) {
     const unsigned width = header & 0xFFu;
     if (cy >= static_cast<short>((header >> 8) & 0xFFu) || cx >= static_cast<short>(width) || cy < 0 || cx < 0) {
         Scratch()[0] = 0;
-        return static_cast<long>(header & 0xFFFF0000u);
+        return static_cast<std::int32_t>(header & 0xFFFF0000u);
     }
     const std::uint32_t xm = ax & 0xFFFF8000u, ym = ay & 0xFFFF8000u;
     const int cell = cx + cy * static_cast<int>(width);
@@ -2936,7 +2936,7 @@ extern "C" long __cdecl AreaMap_Slope(long x, long y, unsigned long direction) {
     const unsigned scale = MapView_HeightScale;
     if (((xm | ym) & 0xFFFFu) == 0) {   // the whole cell: flat
         Scratch()[0] = 0;
-        return static_cast<long>((static_cast<std::uint32_t>(S8(c[2]) + S8(h[0]) * static_cast<int>(scale) * 2 + S8(c[1]))) << 4);
+        return static_cast<std::int32_t>((static_cast<std::uint32_t>(S8(c[2]) + S8(h[0]) * static_cast<int>(scale) * 2 + S8(c[1]))) << 4);
     }
     const auto height = [&](unsigned at) { return static_cast<unsigned char>(h[at] * scale); };
     if (((xm ^ ym) & 0xFFFFu) != 0) {   // one half: the two edges
@@ -2957,10 +2957,10 @@ extern "C" long __cdecl AreaMap_Slope(long x, long y, unsigned long direction) {
         }
         if (b == e && a == d) {
             Scratch()[0] = 0;
-            return static_cast<long>(static_cast<std::uint32_t>(S8(b) + S8(a)) << 4);
+            return static_cast<std::int32_t>(static_cast<std::uint32_t>(S8(b) + S8(a)) << 4);
         }
         Scratch()[0] = 1;
-        return static_cast<long>(static_cast<std::uint32_t>(Abs(S8(b) - S8(e) - S8(d) + S8(a))) << 4);
+        return static_cast<std::int32_t>(static_cast<std::uint32_t>(Abs(S8(b) - S8(e) - S8(d) + S8(a))) << 4);
     }
     // Both halves: the four corners (the original's y slot), then the
     // direction dword's own bytes (its third slot) - what an unmasked corner
@@ -2975,7 +2975,7 @@ extern "C" long __cdecl AreaMap_Slope(long x, long y, unsigned long direction) {
     const unsigned char p0 = slots[0];
     if (p0 == slots[3] && p0 == slots[2] && p0 == slots[1]) {
         Scratch()[0] = 0;
-        return static_cast<long>(static_cast<std::uint32_t>(S8(p0)) << 5);
+        return static_cast<std::int32_t>(static_cast<std::uint32_t>(S8(p0)) << 5);
     }
     Scratch()[0] = 1;
     const unsigned n = d32 & 0xFFu;
@@ -2987,14 +2987,14 @@ extern "C" long __cdecl AreaMap_Slope(long x, long y, unsigned long direction) {
         const int next = S8(slots[(i + 1) & 3]);
         if (high < next) high = next;
     }
-    return static_cast<long>(static_cast<std::uint32_t>(Abs(high - S8(slots[(i - 2) & 3]))) << 5);
+    return static_cast<std::int32_t>(static_cast<std::uint32_t>(Abs(high - S8(slots[(i - 2) & 3]))) << 5);
 }
 
 // original 0x572570 (PSX 0x801559E4): the ground at (x, z), with the height
 // scale set for the call and cleared after it.
-extern "C" long __cdecl MapView_GroundAt(long x, long z) {
+extern "C" std::int32_t __cdecl MapView_GroundAt(std::int32_t x, std::int32_t z) {
     field_event::g.height_check();
-    const long ground = field_event::g.elevation(x, z);
+    const std::int32_t ground = field_event::g.elevation(x, z);
     MapView_HeightScale = 0;
     return ground;
 }
@@ -3017,9 +3017,9 @@ extern "C" void __cdecl MapView_CheckHeightScale(void) {
 // MapView_HeightScale = 0; returns AreaMap_Slope's eax untouched (the PSX
 // sign-extends its low half; the PC's 102 callers get the whole register).
 // AreaMap_Slope's scratch flag 0x903850 is left as it set it.
-extern "C" long __cdecl MapView_SlopeAt(long x, long y, unsigned long direction) {
+extern "C" std::int32_t __cdecl MapView_SlopeAt(std::int32_t x, std::int32_t y, std::uint32_t direction) {
     field_misc::g.check_height_scale();
-    const long slope = field_misc::g.slope(x, y, direction);
+    const std::int32_t slope = field_misc::g.slope(x, y, direction);
     AtFieldMisc(field_misc::at::MapView_HeightScaleAt())[0] = 0;
     return slope;
 }
@@ -3146,7 +3146,7 @@ extern "C" void __cdecl AreaMap_ClearCell(unsigned x, unsigned z) {
 //
 // Kept as the original has it: a count of 0 or less draws nothing; the turn
 // comes first, then the mirrors.
-extern "C" void __cdecl Prim_SetTexture(unsigned long texture, unsigned char* prim, int count) {
+extern "C" void __cdecl Prim_SetTexture(std::uint32_t texture, unsigned char* prim, int count) {
     const auto word = static_cast<std::uint32_t>(texture);
     const unsigned page = (word >> 28) & 3;
     const bool eight_bit = (word & 0x80000000u) == 0;
@@ -3215,7 +3215,7 @@ extern "C" void __cdecl Prim_SetTexture(unsigned long texture, unsigned char* pr
 // DIV-0041 (wide-ring): outside Capcom's window but inside the grown ring, the
 // rim's item - every caller textures, draws or allocates draw items with it
 // (docs/wide-ring-read.md 1.3).
-extern "C" unsigned long __cdecl MapView_ItemAt(long x, long y) {
+extern "C" std::uint32_t __cdecl MapView_ItemAt(std::int32_t x, std::int32_t y) {
     const auto dx = static_cast<std::int32_t>(static_cast<field_misc::U>(x) - static_cast<field_misc::U>(Short(OriginX())));
     const auto dz = static_cast<std::int32_t>(static_cast<field_misc::U>(y) - static_cast<field_misc::U>(Short(OriginZ())));
     const Ring ring = RingCell(dx, dz);
@@ -3227,7 +3227,7 @@ extern "C" unsigned long __cdecl MapView_ItemAt(long x, long y) {
 // buffer of map cell (x, y)'s draw item - DrawItems + (Gfx_BufferIndex + item
 // * 2) * 0x48, the buffer index read after MapView_ItemAt - or 0 when the
 // cell has none. The whole of MapView_ItemAt's eax is the item.
-extern "C" __attribute__((disable_tail_calls)) unsigned char* __cdecl MapView_ItemHalfAt(long x, long y) {
+extern "C" __attribute__((disable_tail_calls)) unsigned char* __cdecl MapView_ItemHalfAt(std::int32_t x, std::int32_t y) {
     const world_map::U item = static_cast<world_map::U>(world_map::g.item_at(x, y));
     if (item == 0) return nullptr;
     return AtWorldMap(world_map::at::DrawItemsAt() + (AtWorldMap(world_map::at::Gfx_BufferIndexAt())[0] + item * 2u) * 0x48u);
@@ -3244,7 +3244,7 @@ extern "C" __attribute__((disable_tail_calls)) unsigned char* __cdecl MapView_It
 // tail slot = Gfx_PacketNext and Gfx_PacketNext += size. No result; the
 // original's eax is the tail slot's new value or, on the exits, the row or
 // the bound - its 371 callers (E8 scan) are draw code that reloads eax.
-extern "C" __attribute__((disable_tail_calls)) void __cdecl MapView_LinkPrimAt(unsigned long x, unsigned long z,
+extern "C" __attribute__((disable_tail_calls)) void __cdecl MapView_LinkPrimAt(std::uint32_t x, std::uint32_t z,
                                                                            int dy, unsigned size) {
     std::int32_t row = static_cast<std::int16_t>(z >> 16);
     row -= (z & 0xFFFF) == 0 ? 1 : 0;
@@ -3270,7 +3270,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl MapView_LinkPrimAt(u
     }
     const world_map::U slot_index = static_cast<world_map::U>(row) * 6u;
     unsigned char* const slot = AtWorldMap(::bof3::Img(DrawLayers_addr) + 0x24 + (slot_index + AtWorldMap(world_map::at::Gfx_BufferIndexAt())[0]) * 8u);
-    world_map::g.link_prim(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(LongWorldMap(slot))), prim);
+    world_map::g.link_prim(reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(LongWorldMap(slot))), prim);
     const world_map::U next = LongWorldMap(AtWorldMap(world_map::at::Gfx_PacketNextAt()));
     PutLong(AtWorldMap(::bof3::Img(DrawLayers_addr) + 0x24 + (slot_index + AtWorldMap(world_map::at::Gfx_BufferIndexAt())[0]) * 8u), next);
     PutLong(AtWorldMap(world_map::at::Gfx_PacketNextAt()), next + bytes);
@@ -3367,7 +3367,7 @@ extern "C" void __cdecl Kind2_Script(void) {
     }
     if (result == 0xFF) {
         if (flags & 4) {   // a glide toward Field_Kind2X / Z
-            const long x = Field_Kind2X, z = Field_Kind2Z;
+            const std::int32_t x = Field_Kind2X, z = Field_Kind2Z;
             const std::int32_t dx = Abs32(static_cast<std::uint32_t>(x) - static_cast<std::uint32_t>(rv::As<records::SpriteObject>(k)->x));
             const std::int32_t dz = Abs32(static_cast<std::uint32_t>(z) - static_cast<std::uint32_t>(rv::As<records::SpriteObject>(k)->z));
             const std::int32_t distance = dx >= dz ? dx : dz;
@@ -3379,7 +3379,7 @@ extern "C" void __cdecl Kind2_Script(void) {
             const std::uint32_t twice = static_cast<std::uint32_t>(distance) * 2u;
             const unsigned char speed = Field_MoveSpeeds[k[0x84]];   // an unchecked byte index, as the original's
             MoveScript_F3Divisor = static_cast<short>(static_cast<std::uint16_t>(speed << 3));
-            const long ground = kind2_object::gKind2Object.elevation(x, z);
+            const std::int32_t ground = kind2_object::gKind2Object.elevation(x, z);
             const auto rest = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteObject>(k)->height) -
                                                         (static_cast<std::uint32_t>(static_cast<std::int32_t>(static_cast<std::int16_t>(ground))) << 16));
             const std::int32_t per_speed = Idiv(0x80, MoveScript_F3Divisor);
@@ -3523,7 +3523,7 @@ extern "C" void __cdecl MoveCmd_MoveKind2(unsigned char direction) {
     SetLong(k2 + kK2Z, z);
     Field_Kind2X = x;
     Field_Kind2Z = z;
-    const long ground = move_cmds::g.elevation(x, z);
+    const std::int32_t ground = move_cmds::g.elevation(x, z);
     const std::int32_t frames = Mul(0x80 / static_cast<std::int32_t>(MoveScript_F3Divisor), k2[kK2Steps]);
     MoveScript_FAWord = 0;
     const std::int32_t rise = static_cast<short>(static_cast<std::uint16_t>(ground)) - static_cast<short>(Word(k2 + kK2Height));
@@ -3540,13 +3540,13 @@ extern "C" void __cdecl Kind2_Place(unsigned char script) {
     unsigned char* const k2 = Kind2();
     move_cmds::g.context_reset(k2 + kK2Context);
     k2[kK2Flags] |= 0x80;
-    const long z = Field_Kind2Z;
+    const std::int32_t z = Field_Kind2Z;
     k2[kK2Script] = script;
-    const long x = Field_Kind2X;
+    const std::int32_t x = Field_Kind2X;
     k2[kK2Speed] = 3;
     SetLong(k2 + kK2X, x);
     SetLong(k2 + kK2Z, z);
-    const long ground = move_cmds::g.elevation(x, z);
+    const std::int32_t ground = move_cmds::g.elevation(x, z);
     SetWord(k2 + kK2Height, static_cast<std::uint32_t>(ground));
     move_cmds::g.set_elevation(ground);
     k2[1] = 1;

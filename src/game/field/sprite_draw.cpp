@@ -200,8 +200,8 @@ namespace sprite_draw { void Capture(unsigned char* object) {
 
     float sx = 1.0f, sy = 1.0f;
     if (object[0x48] != 0) {
-        sx = static_cast<float>(static_cast<double>(Get<long>(object, 0x40)) * (1.0 / 65536));
-        sy = static_cast<float>(static_cast<double>(Get<long>(object, 0x44)) * (1.0 / 65536));
+        sx = static_cast<float>(static_cast<double>(Get<std::int32_t>(object, 0x40)) * (1.0 / 65536));
+        sy = static_cast<float>(static_cast<double>(Get<std::int32_t>(object, 0x44)) * (1.0 / 65536));
     }
     const bool mirror = object[0x2A] != 0, semi = (object[0] & 0x20) != 0;
     const unsigned abr = (object[0x25] >> 5) & 3u;
@@ -265,15 +265,15 @@ void Draw() {
     unsigned char* object = Sprite_Current;
     if (object[0] & 0x40) return;
     if (!(object[0x24] & 0x80) && object[0x48] == 1) {
-        const long depth = Get<long>(object, 0x60);
+        const std::int32_t depth = Get<std::int32_t>(object, 0x60);
         if (depth == 0) {
-            Put<long>(object, 0x40, 0);
-            Put<long>(object, 0x44, 0);
+            Put<std::int32_t>(object, 0x40, 0);
+            Put<std::int32_t>(object, 0x44, 0);
             return;
         }
-        const long scale = (0x4650000L / depth) & ~0xFFL;
-        Put<long>(object, 0x40, scale);
-        Put<long>(object, 0x44, scale);
+        const std::int32_t scale = (0x4650000L / depth) & ~0xFFL;
+        Put<std::int32_t>(object, 0x40, scale);
+        Put<std::int32_t>(object, 0x44, scale);
     }
     const short x = Get<short>(object, 0x2E), y = Get<short>(object, 0x30);
     const int draw = sprite_draw::g_draw_columns >= 0 ? sprite_draw::g_draw_columns : static_cast<int>(Widescreen_Fill());
@@ -297,15 +297,15 @@ void Draw() {
     Sprite_ClutWord(reinterpret_cast<unsigned short*>(prim + 0x1C));
     float scale_x = 1.0f, scale_y = 1.0f;
     if (object[0x48] != 0) {
-        scale_x = static_cast<float>(static_cast<double>(Get<long>(object, 0x40)) * (1.0 / 65536));
-        scale_y = static_cast<float>(static_cast<double>(Get<long>(object, 0x44)) * (1.0 / 65536));
+        scale_x = static_cast<float>(static_cast<double>(Get<std::int32_t>(object, 0x40)) * (1.0 / 65536));
+        scale_y = static_cast<float>(static_cast<double>(Get<std::int32_t>(object, 0x44)) * (1.0 / 65536));
     }
     const unsigned wide = object[0x28] != 0 ? 1u : 0u;
     const unsigned char* piece = frame + 1;
     for (unsigned i = 0; i < count; ++i, piece += kPartBytes) {
         const unsigned size = (piece[0] & 0xFu) * 2;
         const unsigned flags = ((((piece[0] & 0x80u) | (wide << 5)) << 2) | object[0x25]);
-        const unsigned long index = SpriteCell_Add(
+        const std::uint32_t index = SpriteCell_Add(
             static_cast<unsigned>(static_cast<signed char>(piece[1])),
             static_cast<unsigned>(static_cast<signed char>(piece[2])), flags, piece[3],
             static_cast<unsigned>(object[0x26]) + piece[4], SpriteCell_Sizes[size], SpriteCell_Sizes[size + 1]);
@@ -369,16 +369,16 @@ constexpr unsigned kCellWindow = (kMaxCount + 255) * kCellBytes;       // what o
 constexpr unsigned kFrameBytes = 0x100 + 1 + 255 * kPartBytes;
 constexpr unsigned kWindow = 0x40;
 }  // namespace
-namespace sprite_draw { unsigned long g_tails[8]; }
+namespace sprite_draw { std::uint32_t g_tails[8]; }
 namespace sprite_draw {
 struct State {
     alignas(4) unsigned char object[0x80];
     alignas(4) unsigned char frame[kFrameBytes];
     unsigned char cells[kCellWindow];
-    unsigned long cell_count;
+    std::uint32_t cell_count;
     unsigned char* packet_next;
-    unsigned long* ot[8];
-    unsigned long tails[8];
+    std::uint32_t* ot[8];
+    std::uint32_t tails[8];
     unsigned char buffer_index;
     unsigned char* current;
     unsigned char window[kWindow];   // the pool, from packet_next as it was on the way in
@@ -412,7 +412,7 @@ void Apply(const sprite_draw::State& s, unsigned char* window_at) {
 }
 
 using ClutFn = void (__cdecl*)(unsigned short*);
-using AddFn = unsigned long (__cdecl*)(unsigned, unsigned, unsigned, unsigned, unsigned, unsigned, unsigned);
+using AddFn = std::uint32_t (__cdecl*)(unsigned, unsigned, unsigned, unsigned, unsigned, unsigned, unsigned);
 
 void SelfTest(DrawFn theirs, ClutFn their_clut, DrawFn their_reset, AddFn their_add) {
     constexpr unsigned kRounds = 24000;
@@ -442,9 +442,9 @@ void SelfTest(DrawFn theirs, ClutFn their_clut, DrawFn their_reset, AddFn their_
         if (next() % 4) object[0] &= ~0x40;
         if (next() % 2) object[0x48] = 1;
         else if (next() % 2) object[0x48] = 0;
-        static const long kDepth[] = {0, 1, -1, 0x4650000, 0x4650001, 0x7FFFFFFF, static_cast<long>(0x80000000u)};
-        const long depth = next() % 3 == 0 ? kDepth[next() % 7] : static_cast<long>(next() % 0x4000) - 0x800;
-        Put<long>(object, 0x60, depth);
+        static const std::int32_t kDepth[] = {0, 1, -1, 0x4650000, 0x4650001, 0x7FFFFFFF, static_cast<std::int32_t>(0x80000000u)};
+        const std::int32_t depth = next() % 3 == 0 ? kDepth[next() % 7] : static_cast<std::int32_t>(next() % 0x4000) - 0x800;
+        Put<std::int32_t>(object, 0x60, depth);
         Put<short>(object, 0x2E, edge(-0x40, 0x180));
         Put<short>(object, 0x30, edge(-0x40, 0x130));
         const unsigned offset = next() % 0x100;
@@ -517,7 +517,7 @@ void SelfTest(DrawFn theirs, ClutFn their_clut, DrawFn their_reset, AddFn their_
             unsigned char* object = input.object;
             object[0] &= ~0x40;
             object[0x48] = static_cast<unsigned char>(next() % 2);
-            Put<long>(object, 0x60, static_cast<long>(next() % 0x4000) + 1);
+            Put<std::int32_t>(object, 0x60, static_cast<std::int32_t>(next() % 0x4000) + 1);
             short x;
             switch (next() % 5) {
                 case 0: x = static_cast<short>(-0x40 - 1 + static_cast<int>(next() % 3)); break;
@@ -585,10 +585,10 @@ void SelfTest(DrawFn theirs, ClutFn their_clut, DrawFn their_reset, AddFn their_
     for (unsigned round = 0; round < kAddRounds; ++round) {
         unsigned args[7];
         for (auto& a : args) a = next();
-        const unsigned long count = next() % kMaxCount;
-        unsigned long result[2];
+        const std::uint32_t count = next() % kMaxCount;
+        std::uint32_t result[2];
         unsigned char cells[2][kCellWindow];
-        unsigned long counts[2];
+        std::uint32_t counts[2];
         for (auto& b : input.cells) b = static_cast<unsigned char>(next());
         for (int pass = 0; pass < 2; ++pass) {
             std::memcpy(SpriteCell_Table, input.cells, kCellWindow);
@@ -600,7 +600,7 @@ void SelfTest(DrawFn theirs, ClutFn their_clut, DrawFn their_reset, AddFn their_
         }
         if ((result[0] != result[1] || counts[0] != counts[1] || std::memcmp(cells[0], cells[1], kCellWindow) != 0) &&
             ++add_bad <= 8)
-            bof3::Log("shadow      SpriteCell_Add self-test MISMATCH: round %u, count %lu", round, count);
+            bof3::Log("shadow      SpriteCell_Add self-test MISMATCH: round %u, count %u", round, count);
     }
 
     Apply(saved, nullptr);
@@ -639,7 +639,7 @@ void CaptureSelfTest() {
     std::memcpy(saved_vram, Gfx_VramShadow, sizeof saved_vram);
     unsigned char* const saved_current = Sprite_Current;
     unsigned char* const saved_packet = Gfx_PacketNext;
-    const unsigned long saved_count = SpriteCell_Count;
+    const std::uint32_t saved_count = SpriteCell_Count;
     const unsigned saved_buffer = Gfx_BufferIndex;
     std::uint16_t* vram = Gfx_VramShadow;
 
@@ -708,8 +708,8 @@ void CaptureSelfTest() {
         object[0x25] = kPage;
         object[0x2A] = cs.mirror ? 1 : 0;
         object[0x48] = cs.scale != 1 ? 2 : 0;
-        Put<long>(object, 0x40, cs.scale << 16);
-        Put<long>(object, 0x44, cs.scale << 16);
+        Put<std::int32_t>(object, 0x40, cs.scale << 16);
+        Put<std::int32_t>(object, 0x44, cs.scale << 16);
         object[0x5D] = object[0x5E] = object[0x5F] = static_cast<unsigned char>(cs.shade - 0x80);
         Put<const unsigned char*>(object, 0x54, frame);
         Gfx_BufferIndex = static_cast<unsigned char>(buffer);

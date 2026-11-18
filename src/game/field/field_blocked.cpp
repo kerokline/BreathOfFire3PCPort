@@ -158,14 +158,14 @@ std::uint32_t IndexResult() {   // an object test's answer: none most of the tim
 }
 
 std::uint32_t __cdecl StubMapAhead(unsigned char* o) { Record(1, Id(o)); Disturb(); return ByteResult(); }
-std::uint32_t __cdecl StubObjectAt(long x, long y, unsigned m) { Record(2, x, y, m); Disturb(); return IndexResult(); }
-std::uint32_t __cdecl StubMemberAt(long x, long y, unsigned m) { Record(3, x, y, m); Disturb(); return IndexResult(); }
-std::uint32_t __cdecl StubWide(long x, long y, unsigned d) { Record(4, x, y, d & 0xFF); Disturb(); return ByteResult(); }
-std::uint32_t __cdecl StubNarrow(long x, long y, unsigned d) { Record(5, x, y, d & 0xFF); Disturb(); return ByteResult(); }
+std::uint32_t __cdecl StubObjectAt(std::int32_t x, std::int32_t y, unsigned m) { Record(2, x, y, m); Disturb(); return IndexResult(); }
+std::uint32_t __cdecl StubMemberAt(std::int32_t x, std::int32_t y, unsigned m) { Record(3, x, y, m); Disturb(); return IndexResult(); }
+std::uint32_t __cdecl StubWide(std::int32_t x, std::int32_t y, unsigned d) { Record(4, x, y, d & 0xFF); Disturb(); return ByteResult(); }
+std::uint32_t __cdecl StubNarrow(std::int32_t x, std::int32_t y, unsigned d) { Record(5, x, y, d & 0xFF); Disturb(); return ByteResult(); }
 std::uint32_t __cdecl StubCell(short x, short y) { Record(6, static_cast<std::uint16_t>(x), static_cast<std::uint16_t>(y)); Disturb(); return ByteResult(); }
-std::uint32_t __cdecl StubSteep(long x, long y) { Record(7, x, y); Disturb(); return ByteResult(); }
+std::uint32_t __cdecl StubSteep(std::int32_t x, std::int32_t y) { Record(7, x, y); Disturb(); return ByteResult(); }
 std::uint32_t __cdecl StubByteAt(short x, short y) { Record(8, static_cast<std::uint16_t>(x), static_cast<std::uint16_t>(y)); return Hash(6); }
-long __cdecl StubSlope(long x, long y, unsigned long d) {
+std::int32_t __cdecl StubSlope(std::int32_t x, std::int32_t y, std::uint32_t d) {
     Record(9, x, y, d & 0xFF);
     Disturb();
     const std::uint32_t h = Hash(7);
@@ -173,10 +173,10 @@ long __cdecl StubSlope(long x, long y, unsigned long d) {
     Scratch()[0] = h % 8 < 4 ? kFlag[h % 4] : static_cast<unsigned char>(h >> 24);
     static const std::uint16_t kLow[] = {0x3F, 0x40, 0x41, 0, 0x7FFF, 0x8000, 0xFFFF, 0x8040, 0x140};
     const std::uint32_t low = Hash(8) % 4 ? kLow[Hash(9) % 9] : Hash(9) & 0xFFFF;
-    return static_cast<long>((Hash(10) & 0xFFFF0000u) | low);
+    return static_cast<std::int32_t>((Hash(10) & 0xFFFF0000u) | low);
 }
-long __cdecl StubProbe(long x, long y) { Record(10, x, y); Disturb(); return static_cast<long>(Hash(11)); }
-long __cdecl StubElevation(long x, long y) {
+std::int32_t __cdecl StubProbe(std::int32_t x, std::int32_t y) { Record(10, x, y); Disturb(); return static_cast<std::int32_t>(Hash(11)); }
+std::int32_t __cdecl StubElevation(std::int32_t x, std::int32_t y) {
     Record(11, x, y);
     Disturb();
     // Around Sprite_Current's height as it is now (after the disturbance).
@@ -184,9 +184,9 @@ long __cdecl StubElevation(long x, long y) {
     const std::uint32_t h = Hash(12);
     const int delta = h % 8 ? kDelta[h % 10] : static_cast<int>(h >> 16);
     const std::uint32_t low = static_cast<std::uint16_t>(Word(Sprite_Current + 0x3E) + delta);
-    return static_cast<long>((Hash(13) & 0xFFFF0000u) | low);
+    return static_cast<std::int32_t>((Hash(13) & 0xFFFF0000u) | low);
 }
-std::uint32_t __cdecl StubReach(long x, long y, long h, unsigned margin, const unsigned char* o) {
+std::uint32_t __cdecl StubReach(std::int32_t x, std::int32_t y, std::int32_t h, unsigned margin, const unsigned char* o) {
     Record(12, Id(o), x, y, h, margin);
     Disturb();
     const bool yes = o == g_hit || Hash(14) % 61 == 0;

@@ -162,7 +162,7 @@ unsigned __cdecl StubGetTPage(unsigned tp, unsigned abr, int x, int y) {
     Record(1, tp, abr, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
     return Hash();
 }
-void __cdecl StubDrawMode(unsigned char* prim, int dfe, int dtd, unsigned tpage, unsigned long tw) {
+void __cdecl StubDrawMode(unsigned char* prim, int dfe, int dtd, unsigned tpage, std::uint32_t tw) {
     Record(2, Id(prim), static_cast<std::uint32_t>(dfe), static_cast<std::uint32_t>(dtd), tpage,
            static_cast<std::uint32_t>(tw));
     PutDword(prim + 4, 0xE1000000u | (tpage & 0xFFFFu));
@@ -193,7 +193,7 @@ void __cdecl StubFont8(int x, int y, int colour, const unsigned char* text) {
 }
 // sprintf: nothing of the CRT - the format's first bytes and a value of the
 // stand-ins' own, written into the buffer.
-int __cdecl StubSprintf(char* dst, const char* fmt, ...) {
+int StubSprintf(char* dst, const char* fmt, ...) {
     Record(7, Id(dst), Id(fmt), TextHash(reinterpret_cast<const unsigned char*>(fmt), 8));
     const std::uint32_t h = Hash();
     unsigned n = 0;

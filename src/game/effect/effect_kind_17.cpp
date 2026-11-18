@@ -544,7 +544,7 @@ extern "C" void __cdecl EffectKind17_Settle(void) {
     if (SH_CALL(EffectKind17_Bump)()) return;
     o = rv::As<records::EffectObject>(Cur());
     if (static_cast<short>(o->height_whole) < ground) {
-        const long back = SH_CALL(AreaMap_Elevation)(S32(start_x), S32(start_z));
+        const std::int32_t back = SH_CALL(AreaMap_Elevation)(S32(start_x), S32(start_z));
         rv::Store<unsigned>(rv::As<records::EffectObject>(Cur())->height_whole, static_cast<U>(back));
         rv::Store<U>(rv::As<records::EffectObject>(Cur())->step_y, 0);
         rv::Store<U>(rv::As<records::EffectObject>(Cur())->work_20, 0);
@@ -712,7 +712,7 @@ extern "C" unsigned char __cdecl EffectKind17_BlockedAhead(void) {
 // its arguments' high words through its own frame at +2, so the cells passed
 // to _CellBlocked carry the next word above - _CellBlocked reads the low
 // words only.
-extern "C" unsigned char __cdecl EffectKind17_BlockedAt(long x, long z) {
+extern "C" unsigned char __cdecl EffectKind17_BlockedAt(std::int32_t x, std::int32_t z) {
     const U ux = static_cast<U>(x), uz = static_cast<U>(z);
     const U cell_x = ux >> 16, cell_z = uz >> 16;
     if (SH_CALL(EffectKind17_CellBlocked)(cell_x, cell_z)) return 1;

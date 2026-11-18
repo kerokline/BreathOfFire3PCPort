@@ -642,7 +642,7 @@ extern "C" void __cdecl ItemTrade_DrawBackground(void) {
     move_script::SetWord(rect + 2, 0x80);
     move_script::SetWord(rect + 6, 0x20);
     move_script::SetWord(rect + 4, 0x20);
-    SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x95, static_cast<unsigned long>(Key(rect)));
+    SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x95, static_cast<std::uint32_t>(Key(rect)));
     SH_CALL(Gfx_CommitPrim)(7, 0xC);
     const unsigned columns = Widescreen_Fill();
     for (unsigned quad = 0, quads = effect_1g::ItemTrade_BackdropQuads(columns); quad < quads; ++quad) {
@@ -679,7 +679,7 @@ extern "C" void __cdecl ItemTrade_DrawBackground(void) {
     move_script::SetWord(rect + 2, 0);
     move_script::SetWord(rect + 6, 0x100);
     move_script::SetWord(rect + 4, 0x100);
-    SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x95, static_cast<unsigned long>(Key(rect)));
+    SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x95, static_cast<std::uint32_t>(Key(rect)));
     SH_CALL(Gfx_CommitPrim)(7, 0xC);
 }
 
@@ -967,7 +967,7 @@ extern "C" void __cdecl Area_Enter(unsigned area, int x, int z, unsigned flags) 
     mode_flow::g.tint_reset();
     const std::uint16_t previous = Game_AreaNumber;
     const unsigned char zone = Cond_ByteFD;
-    const long kind2_x = Field_Kind2X, kind2_z = Field_Kind2Z;
+    const std::int32_t kind2_x = Field_Kind2X, kind2_z = Field_Kind2Z;
     AreaW2c_LastArea = previous;
     AreaW1a_EntryZone = zone;
     mode_flow::SetLong(mode_flow::At(::bof3::Img(MoveScript_TintRecords_addr) + 0x220), kind2_z);
@@ -989,13 +989,13 @@ extern "C" void __cdecl Area_Enter(unsigned area, int x, int z, unsigned flags) 
     mode_flow::g.view_reset();
     const auto colour = static_cast<std::uint32_t>(mode_flow::Long(Area_Descriptors[Game_AreaNumber] + 0x38));
     if (colour != 0) {
-        mode_flow::g.colour_matrix(Fn<const unsigned long*>(colour));
+        mode_flow::g.colour_matrix(Fn<const std::uint32_t*>(colour));
         const unsigned char* const own = Fn<const unsigned char*>(
             static_cast<std::uint32_t>(mode_flow::Long(Area_Descriptors[Game_AreaNumber] + 0x38)));
         mode_flow::SetLong(mode_flow::At(::bof3::Img(0x903598)), mode_flow::Long(own + 0x20));   // Light_Angles
         mode_flow::SetLong(mode_flow::At(::bof3::Img(0x90359C)), mode_flow::Long(own + 0x24));
     } else {
-        mode_flow::g.colour_matrix(Fn<const unsigned long*>(::bof3::Img(mode_flow::at::kDefaultColour)));
+        mode_flow::g.colour_matrix(Fn<const std::uint32_t*>(::bof3::Img(mode_flow::at::kDefaultColour)));
         mode_flow::SetLong(mode_flow::At(::bof3::Img(0x903598)), static_cast<std::int32_t>(ModeFlow_DefaultLight));
         mode_flow::SetLong(mode_flow::At(::bof3::Img(0x90359C)), mode_flow::Long(mode_flow::At(::bof3::Img(ModeFlow_DefaultLight_addr) + 4)));
     }

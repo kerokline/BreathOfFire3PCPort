@@ -111,24 +111,24 @@ inline U ScriptFlagsAt() { return Of(&Field_ScriptFlags); }            // 0x9039
 // of ours hands a callee's eax on, returning it whole.
 struct Callees {
     // the map-cell handlers
-    long (__cdecl* elevation)(long, long);                                     // AreaMap_Elevation 0x5720C0
-    long (__cdecl* rtp3)(const short*, const short*, const short*, float*, float*, float*, long*);  // Gte_RotTransPers3 0x5A84A0
+    std::int32_t (__cdecl* elevation)(std::int32_t, std::int32_t);                                     // AreaMap_Elevation 0x5720C0
+    std::int32_t (__cdecl* rtp3)(const short*, const short*, const short*, float*, float*, float*, std::int32_t*);  // Gte_RotTransPers3 0x5A84A0
     void (__cdecl* depth_f3)(float*, float*, float*);                          // Gte_StoreDepthF3 0x5A9130
     void (__cdecl* set_poly_ft4)(unsigned char*);                              // Gpu_SetPolyFT4 0x5A75D0
     void (__cdecl* set_shade_tex)(unsigned char*, unsigned);                   // Gpu_SetShadeTex 0x5A77A0
     U (__cdecl* commit)(unsigned, unsigned);                                   // Gfx_CommitPrim 0x461E50
-    long (__cdecl* rtp4)(const short*, const short*, const short*, const short*, float*, float*, float*, float*,
-                         long*);                                               // Gte_RotTransPers4 0x5A85F0
+    std::int32_t (__cdecl* rtp4)(const short*, const short*, const short*, const short*, float*, float*, float*, float*,
+                         std::int32_t*);                                               // Gte_RotTransPers4 0x5A85F0
     void (__cdecl* depth_f4)(float*, float*, float*, float*);                  // Gte_StoreDepthF4 0x5A9170
     void (__cdecl* depths4)(void*);                                            // Gte_PrimDepths4_10 0x5A9290
-    void (__cdecl* set_texture)(unsigned long, unsigned char*, int);           // Prim_SetTexture 0x572A00
+    void (__cdecl* set_texture)(std::uint32_t, unsigned char*, int);           // Prim_SetTexture 0x572A00
     void (__cdecl* flat_overlay)(int, unsigned);                               // MapCell_FlatOverlay 0x570AB0
     void (__cdecl* apply_patch)(const unsigned char*);                         // AreaMap_ApplyPatch 0x571110
-    unsigned char (__cdecl* test)(unsigned long);                              // Area_TestCondition 0x56FF00
-    long (__cdecl* rtp)(const short*, unsigned long*, long*);                  // Gte_RotTransPers 0x5A8250
+    unsigned char (__cdecl* test)(std::uint32_t);                              // Area_TestCondition 0x56FF00
+    std::int32_t (__cdecl* rtp)(const short*, std::uint32_t*, std::int32_t*);                  // Gte_RotTransPers 0x5A8250
     void (__cdecl* depth_flat4)(void*);                                        // Gte_PrimDepthFlat4_10 0x5A92E0
     // the area set-up entries
-    long (__cdecl* clut_adjust)(int, int, int, int, int);                      // Gfx_ClutAdjust 0x5718F0
+    std::int32_t (__cdecl* clut_adjust)(int, int, int, int, int);                      // Gfx_ClutAdjust 0x5718F0
     // the menu draws
     void (__cdecl* draw_box)(int, int, int, int, int, int);                    // Menu_DrawBox 0x57CF60
     void (__cdecl* item_icon)(int, int, int, int);                             // Menu_DrawItemIcon 0x573F30

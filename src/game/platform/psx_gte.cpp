@@ -9,7 +9,7 @@
 
 namespace {
 
-constexpr long kStackDepth = 20;
+constexpr std::int32_t kStackDepth = 20;
 static_assert(Gte_MatrixStack_count == kStackDepth * Gte_Matrix_count);
 
 // --- BOF3X_SHADOW=psx_gte: a differential fuzz, once at start-up ---------------
@@ -21,12 +21,12 @@ static_assert(Gte_MatrixStack_count == kStackDepth * Gte_Matrix_count);
 // scratch. The blocks are put back afterwards.
 
 struct State {
-    unsigned long matrix[8], matrix2[8], stack[160], vertices[6], screen[6];
-    long depth, otz;
-    unsigned long scratch[16];
+    std::uint32_t matrix[8], matrix2[8], stack[160], vertices[6], screen[6];
+    std::int32_t depth, otz;
+    std::uint32_t scratch[16];
 };
 
-void Capture(State& s, const unsigned long* scratch) {
+void Capture(State& s, const std::uint32_t* scratch) {
     std::memcpy(s.matrix, Gte_Matrix, sizeof s.matrix);
     std::memcpy(s.matrix2, Gte_Matrix2, sizeof s.matrix2);
     std::memcpy(s.stack, Gte_MatrixStack, sizeof s.stack);
@@ -36,7 +36,7 @@ void Capture(State& s, const unsigned long* scratch) {
     s.otz = Gte_Depth;
     if (scratch) std::memcpy(s.scratch, scratch, sizeof s.scratch);
 }
-void Apply(const State& s, unsigned long* scratch) {
+void Apply(const State& s, std::uint32_t* scratch) {
     std::memcpy(Gte_Matrix, s.matrix, sizeof s.matrix);
     std::memcpy(Gte_Matrix2, s.matrix2, sizeof s.matrix2);
     std::memcpy(Gte_MatrixStack, s.stack, sizeof s.stack);
@@ -61,7 +61,7 @@ template <class F> Fn AsFn(F* f) { return reinterpret_cast<Fn>(reinterpret_cast<
 void SelfTest(Entry* entries, unsigned n) {
     constexpr unsigned kRounds = 24000;
     static State saved, input, their_out, our_out;
-    static unsigned long scratch[16];
+    static std::uint32_t scratch[16];
     Capture(saved, nullptr);
 
     std::uint32_t rng = 0x1B873593u;
@@ -71,8 +71,8 @@ void SelfTest(Entry* entries, unsigned n) {
         auto* bytes = reinterpret_cast<unsigned char*>(&input);
         for (unsigned i = 0; i < sizeof input; ++i) bytes[i] = static_cast<unsigned char>(next());
         // depth: mostly in range, the edges often, out of range sometimes
-        static const long kEdge[] = {0, 1, 19, 20, 21, -1};
-        input.depth = next() % 3 == 0 ? kEdge[next() % 6] : static_cast<long>(next() % 20);
+        static const std::int32_t kEdge[] = {0, 1, 19, 20, 21, -1};
+        input.depth = next() % 3 == 0 ? kEdge[next() % 6] : static_cast<std::int32_t>(next() % 20);
         if (input.depth >= kStackDepth) ++full;
         if (input.depth <= 0) ++empty;
         // Three argument cells inside the scratch, a quarter of the time
@@ -86,7 +86,7 @@ void SelfTest(Entry* entries, unsigned n) {
             Capture(pass ? our_out : their_out, scratch);
         }
         if (std::memcmp(&their_out, &our_out, sizeof their_out) != 0 && ++bad <= 8)
-            bof3::Log("shadow      psx_gte self-test MISMATCH: %s, round %u, depth %ld", e.name, round, input.depth);
+            bof3::Log("shadow      psx_gte self-test MISMATCH: %s, round %u, depth %d", e.name, round, input.depth);
     }
     Apply(saved, nullptr);
     bof3::Log("shadow      psx_gte self-test: %u functions, %u rounds (%u with the stack full or past it, %u with it "

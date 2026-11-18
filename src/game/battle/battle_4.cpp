@@ -151,7 +151,7 @@ extern "C" void __cdecl Battle_InitEnemies(void) {
 // DIV-0187 (src/game/cheats.cpp): under BOF3X_ENEMY_INFO=1 the byte +0x8F
 // is 1 whatever the kind's bit says - the HP gauge and Identify's panel
 // read it - and the bit is still read, as the original reads it.
-extern "C" void __cdecl Battle_SetupEnemy(unsigned slot, unsigned id, long x, long z) {
+extern "C" void __cdecl Battle_SetupEnemy(unsigned slot, unsigned id, std::int32_t x, std::int32_t z) {
     const std::uint32_t n = slot & 0xFF;
     unsigned char* const e = Enemy(n);
     auto* const enemy_rec = rv::As<records::BattleEnemy>(e);
@@ -188,7 +188,7 @@ extern "C" void __cdecl Battle_SetupEnemy(unsigned slot, unsigned id, long x, lo
     rv::Current<records::BattleEnemy>()->x = static_cast<std::int32_t>(x);
     rv::Current<records::BattleEnemy>()->z = static_cast<std::int32_t>(z);
     unsigned char* const s = Sprite_Current;
-    const long ground = g.elevation(rv::As<records::BattleEnemy>(s)->x, rv::As<records::BattleEnemy>(s)->z);
+    const std::int32_t ground = g.elevation(rv::As<records::BattleEnemy>(s)->x, rv::As<records::BattleEnemy>(s)->z);
     rv::Store<unsigned>(rv::Current<records::BattleEnemy>()->height_whole, static_cast<unsigned>(ground));
     Sprite_Current[0x2B] = 0;
     g.set_bank(enemy_data->bank);

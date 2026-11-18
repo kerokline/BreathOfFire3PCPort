@@ -374,7 +374,7 @@ C2_EXPORT void __cdecl RottenBreathMote_Draw(void) {
     {
         const unsigned char* const s = Sc();
         const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-        MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->z), 2,
+        MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(ts->x), static_cast<std::uint32_t>(ts->z), 2,
                                     0xC);
     }
     unsigned char* const p = Gfx_PacketNext;
@@ -410,7 +410,7 @@ C2_EXPORT void __cdecl RottenBreathMote_Draw(void) {
     MH_CALL(Gpu_SetSemiTrans)(p, 1);
     const unsigned char* const s = Sc();
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->z), 2,
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(ts->x), static_cast<std::uint32_t>(ts->z), 2,
                                 0x54);
 }
 

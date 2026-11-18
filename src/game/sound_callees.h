@@ -53,19 +53,19 @@ constexpr unsigned kSetNotificationPositions = 0x0C;   // IDirectSoundNotify
 constexpr unsigned kGetCurrentPosition = 0x10;  // IDirectSoundBuffer (the music's resume, not the originals')
 constexpr unsigned kGetStatus = 0x24, kLock = 0x2C, kPlay = 0x30, kSetCurrentPosition = 0x34, kSetVolume = 0x3C,
                    kSetFrequency = 0x44, kStop = 0x48, kUnlock = 0x4C, kRestore = 0x50;   // IDirectSoundBuffer
-constexpr long kBufferLost = static_cast<long>(0x88780096u);   // DSERR_BUFFERLOST
+constexpr std::int32_t kBufferLost = static_cast<std::int32_t>(0x88780096u);   // DSERR_BUFFERLOST
 
-using ComCall = long (__stdcall*)(void*);
-using ComStatus = long (__stdcall*)(void*, unsigned long*);
-using ComPosition = long (__stdcall*)(void*, unsigned long*, unsigned long*);
-using ComValue = long (__stdcall*)(void*, unsigned long);
-using ComPlay = long (__stdcall*)(void*, unsigned long, unsigned long, unsigned long);
-using ComLock = long (__stdcall*)(void*, unsigned long, unsigned long, void**, unsigned long*, void**, unsigned long*,
-                                  unsigned long);
-using ComUnlock = long (__stdcall*)(void*, void*, unsigned long, void*, unsigned long);
-using ComCreate = long (__stdcall*)(void*, void*, void**, void*);
-using ComQuery = long (__stdcall*)(void*, const void*, void**);
-using ComPositions = long (__stdcall*)(void*, unsigned long, const void*);
+using ComCall = std::int32_t (__stdcall*)(void*);
+using ComStatus = std::int32_t (__stdcall*)(void*, std::uint32_t*);
+using ComPosition = std::int32_t (__stdcall*)(void*, std::uint32_t*, std::uint32_t*);
+using ComValue = std::int32_t (__stdcall*)(void*, std::uint32_t);
+using ComPlay = std::int32_t (__stdcall*)(void*, std::uint32_t, std::uint32_t, std::uint32_t);
+using ComLock = std::int32_t (__stdcall*)(void*, std::uint32_t, std::uint32_t, void**, std::uint32_t*, void**, std::uint32_t*,
+                                  std::uint32_t);
+using ComUnlock = std::int32_t (__stdcall*)(void*, void*, std::uint32_t, void*, std::uint32_t);
+using ComCreate = std::int32_t (__stdcall*)(void*, void*, void**, void*);
+using ComQuery = std::int32_t (__stdcall*)(void*, const void*, void**);
+using ComPositions = std::int32_t (__stdcall*)(void*, std::uint32_t, const void*);
 
 template <class Fn>
 inline Fn Method(void* object, unsigned offset) {
@@ -76,7 +76,7 @@ inline Fn Method(void* object, unsigned offset) {
 
 struct Callees {
     // The C runtime and the file layer (File_* are ours, file_io.cpp)
-    int (__cdecl* sprintf)(char*, const char*, ...);                          // Crt_sprintf
+    int (*sprintf)(char*, const char*, ...);                          // Crt_sprintf
     void* (__cdecl* malloc)(unsigned);                                       // Crt_malloc
     void (__cdecl* free)(void*);                                             // Crt_free
     int (__cdecl* file_open)(const char*, int, int);                          // File_Open
@@ -104,14 +104,14 @@ struct Callees {
     void (__cdecl* music_pump)();                                             // Music_Pump
     void (__cdecl* music_stop)();                                             // Music_Stop
     unsigned (__cdecl* wave_find_data)(const unsigned char*, const unsigned char**);   // Wave_FindData
-    long (__cdecl* sndbuf_write)(void*, const void*, unsigned, unsigned);     // SndBuf_Write
+    std::int32_t (__cdecl* sndbuf_write)(void*, const void*, unsigned, unsigned);     // SndBuf_Write
     void (__cdecl* sndbuf_play)(std::uint32_t, void*, unsigned);              // SndBuf_Play
     void (__cdecl* sndbuf_stop)(void*);                                       // SndBuf_Stop
     void* (__cdecl* sndbuf_create)(const unsigned char*);                     // SndBuf_CreateFromWave
     void (__cdecl* music_release)();                                          // Music_Release
     void* (__cdecl* music_open_decoder)(const void*, unsigned);               // Music_OpenDecoder
     void* (__cdecl* music_create_buffer)();                                   // Music_CreateBuffer
-    long (__cdecl* music_set_notify)(void*);                                  // Music_SetNotify
+    std::int32_t (__cdecl* music_set_notify)(void*);                                  // Music_SetNotify
     void (__cdecl* music_decode)(unsigned char*, int);                        // Music_Decode
 };
 extern const Callees kOriginals;

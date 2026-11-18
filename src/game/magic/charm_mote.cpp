@@ -116,16 +116,16 @@ void Dispatch(const std::uint32_t* table, unsigned entries, unsigned phase, cons
 // The callees with the arguments the originals push: Gte_RotTransPers4 gets
 // the depth and flag pointers, Gte_RotTrans a flag pointer; ours reads
 // neither flag.
-using Rtp4Fn = long (__cdecl*)(const short*, const short*, const short*, const short*, unsigned char*, unsigned char*,
-                               unsigned char*, unsigned char*, long*, long*);
+using Rtp4Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, const short*, unsigned char*, unsigned char*,
+                               unsigned char*, unsigned char*, std::int32_t*, std::int32_t*);
 
-using RotTransFn = void (__cdecl*)(const short*, long*, long*);
+using RotTransFn = void (__cdecl*)(const short*, std::int32_t*, std::int32_t*);
 
 #define S34_AS(type, name) ::magic_harness::Call(reinterpret_cast<type>(reinterpret_cast<void*>(&::name)))
 
 // The four SVECTORs projected to +8, +8 + step, +8 + 2 step, +8 + 3 step.
 void Rtp4(unsigned char* prim, unsigned step) {
-    long p, flag;
+    std::int32_t p, flag;
     S34_AS(Rtp4Fn, Gte_RotTransPers4)(VP(0), VP(8), VP(0x10), VP(0x18), prim + 8, prim + 8 + step, prim + 8 + 2 * step,
                                      prim + 8 + 3 * step, &p, &flag);
 }
@@ -134,7 +134,7 @@ void Rtp4(unsigned char* prim, unsigned step) {
 void LinkAtSprite(unsigned size) {
     const unsigned char* const s = Sc();
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->z), 2,
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(ts->x), static_cast<std::uint32_t>(ts->z), 2,
                                 size);
 }
 
@@ -283,7 +283,7 @@ void FreeMote(unsigned char* s) {
 
 struct Matrix {
     short m[10];
-    long t[3];
+    std::int32_t t[3];
 };
 
 }  // namespace
@@ -362,12 +362,12 @@ S34_EXPORT void __cdecl CharmMote_PushMatrix(void) {
     v[2] = static_cast<short>(-(S16(s + 0x3E) / 2));
     v[3] = 0;
     Matrix m;
-    long flag;
+    std::int32_t flag;
     S34_AS(RotTransFn, Gte_RotTrans)(v, m.t, &flag);
     MH_CALL(Gte_RotMatrix)(rot, m.m);
     MH_CALL(Gte_MulMatrix0)(Camera_Matrix, m.m, m.m);
-    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&m));
-    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&m));
+    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
+    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
 }
 
 // original 0x4EDB30: a draw-mode packet (tpage 0x35); then a fan of five

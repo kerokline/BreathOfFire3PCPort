@@ -1333,7 +1333,7 @@ SC11_EXPORT void __cdecl Scena11_Trigger14(void) { StartScene(0x28, 5); }
 // less (signed): with flag 0 set, scene 1 at step 0x3C; else scene 1 at step
 // 0 when member 0's +8 is 0, 6 or 7, at step 0x32 otherwise; each with the
 // script flags' bit 0x40, answering 1. Else 0.
-SC11_EXPORT unsigned char __cdecl Scena11_ArriveHook(long x, long) {
+SC11_EXPORT unsigned char __cdecl Scena11_ArriveHook(std::int32_t x, std::int32_t) {
     if (Game_AreaNumber != 0x79) return 0;
     const bool seen = SH_CALL(Flags_Test)(Flags(), 0) != 0;
     if (x > 0x160000) return 0;
@@ -1351,7 +1351,7 @@ SC11_EXPORT unsigned char __cdecl Scena11_ArriveHook(long x, long) {
 }
 
 // original 0x55E4D0: chapter 11's vtable slot 4 (PSX 0x801FAB6C): 0xFF in al.
-SC11_EXPORT unsigned char __cdecl Scena11_CellHook(long, long) { return 0xFF; }
+SC11_EXPORT unsigned char __cdecl Scena11_CellHook(std::int32_t, std::int32_t) { return 0xFF; }
 
 void Scena11_Inject() {
     BOF3_INJECT(Scena11_Frame);

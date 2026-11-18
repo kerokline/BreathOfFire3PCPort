@@ -109,7 +109,7 @@ extern "C" void __cdecl EffectKind2C_Start(void) {
         SetUL(pt, UL(At(::bof3::Img(at::kSparkOffsetX.v) + 4 * i)) + UL(At(::bof3::Img(at::kSparkCentre.v))));
         const U z = UL(At(::bof3::Img(at::kSparkOffsetZ.v) + 4 * i)) + UL(At(::bof3::Img(at::kSparkCentre.v) + 4));
         SetUL(pt + 4, z);
-        const long ground = SH_CALL(AreaMap_Elevation)(Long(pt), static_cast<long>(z));
+        const std::int32_t ground = SH_CALL(AreaMap_Elevation)(Long(pt), static_cast<std::int32_t>(z));
         SetUL(pt + 8, static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(ground))) << 8);
     }
     SH_CALL(EffectSparks_Clear)();
@@ -133,7 +133,7 @@ extern "C" void __cdecl EffectKind2C_Emit(void) {
             const unsigned char* const pt = At(::bof3::Img(at::kSparkPoints.v) + 0x10 * i);
             for (unsigned k = 0; k < 4; ++k) SetUL(r + 4 * k, UL(c + 4 * k));
             for (unsigned k = 0; k < 3; ++k) SetUL(r + 0x10 + 4 * k, Sar(UL(pt + 4 * k) - UL(c + 4 * k), 4));
-            SH_CALL(Gte_VectorNormal)(reinterpret_cast<const long*>(r + 0x10), reinterpret_cast<long*>(r + 0x10));
+            SH_CALL(Gte_VectorNormal)(reinterpret_cast<const std::int32_t*>(r + 0x10), reinterpret_cast<std::int32_t*>(r + 0x10));
             r[0x24] = 0x80;
             rv::Store<std::uint32_t>(rv::As<records::EffectSpark>(r)->size, 0x1000);
             r[0x25] = 0x80;
@@ -215,12 +215,12 @@ extern "C" void __cdecl EffectSparks_Move(void) {
         const U z = static_cast<std::uint32_t>(rv::As<records::EffectSpark>(r)->z) + static_cast<std::uint32_t>(rv::As<records::EffectSpark>(r)->vz);
         rv::Store<std::uint32_t>(rv::As<records::EffectSpark>(r)->z, z);
         rv::Store<std::uint32_t>(rv::As<records::EffectSpark>(r)->height, static_cast<std::uint32_t>(rv::As<records::EffectSpark>(r)->height) + static_cast<std::uint32_t>(rv::As<records::EffectSpark>(r)->vheight));
-        const long ground = SH_CALL(AreaMap_Elevation)(static_cast<long>(x), static_cast<long>(z));
+        const std::int32_t ground = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z));
         const std::int32_t g = static_cast<std::int16_t>(ground);
         if (g > rv::As<records::EffectSpark>(r)->height) {
             rv::Store<std::int32_t>(rv::As<records::EffectSpark>(r)->height, g);
             rv::Store<std::uint32_t>(rv::As<records::EffectSpark>(r)->vheight, 0);
-            SH_CALL(Gte_VectorNormal)(reinterpret_cast<const long*>(r + 0x10), reinterpret_cast<long*>(r + 0x10));
+            SH_CALL(Gte_VectorNormal)(reinterpret_cast<const std::int32_t*>(r + 0x10), reinterpret_cast<std::int32_t*>(r + 0x10));
         }
         const auto shade = static_cast<unsigned char>(r[0x24] - 1);
         const U size = rv::As<records::EffectSpark>(r)->size + 4u;
@@ -247,8 +247,8 @@ extern "C" void __cdecl EffectSparks_Draw(const unsigned char* spark) {
     SH_CALL(Gpu_SetPolyFT4)(p);
     SH_CALL(Gpu_SetSemiTrans)(p, 1);
     short size[2] = {static_cast<short>(rv::As<records::EffectSpark>(spark)->size >> 6), 0};
-    const long point[3] = {static_cast<long>(UL(spark)), static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectSpark>(spark)->z)),
-                           static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectSpark>(spark)->height) << 8)};
+    const std::int32_t point[3] = {static_cast<std::int32_t>(UL(spark)), static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::EffectSpark>(spark)->z)),
+                           static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::EffectSpark>(spark)->height) << 8)};
     short out[2] = {0, 0};
     SH_CALL(EffectGte_ProjectSize)(point, size, out);
     float centre[3];

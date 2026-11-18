@@ -213,7 +213,7 @@ void __cdecl StubDrawNumber(int x, int y, unsigned clut, unsigned value) {
 // of anything - spaces, digits, other bytes - and for an empty string a few
 // more after its NUL (the original draws the first character before any NUL
 // test). The text ends by 0x904BA0 + 0x20, which the fuzz keeps zero.
-int __cdecl StubSprintf(char* dst, const char* fmt, ...) {
+int StubSprintf(char* dst, const char* fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
     const unsigned value = va_arg(ap, unsigned);
@@ -248,7 +248,7 @@ unsigned __cdecl StubGetTPage(unsigned tp, unsigned abr, int x, int y) {
     Record(56, tp, abr, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
     return Hash();   // the whole dword: the caller keeps 16 bits
 }
-void __cdecl StubDrawMode(unsigned char* prim, int dfe, int dtd, unsigned tpage, unsigned long tw) {
+void __cdecl StubDrawMode(unsigned char* prim, int dfe, int dtd, unsigned tpage, std::uint32_t tw) {
     Record(57, Id(prim), static_cast<std::uint32_t>(dfe) | static_cast<std::uint32_t>(dtd) << 16, tpage, static_cast<std::uint32_t>(tw));
     SetLong(prim + 4, static_cast<std::int32_t>(0xE1000000u | (tpage & 0xFFFFu)));
     Disturb();

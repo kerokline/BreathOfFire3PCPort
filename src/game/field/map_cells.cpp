@@ -80,7 +80,7 @@ struct Conditions {
     unsigned char ff, fe, fd, request;
     signed char fa;
     unsigned short mode;
-    unsigned long angle;
+    std::uint32_t angle;
 };
 void ReadConditions(Conditions& c) {
     std::memcpy(c.flags, Cond_Flags, sizeof c.flags);
@@ -102,11 +102,11 @@ void RandomConditions() {
     c.mode = static_cast<unsigned short>(Next() % 4 == 0 ? 7 : Next() % 16);
     c.request = static_cast<unsigned char>(Next() % 4 == 0 ? 4 : Next() % 8);
     // The angle: a third of the time a step from either end of the true half.
-    static const unsigned long kEdge[] = {0x1FF, 0x200, 0x201, 0x9FF, 0xA00, 0xA01};
+    static const std::uint32_t kEdge[] = {0x1FF, 0x200, 0x201, 0x9FF, 0xA00, 0xA01};
     c.angle = Next() % 3 == 0 ? (Next() & ~0xFFFul) | kEdge[Next() % 6] : Next();
     WriteConditions(c);
 }
-unsigned long RandomCode() {
+std::uint32_t RandomCode() {
     static const unsigned kSpecial[] = {0x40, 0xFF, 0xFE, 0xFD, 0xFC, 0xFB, 0xFA};
     static const unsigned kEdge[] = {0x1F, 0x20, 0x3F, 0x41, 0xF9, 0x00};
     unsigned kind;
@@ -128,8 +128,8 @@ unsigned long RandomCode() {
     return (Next() & 0xFFFF0000ul) | (kind << 8) | operand;   // stale bits above, as the callers push
 }
 
-using TestFn = unsigned char (__cdecl*)(unsigned long);
-using ElevationFn = long (__cdecl*)(long, long);
+using TestFn = unsigned char (__cdecl*)(std::uint32_t);
+using ElevationFn = std::int32_t (__cdecl*)(std::int32_t, std::int32_t);
 using HandlerFn = void (__cdecl*)(const unsigned char*, unsigned, unsigned);
 
 void SelfTestCondition(TestFn theirs) {
@@ -140,7 +140,7 @@ void SelfTestCondition(TestFn theirs) {
     unsigned bad = 0, special = 0, flags = 0, other = 0, wide = 0;
     for (unsigned round = 0; round < kRounds; ++round) {
         if (round % 16 == 0) RandomConditions();
-        const unsigned long code = RandomCode();
+        const std::uint32_t code = RandomCode();
         const unsigned kind = (code >> 8) & 0xFF;
         if (kind >= 0xFA) ++special;
         else if (kind < 0x40) ++flags;
@@ -148,7 +148,7 @@ void SelfTestCondition(TestFn theirs) {
         const unsigned char their = theirs(code), our = Area_TestCondition(code);
         if (their > 1) ++wide;
         if (their != our && ++bad <= 8)
-            bof3::Log("shadow      map_cells Area_TestCondition MISMATCH: round %u, code %08lX, %02X / %02X", round, code,
+            bof3::Log("shadow      map_cells Area_TestCondition MISMATCH: round %u, code %08X, %02X / %02X", round, code,
                       their, our);
     }
     WriteConditions(saved);
@@ -172,11 +172,11 @@ void RandomArea(unsigned max_side) {
     static const unsigned char kScale[] = {0, 1, 2, 0x7F, 0x80, 0xFF};
     MapView_HeightScale = static_cast<unsigned char>(Next() % 2 ? kScale[Next() % 6] : Next());
 }
-long RandomCoordinate(unsigned side) {
-    long whole;
-    if (Next() % 8 == 0) whole = static_cast<long>(static_cast<short>(Next()));
-    else whole = static_cast<long>(Next() % (side + 4)) - 2;
-    return static_cast<long>((static_cast<std::uint32_t>(whole) << 16) | (Next() & 0xFFFFu));
+std::int32_t RandomCoordinate(unsigned side) {
+    std::int32_t whole;
+    if (Next() % 8 == 0) whole = static_cast<std::int32_t>(static_cast<short>(Next()));
+    else whole = static_cast<std::int32_t>(Next() % (side + 4)) - 2;
+    return static_cast<std::int32_t>((static_cast<std::uint32_t>(whole) << 16) | (Next() & 0xFFFFu));
 }
 
 void SelfTestElevation(ElevationFn theirs) {
@@ -188,14 +188,14 @@ void SelfTestElevation(ElevationFn theirs) {
     unsigned bad = 0, outside = 0, quadrant[4] = {0, 0, 0, 0};
     for (unsigned round = 0; round < kRounds; ++round) {
         if (round % 256 == 0) RandomArea(40);
-        const long x = RandomCoordinate(AreaMap_Header[0]), y = RandomCoordinate(AreaMap_Header[1]);
-        const long their = theirs(x, y), our = AreaMap_Elevation(x, y);
+        const std::int32_t x = RandomCoordinate(AreaMap_Header[0]), y = RandomCoordinate(AreaMap_Header[1]);
+        const std::int32_t their = theirs(x, y), our = AreaMap_Elevation(x, y);
         const auto cx = static_cast<short>(static_cast<std::uint32_t>(x) >> 16);
         const auto cy = static_cast<short>(static_cast<std::uint32_t>(y) >> 16);
         if (cx < 0 || cy < 0 || cx >= AreaMap_Header[0] || cy >= AreaMap_Header[1]) ++outside;
         else ++quadrant[((x >> 15) & 1) | ((y >> 14) & 2)];
         if (their != our && ++bad <= 8)
-            bof3::Log("shadow      map_cells AreaMap_Elevation MISMATCH: round %u, (%08lX, %08lX), %08lX / %08lX", round,
+            bof3::Log("shadow      map_cells AreaMap_Elevation MISMATCH: round %u, (%08X, %08X), %08X / %08X", round,
                       x, y, their, our);
     }
     std::memcpy(AreaMap_Header, saved, kAreaWindow);
@@ -208,7 +208,7 @@ void SelfTestElevation(ElevationFn theirs) {
 
 // --- the two handlers: everything they touch is state ------------------------
 
-unsigned long g_tails[8];
+std::uint32_t g_tails[8];
 std::uint32_t g_seed;
 
 // MSVC's rand(), as Rand 0x5B93D2 computes it, on g_seed.
@@ -232,24 +232,24 @@ void Apply(const Region* r, const unsigned char* in) {
 // translation in front, a projection and offsets of a screen's size, so that
 // points land around the cull's bounds.
 void RandomScene() {
-    auto small = [](unsigned span) { return static_cast<long>(Next() % (2 * span + 1)) - static_cast<long>(span); };
+    auto small = [](unsigned span) { return static_cast<std::int32_t>(Next() % (2 * span + 1)) - static_cast<std::int32_t>(span); };
     auto* rotation = reinterpret_cast<short*>(Gte_Matrix);
     for (unsigned i = 0; i < 9; ++i) rotation[i] = static_cast<short>((i % 4 == 0 ? 0x1000 : 0) + small(0x200));
-    Gte_Matrix[5] = static_cast<unsigned long>(small(0x400));
-    Gte_Matrix[6] = static_cast<unsigned long>(small(0x400));
-    Gte_Matrix[7] = static_cast<unsigned long>(0x400 + Next() % 0x4000);
-    Gte_ProjDistance = 0x100 + static_cast<long>(Next() % 0x300);
+    Gte_Matrix[5] = static_cast<std::uint32_t>(small(0x400));
+    Gte_Matrix[6] = static_cast<std::uint32_t>(small(0x400));
+    Gte_Matrix[7] = static_cast<std::uint32_t>(0x400 + Next() % 0x4000);
+    Gte_ProjDistance = 0x100 + static_cast<std::int32_t>(Next() % 0x300);
     Gte_OffsetX = 160 + small(40);
     Gte_OffsetY = 120 + small(40);
     Gte_NearZ = small(0x40);
 }
-long RandomNumber() {
-    static const long kEdge[] = {0, 1, -1, 2, 0x7FFFFFFF, static_cast<long>(0x80000000u), 0x1000, 500, 1000};
+std::int32_t RandomNumber() {
+    static const std::int32_t kEdge[] = {0, 1, -1, 2, 0x7FFFFFFF, static_cast<std::int32_t>(0x80000000u), 0x1000, 500, 1000};
     switch (Next() % 8) {
-        case 0: return static_cast<long>(Next());
+        case 0: return static_cast<std::int32_t>(Next());
         case 1: return kEdge[Next() % 9];
-        case 2: return static_cast<long>(Next() % 0x2000000u) - 0x1000000;
-        default: return static_cast<long>(Next() % 0x4000u) - 0x1000;
+        case 2: return static_cast<std::int32_t>(Next() % 0x2000000u) - 0x1000000;
+        default: return static_cast<std::int32_t>(Next() % 0x4000u) - 0x1000;
     }
 }
 
@@ -337,7 +337,7 @@ void SelfTestHandlers(HandlerFn their_quads, HandlerFn their_rising) {
             // The record: a condition, a length of 1 + 5n, n subrecords.
             const unsigned n = Next() % 16 == 0 ? 0 : 1 + Next() % 6;
             g_record[2] = static_cast<unsigned char>(1 + 5 * n);
-            const unsigned long code = Next() % 2 ? 0x4001ul | (Next() & 0xFFFF0000ul) : RandomCode();
+            const std::uint32_t code = Next() % 2 ? 0x4001ul | (Next() & 0xFFFF0000ul) : RandomCode();
             std::memcpy(g_record, &code, 2);
             if (scene)
                 for (unsigned k = 0; k < n * 5; ++k) {

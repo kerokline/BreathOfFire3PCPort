@@ -74,7 +74,7 @@ struct Callees {
     unsigned char (__cdecl* add_cap100)(unsigned char*, unsigned);   // Stat_AddCap100
     unsigned char (__cdecl* window_open)(unsigned, unsigned); // 0x59E2D0, nobody's: claims window record n
     void (__cdecl* play_effect)(unsigned short);              // Sound_PlayEffect
-    long (__cdecl* elevation)(long, long);                    // AreaMap_Elevation
+    std::int32_t (__cdecl* elevation)(std::int32_t, std::int32_t);                    // AreaMap_Elevation
     unsigned char (__cdecl* set_bank)(unsigned short);        // Sprite_SetAnimationBank
     void (__cdecl* update_screen)();                          // Sprite_UpdateScreen
     unsigned char (__cdecl* member_chance_b)(unsigned);       // 0x453910, Battle_MemberRollByAction (BE6)
@@ -95,7 +95,7 @@ struct Callees {
     void (__cdecl* boss_common)();                            // Battle_PlaceBossActors 0x494500 (R3G)
     void (__cdecl* boss_encounter)();                         // 0x4942A0 (ours)
     void (__cdecl* normal_encounter)();                       // 0x4942C0 (ours)
-    void (__cdecl* setup_enemy)(unsigned, unsigned, long, long);   // 0x494320 (ours)
+    void (__cdecl* setup_enemy)(unsigned, unsigned, std::int32_t, std::int32_t);   // 0x494320 (ours)
     void (__cdecl* copy_enemy)(unsigned, unsigned);           // 0x4946C0 (ours)
     void (__cdecl* enemy_offset)(unsigned, unsigned);         // 0x494F00 (ours)
     unsigned char (__cdecl* kind_flag)(unsigned);             // 0x494EA0 (ours)

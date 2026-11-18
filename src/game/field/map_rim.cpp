@@ -29,7 +29,7 @@ unsigned char g_cells[kRows][kColumns][4];
 unsigned short g_runs[kRows][kColumns];
 
 // Layer -1's DrawLayers-shaped record and its draw-table cells (key, item).
-unsigned long g_extra[12];
+std::uint32_t g_extra[12];
 constexpr unsigned kTableMax = 64;   // a layer -1 walk is at most 33 cells
 unsigned g_table_key[kTableMax], g_table_item[kTableMax];
 unsigned g_table_n;
@@ -204,7 +204,7 @@ int Walk(unsigned read_inset) {
     return static_cast<int>(g > 16u ? 16u : g);
 }
 
-unsigned long* ExtraLayer() { return g_extra; }
+std::uint32_t* ExtraLayer() { return g_extra; }
 
 void ExtraReset(unsigned buffer_index) {
     auto* const layer = reinterpret_cast<unsigned char*>(g_extra) + (buffer_index & 0xFFu) * 8u;
@@ -300,7 +300,7 @@ void QuickRestore(bof3::SnapshotReader& r) {
     if (taken != 0) {
         static unsigned char cells[kRows][kColumns][4];
         static unsigned short runs[kRows][kColumns];
-        static unsigned long extra[12];
+        static std::uint32_t extra[12];
         static unsigned keys[kTableMax], items[kTableMax];
         r.Get(cells, sizeof cells);
         r.Get(runs, sizeof runs);
@@ -627,7 +627,7 @@ void SelfTest() {
     std::memcpy(saved_area, AreaMap_Header, kAreaBytes);
     std::memcpy(saved_items, MapView_CellItems, sizeof saved_items);
     std::memcpy(saved_cells, MapView_Cells, sizeof saved_cells);
-    const unsigned long saved_base = AreaMap_CellBase;
+    const std::uint32_t saved_base = AreaMap_CellBase;
     const short saved_row = MapView_Row, saved_column = MapView_Column;
     const short saved_ox = MapView_Origin[0], saved_oz = MapView_Origin[1];
     const unsigned short saved_top = DrawItemPool_Top;

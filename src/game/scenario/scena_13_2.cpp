@@ -672,8 +672,8 @@ SC13_EXPORT void __cdecl Scena13_Run4(void) {
     case 0xA: {
         if (Counter(0) != 0x10) return;
         const unsigned char arg = B(::bof3::Img(scena_sc13::at::kEffectArg) + ObjTrio[0].char_id);
-        Scena13_Slot[0] = SH_CALL(Effect_SpawnAt)(4, 5, static_cast<signed char>(arg), static_cast<long>(static_cast<std::uint32_t>(member0->x)),
-                                                  static_cast<long>(static_cast<std::uint32_t>(member0->z)), static_cast<long>(static_cast<std::uint32_t>(member0->height)));
+        Scena13_Slot[0] = SH_CALL(Effect_SpawnAt)(4, 5, static_cast<signed char>(arg), static_cast<std::int32_t>(static_cast<std::uint32_t>(member0->x)),
+                                                  static_cast<std::int32_t>(static_cast<std::uint32_t>(member0->z)), static_cast<std::int32_t>(static_cast<std::uint32_t>(member0->height)));
         SetStep(0xB);
         return;
     }

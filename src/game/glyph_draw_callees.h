@@ -31,7 +31,7 @@ constexpr rdata::Const kInv32{0x5C4618};        // a double, 1/32 - the glyph te
 
 struct Callees {
     void (__cdecl* prim_color)(unsigned r, unsigned g, unsigned b, unsigned code, unsigned mode,
-                               unsigned long* diffuse, unsigned long* specular);   // D3d_PrimColor
+                               std::uint32_t* diffuse, std::uint32_t* specular);   // D3d_PrimColor
     int (__cdecl* glyph_texture)(unsigned glyph, unsigned clut);                    // Font_GlyphTexture
     void (__cdecl* ret_only)(unsigned);                                             // 0x437CC0
     void (__cdecl* set_blend)(unsigned code, unsigned mode);                        // D3d_SetBlend

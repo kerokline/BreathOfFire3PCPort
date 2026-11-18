@@ -123,7 +123,7 @@ namespace d3d_draw { CellFoot g_cell_foot[128]; }  namespace {
         if (f.x1 < x || f.x0 > x1 || f.y1 < y || f.y0 > y1) continue;
         if (Long(At(::bof3::Img(D3d_CellTexCache_addr) + i * kCellEntry)) != 0) {
             if (d3d_draw::PoseLogOn())
-                bof3::Log("poselog     frame %lu cell free entry %u (upload %d,%d %dx%d over foot %d,%d..%d,%d)", static_cast<unsigned long>(Frame_Counter),
+                bof3::Log("poselog     frame %u cell free entry %u (upload %d,%d %dx%d over foot %d,%d..%d,%d)", static_cast<std::uint32_t>(Frame_Counter),
                           static_cast<unsigned>(i), x, y, w, h, f.x0, f.y0, f.x1, f.y1);
             D3d_FreeCellTexture(static_cast<int>(i));
         }

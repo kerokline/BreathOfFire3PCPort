@@ -175,16 +175,16 @@ void Disturb(U salt) {
 }
 
 void __cdecl StubPrimColor(unsigned r, unsigned gg, unsigned b, unsigned code, unsigned mode,
-                           unsigned long* diffuse, unsigned long* specular) {
+                           std::uint32_t* diffuse, std::uint32_t* specular) {
     Record(1, r, gg, b, code, mode, diffuse != nullptr, specular != nullptr);
     Disturb(1);
     *diffuse = Mix(2);
     if (specular) *specular = Mix(3);
 }
-long __cdecl StubBind(unsigned tpage, unsigned clut) {
+std::int32_t __cdecl StubBind(unsigned tpage, unsigned clut) {
     Record(2, tpage, clut);
     Disturb(4);
-    return static_cast<long>(Mix(5));
+    return static_cast<std::int32_t>(Mix(5));
 }
 void __cdecl StubRet(unsigned a) {
     Record(3, a);
@@ -203,7 +203,7 @@ const Callees kStandIns = {StubPrimColor, StubBind, StubRet, StubBlend, StubShad
 
 // --- the copies --------------------------------------------------------------
 
-using DrawFn = long(__cdecl*)(const unsigned char*);
+using DrawFn = std::int32_t(__cdecl*)(const unsigned char*);
 template <typename F> const void* P(F* f) { return reinterpret_cast<const void*>(f); }
 
 // Offsets from the disassembly (docs/sprt-draw.md section 2): the six E8s of
@@ -377,7 +377,7 @@ unsigned FuzzHandler(const Handler& h, DrawFn theirs, unsigned pass, unsigned ro
         g_theirs.Clear();
         d3d_fuzz::g_log = &g_theirs;
         SetControlWord(cw);
-        const long ret_theirs = theirs(prim);
+        const std::int32_t ret_theirs = theirs(prim);
         SetControlWord(saved_cw);
         Capture(g_theirs_state);
         std::memcpy(prim_theirs, prim, sizeof prim);
@@ -388,7 +388,7 @@ unsigned FuzzHandler(const Handler& h, DrawFn theirs, unsigned pass, unsigned ro
         d3d_fuzz::g_log = &g_ours;
         g_far_base = pass == 0 ? kCapcomFarBase : Addr(g_far);
         SetControlWord(cw);
-        const long ret_ours = h.ours(prim);
+        const std::int32_t ret_ours = h.ours(prim);
         SetControlWord(saved_cw);
         g_far_base = kCapcomFarBase;
         d3d_fuzz::g_log = nullptr;

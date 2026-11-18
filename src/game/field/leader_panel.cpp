@@ -67,7 +67,7 @@ U PtrHi(const unsigned char* p) { return Key(p) & 0xFFFF0000u; }
 // place (the fuzz swaps the cells for recorders); a Fatal past them, where the
 // original jumps through the dword after - the next table's entry
 // (docs/effect_1e.md section 6).
-void Run(const char* who, const unsigned long* table, unsigned entries) {
+void Run(const char* who, const std::uint32_t* table, unsigned entries) {
     const unsigned step = Sprite_Current[3];
     if (step >= entries)
         bof3::Fatal("%s: step byte +3 is %u, past the %u entries of 0x%X - the original jumps through the dword after "
@@ -232,7 +232,7 @@ U R6Address(unsigned offset) { return ::bof3::Img(Effect_Objects_addr) + 0x300 +
 // jmp [table + 4 * index], unchecked in the original: the table's words read in
 // place (the fuzz swaps them for recorders), a Fatal past its entries, where
 // the original jumps through the next table's words.
-void Dispatch(const char* who, const unsigned long* table, unsigned entries, unsigned index, const char* by) {
+void Dispatch(const char* who, const std::uint32_t* table, unsigned entries, unsigned index, const char* by) {
     if (index >= entries)
         bof3::Fatal("%s: %s is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/effect_1f.md section 6)",
@@ -312,7 +312,7 @@ unsigned char* Sc() { return Sprite_Current; }
 // A dispatcher: the table's entry by `index`, called as the original jumps
 // to it - a Fatal past the table's own entries, where the original jumps
 // through the dword after (docs/rest_1f.md section 7).
-void DispatchRest1f(const char* who, const char* by, const unsigned long* table, unsigned count, unsigned index) {
+void DispatchRest1f(const char* who, const char* by, const std::uint32_t* table, unsigned count, unsigned index) {
     if (index >= count)
         bof3::Fatal("%s: %s is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/rest_1f.md section 7)",
@@ -320,11 +320,11 @@ void DispatchRest1f(const char* who, const char* by, const unsigned long* table,
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
 }
 
-void ByStateRest1f(const char* who, const unsigned long* table, unsigned count) {
+void ByStateRest1f(const char* who, const std::uint32_t* table, unsigned count) {
     DispatchRest1f(who, "Sprite_Current +2", table, count, Sc()[2]);
 }
 
-void ByStepRest1f(const char* who, const unsigned long* table, unsigned count) {
+void ByStepRest1f(const char* who, const std::uint32_t* table, unsigned count) {
     DispatchRest1f(who, "Sprite_Current +3", table, count, Sc()[3]);
 }
 
@@ -455,7 +455,7 @@ unsigned char DirByte(unsigned d) { return At(::bof3::Img(kDirAnims.v) + 2 * d +
 // jmp / call [table + 4 * byte]: the table's `entries` handlers, read in place
 // (the fuzz swaps the cells for recorders); a Fatal past them, where the
 // original jumps through the dword after.
-void RunRest1g(const char* who, const unsigned long* table, unsigned entries, unsigned index, const char* byte) {
+void RunRest1g(const char* who, const std::uint32_t* table, unsigned entries, unsigned index, const char* byte) {
     if (index >= entries)
         bof3::Fatal("%s: %s is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/rest_1g.md section 7)",
@@ -473,7 +473,7 @@ void Ensure(unsigned a) { SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned c
 
 unsigned Rnd() { return static_cast<unsigned>(SH_CALL(Rand)()); }
 
-short Elevation(U x, U z) { return static_cast<short>(SH_CALL(AreaMap_Elevation)(static_cast<long>(x), static_cast<long>(z))); }
+short Elevation(U x, U z) { return static_cast<short>(SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z))); }
 
 // The fish's direction animation and its +0x2A byte by +8 (the rows of
 // kDirAnims), each with Sprite_Current re-read: `s[0x2A] = table[2 d + 1]`,
@@ -519,7 +519,7 @@ extern "C" void __cdecl LeaderPanel_S0Begin(void) {
     Effect1e_Blink = 0;
     Sc()[0x29] = 5;
     const unsigned char* const s = Sc();
-    const long height = SH_CALL(AreaMap_Elevation)(rv::As<records::PartyMember>(s)->x, rv::As<records::PartyMember>(s)->z);
+    const std::int32_t height = SH_CALL(AreaMap_Elevation)(rv::As<records::PartyMember>(s)->x, rv::As<records::PartyMember>(s)->z);
     rv::Store<std::uint32_t>(rv::As<records::PartyMember>(Sc())->height_whole, static_cast<unsigned>(height));
     if (Field_State[0x89] == 0) SH_CALL(Sprite_SetAnimationAt)(0xA, 2);
     else SH_CALL(Sprite_SetAnimation)(0xB);
@@ -934,7 +934,7 @@ extern "C" void __cdecl LeaderPanel_S3Run(void) {
             S()[3] = 0;
             return;
         }
-        const long h = SH_CALL(AreaMap_Elevation)(Effect_Objects[0].x, Effect_Objects[0].z);
+        const std::int32_t h = SH_CALL(AreaMap_Elevation)(Effect_Objects[0].x, Effect_Objects[0].z);
         Effect_Objects[0].height_whole = static_cast<unsigned>(h);
     }
     SH_AT(void (__cdecl*)(), at::kHoldTest.v)();
@@ -1996,7 +1996,7 @@ extern "C" void __cdecl LeaderPanel_S10Look(void) {
         }
         if (!done) {
             MoveScript_F3Divisor = 0x20;
-            Field_Kind2Z = static_cast<long>(static_cast<U>(Field_Kind2Z) - 0x8000u);
+            Field_Kind2Z = static_cast<std::int32_t>(static_cast<U>(Field_Kind2Z) - 0x8000u);
         }
     }
     if ((Frame_Counter & 4) == 0) return;
@@ -2004,12 +2004,12 @@ extern "C" void __cdecl LeaderPanel_S10Look(void) {
         unsigned char* const prim = Gfx_PacketNext;
         SH_CALL(Gpu_SetLineF2)(prim);
         const auto y = static_cast<short>((row >> 9) - 0x4000);
-        long depth;
+        std::int32_t depth;
         short v0[4] = {static_cast<short>(0xC000), y, 0, 0};
-        SH_CALL(Gte_RotTransPers)(v0, reinterpret_cast<unsigned long*>(prim + 8), &depth);
+        SH_CALL(Gte_RotTransPers)(v0, reinterpret_cast<std::uint32_t*>(prim + 8), &depth);
         SH_CALL(Gte_StoreDepthF)(reinterpret_cast<float*>(prim + 0x10));
         short v1[4] = {static_cast<short>(0xCF00), y, 0, 0};
-        SH_CALL(Gte_RotTransPers)(v1, reinterpret_cast<unsigned long*>(prim + 0x14), &depth);
+        SH_CALL(Gte_RotTransPers)(v1, reinterpret_cast<std::uint32_t*>(prim + 0x14), &depth);
         SH_CALL(Gte_StoreDepthF)(reinterpret_cast<float*>(prim + 0x1C));
         prim[4] = 0x80;
         prim[5] = 0x80;
@@ -3064,7 +3064,7 @@ extern "C" unsigned char __cdecl Fish_LureClose(void) {
 // again through Sprite_Current) +0x44: d = +0x60 when above 0, +0x60 - 2 * s16
 // +0x3E when below; at 0 both are 0 and eax is Sprite_Current. A d of 0 below
 // is the original's divide fault: ours aborts.
-extern "C" unsigned long __cdecl Sprite_UpdateScreenScaled(void) {
+extern "C" std::uint32_t __cdecl Sprite_UpdateScreenScaled(void) {
     unsigned char* s = Sprite_Current;
     const U held = LongEffect1f(Key(s + 0x3C));
     SetLongEffect1f(Key(s + 0x3C), 0);
@@ -3137,7 +3137,7 @@ extern "C" void __cdecl Effect_ResetFirstSeven(void) {
 // the word into ax); below it (so the threshold is at least 1): (count16 * 10
 // idiv threshold) * points, divided by 10 (signed; every value is small and
 // not negative), in eax whole.
-extern "C" unsigned long __cdecl FieldPanel_KindPoints(unsigned kind, unsigned count) {
+extern "C" std::uint32_t __cdecl FieldPanel_KindPoints(unsigned kind, unsigned count) {
     const U record = ::bof3::Img(Fish_Kinds_addr) + 0x10 + 36u * (kind & 0xFF);
     const unsigned threshold = BEffect1f(record + 0xF);
     const unsigned low = count & 0xFFFF;

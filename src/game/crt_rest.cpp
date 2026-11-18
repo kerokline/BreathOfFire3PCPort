@@ -13,7 +13,6 @@
 // strncpy users and _fcloseall - with them.
 #include "game/crt_rest.h"
 
-#include <io.h>
 
 #include <cstdarg>
 #include <cstddef>
@@ -150,7 +149,7 @@ extern "C" int __cdecl Rand(void) {
 
 // original 0x5B9380: sprintf over MSVC 6's _output, for the conversions above.
 // Returns the characters written, the NUL not counted.
-extern "C" int __cdecl Crt_sprintf(char* dst, const char* fmt, ...) {
+extern "C" int Crt_sprintf(char* dst, const char* fmt, ...) {
     const void* const caller = __builtin_return_address(0);   // named by a refusal
     va_list ap;
     va_start(ap, fmt);
@@ -241,36 +240,32 @@ extern "C" int __cdecl Crt_atoi(const char* s) {
 // original 0x5C2B40: _stricmp. Under the "C" locale (the game never sets one:
 // __lc_handle[LC_CTYPE] 0x7DEC18 stays 0) both bytes are folded A..Z to a..z
 // and compared unsigned; the answer is -1, 0 or 1 (`sbb al, al; sbb al,
-// 0xFF; movsx eax, al`). The toolchain's folds the same way and answers the
-// difference: its sign is the original's answer.
+// 0xFF; movsx eax, al`). Written out, so no C library's own fold is asked
+// (Windows' _stricmp is not a name every system has).
 extern "C" int __cdecl Crt_stricmp(const char* a, const char* b) {
-    const int r = _stricmp(a, b);
-    return (r > 0) - (r < 0);
+    const auto fold = [](char c) -> unsigned char {
+        const unsigned char u = static_cast<unsigned char>(c);
+        return u >= 'A' && u <= 'Z' ? static_cast<unsigned char>(u + 0x20) : u;
+    };
+    for (;; ++a, ++b) {
+        const unsigned char x = fold(*a), y = fold(*b);
+        if (x != y) return x < y ? -1 : 1;
+        if (x == 0) return 0;
+    }
 }
 
 // original 0x5B979A / 0x5B9867: _findfirst / _findnext into MSVC 6's
 // _finddata_t - attrib u32 +0, time_create / time_access / time_write 32-bit
-// +4 / +8 / +0xC, size u32 +0x10, name[260] +0x14, 0x118 bytes. The
-// toolchain's _finddata32_t is that layout (checked below); its _finddata_t is
-// not (64-bit times). The handle goes only between the two (Save_ListFiles,
-// which never closes it: the original's leak, kept there).
-static_assert(offsetof(_finddata32_t, attrib) == 0x0 && sizeof(_finddata32_t::attrib) == 4, "_finddata32_t.attrib");
-static_assert(offsetof(_finddata32_t, time_create) == 0x4 && sizeof(_finddata32_t::time_create) == 4,
-              "_finddata32_t.time_create");
-static_assert(offsetof(_finddata32_t, time_access) == 0x8 && sizeof(_finddata32_t::time_access) == 4,
-              "_finddata32_t.time_access");
-static_assert(offsetof(_finddata32_t, time_write) == 0xC && sizeof(_finddata32_t::time_write) == 4,
-              "_finddata32_t.time_write");
-static_assert(offsetof(_finddata32_t, size) == 0x10 && sizeof(_finddata32_t::size) == 4, "_finddata32_t.size");
-static_assert(offsetof(_finddata32_t, name) == 0x14 && sizeof(_finddata32_t::name) == 260, "_finddata32_t.name");
-static_assert(sizeof(_finddata32_t) == 0x118, "_finddata32_t is MSVC 6's _finddata_t");
-
-extern "C" long __cdecl Crt_findfirst(const char* pattern, void* found) {
-    return static_cast<long>(_findfirst32(pattern, static_cast<_finddata32_t*>(found)));
+// +4 / +8 / +0xC, size u32 +0x10, name[260] +0x14, 0x118 bytes: os::FindData
+// (os/find.h), which each system's backend fills. The handle goes only between
+// the two (Save_ListFiles, which never closes it: the original's leak, kept
+// there).
+extern "C" std::int32_t __cdecl Crt_findfirst(const char* pattern, void* found) {
+    return bof3::os::FindFirst(pattern, static_cast<bof3::os::FindData*>(found));
 }
 
-extern "C" int __cdecl Crt_findnext(long handle, void* found) {
-    return _findnext32(static_cast<intptr_t>(handle), static_cast<_finddata32_t*>(found));
+extern "C" int __cdecl Crt_findnext(std::int32_t handle, void* found) {
+    return bof3::os::FindNext(handle, static_cast<bof3::os::FindData*>(found));
 }
 
 // The file layer: every stream is opened, used and closed by ours - File_Open
@@ -309,12 +304,12 @@ extern "C" int __cdecl Crt_fseek(void* stream, int offset, int whence) {
 
 // original 0x5C3660: the stream's descriptor (MSVC 6's FILE._file).
 extern "C" int __cdecl Crt_fileno(void* stream) {
-    return _fileno(bof3::FileOfToken(stream));
+    return bof3::os::StreamDescriptor(bof3::FileOfToken(stream));
 }
 
 // original 0x5C35D6: the descriptor's length, -1 for a bad one.
 extern "C" int __cdecl Crt_filelength(int fd) {
-    return static_cast<int>(_filelength(fd));
+    return bof3::os::DescriptorLength(fd);
 }
 
 // original 0x5B9ADA: fgets - Cfg_Load's two lines of BOF3.CFG, a text stream.
@@ -346,11 +341,100 @@ extern "C" char* __cdecl Crt_fgets(char* buf, int n, void* stream) {
 // (design 2, measured). No second heap: a HeapCreate'd low heap would need
 // Crt_free to tell its blocks by range and the quicksave's _msize of a
 // block (sound.cpp) to follow, so it stays the design's named fallback.
-extern "C" void* __cdecl Crt_malloc(unsigned size) { return ::bof3::LowBlock(std::malloc(size), size); }
-extern "C" void* __cdecl Crt_calloc(unsigned count, unsigned size) {
-    return ::bof3::LowBlock(std::calloc(count, size), count * size);
+//
+// The arena (docs/linux-round.md, "R10 as run: the arena"): that fallback,
+// built, behind BOF3X_ARENA. On Linux glibc's heap puts blocks above 4 GB and
+// has no exact block size, so there the three and the quicksave's size query
+// (BlockBytes) are an arena of ours below 4 GB (os/heap.h LowArena), always.
+// On Windows it is off unless BOF3X_ARENA=1, and off the three are the lines
+// they were, the toolchain's heap. On, Crt_free tells the arena's blocks by
+// range and hands any other block to the toolchain's free, as it did before
+// (a block of the runtime's own heap, or one a caller took from std::malloc).
+namespace {
+
+constexpr std::size_t kArenaBytes = 256u << 20;   // 60 times the largest file the game reads whole (SND\KARA.DAT, 4.3 MB)
+
+bof3::os::LowArena* OpenArena() {
+    char v[8] = {};
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_ARENA", v, sizeof v);
+    const bool exact = bof3::os::HeapHasExactSize();
+    bool on = !exact;   // the default: the arena where the C runtime cannot say a block's exact size
+    if (n != 0) {
+        if (n == 1 && v[0] == '1')
+            on = true;
+        else if (n == 1 && v[0] == '0')
+            on = false;
+        else
+            bof3::Fatal("BOF3X_ARENA=%s: the heap arena's switch is 1 (on) or 0 (off)", v);
+    }
+    if (!on && !exact)
+        bof3::Fatal("BOF3X_ARENA=0: this system's C runtime has no exact block size (the quicksave's SOUND "
+                    "record needs one) and its heap may lie above 4 GB; the arena cannot be off here");
+    if (!on) return nullptr;
+    auto* const arena = new bof3::os::LowArena;   // never deleted: blocks are freed up to the process's end
+    if (!arena->Open(kArenaBytes))
+        bof3::Fatal("the heap arena (BOF3X_ARENA): no free run of %u MB below 4 GB to reserve (system error %u)",
+                    static_cast<unsigned>(kArenaBytes >> 20), bof3::os::LastError());
+    bof3::Log("heap        the arena (BOF3X_ARENA): %u MB reserved at 0x%08llX..0x%08llX, committed as it fills; "
+              "Crt_malloc, Crt_calloc, Crt_free and the quicksave's block size are its",
+              static_cast<unsigned>(kArenaBytes >> 20), static_cast<unsigned long long>(arena->Base()),
+              static_cast<unsigned long long>(arena->Base() + arena->Reserved()));
+    return arena;
 }
-extern "C" void __cdecl Crt_free(void* ptr) { std::free(ptr); }
+
+// The arena, or null when the toolchain's heap serves; read once.
+bof3::os::LowArena* Arena() {
+    static bof3::os::LowArena* const arena = OpenArena();
+    return arena;
+}
+
+[[noreturn]] void ArenaFull(const char* call, unsigned long long bytes) {
+    bof3::os::LowArena* const a = Arena();
+    bof3::Fatal("%s: the heap arena (BOF3X_ARENA) of %u MB has no room for %llu bytes (%llu requested by live blocks, "
+                "the used end at %llu bytes)", call, static_cast<unsigned>(a->Reserved() >> 20), bytes,
+                static_cast<unsigned long long>(a->InUse()), static_cast<unsigned long long>(a->End()));
+}
+
+}  // namespace
+
+extern "C" void* __cdecl Crt_malloc(unsigned size) {
+    bof3::os::LowArena* const a = Arena();
+    if (!a) return ::bof3::LowBlock(std::malloc(size), size);
+    if (size > bof3::os::LowArena::kMaxRequest) return nullptr;   // _HEAP_MAXREQ, as MSVC 6 and the toolchain
+    void* const p = a->Alloc(size);
+    if (!p) ArenaFull("Crt_malloc", size);
+    return p;
+}
+extern "C" void* __cdecl Crt_calloc(unsigned count, unsigned size) {
+    bof3::os::LowArena* const a = Arena();
+    if (!a) return ::bof3::LowBlock(std::calloc(count, size), count * size);
+    const unsigned long long bytes = static_cast<unsigned long long>(count) * size;
+    if (bytes > bof3::os::LowArena::kMaxRequest) return nullptr;   // the product past _HEAP_MAXREQ: null, as the toolchain
+    void* const p = a->Calloc(count, size);
+    if (!p) ArenaFull("Crt_calloc", bytes);
+    return p;
+}
+extern "C" void __cdecl Crt_free(void* ptr) {
+    bof3::os::LowArena* const a = Arena();
+    if (!a || !a->Owns(ptr)) {
+        std::free(ptr);
+        return;
+    }
+    if (!a->Free(ptr)) bof3::Fatal("Crt_free(%p): inside the heap arena (BOF3X_ARENA) but not a live block (freed twice?)", ptr);
+}
+
+std::size_t crt_rest::BlockBytes(const void* block) {
+    bof3::os::LowArena* const a = Arena();
+    std::size_t bytes = 0;
+    if (a && a->Owns(block)) {
+        if (!a->SizeOf(block, &bytes)) bof3::Fatal("crt_rest::BlockBytes(%p): inside the heap arena but not a live block", block);
+        return bytes;
+    }
+    if (!bof3::os::HeapExactSize(block, &bytes))
+        bof3::Fatal("crt_rest::BlockBytes(%p): a block outside the heap arena, and this system's C runtime has no exact "
+                    "size for it (every block whose size is asked must come from Crt_malloc)", block);
+    return bytes;
+}
 
 // original 0x5B9AA6: sscanf, MSVC 6's _input 0x5BCF64 over a string FILE.
 // Two formats in the executable reach it: Cfg_Load's "%d %d" 0x65DAD0, and
@@ -416,7 +500,7 @@ bool ScanNumber(const unsigned char*& p, bool hex, std::uint32_t* out, bool* end
 
 }  // namespace
 
-extern "C" int __cdecl Crt_sscanf(const char* s, const char* fmt, ...) {
+extern "C" int Crt_sscanf(const char* s, const char* fmt, ...) {
     const bool decimal = std::strcmp(fmt, "%d %d") == 0;
     if (!decimal && std::strcmp(fmt, "%lx@%lx") != 0)
         bof3::Fatal("Crt_sscanf: the format \"%s\" is neither Cfg_Load's \"%%d %%d\" nor the decoder's \"%%lx@%%lx\"", fmt);

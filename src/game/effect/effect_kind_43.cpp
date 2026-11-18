@@ -156,9 +156,9 @@ void NextState() {
     s[1] = static_cast<unsigned char>(s[1] + 1);
 }
 
-long* Point(unsigned char* p) { return reinterpret_cast<long*>(p); }
+std::int32_t* Point(unsigned char* p) { return reinterpret_cast<std::int32_t*>(p); }
 
-const long* Point(const unsigned char* p) { return reinterpret_cast<const long*>(p); }
+const std::int32_t* Point(const unsigned char* p) { return reinterpret_cast<const std::int32_t*>(p); }
 
 float* Out(unsigned char* p) { return reinterpret_cast<float*>(p); }
 
@@ -403,7 +403,7 @@ extern "C" void __cdecl EffectKind43_Setup(void) {
     rv::Current<records::EffectObject>()->z = 0x748000;
     const unsigned char* const s = S();
     auto* const so = rv::AsConst<records::EffectObject>(s);
-    const long ground = SH_CALL(AreaMap_Elevation)(so->x, so->z);
+    const std::int32_t ground = SH_CALL(AreaMap_Elevation)(so->x, so->z);
     rv::Store<U>(rv::Current<records::EffectObject>()->height, static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(ground))) << 16);
     for (unsigned i = 0; i < at::kSparkCount43; ++i) At(::bof3::Img(EffectKind30_Shards_addr) + i * at::kSparkStride43)[0] = 0;
 }

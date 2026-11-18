@@ -138,7 +138,7 @@ void Sound(unsigned id) { SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(
 void Transition(unsigned kind) { SH_CALL(Transition_Start)(static_cast<unsigned char>(kind)); }
 
 void SetElevationAt(std::int32_t x, std::int32_t z) {
-    const long e = SH_CALL(AreaMap_Elevation)(x, z);
+    const std::int32_t e = SH_CALL(AreaMap_Elevation)(x, z);
     SH_CALL(MapView_SetElevation)(static_cast<int>(e));
 }
 
@@ -392,7 +392,7 @@ extern "C" void __cdecl Scena08_Scene1(void) {
             e[0] = 1;
             e[5] = 0x52;
             e[1] = 0;
-            const long h = SH_CALL(AreaMap_Elevation)(x, z);
+            const std::int32_t h = SH_CALL(AreaMap_Elevation)(x, z);
             rv::As<records::EffectObject>(e)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<int>(static_cast<short>(h))) << 16);
         }
         SetTimer(0x3C);
@@ -536,7 +536,7 @@ extern "C" void __cdecl Scena08_Scene3(void) {
         const std::int32_t x = Field_Kind2X;
         Sprite_Kind2.x = x;
         Sprite_Kind2.z = z;
-        const long h = SH_CALL(AreaMap_Elevation)(x, z);
+        const std::int32_t h = SH_CALL(AreaMap_Elevation)(x, z);
         Sprite_Kind2.height_whole = static_cast<unsigned>(h);
         SetElevationAt(Field_Kind2X, Field_Kind2Z);
         C0() = 1;
@@ -554,7 +554,7 @@ extern "C" void __cdecl Scena08_Scene3(void) {
             e[0] = 1;
             e[5] = 0x51;
             e[1] = 0;
-            const long h = SH_CALL(AreaMap_Elevation)(x, z);
+            const std::int32_t h = SH_CALL(AreaMap_Elevation)(x, z);
             rv::As<records::EffectObject>(e)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<int>(static_cast<short>(h))) << 16);
         }
         SetStep(3);
@@ -1091,7 +1091,7 @@ extern "C" void __cdecl Scena08_Scene8(void) {
         const std::int32_t z = Long(At(::bof3::Img(Scena08_Kept_addr) + 0x8));
         ObjTrio[1].x = x;
         ObjTrio[1].z = z;
-        const long h = SH_CALL(AreaMap_Elevation)(x, z);
+        const std::int32_t h = SH_CALL(AreaMap_Elevation)(x, z);
         ObjTrio[1].height_whole = static_cast<unsigned>(h);
         SetRun(0);
         SetStep(0);

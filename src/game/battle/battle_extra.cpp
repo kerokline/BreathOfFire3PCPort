@@ -62,9 +62,9 @@ void Rgb(unsigned char* p, unsigned at_, unsigned char v) { p[at_] = p[at_ + 1] 
 // through the dword after: docs/battle_e1.md section 7). The jmp leaves the
 // caller's stack word and the entry's eax in place: ours hands the word on
 // and answers the entry's eax (round 11 doc section 5.1).
-using Entry = unsigned long (__cdecl*)(unsigned long);
+using Entry = std::uint32_t (__cdecl*)(std::uint32_t);
 
-unsigned long Dispatch(const char* who, U table, unsigned index, unsigned entries, unsigned long through) {
+std::uint32_t Dispatch(const char* who, U table, unsigned index, unsigned entries, std::uint32_t through) {
     if (index >= entries)
         bof3::Fatal("%s: the step byte is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/battle_e1.md section 7)",
@@ -99,7 +99,7 @@ unsigned char& B(U address) { return move_script::At(address)[0]; }
 
 U LRest3a(U address) { return static_cast<U>(move_script::Long(move_script::At(address))); }
 
-unsigned long DispatchRest3a(const char* who, U table, unsigned index, unsigned entries, unsigned long through) {
+std::uint32_t DispatchRest3a(const char* who, U table, unsigned index, unsigned entries, std::uint32_t through) {
     if (index >= entries)
         bof3::Fatal("%s: the step byte is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/rest_3a.md section 7)",
@@ -114,7 +114,7 @@ void W16(U address, unsigned v) { SetWord(At(address), v); }
 // original 0x42D710 (Mode8_Step5's call): jmp [BattleExtra_States + 4 *
 // (dword 0x929F00 & 0xFF)], 4 entries (the run of code pointers to
 // BattleExtra_TallySteps; ours aborts past them).
-extern "C" unsigned long __cdecl BattleExtra_Dispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl BattleExtra_Dispatch(std::uint32_t through) {
     return DispatchRest3a("BattleExtra_Dispatch", ::bof3::Img(BattleExtra_States_addr), LRest3a(::bof3::Img(at::kMode.v)) & 0xFF, 4, through);
 }
 
@@ -136,13 +136,13 @@ extern "C" void __cdecl BattleExtra_Leave(void) {
 // original 0x42D760 (BattleExtra_States[3]): jmp [BattleExtra_TallySteps + 4
 // * byte 0x929F01], 3 (BattleExtra_TallyOpenDispatch, BattleExtra_TallyCount,
 // BattleExtra_TallyClose).
-extern "C" unsigned long __cdecl BattleExtra_TallyDispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl BattleExtra_TallyDispatch(std::uint32_t through) {
     return DispatchRest3a("BattleExtra_TallyDispatch", ::bof3::Img(BattleExtra_TallySteps_addr), FieldS_State, 3, through);
 }
 
 // original 0x42D770 (BattleExtra_TallySteps[0]): jmp [BattleExtra_TallyOpenSteps
 // + 4 * byte 0x929F02], 2 (BattleExtra_OpenTransition, BattleExtra_TallyOpen).
-extern "C" unsigned long __cdecl BattleExtra_TallyOpenDispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl BattleExtra_TallyOpenDispatch(std::uint32_t through) {
     return DispatchRest3a("BattleExtra_TallyOpenDispatch", ::bof3::Img(BattleExtra_TallyOpenSteps_addr), FieldS_Step, 2, through);
 }
 
@@ -302,13 +302,13 @@ extern "C" void __cdecl BattleExtra_DrawPlus(int x_arg, int y_arg) {
 
 // original 0x42DC00 (0x64ADAC[2], state 2): by 0x929F01 through
 // BattleExtra_EquipSteps 0x64ADE0 (3: the opening, the screen, the leaving).
-extern "C" unsigned long __cdecl BattleExtra_EquipDispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl BattleExtra_EquipDispatch(std::uint32_t through) {
     return Dispatch("BattleExtra_EquipDispatch", ::bof3::Img(BattleExtra_EquipSteps_addr), FieldS_State, 3, through);
 }
 
 // original 0x42DC10 (0x64ADE0[0]): by 0x929F02 through 0x64ADEC (3: 0x42D780
 // Transition_Start(3) and on, BattleExtra_EquipOpen, BattleExtra_EquipFadeIn).
-extern "C" unsigned long __cdecl BattleExtra_EquipOpenDispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl BattleExtra_EquipOpenDispatch(std::uint32_t through) {
     return Dispatch("BattleExtra_EquipOpenDispatch", ::bof3::Img(BattleExtra_EquipOpenSteps_addr), FieldS_Step, 3, through);
 }
 
@@ -508,7 +508,7 @@ extern "C" void __cdecl BattleExtra_EquipListInput(void) {
 }
 
 // original 0x42E040 (0x64ADE0[2]): by 0x929F02 through 0x64AE00 (2).
-extern "C" unsigned long __cdecl BattleExtra_EquipLeaveDispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl BattleExtra_EquipLeaveDispatch(std::uint32_t through) {
     return Dispatch("BattleExtra_EquipLeaveDispatch", ::bof3::Img(BattleExtra_EquipLeaveSteps_addr), FieldS_Step, 2, through);
 }
 

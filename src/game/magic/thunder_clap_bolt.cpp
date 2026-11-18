@@ -104,22 +104,22 @@ void Call3(std::uint32_t address, int a, int b, int c) { MH_WORD(Fn3, address)(a
 
 // The callees with the arguments the originals push. Gte_RotTransPers4 gets
 // the depth and flag pointers the originals pass; ours reads the first.
-using Rtp1Fn = long (__cdecl*)(const short*, unsigned char*, long*, long*);
+using Rtp1Fn = std::int32_t (__cdecl*)(const short*, unsigned char*, std::int32_t*, std::int32_t*);
 
-using Rtp4Fn = long (__cdecl*)(const short*, const short*, const short*, const short*, unsigned char*, unsigned char*,
-                               unsigned char*, unsigned char*, long*, long*);
+using Rtp4Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, const short*, unsigned char*, unsigned char*,
+                               unsigned char*, unsigned char*, std::int32_t*, std::int32_t*);
 
 #define S31_AS(type, name) ::magic_harness::Call(reinterpret_cast<type>(reinterpret_cast<void*>(&::name)))
 
 void Rtp1(unsigned v, unsigned char* sxy) {
-    long p, flag;
+    std::int32_t p, flag;
     S31_AS(Rtp1Fn, Gte_RotTransPers)(VP(v), sxy, &p, &flag);
 }
 
 // The four projected points at +8, +8 + step, +8 + 2 step, +8 + 3 step
 // (0x10 a gouraud or flat-textured quad's, 0x14 a gouraud-textured one's).
 void Rtp4(unsigned char* prim, unsigned step) {
-    long p, flag;
+    std::int32_t p, flag;
     S31_AS(Rtp4Fn, Gte_RotTransPers4)(VP(0), VP(8), VP(0x10), VP(0x18), prim + 8, prim + 8 + step, prim + 8 + 2 * step,
                                      prim + 8 + 3 * step, &p, &flag);
 }
@@ -127,7 +127,7 @@ void Rtp4(unsigned char* prim, unsigned step) {
 void LinkAtSprite(unsigned size) {
     const unsigned char* const s = Sc();
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->z), 2,
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(ts->x), static_cast<std::uint32_t>(ts->z), 2,
                                 size);
 }
 

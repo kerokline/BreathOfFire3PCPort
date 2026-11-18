@@ -39,7 +39,7 @@ std::uint32_t Address(const volatile void* p) { return Low32(p); }
 
 const Callees kOriginals = {
     SndBuf_Stop, SndStream_Stop, Music_Halt, Music_Resume, Music_IsPlaying,
-    reinterpret_cast<long (__stdcall*)(const void*, void**, void*)>(static_cast<std::uintptr_t>(::bof3::Code(kDirectSoundCreate.v))),
+    reinterpret_cast<std::int32_t (__stdcall*)(const void*, void**, void*)>(static_cast<std::uintptr_t>(::bof3::Code(kDirectSoundCreate.v))),
 };
 
 }  // namespace sound_rest
@@ -64,8 +64,8 @@ extern "C" int __cdecl SoundRest_HaltBody(std::uint32_t ecx) {
     if (sound::MusicLogOn()) bof3::Log("music_log   f%u Music_Halt track %u", Frame_Counter, static_cast<unsigned>(Music_Track));
     void* const buffer = Music_Buffer;
     if (buffer == nullptr) return 0;
-    unsigned long status = ecx;
-    const long got = sound::Method<ComStatus>(buffer, sound::kGetStatus)(buffer, &status);
+    std::uint32_t status = ecx;
+    const std::int32_t got = sound::Method<ComStatus>(buffer, sound::kGetStatus)(buffer, &status);
     if ((status & 1) == 0) return static_cast<int>(got);
     void* const playing = Music_Buffer;
     return static_cast<int>(sound::Method<ComCall>(playing, sound::kStop)(playing));
@@ -78,7 +78,7 @@ extern "C" int __cdecl SoundRest_HaltBody(std::uint32_t ecx) {
 extern "C" int __cdecl SoundRest_StreamPlayingBody(std::uint32_t ecx) {
     void* const buffer = SndStream_Buffer;
     if (buffer == nullptr) return 0;
-    unsigned long status = ecx;
+    std::uint32_t status = ecx;
     sound::Method<ComStatus>(buffer, sound::kGetStatus)(buffer, &status);
     return (status & 1) ? 1 : 0;
 }

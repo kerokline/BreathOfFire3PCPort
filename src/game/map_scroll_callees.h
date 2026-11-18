@@ -14,12 +14,12 @@ struct Callees {
     void (__cdecl* release_cell)(unsigned char*);            // DrawItemPool_ReleaseCell 0x56FC00
     void (__cdecl* cell_to_map)(int, int, unsigned char*);   // MapView_CellToMap 0x56F910
     // Field_ViewReset
-    void (__cdecl* geom_screen)(long);                       // Gte_SetGeomScreen 0x5A7B00
-    void (__cdecl* geom_offset)(long, long);                 // Gte_SetGeomOffset 0x5A7AE0
-    void (__cdecl* back_color)(long, long, long);            // Gte_SetBackColor 0x5A7B60
+    void (__cdecl* geom_screen)(std::int32_t);                       // Gte_SetGeomScreen 0x5A7B00
+    void (__cdecl* geom_offset)(std::int32_t, std::int32_t);                 // Gte_SetGeomOffset 0x5A7AE0
+    void (__cdecl* back_color)(std::int32_t, std::int32_t, std::int32_t);            // Gte_SetBackColor 0x5A7B60
     void (__cdecl* set_poly_ft4)(unsigned char*);            // Gpu_SetPolyFT4 0x5A75D0
     void (__cdecl* set_shade_tex)(unsigned char*, unsigned); // Gpu_SetShadeTex 0x5A77A0
-    long (__cdecl* elevation)(long, long);                   // AreaMap_Elevation 0x5720C0
+    std::int32_t (__cdecl* elevation)(std::int32_t, std::int32_t);                   // AreaMap_Elevation 0x5720C0
     void (__cdecl* bake_patches)();                          // AreaMap_BakePatches 0x56FAD0
     void (__cdecl* setup_entries)();                         // AreaMap_SetupEntries 0x571720
     void (__cdecl* place_runs)();                            // MapView_PlaceRuns 0x571FF0

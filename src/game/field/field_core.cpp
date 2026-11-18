@@ -74,7 +74,7 @@ unsigned char& LowByte(unsigned short& w) { return *reinterpret_cast<unsigned ch
 // read in place (the fuzz swaps the cells for recorders); a Fatal past them,
 // where the original jumps through the dword after - the next table's entry
 // (docs/field_c3.md section 6).
-void Run(const char* who, unsigned long* table, unsigned entries, unsigned at) {
+void Run(const char* who, std::uint32_t* table, unsigned entries, unsigned at) {
     const unsigned state = Sprite_Current[at];
     if (state >= entries)
         bof3::Fatal("%s: state byte +%u is %u, past the %u entries of 0x%X - the original jumps through the dword after "
@@ -91,10 +91,10 @@ unsigned char ScriptTick() { return SH_CALL(Sprite_ScriptTick)(); }
 
 unsigned char StepTick() { return SH_CALL(Field_LeaderStepTick)(); }
 
-long GroundAt(U x, U z) { return SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z)); }
+std::int32_t GroundAt(U x, U z) { return SH_CALL(MapView_GroundAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z)); }
 
-long SlopeAt(U x, U z, unsigned direction) {
-    return SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), direction);
+std::int32_t SlopeAt(U x, U z, unsigned direction) {
+    return SH_CALL(MapView_SlopeAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), direction);
 }
 
 // AreaMap_Slope's "sloped" byte, which the callers read straight after MapView_SlopeAt.
@@ -137,7 +137,7 @@ void DownWait(U callee, unsigned char next) {
 
 // MapView_SlopeAt's answer steep (above 0x40, a signed word) with the sloped byte set.
 bool Steep(U x, U z, unsigned direction) {
-    const long slope = SlopeAt(x, z, direction);
+    const std::int32_t slope = SlopeAt(x, z, direction);
     return Sloped() && static_cast<short>(slope) > 0x40;
 }
 
@@ -189,9 +189,9 @@ unsigned char* Sc() { return Sprite_Current; }
 unsigned char& CellRest1f(unsigned i) { return move_script::At(::bof3::Img(kCells.v))[i & 0xFF]; }
 
 // `cdq; sub eax, edx; sar eax, 1`: a signed halving that rounds toward zero.
-long HalfRest1f(U v) {
+std::int32_t HalfRest1f(U v) {
     const auto s = static_cast<std::int32_t>(v);
-    return static_cast<long>(static_cast<std::int32_t>(static_cast<U>(s) + (s < 0 ? 1u : 0u)) >> 1);
+    return static_cast<std::int32_t>(static_cast<std::int32_t>(static_cast<U>(s) + (s < 0 ? 1u : 0u)) >> 1);
 }
 
 std::uint16_t W16(unsigned v) { return static_cast<std::uint16_t>(v); }
@@ -286,7 +286,7 @@ extern "C" void __cdecl FieldCore_ScriptMoveAlign(void) {
         s = rv::Current<records::SpriteHead>();
         s->z = (static_cast<U>(s->z) + 0x4800) & 0xFFFF8000u;
         s = rv::Current<records::SpriteHead>();
-        const long slope = SlopeAt(static_cast<U>(s->x), static_cast<U>(s->z), s->direction);
+        const std::int32_t slope = SlopeAt(static_cast<U>(s->x), static_cast<U>(s->z), s->direction);
         rv::Store<unsigned>(rv::As<records::SpriteHead>(S())->height_whole, static_cast<unsigned>(slope));
         Animate(rv::Current<records::SpriteHead>()->direction + 8u);
         s = rv::Current<records::SpriteHead>();
@@ -427,7 +427,7 @@ extern "C" void __cdecl FieldCore_Attached(void) {
             records::SpriteHead* const s = rv::Current<records::SpriteHead>();
             SetULong(rv::Bytes(s) + field, ULong(move_script::At(::bof3::Img(Sprite_ObjectsExtra_addr) + 0x34 + (field - 0x34) + static_cast<U>(s->work_18) * 0xA4u)));
         }
-        long offset[3];
+        std::int32_t offset[3];
         SH_CALL(MoveCmd_AttachOffset)(offset, S()[0x1C]);
         rv::Current<records::SpriteHead>()->x = static_cast<U>(rv::Current<records::SpriteHead>()->x) + static_cast<U>(offset[0]);
         rv::Current<records::SpriteHead>()->z = static_cast<U>(rv::Current<records::SpriteHead>()->z) + static_cast<U>(offset[1]);
@@ -500,8 +500,8 @@ extern "C" void __cdecl FieldCore_HopLaunch(void) {
     SetULong(rv::Bytes(s) + 0x20, (0xFFFFFFFFu - (s->reach & 0xFF)) << 3);
     s = rv::Current<records::SpriteHead>();
     if (rv::Bytes(s)[5] == 0) {
-        Field_Kind2X = static_cast<long>(static_cast<U>(s->step_x) * s->step_frames + static_cast<U>(s->x));
-        Field_Kind2Z = static_cast<long>(static_cast<U>(s->step_z) * s->step_frames + static_cast<U>(s->z));
+        Field_Kind2X = static_cast<std::int32_t>(static_cast<U>(s->step_x) * s->step_frames + static_cast<U>(s->x));
+        Field_Kind2Z = static_cast<std::int32_t>(static_cast<U>(s->step_z) * s->step_frames + static_cast<U>(s->z));
         MoveScript_F3Divisor = static_cast<short>(speed << 3);
     }
     Animate(s->direction == 3 ? 0x3A : 0x3B);
@@ -537,7 +537,7 @@ extern "C" void __cdecl FieldCore_HopFall(void) {
     s->step_y = static_cast<U>(s->step_y) + ULong(rv::Bytes(s) + 0x20);
     StepTick();
     s = rv::Current<records::SpriteHead>();
-    const long ground = GroundAt(static_cast<U>(s->x), static_cast<U>(s->z));
+    const std::int32_t ground = GroundAt(static_cast<U>(s->x), static_cast<U>(s->z));
     s = rv::Current<records::SpriteHead>();   // ecx
     if (static_cast<short>(ground) > SWord(rv::Bytes(s) + 0x3E)) {
         s->height_whole = static_cast<unsigned>(ground);
@@ -584,7 +584,7 @@ extern "C" void __cdecl FieldCore_UpBegin(void) {
 extern "C" void __cdecl FieldCore_UpOut(void) {
     rv::Store<unsigned>(rv::As<records::SpriteHead>(S())->height_whole, rv::As<records::SpriteHead>(S())->height_whole + 0x10u);
     records::SpriteHead* const s = rv::Current<records::SpriteHead>();
-    const long ground = GroundAt(static_cast<U>(s->x), static_cast<U>(s->z));
+    const std::int32_t ground = GroundAt(static_cast<U>(s->x), static_cast<U>(s->z));
     if (static_cast<int>(SWord(S() + 0x3E)) > static_cast<int>(static_cast<short>(ground)) + 0x200) Field_Request = 5;
     ScriptTick();
 }
@@ -592,7 +592,7 @@ extern "C" void __cdecl FieldCore_UpOut(void) {
 // original 0x525D40: FieldCore_UpSteps[2].
 extern "C" void __cdecl FieldCore_UpArrive(void) {
     records::SpriteHead* s = rv::Current<records::SpriteHead>();
-    const long ground = GroundAt(static_cast<U>(s->x), static_cast<U>(s->z));
+    const std::int32_t ground = GroundAt(static_cast<U>(s->x), static_cast<U>(s->z));
     rv::Store<unsigned>(rv::As<records::SpriteHead>(S())->height_whole, static_cast<unsigned>(ground) - 0x200u);
     s = rv::Current<records::SpriteHead>();
     s->x = static_cast<U>(s->x) + ((0u - JumpStepX(s->direction) * ((s->reach & 0xFF) + 1)) << 5);
@@ -610,7 +610,7 @@ extern "C" void __cdecl FieldCore_UpArrive(void) {
 // original 0x525E30: FieldCore_UpSteps[4].
 extern "C" void __cdecl FieldCore_UpIn(void) {
     rv::Store<unsigned>(rv::As<records::SpriteHead>(S())->height_whole, rv::As<records::SpriteHead>(S())->height_whole + 0x10u);
-    const long ground = GroundAt(EventLeader_PendingX, EventLeader_PendingZ);
+    const std::int32_t ground = GroundAt(EventLeader_PendingX, EventLeader_PendingZ);
     const int stop = static_cast<int>(static_cast<short>(ground)) -
                      static_cast<int>(SWord(move_script::At(::bof3::Img(field_c3::at::kTargetOffsets) + rv::As<records::PartyMember>(F())->char_id * 2u)));
     if (static_cast<int>(SWord(S() + 0x3E)) >= stop) {
@@ -660,7 +660,7 @@ extern "C" void __cdecl FieldCore_DownWait4(void) { DownWait(field_c3::at::kDown
 // original 0x525FB0: FieldCore_DownSteps[5].
 extern "C" void __cdecl FieldCore_DownOut(void) {
     rv::Store<unsigned>(rv::As<records::SpriteHead>(S())->height_whole, rv::As<records::SpriteHead>(S())->height_whole - 0x10u);
-    const long ground = GroundAt(EventLeader_PendingX, EventLeader_PendingZ);
+    const std::int32_t ground = GroundAt(EventLeader_PendingX, EventLeader_PendingZ);
     if (static_cast<int>(SWord(S() + 0x3E)) < static_cast<int>(static_cast<short>(ground)) - 0x200) Field_Request = 5;
     ScriptTick();
 }
@@ -668,7 +668,7 @@ extern "C" void __cdecl FieldCore_DownOut(void) {
 // original 0x526000: FieldCore_DownSteps[6].
 extern "C" void __cdecl FieldCore_DownArrive(void) {
     records::SpriteHead* s = rv::Current<records::SpriteHead>();
-    const long ground = GroundAt(static_cast<U>(s->x), static_cast<U>(s->z));
+    const std::int32_t ground = GroundAt(static_cast<U>(s->x), static_cast<U>(s->z));
     rv::Store<unsigned>(rv::As<records::SpriteHead>(S())->height_whole, static_cast<unsigned>(ground) + 0x200u);
     Animate(rv::Current<records::SpriteHead>()->direction == 3 ? 0x3C : 0x3D);
     s = rv::Current<records::SpriteHead>();
@@ -683,10 +683,10 @@ extern "C" void __cdecl FieldCore_DownArrive(void) {
 extern "C" void __cdecl FieldCore_DownIn(void) {
     rv::Store<unsigned>(rv::As<records::SpriteHead>(S())->height_whole, rv::As<records::SpriteHead>(S())->height_whole - 0x10u);
     records::SpriteHead* s = rv::Current<records::SpriteHead>();
-    const long ground = GroundAt(static_cast<U>(s->x), static_cast<U>(s->z));
+    const std::int32_t ground = GroundAt(static_cast<U>(s->x), static_cast<U>(s->z));
     s = rv::Current<records::SpriteHead>();
     if (SWord(rv::Bytes(s) + 0x3E) < static_cast<short>(ground)) {
-        const long again = GroundAt(static_cast<U>(s->x), static_cast<U>(s->z));
+        const std::int32_t again = GroundAt(static_cast<U>(s->x), static_cast<U>(s->z));
         rv::Store<unsigned>(rv::As<records::SpriteHead>(S())->height_whole, static_cast<unsigned>(again));
         rv::Current<records::SpriteHead>()->step_frames = 2;
         S()[0xA] = 0;
@@ -767,7 +767,7 @@ extern "C" void __cdecl FieldCore_JumpExitArrive(void) {
     }
     rv::Current<records::SpriteHead>()->step_frames = 0;
     s = rv::Current<records::SpriteHead>();
-    const long ground = GroundAt(static_cast<U>(s->x), static_cast<U>(s->z));
+    const std::int32_t ground = GroundAt(static_cast<U>(s->x), static_cast<U>(s->z));
     rv::Store<unsigned>(rv::As<records::SpriteHead>(S())->height_whole, static_cast<unsigned>(ground));
     F()[0x128] = 2;
     Animate(rv::Current<records::SpriteHead>()->direction + 8u);
@@ -879,8 +879,8 @@ extern "C" void __cdecl FieldCore_TileD0Exit(void) {
         const U n = (s->reach & 0xFF) + 1;
         const U x = DirStepX(d) * n + static_cast<U>(s->x);
         const U z = DirStepZ(d) * n + static_cast<U>(s->z);
-        if (SH_CALL(Field_WayBlocked)(static_cast<long>(x), static_cast<long>(z), rv::Bytes(s)[0x70], SWord(rv::Bytes(s) + 0x3E)) != 0) continue;
-        if (SH_CALL(AreaMap_CellsNone)(static_cast<long>(x), static_cast<long>(z), rv::Current<records::SpriteHead>()->reach & 0xFF, 0xD0, 0) != 0) {
+        if (SH_CALL(Field_WayBlocked)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), rv::Bytes(s)[0x70], SWord(rv::Bytes(s) + 0x3E)) != 0) continue;
+        if (SH_CALL(AreaMap_CellsNone)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), rv::Current<records::SpriteHead>()->reach & 0xFF, 0xD0, 0) != 0) {
             rv::Current<records::SpriteHead>()->direction = static_cast<unsigned char>(d);
             return;
         }
@@ -894,7 +894,7 @@ extern "C" void __cdecl FieldCore_TileD0Exit(void) {
         const U x = DirStepX(d) + static_cast<U>(s->x);
         const U z = DirStepZ(d) + static_cast<U>(s->z);
         short ground = 0;
-        if (SH_CALL(FieldCore_TileD0Probe)(static_cast<long>(x), static_cast<long>(z), &ground, 1) != 0 && best > ground) {
+        if (SH_CALL(FieldCore_TileD0Probe)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z), &ground, 1) != 0 && best > ground) {
             best = ground;
             best_direction = static_cast<unsigned char>(d);
         }
@@ -904,11 +904,11 @@ extern "C" void __cdecl FieldCore_TileD0Exit(void) {
 
 // original 0x526820: called by FieldCore_TileD0Exit - the ground at (x, z), or
 // al 0 for a steep slope above the object.
-extern "C" unsigned char __cdecl FieldCore_TileD0Probe(long x, long z, short* ground, unsigned direction) {
-    const long slope = SlopeAt(static_cast<U>(x), static_cast<U>(z), direction);
+extern "C" unsigned char __cdecl FieldCore_TileD0Probe(std::int32_t x, std::int32_t z, short* ground, unsigned direction) {
+    const std::int32_t slope = SlopeAt(static_cast<U>(x), static_cast<U>(z), direction);
     *ground = static_cast<short>(slope);
     if (Sloped() && static_cast<short>(slope) > 0x40) {
-        const long height = GroundAt(static_cast<U>(x), static_cast<U>(z));
+        const std::int32_t height = GroundAt(static_cast<U>(x), static_cast<U>(z));
         if (SWord(S() + 0x3E) < static_cast<short>(height)) return 0;
     }
     *ground = static_cast<short>(GroundAt(static_cast<U>(x), static_cast<U>(z)));
@@ -991,7 +991,7 @@ extern "C" void __cdecl FieldCore_FallSpin(void) {
     s->direction = static_cast<unsigned char>((s->direction + 1) & 7);
     Animate(rv::Current<records::SpriteHead>()->direction);
     s = rv::Current<records::SpriteHead>();
-    const long ground = GroundAt(static_cast<U>(s->x), static_cast<U>(s->z));
+    const std::int32_t ground = GroundAt(static_cast<U>(s->x), static_cast<U>(s->z));
     if (static_cast<int>(static_cast<short>(ground)) - static_cast<int>(SWord(S() + 0x3E)) > 0x100 && Field_Request != 5) {
         B(::bof3::Img(field_c3::at::kScriptFlags2High)) = static_cast<unsigned char>(B(::bof3::Img(field_c3::at::kScriptFlags2High)) | 2);
         Field_Request = 5;
@@ -1021,7 +1021,7 @@ extern "C" void __cdecl FieldCore_RecoilBegin(void) {
         s = rv::Current<records::SpriteHead>();
         s->z = (static_cast<U>(s->z) + 0x4800) & 0xFFFF8000u;
         s = rv::Current<records::SpriteHead>();
-        const long slope = SlopeAt(static_cast<U>(s->x), static_cast<U>(s->z), s->direction);
+        const std::int32_t slope = SlopeAt(static_cast<U>(s->x), static_cast<U>(s->z), s->direction);
         rv::Store<unsigned>(rv::As<records::SpriteHead>(S())->height_whole, static_cast<unsigned>(slope));
         s = rv::Current<records::SpriteHead>();
         if (rv::Bytes(s)[5] == 0) {
@@ -1134,9 +1134,9 @@ extern "C" unsigned char __cdecl Field_CellAheadFlat(void) {
             }
             if ((k & 0xF0) == 0xA0) return member_sprites::g.cell_slope(8);
             const unsigned char* const s = Sprite_Current;
-            const long ax = Half(static_cast<std::uint32_t>(static_cast<short>(rv::As<records::PartyMember>(s)->x_whole)) * 0x20000u + 0x10000u);
-            const long az = static_cast<long>(High(ahead_z));
-            const long r = member_sprites::g.object_at(ax, az, 1);
+            const std::int32_t ax = Half(static_cast<std::uint32_t>(static_cast<short>(rv::As<records::PartyMember>(s)->x_whole)) * 0x20000u + 0x10000u);
+            const std::int32_t az = static_cast<std::int32_t>(High(ahead_z));
+            const std::int32_t r = member_sprites::g.object_at(ax, az, 1);
             if (Cell(0) == 0) return 3;
             if (static_cast<short>(r) <= 0x40) return 3;
             rv::Current<records::PartyMember>()->direction = 7;
@@ -1159,9 +1159,9 @@ extern "C" unsigned char __cdecl Field_CellAheadFlat(void) {
         }
         if ((k & 0xF0) == 0xA0) return member_sprites::g.cell_slope(8);
         const unsigned char* const s = Sprite_Current;
-        const long az = Half(static_cast<std::uint32_t>(static_cast<short>(rv::As<records::PartyMember>(s)->z_whole)) * 0x20000u + 0x10000u);
-        const long ax = static_cast<long>(High(ahead_x));
-        const long r = member_sprites::g.object_at(ax, az, 1);
+        const std::int32_t az = Half(static_cast<std::uint32_t>(static_cast<short>(rv::As<records::PartyMember>(s)->z_whole)) * 0x20000u + 0x10000u);
+        const std::int32_t ax = static_cast<std::int32_t>(High(ahead_x));
+        const std::int32_t r = member_sprites::g.object_at(ax, az, 1);
         if (Cell(0) == 0) return 3;
         if (static_cast<short>(r) <= 0x40) return 3;
         rv::Current<records::PartyMember>()->direction = 1;
@@ -1208,9 +1208,9 @@ extern "C" unsigned char __cdecl Field_CellAheadFlat(void) {
         }
         if (s->direction & 1) return 3;
         {
-            const long ax = Half((static_cast<std::uint32_t>(static_cast<short>(s->x_whole)) +
+            const std::int32_t ax = Half((static_cast<std::uint32_t>(static_cast<short>(s->x_whole)) +
                                   static_cast<std::uint32_t>(static_cast<short>(ahead_x))) << 16);
-            const long r = member_sprites::g.object_at(ax, static_cast<long>(High(ahead_z)), 3);
+            const std::int32_t r = member_sprites::g.object_at(ax, static_cast<std::int32_t>(High(ahead_z)), 3);
             if (Cell(0) != 0 && static_cast<short>(r) > 0x40) {
                 member_sprites::g.turn_unless(4, 6, 5);
                 return 1;
@@ -1218,9 +1218,9 @@ extern "C" unsigned char __cdecl Field_CellAheadFlat(void) {
         }
         const records::PartyMember* const t = rv::Current<records::PartyMember>();
         if (t->direction & 1) return 3;
-        const long az = Half((static_cast<std::uint32_t>(static_cast<short>(t->z_whole)) +
+        const std::int32_t az = Half((static_cast<std::uint32_t>(static_cast<short>(t->z_whole)) +
                               static_cast<std::uint32_t>(static_cast<short>(ahead_z))) << 16);
-        const long r = member_sprites::g.object_at(static_cast<long>(High(ahead_x)), az, 1);
+        const std::int32_t r = member_sprites::g.object_at(static_cast<std::int32_t>(High(ahead_x)), az, 1);
         if (Cell(0) == 0) return 3;
         if (static_cast<short>(r) <= 0x40) return 3;
         member_sprites::g.turn_unless(2, 4, 3);
@@ -1546,9 +1546,9 @@ extern "C" unsigned char __cdecl Field_CellSlope(unsigned cell) {
 // when the sloped flag (cell 0) is set and the answer's low word, signed, is
 // above 0x40, else 0.
 extern "C" unsigned char __cdecl Field_SlopeBetween(unsigned x0, unsigned x1, unsigned z0, unsigned z1, unsigned direction) {
-    const long x = HalfRest1f(static_cast<U>(static_cast<int>(static_cast<short>(x0)) + static_cast<int>(static_cast<short>(x1))) << 16);
-    const long z = HalfRest1f(static_cast<U>(static_cast<int>(static_cast<short>(z0)) + static_cast<int>(static_cast<short>(z1))) << 16);
-    const long r = SH_CALL(MapView_SlopeAt)(x, z, direction);
+    const std::int32_t x = HalfRest1f(static_cast<U>(static_cast<int>(static_cast<short>(x0)) + static_cast<int>(static_cast<short>(x1))) << 16);
+    const std::int32_t z = HalfRest1f(static_cast<U>(static_cast<int>(static_cast<short>(z0)) + static_cast<int>(static_cast<short>(z1))) << 16);
+    const std::int32_t r = SH_CALL(MapView_SlopeAt)(x, z, direction);
     if (CellRest1f(0) == 0) return 0;
     return static_cast<short>(r) > 0x40 ? 1 : 0;
 }
@@ -1652,8 +1652,8 @@ extern "C" unsigned char __cdecl Field_CellKind(unsigned x, unsigned z, unsigned
     const std::uint32_t X1 = High(x), Z1 = High(z), X0 = High(x0), Z0 = High(z0);
     const unsigned char* const c = Sprite_Current;
     const bool whole_x = rv::As<records::PartyMember>(c)->x_frac == 0, whole_z = rv::As<records::PartyMember>(c)->z_frac == 0, ground = c[0x70] == 0;
-    const long px = whole_x == ground ? Half(X1 + X0) : static_cast<long>(X1);
-    const long pz = whole_z == ground ? Half(Z1 + Z0) : static_cast<long>(Z1);
+    const std::int32_t px = whole_x == ground ? Half(X1 + X0) : static_cast<std::int32_t>(X1);
+    const std::int32_t pz = whole_z == ground ? Half(Z1 + Z0) : static_cast<std::int32_t>(Z1);
     const unsigned char to = member_sprites::g.byte_at(static_cast<short>(x), static_cast<short>(z));
     const unsigned char from = member_sprites::g.byte_at(static_cast<short>(x0), static_cast<short>(z0));
     switch (to & 0xF0) {
@@ -1720,8 +1720,8 @@ extern "C" unsigned char __cdecl Field_CellFacing(unsigned cell) {
 
 // original 0x528770: 1 when 0x5725C0 finds an object at (x, z) in the
 // sprite's facing that stands more than 0x40 high.
-extern "C" unsigned char __cdecl Field_ObjectAhead(long x, long z) {
-    const long r = member_sprites::g.object_at(x, z, rv::Current<records::PartyMember>()->direction);
+extern "C" unsigned char __cdecl Field_ObjectAhead(std::int32_t x, std::int32_t z) {
+    const std::int32_t r = member_sprites::g.object_at(x, z, rv::Current<records::PartyMember>()->direction);
     if (Cell(0) == 0) return 0;
     return static_cast<short>(r) > 0x40 ? 1 : 0;
 }

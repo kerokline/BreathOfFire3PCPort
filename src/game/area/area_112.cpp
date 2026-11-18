@@ -142,7 +142,7 @@ extern "C" void __cdecl Area112_ChoiceClearFlags(void) {
 // Cond_ByteFD 3, story flag 0x33, Cond row 13's flag 0x10, the x high word
 // 0xB..0xD and z 0x57..0x59 (16 bits), the leader's pose 0, 7 or 6: counter 0
 // = 0, Party_DropIn(0), al 1. Else al 0.
-extern "C" unsigned char __cdecl Area112_StepHook(long x, long z) {
+extern "C" unsigned char __cdecl Area112_StepHook(std::int32_t x, std::int32_t z) {
     if (Cond_ByteFD != 3) return 0;
     if (!Test(0x33)) return 0;
     if (AH_CALL(Flags_Test)(Mem(::bof3::Img(Cond_Flags_addr) + 0x68), 0x10) == 0) return 0;
@@ -162,7 +162,7 @@ extern "C" unsigned char __cdecl Area112_StepHook(long x, long z) {
 // sub-kind 0x15, al 0. Else each set bit of the entry's bits byte - bits 0..3
 // clear, bits 4..7 set Area112_HookFlags[bit & 3] - then the entry's flag
 // set, Sound_PlayEffect(0x200), Effect_HoldFlag1C(0xF), al 1.
-extern "C" unsigned char __cdecl Area112_CellHook(long x, long z) {
+extern "C" unsigned char __cdecl Area112_CellHook(std::int32_t x, std::int32_t z) {
     const auto cx = static_cast<unsigned char>(x);
     const auto cz = static_cast<unsigned char>(z);
     const unsigned char pose = B(::bof3::Img(ObjTrio_addr) + 0x8);
@@ -238,12 +238,12 @@ extern "C" void __cdecl Area112_EffectRun(void) {
 extern "C" void __cdecl Area112_EffectRing(void) {
     const unsigned char* const cur = Sprite_Current;
     const auto* const tCur = rv::AsConst<records::EffectObject>(cur);
-    long point[4];
+    std::int32_t point[4];
     point[0] = tCur->x;
     point[1] = tCur->z;
     point[2] = tCur->height;
     point[3] = 0;
-    AH_AT(void (__cdecl*)(const long*), at::kRingAt.v)(point);
+    AH_AT(void (__cdecl*)(const std::int32_t*), at::kRingAt.v)(point);
 }
 
 // original 0x4188B0 (area 113 +0x34[0]): an answer: the message word 4 and

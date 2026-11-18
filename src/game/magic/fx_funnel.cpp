@@ -83,7 +83,7 @@ float* At(unsigned char* prim, unsigned offset) { return reinterpret_cast<float*
 // The four vertices at Prim_VertexScratch projected into the primitive's
 // screen points; the depth answer and the flag word are the caller's locals.
 void Project4(unsigned char* prim, unsigned a, unsigned b, unsigned c, unsigned d) {
-    long depth = 0;
+    std::int32_t depth = 0;
     MH_CALL(Gte_RotTransPers4)(Vertex(::bof3::Img(Prim_VertexScratch_addr)), Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x8), Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x10), Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x18), At(prim, a), At(prim, b),
                                At(prim, c), At(prim, d), &depth);
 }
@@ -107,11 +107,11 @@ void Shade(unsigned char* prim, unsigned offset, unsigned char v) {
 // MagicFx_PushActorMatrix does after its own Gte_PushMatrix.
 void LoadMatrix(const short* angles, const short* vector) {
     alignas(4) unsigned char m[0x20];
-    MH_CALL(Gte_RotTrans)(vector, reinterpret_cast<long*>(m + 0x14));
+    MH_CALL(Gte_RotTrans)(vector, reinterpret_cast<std::int32_t*>(m + 0x14));
     MH_CALL(Gte_RotMatrix)(angles, reinterpret_cast<short*>(m));
     MH_CALL(Gte_MulMatrix0)(Camera_Matrix, reinterpret_cast<const short*>(m), reinterpret_cast<short*>(m));
-    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(m));
-    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(m));
+    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(m));
+    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(m));
 }
 
 // The translation the three matrices share: the task's position in map units
@@ -150,7 +150,7 @@ unsigned char* TargetRecord() {
     return target < 3 ? PartyOf(target) : EnemyOf(target);
 }
 
-long Ground(const unsigned char* at_position) {
+std::int32_t Ground(const unsigned char* at_position) {
     return MH_CALL(AreaMap_Elevation)(rv::As<records::SpriteHead>(at_position)->x, rv::As<records::SpriteHead>(at_position)->z);
 }
 

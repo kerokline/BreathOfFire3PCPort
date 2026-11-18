@@ -1,5 +1,8 @@
 // The main thread's stack and the start-up floating-point words.
-// docs/crt-startup.md sections 4, 8 and 10.
+// docs/crt-startup.md sections 4, 8 and 10. Windows-only by design
+// (docs/linux-round.md LB7): the TEB, the guard page, VirtualQuery and the
+// suspended main thread's CONTEXT; stackwatch_posix.cpp is Linux's, where
+// BOF3X_STACKWATCH refuses.
 //
 // The DLL runs on a thread the launcher made (CreateRemoteThread on
 // LoadLibraryW) while the game's main thread is still suspended at its first

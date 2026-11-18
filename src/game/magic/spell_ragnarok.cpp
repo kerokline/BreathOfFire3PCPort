@@ -70,19 +70,19 @@ template <typename T, typename F> T As(F* f) { return reinterpret_cast<T>(reinte
 
 // The GTE entry points as the overlays push them (one pointer more than
 // symbols.gen.h's prototypes: the flag word).
-using Rtp3Fn = long (__cdecl*)(const short*, const short*, const short*, float*, float*, float*, long*, long*);
+using Rtp3Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, float*, float*, float*, std::int32_t*, std::int32_t*);
 
-using Rtp4Fn = long (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*,
-                               long*, long*);
+using Rtp4Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*,
+                               std::int32_t*, std::int32_t*);
 
 void Rtp3(unsigned char* p, unsigned a, unsigned b, unsigned c) {
-    long depth, flag;
+    std::int32_t depth, flag;
     S25_AS(Rtp3Fn, Gte_RotTransPers3)(VP(0), VP(8), VP(0x10), reinterpret_cast<float*>(p + a),
                                       reinterpret_cast<float*>(p + b), reinterpret_cast<float*>(p + c), &depth, &flag);
 }
 
 void Rtp4(unsigned char* p, unsigned a, unsigned b, unsigned c, unsigned d) {
-    long depth, flag;
+    std::int32_t depth, flag;
     S25_AS(Rtp4Fn, Gte_RotTransPers4)(VP(0), VP(8), VP(0x10), VP(0x18), reinterpret_cast<float*>(p + a),
                                       reinterpret_cast<float*>(p + b), reinterpret_cast<float*>(p + c),
                                       reinterpret_cast<float*>(p + d), &depth, &flag);

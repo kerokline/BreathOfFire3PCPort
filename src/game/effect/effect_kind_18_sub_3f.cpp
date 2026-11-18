@@ -90,7 +90,7 @@ float* F(unsigned char* p) { return reinterpret_cast<float*>(p); }
 struct Matrix {
     short m[9];
     short pad;
-    long t[3];
+    std::int32_t t[3];
 };
 
 // mov ecx, [Sprite_Current]; xor eax, eax; mov al, [ecx + 2]; jmp [table + eax
@@ -126,7 +126,7 @@ bool Cue(unsigned value) { return B(::bof3::Img(at::kCounter.v)) == value; }
 // Gte_RotTransPers4 of Prim_VertexScratch's four vectors (0x9037A0, A8, B0, B8)
 // into the quad at p; the original's depth and flag are locals of its own.
 void Project4(unsigned char* p) {
-    long depth = 0;
+    std::int32_t depth = 0;
     SH_CALL(Gte_RotTransPers4)(Vector(0), Vector(8), Vector(0x10), Vector(0x18), F(p + 8), F(p + 0x18), F(p + 0x28),
                                F(p + 0x38), &depth);
 }
@@ -592,8 +592,8 @@ extern "C" void __cdecl EffectKind18Sub24_Draw(void) {
     SH_CALL(Gte_RotTrans)(pos, m.t);
     SH_CALL(Gte_RotMatrix)(angles, m.m);
     SH_CALL(Gte_MulMatrix0)(Camera_Matrix, m.m, m.m);
-    SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&m));
-    SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&m));
+    SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
+    SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
     s = S();
     const unsigned char kick = s[0xB];
     U texture;
@@ -660,8 +660,8 @@ extern "C" void __cdecl EffectKind18Sub24_DrawTrail(int from, int to, int angle,
     SH_CALL(Gte_RotMatrix)(Vector(8), m.m);
     SH_CALL(Gte_RotMatrixZ)(angle, m.m);
     SH_CALL(Gte_MulMatrix0)(Camera_Matrix, m.m, m.m);
-    SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&m));
-    SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&m));
+    SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
+    SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
     if (from < to) {
         unsigned char* const v = Vtx();
         U i = static_cast<U>(from);
@@ -682,7 +682,7 @@ extern "C" void __cdecl EffectKind18Sub24_DrawTrail(int from, int to, int angle,
                 unsigned char* const p = Gfx_PacketNext;
                 SH_CALL(Gpu_SetPolyG4)(p);
                 SH_CALL(Gpu_SetSemiTrans)(p, 1);
-                long depth = 0;
+                std::int32_t depth = 0;
                 SH_CALL(Gte_RotTransPers3)(Vector(0x10), Vector(0x18), Vector(0), F(p + 8), F(p + 0x18), MapView_ScreenXY,
                                            &depth);
                 float third = 0;

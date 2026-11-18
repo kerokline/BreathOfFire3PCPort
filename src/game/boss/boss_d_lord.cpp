@@ -88,7 +88,7 @@ unsigned char EnterBossSj(U fc, U f4, U f8) {
 // original 0x43F7A0: BossKind_Table[59]. jmp [BossDLord_States + 4 *
 // Sprite_Current +1] (12: its entry, the generic enemy states, its act table
 // at 6).
-extern "C" unsigned long __cdecl BossDLord_Dispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl BossDLord_Dispatch(std::uint32_t through) {
     return DispatchBossSj("BossDLord_Dispatch", AddressOf(BossDLord_States), 12, 1, through);
 }
 
@@ -100,7 +100,7 @@ extern "C" unsigned char __cdecl BossDLord_Enter(void) {
 
 // original 0x43F820: state 6: jmp [BossDLord_ActSubs + 4 * +2] (6: the
 // generic act table with BossDLord_Death at 4).
-extern "C" unsigned long __cdecl BossDLord_ActDispatch(unsigned long through) {
+extern "C" std::uint32_t __cdecl BossDLord_ActDispatch(std::uint32_t through) {
     return DispatchBossSj("BossDLord_ActDispatch", AddressOf(BossDLord_ActSubs), 6, 2, through);
 }
 

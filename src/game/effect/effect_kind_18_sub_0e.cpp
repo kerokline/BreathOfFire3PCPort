@@ -62,7 +62,7 @@ I Abs(I v) {
 
 // movsx eax, ax; cdq; sub eax, edx; sar eax, 1: an elevation's low word halved
 // toward zero
-I Half(long e) {
+I Half(std::int32_t e) {
     const I w = static_cast<std::int16_t>(static_cast<U>(e));
     return (w - (w >> 31)) >> 1;
 }
@@ -97,7 +97,7 @@ unsigned char* Row9() { return At(::bof3::Img(Cond_Flags_addr) + 0x48); }
 // The four-vertex projection every quad here makes of Prim_VertexScratch into a
 // primitive whose vertices are `stride` apart from +8 (0x10 textured, 0xC flat).
 void Project4Effect5b(unsigned char* prim, unsigned stride) {
-    long p;
+    std::int32_t p;
     SH_CALL(Gte_RotTransPers4)(VertexEffect5b(0), VertexEffect5b(1), VertexEffect5b(2), VertexEffect5b(3), reinterpret_cast<float*>(prim + 8),
                                reinterpret_cast<float*>(prim + 8 + stride), reinterpret_cast<float*>(prim + 8 + 2 * stride),
                                reinterpret_cast<float*>(prim + 8 + 3 * stride), &p);
@@ -238,15 +238,15 @@ extern "C" void __cdecl EffectKind18Sub0E_DrawGate(void) {
     const U far = Word(s + 0x30) - 0x35C0u;
     SetV(3, 1, far);
     SetV(1, 1, far);
-    const long e1 = SH_CALL(AreaMap_Elevation)(0x18000, static_cast<long>(z0));
+    const std::int32_t e1 = SH_CALL(AreaMap_Elevation)(0x18000, static_cast<std::int32_t>(z0));
     SetV(0, 2, static_cast<U>(0x40 - Half(e1)));
-    const long e2 = SH_CALL(AreaMap_Elevation)(0x18000, static_cast<long>(z0));
+    const std::int32_t e2 = SH_CALL(AreaMap_Elevation)(0x18000, static_cast<std::int32_t>(z0));
     const U z1 = static_cast<U>(VS(1, 1) + 0x4000) << 9;
     const U x1 = static_cast<U>(VS(1, 0) + 0x4000) << 9;
     SetV(2, 2, static_cast<U>(0x180 - Half(e2)));
-    const long e3 = SH_CALL(AreaMap_Elevation)(static_cast<long>(x1), static_cast<long>(z1));
+    const std::int32_t e3 = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(x1), static_cast<std::int32_t>(z1));
     SetV(1, 2, static_cast<U>(0x40 - Half(e3)));
-    const long e4 = SH_CALL(AreaMap_Elevation)(static_cast<long>(x1), static_cast<long>(z1));
+    const std::int32_t e4 = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(x1), static_cast<std::int32_t>(z1));
     SetV(3, 2, static_cast<U>(0x180 - Half(e4)));
     Project4Effect5b(prim, 0x10);
     SH_CALL(Gte_PrimDepths4_10)(prim);
@@ -350,7 +350,7 @@ extern "C" void __cdecl EffectKind18Sub13_Rise(void) {
 // head 0x48 - height and its foot height + 0x40 off half the ground's
 // elevation at each end; Gte_RotTransPers4, Gte_PrimDepths4_10,
 // Prim_SetTexture(texture + 0x275000F3, prim, 1), linked at the point (0x48).
-extern "C" void __cdecl EffectKind18Sub13_DrawPanel(unsigned long texture, int height) {
+extern "C" void __cdecl EffectKind18Sub13_DrawPanel(std::uint32_t texture, int height) {
     const unsigned char* const s = S();
     const U h = static_cast<U>(height);
     const U x = (rv::As<records::EffectObject>(s)->x_whole << 7) - 0x3FC0u;
@@ -366,15 +366,15 @@ extern "C" void __cdecl EffectKind18Sub13_DrawPanel(unsigned long texture, int h
     const U zf = (rv::As<records::EffectObject>(s)->z_whole << 7) - h - 0x3FF8u;
     SetV(3, 1, zf);
     SetV(1, 1, zf);
-    const long e1 = SH_CALL(AreaMap_Elevation)(static_cast<long>(xi), static_cast<long>(zi));
+    const std::int32_t e1 = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(xi), static_cast<std::int32_t>(zi));
     SetV(0, 2, 0x48u - static_cast<U>(Half(e1)) - h);
-    const long e2 = SH_CALL(AreaMap_Elevation)(static_cast<long>(xi), static_cast<long>(zi));
+    const std::int32_t e2 = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(xi), static_cast<std::int32_t>(zi));
     const U z1 = static_cast<U>(VS(1, 1) + 0x4000) << 9;
     const U x1 = static_cast<U>(VS(1, 0) + 0x4000) << 9;
     SetV(2, 2, h - static_cast<U>(Half(e2)) + 0x40u);
-    const long e3 = SH_CALL(AreaMap_Elevation)(static_cast<long>(x1), static_cast<long>(z1));
+    const std::int32_t e3 = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(x1), static_cast<std::int32_t>(z1));
     SetV(1, 2, 0x48u - static_cast<U>(Half(e3)) - h);
-    const long e4 = SH_CALL(AreaMap_Elevation)(static_cast<long>(x1), static_cast<long>(z1));
+    const std::int32_t e4 = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(x1), static_cast<std::int32_t>(z1));
     SetV(3, 2, h - static_cast<U>(Half(e4)) + 0x40u);
     unsigned char* const prim = Prim();
     SH_CALL(Gpu_SetPolyFT4)(prim);
@@ -405,17 +405,17 @@ extern "C" void __cdecl EffectKind18Sub13_DrawLine(void) {
     prim[4] = grey;
     const U z0 = static_cast<U>(VS(0, 1) + 0x4000) << 9;
     const U x0 = static_cast<U>(VS(0, 0) + 0x4000) << 9;
-    const long e1 = SH_CALL(AreaMap_Elevation)(static_cast<long>(x0), static_cast<long>(z0));
+    const std::int32_t e1 = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(x0), static_cast<std::int32_t>(z0));
     const I h1 = Half(e1);
     const U lift1 = (Frame_Counter % 0x30u) * 2 + 4;
     const U x1 = static_cast<U>(VS(1, 0) + 0x4000) << 9;
     SetV(0, 2, lift1 - static_cast<U>(h1));
     const U z1 = static_cast<U>(VS(1, 1) + 0x4000) << 9;
-    const long e2 = SH_CALL(AreaMap_Elevation)(static_cast<long>(x1), static_cast<long>(z1));
+    const std::int32_t e2 = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(x1), static_cast<std::int32_t>(z1));
     const I h2 = Half(e2);
     const U lift2 = (Frame_Counter % 0x30u) * 2 + 4;
     SetV(1, 2, lift2 - static_cast<U>(h2));
-    long p;
+    std::int32_t p;
     SH_CALL(Gte_RotTransPers3)(VertexEffect5b(0), VertexEffect5b(1), VertexEffect5b(2), reinterpret_cast<float*>(prim + 8),
                                reinterpret_cast<float*>(prim + 0x14), MapView_ScreenXY, &p);
     float depth;

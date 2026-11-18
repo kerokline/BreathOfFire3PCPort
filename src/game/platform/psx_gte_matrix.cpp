@@ -29,7 +29,7 @@ namespace {
 struct State {
     unsigned char scratch[96];
     short camera[9];
-    unsigned long gte[8];
+    std::uint32_t gte[8];
 };
 
 void Capture(State& s, const unsigned char* scratch) {
@@ -136,8 +136,8 @@ void SelfTest(const Entry* entries, unsigned n) {
         const bool same = pad_ok && std::memcmp(&their_out, &our_out, sizeof their_out) == 0 &&
                           (e.shape == kLoad || result[0] == result[1]);
         if (!same && ++bad <= 8)
-            bof3::Log("shadow      psx_gte_matrix self-test MISMATCH: %s, round %u, cells %u %u %u, value %08lX, "
-                      "padding %s", e.name, round, at[0], at[1], at[2], static_cast<unsigned long>(value),
+            bof3::Log("shadow      psx_gte_matrix self-test MISMATCH: %s, round %u, cells %u %u %u, value %08X, "
+                      "padding %s", e.name, round, at[0], at[1], at[2], static_cast<std::uint32_t>(value),
                       pad_ok ? "zero" : "NOT ZERO");
     }
     Apply(saved, scratch);

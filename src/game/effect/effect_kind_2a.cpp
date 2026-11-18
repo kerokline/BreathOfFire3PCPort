@@ -93,7 +93,7 @@ void BeamColour(unsigned char* v, U table) {
 }
 
 // original 0x470470 / 0x4713C0: see EffectKind28_DrawBeam.
-void DrawBeam(const long* a, const long* b, U colours, EndFn end, SidesFn sides) {
+void DrawBeam(const std::int32_t* a, const std::int32_t* b, U colours, EndFn end, SidesFn sides) {
     DrawMode(1, 0x3C0, 0, 1);
     SH_CALL(Gfx_CommitPrim)(3, 0xC);
     SH_CALL(EffectGte_LoadMapCamera)();
@@ -220,12 +220,12 @@ unsigned char* Member(const char* who, unsigned m) {
 // above it, the beam drawn and the row pushed.
 void Row2A() {
     const unsigned char* const s = S();
-    const long ground = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c), static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_10));
+    const std::int32_t ground = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c), static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_10));
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_20, (static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(ground))) + 0x100u) << 16);
     unsigned char* const t = S();
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(t)->step_y, static_cast<std::uint32_t>(rv::As<records::EffectObject>(t)->work_20));
     const unsigned char* const u = S();
-    SH_CALL(EffectKind2A_DrawBeam)(reinterpret_cast<const long*>(u + 0xC), reinterpret_cast<const long*>(u + 0x18));
+    SH_CALL(EffectKind2A_DrawBeam)(reinterpret_cast<const std::int32_t*>(u + 0xC), reinterpret_cast<const std::int32_t*>(u + 0x18));
     SH_CALL(EffectKind2A_PushParty)();
 }
 
@@ -301,7 +301,7 @@ extern "C" void __cdecl EffectKind2A_PushParty(void) {
 
 // original 0x4713C0 (0x1CC bytes): EffectKind28_DrawBeam's copy - its colours
 // 0x654328, its end and side draws EffectKind2A_DrawEnd / _DrawSides.
-extern "C" void __cdecl EffectKind2A_DrawBeam(const long* a, const long* b) {
+extern "C" void __cdecl EffectKind2A_DrawBeam(const std::int32_t* a, const std::int32_t* b) {
     DrawBeam(a, b, ::bof3::Img(at::kBeamColours2A.v), &EffectKind2A_DrawEnd, &EffectKind2A_DrawSides);
 }
 

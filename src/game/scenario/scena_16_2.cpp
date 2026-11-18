@@ -101,7 +101,7 @@ void Scene3Tail() {
     const std::int32_t kind2_z = Field_Kind2Z;
     const std::int32_t d = Sprite_ObjectsExtra[0].z;
     MapView_Origin[1] = static_cast<short>(static_cast<unsigned>(static_cast<std::uint16_t>(MapView_Origin[1])) - 0x1Eu);
-    Field_Kind2Z = static_cast<long>(static_cast<std::uint32_t>(kind2_z) - 0x1E0000u);
+    Field_Kind2Z = static_cast<std::int32_t>(static_cast<std::uint32_t>(kind2_z) - 0x1E0000u);
     const std::int32_t e = Sprite_Kind2.z;
     MapView_FocusZ = 0x6200;
     Sprite_ObjectsExtra[0].z = static_cast<std::int32_t>(static_cast<std::uint32_t>(d) - 0x1E0000u);

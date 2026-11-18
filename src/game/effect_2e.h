@@ -41,7 +41,7 @@ void __cdecl EffectKind48_State12_Shrink(void);
 
 // original 0x479970: the mean of two angles of 12 bits, taken the short way
 // round (0x800 added when they lie 0x800 or more apart). Answers in eax.
-long __cdecl EffectAngle_Mean(unsigned a, unsigned b);
+std::int32_t __cdecl EffectAngle_Mean(unsigned a, unsigned b);
 // original 0x47A560: the unit sphere's 0x1E2 vertices (15 rings of 32 and the
 // two poles, 0x1000 = 1), its 0x200 quads and each vertex's shade under the
 // light (0, 0x1000, 0x1000) normalised. al 0.
@@ -61,7 +61,7 @@ void __cdecl EffectKind4A_TrailDraw(void);
 // original 0x47AF10: a fan of 32 Gouraud triangles round `point`'s screen
 // position, its radius `size` (the low word) scaled to the point's depth; the
 // centre shaded `centre`, the rim `rim` (bytes).
-void __cdecl EffectKind4A_DrawGlow(const long* point, unsigned size, unsigned centre, unsigned rim);
+void __cdecl EffectKind4A_DrawGlow(const std::int32_t* point, unsigned size, unsigned centre, unsigned rim);
 
 // Kind 0x4B: 32 debris at a fixed cell; Effect_KindHandlers[0x4B].
 void __cdecl EffectKind4B_Run(void);

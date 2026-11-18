@@ -267,7 +267,7 @@ void Disturb(U salt) {
     default: At(Gfx_DrawTpage_addr)[(h >> 8) % 2] = value; break;
     }
 }
-void __cdecl StubPrimColor(U r, U gg, U b, U code, U mode, unsigned long* diffuse, unsigned long* specular) {
+void __cdecl StubPrimColor(U r, U gg, U b, U code, U mode, std::uint32_t* diffuse, std::uint32_t* specular) {
     Record(11, r, gg, b, code, mode, specular != nullptr);
     Disturb(12);
     *diffuse = Mix(13);
@@ -288,16 +288,16 @@ void __cdecl StubShade(U mode) {
 
 const Callees kStandIns = {
     As<unsigned char (__cdecl*)(short, short)>(&StubCell),
-    As<unsigned char (__cdecl*)(long, long)>(&StubSteep),
-    As<unsigned char (__cdecl*)(long, long)>(&StubSteepAt),
+    As<unsigned char (__cdecl*)(std::int32_t, std::int32_t)>(&StubSteep),
+    As<unsigned char (__cdecl*)(std::int32_t, std::int32_t)>(&StubSteepAt),
     StubSetPolyF4,
     As<void (__cdecl*)(unsigned, unsigned)>(&StubCommit),
-    As<unsigned char (__cdecl*)(unsigned long)>(&StubCondition),
-    As<unsigned long (__cdecl*)(long, long)>(&StubItemAt),
-    As<void (__cdecl*)(unsigned long, unsigned char*, int)>(&StubSetTexture),
+    As<unsigned char (__cdecl*)(std::uint32_t)>(&StubCondition),
+    As<std::uint32_t (__cdecl*)(std::int32_t, std::int32_t)>(&StubItemAt),
+    As<void (__cdecl*)(std::uint32_t, unsigned char*, int)>(&StubSetTexture),
     StubCheckScale,
-    As<long (__cdecl*)(long, long, unsigned long)>(&StubSlope),
-    As<void (__cdecl*)(unsigned, unsigned, unsigned, unsigned, unsigned, unsigned long*, unsigned long*)>(
+    As<std::int32_t (__cdecl*)(std::int32_t, std::int32_t, std::uint32_t)>(&StubSlope),
+    As<void (__cdecl*)(unsigned, unsigned, unsigned, unsigned, unsigned, std::uint32_t*, std::uint32_t*)>(
         &StubPrimColor),
     As<void (__cdecl*)(unsigned)>(&StubRet),
     As<void (__cdecl*)(unsigned, unsigned)>(&StubBlend),

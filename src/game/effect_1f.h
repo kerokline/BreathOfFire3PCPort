@@ -15,13 +15,13 @@ extern "C" {
 // Sprite_Current +0x3C held at 0, then +0x40 and +0x44 = 0x4650000 / d with the
 // low byte cleared (d = +0x60 above 0, +0x60 - 2 * s16 +0x3E below 0; both 0
 // at 0). A d of 0 is the original's divide fault: ours aborts.
-unsigned long __cdecl Sprite_UpdateScreenScaled(void);
+std::uint32_t __cdecl Sprite_UpdateScreenScaled(void);
 
 // original 0x52CE60 (PSX twin 0x801E0B14): a kind's points for a count - the
 // record's word +0x12 at or above its threshold byte +0xF (36-byte records
 // from 0x66A6A0), else (count * 10 / threshold) * points / 10. eax: the
 // count's high word and the points, or the scaled value (callers read ax).
-unsigned long __cdecl FieldPanel_KindPoints(unsigned kind, unsigned count);
+std::uint32_t __cdecl FieldPanel_KindPoints(unsigned kind, unsigned count);
 
 // original 0x52CED0 (PSX twin 0x801E0BC4): FieldPanel_KindPoints summed over
 // the 32 count bytes 0x9040EC that are not 0.

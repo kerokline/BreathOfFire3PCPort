@@ -432,12 +432,12 @@ void Fade(const Pool& p) {
 void DrawMode(const Pool& p) {
     MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
     const unsigned char* const c = Cur(p);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(move_script::Long(c + 0x14)), static_cast<unsigned long>(move_script::Long(c + 0x18)), 2, 0xC);
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(move_script::Long(c + 0x14)), static_cast<std::uint32_t>(move_script::Long(c + 0x18)), 2, 0xC);
 }
 
 void Commit(const Pool& p) {
     const unsigned char* const c = Cur(p);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(move_script::Long(c + 0x14)), static_cast<unsigned long>(move_script::Long(c + 0x18)), 2, 0x34);
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(move_script::Long(c + 0x14)), static_cast<std::uint32_t>(move_script::Long(c + 0x18)), 2, 0x34);
 }
 
 // Scratch +0 / +2 the sparkle's screen point (read before the draw mode).

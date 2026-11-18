@@ -252,12 +252,12 @@ bool Rect(const unsigned char* s, float& left, float& right, float& top, float& 
     if (s[0] & 0x40) return false;
     float sx = 1.0f, sy = 1.0f;
     if (!(s[0x24] & 0x80) && s[0x48] == 1) {
-        const long depth = Get<long>(s, 0x60);
+        const std::int32_t depth = Get<std::int32_t>(s, 0x60);
         if (depth == 0) return false;
         sx = sy = static_cast<float>(static_cast<double>((0x4650000L / depth) & ~0xFFL) * (1.0 / 65536));
     } else if (s[0x48] != 0) {
-        sx = static_cast<float>(static_cast<double>(Get<long>(s, 0x40)) * (1.0 / 65536));
-        sy = static_cast<float>(static_cast<double>(Get<long>(s, 0x44)) * (1.0 / 65536));
+        sx = static_cast<float>(static_cast<double>(Get<std::int32_t>(s, 0x40)) * (1.0 / 65536));
+        sy = static_cast<float>(static_cast<double>(Get<std::int32_t>(s, 0x44)) * (1.0 / 65536));
     }
     const float x = Get<float>(s, 0x74), y = Get<float>(s, 0x78);
     int l = 0, r = 0, t = 0, b = 0;
@@ -505,12 +505,12 @@ void SelfTest() {
         Check(ok && about(L, px - r) && about(R, px - l), "rect mirrored", static_cast<int>(L), static_cast<int>(R));
         sprite[0x2A] = 0;
         sprite[0x48] = 1;   // scaled by the depth: 0x4650000 / 2250 = 0x8000, half size
-        const long depth = 2250;
+        const std::int32_t depth = 2250;
         std::memcpy(sprite + 0x60, &depth, 4);
         ok = Rect(sprite, L, R, T, B);
         Check(ok && about(L, px + l * 0.5) && about(R, px + r * 0.5) && about(B, py + b * 0.5), "rect scaled",
               static_cast<int>(L * 100), static_cast<int>(R * 100));
-        const long zero = 0;
+        const std::int32_t zero = 0;
         std::memcpy(sprite + 0x60, &zero, 4);
         Check(!Rect(sprite, L, R, T, B), "depth 0 draws nothing");
         sprite[0x48] = 0;
@@ -639,7 +639,7 @@ unsigned EnvUnsigned(const char* name, unsigned fallback, unsigned lo, unsigned 
     const std::uint32_t n = bof3::os::GetEnv(name, text, sizeof text);
     if (n == 0) return fallback;
     char* end = nullptr;
-    const unsigned long v = n < sizeof text ? std::strtoul(text, &end, 10) : 0;
+    const std::uint32_t v = n < sizeof text ? std::strtoul(text, &end, 10) : 0;
     if (n >= sizeof text || end == text || *end != '\0' || v < lo || v > hi)
         bof3::Fatal("%s must be %u..%u", name, lo, hi);
     return static_cast<unsigned>(v);

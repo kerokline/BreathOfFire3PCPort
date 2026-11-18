@@ -157,8 +157,8 @@ extern "C" void __cdecl EffectKind4E_Start(void) {
     const std::int32_t height = static_cast<std::int16_t>(ObjTrio[0].height_whole);
     Prim_VertexScratch[0].y = static_cast<short>(Sar(z, 9) - 0x4000u);
     Prim_VertexScratch[0].z = static_cast<short>(-(height / 2));
-    long depth = 0;
-    const long answer = SH_CALL(Gte_RotTransPers)(reinterpret_cast<short*>(Prim_VertexScratch), reinterpret_cast<unsigned long*>(S() + 0x74), &depth);
+    std::int32_t depth = 0;
+    const std::int32_t answer = SH_CALL(Gte_RotTransPers)(reinterpret_cast<short*>(Prim_VertexScratch), reinterpret_cast<std::uint32_t*>(S() + 0x74), &depth);
     rv::Current<records::EffectObject>()->depth = static_cast<U>(answer);
     SH_CALL(Gte_StoreDepthF)(reinterpret_cast<float*>(S() + 0x7C));
     S()[9] = 0;

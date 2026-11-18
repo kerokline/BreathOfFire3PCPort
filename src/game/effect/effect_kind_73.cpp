@@ -242,20 +242,20 @@ extern "C" void __cdecl EffectKind74_Draw(void) {
     U angle = Word(s + 0x20);
     const U x = rv::As<records::EffectWork>(s)->work_0c, z = rv::As<records::EffectWork>(s)->work_10;
     U y = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->step_y);
-    long pt[3];
+    std::int32_t pt[3];
     float low[3], high[3];
     auto project = [&](U a) {
-        pt[0] = static_cast<long>((static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(a))) << 5) + x);
-        pt[1] = static_cast<long>((static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(a))) << 5) + z);
+        pt[0] = static_cast<std::int32_t>((static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(a))) << 5) + x);
+        pt[1] = static_cast<std::int32_t>((static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(a))) << 5) + z);
         unsigned char* c = S();
         U h = y - UL(c + 0x24);
         if (S32(h) < S32(static_cast<std::uint32_t>(rv::As<records::EffectObject>(c)->step_y))) h = static_cast<std::uint32_t>(rv::As<records::EffectObject>(c)->step_y);
-        pt[2] = static_cast<long>(h);
+        pt[2] = static_cast<std::int32_t>(h);
         SH_CALL(EffectGte_ProjectPoint)(pt, low);
         c = S();
         h = y;
         if (S32(y) > S32(static_cast<std::uint32_t>(rv::As<records::EffectObject>(c)->work_1c))) h = static_cast<std::uint32_t>(rv::As<records::EffectObject>(c)->work_1c);
-        pt[2] = static_cast<long>(h);
+        pt[2] = static_cast<std::int32_t>(h);
         SH_CALL(EffectGte_ProjectPoint)(pt, high);
     };
     project(angle);
@@ -283,7 +283,7 @@ extern "C" void __cdecl EffectKind74_Draw(void) {
         prim[4] = prim[5] = prim[6] = 0x80;
         rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(prim)->tpage, SH_CALL(Gpu_GetTPage)(1, 0, 0x1C0, 0x100));
         rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(prim)->clut, SH_CALL(Gpu_GetClut)(0, 0x1E5));
-        SH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(pt[0]), static_cast<unsigned long>(pt[1]), 2, 0x48);
+        SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(pt[0]), static_cast<std::uint32_t>(pt[1]), 2, 0x48);
         s = S();
     } while (S32(y) < S32(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_1c) + 0x1000000u));
 }
@@ -388,7 +388,7 @@ extern "C" void __cdecl EffectKind73_DrawSpark(unsigned char* r) {
     unsigned char* const prim = Gfx_PacketNext;
     SH_CALL(Gpu_SetPolyFT4)(prim);
     SH_CALL(Gpu_SetSemiTrans)(prim, 1);
-    const long* const point = reinterpret_cast<const long*>(r + 4);
+    const std::int32_t* const point = reinterpret_cast<const std::int32_t*>(r + 4);
     float screen[3];
     SH_CALL(EffectGte_ProjectPoint)(point, screen);
     short wh[2] = {static_cast<short>(Word(r + 0x14)), static_cast<short>(Word(r + 0x14))};

@@ -121,11 +121,11 @@ void Dispatch(const std::uint32_t* phases, unsigned n, unsigned phase, const cha
 
 // The projections with the arguments the originals push: the depth and a
 // flag pointer past the declared ones (cdecl: the caller pops them).
-using Rtp3Fn = long (__cdecl*)(const short*, const short*, const short*, unsigned char*, unsigned char*, unsigned char*,
-                               long*, long*);
+using Rtp3Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, unsigned char*, unsigned char*, unsigned char*,
+                               std::int32_t*, std::int32_t*);
 
-using Rtp4Fn = long (__cdecl*)(const short*, const short*, const short*, const short*, unsigned char*, unsigned char*,
-                               unsigned char*, unsigned char*, long*, long*);
+using Rtp4Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, const short*, unsigned char*, unsigned char*,
+                               unsigned char*, unsigned char*, std::int32_t*, std::int32_t*);
 
 #define S07_AS(type, name) ::magic_harness::Call(reinterpret_cast<type>(reinterpret_cast<void*>(&::name)))
 
@@ -134,7 +134,7 @@ using Rtp4Fn = long (__cdecl*)(const short*, const short*, const short*, const s
 void LinkAtSprite(int dy, unsigned size) {
     const unsigned char* const s = Sc();
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->z), dy,
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(ts->x), static_cast<std::uint32_t>(ts->z), dy,
                                 size);
 }
 
@@ -468,8 +468,8 @@ S07_EXPORT void __cdecl FocusAura_DrawRing(void) {
         const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
         SetVW(0x1A, static_cast<unsigned>(y4));
         const std::uint32_t shift = static_cast<std::uint32_t>(Shl(VS(0x18), 9));
-        const auto x = static_cast<unsigned long>(static_cast<std::uint32_t>(ts->x) + shift);
-        const auto z = static_cast<unsigned long>(static_cast<std::uint32_t>(ts->z) + shift);
+        const auto x = static_cast<std::uint32_t>(static_cast<std::uint32_t>(ts->x) + shift);
+        const auto z = static_cast<std::uint32_t>(static_cast<std::uint32_t>(ts->z) + shift);
         DrawMode(0x35);
         MH_CALL(MapView_LinkPrimAt)(x, z, 0, 0xC);
         unsigned char* const p = Gfx_PacketNext;
@@ -482,7 +482,7 @@ S07_EXPORT void __cdecl FocusAura_DrawRing(void) {
         p[0x34] = SB(0);
         p[0x35] = SB(2);
         p[0x36] = SB(4);
-        long depth, flag;
+        std::int32_t depth, flag;
         S07_AS(Rtp4Fn, Gte_RotTransPers4)(VP(0), VP(8), VP(0x10), VP(0x18), p + 8, p + 0x18, p + 0x28, p + 0x38, &depth,
                                          &flag);
         MH_CALL(Gte_PrimDepths4_10B)(p);
@@ -521,7 +521,7 @@ S07_EXPORT void __cdecl FocusAura_DrawDisc(void) {
         SetVW(0x10, static_cast<unsigned>(Mul12(v, SS(6))));
         v = MH_CALL(Math_Cos)(e);
         SetVW(0x12, static_cast<unsigned>(Mul12(v, SS(6))));
-        long depth, flag;
+        std::int32_t depth, flag;
         S07_AS(Rtp3Fn, Gte_RotTransPers3)(VP(0), VP(8), VP(0x10), p + 8, p + 0x18, p + 0x28, &depth, &flag);
         MH_CALL(Gte_PrimDepths3_10B)(p);
         p[4] = 1;

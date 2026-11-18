@@ -284,7 +284,7 @@ extern "C" void __cdecl EffectKind9D_Shrink(void) {
 // original 0x48A010 (x, y: a screen point's floats): Kind9DQuad with the upper
 // corners 0x90 grey and the lower two green +0x5D + 0x20 / +0x5E + 0x20 (both
 // read at entry).
-extern "C" void __cdecl EffectKind9D_DrawPulse(unsigned long x, unsigned long y) {
+extern "C" void __cdecl EffectKind9D_DrawPulse(std::uint32_t x, std::uint32_t y) {
     unsigned char* const s = S();
     const unsigned char a = static_cast<unsigned char>(s[0x5D] + 0x20);
     const unsigned char b = static_cast<unsigned char>(s[0x5E] + 0x20);
@@ -293,7 +293,7 @@ extern "C" void __cdecl EffectKind9D_DrawPulse(unsigned long x, unsigned long y)
 
 // original 0x48A160 (x, y): Kind9DQuad with the upper corners +0x5D grey and
 // the lower two +0x5E grey (both read at entry).
-extern "C" void __cdecl EffectKind9D_DrawGlow(unsigned long x, unsigned long y) {
+extern "C" void __cdecl EffectKind9D_DrawGlow(std::uint32_t x, std::uint32_t y) {
     unsigned char* const s = S();
     const unsigned char a = s[0x5D];
     const unsigned char b = s[0x5E];
@@ -317,8 +317,8 @@ extern "C" void __cdecl EffectKind9D_Project(float* out) {
     v[0] = static_cast<short>(Sar(static_cast<std::uint32_t>(so->x), 9) - 0x4000u);
     v[1] = static_cast<short>(Sar(static_cast<std::uint32_t>(so->z), 9) - 0x4000u);
     v[2] = static_cast<short>(-(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(s)->height_whole)) / 2));
-    long depth;
-    const long r = SH_CALL(Gte_RotTransPers)(v, reinterpret_cast<unsigned long*>(out), &depth);
+    std::int32_t depth;
+    const std::int32_t r = SH_CALL(Gte_RotTransPers)(v, reinterpret_cast<std::uint32_t*>(out), &depth);
     rv::Current<records::EffectObject>()->depth = static_cast<U>(r);
     FldSub(&out[0], At(at::kCentreX), &out[0]);
     FldSub(&out[1], At(at::kCentreY), &out[1]);

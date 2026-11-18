@@ -136,7 +136,7 @@ int Band(int q, int previous, int zero, const int (&bands)[8]) {
 
 void PushMessage(unsigned id) {
     const unsigned char* const text = MH_CALL(Msg_SystemPtr)(id);
-    MH_CALL(BattleQueue_Push)(1, 0x3C, static_cast<unsigned long>(Key(text)));
+    MH_CALL(BattleQueue_Push)(1, 0x3C, static_cast<std::uint32_t>(Key(text)));
 }
 
 }  // namespace
@@ -450,15 +450,15 @@ extern "C" void __cdecl MagicFx_PushActorMatrix(void) {
     v[3] = 0;
     struct Matrix {
         short m[10];
-        long t[3];
+        std::int32_t t[3];
     } m;
     static_assert(offsetof(Matrix, t) == 0x14 && sizeof(Matrix) == 0x20, "MATRIX layout");
-    long flag;
+    std::int32_t flag;
     g.rot_trans(v, m.t, &flag);
     g.rot_matrix(rot, m.m);
     g.mul_matrix0(Camera_Matrix, m.m, m.m);
-    g.set_rot(reinterpret_cast<const unsigned long*>(&m));
-    g.set_trans(reinterpret_cast<const unsigned long*>(&m));
+    g.set_rot(reinterpret_cast<const std::uint32_t*>(&m));
+    g.set_trans(reinterpret_cast<const std::uint32_t*>(&m));
 }
 
 void Foretell_Inject() {

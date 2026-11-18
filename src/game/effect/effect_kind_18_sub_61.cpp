@@ -382,7 +382,7 @@ extern "C" void __cdecl EffectKind18Sub61_DrawTracks(void) {
                 SH_CALL(MapView_LinkPrimAt)(static_cast<U>(t[0]) << 16, static_cast<U>(t[1]) << 16, 0, 0x48);
             }
             const U step = S8U(At(::bof3::Img(at::kTrackSteps.v) + r)[0]);
-            item = SH_CALL(MapView_ItemHalfAt)(t[0], static_cast<long>(t[1] + step));
+            item = SH_CALL(MapView_ItemHalfAt)(t[0], static_cast<std::int32_t>(t[1] + step));
             if (item == nullptr) continue;
             unsigned char* const p = Gfx_PacketNext;
             SH_CALL(Gpu_SetPolyFT4)(p);
@@ -640,7 +640,7 @@ extern "C" void __cdecl EffectKind18Sub62_Ripple(void) {
             corners[at3] = static_cast<unsigned char>(corners[at3] + up13);
         }
     }
-    const long h = SH_CALL(AreaMap_Elevation)(Sprite_ObjectsExtra[0].x, Sprite_ObjectsExtra[0].z);
+    const std::int32_t h = SH_CALL(AreaMap_Elevation)(Sprite_ObjectsExtra[0].x, Sprite_ObjectsExtra[0].z);
     Sprite_ObjectsExtra[0].height_whole = static_cast<U>(h);
     Sprite_ObjectsExtra[0].step_y = 0;
     MapView_Redraw = 2;
@@ -684,7 +684,7 @@ extern "C" void __cdecl EffectKind18Sub63_Glow(void) {
             SetWord(out + 2, y);
             SetWord(out + 4, Word(At(::bof3::Img(at::kGlowReach.v) + 4 * k2 + 2)));
         }
-        long depth;
+        std::int32_t depth;
         SH_CALL(Gte_RotTransPers4)(Vertex(0), Vertex(1), Vertex(2), Vertex(3), reinterpret_cast<float*>(p + 8),
                                    reinterpret_cast<float*>(p + 0x18), reinterpret_cast<float*>(p + 0x28),
                                    reinterpret_cast<float*>(p + 0x38), &depth);

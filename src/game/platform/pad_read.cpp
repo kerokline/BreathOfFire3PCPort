@@ -104,7 +104,7 @@ void LoadPadMap() {
         bof3::Log("pad: BOF3X_PAD - %d items understood, %u inputs bound, layout %s", understood,
                   static_cast<unsigned>(pad.size()), input::LayoutName(layout));
     } else if (n >= sizeof text) {
-        bof3::Log("pad: BOF3X_PAD too long (%lu); the default map", static_cast<unsigned long>(n));
+        bof3::Log("pad: BOF3X_PAD too long (%u); the default map", static_cast<std::uint32_t>(n));
     }
     pad_read::g_layout = LayoutFromEnv(layout);
 }

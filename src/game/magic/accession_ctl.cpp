@@ -82,7 +82,7 @@ S33_EXPORT void __cdecl AccessionCtl_Start(void) {
     {
         const unsigned char* const s = Sc();
         const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-        const long ground = MH_CALL(AreaMap_Elevation)(ts->x, ts->z);
+        const std::int32_t ground = MH_CALL(AreaMap_Elevation)(ts->x, ts->z);
         rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, U(ground) & 0xFFFF);
     }
     Sc()[0xB] = 0;

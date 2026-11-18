@@ -58,7 +58,7 @@ Handler StateEntry(const char* who, U table, unsigned count, unsigned index) {
 // x's low byte, whose z byte is z's, and whose direction (the third byte's low
 // nibble) is the leader's direction byte (the whole byte: 0x10 or more matches
 // none); `count` when none - the search the three cell hooks open with.
-unsigned FindCell(U table, unsigned count, unsigned stride, long x, long z) {
+unsigned FindCell(U table, unsigned count, unsigned stride, std::int32_t x, std::int32_t z) {
     const unsigned char pose = B(::bof3::Img(ObjTrio_addr) + 0x8);
     for (unsigned i = 0; i < count; ++i) {
         const unsigned char* const e = Mem(table + i * stride);
@@ -408,7 +408,7 @@ extern "C" void __cdecl Area141_Tail52(void) {
 // original 0x420360 (Area_CellHooks, area 0x8D): FindCell over
 // Area141_CellEntries; a match: ScriptFlags_Set40, tail kind 52 at the
 // entry's state (+3), al 1; none: al 0.
-extern "C" unsigned char __cdecl Area141_CellHook(long x, long z) {
+extern "C" unsigned char __cdecl Area141_CellHook(std::int32_t x, std::int32_t z) {
     const unsigned i = FindCell(::bof3::Img(Area141_CellEntries_addr), at::kArea141CellCount, 4, x, z);
     if (i == at::kArea141CellCount) return 0;
     AH_CALL(ScriptFlags_Set40)();

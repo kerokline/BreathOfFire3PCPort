@@ -103,7 +103,7 @@ unsigned Alloc(std::uint32_t address) { return MH_WORD(FnAlloc, address)() & 0xF
 void DrawMode(unsigned tpage) { MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, tpage, 0); }
 
 void Link(std::int32_t x, std::int32_t z, int dy, unsigned size) {
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), dy, size);
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), dy, size);
 }
 
 // Linked at a MAGIC168 mote's +0x14 / +0x18.

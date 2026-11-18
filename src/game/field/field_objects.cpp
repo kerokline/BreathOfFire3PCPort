@@ -58,7 +58,7 @@ constexpr unsigned kBuf = 0x100, kLog = 64;
 unsigned char g_object[kBuf], g_sprite[kBuf], g_descriptor[0x44];
 const unsigned char* g_scripts[256];
 short g_vectors[256 * 3];   // the descriptor's +0x0C offsets
-long g_offset[4];
+std::int32_t g_offset[4];
 struct Entry { std::uint32_t what, a, b, c; };
 Entry g_log[kLog];
 unsigned g_log_n, g_seed;
@@ -110,7 +110,7 @@ unsigned char __cdecl StubBlocked(unsigned char* o) { Record(3, Id(o)); Disturb(
 void __cdecl StubMove(unsigned char* c, unsigned char d) { Record(4, Id(c), d); Disturb(); }
 void __cdecl StubSettle(unsigned char* o, unsigned char d) { Record(5, Id(o), d); }
 void __cdecl StubMotion(unsigned char* o) { Record(6, Id(o)); }
-long __cdecl StubElevation(long x, long z) { Record(7, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z)); return static_cast<long>(Hash()); }
+std::int32_t __cdecl StubElevation(std::int32_t x, std::int32_t z) { Record(7, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z)); return static_cast<std::int32_t>(Hash()); }
 void __cdecl StubPartyApply(unsigned char* c) { Record(8, Id(c)); Disturb(); }
 void __cdecl StubPartyMove(unsigned char* o, unsigned char d) { Record(9, Id(o), d); Disturb(); }
 // The attach pair's: the handle's object number (often one of the 30, or a
@@ -121,9 +121,9 @@ unsigned char __cdecl StubByHandle(unsigned char h) {
     const std::uint32_t k = Hash();
     return static_cast<unsigned char>(k % 4 ? k % 0x1E : 0x1E + (k >> 8) % 8);
 }
-void __cdecl StubAttachOffset(long* out, unsigned char i) {
+void __cdecl StubAttachOffset(std::int32_t* out, unsigned char i) {
     Record(11, i);
-    for (unsigned j = 0; j < 3; ++j) out[j] = static_cast<long>(Hash() * (j + 3));
+    for (unsigned j = 0; j < 3; ++j) out[j] = static_cast<std::int32_t>(Hash() * (j + 3));
     Disturb();
 }
 void __cdecl StubUpdate(unsigned char* o) { Record(12, Id(o)); Disturb(); }
@@ -139,15 +139,15 @@ short* __cdecl StubRotMatrix(const short* a, short* m) {
     for (unsigned i = 0; i < 16; ++i) m[i] = static_cast<short>(Hash() >> i);
     return m;
 }
-void __cdecl StubTransMatrix(unsigned long* m, const unsigned long* v) {
+void __cdecl StubTransMatrix(std::uint32_t* m, const std::uint32_t* v) {
     Record(16, static_cast<std::uint32_t>(v[0]), static_cast<std::uint32_t>(v[1]), static_cast<std::uint32_t>(v[2]));
     for (unsigned i = 0; i < 3; ++i) m[5 + i] = v[i];
 }
-void __cdecl StubSetRot(const unsigned long* m) { Record(17, Sum(m, 20)); }
-void __cdecl StubSetTrans(const unsigned long* m) { Record(18, Sum(m + 5, 12)); }
-void __cdecl StubRotTrans(const short* v, long* out) {
+void __cdecl StubSetRot(const std::uint32_t* m) { Record(17, Sum(m, 20)); }
+void __cdecl StubSetTrans(const std::uint32_t* m) { Record(18, Sum(m + 5, 12)); }
+void __cdecl StubRotTrans(const short* v, std::int32_t* out) {
     Record(19, static_cast<std::uint16_t>(v[0]), static_cast<std::uint16_t>(v[1]) << 16 | static_cast<std::uint16_t>(v[2]));
-    for (unsigned j = 0; j < 3; ++j) out[j] = static_cast<long>(Hash() * (j + 7));
+    for (unsigned j = 0; j < 3; ++j) out[j] = static_cast<std::int32_t>(Hash() * (j + 7));
 }
 const field_objects::CalleesFieldObjects kStubs = {StubStep, StubPoseWait, StubBlocked, StubMove, StubSettle, StubMotion, StubElevation, StubPartyApply, StubPartyMove,
                         StubByHandle, StubAttachOffset, StubUpdate, StubPush, StubRotMatrix, StubTransMatrix, StubSetRot, StubSetTrans,
@@ -213,7 +213,7 @@ constexpr unsigned kRegionBytes = sizeof(records::SpriteObject) + 8 * 0xA4 + Mov
 struct State {
     unsigned char memory[kRegionBytes];
     unsigned char object[kBuf], sprite[kBuf];
-    long offset[4];   // MoveCmd_AttachOffset's out
+    std::int32_t offset[4];   // MoveCmd_AttachOffset's out
     unsigned char* current;
     unsigned char* active;
     std::uint16_t area;
@@ -251,7 +251,7 @@ bool Often() { return Next() % 3 == 0; }
 
 using ObjectFn = void (__cdecl*)(unsigned char*);
 using SettleFn = void (__cdecl*)(unsigned char*, unsigned char);
-using OffsetFn = void (__cdecl*)(long*, unsigned char);
+using OffsetFn = void (__cdecl*)(std::int32_t*, unsigned char);
 
 void SelfTest(void* const (&theirs)[kCount]) {
     constexpr unsigned kRounds = 20000;

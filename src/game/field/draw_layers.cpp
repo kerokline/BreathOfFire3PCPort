@@ -11,7 +11,7 @@
 namespace {
 
 constexpr unsigned kLayers = 0x38, kLayerBytes = 0x30;
-static_assert(kLayers * kLayerBytes == DrawLayers_count * sizeof(unsigned long));
+static_assert(kLayers * kLayerBytes == DrawLayers_count * sizeof(std::uint32_t));
 
 // --- BOF3X_SHADOW=draw_layers: differential fuzzes, once at start-up -----------
 // Neither function calls anything and every jump is internal, so byte-copies
@@ -60,10 +60,10 @@ void SelfTestReset(VoidFn theirs) {
 // with the low 16 bits random, so that the order shows.
 void SelfTestSort(VoidFn theirs) {
     constexpr unsigned kRounds = 3000;
-    static unsigned long saved[DrawTable_count], input[DrawTable_count], their_out[DrawTable_count];
+    static std::uint32_t saved[DrawTable_count], input[DrawTable_count], their_out[DrawTable_count];
     std::memcpy(saved, DrawTable, sizeof saved);
     const unsigned char saved_count = DrawTable_Count;
-    const unsigned long saved_scratch = Scratch_Swap;
+    const std::uint32_t saved_scratch = Scratch_Swap;
     unsigned bad = 0, empty = 0, with_ties = 0;
     for (unsigned round = 0; round < kRounds; ++round) {
         const unsigned spread = 1 + Rng() % (Rng() % 2 ? 6 : 0x10000);
@@ -71,19 +71,19 @@ void SelfTestSort(VoidFn theirs) {
         DrawTable_Count = static_cast<unsigned char>(Rng() % 3 ? Rng() % 24 : Rng());
         if (DrawTable_Count == 0) ++empty;
         if (spread <= 6 && DrawTable_Count > 6) ++with_ties;
-        const unsigned long scratch_in = Rng();
+        const std::uint32_t scratch_in = Rng();
 
         std::memcpy(DrawTable, input, sizeof input);
         Scratch_Swap = scratch_in;
         theirs();
         std::memcpy(their_out, DrawTable, sizeof their_out);
-        const unsigned long their_scratch = Scratch_Swap;
+        const std::uint32_t their_scratch = Scratch_Swap;
         std::memcpy(DrawTable, input, sizeof input);
         Scratch_Swap = scratch_in;
         DrawTable_Sort();
         if ((std::memcmp(their_out, DrawTable, sizeof their_out) != 0 || their_scratch != Scratch_Swap) && ++bad <= 8)
-            bof3::Log("shadow      DrawTable_Sort self-test MISMATCH round %u: count %u, scratch 0x%08lX vs ours 0x%08lX",
-                      round, DrawTable_Count, their_scratch, static_cast<unsigned long>(Scratch_Swap));
+            bof3::Log("shadow      DrawTable_Sort self-test MISMATCH round %u: count %u, scratch 0x%08X vs ours 0x%08X",
+                      round, DrawTable_Count, their_scratch, static_cast<std::uint32_t>(Scratch_Swap));
     }
     std::memcpy(DrawTable, saved, sizeof saved);
     DrawTable_Count = saved_count;

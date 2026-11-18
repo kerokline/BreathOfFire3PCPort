@@ -140,7 +140,7 @@ template <class T> void PutRest2b(unsigned char* p, unsigned offset, T v) {
 // jmp / call [table + 4 * byte]: the table's `entries` handlers, read in place
 // (the fuzz swaps the cells for recorders); a Fatal past them, where the
 // original jumps through the dword after.
-void Run(const char* who, const unsigned long* table, unsigned entries, unsigned index, const char* byte) {
+void Run(const char* who, const std::uint32_t* table, unsigned entries, unsigned index, const char* byte) {
     if (index >= entries)
         bof3::Fatal("%s: %s is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/rest_2b.md section 7)",
@@ -684,10 +684,10 @@ extern "C" void __cdecl Shisu_Score(void) {
 // read again after the first elevation.
 extern "C" void __cdecl Shisu_InitModels(void) {
     const U file = Rest2b_ModelFile;
-    const long kz = Field_Kind2Z;
+    const std::int32_t kz = Field_Kind2Z;
     SetL(::bof3::Img(kModelB.v) + 0x54, file);
     SetL(::bof3::Img(kModelB.v) + 0x50, L(file + 4));
-    const long kx = Field_Kind2X;
+    const std::int32_t kx = Field_Kind2X;
     Rest2b_ModelBState = 0;
     BRest2b(::bof3::Img(kModelB.v) + 0x48) = 0;
     Rest2c_FigureLift = 0x1000;
@@ -699,13 +699,13 @@ extern "C" void __cdecl Shisu_InitModels(void) {
     Rest2b_ModelBRgb[2] = 0x80;
     SetL(::bof3::Img(kModelB.v) + 0x34, static_cast<U>(kx));
     SetL(::bof3::Img(kModelB.v) + 0x38, static_cast<U>(kz));
-    const long hb = SH_CALL(AreaMap_Elevation)(kx, kz);
+    const std::int32_t hb = SH_CALL(AreaMap_Elevation)(kx, kz);
     const U file2 = Rest2b_ModelFile;
     Rest2b_ModelBY = (static_cast<U>(static_cast<std::int32_t>(static_cast<short>(hb))) - 0x200u) << 16;
-    const long kz2 = Field_Kind2Z;
+    const std::int32_t kz2 = Field_Kind2Z;
     SetL(::bof3::Img(kModelA.v) + 0x54, file2 + 8);
     SetL(::bof3::Img(kModelA.v) + 0x50, L(file2 + 8 + 4));
-    const long kx2 = Field_Kind2X;
+    const std::int32_t kx2 = Field_Kind2X;
     Rest2b_ModelAState = 0;
     BRest2b(::bof3::Img(kModelA.v) + 0x48) = 0;
     SetL(::bof3::Img(kModelA.v) + 0x40, 0x1000);
@@ -717,7 +717,7 @@ extern "C" void __cdecl Shisu_InitModels(void) {
     BRest2b(::bof3::Img(kAColour.v) + 2) = 0x80;
     SetL(::bof3::Img(kModelA.v) + 0x34, static_cast<U>(kx2));
     SetL(::bof3::Img(kModelA.v) + 0x38, static_cast<U>(kz2));
-    const long ha = SH_CALL(AreaMap_Elevation)(kx2, kz2);
+    const std::int32_t ha = SH_CALL(AreaMap_Elevation)(kx2, kz2);
     Rest2c_FigureY = (static_cast<U>(static_cast<std::int32_t>(static_cast<short>(ha))) + 0x200u) << 16;
 }
 
@@ -792,19 +792,19 @@ extern "C" void __cdecl Shisu_DrawModel(unsigned char* record) {
         static_cast<signed char>(Get<const unsigned char*>(Sprite_Current, 0x54)[0])));
     alignas(4) short matrix[16];
     SH_CALL(Sprite_ObjectMatrix)(matrix);
-    SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(matrix));
-    SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(matrix));
+    SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(matrix));
+    SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(matrix));
     if (Sprite_Current[0x48] == 0) {
-        const long s = Get<long>(Sprite_Current, 0x40);
-        const long scale[3] = {s, s, s};
+        const std::int32_t s = Get<std::int32_t>(Sprite_Current, 0x40);
+        const std::int32_t scale[3] = {s, s, s};
         SH_CALL(Gte_ScaleMatrix)(matrix, scale);
     }
     alignas(4) short view[16];
     std::memcpy(view, matrix, sizeof view);
     alignas(4) short light[16] = {};
-    SH_CALL(Light_ObjectDirection)(light, reinterpret_cast<const long*>(Sprite_Current + 0x64));
+    SH_CALL(Light_ObjectDirection)(light, reinterpret_cast<const std::int32_t*>(Sprite_Current + 0x64));
     SH_CALL(Camera_LoadMatrix)(view);
-    SH_CALL(Gte_SetMatrix2)(reinterpret_cast<const unsigned long*>(light));
+    SH_CALL(Gte_SetMatrix2)(reinterpret_cast<const std::uint32_t*>(light));
     const unsigned char flags = Get<const unsigned char*>(Sprite_Current, 0x54)[3];
     const unsigned mode = flags & 0x40 ? flags : 2u;
     const unsigned char* quad = Get<const unsigned char*>(Sprite_Current, 0x50);
@@ -816,9 +816,9 @@ extern "C" void __cdecl Shisu_DrawModel(unsigned char* record) {
             unsigned char* const p = Gfx_PacketNext;
             SH_CALL(Gpu_SetPolyFT4)(p);
             for (unsigned i = 0; i < 12; ++i) v[i / 3 * 4 + i % 3] = Get<short>(quad, 2 + 2 * i);
-            const long normal[3] = {Get<short>(quad, 0x1A), Get<short>(quad, 0x1C), Get<short>(quad, 0x1E)};
+            const std::int32_t normal[3] = {Get<short>(quad, 0x1A), Get<short>(quad, 0x1C), Get<short>(quad, 0x1E)};
             for (unsigned k = 0; k < 4; ++k) PutRest2b<std::uint16_t>(p, 0x14 + 0x10 * k, Get<std::uint16_t>(quad, 0x20 + 2 * k));
-            long depth;
+            std::int32_t depth;
             SH_CALL(Gte_RotTransPers4)(v, v + 4, v + 8, v + 12, reinterpret_cast<float*>(p + 8),
                                        reinterpret_cast<float*>(p + 0x18), reinterpret_cast<float*>(p + 0x28),
                                        reinterpret_cast<float*>(p + 0x38), &depth);
@@ -871,15 +871,15 @@ extern "C" void __cdecl Shisu_ModelBSquare(void) {
 // the elevation at the kind-2 sprite's place (<< 16, signed): on it (asked
 // again) and done 1; else done 0. Then its draw.
 extern "C" void __cdecl Shisu_ModelBDrop(void) {
-    const long kz = Field_Kind2Z;
-    const long kx = Field_Kind2X;
+    const std::int32_t kz = Field_Kind2Z;
+    const std::int32_t kx = Field_Kind2X;
     Rest2b_ModelBY = Rest2b_ModelBY + 0x200000u;
-    const long h = SH_CALL(AreaMap_Elevation)(kx, kz);
+    const std::int32_t h = SH_CALL(AreaMap_Elevation)(kx, kz);
     const auto ground = static_cast<std::int32_t>(static_cast<U>(static_cast<std::int32_t>(static_cast<short>(h))) << 16);
     if (static_cast<std::int32_t>(Rest2b_ModelBY) > ground) {
-        const long kz2 = Field_Kind2Z;
-        const long kx2 = Field_Kind2X;
-        const long h2 = SH_CALL(AreaMap_Elevation)(kx2, kz2);
+        const std::int32_t kz2 = Field_Kind2Z;
+        const std::int32_t kx2 = Field_Kind2X;
+        const std::int32_t h2 = SH_CALL(AreaMap_Elevation)(kx2, kz2);
         Rest2b_ModelBDone = 1;
         Rest2b_ModelBY = static_cast<U>(static_cast<std::int32_t>(static_cast<short>(h2))) << 16;
     } else {
@@ -953,9 +953,9 @@ extern "C" void __cdecl MasterFigure_TurnHome(void) {
 // Below the target: set to it and +6 = 1; else +6 = 0. Then the faded draw.
 // The second call reads both coordinates again.
 extern "C" void __cdecl MasterFigure_Settle(void) {
-    const long first = SH_CALL(AreaMap_Elevation)(Field_Kind2X, Field_Kind2Z);
+    const std::int32_t first = SH_CALL(AreaMap_Elevation)(Field_Kind2X, Field_Kind2Z);
     const U target = (static_cast<U>(static_cast<int>(static_cast<short>(first))) << 16) + Rest2c_FigureLift * 0xA00u;
-    const long second = SH_CALL(AreaMap_Elevation)(Field_Kind2X, Field_Kind2Z);
+    const std::int32_t second = SH_CALL(AreaMap_Elevation)(Field_Kind2X, Field_Kind2Z);
     const U top = (static_cast<U>(static_cast<int>(static_cast<short>(second))) + 0x200u) << 16;
     const int fall = static_cast<int>(top - target) / 16;
     const U y = Rest2c_FigureY - static_cast<U>(fall);

@@ -232,7 +232,7 @@ bool IsTexture2(const void* iid) {
 
 // --- IDirectDrawSurface4 --------------------------------------------------------------
 
-long __stdcall SQueryInterface(Surface* s, const void* iid, void** out) {
+std::int32_t __stdcall SQueryInterface(Surface* s, const void* iid, void** out) {
     Record(kSurfaceCall + kQueryInterface, Id(s), Get(iid, 0), Get(iid, 4), Get(iid, 8), Get(iid, 12),
            static_cast<U>(reinterpret_cast<std::uintptr_t>(out)));
     U hr = kOk;
@@ -244,7 +244,7 @@ long __stdcall SQueryInterface(Surface* s, const void* iid, void** out) {
         }
     }
     After(kSurfaceCall + kQueryInterface);
-    return static_cast<long>(hr);
+    return static_cast<std::int32_t>(hr);
 }
 U __stdcall SAddRef(Surface* s) {
     Record(kSurfaceCall + kAddRef, Id(s));
@@ -277,7 +277,7 @@ void Fill(const Surface& s, const Rect& r, U color) {
     }
 }
 
-long __stdcall SBlt(Surface* s, const void* to_rect, void* from, const void* from_rect, U flags, void* fx) {
+std::int32_t __stdcall SBlt(Surface* s, const void* to_rect, void* from, const void* from_rect, U flags, void* fx) {
     U a[4], b[4];
     RectArgs(to_rect, a);
     RectArgs(from_rect, b);
@@ -297,9 +297,9 @@ long __stdcall SBlt(Surface* s, const void* to_rect, void* from, const void* fro
             Copy(*s, rt.l, rt.t, *src, rf);
     }
     After(kSurfaceCall + kBlt);
-    return static_cast<long>(hr);
+    return static_cast<std::int32_t>(hr);
 }
-long __stdcall SBltFast(Surface* s, U x, U y, void* from, const void* from_rect, U trans) {
+std::int32_t __stdcall SBltFast(Surface* s, U x, U y, void* from, const void* from_rect, U trans) {
     U b[4];
     RectArgs(from_rect, b);
     Record(kSurfaceCall + kBltFast, Id(s), x, y, Id(from), b[0], b[1], b[2], b[3], trans);
@@ -313,16 +313,16 @@ long __stdcall SBltFast(Surface* s, U x, U y, void* from, const void* from_rect,
             Copy(*s, static_cast<int>(x), static_cast<int>(y), *src, rf);
     }
     After(kSurfaceCall + kBltFast);
-    return static_cast<long>(hr);
+    return static_cast<std::int32_t>(hr);
 }
-long __stdcall SFlip(Surface* s, void* target, U flags) {
+std::int32_t __stdcall SFlip(Surface* s, void* target, U flags) {
     Record(kSurfaceCall + kFlip, Id(s), Id(target), flags);
     U hr = kOk;
     Planned(kSurfaceCall + kFlip, &hr);
     After(kSurfaceCall + kFlip);
-    return static_cast<long>(hr);
+    return static_cast<std::int32_t>(hr);
 }
-long __stdcall SGetSurfaceDesc(Surface* s, unsigned char* d) {
+std::int32_t __stdcall SGetSurfaceDesc(Surface* s, unsigned char* d) {
     Record(kSurfaceCall + kGetSurfaceDesc, Id(s), d ? Get(d, 0) : kNullRect);
     U hr = kOk;
     if (!Planned(kSurfaceCall + kGetSurfaceDesc, &hr)) {
@@ -330,16 +330,16 @@ long __stdcall SGetSurfaceDesc(Surface* s, unsigned char* d) {
         else FillDesc(*s, d, 0);
     }
     After(kSurfaceCall + kGetSurfaceDesc);
-    return static_cast<long>(hr);
+    return static_cast<std::int32_t>(hr);
 }
-long __stdcall SIsLost(Surface* s) {
+std::int32_t __stdcall SIsLost(Surface* s) {
     Record(kSurfaceCall + kIsLost, Id(s));
     U hr = kOk;
     Planned(kSurfaceCall + kIsLost, &hr);
     After(kSurfaceCall + kIsLost);
-    return static_cast<long>(hr);
+    return static_cast<std::int32_t>(hr);
 }
-long __stdcall SLock(Surface* s, const void* rect, unsigned char* d, U flags, U event) {
+std::int32_t __stdcall SLock(Surface* s, const void* rect, unsigned char* d, U flags, U event) {
     U a[4];
     RectArgs(rect, a);
     Record(kSurfaceCall + kLock, Id(s), a[0], a[1], a[2], a[3], flags, event, d ? Get(d, 0) : kNullRect);
@@ -356,23 +356,23 @@ long __stdcall SLock(Surface* s, const void* rect, unsigned char* d, U flags, U 
         }
     }
     After(kSurfaceCall + kLock);
-    return static_cast<long>(hr);
+    return static_cast<std::int32_t>(hr);
 }
-long __stdcall SRestore(Surface* s) {
+std::int32_t __stdcall SRestore(Surface* s) {
     Record(kSurfaceCall + kRestore, Id(s));
     U hr = kOk;
     Planned(kSurfaceCall + kRestore, &hr);
     After(kSurfaceCall + kRestore);
-    return static_cast<long>(hr);
+    return static_cast<std::int32_t>(hr);
 }
-long __stdcall SSetColorKey(Surface* s, U flags, const void* key) {
+std::int32_t __stdcall SSetColorKey(Surface* s, U flags, const void* key) {
     Record(kSurfaceCall + kSetColorKey, Id(s), flags, key ? Get(key, 0) : kNullRect, key ? Get(key, 4) : kNullRect);
     U hr = kOk;
     Planned(kSurfaceCall + kSetColorKey, &hr);
     After(kSurfaceCall + kSetColorKey);
-    return static_cast<long>(hr);
+    return static_cast<std::int32_t>(hr);
 }
-long __stdcall SUnlock(Surface* s, const void* rect) {
+std::int32_t __stdcall SUnlock(Surface* s, const void* rect) {
     U a[4];
     RectArgs(rect, a);
     Record(kSurfaceCall + kUnlock, Id(s), a[0], a[1], a[2], a[3]);
@@ -382,12 +382,12 @@ long __stdcall SUnlock(Surface* s, const void* rect) {
         else s->locked = false;
     }
     After(kSurfaceCall + kUnlock);
-    return static_cast<long>(hr);
+    return static_cast<std::int32_t>(hr);
 }
 
 // --- IDirect3DTexture2 ------------------------------------------------------------------
 
-long __stdcall TQueryInterface(Texture* t, const void* iid, void** out) {
+std::int32_t __stdcall TQueryInterface(Texture* t, const void* iid, void** out) {
     Record(kTextureCall + kQueryInterface, Id(t), Get(iid, 0), Get(iid, 4), Get(iid, 8), Get(iid, 12),
            static_cast<U>(reinterpret_cast<std::uintptr_t>(out)));
     U hr = kOk;
@@ -399,7 +399,7 @@ long __stdcall TQueryInterface(Texture* t, const void* iid, void** out) {
         }
     }
     After(kTextureCall + kQueryInterface);
-    return static_cast<long>(hr);
+    return static_cast<std::int32_t>(hr);
 }
 U __stdcall TAddRef(Texture* t) {
     Record(kTextureCall + kAddRef, Id(t));
@@ -411,22 +411,22 @@ U __stdcall TRelease(Texture* t) {
     After(kTextureCall + kRelease);
     return 0;
 }
-long __stdcall TGetHandle(Texture* t, void* device, U* handle) {
+std::int32_t __stdcall TGetHandle(Texture* t, void* device, U* handle) {
     Record(kTextureCall + kGetHandle, Id(t), static_cast<U>(reinterpret_cast<std::uintptr_t>(device)),
            static_cast<U>(reinterpret_cast<std::uintptr_t>(handle)));
     U hr = kOk;
     if (!Planned(kTextureCall + kGetHandle, &hr)) *handle = 0x7E000000u + t->index;
     After(kTextureCall + kGetHandle);
-    return static_cast<long>(hr);
+    return static_cast<std::int32_t>(hr);
 }
-long __stdcall TPaletteChanged(Texture* t, U start, U count) {
+std::int32_t __stdcall TPaletteChanged(Texture* t, U start, U count) {
     Record(kTextureCall + kPaletteChanged, Id(t), start, count);
     U hr = kOk;
     Planned(kTextureCall + kPaletteChanged, &hr);
     After(kTextureCall + kPaletteChanged);
-    return static_cast<long>(hr);
+    return static_cast<std::int32_t>(hr);
 }
-long __stdcall TLoad(Texture* t, Texture* from) {
+std::int32_t __stdcall TLoad(Texture* t, Texture* from) {
     Record(kTextureCall + kLoad, Id(t), Id(from));
     U hr = kOk;
     if (!Planned(kTextureCall + kLoad, &hr)) {
@@ -441,12 +441,12 @@ long __stdcall TLoad(Texture* t, Texture* from) {
         }
     }
     After(kTextureCall + kLoad);
-    return static_cast<long>(hr);
+    return static_cast<std::int32_t>(hr);
 }
 
 // --- IDirectDraw4 ---------------------------------------------------------------------------
 
-long __stdcall DCreateSurface(DirectDraw*, const unsigned char* d, void** out, void* outer) {
+std::int32_t __stdcall DCreateSurface(DirectDraw*, const unsigned char* d, void** out, void* outer) {
     U snap = kNullRect;
     if (d && g_log->n_descs < kMaxDescs) {
         snap = g_log->n_descs++;
@@ -479,10 +479,10 @@ long __stdcall DCreateSurface(DirectDraw*, const unsigned char* d, void** out, v
         }
     }
     After(kDirectDrawCall + kCreateSurface);
-    return static_cast<long>(hr);
+    return static_cast<std::int32_t>(hr);
 }
 
-template <U Base, int S> long __stdcall Trap(void*) {
+template <U Base, int S> std::int32_t __stdcall Trap(void*) {
     bof3::Fatal("ddraw_fuzz: slot %d (vtable +0x%X) of a fake %s was called, and nothing records it", S, S * 4,
                 Base == kSurfaceCall ? "surface" : Base == kTextureCall ? "texture" : "IDirectDraw4");
 }
@@ -521,7 +521,7 @@ void Build() {
     for (int pass = 0; pass < 2; ++pass) {
         g_arena[pass] = static_cast<unsigned char*>(
             bof3::os::MemAlloc(nullptr, static_cast<std::size_t>(kMaxSurfaces) * kSlotBytes, bof3::os::Prot::ReadWrite));
-        if (!g_arena[pass]) bof3::Fatal("ddraw_fuzz: MemAlloc of the pixel arena failed, error %lu", (unsigned long)bof3::os::LastError());
+        if (!g_arena[pass]) bof3::Fatal("ddraw_fuzz: MemAlloc of the pixel arena failed, error %u", (std::uint32_t)bof3::os::LastError());
     }
 }
 

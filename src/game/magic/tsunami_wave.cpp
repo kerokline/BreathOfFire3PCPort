@@ -100,14 +100,14 @@ void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
 
 // The callees with the arguments the originals push. Gte_RotTransPers4 gets
 // the depth and flag pointers the originals pass; ours reads the first.
-using Rtp4Fn = long (__cdecl*)(const short*, const short*, const short*, const short*, unsigned char*, unsigned char*,
-                               unsigned char*, unsigned char*, long*, long*);
+using Rtp4Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, const short*, unsigned char*, unsigned char*,
+                               unsigned char*, unsigned char*, std::int32_t*, std::int32_t*);
 
 #define S14_AS(type, name) ::magic_harness::Call(reinterpret_cast<type>(reinterpret_cast<void*>(&::name)))
 
 // The four projected points at +8, +0x18, +0x28, +0x38.
 void Rtp4(unsigned char* prim) {
-    long p, flag;
+    std::int32_t p, flag;
     S14_AS(Rtp4Fn, Gte_RotTransPers4)(VP(0), VP(8), VP(0x10), VP(0x18), prim + 8, prim + 0x18, prim + 0x28, prim + 0x38,
                                      &p, &flag);
 }

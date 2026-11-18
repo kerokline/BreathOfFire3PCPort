@@ -130,7 +130,7 @@ void PlaceRandomObject(U cells, U weights) {
         const auto z = static_cast<std::int32_t>(static_cast<U>(B(cells + pick * 2 + 1)) << 16);
         tObject->x = x;
         tObject->z = z;
-        const long ground = AH_CALL(AreaMap_Elevation)(tObject->x, z);
+        const std::int32_t ground = AH_CALL(AreaMap_Elevation)(tObject->x, z);
         rv::Store<unsigned>(rv::As<records::SpriteObject>(object)->height_whole, static_cast<unsigned>(ground));
     }
     Field_StepCount = static_cast<unsigned short>(Long(Mem(::bof3::Img(ObjTrio_addr) + 0x134)) - 5);
@@ -349,7 +349,7 @@ extern "C" void __cdecl Area111_StepToExtra(void) {
     z = (z & 0xFFFFu) | static_cast<U>(static_cast<std::uint16_t>((z >> 16) + sz)) << 16;
     const auto dx = static_cast<std::int32_t>(x - static_cast<U>(rv::As<records::SpriteHead>(cur)->x));
     const auto dz = static_cast<std::int32_t>(z - z0);
-    const long ground = AH_CALL(AreaMap_Elevation)(static_cast<long>(x), static_cast<long>(z));
+    const std::int32_t ground = AH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z));
     const auto dy = static_cast<std::int16_t>(static_cast<std::uint16_t>(ground) - rv::Current<records::SpriteObject>()->height_whole);
     if (MoveScript_Object[4] == 0) return;
     Sprite_Current[9] = 0x20;
@@ -439,7 +439,7 @@ extern "C" void __cdecl Area111_TailGate(void) {
 // (x = 0x20 / 0x26, z = 0x16C / 0x172 over three cells) likewise; else the
 // cell (x high word 0x11..0x12, z 0xB7..0xB8) with flag 0x28 clear:
 // ScriptFlags_Set40, tail kind 0x11, state 0x14. al 0 always.
-extern "C" unsigned char __cdecl Area111_ArriveHook(long x, long z) {
+extern "C" unsigned char __cdecl Area111_ArriveHook(std::int32_t x, std::int32_t z) {
     if (Cond_ByteFD == 0) Clear(0x28);
     if (Cond_ByteFD != 1) return 0;
     const unsigned char* const cur = Sprite_Current;

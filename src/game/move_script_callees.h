@@ -23,7 +23,7 @@ struct CalleesMoveScript {
     int (__cdecl* variable)(unsigned char);
     void (__cdecl* trio_clear)();
     void (__cdecl* trio_set)();
-    long (__cdecl* elevation)(long, long);
+    std::int32_t (__cdecl* elevation)(std::int32_t, std::int32_t);
     void (__cdecl* set_animation)(unsigned char);
     void (__cdecl* set_animation_at)(unsigned char, unsigned short);
     void (__cdecl* flags_clear)();
@@ -32,7 +32,7 @@ struct CalleesMoveScript {
     unsigned char (__cdecl* tick_once)();
     unsigned short (__cdecl* peek)();
     void (__cdecl* sound)(unsigned short);
-    void (__cdecl* op_f7)(long, long, unsigned char, unsigned char*);
+    void (__cdecl* op_f7)(std::int32_t, std::int32_t, unsigned char, unsigned char*);
     void (__cdecl* attach)(unsigned char*, unsigned char, unsigned char, unsigned char, unsigned char);
     unsigned char (__cdecl* test_fb)(short, short);
     unsigned char (__cdecl* test_fc)(short, short);

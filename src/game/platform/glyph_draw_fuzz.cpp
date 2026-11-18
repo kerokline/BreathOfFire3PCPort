@@ -92,7 +92,7 @@ U Mix(U salt) {
 }
 
 void __cdecl StubPrimColor(unsigned r, unsigned gg, unsigned b, unsigned code, unsigned mode,
-                           unsigned long* diffuse, unsigned long* specular) {
+                           std::uint32_t* diffuse, std::uint32_t* specular) {
     Record(1, r, gg, b, code, mode, specular != nullptr, diffuse != nullptr);
     *diffuse = Mix(1);
     if (specular) *specular = Mix(2);
@@ -128,7 +128,7 @@ const Callees kStandIns = {StubPrimColor, StubGlyphTexture, StubRetOnly, StubSet
 // Offsets of every E8 in each body, from the disassembly (docs/glyph-draw.md
 // sections 2 and 3); every other transfer is internal or through the device.
 
-using DrawFn = long(__cdecl*)(const unsigned char*);
+using DrawFn = std::int32_t(__cdecl*)(const unsigned char*);
 using LookupFn = int(__cdecl*)(unsigned, unsigned);
 
 DrawFn CloneDraw() {
@@ -240,7 +240,7 @@ unsigned FuzzDraw(DrawFn theirs, unsigned rounds, bool inset) {
         g_prim = prim;
         g_theirs.Clear();
         d3d_fuzz::g_log = &g_theirs;
-        const long ret_theirs = theirs(prim);
+        const std::int32_t ret_theirs = theirs(prim);
         unsigned char v_theirs[d3d_fuzz::kVertexBytes];
         std::memcpy(v_theirs, At(D3d_Vertices_addr), sizeof v_theirs);
         Capture(g_theirs_state);
@@ -250,7 +250,7 @@ unsigned FuzzDraw(DrawFn theirs, unsigned rounds, bool inset) {
         g_ours.Clear();
         d3d_fuzz::g_log = &g_ours;
         g_texel_inset = inset ? 0.5f : 0.0f;
-        const long ret_ours = D3d_DrawGlyph(prim);
+        const std::int32_t ret_ours = D3d_DrawGlyph(prim);
         g_texel_inset = 0.0f;
         d3d_fuzz::g_log = nullptr;
         g_prim = nullptr;

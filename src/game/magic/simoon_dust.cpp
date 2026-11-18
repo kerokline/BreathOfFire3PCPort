@@ -79,13 +79,13 @@ float* At(unsigned char* prim, unsigned offset) { return reinterpret_cast<float*
 // The four vertices at Prim_VertexScratch projected into the primitive's
 // screen points; the depth answer and the flag word are the caller's locals.
 void Project4(unsigned char* prim, unsigned a, unsigned b, unsigned c, unsigned d) {
-    long depth = 0;
+    std::int32_t depth = 0;
     MH_CALL(Gte_RotTransPers4)(Vertex(::bof3::Img(Prim_VertexScratch_addr)), Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x8), Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x10), Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x18), At(prim, a), At(prim, b),
                                At(prim, c), At(prim, d), &depth);
 }
 
 void Project3(unsigned char* prim) {
-    long depth = 0;
+    std::int32_t depth = 0;
     MH_CALL(Gte_RotTransPers3)(Vertex(::bof3::Img(Prim_VertexScratch_addr)), Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x8), Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x10), At(prim, 8), At(prim, 0x18), At(prim, 0x28),
                                &depth);
 }
@@ -311,7 +311,7 @@ S23_EXPORT void __cdecl SimoonDome_Draw(void) {
             const std::int32_t x = Shl(Get(::bof3::Img(Prim_VertexScratch_addr) + 0x18), 9) + tsc->x;
             const std::int32_t z = Shl(static_cast<short>(y), 9) + tsc->z;
             MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
-            MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), 2, 0xC);
+            MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), 2, 0xC);
             unsigned char* const prim = Gfx_PacketNext;
             MH_CALL(Gpu_SetPolyGT4)(prim);
             MH_CALL(Gpu_SetSemiTrans)(prim, 1);
@@ -333,7 +333,7 @@ S23_EXPORT void __cdecl SimoonDome_Draw(void) {
             Shade(prim, 0x18, ::bof3::Img(at::kW8));
             Shade(prim, 0x2C, ::bof3::Img(at::kW6));
             Shade(prim, 0x40, ::bof3::Img(at::kW6));
-            MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), 2, 0x54);
+            MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), 2, 0x54);
         }
     }
 }

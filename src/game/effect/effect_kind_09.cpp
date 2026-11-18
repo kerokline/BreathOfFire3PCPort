@@ -154,7 +154,7 @@ void AreaRect(U y, U w, U h) {
 // s16. The fourth word is 0: the original never writes it (stale stack), so
 // it cannot be reproduced, only replaced - DIV-0023's ruling, as field_e2's
 // Mode11_ObjectDraw; the projection reads x, y and z.
-void AttachVector(const unsigned char* o, const long* out, short* v) {
+void AttachVector(const unsigned char* o, const std::int32_t* out, short* v) {
     v[0] = static_cast<short>(static_cast<U>((static_cast<std::int32_t>(L(o + 0x34) + static_cast<U>(out[0]))) >> 9) - 0x4000u);
     v[1] = static_cast<short>(static_cast<U>((static_cast<std::int32_t>(L(o + 0x38) + static_cast<U>(out[1]))) >> 9) - 0x4000u);
     const std::int32_t h = static_cast<std::int32_t>(static_cast<U>(SW(o + 0x3E)) + static_cast<U>(out[2]));
@@ -223,7 +223,7 @@ void RunRest4f(Trace& t, std::int32_t target, U oh, int dir, bool back, U colour
             nh = oh;
             more = false;
         } else {
-            const long e = SH_CALL(AreaMap_Elevation)(static_cast<long>(t.x), nz);
+            const std::int32_t e = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(t.x), nz);
             t.hd = (t.hd & 0xFFFFu) | (static_cast<U>(e) << 16);
             nh = t.hd;
         }
@@ -280,7 +280,7 @@ template <typename C> void Triangle(const short* v0, const short* v1, const shor
     short m[16];
     SH_CALL(Sprite_ObjectMatrix)(m);
     SH_CALL(Camera_LoadMatrix)(m);
-    long p;
+    std::int32_t p;
     SH_CALL(Gte_RotTransPers3)(v0, v1, v2, reinterpret_cast<float*>(prim + 8), reinterpret_cast<float*>(prim + 0x18),
                                reinterpret_cast<float*>(prim + 0x28), &p);
     SH_CALL(Gte_PrimDepths3_10B)(prim);
@@ -343,12 +343,12 @@ extern "C" void __cdecl EffectKind01_Draw(void) {
     AreaRect(0xF0, 0x10, 0x10);
     unsigned char* const p = Gfx_PacketNext;
     SH_CALL(Gpu_SetPolyFT4)(p);
-    long out[3];
+    std::int32_t out[3];
     SH_CALL(MoveCmd_AttachOffset)(out, e[0x1C]);
     alignas(4) short v[4];
     AttachVector(S(), out, v);
-    long depth[2];
-    const long z = SH_CALL(Gte_RotTransPers)(v, reinterpret_cast<unsigned long*>(p + 8), depth);
+    std::int32_t depth[2];
+    const std::int32_t z = SH_CALL(Gte_RotTransPers)(v, reinterpret_cast<std::uint32_t*>(p + 8), depth);
     eo->depth = static_cast<U>(z);
     SH_CALL(Gte_PrimDepthFlat4_10)(p);
     SetL(p + 0x1C, 0);
@@ -468,7 +468,7 @@ extern "C" void __cdecl EffectKind08_Start(void) {
     unsigned char* s = S();
     rv::As<records::EffectObject>(s)->x = 0xB0000;
     rv::As<records::EffectObject>(s)->z = 0xF8000;
-    const long e = SH_CALL(AreaMap_Elevation)(SLRest4f(s + 0x34), SLRest4f(s + 0x38));
+    const std::int32_t e = SH_CALL(AreaMap_Elevation)(SLRest4f(s + 0x34), SLRest4f(s + 0x38));
     s = S();
     rv::As<records::EffectObject>(s)->height_whole = static_cast<U>(e);
     s[0x29] = 5;
@@ -501,7 +501,7 @@ extern "C" void __cdecl EffectKind08_TraceTwo(void) {
     RunRest4f(t, target, oh, +1, false, 0xC0C0C0);
     t.x = 0xB0000;
     t.z = 0x138000;
-    const long e = SH_CALL(AreaMap_Elevation)(0xB0000, 0x138000);
+    const std::int32_t e = SH_CALL(AreaMap_Elevation)(0xB0000, 0x138000);
     t.h = (t.h & 0xFFFFu) | (static_cast<U>(e) << 16);
     RunRest4f(t, target, oh, -1, true, 0x303030);
     if (BRest4f(::bof3::Img(at::kChapterByte4A.v)) == 0x34) S()[1] = 3;
@@ -524,12 +524,12 @@ extern "C" void __cdecl EffectKind08_DrawLine(int ax, int az, int ah, int bx, in
         v[3] = 0;
     };
     short v[4];
-    long p;
+    std::int32_t p;
     vector(v, bx, bz, bh);
-    SH_CALL(Gte_RotTransPers)(v, reinterpret_cast<unsigned long*>(prim + 8), &p);
+    SH_CALL(Gte_RotTransPers)(v, reinterpret_cast<std::uint32_t*>(prim + 8), &p);
     SH_CALL(Gte_StoreDepthF)(reinterpret_cast<float*>(prim + 0x10));
     vector(v, ax, az, ah);
-    SH_CALL(Gte_RotTransPers)(v, reinterpret_cast<unsigned long*>(prim + 0x14), &p);
+    SH_CALL(Gte_RotTransPers)(v, reinterpret_cast<std::uint32_t*>(prim + 0x14), &p);
     SH_CALL(Gte_StoreDepthF)(reinterpret_cast<float*>(prim + 0x1C));
     const U c = static_cast<U>(colour);
     prim[4] = static_cast<unsigned char>(c);
@@ -786,7 +786,7 @@ extern "C" void __cdecl EffectKind0B_Attach(void) {
     rv::As<records::EffectObject>(s)->angle[0] = Sprite_ObjectsExtra[0].angle[0];
     rv::As<records::EffectObject>(s)->angle[1] = Sprite_ObjectsExtra[0].angle[1];
     rv::As<records::EffectObject>(s)->angle[2] = Sprite_ObjectsExtra[0].angle[2];
-    long out[3];
+    std::int32_t out[3];
     SH_CALL(MoveCmd_AttachOffset)(out, s[0x1C]);
     s = S();
     rv::As<records::EffectObject>(s)->x = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x) + static_cast<U>(out[0]);
@@ -802,7 +802,7 @@ extern "C" void __cdecl EffectKind0B_Attach(void) {
 extern "C" void __cdecl EffectKind0B_Follow(void) {
     unsigned char* s = S();
     rv::As<records::EffectObject>(s)->height_whole = rv::As<records::EffectObject>(s)->height_whole + 0x20;
-    const long point[3] = {SLRest4f(s + 0x34), SLRest4f(s + 0x38), SLRest4f(s + 0x3C)};
+    const std::int32_t point[3] = {SLRest4f(s + 0x34), SLRest4f(s + 0x38), SLRest4f(s + 0x3C)};
     SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(s + 0x74));
     if (!Fade0B(4, 7)) {
         SH_CALL(Effect_Release)();
@@ -876,12 +876,12 @@ extern "C" void __cdecl EffectKind10_Run(void) {
     AreaRect(0xF0, 0x10, 0x10);
     unsigned char* const p = Gfx_PacketNext;
     SH_CALL(Gpu_SetPolyFT4)(p);
-    long out[3];
+    std::int32_t out[3];
     SH_CALL(MoveCmd_AttachOffset)(out, e[0x10]);
     alignas(4) short v[4];
     AttachVector(S(), out, v);
-    long depth[2];
-    eo->depth = static_cast<U>(SH_CALL(Gte_RotTransPers)(v, reinterpret_cast<unsigned long*>(p + 8), depth));
+    std::int32_t depth[2];
+    eo->depth = static_cast<U>(SH_CALL(Gte_RotTransPers)(v, reinterpret_cast<std::uint32_t*>(p + 8), depth));
     SH_CALL(Gte_StoreDepthF)(reinterpret_cast<float*>(p + 0x10));
     CopyDword(p + 0x20, p + 0x10);
     CopyDword(p + 0x1C, p + 0xC);
@@ -890,7 +890,7 @@ extern "C" void __cdecl EffectKind10_Run(void) {
     Sprite_Current = Extra("EffectKind10_Run", static_cast<std::uint32_t>(rv::As<records::EffectObject>(e)->work_18));
     SH_CALL(MoveCmd_AttachOffset)(out, e[0x1C]);
     AttachVector(S(), out, v);
-    eo->depth = static_cast<U>(SH_CALL(Gte_RotTransPers)(v, reinterpret_cast<unsigned long*>(p + 0x28), depth));
+    eo->depth = static_cast<U>(SH_CALL(Gte_RotTransPers)(v, reinterpret_cast<std::uint32_t*>(p + 0x28), depth));
     SH_CALL(Gte_StoreDepthF)(reinterpret_cast<float*>(p + 0x30));
     CopyDword(p + 0x40, p + 0x30);
     CopyDword(p + 0x3C, p + 0x2C);

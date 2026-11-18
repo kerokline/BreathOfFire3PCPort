@@ -443,7 +443,7 @@ void SelfTest() {
         reinterpret_cast<void*>(&Task_Exit),    reinterpret_cast<void*>(&Task_ClearPrivate),
     };
     void* arena = bof3::os::MemAlloc(nullptr, kArenaBytes, bof3::os::Prot::ReadWrite);
-    if (!arena) bof3::Fatal("task_sched: MemAlloc(%u) failed, error %lu", (unsigned)kArenaBytes, (unsigned long)bof3::os::LastError());
+    if (!arena) bof3::Fatal("task_sched: MemAlloc(%u) failed, error %u", (unsigned)kArenaBytes, (std::uint32_t)bof3::os::LastError());
     g_arena = Address(arena);
     std::memcpy(g_saved.globals, At(kGlobals), kGlobalBytes);
 

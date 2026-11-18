@@ -96,7 +96,7 @@ struct Callees {
     void (__cdecl* defeated)();
     // other modules' and Capcom's
     unsigned char (__cdecl* sprite_tick_once)();
-    unsigned long (__cdecl* status_tint)(unsigned);
+    std::uint32_t (__cdecl* status_tint)(unsigned);
     unsigned char (__cdecl* set_tint)(unsigned char*, unsigned char, unsigned char, unsigned char, unsigned char);
     void (__cdecl* tint_release)(unsigned char);
     void (__cdecl* release_tint)(unsigned char*);
@@ -105,12 +105,12 @@ struct Callees {
     unsigned (__cdecl* item_class)(unsigned, unsigned);
     void (__cdecl* damage_popup)(unsigned, unsigned);
     void (__cdecl* ap_popup)(unsigned, unsigned);
-    unsigned long (__cdecl* turn_check)();
+    std::uint32_t (__cdecl* turn_check)();
     void (__cdecl* play_cue)(unsigned);
     void (__cdecl* play_effect)(unsigned short);
     void (__cdecl* hit_sound)();
     void (__cdecl* hit_popup)();
-    unsigned long (__cdecl* clear_actor_bit)(unsigned);
+    std::uint32_t (__cdecl* clear_actor_bit)(unsigned);
 };
 
 extern const Callees kOriginals;

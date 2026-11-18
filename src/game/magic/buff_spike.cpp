@@ -43,16 +43,16 @@ constexpr ::bof3::image::Va kActionId{0x904B80};
 // The effect library's (queue group L, docs/magic_s18.md section 5), by name:
 // MagicFx_LinkByDepth (through LinkDepthsFn: the depths as const long *),
 // MagicFx_ApplyBuff.
-using LinkDepthsFn = void (__cdecl*)(unsigned long, unsigned long, const long*, unsigned char*, unsigned, unsigned, unsigned);
+using LinkDepthsFn = void (__cdecl*)(std::uint32_t, std::uint32_t, const std::int32_t*, unsigned char*, unsigned, unsigned, unsigned);
 
 // The GTE calls as the originals push them: one pointer more than
 // symbols.toml's prototypes carry (a flag word the callee may write).
-using Rtp3Fn = long (__cdecl*)(const short*, const short*, const short*, float*, float*, float*, long*, long*);
+using Rtp3Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, float*, float*, float*, std::int32_t*, std::int32_t*);
 
-using Rtp4Fn = long (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*,
-                               long*, long*);
+using Rtp4Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*,
+                               std::int32_t*, std::int32_t*);
 
-using Avg3Fn = long (__cdecl*)(const short*, const short*, const short*, float*, float*, float*, long*, long*);
+using Avg3Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, float*, float*, float*, std::int32_t*, std::int32_t*);
 
 template <typename T, typename F> T As(F* f) { return reinterpret_cast<T>(reinterpret_cast<void*>(f)); }
 
@@ -102,7 +102,7 @@ float* Fl(unsigned char* p) { return reinterpret_cast<float*>(p); }
 
 // A .data dispatch table read in place: the cell called, the index checked
 // (the originals' is not).
-void CallCell(const unsigned long* table, unsigned entries, unsigned index, const char* who) {
+void CallCell(const std::uint32_t* table, unsigned entries, unsigned index, const char* who) {
     if (index >= entries) bof3::Fatal("%s: index %u, past the %u-entry table", who, index, entries);
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
 }
@@ -117,24 +117,24 @@ void CallPhase(const std::uint32_t* phases, unsigned entries, const char* who) {
 void LinkAt(unsigned dy, unsigned size) {
     const unsigned char* const sc = SC();
     const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tsc->x), static_cast<unsigned long>(tsc->z),
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(tsc->x), static_cast<std::uint32_t>(tsc->z),
                                 static_cast<int>(dy), size);
 }
 
-long Rtp3(unsigned char* p) {
-    long depth = 0, flag = 0;
+std::int32_t Rtp3(unsigned char* p) {
+    std::int32_t depth = 0, flag = 0;
     return MH_CALL(As<Rtp3Fn>(&::Gte_RotTransPers3))(VxP(0), VxP(8), VxP(0x10), Fl(p + 8), Fl(p + 0x18), Fl(p + 0x28), &depth,
                                                      &flag);
 }
 
-long Rtp4(unsigned char* p) {
-    long depth = 0, flag = 0;
+std::int32_t Rtp4(unsigned char* p) {
+    std::int32_t depth = 0, flag = 0;
     return MH_CALL(As<Rtp4Fn>(&::Gte_RotTransPers4))(VxP(0), VxP(8), VxP(0x10), VxP(0x18), Fl(p + 8), Fl(p + 0x18),
                                                      Fl(p + 0x28), Fl(p + 0x38), &depth, &flag);
 }
 
-long Avg3(unsigned char* p) {
-    long depth = 0, flag = 0;
+std::int32_t Avg3(unsigned char* p) {
+    std::int32_t depth = 0, flag = 0;
     return MH_CALL(As<Avg3Fn>(&::Gte_RotAverage3))(VxP(0), VxP(8), VxP(0x10), Fl(p + 8), Fl(p + 0x18), Fl(p + 0x28), &depth,
                                                    &flag);
 }
@@ -180,7 +180,7 @@ bool SpikeFly() {
 // first row +0x50, the second the scratch word +2 negated), coloured by
 // `colors`[3 * (i + 4 * +4)]; each triangle's depth into `depths` and the
 // packet cursor moved past it (0x34).
-void SpikeRow(const unsigned char* colors, bool first, long (&depths)[4]) {
+void SpikeRow(const unsigned char* colors, bool first, std::int32_t (&depths)[4]) {
     unsigned char* sc = SC();
     int a = sc[9];
     if (a >= sc[9] + 0x20) return;
@@ -214,7 +214,7 @@ void SpikeRow(const unsigned char* colors, bool first, long (&depths)[4]) {
         SetVx(0x12, static_cast<unsigned>(MulSar(r, Ds(0), 12)));
         MH_CALL(Gpu_SetPolyG3)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 0);
-        const long depth = Avg3(p);
+        const std::int32_t depth = Avg3(p);
         const int k = (a - SC()[9]) / 8;
         a += 8;
         // The original stores into its four-entry stack array by this index,
@@ -577,22 +577,22 @@ MS18_EXPORT void __cdecl BuffSpike_Orbit(void) {
 MS18_EXPORT void __cdecl BuffSpike_Draw(void) {
     MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x15, 0);
     LinkAt(2, 0xC);
-    long depths[4] = {};
+    std::int32_t depths[4] = {};
     unsigned char* const up = Gfx_PacketNext;
     SpikeRow(BuffSpike_ColorsUp, true, depths);
     {
         const unsigned char* const sc = SC();
         const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
-        MH_AT(LinkDepthsFn, bof3::addr::MagicFx_LinkByDepth)(static_cast<unsigned long>(tsc->x),
-                                                             static_cast<unsigned long>(tsc->z), depths, up, 4,
+        MH_AT(LinkDepthsFn, bof3::addr::MagicFx_LinkByDepth)(static_cast<std::uint32_t>(tsc->x),
+                                                             static_cast<std::uint32_t>(tsc->z), depths, up, 4,
                                                              0x34, 2);
     }
     unsigned char* const down = Gfx_PacketNext;
     SpikeRow(BuffSpike_ColorsDown, false, depths);
     const unsigned char* const sc = SC();
     const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
-    MH_AT(LinkDepthsFn, bof3::addr::MagicFx_LinkByDepth)(static_cast<unsigned long>(tsc->x),
-                                                         static_cast<unsigned long>(tsc->z), depths, down, 4,
+    MH_AT(LinkDepthsFn, bof3::addr::MagicFx_LinkByDepth)(static_cast<std::uint32_t>(tsc->x),
+                                                         static_cast<std::uint32_t>(tsc->z), depths, down, 4,
                                                          0x34, 2);
 }
 

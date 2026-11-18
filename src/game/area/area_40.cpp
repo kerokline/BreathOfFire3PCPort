@@ -215,7 +215,7 @@ extern "C" void __cdecl Area40_TailPuzzle(void) {
 // the pattern is complete, every grid cell switched off. al 0 always. Every
 // cell word goes out with its high half stale in the original (the callees
 // read 16 bits).
-extern "C" unsigned char __cdecl Area40_ArriveHook(unsigned long x, unsigned long z) {
+extern "C" unsigned char __cdecl Area40_ArriveHook(std::uint32_t x, std::uint32_t z) {
     if (Cond_ByteFD != 6) return 0;
     if (Field_State[0x2B] != 0) return 0;
     if (AH_CALL(Flags_Test)(Mem(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x27) != 0) return 0;
@@ -244,7 +244,7 @@ extern "C" unsigned char __cdecl Area40_ArriveHook(unsigned long x, unsigned lon
 // whose patch entry (its low word + AreaMap_PatchBase) is of kind 0x8000
 // under 0xF000 answers that entry's bit 0. Else 0. Reads only. A step of 0 or
 // one past the end walks on for ever, as the original (section 6).
-extern "C" unsigned char __cdecl Area40_TileLit(unsigned long x, unsigned long z) {
+extern "C" unsigned char __cdecl Area40_TileLit(std::uint32_t x, std::uint32_t z) {
     const std::int32_t dx = static_cast<std::int16_t>(static_cast<std::uint16_t>(x - static_cast<std::uint16_t>(MapView_Origin[0])));
     const std::int32_t dz = static_cast<std::int16_t>(static_cast<std::uint16_t>(z - static_cast<std::uint16_t>(MapView_Origin[1])));
     std::int32_t row = dz + dx;
@@ -309,7 +309,7 @@ extern "C" void __cdecl Area40_ClearGrid(void) {
 // original hands AreaMap_SetByte its argument dwords as they then are: x's
 // new high word with z's low word above it, z's new high word with two bytes
 // of the caller's frame above it (read in 16 bits).
-extern "C" void __cdecl Area40_MarkBehind(unsigned long x, unsigned long z) {
+extern "C" void __cdecl Area40_MarkBehind(std::uint32_t x, std::uint32_t z) {
     const unsigned d = B(::bof3::Img(ObjTrio_addr) + 0x8) & 7;
     const auto sx = static_cast<std::int16_t>(static_cast<signed char>(B(::bof3::Img(at::kCellDelta.v) + d * 2)));
     const auto sz = static_cast<std::int16_t>(static_cast<signed char>(B(::bof3::Img(at::kCellDelta.v) + d * 2 + 1)));
@@ -330,7 +330,7 @@ extern "C" void __cdecl Area40_DrawGrid(void) {
         for (unsigned c = 0; c < at::kGridSide; ++c) {
             const U x = at::kGridX + c, z = at::kGridZ + r;
             if (AH_CALL(AreaMap_ByteAt)(static_cast<short>(x), static_cast<short>(z)) != 0x50) continue;
-            const U item = static_cast<U>(AH_CALL(MapView_ItemAt)(static_cast<long>(x), static_cast<long>(z)));
+            const U item = static_cast<U>(AH_CALL(MapView_ItemAt)(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z)));
             if (item == 0) continue;
             unsigned char* const p = Gfx_PacketNext;
             AH_CALL(Gpu_SetPolyF4)(p);

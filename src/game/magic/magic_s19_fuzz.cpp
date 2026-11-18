@@ -272,7 +272,7 @@ template <std::uint32_t A> int __cdecl StubTrig(int angle) {
     const std::uint32_t h = mh::Noise();
     return h % 4 ? static_cast<int>(h % 8193) - 4096 : static_cast<int>(h);
 }
-void __cdecl StubDrawMode(unsigned char* prim, int dfe, int dtd, unsigned tpage, unsigned long tw) {
+void __cdecl StubDrawMode(unsigned char* prim, int dfe, int dtd, unsigned tpage, std::uint32_t tw) {
     mh::Record(bof3::addr::Gpu_SetDrawMode, Key(prim), static_cast<std::uint32_t>(dfe) ^ (static_cast<std::uint32_t>(dtd) << 16),
              tpage, static_cast<std::uint32_t>(tw));
 }
@@ -286,7 +286,7 @@ void __cdecl StubCommit(unsigned slot, unsigned size) {
     mh::Record(bof3::addr::Gfx_CommitPrim, slot & 0xFF, size & 0xFF);
     Advance(size);
 }
-void __cdecl StubLinkAt(unsigned long x, unsigned long z, int dy, unsigned size) {
+void __cdecl StubLinkAt(std::uint32_t x, std::uint32_t z, int dy, unsigned size) {
     mh::Record(bof3::addr::MapView_LinkPrimAt, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z),
              static_cast<std::uint32_t>(dy) & 0xFF, size & 0xFF);
     Advance(size);
@@ -302,18 +302,18 @@ template <std::uint32_t A> void __cdecl StubDepths(void* prim) { mh::Record(A, K
 // The projections: the vectors' contents and the outputs' places logged; the
 // outputs and the depth written; a depth answered (Gte_RotAverage3's is kept
 // by the crystal).
-long __cdecl StubRtp3(const short* v0, const short* v1, const short* v2, float* s0, float* s1, float* s2, long* p) {
+std::int32_t __cdecl StubRtp3(const short* v0, const short* v1, const short* v2, float* s0, float* s1, float* s2, std::int32_t* p) {
     mh::Record(bof3::addr::Gte_RotTransPers3, Key(v0) ^ (Key(v1) << 1) ^ (Key(v2) << 2), Vec3(v0) ^ (Vec3(v1) << 1) ^ (Vec3(v2) << 3),
              Key(s0), Key(s1) ^ (Key(s2) << 1));
     const std::uint32_t h = mh::Noise();
     Project(s0, Mix(h, 1), 2);
     Project(s1, Mix(h, 2), 2);
     Project(s2, Mix(h, 3), 2);
-    *p = static_cast<long>(Mix(h, 4));
-    return static_cast<long>(Mix(h, 5));
+    *p = static_cast<std::int32_t>(Mix(h, 4));
+    return static_cast<std::int32_t>(Mix(h, 5));
 }
-long __cdecl StubRtp4(const short* v0, const short* v1, const short* v2, const short* v3, float* s0, float* s1, float* s2,
-                      float* s3, long* p) {
+std::int32_t __cdecl StubRtp4(const short* v0, const short* v1, const short* v2, const short* v3, float* s0, float* s1, float* s2,
+                      float* s3, std::int32_t* p) {
     mh::Record(bof3::addr::Gte_RotTransPers4, Key(v0) ^ (Key(v1) << 1) ^ (Key(v2) << 2) ^ (Key(v3) << 3),
              Vec3(v0) ^ (Vec3(v1) << 1) ^ (Vec3(v2) << 3) ^ (Vec3(v3) << 5), Key(s0) ^ (Key(s1) << 1),
              Key(s2) ^ (Key(s3) << 1));
@@ -322,25 +322,25 @@ long __cdecl StubRtp4(const short* v0, const short* v1, const short* v2, const s
     Project(s1, Mix(h, 2), 2);
     Project(s2, Mix(h, 3), 2);
     Project(s3, Mix(h, 4), 2);
-    *p = static_cast<long>(Mix(h, 5));
-    return static_cast<long>(Mix(h, 6));
+    *p = static_cast<std::int32_t>(Mix(h, 5));
+    return static_cast<std::int32_t>(Mix(h, 6));
 }
-long __cdecl StubRotAverage3(const short* v0, const short* v1, const short* v2, float* s0, float* s1, float* s2, long* p) {
+std::int32_t __cdecl StubRotAverage3(const short* v0, const short* v1, const short* v2, float* s0, float* s1, float* s2, std::int32_t* p) {
     mh::Record(bof3::addr::Gte_RotAverage3, Key(v0) ^ (Key(v1) << 1) ^ (Key(v2) << 2), Vec3(v0) ^ (Vec3(v1) << 1) ^ (Vec3(v2) << 3),
              Key(s0), Key(s1) ^ (Key(s2) << 1));
     const std::uint32_t h = mh::Noise();
     Project(s0, Mix(h, 1), 3);
     Project(s1, Mix(h, 2), 3);
     Project(s2, Mix(h, 3), 3);
-    *p = static_cast<long>(Mix(h, 4));
-    return static_cast<long>(Mix(h, 5));
+    *p = static_cast<std::int32_t>(Mix(h, 4));
+    return static_cast<std::int32_t>(Mix(h, 5));
 }
 // 0x4FB880 (the library's): the four depths logged, then - a quarter of the
 // time, as when the cell is off the map or the pool full - the primitives
 // dropped (Gfx_PacketNext back by count * stride); the depths it zeroes as it
 // links.
 constexpr std::uint32_t kLinkSorted = 0x4FB880;
-void __cdecl StubLinkSorted(unsigned long x, unsigned long z, long* depths, unsigned char* prim, unsigned count,
+void __cdecl StubLinkSorted(std::uint32_t x, std::uint32_t z, std::int32_t* depths, unsigned char* prim, unsigned count,
                             unsigned stride, unsigned last) {
     mh::Record(kLinkSorted, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), Key(prim),
              (count & 0xFF) | ((stride & 0xFF) << 8) | ((last & 0xFF) << 16));

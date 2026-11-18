@@ -623,7 +623,7 @@ namespace {
 void ReadOptLayers() {
     char list[kOptMax * kOptName];
     const std::uint32_t n = bof3::os::GetEnv("BOF3X_OPT", list, sizeof list);
-    if (n >= sizeof list) bof3::Fatal("DIV-0086: BOF3X_OPT is %lu characters; at most %u", static_cast<unsigned long>(n), (unsigned)sizeof list - 1);
+    if (n >= sizeof list) bof3::Fatal("DIV-0086: BOF3X_OPT is %u characters; at most %u", static_cast<std::uint32_t>(n), (unsigned)sizeof list - 1);
     if (n == 0 || std::strcmp(list, "original") == 0 || std::strcmp(list, "none") == 0) return;
     for (char* p = list;;) {
         char* end = std::strchr(p, ',');

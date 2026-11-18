@@ -78,13 +78,13 @@ std::uint32_t Special() {
     }
     return Hash();
 }
-long __cdecl StubProject(const short* v, unsigned long* sxy, long* p) {
+std::int32_t __cdecl StubProject(const short* v, std::uint32_t* sxy, std::int32_t* p) {
     Record(2, static_cast<std::uint16_t>(v[0]), static_cast<std::uint16_t>(v[1]), static_cast<std::uint16_t>(v[2]));
     sxy[0] = Special();
     ++g_log_n;   // a new hash for the second
     sxy[1] = Special();
-    *p = static_cast<long>(Hash());
-    return static_cast<long>(Hash());
+    *p = static_cast<std::int32_t>(Hash());
+    return static_cast<std::int32_t>(Hash());
 }
 void __cdecl StubDropped(unsigned char) { Record(3); }
 void __cdecl StubOverlay() { Record(4); }

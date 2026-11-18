@@ -127,10 +127,10 @@ extern "C" void __cdecl EffectKind20_Aim(void) {
     if (rv::As<records::EffectObject>(Cur())->column != 0) return;
     SH_CALL(EffectGte_LoadMapCamera)();
     s = Cur();
-    long point[3] = {rv::As<records::EffectObject>(s)->x, rv::As<records::EffectObject>(s)->z, rv::As<records::EffectObject>(s)->height};
+    std::int32_t point[3] = {rv::As<records::EffectObject>(s)->x, rv::As<records::EffectObject>(s)->z, rv::As<records::EffectObject>(s)->height};
     float near[3], far[3];
     SH_CALL(EffectGte_ProjectPoint)(point, near);
-    point[1] = static_cast<long>(static_cast<U>(point[1]) + 0x10000u);
+    point[1] = static_cast<std::int32_t>(static_cast<U>(point[1]) + 0x10000u);
     SH_CALL(EffectGte_ProjectPoint)(point, far);
     const auto dx = static_cast<float>(static_cast<double>(far[0]) - static_cast<double>(near[0]));
     const auto dy = static_cast<float>(static_cast<double>(far[1]) - static_cast<double>(near[1]));
@@ -167,11 +167,11 @@ extern "C" void __cdecl EffectKind20_Draw(void) {
     DebrisMode(1);
     const unsigned char* const s = Cur();
     auto* const so = rv::AsConst<records::EffectObject>(s);
-    const long point[3] = {so->x, so->z, so->height};
+    const std::int32_t point[3] = {so->x, so->z, so->height};
     const U width = (static_cast<std::uint32_t>(so->z) & 0xFFFF0000u) | Word(s + 0x64);
     const U height = (static_cast<std::uint32_t>(so->height) & 0xFFFF0000u) | Word(s + 0x68);
     const U angle = (static_cast<std::uint32_t>(so->z) & 0xFFFF0000u) | Word(s + 0x6C);
-    SH_AT(void (__cdecl*)(const long*, U, U, U, U, U), at::kCone.v)(point, width, height, angle, 0xC0, 0);
+    SH_AT(void (__cdecl*)(const std::int32_t*, U, U, U, U, U), at::kCone.v)(point, width, height, angle, 0xC0, 0);
 }
 
 void EffectKind20_Inject() {

@@ -110,7 +110,7 @@ struct Callees {
     const unsigned char* (__cdecl* yes_no_line)(unsigned);
     void (__cdecl* msgbox_reset)();                                                           // MsgBox_Reset
     void (__cdecl* sound)(unsigned);                                                          // Sound_PlayEffect
-    void (__cdecl* draw_mode)(unsigned char*, int, int, unsigned, unsigned long);             // Gpu_SetDrawMode
+    void (__cdecl* draw_mode)(unsigned char*, int, int, unsigned, std::uint32_t);             // Gpu_SetDrawMode
     void (__cdecl* commit)(unsigned, unsigned);                                               // Gfx_CommitPrim
     void (__cdecl* set_sprt)(unsigned char*);                                                 // Gpu_SetSprt
     void (__cdecl* set_semi)(unsigned char*, unsigned);                                       // Gpu_SetSemiTrans
@@ -122,7 +122,7 @@ struct Callees {
     void (__cdecl* set_line_f4)(unsigned char*);                                              // Gpu_SetLineF4
     void (__cdecl* set_tile)(unsigned char*);                                                 // Gpu_SetTile
     unsigned char (__cdecl* area_byte)(int, int);                                             // AreaMap_ByteAt
-    int (__cdecl* sprintf_)(char*, const char*, ...);                                         // Crt_sprintf
+    int (*sprintf_)(char*, const char*, ...);                                         // Crt_sprintf
     // group W's and X's
     void (__cdecl* stat_icon)(unsigned, int, int, unsigned, unsigned, unsigned);
     void (__cdecl* draw_hand)(int, int, int);

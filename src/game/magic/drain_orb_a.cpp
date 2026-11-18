@@ -33,10 +33,10 @@ using move_script::Word;
 
 // The GTE calls as the originals push them: one pointer more than
 // symbols.toml's prototypes carry (a flag word the callee may write).
-using Rtp3Fn = long (__cdecl*)(const short*, const short*, const short*, float*, float*, float*, long*, long*);
+using Rtp3Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, float*, float*, float*, std::int32_t*, std::int32_t*);
 
-using Rtp4Fn = long (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*,
-                               long*, long*);
+using Rtp4Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*,
+                               std::int32_t*, std::int32_t*);
 
 template <typename T, typename F> T As(F* f) { return reinterpret_cast<T>(reinterpret_cast<void*>(f)); }
 
@@ -80,13 +80,13 @@ float* Fl(unsigned char* p) { return reinterpret_cast<float*>(p); }
 
 // A word of a table of dwords (the originals read the low word at stride 4),
 // the index signed as the originals' movsx gives it.
-unsigned TableWord(const unsigned long* table, int index) {
+unsigned TableWord(const std::uint32_t* table, int index) {
     return Word(reinterpret_cast<const unsigned char*>(table) + static_cast<std::int32_t>(index) * 4);
 }
 
 // A .data dispatch table read in place: the cell called, the index checked
 // (the originals' is not).
-void CallCell(const unsigned long* table, unsigned entries, unsigned index, const char* who) {
+void CallCell(const std::uint32_t* table, unsigned entries, unsigned index, const char* who) {
     if (index >= entries) bof3::Fatal("%s: index %u, past the %u-entry table", who, index, entries);
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
 }
@@ -101,18 +101,18 @@ void CallPhase(const std::uint32_t* phases, unsigned entries, const char* who) {
 void LinkAt(unsigned dy, unsigned size) {
     const unsigned char* const sc = SC();
     const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tsc->x), static_cast<unsigned long>(tsc->z),
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(tsc->x), static_cast<std::uint32_t>(tsc->z),
                                 static_cast<int>(dy), size);
 }
 
-long Rtp3(unsigned char* p) {
-    long depth = 0, flag = 0;
+std::int32_t Rtp3(unsigned char* p) {
+    std::int32_t depth = 0, flag = 0;
     return MH_CALL(As<Rtp3Fn>(&::Gte_RotTransPers3))(VxP(0), VxP(8), VxP(0x10), Fl(p + 8), Fl(p + 0x18), Fl(p + 0x28), &depth,
                                                      &flag);
 }
 
-long Rtp4(unsigned char* p) {
-    long depth = 0, flag = 0;
+std::int32_t Rtp4(unsigned char* p) {
+    std::int32_t depth = 0, flag = 0;
     return MH_CALL(As<Rtp4Fn>(&::Gte_RotTransPers4))(VxP(0), VxP(8), VxP(0x10), VxP(0x18), Fl(p + 8), Fl(p + 0x18),
                                                      Fl(p + 0x28), Fl(p + 0x38), &depth, &flag);
 }
@@ -132,7 +132,7 @@ void Shade3(unsigned char* q, short c) {
 // The four types' shared task body: the phase through its .data table, then
 // the draw between the actor matrix's push and pop while the task is live
 // (+0) and past its first phase (+2).
-template <void (__cdecl* Draw)(void)> void OrbTask(const unsigned long* phases, unsigned n, const char* who) {
+template <void (__cdecl* Draw)(void)> void OrbTask(const std::uint32_t* phases, unsigned n, const char* who) {
     CallCell(phases, n, SC()[2], who);
     const unsigned char* const sc = SC();
     if (sc[0] == 0 || sc[2] == 0) return;

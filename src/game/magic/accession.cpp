@@ -314,14 +314,14 @@ S33_EXPORT void __cdecl Accession_ApplyB(void) {
         first[5] = 0;
         tfirst->x = x;
         tfirst->z = z;
-        const long ground = MH_CALL(AreaMap_Elevation)(x, z);
+        const std::int32_t ground = MH_CALL(AreaMap_Elevation)(x, z);
         const std::int32_t z0 = tfirst->z;
         const std::int32_t cz = move_script::Long(Mem(::bof3::Img(BossSi_CentreZ_addr)));
         rv::Store<unsigned>(tfirst->height_whole, U(ground) & 0xFFFF);
         SetLong(Mem(::bof3::Img(BattleTask_Slots_addr) + 0x34), move_script::Long(Mem(::bof3::Img(BossSi_CentreX_addr))));
         const std::int32_t x0 = tfirst->x;
         SetLong(Mem(::bof3::Img(BattleTask_Slots_addr) + 0x38), cz);
-        const long ground0 = MH_CALL(AreaMap_Elevation)(x0, z0);
+        const std::int32_t ground0 = MH_CALL(AreaMap_Elevation)(x0, z0);
         const unsigned char was = Mem(::bof3::Img(0x904AB0))[0];
         Mem(::bof3::Img(0x904AA9))[0] |= 0x80;
         SetLong(Mem(::bof3::Img(BattleTask_Slots_addr) + 0x3C), static_cast<std::int32_t>(Shl(static_cast<short>(ground0), 16)));

@@ -533,7 +533,7 @@ void Seed(unsigned k) {
     // the field's cells
     Field_State[0x89] = static_cast<unsigned char>(PickOf(0, sh::Next()));
     Field_Kind2Hold = static_cast<unsigned char>(PickOf(0, 0, sh::Next()));
-    Field_Kind2Z = static_cast<long>(PickOf(0x150000, 0x150000, 0x150001, 0x3C0000, sh::Next()));
+    Field_Kind2Z = static_cast<std::int32_t>(PickOf(0x150000, 0x150000, 0x150001, 0x3C0000, sh::Next()));
     Frame_Counter = sh::Half() ? sh::Next() & ~0xFu : sh::Next();
     Transition_Busy = static_cast<unsigned short>(PickOf(0, 0, sh::Next()));
     Input_Pressed = static_cast<unsigned short>(PickOf(0x04, 0x10, 0x20, 0x40, 0x74, 0x24, 0x84, 0x2000, 0x8000, 0x4000,

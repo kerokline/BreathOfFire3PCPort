@@ -72,8 +72,8 @@ struct Callees {
     U drive_type_slot;   // where GetDriveTypeA is read from, once a call: the import slot 0x5C4088
     // Game_Init's
     void (__cdecl* init_geom)();                                               // Gte_InitGeom
-    void (__cdecl* set_geom_offset)(long x, long y);                           // Gte_SetGeomOffset
-    void (__cdecl* set_geom_screen)(long h);                                   // Gte_SetGeomScreen
+    void (__cdecl* set_geom_offset)(std::int32_t x, std::int32_t y);                           // Gte_SetGeomOffset
+    void (__cdecl* set_geom_screen)(std::int32_t h);                                   // Gte_SetGeomScreen
     void (__cdecl* dinput_init)(void* hinstance, void* hwnd);                  // DInput_Init
     void (__cdecl* sound_setup)(void* hwnd);                                   // 0x5A6830 Snd_Init, ours (PS)
     void (__cdecl* dropped_call)(unsigned char b);                             // Port_DroppedCall
@@ -83,8 +83,8 @@ struct Callees {
     void (__cdecl* begin_frame)();                                             // Gfx_BeginFrame
     void (__cdecl* set_stack_base)();                                          // Task_SetStackBase: reached by a jmp
     // Gfx_InitBufferBlock's and Gfx_LinkOTags'
-    void (__cdecl* clear_otag_r)(unsigned long* ot, int n);                    // Gpu_ClearOTagR
-    void (__cdecl* add_prim)(unsigned long* ot, unsigned long* prim, unsigned long* link_out);   // Gpu_AddPrim
+    void (__cdecl* clear_otag_r)(std::uint32_t* ot, int n);                    // Gpu_ClearOTagR
+    void (__cdecl* add_prim)(std::uint32_t* ot, std::uint32_t* prim, std::uint32_t* link_out);   // Gpu_AddPrim
 };
 extern const Callees kOriginals;
 extern Callees g;

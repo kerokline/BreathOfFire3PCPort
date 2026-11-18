@@ -116,8 +116,8 @@ FH_EXPORT unsigned char __cdecl Encounter_Place(unsigned facing, unsigned keep_c
     field_hidden::g.push_matrix();
     field_hidden::g.aim_camera(FieldHidden_Facing);
     for (unsigned char m = 0; m < Al(field_hidden::g.party_count(1)); ++m) {
-        const long x = Long(At(::bof3::Img(field_hidden::at::kMemberPos) + m * 8u));
-        const long z = Long(At(::bof3::Img(field_hidden::at::kMemberPos) + m * 8u + 4));
+        const std::int32_t x = Long(At(::bof3::Img(field_hidden::at::kMemberPos) + m * 8u));
+        const std::int32_t z = Long(At(::bof3::Img(field_hidden::at::kMemberPos) + m * 8u + 4));
         const unsigned char id = Byte(::bof3::Img(field_hidden::at::kPartyList2) + m);
         const unsigned wide = (id == 2 || id == 6) ? 1u : 0u;
         if (Al(field_hidden::g.on_screen(x, z, (facing & 0xFFFFFF00u) | wide, 0x20)) == 0) {
@@ -254,7 +254,7 @@ extern "C" unsigned char __cdecl Encounter_MemberClear(unsigned member) {
 extern "C" unsigned char __cdecl Encounter_MemberStands(unsigned member) {
     const u32 m = member & 0xFF;
     const unsigned wide = Member(m)[1];
-    const long e = inventory_ops::g.elevation(move_script::Long(PosX(m)), move_script::Long(PosZ(m)));
+    const std::int32_t e = inventory_ops::g.elevation(move_script::Long(PosX(m)), move_script::Long(PosZ(m)));
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->height, Shl(static_cast<std::int16_t>(e), 16));
     if (!inventory_ops::g.cell_fits(move_script::Long(PosX(m)), move_script::Long(PosZ(m)), wide)) return 0;
     return inventory_ops::g.object_at(move_script::Long(PosX(m)), move_script::Long(PosZ(m)), wide) == 0xFF;
@@ -375,7 +375,7 @@ extern "C" unsigned char __cdecl Encounter_EnemiesReachable(void) {
 // original 0x592800 (PSX 0x801C7ED8): whether a thing at (x, z) of size
 // class `size` keeps apart from each active enemy of the first `count` (its
 // byte) - each enemy's size its kind's byte +0x86.
-extern "C" unsigned char __cdecl Encounter_EnemyClear(unsigned count, long x, long z, unsigned size) {
+extern "C" unsigned char __cdecl Encounter_EnemyClear(unsigned count, std::int32_t x, std::int32_t z, unsigned size) {
     const auto n = static_cast<unsigned char>(count);
     for (unsigned char k = 0; k < n; ++k) {
         unsigned char* const e = Enemy(k);
@@ -424,19 +424,19 @@ extern "C" unsigned char __cdecl AreaMap_CellNibble(unsigned x, unsigned z) {
 unsigned char g_on_screen_lower_bounds = 0;
 bool g_on_screen_log = false;
 
-extern "C" unsigned char __cdecl Encounter_OnScreen(long x, long z, unsigned size, unsigned margin) {
+extern "C" unsigned char __cdecl Encounter_OnScreen(std::int32_t x, std::int32_t z, unsigned size, unsigned margin) {
     i32 a = Shl(static_cast<i32>((size & 0xFF) + 1), 14);
     i32 b = a;
     float sxy[2];
     for (unsigned char t = 0; t < 4; ++t) {
         const i32 pz = AddInventoryOps(b, z), px = AddInventoryOps(a, x);
         const i32 y = Shl(static_cast<std::int16_t>(inventory_ops::g.elevation(px, pz)), 16);
-        inventory_ops::g.project(px, pz, y, reinterpret_cast<unsigned long*>(sxy));
+        inventory_ops::g.project(px, pz, y, reinterpret_cast<std::uint32_t*>(sxy));
         if (sxy[0] >= 320.0f) return 0;
         if (sxy[1] >= 240.0f) return 0;
         if (sxy[0] < 0.0f || sxy[1] < 0.0f) {
             if (g_on_screen_log)
-                bof3::Log("D56         Encounter_OnScreen(%ld, %ld, size %u, margin %u) corner %u at (%.1f, %.1f): %s",
+                bof3::Log("D56         Encounter_OnScreen(%d, %d, size %u, margin %u) corner %u at (%.1f, %.1f): %s",
                           x, z, size & 0xFF, margin & 0xFF, static_cast<unsigned>(t), static_cast<double>(sxy[0]),
                           static_cast<double>(sxy[1]),
                           g_on_screen_lower_bounds ? "refused (DIV-0116)" : "passed, the port's bounds");
@@ -448,7 +448,7 @@ extern "C" unsigned char __cdecl Encounter_OnScreen(long x, long z, unsigned siz
     }
     const i32 pz = AddInventoryOps(b, z), px = AddInventoryOps(a, x);
     const i32 y = Shl(static_cast<std::int16_t>(inventory_ops::g.elevation(px, pz)), 16);
-    inventory_ops::g.project(px, pz, y, reinterpret_cast<unsigned long*>(sxy));
+    inventory_ops::g.project(px, pz, y, reinterpret_cast<std::uint32_t*>(sxy));
     return static_cast<double>(sxy[1]) - static_cast<double>(margin & 0xFF) >= 8.0;
 }
 
@@ -457,13 +457,13 @@ extern "C" unsigned char __cdecl Encounter_OnScreen(long x, long z, unsigned siz
 // high word / 2)), the two floats to `sxy`; the answer is Gte_RotTransPers's.
 // The original lets the depth land in its own second argument slot, which no
 // caller reads again.
-extern "C" long __cdecl Encounter_Project(long x, long z, long y, unsigned long* sxy) {
+extern "C" std::int32_t __cdecl Encounter_Project(std::int32_t x, std::int32_t z, std::int32_t y, std::uint32_t* sxy) {
     short v[3];
     v[0] = static_cast<short>(Sub(x >> 9, 0x4000));
     v[1] = static_cast<short>(Sub(z >> 9, 0x4000));
     const i32 yh = static_cast<std::int16_t>(static_cast<u32>(y) >> 16);
     v[2] = static_cast<short>(Neg(yh / 2));
-    long depth;
+    std::int32_t depth;
     return inventory_ops::g.rot_trans_pers(v, sxy, &depth);
 }
 
@@ -483,12 +483,12 @@ extern "C" void __cdecl Encounter_AimCamera(unsigned facing) {
     for (unsigned k = 0; k < 8; ++k) {
         unsigned char* const e = Enemy(k);
         if (e[0] == 0) continue;
-        const long h = inventory_ops::g.elevation(rv::As<records::EncounterSlot>(e)->x, rv::As<records::EncounterSlot>(e)->z);
+        const std::int32_t h = inventory_ops::g.elevation(rv::As<records::EncounterSlot>(e)->x, rv::As<records::EncounterSlot>(e)->z);
         ModeRest_ElevationBase = AddInventoryOps(static_cast<std::int32_t>(ModeRest_ElevationBase), static_cast<std::int16_t>(h));
         ++n;
     }
     for (unsigned char m = 0; m < static_cast<unsigned char>(inventory_ops::g.party_count(1)); ++m) {
-        const long h = inventory_ops::g.elevation(move_script::Long(PosX(m)), move_script::Long(PosZ(m)));
+        const std::int32_t h = inventory_ops::g.elevation(move_script::Long(PosX(m)), move_script::Long(PosZ(m)));
         ModeRest_ElevationBase = AddInventoryOps(static_cast<std::int32_t>(ModeRest_ElevationBase), static_cast<std::int16_t>(h));
         ++n;
     }
@@ -496,7 +496,7 @@ extern "C" void __cdecl Encounter_AimCamera(unsigned facing) {
     struct {
         short m[9];
         short pad;
-        long t[3];
+        std::int32_t t[3];
     } matrix;
     inventory_ops::g.rot_matrix(Camera_Angles, matrix.m);
     const u32 f = facing & 0xFF;
@@ -505,20 +505,20 @@ extern "C" void __cdecl Encounter_AimCamera(unsigned facing) {
     v[2] = static_cast<short>(static_cast<std::int32_t>(ModeRest_ElevationBase) >> 1);
     v[0] = static_cast<short>(Sub(0x4000, AddInventoryOps(Shl(offset[0], 16), CentreX()) >> 9));
     v[1] = static_cast<short>(Sub(0x4000, AddInventoryOps(Shl(offset[1], 16), CentreZ()) >> 9));
-    long out[3];
+    std::int32_t out[3];
     inventory_ops::g.apply_matrix(matrix.m, v, out);
     matrix.t[0] = AddInventoryOps(Camera_ShiftX, out[0]);
     matrix.t[1] = AddInventoryOps(Camera_ShiftY, out[1]);
     matrix.t[2] = AddInventoryOps(AddInventoryOps(Camera_Distance, out[2]), 0x1194);
     inventory_ops::g.rot_matrix(Camera_Angles, matrix.m);
-    inventory_ops::g.set_rot_matrix(reinterpret_cast<const unsigned long*>(&matrix));
-    inventory_ops::g.set_trans_matrix(reinterpret_cast<const unsigned long*>(&matrix));
+    inventory_ops::g.set_rot_matrix(reinterpret_cast<const std::uint32_t*>(&matrix));
+    inventory_ops::g.set_trans_matrix(reinterpret_cast<const std::uint32_t*>(&matrix));
 }
 
 // original 0x592BD0 (PSX 0x801C8490): whether two things at (x0, z0) and
 // (x1, z1), 16.16, are apart: |dx| or |dz| (32-bit differences) at least
 // ((size0 + 1) + (size1 + 1)) * 0x8000, the sizes' low bytes.
-extern "C" unsigned char __cdecl Encounter_Apart(long x0, long z0, long x1, long z1, unsigned size0, unsigned size1) {
+extern "C" unsigned char __cdecl Encounter_Apart(std::int32_t x0, std::int32_t z0, std::int32_t x1, std::int32_t z1, unsigned size0, unsigned size1) {
     const i32 sum = AddInventoryOps(Shl(static_cast<i32>((size1 & 0xFF) + 1), 15), Shl(static_cast<i32>((size0 & 0xFF) + 1), 15));
     i32 dx = Sub(x0, x1);
     if (dx <= 0) dx = Sub(x1, x0);
@@ -537,7 +537,7 @@ extern "C" unsigned char __cdecl Encounter_Apart(long x0, long z0, long x1, long
 // only, b + 1 or b + 3; off both, no. The original also leaves the nibble
 // and b in its first and third argument slots, which no caller reads (three
 // call sites, each pops them).
-extern "C" unsigned char __cdecl Encounter_CellFits(long x, long z, unsigned size) {
+extern "C" unsigned char __cdecl Encounter_CellFits(std::int32_t x, std::int32_t z, unsigned size) {
     const i32 s = Shl(static_cast<i32>(size & 0xFF), 15);
     const i32 xs = Sub(x, s), zs = Sub(z, s);
     const unsigned char v = inventory_ops::g.cell_nibble(Cell(xs), Cell(zs));

@@ -123,7 +123,7 @@ void __cdecl StubFadeMusic() { Record(8); }
 void __cdecl StubEffect(unsigned short id) { Record(9, id); }
 // The state handlers: which one ran, at which state.
 template <unsigned N> void __cdecl StubHandler() { Record(10 + N, Title_State); DisturbTitle(); }
-void __cdecl StubDrawMode(unsigned char* prim, int dfe, int dtd, unsigned tpage, unsigned long tw) {
+void __cdecl StubDrawMode(unsigned char* prim, int dfe, int dtd, unsigned tpage, std::uint32_t tw) {
     Record(20, Id(prim), static_cast<std::uint32_t>(dfe), static_cast<std::uint32_t>(dtd), tpage ^ static_cast<std::uint32_t>(tw) << 16);
     std::memset(prim + 4, static_cast<int>(Hash() & 0xFF), 8);
     DisturbTitle();

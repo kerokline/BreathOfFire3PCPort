@@ -166,7 +166,7 @@ void Close(bool up) {
 // The original also pushes a tenth pointer (a flag local) the projection
 // does not read.
 void Project(unsigned char* p) {
-    long depth;
+    std::int32_t depth;
     SH_CALL(Gte_RotTransPers4)(Vertex(0), Vertex(1), Vertex(2), Vertex(3), reinterpret_cast<float*>(p + 8),
                                reinterpret_cast<float*>(p + 0x18), reinterpret_cast<float*>(p + 0x28),
                                reinterpret_cast<float*>(p + 0x38), &depth);
@@ -174,10 +174,10 @@ void Project(unsigned char* p) {
 }
 
 // A vertex's ground point: (s16 + 0x4000) << 9, the 16.16 the map reads.
-long Ground(const unsigned char* word) { return static_cast<long>(static_cast<U>(S16(word) + 0x4000) << 9); }
+std::int32_t Ground(const unsigned char* word) { return static_cast<std::int32_t>(static_cast<U>(S16(word) + 0x4000) << 9); }
 
 // base - ground / 2 (movsx ax; cdq; sub; sar 1: toward zero), the low word.
-U Above(U base, long height) {
+U Above(U base, std::int32_t height) {
     const std::int32_t half = static_cast<std::int16_t>(static_cast<U>(height) & 0xFFFFu) / 2;
     return base - static_cast<U>(half);
 }
@@ -227,11 +227,11 @@ void GroundDraw(U (*texture)(const unsigned char* s)) {
             SetWord(v + 0xA, y - 0x4040u);
         }
     }
-    const long x0 = Ground(v), y0 = Ground(v + 2);
-    long h = SH_CALL(AreaMap_Elevation)(x0, y0);
+    const std::int32_t x0 = Ground(v), y0 = Ground(v + 2);
+    std::int32_t h = SH_CALL(AreaMap_Elevation)(x0, y0);
     rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->z, Above(0x40, h));
     h = SH_CALL(AreaMap_Elevation)(x0, y0);
-    const long x1 = Ground(v + 8), y1 = Ground(v + 0xA);
+    const std::int32_t x1 = Ground(v + 8), y1 = Ground(v + 0xA);
     rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].z, Above(0x180, h));
     h = SH_CALL(AreaMap_Elevation)(x1, y1);
     rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].z, Above(0x40, h));

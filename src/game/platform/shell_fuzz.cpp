@@ -304,8 +304,8 @@ unsigned __stdcall StubDriveType(const char* root) {
 const void* g_slot_drive_type = reinterpret_cast<const void*>(&StubDriveType);
 
 void __cdecl StubInitGeom() { Record(0x30); Disturb(); }
-void __cdecl StubGeomOffset(long x, long y) { Record(0x31, static_cast<U>(x), static_cast<U>(y)); Disturb(); }
-void __cdecl StubGeomScreen(long h) { Record(0x32, static_cast<U>(h)); Disturb(); }
+void __cdecl StubGeomOffset(std::int32_t x, std::int32_t y) { Record(0x31, static_cast<U>(x), static_cast<U>(y)); Disturb(); }
+void __cdecl StubGeomScreen(std::int32_t h) { Record(0x32, static_cast<U>(h)); Disturb(); }
 void __cdecl StubDInput(void* hinstance, void* hwnd) { Record(0x33, Addr(hinstance), Addr(hwnd)); Disturb(); }
 void __cdecl StubSound(void* hwnd) { Record(0x34, Addr(hwnd)); Disturb(); }
 // Capcom pushes a whole dword (push 0); Port_DroppedCall reads the byte
@@ -324,14 +324,14 @@ unsigned char* __cdecl StubDispEnv(unsigned char* env, int x, int y, int w, int 
 void __cdecl StubInitBlock(unsigned char* block) { Record(0x38, Addr(block)); Disturb(); }
 void __cdecl StubBeginFrame() { Record(0x39); Disturb(); }
 
-void __cdecl StubClearOTagR(unsigned long* ot, int n) {
+void __cdecl StubClearOTagR(std::uint32_t* ot, int n) {
     Record(0x40, Addr(ot), static_cast<U>(n));
     // The block's DRAWENV bytes the caller stores after this call.
     const U h = Hash(0xC1E);
     if (h & 1) At(Addr(ot) - kBlockOt + 0x2C + (h >> 1) % 4)[0] = static_cast<unsigned char>(h >> 8);
     Disturb();
 }
-void __cdecl StubAddPrim(unsigned long* ot, unsigned long* prim, unsigned long* link_out) {
+void __cdecl StubAddPrim(std::uint32_t* ot, std::uint32_t* prim, std::uint32_t* link_out) {
     Record(0x41, Addr(ot), Addr(prim), Addr(link_out));
     Disturb();
 }

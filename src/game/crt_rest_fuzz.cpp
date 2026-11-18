@@ -187,7 +187,7 @@ unsigned Kinds(const char* fmt, char* kinds) {
     return n;
 }
 
-using SprintfFn = int (__cdecl*)(char*, const char*, ...);
+using SprintfFn = int (*)(char*, const char*, ...);
 
 // Up to three arguments, as the formats have.
 int Call(SprintfFn f, char* out, const char* fmt, const U* args) { return f(out, fmt, args[0], args[1], args[2]); }
@@ -504,7 +504,7 @@ void FuzzFind() {
         HANDLE h = FindFirstFileA(pattern, &w);
         unsigned char found[0x118];
         std::memset(found, 0xCC, sizeof found);
-        const long handle = ::Crt_findfirst(pattern, found);
+        const std::int32_t handle = ::Crt_findfirst(pattern, found);
         if ((h == INVALID_HANDLE_VALUE) != (handle == -1)) {
             Mismatch(pattern, 0, h == INVALID_HANDLE_VALUE, handle == -1);
             if (h != INVALID_HANDLE_VALUE) FindClose(h);
@@ -679,7 +679,7 @@ void ScanString(unsigned round, char* s) {
 }
 
 // The planted bugs.
-int __cdecl PlantedScanNoEof(const char* s, const char* fmt, ...) {   // 0 where the original answers -1
+int PlantedScanNoEof(const char* s, const char* fmt, ...) {   // 0 where the original answers -1
     std::va_list args;
     va_start(args, fmt);
     void* const a = va_arg(args, void*);
@@ -688,13 +688,13 @@ int __cdecl PlantedScanNoEof(const char* s, const char* fmt, ...) {   // 0 where
     const int r = ::Crt_sscanf(s, fmt, a, b);
     return r < 0 ? 0 : r;
 }
-int __cdecl PlantedScanSaturate(const char* s, const char* fmt, ...) {   // the toolchain's sscanf
+int PlantedScanSaturate(const char* s, const char* fmt, ...) {   // the toolchain's sscanf
     std::va_list args;
     va_start(args, fmt);
     void* const a = va_arg(args, void*);
     void* const b = va_arg(args, void*);
     va_end(args);
-    unsigned long x = 0, y = 0;
+    std::uint32_t x = 0, y = 0;
     const int r = std::strcmp(fmt, "%d %d") == 0 ? std::sscanf(s, "%d %d", reinterpret_cast<int*>(&x), reinterpret_cast<int*>(&y))
                                                  : std::sscanf(s, "%lx@%lx", &x, &y);
     if (r >= 1) std::memcpy(a, &x, 4);
@@ -702,7 +702,7 @@ int __cdecl PlantedScanSaturate(const char* s, const char* fmt, ...) {   // the 
     return r;
 }
 
-using ScanFn = int (__cdecl*)(const char*, const char*, ...);
+using ScanFn = int (*)(const char*, const char*, ...);
 // hex false: Cfg_Load's format at 0x65DAD0; true: the decoder's at 0x672854.
 unsigned CompareScan(ScanFn ours, unsigned rounds, bool log, bool hex = false) {
     const ScanFn theirs = bof3::orig::Crt_sscanf;   // orig:: converts to its pointer (tools/gen_symbols.py)

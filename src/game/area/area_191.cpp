@@ -271,7 +271,7 @@ extern "C" void __cdecl Area191_Tail53(void) {
 // word is not 0, in z when z's is not, and the diagonal when both - counted
 // where AreaMap_ByteAt answers 0xA6; any: ScriptFlags_Set40, tail kind 53 at
 // state 0, al 1. Else al 0.
-extern "C" unsigned char __cdecl Area191_StepHook(long x, long z) {
+extern "C" unsigned char __cdecl Area191_StepHook(std::int32_t x, std::int32_t z) {
     const U xv = static_cast<U>(x), zv = static_cast<U>(z);
     const auto cx = static_cast<short>(xv >> 16), cz = static_cast<short>(zv >> 16);
     unsigned char n = 0;

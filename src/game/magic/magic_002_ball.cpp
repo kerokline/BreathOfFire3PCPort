@@ -89,7 +89,7 @@ int Dot(const short* n, short y) {
 // the light, then the same with the normal's y turned over - the upper
 // dome's shade and the mirrored lower dome's.
 void ShadePoint(int x, int y, int z, unsigned char& upper, unsigned char& lower) {
-    const long in[3] = {x, y, z};
+    const std::int32_t in[3] = {x, y, z};
     short n[3];
     MH_CALL(Gte_VectorNormalS)(in, n);
     upper = Shade(Sqrt(Dot(n, n[1])));

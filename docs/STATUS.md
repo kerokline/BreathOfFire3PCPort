@@ -64,6 +64,18 @@ D406's quick-load listen and DIV-0203's German - the notes say exactly that. **T
 issue #190** (the dragon gene window; not reproduced in many tries; left open by the owner to gather data).
 The tag and the release are made; PR #211, the readiness docs, is merged.
 
+**The Linux round's unit LB0, 2026-11-17 (branch `linux/long-pass`, not merged).** `long` is 8 bytes on x86-64 Linux and 4 on
+Windows; `src/game` (5,077 sites) and the generated header now spell the image's word as `std::int32_t` / `std::uint32_t`.
+Variadic functions carry no `__cdecl`, and the save list's directory search and the file layer's descriptor calls went
+into the OS seam (`os/find.h`, `os/stream.h`, a Win32 and a POSIX backend each, `os_tests` passing on both).
+`tools/linux_probe/linux_tree.py` measures it: 764 of the 802 source files a 64-bit host builds compile for x86-64 Linux,
+where 40 of 813 did; the 38 that do not are listed with a reason in `analysis/linux_tree.tsv` (the window, DirectInput,
+Direct3D's headers, the crash and fiber files, `_msize`). On Windows both widths build; the first part left the machine code
+that of `main` `7999aa1a` but for the offsets of log formats that lost an `l`, the second changed four objects, and the
+hosted shadow suite passes over both ([`linux-round.md`](linux-round.md), "LB0 as run"). One weakness of the 64-bit Windows
+build went with it: the save list kept the C runtime's search handle in a 32-bit word. No ledger entry; the routes were not
+run. Nothing links or runs on Linux yet.
+
 **The Linux native round's groundwork, PR #229 (frost's PR #226 with the Windows review's commits on top;
 merged 2026-11-11 evening, `main` `c14b805c`).** [`linux-round.md`](linux-round.md) is the round's record; this is only where it
 stands. The PR holds stage LA (the OS census, the low-memory and calling-convention probes, the DXVK-native

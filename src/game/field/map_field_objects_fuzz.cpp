@@ -191,12 +191,12 @@ U ScreenBits(U h, float lo, float hi) {
 // --- the stand-ins -------------------------------------------------------------------------
 float g_lo_x = -80, g_hi_x = 400, g_lo_y = -20, g_hi_y = 260;   // the bounds the test in hand culls on
 
-long __cdecl StubElevation(long x, long y) {
+std::int32_t __cdecl StubElevation(std::int32_t x, std::int32_t y) {
     Record(1, static_cast<U>(x), static_cast<U>(y));
     Disturb(1);
     const U h = Hash(2);
     const U low = (h >> 3) % 2 ? PickH(h >> 5, {0, 1, 2, 3, 0xFFFF, 0xFFFE, 0x7FFF, 0x8000, 0x8001, 0x100}) : (h >> 5);
-    return static_cast<long>((Hash(3) & 0xFFFF0000u) | (low & 0xFFFFu));
+    return static_cast<std::int32_t>((Hash(3) & 0xFFFF0000u) | (low & 0xFFFFu));
 }
 void ScreenPoint(float* s, U salt) {
     const U h = Hash(salt);
@@ -205,14 +205,14 @@ void ScreenPoint(float* s, U salt) {
 }
 U VertexWords(const short* v) { return (static_cast<U>(static_cast<std::uint16_t>(v[0]))) | (static_cast<U>(static_cast<std::uint16_t>(v[1])) << 16); }
 U VertexZ(const short* v) { return static_cast<std::uint16_t>(v[2]); }
-long __cdecl StubRtp3(const short* v0, const short* v1, const short* v2, float* s0, float* s1, float* s2, long* p) {
+std::int32_t __cdecl StubRtp3(const short* v0, const short* v1, const short* v2, float* s0, float* s1, float* s2, std::int32_t* p) {
     Record(2, VertexWords(v0), VertexZ(v0), VertexWords(v1), VertexZ(v1), VertexWords(v2));
     Record(2, VertexZ(v2), Addr(s0), Addr(s1), Addr(s2));
     ScreenPoint(s0, 4);
     ScreenPoint(s1, 5);
     ScreenPoint(s2, 6);
-    *p = static_cast<long>(Hash(7));
-    return static_cast<long>(Hash(8));
+    *p = static_cast<std::int32_t>(Hash(7));
+    return static_cast<std::int32_t>(Hash(8));
 }
 void __cdecl StubDepthF3(float* a, float* b, float* c) {
     Record(3);
@@ -248,8 +248,8 @@ U __cdecl StubCommit(unsigned slot, unsigned size) {
     Disturb(16);
     return Hash(17);
 }
-long __cdecl StubRtp4(const short* v0, const short* v1, const short* v2, const short* v3, float* s0, float* s1,
-                      float* s2, float* s3, long* p) {
+std::int32_t __cdecl StubRtp4(const short* v0, const short* v1, const short* v2, const short* v3, float* s0, float* s1,
+                      float* s2, float* s3, std::int32_t* p) {
     Record(7, VertexWords(v0), VertexZ(v0), VertexWords(v1), VertexZ(v1), VertexWords(v2));
     Record(7, VertexZ(v2), VertexWords(v3), VertexZ(v3), Packet(s0), Packet(s1));
     Record(7, Packet(s2), Packet(s3));
@@ -257,8 +257,8 @@ long __cdecl StubRtp4(const short* v0, const short* v1, const short* v2, const s
     ScreenPoint(s1, 19);
     ScreenPoint(s2, 20);
     ScreenPoint(s3, 21);
-    *p = static_cast<long>(Hash(22));
-    return static_cast<long>(Hash(23));
+    *p = static_cast<std::int32_t>(Hash(22));
+    return static_cast<std::int32_t>(Hash(23));
 }
 void __cdecl StubDepthF4(float* a, float* b, float* c, float* d) {
     Record(8, Packet(a), Packet(b), Packet(c), Packet(d));
@@ -272,7 +272,7 @@ void __cdecl StubDepths4(void* prim) {
     auto* p = static_cast<unsigned char*>(prim);
     for (U z = 0x10; z <= 0x40; z += 0x10) SetDword(p + z, Hash(28 + z));
 }
-void __cdecl StubSetTexture(unsigned long texture, unsigned char* prim, int count) {
+void __cdecl StubSetTexture(std::uint32_t texture, unsigned char* prim, int count) {
     Record(10, static_cast<U>(texture), Packet(prim), static_cast<U>(count), PrimHash(prim, 0x48));
     prim[0x16] ^= static_cast<unsigned char>(Hash(29));
     Disturb(30);
@@ -291,30 +291,30 @@ void __cdecl StubApplyPatch(const unsigned char* entry) {
 }
 // Only the low 16 bits reach the real one (map_cells.cpp): the originals push
 // ax with stale bits above.
-unsigned char __cdecl StubTest(unsigned long code) {
+unsigned char __cdecl StubTest(std::uint32_t code) {
     Record(13, static_cast<U>(code) & 0xFFFFu);
     Disturb(31);
     const U h = Hash(32);
     return static_cast<unsigned char>(PickH(h, {0, 0, 1, 1, 0x80, 0xFF, 0x7F, 2}));
 }
-long __cdecl StubRtp(const short* v, unsigned long* sxy, long* p) {
+std::int32_t __cdecl StubRtp(const short* v, std::uint32_t* sxy, std::int32_t* p) {
     Record(14, VertexWords(v), VertexZ(v), Addr(sxy));
     ScreenPoint(reinterpret_cast<float*>(sxy), 33);
-    *p = static_cast<long>(Hash(34));
+    *p = static_cast<std::int32_t>(Hash(34));
     const U h = Hash(35);
     const U depth = (h % 3 == 0) ? PickH(h >> 3, {0, 1, 0xFFFFFFFFu, 2, 0xFFFFFFFEu, 7, 100, 0x7FFFFFFFu, 0x80000000u,
                                                   0x10000, 0xFFFF0000u, 3, 1125, 0xFFFFFB9Bu})
                                  : (h >> 3) % 0x4000 + 1;
-    return static_cast<long>(depth);
+    return static_cast<std::int32_t>(depth);
 }
 void __cdecl StubDepthFlat4(void* prim) {
     Record(15, Packet(prim));
     SetDword(static_cast<unsigned char*>(prim) + 0x10, Hash(36));
     Disturb(37);
 }
-long __cdecl StubClutAdjust(int c, int r, int red, int green, int blue) {
+std::int32_t __cdecl StubClutAdjust(int c, int r, int red, int green, int blue) {
     Record(16, static_cast<U>(c), static_cast<U>(r), static_cast<U>(red), static_cast<U>(green), static_cast<U>(blue));
-    return static_cast<long>(Hash(38));
+    return static_cast<std::int32_t>(Hash(38));
 }
 // The menu draws. Menu_DrawBox reads the colour's byte (menu_windows.cpp);
 // Text_DrawAt hands the colour to Text_DrawString, which reads its low byte;

@@ -94,21 +94,21 @@ using Fn0 = void (__cdecl*)();
 
 void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
 
-using Rtp3Fn = long (__cdecl*)(const short*, const short*, const short*, unsigned char*, unsigned char*, unsigned char*,
-                               long*, long*);
+using Rtp3Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, unsigned char*, unsigned char*, unsigned char*,
+                               std::int32_t*, std::int32_t*);
 
-using Rtp4Fn = long (__cdecl*)(const short*, const short*, const short*, const short*, unsigned char*, unsigned char*,
-                               unsigned char*, unsigned char*, long*, long*);
+using Rtp4Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, const short*, unsigned char*, unsigned char*,
+                               unsigned char*, unsigned char*, std::int32_t*, std::int32_t*);
 
 #define S22_AS(type, name) ::magic_harness::Call(reinterpret_cast<type>(reinterpret_cast<void*>(&::name)))
 
 void Rtp3(unsigned char* prim) {
-    long p, flag;
+    std::int32_t p, flag;
     S22_AS(Rtp3Fn, Gte_RotTransPers3)(VP(0), VP(8), VP(0x10), prim + 8, prim + 0x18, prim + 0x28, &p, &flag);
 }
 
 void Rtp4(unsigned char* prim) {
-    long p, flag;
+    std::int32_t p, flag;
     S22_AS(Rtp4Fn, Gte_RotTransPers4)(VP(0), VP(8), VP(0x10), VP(0x18), prim + 8, prim + 0x18, prim + 0x28, prim + 0x38,
                                      &p, &flag);
 }
@@ -116,7 +116,7 @@ void Rtp4(unsigned char* prim) {
 void LinkAtSprite(unsigned size) {
     const unsigned char* const s = Sc();
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->z), 2,
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(ts->x), static_cast<std::uint32_t>(ts->z), 2,
                                 size);
 }
 
@@ -161,18 +161,18 @@ void PushTaskMatrix(bool tilt) {
     v[3] = 0;
     struct Matrix {
         short m[10];
-        long t[3];
+        std::int32_t t[3];
     } m;
     static_assert(sizeof(Matrix) == 0x20, "MATRIX layout");
-    long flag;
+    std::int32_t flag;
     // The original pushes a third argument (the flag) to Gte_RotTrans, which
     // takes two (cdecl: the caller pops it).
-    using RotTransFn = void (__cdecl*)(const short*, long*, long*);
+    using RotTransFn = void (__cdecl*)(const short*, std::int32_t*, std::int32_t*);
     S22_AS(RotTransFn, Gte_RotTrans)(v, m.t, &flag);
     MH_CALL(Gte_RotMatrix)(rot, m.m);
     MH_CALL(Gte_MulMatrix0)(Camera_Matrix, m.m, m.m);
-    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&m));
-    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&m));
+    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
+    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(&m));
 }
 
 }  // namespace

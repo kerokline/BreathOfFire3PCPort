@@ -45,15 +45,15 @@ struct CalleesFieldFrame {
     unsigned char (__cdecl* tick_once)();
     // Sprite_ProjectA's
     void (__cdecl* inherit_key)();
-    void (__cdecl* load_vertex)(const unsigned long*);
+    void (__cdecl* load_vertex)(const std::uint32_t*);
     void (__cdecl* rtps)();
-    void (__cdecl* store_xy)(unsigned long*);
-    void (__cdecl* store_depth)(long*);
+    void (__cdecl* store_xy)(std::uint32_t*);
+    void (__cdecl* store_depth)(std::int32_t*);
     // the frame's draw
     void (__cdecl* header_pass)();
     void (__cdecl* overlays)();
     void (__cdecl* draw_pass)();
-    void (__cdecl* swap)(unsigned long, unsigned long);
+    void (__cdecl* swap)(std::uint32_t, std::uint32_t);
     void (__cdecl* sprite_draw)();
 };
 

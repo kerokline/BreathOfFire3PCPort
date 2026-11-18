@@ -76,15 +76,15 @@ void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
     bof3::Fatal("%s: phase %u, past the %u-entry table", who, phase, entries);
 }
 
-using Rtp4Fn = long (__cdecl*)(const short*, const short*, const short*, const short*, unsigned char*, unsigned char*,
-                               unsigned char*, unsigned char*, long*, long*);
+using Rtp4Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, const short*, unsigned char*, unsigned char*,
+                               unsigned char*, unsigned char*, std::int32_t*, std::int32_t*);
 
 #define S33_AS(type, name) ::magic_harness::Call(reinterpret_cast<type>(reinterpret_cast<void*>(&::name)))
 
 // The four projected points at +8, +8 + step, +8 + 2 step, +8 + 3 step
 // (0xC a flat quad's, 0x10 a gouraud one's).
 void Rtp4(unsigned char* prim, unsigned step) {
-    long p, flag;
+    std::int32_t p, flag;
     S33_AS(Rtp4Fn, Gte_RotTransPers4)(VP(0), VP(8), VP(0x10), VP(0x18), prim + 8, prim + 8 + step, prim + 8 + 2 * step,
                                      prim + 8 + 3 * step, &p, &flag);
 }

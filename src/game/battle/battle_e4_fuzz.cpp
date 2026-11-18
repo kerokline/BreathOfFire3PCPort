@@ -478,7 +478,7 @@ void Select() {
     for (const bh::Clone& c : kAll56) {
         for (const char* p = only; *p;) {
             char* end = nullptr;
-            const unsigned long v = std::strtoul(p, &end, 16);
+            const std::uint32_t v = std::strtoul(p, &end, 16);
             if (end == p) break;
             if (v == c.base) {
                 g_only[n++] = c;

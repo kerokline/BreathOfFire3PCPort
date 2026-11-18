@@ -128,20 +128,20 @@ short* __cdecl StubRotMatrix(const short* angles, short* m) {
     Record(7, Address(angles), Address(m), Sum(angles, 6));
     for (unsigned i = 0; i < 9; ++i) m[i] = static_cast<short>(Hash() >> i);
     const std::uint32_t h = Hash();
-    if (h % 4 == 0) MapView_FocusX = static_cast<long>(h * 7);   // read again after this call
-    if (h % 5 == 0) MapView_Elevation = static_cast<long>(h * 11);
+    if (h % 4 == 0) MapView_FocusX = static_cast<std::int32_t>(h * 7);   // read again after this call
+    if (h % 5 == 0) MapView_Elevation = static_cast<std::int32_t>(h * 11);
     return m;
 }
-void __cdecl StubApplyMatrix(const short* m, const short* v, long* out) {
+void __cdecl StubApplyMatrix(const short* m, const short* v, std::int32_t* out) {
     Record(8, Address(m), Sum(m, 0x20), Pack(v));
     Record(8, static_cast<std::uint16_t>(v[2]));
-    for (unsigned j = 0; j < 3; ++j) out[j] = static_cast<long>(Hash() * (j + 3));
+    for (unsigned j = 0; j < 3; ++j) out[j] = static_cast<std::int32_t>(Hash() * (j + 3));
     const std::uint32_t h = Hash();
     if (h % 4 == 0) Camera_ShiftX = static_cast<short>(h >> 8);
     if (h % 5 == 0) Camera_Distance = static_cast<short>(h >> 12);
 }
-void __cdecl StubSetRot(const unsigned long* m) { Record(9, Address(m), Sum(m, 0x20)); }
-void __cdecl StubSetTrans(const unsigned long* m) {
+void __cdecl StubSetRot(const std::uint32_t* m) { Record(9, Address(m), Sum(m, 0x20)); }
+void __cdecl StubSetTrans(const std::uint32_t* m) {
     Record(10, Address(m), Sum(m, 0x20));
     if (Hash() % 4 == 0) MapView_Redraw = static_cast<unsigned char>(Hash() % 3);
 }
@@ -180,9 +180,9 @@ void __cdecl StubLayersReset() {
     Record(20);
     for (unsigned k = 0; k < 8; ++k) DrawLayers[(Hash() + k * 97) % DrawLayers_count] = Hash() * (k + 1);
 }
-void __cdecl StubLoadVertex(const unsigned long* v) { Record(21, Address(v), v[0], v[1]); }
+void __cdecl StubLoadVertex(const std::uint32_t* v) { Record(21, Address(v), v[0], v[1]); }
 void __cdecl StubRtps() { Record(22); }
-void __cdecl StubStoreXY(unsigned long* out) {
+void __cdecl StubStoreXY(std::uint32_t* out) {
     Record(23, Address(out));
     out[0] = PickBits(-50.0f, 370.0f);
     Record(23);
@@ -206,16 +206,16 @@ unsigned short __cdecl StubAlloc() {
     if (h % 9 == 0) MapView_CornerPtr = reinterpret_cast<unsigned char*>(&AreaMap_Corners) + (h >> 8) % 200 * 4;
     return static_cast<unsigned short>(h % 4 == 0 ? 0 : 1 + (h >> 4) % (kItems - 1));
 }
-void __cdecl StubLoadVertices3(const unsigned long* v) {
+void __cdecl StubLoadVertices3(const std::uint32_t* v) {
     Record(26, Address(v), v[0], v[1]);
     Record(26, v[2], v[3], v[4]);
     Record(26, v[5]);
 }
 void __cdecl StubRtpt() { Record(27); }
-void __cdecl StubLink(unsigned long* tail, unsigned long item) { Record(28, Address(tail), item); }
-void __cdecl StubStoreXY3(unsigned long* a, unsigned long* b, unsigned long* c) {
+void __cdecl StubLink(std::uint32_t* tail, std::uint32_t item) { Record(28, Address(tail), item); }
+void __cdecl StubStoreXY3(std::uint32_t* a, std::uint32_t* b, std::uint32_t* c) {
     Record(29, Address(a), Address(b), Address(c));
-    for (unsigned long* out : {a, b, c}) {
+    for (std::uint32_t* out : {a, b, c}) {
         out[0] = Hash();
         Record(29);
         out[1] = Hash();
@@ -241,7 +241,7 @@ void __cdecl StubSort() { Record(33, DrawTable_Count, Sum(DrawTable, DrawTable_C
 
 // --- MapView_CellTextures's, MapCell_DrawWalls's, AreaMap_ClutCycle's ---------------------
 
-void __cdecl StubSetTexture(unsigned long texture, unsigned char* prim, int count) {
+void __cdecl StubSetTexture(std::uint32_t texture, unsigned char* prim, int count) {
     Record(40, texture, Address(prim), static_cast<std::uint32_t>(count));
 }
 unsigned __cdecl StubRelease(unsigned short index) {
@@ -256,15 +256,15 @@ void __cdecl StubSetPolyFT4(unsigned char* prim) { Record(50, Packet(prim)); }
 void __cdecl StubSetShadeTex(unsigned char* prim, unsigned tge) { Record(51, Packet(prim), tge); }
 // The vertices are the caller's locals: their three words are logged, not
 // where they are; the fourth words are not read by the real one.
-long __cdecl StubRotTransPers4(const short* v0, const short* v1, const short* v2, const short* v3, float* s0, float* s1,
-                               float* s2, float* s3, long* p) {
+std::int32_t __cdecl StubRotTransPers4(const short* v0, const short* v1, const short* v2, const short* v3, float* s0, float* s1,
+                               float* s2, float* s3, std::int32_t* p) {
     Record(52, Pack(v0), static_cast<std::uint16_t>(v0[2]), Pack(v1));
     Record(52, static_cast<std::uint16_t>(v1[2]), Pack(v2), static_cast<std::uint16_t>(v2[2]));
     Record(52, Pack(v3), static_cast<std::uint16_t>(v3[2]));
     Record(52, Packet(s0), Packet(s1), Packet(s2));
     Record(52, Packet(s3));
-    *p = static_cast<long>(Hash());
-    return static_cast<long>(Hash() * 3);
+    *p = static_cast<std::int32_t>(Hash());
+    return static_cast<std::int32_t>(Hash() * 3);
 }
 // Both arguments are bytes to the real one (draw_emit.cpp): the original
 // pushes the slot with stale bits above.
@@ -273,7 +273,7 @@ void __cdecl StubCommit(unsigned slot, unsigned size) {
     Gfx_PacketNext += size & 0xFFu;   // the caller's next primitive
 }
 
-unsigned char __cdecl StubTest(unsigned long code) {
+unsigned char __cdecl StubTest(std::uint32_t code) {
     Record(60, static_cast<std::uint32_t>(code));
     const std::uint32_t h = Hash();
     return static_cast<unsigned char>(h % 3 == 0 ? 0 : h % 3 == 1 ? 1 : h >> 8);
@@ -458,14 +458,14 @@ void SelfTestFrame(void (__cdecl* theirs)()) {
         const short step = OneIn(8) ? static_cast<short>(Next()) : kStep[Next() % 8];
         MoveScript_F3Divisor = step;
         // The focus a step or two from where the kind-2 object stands - or on it.
-        auto near = [&](long kind2, std::uint32_t top) {
+        auto near = [&](std::int32_t kind2, std::uint32_t top) {
             const std::uint32_t on = top - ((static_cast<std::uint32_t>(kind2) & 0xFFFF8000u) >> 8);
             static const int kDelta[] = {0, 0, 1, -1, 2, -2};
             switch (Next() % 4) {
-                case 0: return static_cast<long>(on);
-                case 1: return static_cast<long>(on + static_cast<std::uint32_t>(step * kDelta[Next() % 6]));
-                case 2: return static_cast<long>(on + static_cast<std::uint32_t>(kDelta[Next() % 6]));
-                default: return static_cast<long>(Next());
+                case 0: return static_cast<std::int32_t>(on);
+                case 1: return static_cast<std::int32_t>(on + static_cast<std::uint32_t>(step * kDelta[Next() % 6]));
+                case 2: return static_cast<std::int32_t>(on + static_cast<std::uint32_t>(kDelta[Next() % 6]));
+                default: return static_cast<std::int32_t>(Next());
             }
         };
         MapView_FocusX = near(Field_Kind2X, 0x7FFF);
@@ -551,8 +551,8 @@ void SelfTestBuild(void (__cdecl* theirs)()) {
         MapView_Origin[1] = static_cast<short>(Next() % 64);
         const int kind2_x = static_cast<short>(Next() % 64);
         const int kind2_z = threshold + MapView_Origin[1] + MapView_Origin[0] - kind2_x - 8;
-        Field_Kind2X = static_cast<long>((static_cast<std::uint32_t>(kind2_x) << 16) | (Next() & 0xFFFFu));
-        Field_Kind2Z = static_cast<long>((static_cast<std::uint32_t>(kind2_z) << 16) | (Next() & 0xFFFFu));
+        Field_Kind2X = static_cast<std::int32_t>((static_cast<std::uint32_t>(kind2_x) << 16) | (Next() & 0xFFFFu));
+        Field_Kind2Z = static_cast<std::int32_t>((static_cast<std::uint32_t>(kind2_z) << 16) | (Next() & 0xFFFFu));
         // A grid of up to 16 x 16 (the rows below it read too): corners with
         // equal and sign-edge bytes often, so the side items' comparisons tie.
         AreaMap_Header[0] = static_cast<unsigned char>(1 + Next() % 16);
@@ -737,7 +737,7 @@ template <unsigned K> void __cdecl EntryStandIn(const unsigned char* entry) {
     if (entry[2] == 1 && Hash() % 4 == 0) const_cast<unsigned char*>(entry)[2] = 2;
 }
 template <unsigned... K> void FillEntries(std::integer_sequence<unsigned, K...>) {
-    ((AreaMap_EntryHandlers[K] = static_cast<unsigned long>(Address(reinterpret_cast<const void*>(&EntryStandIn<K>)))), ...);
+    ((AreaMap_EntryHandlers[K] = static_cast<std::uint32_t>(Address(reinterpret_cast<const void*>(&EntryStandIn<K>)))), ...);
 }
 
 void SelfTestHeaderPass(void (__cdecl* theirs)()) {
@@ -745,7 +745,7 @@ void SelfTestHeaderPass(void (__cdecl* theirs)()) {
     const Region r[] = {R(Draw_PassFlags), R(AreaMap_Header, kAreaBytes)};
     constexpr unsigned n = sizeof r / sizeof r[0];
     Capture(r, n, g_saved);
-    static unsigned long saved_handlers[kMaskReach];
+    static std::uint32_t saved_handlers[kMaskReach];
     std::memcpy(saved_handlers, AreaMap_EntryHandlers, sizeof saved_handlers);
     FillEntries(std::make_integer_sequence<unsigned, kMaskReach>());
     g_rng = 0x571AF001u;

@@ -93,7 +93,7 @@ void BeamColour(unsigned char* v, U table) {
 }
 
 // original 0x470470 / 0x4713C0: see EffectKind28_DrawBeam.
-void DrawBeam(const long* a, const long* b, U colours, EndFn end, SidesFn sides) {
+void DrawBeam(const std::int32_t* a, const std::int32_t* b, U colours, EndFn end, SidesFn sides) {
     DrawMode(1, 0x3C0, 0, 1);
     SH_CALL(Gfx_CommitPrim)(3, 0xC);
     SH_CALL(EffectGte_LoadMapCamera)();
@@ -220,7 +220,7 @@ extern "C" void __cdecl EffectKind28_Run(void) { Dispatch("EffectKind28_Run", Ad
 // clear, 2 once it is set.
 extern "C" void __cdecl EffectKind28_Start(void) {
     const unsigned char* const s = S();
-    const long ground = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c), static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_10));
+    const std::int32_t ground = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c), static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_10));
     const U height = (static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(ground))) + 0x100u) << 16;
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->step_y, height);
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_20, height);
@@ -240,7 +240,7 @@ extern "C" void __cdecl EffectKind28_WaitFlag(void) {
 // pushed; while story flag 0xB is clear, +1 = 0 (the flag's answer, 0).
 extern "C" void __cdecl EffectKind28_Beam(void) {
     const unsigned char* const s = S();
-    SH_CALL(EffectKind28_DrawBeam)(reinterpret_cast<const long*>(s + 0xC), reinterpret_cast<const long*>(s + 0x18));
+    SH_CALL(EffectKind28_DrawBeam)(reinterpret_cast<const std::int32_t*>(s + 0xC), reinterpret_cast<const std::int32_t*>(s + 0x18));
     SH_CALL(EffectKind28_PushParty)();
     if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0xB) == 0) S()[1] = 0;
 }
@@ -272,7 +272,7 @@ extern "C" void __cdecl EffectKind28_PushParty(void) {
 // plus the frame's low bit, a half-fan EffectKind28_DrawEnd(x, y, size, angle +
 // 0x400 at a, + 0xC00 at b), the screen words through _ftol; then
 // EffectKind28_DrawSides between the two ends.
-extern "C" void __cdecl EffectKind28_DrawBeam(const long* a, const long* b) {
+extern "C" void __cdecl EffectKind28_DrawBeam(const std::int32_t* a, const std::int32_t* b) {
     DrawBeam(a, b, ::bof3::Img(at::kBeamColours28.v), &EffectKind28_DrawEnd, &EffectKind28_DrawSides);
 }
 

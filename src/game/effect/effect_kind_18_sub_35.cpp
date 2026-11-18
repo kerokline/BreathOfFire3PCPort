@@ -103,16 +103,16 @@ bool LeaderAt(const unsigned char* s, bool z_first, std::int32_t first, std::int
 }
 
 // A vertex's ground point: (s16 + 0x4000) << 9, the 16.16 the map reads.
-long Ground(const unsigned char* word) { return static_cast<long>(static_cast<U>(S16(word) + 0x4000) << 9); }
+std::int32_t Ground(const unsigned char* word) { return static_cast<std::int32_t>(static_cast<U>(S16(word) + 0x4000) << 9); }
 
 // movsx eax, ax; cdq; sub eax, edx; sar eax, 1: the height halved toward zero.
-U Half(long height) { return static_cast<U>(static_cast<std::int16_t>(static_cast<U>(height) & 0xFFFFu) / 2); }
+U Half(std::int32_t height) { return static_cast<U>(static_cast<std::int16_t>(static_cast<U>(height) & 0xFFFFu) / 2); }
 
 // The quad's four corners projected into the POLY_FT4 at p, its depths set.
 // The original also pushes a tenth pointer (a flag local) the projection does
 // not read.
 void Project(unsigned char* p) {
-    long depth;
+    std::int32_t depth;
     SH_CALL(Gte_RotTransPers4)(Vertex(0), Vertex(1), Vertex(2), Vertex(3), reinterpret_cast<float*>(p + 8),
                                reinterpret_cast<float*>(p + 0x18), reinterpret_cast<float*>(p + 0x28),
                                reinterpret_cast<float*>(p + 0x38), &depth);
@@ -339,11 +339,11 @@ extern "C" void __cdecl EffectKind18Sub35_Draw(void) {
             SetWord(v + 0xA, z1);
         }
     }
-    const long x0 = Ground(v), z0 = Ground(v + 2);
-    long h = SH_CALL(AreaMap_Elevation)(x0, z0);
+    const std::int32_t x0 = Ground(v), z0 = Ground(v + 2);
+    std::int32_t h = SH_CALL(AreaMap_Elevation)(x0, z0);
     SetWord(v + 4, 0x40u - Half(h));
     h = SH_CALL(AreaMap_Elevation)(x0, z0);
-    const long x1 = Ground(v + 8), z1 = Ground(v + 0xA);
+    const std::int32_t x1 = Ground(v + 8), z1 = Ground(v + 0xA);
     SetWord(v + 0x14, 0x180u - Half(h));
     h = SH_CALL(AreaMap_Elevation)(x1, z1);
     SetWord(v + 0xC, 0x40u - Half(h));

@@ -45,8 +45,8 @@ using sound::Method;
 // (Snd_BufferDesc's flags 0x180E2, stored by SndBuf_CreateFromWave at
 // 0x5A6A4F), so SetPan needs nothing added.
 constexpr unsigned kGetVolume = 0x18, kGetPan = 0x1C, kSetPan = 0x40;
-using ComGet = long (__stdcall*)(void*, long*);
-using ComSet = long (__stdcall*)(void*, long);
+using ComGet = std::int32_t (__stdcall*)(void*, std::int32_t*);
+using ComSet = std::int32_t (__stdcall*)(void*, std::int32_t);
 
 // Where the module reads and writes - game memory, or the self-test's own.
 struct Places {
@@ -102,8 +102,8 @@ unsigned char* Current() { return reinterpret_cast<unsigned char*>(static_cast<s
 struct Voice {
     void* buffer;
     unsigned char* owner;   // the sprite whose place it follows (DIV-0171); null: a fixed level (DIV-0172)
-    long saved_volume, saved_pan;
-    long volume, pan;       // what was put on it last
+    std::int32_t saved_volume, saved_pan;
+    std::int32_t volume, pan;       // what was put on it last
 };
 constexpr std::size_t kMaxVoices = 6 * 64;   // a buffer per bank entry: six banks of 64 voices
 std::array<Voice, kMaxVoices> g_voices{};
@@ -111,20 +111,20 @@ std::size_t g_count = 0;
 
 struct Pending {
     bool on;
-    long volume, pan;
+    std::int32_t volume, pan;
 };
 Pending g_pending{false, 0, 0};
 
-long GetVolume(void* b) { long v = 0; Method<ComGet>(b, kGetVolume)(b, &v); return v; }
-long GetPan(void* b) { long v = 0; Method<ComGet>(b, kGetPan)(b, &v); return v; }
-void SetVolume(void* b, long v) { Method<ComSet>(b, sound::kSetVolume)(b, v); }
-void SetPan(void* b, long v) { Method<ComSet>(b, kSetPan)(b, v); }
+std::int32_t GetVolume(void* b) { std::int32_t v = 0; Method<ComGet>(b, kGetVolume)(b, &v); return v; }
+std::int32_t GetPan(void* b) { std::int32_t v = 0; Method<ComGet>(b, kGetPan)(b, &v); return v; }
+void SetVolume(void* b, std::int32_t v) { Method<ComSet>(b, sound::kSetVolume)(b, v); }
+void SetPan(void* b, std::int32_t v) { Method<ComSet>(b, kSetPan)(b, v); }
 bool Playing(void* b) {
-    unsigned long status = 0;
+    std::uint32_t status = 0;
     Method<sound::ComStatus>(b, sound::kGetStatus)(b, &status);
     return (status & 1) != 0;
 }
-long Clamp(long v, long lo, long hi) { return v < lo ? lo : v > hi ? hi : v; }
+std::int32_t Clamp(std::int32_t v, std::int32_t lo, std::int32_t hi) { return v < lo ? lo : v > hi ? hi : v; }
 
 Voice* Find(void* buffer) {
     for (std::size_t i = 0; i < g_count; ++i)
@@ -148,7 +148,7 @@ Voice* Take(void* buffer, unsigned char* owner) {
     v.saved_pan = v.pan = GetPan(buffer);
     return &v;
 }
-void Put(Voice* v, long volume, long pan) {
+void Put(Voice* v, std::int32_t volume, std::int32_t pan) {
     if (volume != v->volume) SetVolume(v->buffer, volume);
     if (pan != v->pan) SetPan(v->buffer, pan);
     v->volume = volume;
@@ -161,14 +161,14 @@ void Put(Voice* v, long volume, long pan) {
 // play a buffer louder than its own level - and 0 as silence (-10000). The
 // louder side is the volume, the difference the pan (positive quietens the
 // left, negative the right).
-long Hundredths(std::int32_t v, std::int32_t full) {
+std::int32_t Hundredths(std::int32_t v, std::int32_t full) {
     if (v <= 0) return -10000;
-    const long h = std::lround(2000.0 * std::log10(static_cast<double>(v) / full));
+    const std::int32_t h = std::lround(2000.0 * std::log10(static_cast<double>(v) / full));
     return Clamp(h, -10000, 0);
 }
-void Mix(std::int32_t left, std::int32_t right, std::int32_t full, long saved_volume, long saved_pan, long* volume,
-         long* pan) {
-    const long l = Hundredths(left, full), r = Hundredths(right, full);
+void Mix(std::int32_t left, std::int32_t right, std::int32_t full, std::int32_t saved_volume, std::int32_t saved_pan, std::int32_t* volume,
+         std::int32_t* pan) {
+    const std::int32_t l = Hundredths(left, full), r = Hundredths(right, full);
     *volume = Clamp(saved_volume + (l > r ? l : r), -10000, 0);
     *pan = Clamp(saved_pan + r - l, -10000, 10000);
 }
@@ -318,7 +318,7 @@ void UpdatePositional() {
         Voice* const v = &g_voices[i];
         if (v->owner != owner) { ++i; continue; }
         if (!Playing(v->buffer)) { Restore(v); continue; }   // the slot swapped in is looked at next
-        long volume, pan;
+        std::int32_t volume, pan;
         Mix(left, right, full, v->saved_volume, v->saved_pan, &volume, &pan);
         Put(v, volume, pan);
         ++i;
@@ -352,7 +352,7 @@ namespace {
 constexpr std::int32_t kCueLevel = 0x17FF;
 
 void PlayAt(unsigned short id, std::int32_t left, std::int32_t right) {
-    long volume, pan;
+    std::int32_t volume, pan;
     Mix(left, right, kCueLevel, 0, 0, &volume, &pan);
     g_pending = {true, volume, pan};
     g.play_effect(id);
@@ -455,15 +455,15 @@ namespace {
 
 struct FakeBuffer {
     void* const* vtable;
-    long volume, pan;
-    unsigned long status;
+    std::int32_t volume, pan;
+    std::uint32_t status;
     int sets;   // SetVolume + SetPan calls
 };
-long __stdcall FbGetVolume(void* b, long* v) { *v = static_cast<FakeBuffer*>(b)->volume; return 0; }
-long __stdcall FbGetPan(void* b, long* v) { *v = static_cast<FakeBuffer*>(b)->pan; return 0; }
-long __stdcall FbGetStatus(void* b, unsigned long* s) { *s = static_cast<FakeBuffer*>(b)->status; return 0; }
-long __stdcall FbSetVolume(void* b, long v) { static_cast<FakeBuffer*>(b)->volume = v; ++static_cast<FakeBuffer*>(b)->sets; return 0; }
-long __stdcall FbSetPan(void* b, long v) { static_cast<FakeBuffer*>(b)->pan = v; ++static_cast<FakeBuffer*>(b)->sets; return 0; }
+std::int32_t __stdcall FbGetVolume(void* b, std::int32_t* v) { *v = static_cast<FakeBuffer*>(b)->volume; return 0; }
+std::int32_t __stdcall FbGetPan(void* b, std::int32_t* v) { *v = static_cast<FakeBuffer*>(b)->pan; return 0; }
+std::int32_t __stdcall FbGetStatus(void* b, std::uint32_t* s) { *s = static_cast<FakeBuffer*>(b)->status; return 0; }
+std::int32_t __stdcall FbSetVolume(void* b, std::int32_t v) { static_cast<FakeBuffer*>(b)->volume = v; ++static_cast<FakeBuffer*>(b)->sets; return 0; }
+std::int32_t __stdcall FbSetPan(void* b, std::int32_t v) { static_cast<FakeBuffer*>(b)->pan = v; ++static_cast<FakeBuffer*>(b)->sets; return 0; }
 void* g_vtable[0x54 / 4];
 
 struct TestWorld {
@@ -578,7 +578,7 @@ void SelfTest() {
     PlayPositional(0x105);
     Check(g_plays == 1 && g_count == 2, "PlayPositional: one play, two buffers remembered");
     UpdatePositional();
-    const long expect_pan = std::lround(2000.0 * std::log10(9557.0 / 0x37FF));   // the right side down
+    const std::int32_t expect_pan = std::lround(2000.0 * std::log10(9557.0 / 0x37FF));   // the right side down
     Check(g_fb[0].volume == 0 && g_fb[0].pan == expect_pan && g_fb[1].pan == expect_pan, "update: volume and pan");
     world.current = Addr(world.other);
     const int sets = g_fb[0].sets;
@@ -611,7 +611,7 @@ void SelfTest() {
     // Op BC's call: left 0x18FF (above 0x17FF: the buffer's level), right
     // 0x1FF (-21.6 dB): pan -2161 (right down).
     PlayLevel(0x105, 0x28, 0x3F);
-    const long bc_pan = -std::lround(2000.0 * std::log10(static_cast<double>(0x17FF) / 0x1FF));
+    const std::int32_t bc_pan = -std::lround(2000.0 * std::log10(static_cast<double>(0x17FF) / 0x1FF));
     Check(g_count == 2 && g_fb[0].volume == 0 && g_fb[0].pan == bc_pan, "PlayLevel: op BC's level");
     PlayLevel(0x105, 0x50, 0x50);
     Check(g_fb[0].volume == -10000 && g_fb[1].volume == -10000, "PlayLevel: the scenario's level 0 is silence");
@@ -620,7 +620,7 @@ void SelfTest() {
     // The rings: object 3 at cell (40, 40); the leader 23 away: nothing; 20
     // away: 0xFF; 10: 0xFFF; 5: 0x2FFF (the buffer's level).
     SetS16(world.objects + 3 * 0xA4 + 0x36, 40); SetS16(world.objects + 3 * 0xA4 + 0x3A, 40);
-    struct { std::int16_t x, z; int plays; long volume; } rings[] = {
+    struct { std::int16_t x, z; int plays; std::int32_t volume; } rings[] = {
         {63, 40, 0, 0}, {40, 17, 0, 0}, {60, 40, 1, Hundredths(0xFF, 0x17FF)}, {30, 50, 1, Hundredths(0xFFF, 0x17FF)},
         {45, 35, 1, 0}, {41, 39, 1, 0}};
     for (const auto& c : rings) {

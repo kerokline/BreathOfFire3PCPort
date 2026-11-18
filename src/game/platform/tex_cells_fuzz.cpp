@@ -275,7 +275,7 @@ struct Device {
 };
 void* g_device_vtbl[64];
 Device g_device = {g_device_vtbl};
-long __stdcall DeviceBeginScene(Device*) {
+std::int32_t __stdcall DeviceBeginScene(Device*) {
     Record(kBeginSceneCall);
     Disturb(kBeginSceneCall);
     return 0;
@@ -313,13 +313,13 @@ void SeedPrecision() {
     ++g_precision_seeded;
 }
 
-long __stdcall DeviceEndScene(Device*) {
+std::int32_t __stdcall DeviceEndScene(Device*) {
     Record(kEndSceneCall);
     if (g_kind == kBuildRound) SeedPrecision();
     Disturb(kEndSceneCall);
     return 0;
 }
-long __stdcall DeviceTrap(void*) {
+std::int32_t __stdcall DeviceTrap(void*) {
     bof3::Fatal("tex_cells: a fake device method other than BeginScene or EndScene was called");
 }
 void BuildDevice() {
@@ -381,7 +381,7 @@ constexpr U kCellBlock = 0x5A32B0, kCellBlockBytes = 0x7AA;      // build, free,
 constexpr U kUnpackers = 0x5A9E1E, kUnpackersBytes = 0x7B8;      // the five unpackers; ret at 0x5AA5D5
 
 using GlyphBuildFn = void(__cdecl*)(int, unsigned, unsigned);
-using ClearFn = long(__cdecl*)(void*);
+using ClearFn = std::int32_t(__cdecl*)(void*);
 using FitFn = void(__cdecl*)(unsigned, unsigned, unsigned*, unsigned*);
 using BuildFn = void(__cdecl*)(int, unsigned, unsigned, unsigned, unsigned);
 using FreeFn = void(__cdecl*)(int);
@@ -894,7 +894,7 @@ void SelfTest() {
     g_dst[1] = static_cast<unsigned char*>(bof3::os::MemAlloc(nullptr, kDstBytes, bof3::os::Prot::ReadWrite));
     g_glyphs = static_cast<unsigned char*>(bof3::os::MemAlloc(nullptr, 2 * kGlyphs * kGlyphBytes, bof3::os::Prot::ReadWrite));
     if (!g_source || !g_dst[0] || !g_dst[1] || !g_glyphs)
-        bof3::Fatal("tex_cells: MemAlloc failed, error %lu", (unsigned long)bof3::os::LastError());
+        bof3::Fatal("tex_cells: MemAlloc failed, error %u", (std::uint32_t)bof3::os::LastError());
     for (U i = 0; i < kSourceBytes; i += 4) PutLong(Addr(g_source + i), Next());
     for (U i = 0; i < 2 * kGlyphs * kGlyphBytes; i += 4) PutLong(Addr(g_glyphs + i), Next());
 

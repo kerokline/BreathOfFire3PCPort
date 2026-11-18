@@ -160,7 +160,7 @@ extern "C" void __cdecl Area26_PlaceEffect(void) {
     tRecord->x = 0x70000;
     record[0] = 1;
     record[5] = 0x33;
-    const long height = AH_CALL(AreaMap_Elevation)(tRecord->x, tRecord->z);
+    const std::int32_t height = AH_CALL(AreaMap_Elevation)(tRecord->x, tRecord->z);
     tRecord->height = static_cast<std::int32_t>(static_cast<U>(static_cast<std::int16_t>(height)) << 16);
 }
 

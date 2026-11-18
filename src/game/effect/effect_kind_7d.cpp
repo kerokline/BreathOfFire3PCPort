@@ -89,13 +89,13 @@ bool CountDown() {
 // The cone's rim point at angle a and radius r about the point: (x, z + (cos a r
 // >> 4), height + (sin a r << 4)), each product a 32-bit imul; projected. The
 // original writes x only for the inner point of each pair (the outer reuses it).
-void ConePoint(long* rim, const long* point, U a, unsigned radius, float* out, bool inner) {
+void ConePoint(std::int32_t* rim, const std::int32_t* point, U a, unsigned radius, float* out, bool inner) {
     if (inner) rim[0] = point[0];
     const U c = static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(a)));
-    rim[1] = static_cast<long>(static_cast<U>(static_cast<std::int32_t>(c * static_cast<U>(S16(radius))) >> 4) +
+    rim[1] = static_cast<std::int32_t>(static_cast<U>(static_cast<std::int32_t>(c * static_cast<U>(S16(radius))) >> 4) +
                                static_cast<U>(point[1]));
     const U sn = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(a)));
-    rim[2] = static_cast<long>(((sn * static_cast<U>(S16(radius))) << 4) + static_cast<U>(point[2]));
+    rim[2] = static_cast<std::int32_t>(((sn * static_cast<U>(S16(radius))) << 4) + static_cast<U>(point[2]));
     SH_CALL(EffectGte_ProjectPoint)(rim, out);
 }
 
@@ -336,8 +336,8 @@ extern "C" void __cdecl EffectKind7D_SetMap(void) {
             unsigned char* const cell = P(::bof3::Img(AreaMap_Header_addr) + 4 * index);
             SetUL(cell, UL(cell) & 0xFFFFFF00u);
             SetUL(cell, UL(cell) | B(::bof3::Img(at::kMapBits.v) + at::kGridColumns * (at::kGridRows * on + row) + column));
-            const U item = static_cast<U>(SH_CALL(MapView_ItemAt)(static_cast<long>(column + at::kMapColumn0),
-                                                                 static_cast<long>(z)));
+            const U item = static_cast<U>(SH_CALL(MapView_ItemAt)(static_cast<std::int32_t>(column + at::kMapColumn0),
+                                                                 static_cast<std::int32_t>(z)));
             if (item != 0)
                 SH_CALL(Prim_SetTexture)(UL(cell), draw_pool::Items() + item * at::kDrawItemStride, 2);
         }
@@ -364,7 +364,7 @@ extern "C" void __cdecl EffectKind7F_Start(void) {
 // the radii +0x2E and +0x30, both then 0x40 wider; +9 down, at 0 +1 up.
 extern "C" void __cdecl EffectKind7F_Grow(void) {
     unsigned char* const s = S();
-    SH_CALL(EffectKind7F_DrawCone)(reinterpret_cast<const long*>(s + 0x34), static_cast<std::uint32_t>(rv::As<records::EffectWork>(s)->work_2e), static_cast<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30));
+    SH_CALL(EffectKind7F_DrawCone)(reinterpret_cast<const std::int32_t*>(s + 0x34), static_cast<std::uint32_t>(rv::As<records::EffectWork>(s)->work_2e), static_cast<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30));
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, static_cast<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e) + 0x40);
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, static_cast<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30) + 0x40);
     if (CountDown()) NextState();
@@ -376,12 +376,12 @@ extern "C" void __cdecl EffectKind7F_Grow(void) {
 // (radius r1) and the outer (r2), grey 0x80 inside and black outside, each with
 // a draw mode before it, both linked at (x, the previous outer point's z).
 // r1 and r2 read as their low words.
-extern "C" void __cdecl EffectKind7F_DrawCone(const long* point, unsigned r1, unsigned r2) {
+extern "C" void __cdecl EffectKind7F_DrawCone(const std::int32_t* point, unsigned r1, unsigned r2) {
     const U page = SH_CALL(Gpu_GetTPage)(0, 1, 0x380, 0x100);
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, page & 0xFFFFu, 0);
     SH_CALL(Gfx_CommitPrim)(2, 0xC);
     SH_CALL(EffectGte_LoadMapCamera)();
-    long rim[3];
+    std::int32_t rim[3];
     float inner[3], outer[3];
     ConePoint(rim, point, 0, r1, inner, true);
     ConePoint(rim, point, 0, r2, outer, false);

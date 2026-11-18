@@ -57,10 +57,10 @@ float FloatAt(const unsigned char* p) {
 }
 void PutFloat(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
 
-using Com6 = long(__stdcall*)(void*, U, U, U, U, U);
+using Com6 = std::int32_t(__stdcall*)(void*, U, U, U, U, U);
 // DrawPrimitive(TRIANGLESTRIP, D3DFVF_TLVERTEX, D3d_Vertices, 4, 0), the device
 // read afresh as the handlers read it.
-long DrawStrip4() {
+std::int32_t DrawStrip4() {
     void** device = reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))));
     void* method = (*reinterpret_cast<void***>(device))[0x70 / 4];
     return reinterpret_cast<Com6>(method)(device, 5, 0x1C4, ::bof3::Img(D3d_Vertices_addr), 4, 0);
@@ -73,7 +73,7 @@ struct End {
 
 }  // namespace
 
-long DrawWide(unsigned corners) {
+std::int32_t DrawWide(unsigned corners) {
     if (corners < 2 || corners > 4) bof3::Fatal("d3d_lines::DrawWide: %u corners (2..4)", corners);
     const float sx = D3d_ScaleX, sy = D3d_ScaleY;
     const float hx = sx * 0.5f, hy = sy * 0.5f;
@@ -84,7 +84,7 @@ long DrawWide(unsigned corners) {
         ends[i].y = FloatAt(v + 4) + hy;
         std::memcpy(ends[i].rest, v + 8, sizeof ends[i].rest);
     }
-    long result = 0;
+    std::int32_t result = 0;
     for (unsigned i = 0; i + 1 < corners; ++i) {
         const End& a = ends[i];
         const End& b = ends[i + 1];

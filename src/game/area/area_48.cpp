@@ -170,7 +170,7 @@ extern "C" void __cdecl Area48_TailDropIn(void) {
 // 0xD..0xE; 1 for z's high word 6 or z exactly 0x58000, x's 0xC..0xD; 2 for
 // z's high word 0xB or z 0xA8000, x's 0x13..0x14. The words compared as
 // 16-bit; every test is made. Answers 0.
-extern "C" int __cdecl Area48_ArriveHook(long x, long z) {
+extern "C" int __cdecl Area48_ArriveHook(std::int32_t x, std::int32_t z) {
     const std::uint16_t xh = High(x), zh = High(z);
     if (xh == 0x17 && static_cast<std::uint16_t>(zh - 0xD) < 2) ArmTail3(0);
     if ((zh == 6 || z == 0x58000) && static_cast<std::uint16_t>(xh - 0xC) < 2) ArmTail3(1);

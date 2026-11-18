@@ -5,7 +5,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <io.h>
 #include <utility>
 
 #include "bof3/symbols.gen.h"
@@ -191,7 +190,7 @@ const Callees kOriginals = {
     Area_ZoneAt, Rand, Party_Count, Fn<unsigned char (__cdecl*)(unsigned, unsigned, unsigned)>(::bof3::Code(bof3::addr::Actor_EquipCount)),
     Fn<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Sprite_EnsureAnimation)),
     Flags_Test, Sprite_SetAnimationBank, Field_MemberSprite, Field_PartyLoad, Sprite_ReleaseTint, Sprite_LoadPalette,
-    Field_PartyPosition, Fn<void (__cdecl*)(long, long, unsigned)>(::bof3::Code(bof3::addr::Field_LeaderPlaceOffset)),
+    Field_PartyPosition, Fn<void (__cdecl*)(std::int32_t, std::int32_t, unsigned)>(::bof3::Code(bof3::addr::Field_LeaderPlaceOffset)),
     Party_ClearActive, Field_LeaderFrame, Field_MemberFrame,
     reinterpret_cast<const std::uint32_t*>(::bof3::Img(Field_PendingJumps_addr)),
     Party_ClearAll, Sprite_SetTint, Field_MemberTimers,

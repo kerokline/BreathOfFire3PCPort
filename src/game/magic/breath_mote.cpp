@@ -326,7 +326,7 @@ void DrawModeMagicS29(unsigned tpage) { MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext,
 void CommitMagicS29(unsigned slot, unsigned size) { MH_CALL(Gfx_CommitPrim)(slot, size); }
 
 void Link(std::int32_t x, std::int32_t z, int dy, unsigned size) {
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), dy, size);
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), dy, size);
 }
 
 void LinkAtSc(unsigned size) {
@@ -336,13 +336,13 @@ void LinkAtSc(unsigned size) {
 }
 
 void Project3(unsigned char* p) {
-    long depth;
+    std::int32_t depth;
     MH_CALL(Gte_RotTransPers3)(Vec(::bof3::Img(Prim_VertexScratch_addr)), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x8), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x10), Xy(p, 8), Xy(p, 0x18), Xy(p, 0x28), &depth);
     MH_CALL(Gte_PrimDepths3_10B)(p);
 }
 
 void Project4(unsigned char* p) {
-    long depth;
+    std::int32_t depth;
     MH_CALL(Gte_RotTransPers4)(Vec(::bof3::Img(Prim_VertexScratch_addr)), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x8), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x10), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x18), Xy(p, 8), Xy(p, 0x18),
                                Xy(p, 0x28), Xy(p, 0x38), &depth);
     MH_CALL(Gte_PrimDepths4_10B)(p);

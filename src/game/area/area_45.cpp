@@ -879,8 +879,8 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawNeedle(
     PutLong(matrix + 0x14, 0);
     PutLong(matrix + 0x18, 0);
     PutLong(matrix + 0x1C, 0);
-    g.set_rot_matrix(reinterpret_cast<const unsigned long*>(matrix));
-    g.set_trans_matrix(reinterpret_cast<const unsigned long*>(matrix));
+    g.set_rot_matrix(reinterpret_cast<const std::uint32_t*>(matrix));
+    g.set_trans_matrix(reinterpret_cast<const std::uint32_t*>(matrix));
     unsigned char* const prim = PacketNext();
     unsigned char* const scratch = AtWorldMap(world_map::at::Prim_VertexScratchAt());
     rv::As<records::SVector>(scratch)[0].x = 0xFFF6;   // (-10, 0, 0)
@@ -896,7 +896,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawNeedle(
     rv::As<records::SVector>(scratch)[3].y = 0;
     rv::As<records::SVector>(scratch)[3].z = 0;
     g.set_poly_g4(prim);
-    long depth, flag;
+    std::int32_t depth, flag;
     g.rot_trans_pers4(reinterpret_cast<const short*>(scratch), reinterpret_cast<const short*>(scratch + 8),
                       reinterpret_cast<const short*>(scratch + 0x10), reinterpret_cast<const short*>(scratch + 0x18),
                       reinterpret_cast<float*>(prim + 8), reinterpret_cast<float*>(prim + 0x18),
@@ -1081,10 +1081,10 @@ extern "C" void __cdecl Area45_DrawDrift(void) {
     rv::Store<unsigned>(rv::As<records::SVector>(v)[1].z, 0xFD00);
     rv::Store<unsigned>(rv::As<records::SVector>(v)[2].z, 0xFD00);
     rv::Store<unsigned>(rv::As<records::SVector>(v)[3].z, 0xFD00);
-    long depth = 0, flag = 0;
+    std::int32_t depth = 0, flag = 0;
     const auto* const sv = reinterpret_cast<const short*>(v);
-    using Pers4 = long (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*,
-                                  long*, long*);
+    using Pers4 = std::int32_t (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*,
+                                  std::int32_t*, std::int32_t*);
     AH_AT(Pers4, bof3::addr::Gte_RotTransPers4)(sv, sv + 4, sv + 8, sv + 12, reinterpret_cast<float*>(prim + 8),
                                                 reinterpret_cast<float*>(prim + 0x18), reinterpret_cast<float*>(prim + 0x28),
                                                 reinterpret_cast<float*>(prim + 0x38), &depth, &flag);

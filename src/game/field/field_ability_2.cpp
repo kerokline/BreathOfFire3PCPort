@@ -528,7 +528,7 @@ U Rec(unsigned n, unsigned at) { return ::bof3::Img(WindowRecords_addr) + kWindo
 // jmp / call [table + 4 * byte]: the table's `entries` handlers, read in place
 // (the fuzz swaps the cells for recorders); a Fatal past them, where the
 // original jumps through the dword after.
-void Run(const char* who, const unsigned long* table, unsigned entries, unsigned index, const char* byte) {
+void Run(const char* who, const std::uint32_t* table, unsigned entries, unsigned index, const char* byte) {
     if (index >= entries)
         bof3::Fatal("%s: %s is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/rest_2f.md section 7)",

@@ -56,7 +56,7 @@ U Abs(U v) {
 }
 
 // movsx eax, ax; cdq; sub eax, edx; sar eax, 1: a height word halved toward 0.
-U HalfOf(long h) { return static_cast<U>(SWEffect5c(static_cast<U>(h)) / 2); }
+U HalfOf(std::int32_t h) { return static_cast<U>(SWEffect5c(static_cast<U>(h)) / 2); }
 
 // Prim_VertexScratch 0x9037A0: four SVECTORs of 8 bytes (a0, a8, b0, b8).
 unsigned char* VSEffect5c(unsigned off) { return reinterpret_cast<unsigned char*>(Prim_VertexScratch) + off; }
@@ -174,7 +174,7 @@ void CentreQuad(const float* xy, std::int32_t h, std::int32_t f, unsigned char* 
 // The four vertices in Prim_VertexScratch projected into a quad's four screen
 // points at the given offsets (the depth out a local nothing reads).
 void Project4Effect5c(unsigned char* prim, unsigned o0, unsigned o1, unsigned o2, unsigned o3) {
-    long depth = 0;
+    std::int32_t depth = 0;
     SH_CALL(Gte_RotTransPers4)(VX(0), VX(8), VX(0x10), VX(0x18), F(prim + o0), F(prim + o1), F(prim + o2), F(prim + o3),
                                &depth);
 }
@@ -320,15 +320,15 @@ extern "C" void __cdecl EffectKind18Sub10_DrawPanel(void) {
     const U z1 = Word(s + 0x30) - 0x2140u;
     SetWord(VSEffect5c(0x1A), z1);
     SetWord(VSEffect5c(0xA), z1);
-    long ground = SH_CALL(AreaMap_Elevation)(0x418000, static_cast<long>(ez));
+    std::int32_t ground = SH_CALL(AreaMap_Elevation)(0x418000, static_cast<std::int32_t>(ez));
     SetWord(VSEffect5c(4), 0x40u - HalfOf(ground));
-    ground = SH_CALL(AreaMap_Elevation)(0x418000, static_cast<long>(ez));
+    ground = SH_CALL(AreaMap_Elevation)(0x418000, static_cast<std::int32_t>(ez));
     const U ez2 = VertexCell(0xA);
     const U ex2 = VertexCell(8);
     SetWord(VSEffect5c(0x14), 0x180u - HalfOf(ground));
-    ground = SH_CALL(AreaMap_Elevation)(static_cast<long>(ex2), static_cast<long>(ez2));
+    ground = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(ex2), static_cast<std::int32_t>(ez2));
     SetWord(VSEffect5c(0xC), 0x40u - HalfOf(ground));
-    ground = SH_CALL(AreaMap_Elevation)(static_cast<long>(ex2), static_cast<long>(ez2));
+    ground = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(ex2), static_cast<std::int32_t>(ez2));
     SetWord(VSEffect5c(0x1C), 0x180u - HalfOf(ground));
     Project4Effect5c(prim, 8, 0x18, 0x28, 0x38);
     SH_CALL(Gte_PrimDepths4_10)(prim);
@@ -430,8 +430,8 @@ extern "C" void __cdecl EffectKind18Sub56_DrawRays(int level) {
         SetWord(VSEffect5c(0), 0xE0C0);
         SetWord(VSEffect5c(2), z);
         SetWord(VSEffect5c(4), 0xFE40);
-        long depth = 0;
-        SH_CALL(Gte_RotTransPers)(VX(0), reinterpret_cast<unsigned long*>(MapView_ScreenXY), &depth);
+        std::int32_t depth = 0;
+        SH_CALL(Gte_RotTransPers)(VX(0), reinterpret_cast<std::uint32_t*>(MapView_ScreenXY), &depth);
         const U turn = 3u - (((Frame_Counter / 3u) + j) & 7u);
         const U half = Abs(turn) + 0x10u;
         unsigned char* const prim = Gfx_PacketNext;
@@ -583,8 +583,8 @@ extern "C" void __cdecl EffectKind18Sub58_DrawColumn(unsigned n) {
         SetWord(VSEffect5c(0), x);
         SetWord(VSEffect5c(2), z);
         SetWord(VSEffect5c(4), 0xFFFFFF80u - (b + c * 8u) * n);
-        long depth = 0;
-        SH_CALL(Gte_RotTransPers)(VX(0), reinterpret_cast<unsigned long*>(MapView_ScreenXY), &depth);
+        std::int32_t depth = 0;
+        SH_CALL(Gte_RotTransPers)(VX(0), reinterpret_cast<std::uint32_t*>(MapView_ScreenXY), &depth);
         SH_CALL(Gte_PrimDepthFlat4_10)(prim);
         const U m = I(y) < 0x1380000 ? 4u : c;
         const U half = static_cast<U>(I(m * n) / 2) + lift + 4u;

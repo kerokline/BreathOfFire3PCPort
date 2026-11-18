@@ -69,7 +69,7 @@ I Abs(I v) {
 
 // movsx eax, ax; cdq; sub eax, edx; sar eax, 1: an elevation's low word halved
 // toward zero
-I Half(long e) {
+I Half(std::int32_t e) {
     const I w = static_cast<std::int16_t>(static_cast<U>(e));
     return (w - (w >> 31)) >> 1;
 }
@@ -104,7 +104,7 @@ unsigned char* Row9() { return At(::bof3::Img(Cond_Flags_addr) + 0x48); }
 // The four-vertex projection every quad here makes of Prim_VertexScratch into a
 // primitive whose vertices are `stride` apart from +8 (0x10 textured, 0xC flat).
 void Project4Effect5b(unsigned char* prim, unsigned stride) {
-    long p;
+    std::int32_t p;
     SH_CALL(Gte_RotTransPers4)(VertexEffect5b(0), VertexEffect5b(1), VertexEffect5b(2), VertexEffect5b(3), reinterpret_cast<float*>(prim + 8),
                                reinterpret_cast<float*>(prim + 8 + stride), reinterpret_cast<float*>(prim + 8 + 2 * stride),
                                reinterpret_cast<float*>(prim + 8 + 3 * stride), &p);
@@ -175,7 +175,7 @@ void Gate0FPrepare(const char* who, bool sub4F) {
     SetWord(S() + 0x3A, B(::bof3::Img(at::kGateCells.v) + 1 + 2u * static_cast<U>(v)));
     S()[8] = v == 0 ? 1 : 0;
     s = S();
-    const long e = SH_CALL(AreaMap_Elevation)(Long(s + 0x34), Long(s + 0x38));
+    const std::int32_t e = SH_CALL(AreaMap_Elevation)(Long(s + 0x34), Long(s + 0x38));
     const U height = Word(At(::bof3::Img(at::kGateHeights.v) + 2u * static_cast<U>(v)));
     SetWord(S() + 0x3E, (0u - height) - static_cast<U>(Half(e)));
     SetWord(S() + 0x32, height);
@@ -186,7 +186,7 @@ void Gate0FPrepare(const char* who, bool sub4F) {
 std::int32_t SWEffect5c(U v) { return static_cast<std::int16_t>(v & 0xFFFFu); }
 
 // movsx eax, ax; cdq; sub eax, edx; sar eax, 1: a height word halved toward 0.
-U HalfOf(long h) { return static_cast<U>(SWEffect5c(static_cast<U>(h)) / 2); }
+U HalfOf(std::int32_t h) { return static_cast<U>(SWEffect5c(static_cast<U>(h)) / 2); }
 
 // Prim_VertexScratch 0x9037A0: four SVECTORs of 8 bytes (a0, a8, b0, b8).
 unsigned char* VSEffect5c(unsigned off) { return reinterpret_cast<unsigned char*>(Prim_VertexScratch) + off; }
@@ -234,7 +234,7 @@ unsigned char Sub50Byte(const char* who, U table, unsigned index) {
 // The four vertices in Prim_VertexScratch projected into a quad's four screen
 // points at the given offsets (the depth out a local nothing reads).
 void Project4Effect5c(unsigned char* prim, unsigned o0, unsigned o1, unsigned o2, unsigned o3) {
-    long depth = 0;
+    std::int32_t depth = 0;
     SH_CALL(Gte_RotTransPers4)(VX(0), VX(8), VX(0x10), VX(0x18), F(prim + o0), F(prim + o1), F(prim + o2), F(prim + o3),
                                &depth);
 }
@@ -380,15 +380,15 @@ extern "C" void __cdecl EffectKind18Sub0F_DrawGate(int ground) {
     if (ground != 0) {
         const U z0 = static_cast<U>(static_cast<std::int16_t>(vz) + 0x4000) << 9;
         const U x0 = static_cast<U>(static_cast<std::int16_t>(vx) + 0x4000) << 9;
-        const long e1 = SH_CALL(AreaMap_Elevation)(static_cast<long>(x0), static_cast<long>(z0));
+        const std::int32_t e1 = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(x0), static_cast<std::int32_t>(z0));
         SetV(0, 2, (0u - static_cast<U>(Half(e1))) - rv::As<records::EffectObject>(S())->height_whole - 0x140u);
-        const long e2 = SH_CALL(AreaMap_Elevation)(static_cast<long>(x0), static_cast<long>(z0));
+        const std::int32_t e2 = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(x0), static_cast<std::int32_t>(z0));
         const U z1 = static_cast<U>(VS(1, 1) + 0x4000) << 9;
         const U x1 = static_cast<U>(VS(1, 0) + 0x4000) << 9;
         SetV(2, 2, (0u - static_cast<U>(Half(e2))) - rv::As<records::EffectObject>(S())->height_whole);
-        const long e3 = SH_CALL(AreaMap_Elevation)(static_cast<long>(x1), static_cast<long>(z1));
+        const std::int32_t e3 = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(x1), static_cast<std::int32_t>(z1));
         SetV(1, 2, (0u - static_cast<U>(Half(e3))) - rv::As<records::EffectObject>(S())->height_whole - 0x140u);
-        const long e4 = SH_CALL(AreaMap_Elevation)(static_cast<long>(x1), static_cast<long>(z1));
+        const std::int32_t e4 = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(x1), static_cast<std::int32_t>(z1));
         SetV(3, 2, (0u - static_cast<U>(Half(e4))) - rv::As<records::EffectObject>(S())->height_whole);
     } else {
         const U head = rv::As<records::EffectWork>(s)->work_32 - 0x140u;
@@ -479,7 +479,7 @@ extern "C" void __cdecl EffectKind18Sub50_Start(void) {
     rv::As<records::EffectObject>(s)->x = static_cast<U>(At(AddressOf(EffectKind18Sub50_Cells) + 2 * v)[0]) << 16;
     v = Sub50Variant(kWho, s[0xB]);
     rv::As<records::EffectObject>(s)->z = static_cast<U>(At(AddressOf(EffectKind18Sub50_Cells) + 2 * v + 1)[0]) << 16;
-    const long ground = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(s)->x, rv::As<records::EffectObject>(s)->z);
+    const std::int32_t ground = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(s)->x, rv::As<records::EffectObject>(s)->z);
     s = S();
     v = Sub50Variant(kWho, s[0xB]);
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, (0u - HalfOf(ground)) - Word(At(AddressOf(EffectKind18Sub50_Heights) + 2 * v)));
@@ -595,15 +595,15 @@ extern "C" void __cdecl EffectKind18Sub50_DrawWall(unsigned texture, unsigned he
     const U z1 = (static_cast<U>(rv::As<records::EffectObject>(s)->z_whole) << 7) - b - 0x3FF8u;
     SetWord(VSEffect5c(0x1A), z1);
     SetWord(VSEffect5c(0xA), z1);
-    long ground = SH_CALL(AreaMap_Elevation)(static_cast<long>(ex), static_cast<long>(ez));
+    std::int32_t ground = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(ex), static_cast<std::int32_t>(ez));
     SetWord(VSEffect5c(4), (0u - HalfOf(ground)) - rv::As<records::EffectObject>(S())->height_whole - b + 8u);
-    ground = SH_CALL(AreaMap_Elevation)(static_cast<long>(ex), static_cast<long>(ez));
+    ground = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(ex), static_cast<std::int32_t>(ez));
     const U ez2 = VertexCell(0xA);
     const U ex2 = VertexCell(8);
     SetWord(VSEffect5c(0x14), (0u - HalfOf(ground)) - rv::As<records::EffectObject>(S())->height_whole + b);
-    ground = SH_CALL(AreaMap_Elevation)(static_cast<long>(ex2), static_cast<long>(ez2));
+    ground = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(ex2), static_cast<std::int32_t>(ez2));
     SetWord(VSEffect5c(0xC), (0u - HalfOf(ground)) - rv::As<records::EffectObject>(S())->height_whole - b + 8u);
-    ground = SH_CALL(AreaMap_Elevation)(static_cast<long>(ex2), static_cast<long>(ez2));
+    ground = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(ex2), static_cast<std::int32_t>(ez2));
     SetWord(VSEffect5c(0x1C), (0u - HalfOf(ground)) - rv::As<records::EffectObject>(S())->height_whole + b);
     unsigned char* const prim = Gfx_PacketNext;
     SH_CALL(Gpu_SetPolyFT4)(prim);
@@ -629,15 +629,15 @@ extern "C" void __cdecl EffectKind18Sub50_DrawLine(void) {
     prim[6] = shade;
     prim[5] = shade;
     prim[4] = shade;
-    long ground = SH_CALL(AreaMap_Elevation)(static_cast<long>(VertexCell(0)), static_cast<long>(VertexCell(2)));
+    std::int32_t ground = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(VertexCell(0)), static_cast<std::int32_t>(VertexCell(2)));
     U rise = 2u * (Frame_Counter % 0x30u) - 0x3Cu;
     const U ex2 = VertexCell(8);
     const U ez2 = VertexCell(0xA);
     SetWord(VSEffect5c(4), rise - rv::As<records::EffectObject>(S())->height_whole - HalfOf(ground));
-    ground = SH_CALL(AreaMap_Elevation)(static_cast<long>(ex2), static_cast<long>(ez2));
+    ground = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(ex2), static_cast<std::int32_t>(ez2));
     rise = 2u * (Frame_Counter % 0x30u) - 0x3Cu;
     SetWord(VSEffect5c(0xC), rise - rv::As<records::EffectObject>(S())->height_whole - HalfOf(ground));
-    long depth = 0;
+    std::int32_t depth = 0;
     SH_CALL(Gte_RotTransPers3)(VX(0), VX(8), VX(0x10), F(prim + 8), F(prim + 0x14), MapView_ScreenXY, &depth);
     float third = 0;
     SH_CALL(Gte_StoreDepthF3)(F(prim + 0x10), F(prim + 0x1C), &third);

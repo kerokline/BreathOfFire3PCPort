@@ -96,7 +96,7 @@ std::int32_t Spread(U length) {
 // 0x80 (the first angle whole, the second & 0xFFF), the centre `centre`'s
 // shade and the two rim points `rim`'s, the depth at every vertex; each
 // committed at slot 1 (0x34 bytes).
-void GlowFan(const long* point, U size, U centre, U rim, unsigned parity) {
+void GlowFan(const std::int32_t* point, U size, U centre, U rim, unsigned parity) {
     SH_CALL(EffectGte_LoadMapCamera)();
     float p[3];
     SH_CALL(EffectGte_ProjectPoint)(point, p);
@@ -139,7 +139,7 @@ static void Kind3BGlow(unsigned offset) {
     SH_CALL(Gfx_CommitPrim)(1, 0xC);
     const unsigned char* const s = Cur();
     auto* const so = rv::AsConst<records::EffectObject>(s);
-    const long point[3] = {so->x, so->z, so->height};
+    const std::int32_t point[3] = {so->x, so->z, so->height};
     SH_CALL(EffectKind3B_DrawGlow)(point, static_cast<U>(s[offset]) << 2, 0x80, 0);
 }
 
@@ -231,15 +231,15 @@ extern "C" void __cdecl EffectKind3B_DrawSpiral(unsigned char* spiral) {
     U angle = Word(spiral + 0x10);
     U radius = Word(spiral + 0x12);
     U shade = Word(spiral + 0x14);
-    long q[3];
+    std::int32_t q[3];
     float v[3], w[3];
     int c = SH_CALL(Math_Cos)(static_cast<short>(angle));
-    q[0] = static_cast<long>(static_cast<U>(MulSar(c, static_cast<U>(static_cast<int>(static_cast<short>(radius))), 4)) +
+    q[0] = static_cast<std::int32_t>(static_cast<U>(MulSar(c, static_cast<U>(static_cast<int>(static_cast<short>(radius))), 4)) +
                              UL(spiral + 0));
     int n = SH_CALL(Math_Sin)(static_cast<short>(angle));
-    q[1] = static_cast<long>(static_cast<U>(MulSar(n, static_cast<U>(static_cast<int>(static_cast<short>(radius))), 4)) +
+    q[1] = static_cast<std::int32_t>(static_cast<U>(MulSar(n, static_cast<U>(static_cast<int>(static_cast<short>(radius))), 4)) +
                              UL(spiral + 4));
-    q[2] = static_cast<long>(UL(spiral + 8));
+    q[2] = static_cast<std::int32_t>(UL(spiral + 8));
     SH_CALL(EffectGte_ProjectPoint)(q, v);
     std::memcpy(w, v, sizeof w);
     for (unsigned k = 0; k < 32; ++k) {
@@ -260,21 +260,21 @@ extern "C" void __cdecl EffectKind3B_DrawSpiral(unsigned char* spiral) {
         shade -= 4;
         const U rr = static_cast<U>(static_cast<int>(static_cast<short>(radius)));
         c = SH_CALL(Math_Cos)(static_cast<short>(angle));
-        q[0] = static_cast<long>(static_cast<U>(MulSar(c, rr, 4)) + UL(spiral + 0));
+        q[0] = static_cast<std::int32_t>(static_cast<U>(MulSar(c, rr, 4)) + UL(spiral + 0));
         n = SH_CALL(Math_Sin)(static_cast<short>(angle));
-        q[1] = static_cast<long>(static_cast<U>(MulSar(n, rr, 4)) + UL(spiral + 4));
-        q[2] = static_cast<long>(UL(spiral + 8));
-        long d[3] = {static_cast<long>(static_cast<U>(q[0]) - last_x), static_cast<long>(static_cast<U>(q[1]) - last_z), 0};
-        const long squared = SH_CALL(Gte_VectorNormal)(d, d);
-        length += SH_AT(U (__cdecl*)(long), at::kSqrt.v)(squared);
-        const long perp[3] = {static_cast<long>(0u - static_cast<U>(d[1])), d[0], 0};
-        long edge[3];
-        edge[0] = static_cast<long>(static_cast<U>(q[0]) + static_cast<U>(MulSar(Spread(length), static_cast<U>(perp[0]), 12)));
-        edge[1] = static_cast<long>(static_cast<U>(q[1]) + static_cast<U>(MulSar(Spread(length), static_cast<U>(perp[1]), 12)));
+        q[1] = static_cast<std::int32_t>(static_cast<U>(MulSar(n, rr, 4)) + UL(spiral + 4));
+        q[2] = static_cast<std::int32_t>(UL(spiral + 8));
+        std::int32_t d[3] = {static_cast<std::int32_t>(static_cast<U>(q[0]) - last_x), static_cast<std::int32_t>(static_cast<U>(q[1]) - last_z), 0};
+        const std::int32_t squared = SH_CALL(Gte_VectorNormal)(d, d);
+        length += SH_AT(U (__cdecl*)(std::int32_t), at::kSqrt.v)(squared);
+        const std::int32_t perp[3] = {static_cast<std::int32_t>(0u - static_cast<U>(d[1])), d[0], 0};
+        std::int32_t edge[3];
+        edge[0] = static_cast<std::int32_t>(static_cast<U>(q[0]) + static_cast<U>(MulSar(Spread(length), static_cast<U>(perp[0]), 12)));
+        edge[1] = static_cast<std::int32_t>(static_cast<U>(q[1]) + static_cast<U>(MulSar(Spread(length), static_cast<U>(perp[1]), 12)));
         edge[2] = q[2];
         SH_CALL(EffectGte_ProjectPoint)(edge, v);
-        edge[0] = static_cast<long>(static_cast<U>(q[0]) - static_cast<U>(MulSar(Spread(length), static_cast<U>(perp[0]), 12)));
-        edge[1] = static_cast<long>(static_cast<U>(q[1]) - static_cast<U>(MulSar(Spread(length), static_cast<U>(perp[1]), 12)));
+        edge[0] = static_cast<std::int32_t>(static_cast<U>(q[0]) - static_cast<U>(MulSar(Spread(length), static_cast<U>(perp[0]), 12)));
+        edge[1] = static_cast<std::int32_t>(static_cast<U>(q[1]) - static_cast<U>(MulSar(Spread(length), static_cast<U>(perp[1]), 12)));
         edge[2] = q[2];
         SH_CALL(EffectGte_ProjectPoint)(edge, w);
         std::memcpy(prim + 0x28, v, 12);
@@ -309,7 +309,7 @@ extern "C" void __cdecl EffectKind3B_InitSpirals(void) {
 // original 0x4747D0: the glow (GlowFan): `point` projected, `size` (its low
 // word) scaled at its depth, the radius that plus the frame's parity; `centre`
 // and `rim` the shades (their low bytes).
-extern "C" void __cdecl EffectKind3B_DrawGlow(const long* point, unsigned size, unsigned centre, unsigned rim) {
+extern "C" void __cdecl EffectKind3B_DrawGlow(const std::int32_t* point, unsigned size, unsigned centre, unsigned rim) {
     GlowFan(point, size, centre, rim, 0);
 }
 

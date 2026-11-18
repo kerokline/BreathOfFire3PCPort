@@ -193,12 +193,12 @@ void Move(U h) {
     case 7: Field_Kind2Hold = static_cast<unsigned char>(v & 1); break;
     case 8: Mem(SharedScratch_addr)[0] = static_cast<unsigned char>(v % 3 == 0 ? 0 : v); break;
     case 9: SetWord(rv::Bytes(ObjTrio) + 0x3E, w); break;
-    case 10: Field_Kind2X = Long(rv::Bytes(ObjTrio) + 0x34); Field_Kind2Z = v & 1 ? Long(rv::Bytes(ObjTrio) + 0x38) : static_cast<long>(w); break;
+    case 10: Field_Kind2X = Long(rv::Bytes(ObjTrio) + 0x34); Field_Kind2Z = v & 1 ? Long(rv::Bytes(ObjTrio) + 0x38) : static_cast<std::int32_t>(w); break;
     case 11: Camera_Distance = static_cast<short>(w); break;
     case 12: SetLong(o + 0x40, static_cast<std::int32_t>(PickBy(v, 0x1C000, 0x1FFFF, 0x20000, w << 1))); break;
     case 13: o[0xB] = static_cast<unsigned char>(w % 20); break;
     case 14: o[3 + v % 2] = static_cast<unsigned char>(w % 20); break;
-    default: MapView_Elevation = static_cast<long>(static_cast<short>(w)); break;
+    default: MapView_Elevation = static_cast<std::int32_t>(static_cast<short>(w)); break;
     }
 }
 

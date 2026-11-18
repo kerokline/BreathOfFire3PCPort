@@ -108,29 +108,29 @@ void FuzzPrim(const char* name, const void* theirs, const void* ours, unsigned r
 // under three control words.
 unsigned g_sqrt_differ_007f;
 void FuzzSqrt(const void* theirs) {
-    using Fn = long (__cdecl*)(long);
+    using Fn = std::int32_t (__cdecl*)(std::int32_t);
     const Fn t = reinterpret_cast<Fn>(const_cast<void*>(theirs));
     const unsigned short words[] = {0x027F, 0x037F, 0x007F};
     const unsigned short saved = ControlWord();
-    static const long kEdges[] = {0, 1, 2, 3, 4, -1, -2, 0x7FFFFFFF, static_cast<long>(0x80000000u), 0x7FFEA810,
+    static const std::int32_t kEdges[] = {0, 1, 2, 3, 4, -1, -2, 0x7FFFFFFF, static_cast<std::int32_t>(0x80000000u), 0x7FFEA810,
                                   0x7FFEA80F, 0x3FFFFFFF, 0x40000000, 0xFFFF, 0x10000};
     for (unsigned round = 0; round < 0x18000; ++round) {
-        long n;
+        std::int32_t n;
         switch (Next() % 6) {
         case 0: n = kEdges[Next() % (sizeof kEdges / sizeof kEdges[0])]; break;
         case 1: case 2: case 3: {
-            const long k = static_cast<long>(Next() % 46341);
-            n = k * k + static_cast<long>(Next() % 3) - 1;
+            const std::int32_t k = static_cast<std::int32_t>(Next() % 46341);
+            n = k * k + static_cast<std::int32_t>(Next() % 3) - 1;
             break;
         }
-        case 4: n = static_cast<long>(Next() & 0xFFFFF); break;
-        default: n = static_cast<long>(Next()); break;
+        case 4: n = static_cast<std::int32_t>(Next() & 0xFFFFF); break;
+        default: n = static_cast<std::int32_t>(Next()); break;
         }
         const unsigned short cw = words[round % 3];
         SetControlWord(cw);
-        const long a = t(n);
+        const std::int32_t a = t(n);
         SetControlWord(saved);
-        const long b = Gte_SquareRoot0(n);
+        const std::int32_t b = Gte_SquareRoot0(n);
         if (a == b) continue;
         if (cw == 0x007F) ++g_sqrt_differ_007f;
         else LeafMismatch("Gte_SquareRoot0", round, static_cast<U>(a), static_cast<U>(b));
@@ -286,39 +286,39 @@ void Disturb() {
     }
 }
 
-long __stdcall FakeRelease(void* self) {
+std::int32_t __stdcall FakeRelease(void* self) {
     Record(0x08, Id(self));
     ++g_counts[0x08 / 4];
     Disturb();
-    return static_cast<long>(Hash(0x4E1) & 0xFF);
+    return static_cast<std::int32_t>(Hash(0x4E1) & 0xFF);
 }
-long __stdcall FakeGetDC(void* self, void** hdc) {
+std::int32_t __stdcall FakeGetDC(void* self, void** hdc) {
     Record(0x44, Id(self));
     ++g_counts[0x44 / 4];
     const U h = Hash(0x6DC);
     *hdc = At(h | 0x10000);   // a handle: written always, used only on success
     Disturb();
-    return h % 4 == 0 ? static_cast<long>(0x887601C2u) : h % 7 == 0 ? static_cast<long>(h) : 0;
+    return h % 4 == 0 ? static_cast<std::int32_t>(0x887601C2u) : h % 7 == 0 ? static_cast<std::int32_t>(h) : 0;
 }
-long __stdcall FakeRestoreDisplayMode(void* self) {
+std::int32_t __stdcall FakeRestoreDisplayMode(void* self) {
     Record(0x4C, Id(self));
     ++g_counts[0x4C / 4];
     Disturb();
-    return static_cast<long>(Hash(0x4D0));
+    return static_cast<std::int32_t>(Hash(0x4D0));
 }
-long __stdcall FakeSetCooperativeLevel(void* self, void* hwnd, unsigned long flags) {
+std::int32_t __stdcall FakeSetCooperativeLevel(void* self, void* hwnd, std::uint32_t flags) {
     Record(0x50, Id(self), Addr(hwnd), flags);
     ++g_counts[0x50 / 4];
     Disturb();
-    return static_cast<long>(Hash(0xC00));
+    return static_cast<std::int32_t>(Hash(0xC00));
 }
-long __stdcall FakeReleaseDC(void* self, void* hdc) {
+std::int32_t __stdcall FakeReleaseDC(void* self, void* hdc) {
     Record(0x68, Id(self), Addr(hdc));
     ++g_counts[0x68 / 4];
     Disturb();
-    return static_cast<long>(Hash(0x6EDC));
+    return static_cast<std::int32_t>(Hash(0x6EDC));
 }
-template <int S> long __stdcall FakeUnexpected(void* self) {
+template <int S> std::int32_t __stdcall FakeUnexpected(void* self) {
     bof3::Fatal("psx_rest: self-test reached COM slot %d (+0x%X) of object %u, which nothing fakes", S, S * 4,
                 (unsigned)Id(self));
 }
@@ -363,7 +363,7 @@ template <U kWhat> void __cdecl StubSeven() {
     Record(kWhat);
     Disturb();
 }
-unsigned long __stdcall StubSetTextColor(void* hdc, unsigned long color) {
+std::uint32_t __stdcall StubSetTextColor(void* hdc, std::uint32_t color) {
     Record(0x110, Addr(hdc), color);
     Disturb();
     return Hash(0x7C0);

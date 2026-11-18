@@ -111,7 +111,7 @@ void PutFloat(unsigned char* p, int v) {
 
 // A .data dispatch table read in place: the cell called, the index checked
 // (the originals' is not).
-void CallCell(const unsigned long* table, unsigned entries, unsigned index, const char* who) {
+void CallCell(const std::uint32_t* table, unsigned entries, unsigned index, const char* who) {
     if (index >= entries) bof3::Fatal("%s: index %u, past the %u-entry table", who, index, entries);
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
 }

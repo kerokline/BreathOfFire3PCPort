@@ -215,7 +215,7 @@ unsigned char __cdecl StubFacingObject() {
     Disturb(0x1F);
     return h % 3 == 0 ? static_cast<unsigned char>((h >> 16) % 34) : 0xFF;
 }
-unsigned char __cdecl StubObjectAhead(long x, long z, unsigned) {
+unsigned char __cdecl StubObjectAhead(std::int32_t x, std::int32_t z, unsigned) {
     Record(0x20, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z));
     const std::uint32_t h = Hash(0x20);
     return h % 2 ? 0xFF : static_cast<unsigned char>((h >> 8) % 34);
@@ -241,7 +241,7 @@ void __cdecl StubTalkTo(unsigned index) {
 }
 // The hooks: the step target (0x903858 / 0x90385C) may be moved, which
 // Field_LeaderStepTarget reads back.
-int HookBody(unsigned id, long x, long z) {
+int HookBody(unsigned id, std::int32_t x, std::int32_t z) {
     Record(id, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z));
     const std::uint32_t h = Hash(id);
     if (h % 5 == 0) {
@@ -252,25 +252,25 @@ int HookBody(unsigned id, long x, long z) {
     const std::uint32_t r = Hash(id + 4);
     return r % 2 ? 0 : static_cast<int>(r);
 }
-int __cdecl StubStepHook(long x, long z) { return HookBody(0x28, x, z); }
-int __cdecl StubArriveHook(long x, long z) { return HookBody(0x2D, x, z); }
-int __cdecl StubAreaStep(long x, long z) { return HookBody(0x32, x, z); }
-int __cdecl StubAreaArrive(long x, long z) { return HookBody(0x37, x, z); }
-unsigned char __cdecl StubReturnGate(long x, long z) {
+int __cdecl StubStepHook(std::int32_t x, std::int32_t z) { return HookBody(0x28, x, z); }
+int __cdecl StubArriveHook(std::int32_t x, std::int32_t z) { return HookBody(0x2D, x, z); }
+int __cdecl StubAreaStep(std::int32_t x, std::int32_t z) { return HookBody(0x32, x, z); }
+int __cdecl StubAreaArrive(std::int32_t x, std::int32_t z) { return HookBody(0x37, x, z); }
+unsigned char __cdecl StubReturnGate(std::int32_t x, std::int32_t z) {
     Record(0x3C, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z));
     return Hash(0x3C) % 3 == 0 ? Answer(0x3D, 0) : 0;
 }
 // The chapter records: four of them, numbered, and a 256-entry table (-128 at
 // the start) whose entry i is record i & 3.
 template <unsigned N>
-unsigned char __cdecl StubChapterStep(long x, long z) {
+unsigned char __cdecl StubChapterStep(std::int32_t x, std::int32_t z) {
     Record(0x40 + N, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z));
     Disturb(0x40 + N);
     const std::uint32_t h = Hash(0x40 + N);
     return h % 2 ? 0 : static_cast<unsigned char>(h >> 8);
 }
 template <unsigned N>
-unsigned char __cdecl StubChapterArrive(long x, long z) {
+unsigned char __cdecl StubChapterArrive(std::int32_t x, std::int32_t z) {
     Record(0x48 + N, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z));
     Disturb(0x48 + N);
     const std::uint32_t h = Hash(0x48 + N);
@@ -331,19 +331,19 @@ unsigned char __cdecl StubLinkAt(unsigned x, unsigned z) {
     Record(0x6C, x & 0xFFFF, z & 0xFFFF);
     return Answer(0x6C, 2);
 }
-long __cdecl StubGroundAt(long x, long z) {
+std::int32_t __cdecl StubGroundAt(std::int32_t x, std::int32_t z) {
     Record(0x6D, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z));
     const std::uint32_t h = Hash(0x6D);
     // near the sprite's own height half the time: both sides of 0x80 / 0x100
-    if (h % 2) return static_cast<long>(static_cast<short>(Word(Sprite_Current + 0x3E)) + static_cast<int>((h >> 4) % 0x281) - 0x140);
-    return static_cast<long>(h);
+    if (h % 2) return static_cast<std::int32_t>(static_cast<short>(Word(Sprite_Current + 0x3E)) + static_cast<int>((h >> 4) % 0x281) - 0x140);
+    return static_cast<std::int32_t>(h);
 }
 unsigned char __cdecl StubScriptTick() {
     Record(0x6E);
     Disturb(0x6E);
     return static_cast<unsigned char>(Hash(0x6F));
 }
-unsigned char __cdecl StubObjectAt(long x, long y, unsigned margin) {
+unsigned char __cdecl StubObjectAt(std::int32_t x, std::int32_t y, unsigned margin) {
     Record(0x70, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y), margin);
     static const unsigned char kIndex[] = {0xFF, 0xFF, 0, 29, 30, 33, 0x1D, 0x1E, 0x7F, 0x80, 0xFE, 5, 31};
     const std::uint32_t h = Hash(0x70);
@@ -384,10 +384,10 @@ unsigned char __cdecl StubSetBank(unsigned short bank) {
     DisturbPlacement(0x79);
     return 0;
 }
-long __cdecl StubElevation(long x, long z) {
+std::int32_t __cdecl StubElevation(std::int32_t x, std::int32_t z) {
     Record(0x7A, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z));
     DisturbPlacement(0x7A);
-    return static_cast<long>(Hash(0x7B));
+    return static_cast<std::int32_t>(Hash(0x7B));
 }
 void __cdecl StubSetFlags(const unsigned char* flags) {
     Record(0x7C, Address(flags), *flags);
@@ -438,7 +438,7 @@ unsigned char __cdecl StubPartyVisible(unsigned a, unsigned b) {
     Sprite_Current = Member(static_cast<int>(1 + Hash(0x8F) % 2));
     return Answer(0x90, 4);
 }
-unsigned char __cdecl StubMemberFits(long x, long z, unsigned slot, unsigned a, unsigned b) {
+unsigned char __cdecl StubMemberFits(std::int32_t x, std::int32_t z, unsigned slot, unsigned a, unsigned b) {
     Record(0x91, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), slot, a, b);
     const std::uint32_t h = Hash(0x92);
     if (h % 5 == 0) Field_MemberCount = static_cast<unsigned char>((h >> 8) % 5);   // read again by the loop
@@ -465,7 +465,7 @@ unsigned char __cdecl StubStepCode() {
 }
 // 0x5725C0: AreaMap_Slope leaves the byte 0x903850 (flat 0, sloped 1); the
 // answer is a height, both sides of 0x40 and of the sprite's own.
-long __cdecl StubSlopeAt(long x, long z, std::uint32_t direction) {
+std::int32_t __cdecl StubSlopeAt(std::int32_t x, std::int32_t z, std::uint32_t direction) {
     Record(0x97, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), direction);
     const std::uint32_t h = Hash(0x97);
     At(at::kScratch_addr)[0] = static_cast<unsigned char>(h % 3 == 0 ? 0 : h % 3 == 1 ? 1 : (h >> 8));
@@ -475,9 +475,9 @@ long __cdecl StubSlopeAt(long x, long z, std::uint32_t direction) {
     if (k % 3 == 0) {
         static const int kRise[] = {0x80, -0x80, 0x81, -0x81, 0x7F, -0x7F};
         const int rise = (k >> 4) % 2 ? kRise[(k >> 8) % 6] : static_cast<int>((k >> 4) % 0x181) - 0xC0;
-        return static_cast<long>(static_cast<short>(Word(Sprite_Current + 0x3E)) - rise);
+        return static_cast<std::int32_t>(static_cast<short>(Word(Sprite_Current + 0x3E)) - rise);
     }
-    return static_cast<long>(k % 3 == 1 ? kHeights[(k >> 8) % 7] : static_cast<int>(k));
+    return static_cast<std::int32_t>(k % 3 == 1 ? kHeights[(k >> 8) % 7] : static_cast<int>(k));
 }
 unsigned char __cdecl StubTestFB(unsigned x, unsigned z) {
     Record(0x9A, x & 0xFFFF, z & 0xFFFF);
@@ -485,7 +485,7 @@ unsigned char __cdecl StubTestFB(unsigned x, unsigned z) {
 }
 // The per-area handlers, numbered by case.
 template <unsigned N>
-unsigned char __cdecl StubAreaStepCase(long x, long z) {
+unsigned char __cdecl StubAreaStepCase(std::int32_t x, std::int32_t z) {
     Record(0xA0 + N, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z));
     Disturb(0xA0 + N);
     const std::uint32_t h = Hash(0xA0 + N);
@@ -498,7 +498,7 @@ unsigned char __cdecl StubAreaStepNoArgs() {   // case 6: nothing pushed, nothin
     return h % 2 ? 0 : static_cast<unsigned char>(h >> 8);
 }
 template <unsigned N>
-unsigned char __cdecl StubAreaArriveCase(long x, long z) {
+unsigned char __cdecl StubAreaArriveCase(std::int32_t x, std::int32_t z) {
     Record(0xD0 + N, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z));
     Disturb(0xD0 + N);
     const std::uint32_t h = Hash(0xD0 + N);
@@ -987,9 +987,9 @@ using U = unsigned char (__cdecl*)();
 using UU = unsigned char (__cdecl*)(unsigned);
 using VU = void (__cdecl*)(unsigned);
 using VP = void (__cdecl*)(const unsigned char*);
-using ULL = unsigned char (__cdecl*)(long, long, unsigned);
-using ILL = int (__cdecl*)(long, long);
-using BLL = unsigned char (__cdecl*)(long, long);
+using ULL = unsigned char (__cdecl*)(std::int32_t, std::int32_t, unsigned);
+using ILL = int (__cdecl*)(std::int32_t, std::int32_t);
+using BLL = unsigned char (__cdecl*)(std::int32_t, std::int32_t);
 using PV = const unsigned char* (__cdecl*)();
 
 // Each test: the function's name, its copy, the regions it needs, and ours.
@@ -1087,7 +1087,7 @@ void RunTests(unsigned rounds, unsigned only) {
             g_cell = Pick(kCells);
             unsigned arg = OneIn(2) ? g_cell : static_cast<unsigned>(Next());
             if (OneIn(2)) arg = (Next() & 0xFFFFFF00u) | (arg & 0xFF);
-            long x = static_cast<long>(Next()), z = static_cast<long>(OneIn(2) ? 0x108000 - 1 + Next() % 3 : Next());
+            std::int32_t x = static_cast<std::int32_t>(Next()), z = static_cast<std::int32_t>(OneIn(2) ? 0x108000 - 1 + Next() % 3 : Next());
             unsigned char* const saved_area0 = Area_Descriptors[0];
             switch (t.fn) {
             case kOp5: case kOpD: case kOp9: {

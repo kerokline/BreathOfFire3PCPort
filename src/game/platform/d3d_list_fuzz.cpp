@@ -123,10 +123,10 @@ void Disturb(U node, U salt) {
     }
 }
 
-template <int K> long __cdecl StubEntry(const unsigned char* prim) {
+template <int K> std::int32_t __cdecl StubEntry(const unsigned char* prim) {
     Record(0x40 + K, Addr(prim) - g_base);
     Disturb(Addr(prim), 0x100 + K);
-    return static_cast<long>(Mix(0x200 + K));
+    return static_cast<std::int32_t>(Mix(0x200 + K));
 }
 void __cdecl StubMove(short* rect, int x, int y) {
     Record(0x30, Addr(rect) - g_base, static_cast<U>(x), static_cast<U>(y));
@@ -184,7 +184,7 @@ void Relocate(unsigned char* code, U disp_at, U table_at, U entries) {
     std::memcpy(code + disp_at, &disp, 4);
 }
 
-using DrawFn = void(__cdecl*)(unsigned long*);
+using DrawFn = void(__cdecl*)(std::uint32_t*);
 
 DrawFn CloneDraw() {
     static const void* const kStubs[] = {
@@ -280,7 +280,7 @@ void SelfTest() {
             g_round = r;
             RandomTable(coverage);
             Capture(g_start);
-            auto* ot = reinterpret_cast<unsigned long*>(At(g_base));
+            auto* ot = reinterpret_cast<std::uint32_t*>(At(g_base));
 
             g_theirs.Clear();
             d3d_fuzz::g_log = &g_theirs;

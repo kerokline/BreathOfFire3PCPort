@@ -118,57 +118,57 @@ void Disturb() {
 }
 
 std::uint32_t Id(const void* self) { return static_cast<const Fake*>(self)->id; }
-long Answer(std::uint32_t h, bool lost) {
+std::int32_t Answer(std::uint32_t h, bool lost) {
     switch (h % 10) {
     case 0: return lost ? kBufferLost : 0;
-    case 1: return lost ? kBufferLost : static_cast<long>(0x80004005u);
-    case 2: return static_cast<long>(0x88780078u);   // another DSERR
+    case 1: return lost ? kBufferLost : static_cast<std::int32_t>(0x80004005u);
+    case 2: return static_cast<std::int32_t>(0x88780078u);   // another DSERR
     default: return 0;
     }
 }
 
-long __stdcall FakeQuery(void* self, const void* iid, void** out) {
+std::int32_t __stdcall FakeQuery(void* self, const void* iid, void** out) {
     Record(0x100, Id(self), Bytes(iid, 16));
     const std::uint32_t h = Hash();
     *out = &g_notifies[h & 1];
     Disturb();
     return Answer(h >> 4, false);
 }
-long __stdcall FakeAddRef(void* self) { Record(0x101, Id(self)); return 1; }
-long __stdcall FakeRelease(void* self) { Record(0x102, Id(self)); Disturb(); return 0; }
-long __stdcall FakeCreate(void* self, void* desc, void** out, void* outer) {
+std::int32_t __stdcall FakeAddRef(void* self) { Record(0x101, Id(self)); return 1; }
+std::int32_t __stdcall FakeRelease(void* self) { Record(0x102, Id(self)); Disturb(); return 0; }
+std::int32_t __stdcall FakeCreate(void* self, void* desc, void** out, void* outer) {
     const unsigned char* const d = static_cast<const unsigned char*>(desc);
     std::uint32_t format;
     std::memcpy(&format, d + 0x10, 4);
     Record(0x103, Id(self), Address(desc), Bytes(d, 0x24), format == Address(Snd_WaveFormat) ? Bytes(Snd_WaveFormat, 0x12) : 1);
     Record(0x103, Address(outer));
     const std::uint32_t h = Hash();
-    const long r = Answer(h, false);
+    const std::int32_t r = Answer(h, false);
     if (r == 0 || h % 7 == 0) *out = AnyBuffer(h >> 8);   // a failing create may write it too
     Disturb();
     return r;
 }
-long __stdcall FakePositions(void* self, unsigned long n, const void* positions) {
+std::int32_t __stdcall FakePositions(void* self, std::uint32_t n, const void* positions) {
     Record(0x104, Id(self), n, Bytes(positions, 16));
     Disturb();
     return Answer(Hash(), false);
 }
-long __stdcall FakeGetStatus(void* self, unsigned long* status) {
+std::int32_t __stdcall FakeGetStatus(void* self, std::uint32_t* status) {
     Record(0x105, Id(self));
     const std::uint32_t h = Hash();
     *status = h % 3 == 0 ? (h >> 8) | 1 : h >> 8;
     Disturb();
     return 0;
 }
-long __stdcall FakeLock(void* self, unsigned long offset, unsigned long bytes, void** p1, unsigned long* n1, void** p2,
-                        unsigned long* n2, unsigned long flags) {
+std::int32_t __stdcall FakeLock(void* self, std::uint32_t offset, std::uint32_t bytes, void** p1, std::uint32_t* n1, void** p2,
+                        std::uint32_t* n2, std::uint32_t flags) {
     Record(0x106, Id(self), offset, bytes, flags);
     const std::uint32_t h = Hash();
-    const long r = Answer(h, true);
+    const std::int32_t r = Answer(h, true);
     if (r == 0) {
-        const unsigned long room = bytes > 0x200 ? 0x200 : bytes;
+        const std::uint32_t room = bytes > 0x200 ? 0x200 : bytes;
         const std::uint32_t c = (h >> 8) % 5;
-        const unsigned long first = c < 2 ? room : c == 2 ? 0 : (h >> 11) % (room + 1);
+        const std::uint32_t first = c < 2 ? room : c == 2 ? 0 : (h >> 11) % (room + 1);
         *p1 = g_lock + (h >> 16) % 0x100;
         *n1 = first;
         *p2 = g_lock + 0x300 + (h >> 20) % 0x100;
@@ -177,23 +177,23 @@ long __stdcall FakeLock(void* self, unsigned long offset, unsigned long bytes, v
     Disturb();
     return r;
 }
-long __stdcall FakeUnlock(void* self, void* p1, unsigned long n1, void* p2, unsigned long n2) {
+std::int32_t __stdcall FakeUnlock(void* self, void* p1, std::uint32_t n1, void* p2, std::uint32_t n2) {
     Record(0x107, Id(self), Address(p1) - Address(g_lock), n1, (Address(p2) - Address(g_lock)) ^ (n2 << 12));
     Disturb();
     return Answer(Hash(), false);
 }
-long __stdcall FakePlay(void* self, unsigned long a, unsigned long b, unsigned long flags) {
+std::int32_t __stdcall FakePlay(void* self, std::uint32_t a, std::uint32_t b, std::uint32_t flags) {
     Record(0x108, Id(self), a, b, flags);
     const std::uint32_t h = Hash();
     Disturb();
     return Answer(h, true);
 }
-long __stdcall FakeSetPosition(void* self, unsigned long v) { Record(0x109, Id(self), v); Disturb(); return Answer(Hash(), false); }
-long __stdcall FakeSetVolume(void* self, unsigned long v) { Record(0x10A, Id(self), v); Disturb(); return Answer(Hash(), false); }
-long __stdcall FakeSetFrequency(void* self, unsigned long v) { Record(0x10B, Id(self), v); Disturb(); return Answer(Hash(), false); }
-long __stdcall FakeStop(void* self) { Record(0x10C, Id(self)); Disturb(); return 0; }
-long __stdcall FakeRestore(void* self) { Record(0x10D, Id(self)); Disturb(); return Answer(Hash(), false); }
-long __stdcall FakeUnexpected(void* self) {
+std::int32_t __stdcall FakeSetPosition(void* self, std::uint32_t v) { Record(0x109, Id(self), v); Disturb(); return Answer(Hash(), false); }
+std::int32_t __stdcall FakeSetVolume(void* self, std::uint32_t v) { Record(0x10A, Id(self), v); Disturb(); return Answer(Hash(), false); }
+std::int32_t __stdcall FakeSetFrequency(void* self, std::uint32_t v) { Record(0x10B, Id(self), v); Disturb(); return Answer(Hash(), false); }
+std::int32_t __stdcall FakeStop(void* self) { Record(0x10C, Id(self)); Disturb(); return 0; }
+std::int32_t __stdcall FakeRestore(void* self) { Record(0x10D, Id(self)); Disturb(); return Answer(Hash(), false); }
+std::int32_t __stdcall FakeUnexpected(void* self) {
     bof3::Fatal("sound: self-test reached a DirectSound method it does not fake (object %u)", (unsigned)Id(self));
 }
 
@@ -229,7 +229,7 @@ void BuildFakes() {
 }
 
 // --- The stand-ins ------------------------------------------------------------
-int __cdecl StubSprintf(char* dst, const char* fmt, ...) {
+int StubSprintf(char* dst, const char* fmt, ...) {
     unsigned n = 0;
     for (const char* p = fmt; *p; ++p)
         if (*p == '%') ++n;
@@ -356,10 +356,10 @@ unsigned __cdecl StubFindData(const unsigned char* wave, const unsigned char** d
     Disturb();
     return (h >> 16) % 0x201;
 }
-long __cdecl StubWrite(void* buffer, const void* src, unsigned offset, unsigned size) {
+std::int32_t __cdecl StubWrite(void* buffer, const void* src, unsigned offset, unsigned size) {
     Record(27, Address(buffer), Address(src), offset, size);
     Disturb();
-    return static_cast<long>(Hash());
+    return static_cast<std::int32_t>(Hash());
 }
 // Sound_PlayEffect's cue: its four words and their voice entries' buffers,
 // which the two stand-ins under it may change - the original reads each word
@@ -400,7 +400,7 @@ void* __cdecl StubCreateBuffer() {
     Disturb();
     return h % 4 == 0 ? nullptr : AnyBuffer(h >> 8);
 }
-long __cdecl StubSetNotify(void* buffer) { Record(34, Address(buffer)); Disturb(); return static_cast<long>(Hash()); }
+std::int32_t __cdecl StubSetNotify(void* buffer) { Record(34, Address(buffer)); Disturb(); return static_cast<std::int32_t>(Hash()); }
 void __cdecl StubDecode(unsigned char* dst, int size) { Record(35, Address(dst), static_cast<std::uint32_t>(size)); Disturb(); }
 
 template <class To, class From>

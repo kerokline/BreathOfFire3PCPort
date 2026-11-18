@@ -93,7 +93,7 @@ unsigned char EnterTick() {
 void EndStep(U anims, unsigned animation) {
     AddLong(Sprite_Current + 0x38, 0x8000);
     unsigned char* const s = Sprite_Current;
-    const long ground = BH_CALL(AreaMap_Elevation)(Long(s + 0x34), Long(s + 0x38));
+    const std::int32_t ground = BH_CALL(AreaMap_Elevation)(Long(s + 0x34), Long(s + 0x38));
     SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(ground) & 0xFFFF);
     BH_CALL(Sprite_SetAnimationBank)(0x5F);
     rv::As<records::BattleEnemy>(Enemy())->anim_table = static_cast<std::int32_t>(anims);

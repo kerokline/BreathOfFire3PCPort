@@ -148,23 +148,23 @@ extern "C" void __cdecl EffectKind2B_Shrink(void) {
 // and the last two take that (byte arithmetic, kept from quad to quad).
 extern "C" void __cdecl EffectKind2B_Draw(void) {
     SH_CALL(EffectGte_LoadMapCamera)();
-    long point[3];
+    std::int32_t point[3];
     float ground[3], top[3];
     auto Project = [&](U u) {
         {
             const U c = static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(u)));
             const unsigned char* const s = S();
-            point[0] = static_cast<long>(Sar(c * static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectWork>(s)->work_2e))), 4) + static_cast<std::uint32_t>(rv::AsConst<records::EffectObject>(s)->x));
+            point[0] = static_cast<std::int32_t>(Sar(c * static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectWork>(s)->work_2e))), 4) + static_cast<std::uint32_t>(rv::AsConst<records::EffectObject>(s)->x));
         }
         {
             const U n = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(u)));
             const unsigned char* const s = S();
-            point[1] = static_cast<long>(Sar(n * static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectWork>(s)->work_2e))), 4) + static_cast<std::uint32_t>(rv::AsConst<records::EffectObject>(s)->z));
+            point[1] = static_cast<std::int32_t>(Sar(n * static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectWork>(s)->work_2e))), 4) + static_cast<std::uint32_t>(rv::AsConst<records::EffectObject>(s)->z));
             point[2] = rv::AsConst<records::EffectObject>(s)->height;
         }
         SH_CALL(EffectGte_ProjectPoint)(point, ground);
         const unsigned char* const s = S();
-        point[2] = static_cast<long>((static_cast<U>(SW(s + 0x30)) << 16) + static_cast<std::uint32_t>(rv::AsConst<records::EffectObject>(s)->height));
+        point[2] = static_cast<std::int32_t>((static_cast<U>(SW(s + 0x30)) << 16) + static_cast<std::uint32_t>(rv::AsConst<records::EffectObject>(s)->height));
         SH_CALL(EffectGte_ProjectPoint)(point, top);
     };
     Project(0);

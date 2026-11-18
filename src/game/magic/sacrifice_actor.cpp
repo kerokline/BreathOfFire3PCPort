@@ -128,23 +128,23 @@ void Dispatch(const std::uint32_t* table, unsigned entries, unsigned phase, cons
 
 // The callees with the arguments the originals push: both projections get a
 // flag pointer past the depth, which ours does not read.
-using Rtp3Fn = long (__cdecl*)(const short*, const short*, const short*, unsigned char*, unsigned char*, unsigned char*,
-                               long*, long*);
+using Rtp3Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, unsigned char*, unsigned char*, unsigned char*,
+                               std::int32_t*, std::int32_t*);
 
-using Rtp4Fn = long (__cdecl*)(const short*, const short*, const short*, const short*, unsigned char*, unsigned char*,
-                               unsigned char*, unsigned char*, long*, long*);
+using Rtp4Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, const short*, unsigned char*, unsigned char*,
+                               unsigned char*, unsigned char*, std::int32_t*, std::int32_t*);
 
 #define S10_AS(type, name) ::magic_harness::Call(reinterpret_cast<type>(reinterpret_cast<void*>(&::name)))
 
 // Prim_VertexScratch's first three SVECTORs projected to +8, +0x18, +0x28.
 void Rtp3(unsigned char* prim) {
-    long p, flag;
+    std::int32_t p, flag;
     S10_AS(Rtp3Fn, Gte_RotTransPers3)(VP(0), VP(8), VP(0x10), prim + 8, prim + 0x18, prim + 0x28, &p, &flag);
 }
 
 // All four projected to +8, +8 + step, +8 + 2 step, +8 + 3 step.
 void Rtp4(unsigned char* prim, unsigned step) {
-    long p, flag;
+    std::int32_t p, flag;
     S10_AS(Rtp4Fn, Gte_RotTransPers4)(VP(0), VP(8), VP(0x10), VP(0x18), prim + 8, prim + 8 + step, prim + 8 + 2 * step,
                                      prim + 8 + 3 * step, &p, &flag);
 }
@@ -388,8 +388,8 @@ S10_EXPORT void __cdecl SacrificeRing_Draw(void) {
             const unsigned char* const s = Sc();
             const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
             SetVW(0x1A, static_cast<unsigned>(y));
-            const auto x = static_cast<unsigned long>(static_cast<std::uint32_t>(ts->x) + dx);
-            const auto z = static_cast<unsigned long>(static_cast<std::uint32_t>(ts->z) + Shl(y, 9));
+            const auto x = static_cast<std::uint32_t>(static_cast<std::uint32_t>(ts->x) + dx);
+            const auto z = static_cast<std::uint32_t>(static_cast<std::uint32_t>(ts->z) + Shl(y, 9));
             MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
             MH_CALL(MapView_LinkPrimAt)(x, z, 2, 0xC);
             unsigned char* const p = Gfx_PacketNext;

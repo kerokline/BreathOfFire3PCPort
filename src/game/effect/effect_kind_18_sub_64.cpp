@@ -84,13 +84,13 @@ std::int32_t Abs(U d) {
 }
 
 // movsx eax, ax; cdq; sub eax, edx; sar 1: half a height, toward zero.
-U Half(long height) { return static_cast<U>(static_cast<std::int16_t>(static_cast<U>(height) & 0xFFFFu) / 2); }
+U Half(std::int32_t height) { return static_cast<U>(static_cast<std::int16_t>(static_cast<U>(height) & 0xFFFFu) / 2); }
 
 // The quad's four corners projected into the POLY_FT4 / G4 at p, its depths
 // set. The original also pushes a tenth pointer (a flag local) the projection
 // does not read.
 void Project(unsigned char* p) {
-    long depth;
+    std::int32_t depth;
     SH_CALL(Gte_RotTransPers4)(Vertex(0), Vertex(1), Vertex(2), Vertex(3), reinterpret_cast<float*>(p + 8),
                                reinterpret_cast<float*>(p + 0x18), reinterpret_cast<float*>(p + 0x28),
                                reinterpret_cast<float*>(p + 0x38), &depth);
@@ -270,14 +270,14 @@ extern "C" void __cdecl EffectKind18Sub64_Draw(unsigned scale, int width, unsign
         rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].y, z - along - l);
         {
             unsigned char* const r = S();
-            const long h = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(r)->x, rv::As<records::EffectObject>(r)->z);
+            const std::int32_t h = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(r)->x, rv::As<records::EffectObject>(r)->z);
             const U top = (0u - (2 * w + 0xC0u)) - Half(h);
             rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].z, top);
             rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->z, top);
         }
         {
             unsigned char* const r = S();
-            const long h = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(r)->x, rv::As<records::EffectObject>(r)->z);
+            const std::int32_t h = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(r)->x, rv::As<records::EffectObject>(r)->z);
             const U bottom = 0xFFFFFF40u - Half(h);
             rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].z, bottom);
             rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].z, bottom);

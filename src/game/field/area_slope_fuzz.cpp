@@ -12,7 +12,7 @@
 
 namespace area_slope {
 
-using SlopeFn = long (__cdecl*)(long, long, unsigned long);
+using SlopeFn = std::int32_t (__cdecl*)(std::int32_t, std::int32_t, std::uint32_t);
 
 namespace {
 
@@ -39,7 +39,7 @@ constexpr unsigned kBlock = 160;
 // long CallFramed(const void* fn, unsigned char* block): calls fn with esp at
 // a copy of block (so block[0..11] are its three arguments), then copies the
 // stack back into block.
-__attribute__((naked)) long __cdecl CallFramed(const void*, unsigned char*) {
+__attribute__((naked)) std::int32_t __cdecl CallFramed(const void*, unsigned char*) {
     __asm__ volatile(
         "push %esi\n\t"
         "push %edi\n\t"
@@ -124,12 +124,12 @@ void SelfTest(SlopeFn theirs) {
 
         std::memcpy(their_block, input, kBlock);
         std::memcpy(Scratch(), scratch_in, 4);
-        const long their = CallFramed(reinterpret_cast<const void*>(theirs), their_block);
+        const std::int32_t their = CallFramed(reinterpret_cast<const void*>(theirs), their_block);
         unsigned char their_scratch[4];
         std::memcpy(their_scratch, Scratch(), 4);
         std::memcpy(our_block, input, kBlock);
         std::memcpy(Scratch(), scratch_in, 4);
-        const long our = CallFramed(reinterpret_cast<const void*>(&AreaMap_Slope), our_block);
+        const std::int32_t our = CallFramed(reinterpret_cast<const void*>(&AreaMap_Slope), our_block);
 
         const auto cx = static_cast<short>(x >> 16), cy = static_cast<short>(y >> 16);
         if (cx < 0 || cy < 0 || cx >= AreaMap_Header[0] || cy >= AreaMap_Header[1]) ++outside;

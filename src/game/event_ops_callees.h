@@ -105,7 +105,7 @@ extern const std::uint32_t kArriveHandlers[kArriveCases];
 constexpr unsigned kNoArgsCase = 6;   // Area_StepHook's case 6 calls 0x40EB90 without arguments
 
 using Test = unsigned char (__cdecl*)();
-using Hook = unsigned char (__cdecl*)(long, long);
+using Hook = unsigned char (__cdecl*)(std::int32_t, std::int32_t);
 struct ChapterHooks {   // the record at::kChapterHooks points at, as these two read it: 32-bit words
     std::uint32_t unused[2];
     std::uint32_t step;     // +8, a code word (a Hook)
@@ -129,15 +129,15 @@ struct Callees {
     unsigned char (__cdecl* effect_ahead)();
     const unsigned char* (__cdecl* passage_ahead)();
     unsigned char (__cdecl* facing_object)();
-    unsigned char (__cdecl* object_ahead)(long, long, unsigned);
+    unsigned char (__cdecl* object_ahead)(std::int32_t, std::int32_t, unsigned);
     unsigned char (__cdecl* cell_around)(unsigned);
     unsigned char (__cdecl* cell_around_near)(unsigned);
     void (__cdecl* talk_to)(unsigned);
-    int (__cdecl* step_hook)(long, long);
-    int (__cdecl* arrive_hook)(long, long);
-    int (__cdecl* area_step)(long, long);
-    int (__cdecl* area_arrive)(long, long);
-    unsigned char (__cdecl* return_gate)(long, long);
+    int (__cdecl* step_hook)(std::int32_t, std::int32_t);
+    int (__cdecl* arrive_hook)(std::int32_t, std::int32_t);
+    int (__cdecl* area_step)(std::int32_t, std::int32_t);
+    int (__cdecl* area_arrive)(std::int32_t, std::int32_t);
+    unsigned char (__cdecl* return_gate)(std::int32_t, std::int32_t);
     const ::bof3::Slot32<const ChapterHooks>* chapter_hooks;   // a table of 32-bit record places; entry 0 here; indexed -128..127
     // other files' functions
     unsigned char (__cdecl* leader_animation)(unsigned);           // Field_LeaderAnimation
@@ -150,16 +150,16 @@ struct Callees {
     int (__cdecl* rand)();                                         // Rand, the CRT's
     void (__cdecl* play_effect)(unsigned short);                   // Sound_PlayEffect
     unsigned char (__cdecl* link_at)(unsigned, unsigned);          // Area_LinkAt
-    long (__cdecl* ground_at)(long, long);                         // MapView_GroundAt
+    std::int32_t (__cdecl* ground_at)(std::int32_t, std::int32_t);                         // MapView_GroundAt
     unsigned char (__cdecl* script_tick)();                        // Sprite_ScriptTick
-    unsigned char (__cdecl* object_at)(long, long, unsigned);      // Sprite_ObjectAt
+    unsigned char (__cdecl* object_at)(std::int32_t, std::int32_t, unsigned);      // Sprite_ObjectAt
     unsigned char (__cdecl* point_in_reach)(int, int, short, int, const unsigned char*);  // Sprite_PointInReach
     void (__cdecl* change_area)(unsigned, int, int, unsigned);     // Field_ChangeArea
     unsigned char (__cdecl* flags_test)(const unsigned char*, unsigned);  // Flags_Test
     void (__cdecl* flags_clear)(unsigned char*, unsigned);         // Flags_Clear
     void (__cdecl* reset)();                                       // EventObj_Reset
     unsigned char (__cdecl* set_bank)(unsigned short);             // Sprite_SetAnimationBank
-    long (__cdecl* elevation)(long, long);                         // AreaMap_Elevation
+    std::int32_t (__cdecl* elevation)(std::int32_t, std::int32_t);                         // AreaMap_Elevation
     void (__cdecl* set_flags)(const unsigned char*);               // EventObj_SetFlags
     void (__cdecl* set_animation)(unsigned char);                  // Sprite_SetAnimation
     void (__cdecl* face)();                                        // EventObj_Face (Capcom's)
@@ -171,12 +171,12 @@ struct Callees {
     int (__cdecl* cell_hook)(unsigned, unsigned);
     void (__cdecl* set_cell)(unsigned, unsigned, unsigned);
     unsigned char (__cdecl* party_visible)(unsigned, unsigned);
-    unsigned char (__cdecl* member_fits)(long, long, unsigned, unsigned, unsigned);
+    unsigned char (__cdecl* member_fits)(std::int32_t, std::int32_t, unsigned, unsigned, unsigned);
     void (__cdecl* leader_move)();
     void (__cdecl* leader_follow)();
     void (__cdecl* leader_ground)();
     unsigned char (__cdecl* step_code)();
-    long (__cdecl* slope_at)(long, long, std::uint32_t);
+    std::int32_t (__cdecl* slope_at)(std::int32_t, std::int32_t, std::uint32_t);
     unsigned char (__cdecl* test_fb)(unsigned, unsigned);
     // the per-area handlers; step[kNoArgsCase] is called without arguments
     Hook area_step_handlers[kStepCases];

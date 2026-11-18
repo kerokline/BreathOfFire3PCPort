@@ -408,13 +408,13 @@ extern "C" void __cdecl Sprite_ProjectA(void) {
     vertex[1] = static_cast<short>((sprite->z >> 9) - 0x4000);
     vertex[2] = static_cast<short>(-(static_cast<std::int16_t>(sprite->height_whole) / 2));
     vertex[3] = 0;   // DIV-0023
-    unsigned long vertex_words[2];
+    std::uint32_t vertex_words[2];
     std::memcpy(vertex_words, vertex, sizeof vertex_words);
     field_frame::g.load_vertex(vertex_words);
     field_frame::g.rtps();
-    unsigned long screen[2];
+    std::uint32_t screen[2];
     field_frame::g.store_xy(screen);
-    field_frame::g.store_depth(reinterpret_cast<long*>(Sprite_Current + 0x60));
+    field_frame::g.store_depth(reinterpret_cast<std::int32_t*>(Sprite_Current + 0x60));
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->screen_xf, static_cast<std::int32_t>(ThroughX87(static_cast<std::uint32_t>(screen[0]))));
     rv::Store<unsigned>(rv::Current<records::SpriteHead>()->screen_x, Ftol16(static_cast<std::uint32_t>(screen[0])));
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->screen_yf, static_cast<std::int32_t>(ThroughX87(static_cast<std::uint32_t>(screen[1]))));
@@ -470,21 +470,21 @@ extern "C" void __cdecl Sprite_InitFromEntry(unsigned char* entry) {
 //     never raises it and one past 0xFFFF is stored truncated;
 //   - the vertices' fourth words in Prim_VertexScratch are left as they were
 //     and go to Gte_LoadVertex with them.
-extern "C" unsigned __cdecl Sprite_AddDrawRecords(unsigned long* record) {
+extern "C" unsigned __cdecl Sprite_AddDrawRecords(std::uint32_t* record) {
     Gte_PushMatrix();
     const auto count = static_cast<std::uint16_t>(static_cast<std::int8_t>(ObjectData()[0]));
     alignas(4) short matrix[16];
     Sprite_ObjectMatrix(matrix);
-    Gte_SetRotMatrix(reinterpret_cast<const unsigned long*>(matrix));
-    Gte_SetTransMatrix(reinterpret_cast<const unsigned long*>(matrix));
+    Gte_SetRotMatrix(reinterpret_cast<const std::uint32_t*>(matrix));
+    Gte_SetTransMatrix(reinterpret_cast<const std::uint32_t*>(matrix));
     if (Sprite_Current[0x48] == 0) {
-        const long s = Get<long>(Sprite_Current, 0x40);
-        const long scale[3] = {s, s, s};
+        const std::int32_t s = Get<std::int32_t>(Sprite_Current, 0x40);
+        const std::int32_t scale[3] = {s, s, s};
         Gte_ScaleMatrix(matrix, scale);
     }
     alignas(4) short view[16];
     std::memcpy(view, matrix, sizeof view);
-    Light_ObjectDirection(reinterpret_cast<short*>(Light_Matrix), reinterpret_cast<const long*>(Sprite_Current + 0x64));
+    Light_ObjectDirection(reinterpret_cast<short*>(Light_Matrix), reinterpret_cast<const std::int32_t*>(Sprite_Current + 0x64));
     Camera_LoadMatrix(view);
     Gte_SetMatrix2(Light_Matrix);
 
@@ -504,19 +504,19 @@ extern "C" unsigned __cdecl Sprite_AddDrawRecords(unsigned long* record) {
         Gpu_SetPolyFT4(prim);
         short* vertices = reinterpret_cast<short*>(Prim_VertexScratch);
         for (unsigned i = 0; i < 12; ++i) vertices[i / 3 * 4 + i % 3] = Get<short>(quad, 2 + 2 * i);
-        const long normal[3] = {Get<short>(quad, 0x1A), Get<short>(quad, 0x1C), Get<short>(quad, 0x1E)};
+        const std::int32_t normal[3] = {Get<short>(quad, 0x1A), Get<short>(quad, 0x1C), Get<short>(quad, 0x1E)};
         for (unsigned k = 0; k < 4; ++k) Put<std::uint16_t>(prim, 0x14 + 0x10 * k, Get<std::uint16_t>(quad, 0x20 + 2 * k));
         for (unsigned k = 0; k < 4; ++k) {
-            Gte_LoadVertex(reinterpret_cast<const unsigned long*>(vertices + 4 * k));
+            Gte_LoadVertex(reinterpret_cast<const std::uint32_t*>(vertices + 4 * k));
             Gte_Rtps();
-            Gte_StoreScreenXY(reinterpret_cast<unsigned long*>(prim + 8 + 0x10 * k));
-            long depth;
+            Gte_StoreScreenXY(reinterpret_cast<std::uint32_t*>(prim + 8 + 0x10 * k));
+            std::int32_t depth;
             Gte_StoreDepthQuarter(&depth);
             Gte_StoreDepthF(reinterpret_cast<float*>(prim + 0x10 + 0x10 * k));
             if (k == 0) {
                 Put<std::uint16_t>(rec, 4, static_cast<std::uint16_t>(depth));
                 Put<std::uint16_t>(rec, 6, static_cast<std::uint16_t>(depth));
-            } else if (static_cast<long>(Get<std::uint16_t>(rec, 4)) < depth) {
+            } else if (static_cast<std::int32_t>(Get<std::uint16_t>(rec, 4)) < depth) {
                 Put<std::uint16_t>(rec, 4, static_cast<std::uint16_t>(depth));
             }
         }
@@ -549,19 +549,19 @@ extern "C" unsigned __cdecl Sprite_AddDrawRecords(unsigned long* record) {
 // Gte_TransposeMatrix in place is not a transpose: the upper triangle is
 // lost. Kept, as the original has it; Gte_NormalColor as shipped throws the
 // lit colour away, so nothing on screen shows it.
-extern "C" void __cdecl Light_ObjectDirection(short* out, const long* angles) {
+extern "C" void __cdecl Light_ObjectDirection(short* out, const std::int32_t* angles) {
     Light_AnglesCopy[0] = Light_Angles[0];
     Light_AnglesCopy[1] = Light_Angles[1];
     Light_AnglesCopy[2] = Light_Angles[2];
-    const unsigned long zero[3] = {0, 0, 0};
+    const std::uint32_t zero[3] = {0, 0, 0};
     Gte_PushMatrix();
     alignas(4) short turn[16];
     Gte_RotMatrix(Light_AnglesCopy, turn);
-    Gte_TransMatrix(reinterpret_cast<unsigned long*>(turn), zero);
-    Gte_SetRotMatrix(reinterpret_cast<const unsigned long*>(turn));
-    Gte_SetTransMatrix(reinterpret_cast<const unsigned long*>(turn));
+    Gte_TransMatrix(reinterpret_cast<std::uint32_t*>(turn), zero);
+    Gte_SetRotMatrix(reinterpret_cast<const std::uint32_t*>(turn));
+    Gte_SetTransMatrix(reinterpret_cast<const std::uint32_t*>(turn));
     const short reach[4] = {0, 0, Light_Angles[3], 0};
-    long light[3];
+    std::int32_t light[3];
     Gte_RotTrans(reach, light);
     const short object_angles[4] = {static_cast<short>(angles[0]), static_cast<short>(angles[1]),
                                     static_cast<short>(angles[2]), 0};
@@ -581,13 +581,13 @@ extern "C" void __cdecl Light_ObjectDirection(short* out, const long* angles) {
 extern "C" short* __cdecl Sprite_ObjectMatrix(short* matrix) {
     const unsigned char* object = Sprite_Current;
     short position[4], angles[4];
-    position[0] = static_cast<short>((Get<long>(object, 0x34) >> 9) - 0x4000);
-    position[1] = static_cast<short>((Get<long>(object, 0x38) >> 9) - 0x4000);
+    position[0] = static_cast<short>((Get<std::int32_t>(object, 0x34) >> 9) - 0x4000);
+    position[1] = static_cast<short>((Get<std::int32_t>(object, 0x38) >> 9) - 0x4000);
     position[2] = static_cast<short>(-(Get<short>(object, 0x3E) / 2));
     angles[0] = Get<short>(object, 0x64);
     angles[1] = Get<short>(object, 0x68);
     angles[2] = Get<short>(object, 0x6C);
-    Gte_RotTrans(position, reinterpret_cast<long*>(matrix + 10));
+    Gte_RotTrans(position, reinterpret_cast<std::int32_t*>(matrix + 10));
     return Gte_RotMatrix(angles, matrix);
 }
 
@@ -596,8 +596,8 @@ extern "C" short* __cdecl Sprite_ObjectMatrix(short* matrix) {
 // loaded into the GTE.
 extern "C" void __cdecl Camera_LoadMatrix(short* matrix) {
     Gte_MulMatrix0(Camera_Matrix, matrix, matrix);
-    Gte_SetRotMatrix(reinterpret_cast<const unsigned long*>(matrix));
-    Gte_SetTransMatrix(reinterpret_cast<const unsigned long*>(matrix));
+    Gte_SetRotMatrix(reinterpret_cast<const std::uint32_t*>(matrix));
+    Gte_SetTransMatrix(reinterpret_cast<const std::uint32_t*>(matrix));
 }
 
 namespace {
@@ -980,8 +980,8 @@ extern "C" unsigned char __cdecl MoveCmd_OpE9Start(unsigned char* object, signed
     Sc()[0xA] = static_cast<unsigned char>(Idiv(0x10, speed, "MoveCmd_OpE9Start"));
     rv::Store<std::int32_t>(rv::As<records::SpriteHead>(Sc())->step_y, static_cast<std::int32_t>(static_cast<U>(static_cast<std::int32_t>(static_cast<short>(c))) << 8));
     if (SH_CALL(MoveScript_ObjectKind)() == 2) {
-        Field_Kind2Z = static_cast<long>(static_cast<U>(sb) << 15) + Sprite_Kind2.z;
-        Field_Kind2X = static_cast<long>(static_cast<U>(sa) << 15) + Sprite_Kind2.x;
+        Field_Kind2Z = static_cast<std::int32_t>(static_cast<U>(sb) << 15) + Sprite_Kind2.z;
+        Field_Kind2X = static_cast<std::int32_t>(static_cast<U>(sa) << 15) + Sprite_Kind2.x;
         MoveScript_F3Divisor = static_cast<unsigned short>(speed << 3);
         MoveScript_FAWord = 0;
         Sc()[4] = 2;
@@ -1023,7 +1023,7 @@ extern "C" unsigned char __cdecl MoveCmd_OpE9Arc(unsigned char* object, signed c
     const std::int32_t rise = Long(Sc() + 0x14);
     rv::As<records::SpriteHead>(Sc())->step_y = static_cast<std::int32_t>(static_cast<U>(static_cast<short>(d)) + static_cast<U>(rise));
     Sc()[0xA] = static_cast<unsigned char>(Sc()[0xA] - 1);
-    const long ground = SH_CALL(AreaMap_Elevation)(rv::As<records::SpriteHead>(Sc())->x, rv::As<records::SpriteHead>(Sc())->z);
+    const std::int32_t ground = SH_CALL(AreaMap_Elevation)(rv::As<records::SpriteHead>(Sc())->x, rv::As<records::SpriteHead>(Sc())->z);
     records::SpriteHead* sc = rv::As<records::SpriteHead>(Sc());
     if (sc->step_y < 0 && S16(static_cast<U>(ground)) > S16(sc->height_whole)) {
         rv::Store<unsigned>(sc->height_whole, static_cast<U>(ground));
@@ -1065,7 +1065,7 @@ extern "C" unsigned char __cdecl MoveCmd_OpE9Kind2(unsigned char* object, signed
     rv::As<records::SpriteHead>(Sc())->step_y = static_cast<std::int32_t>(static_cast<U>(rv::As<records::SpriteHead>(Sc())->step_y) + static_cast<U>(static_cast<short>(d)));
     SH_CALL(MapView_SetElevation)(static_cast<std::uint16_t>(Sprite_Kind2.height_whole));
     Sc()[0xA] = static_cast<unsigned char>(Sc()[0xA] - 1);
-    const long ground = SH_CALL(AreaMap_Elevation)(Field_Kind2X, Field_Kind2Z);
+    const std::int32_t ground = SH_CALL(AreaMap_Elevation)(Field_Kind2X, Field_Kind2Z);
     records::SpriteHead* sc = rv::As<records::SpriteHead>(Sc());
     if (sc->step_y < 0 && S16(static_cast<U>(ground)) > S16(sc->height_whole)) {
         sc->height_whole = static_cast<U>(ground);
@@ -1098,7 +1098,7 @@ extern "C" unsigned char __cdecl MoveCmd_OpE9Fall(unsigned char*, signed char, s
                                                   unsigned char, unsigned char) {
     rv::Store<unsigned>(rv::As<records::SpriteHead>(Sc())->height_whole, rv::As<records::SpriteHead>(Sc())->height_whole + static_cast<U>(rv::As<records::SpriteHead>(Sc())->step_y >> 8));
     rv::As<records::SpriteHead>(Sc())->step_y = static_cast<std::int32_t>(static_cast<U>(rv::As<records::SpriteHead>(Sc())->step_y) + static_cast<U>(static_cast<short>(d)));
-    const long ground = SH_CALL(AreaMap_Elevation)(rv::As<records::SpriteHead>(Sc())->x, rv::As<records::SpriteHead>(Sc())->z);
+    const std::int32_t ground = SH_CALL(AreaMap_Elevation)(rv::As<records::SpriteHead>(Sc())->x, rv::As<records::SpriteHead>(Sc())->z);
     unsigned char* const sc = Sc();
     if (S16(static_cast<U>(ground)) > S16(rv::As<records::SpriteHead>(sc)->height_whole)) {
         rv::Store<unsigned>(rv::As<records::SpriteHead>(sc)->height_whole, static_cast<U>(ground));
@@ -1156,8 +1156,8 @@ extern "C" unsigned short __cdecl Sprite_ScriptPeek(void) {
 extern "C" unsigned char __cdecl Effect_Spawn(unsigned char kind, signed char a, signed char b, short x, short z) {
     const unsigned char slot = SH_CALL(Effect_FindFree)();
     if (EffectLogOn())
-        bof3::Log("effect      spawn kind 0x%02X a %d b %d x %d z %d slot %u frame %lu", kind, a, b, x, z, slot,
-                  static_cast<unsigned long>(Frame_Counter));
+        bof3::Log("effect      spawn kind 0x%02X a %d b %d x %d z %d slot %u frame %u", kind, a, b, x, z, slot,
+                  static_cast<std::uint32_t>(Frame_Counter));
     if (slot == 0xFF) return slot;
     if (slot >= 20) bof3::Fatal("Effect_Spawn (0x57CE10): Effect_FindFree answered %u, past the 20 records", slot);
     unsigned char* const r = rv::Bytes(&Effect_Objects[slot]);
@@ -1173,11 +1173,11 @@ extern "C" unsigned char __cdecl Effect_Spawn(unsigned char kind, signed char a,
 
 // original 0x57CE80 (PSX 0x8015D5F0): Effect_Spawn's sibling of kind 0x19 - the same record
 // with +5 = 0x19 and the dwords x, y, z at +0x34, +0x38, +0x3C.
-extern "C" unsigned char __cdecl Effect_SpawnAt(unsigned char kind, signed char a, signed char b, long x, long y, long z) {
+extern "C" unsigned char __cdecl Effect_SpawnAt(unsigned char kind, signed char a, signed char b, std::int32_t x, std::int32_t y, std::int32_t z) {
     const unsigned char slot = SH_CALL(Effect_FindFree)();
     if (EffectLogOn())
-        bof3::Log("effect      spawnAt kind 0x%02X a %d b %d x %ld y %ld z %ld slot %u frame %lu", kind, a, b, x, y, z,
-                  slot, static_cast<unsigned long>(Frame_Counter));
+        bof3::Log("effect      spawnAt kind 0x%02X a %d b %d x %d y %d z %d slot %u frame %u", kind, a, b, x, y, z,
+                  slot, static_cast<std::uint32_t>(Frame_Counter));
     if (slot == 0xFF) return slot;
     if (slot >= 20) bof3::Fatal("Effect_SpawnAt (0x57CE80): Effect_FindFree answered %u, past the 20 records", slot);
     unsigned char* const r = rv::Bytes(&Effect_Objects[slot]);

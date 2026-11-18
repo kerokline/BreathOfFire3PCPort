@@ -39,7 +39,7 @@ unsigned char& B(U address) { return *Mem(address); }
 unsigned char* EffectAt(unsigned slot) { return rv::Bytes(&Effect_Objects[slot]); }
 
 // The high word of a 16.16 position, as the hooks read it (a word at +2).
-std::uint16_t High(long v) { return static_cast<std::uint16_t>(static_cast<U>(v) >> 16); }
+std::uint16_t High(std::int32_t v) { return static_cast<std::uint16_t>(static_cast<U>(v) >> 16); }
 
 void SetMessage(unsigned id) { SetWord(Mem(::bof3::Img(at::kMessage.v)), id); }
 
@@ -228,7 +228,7 @@ extern "C" void __cdecl Area100_TailEffect9B(void) {
 // flag 0x33, x's high word 0x45..0x47 and z's 0x33..0x35 (16-bit compares),
 // the leader's pose 0, 7 or 6: counter 0 = 0, Party_DropIn(0), al 1. Else al
 // 0.
-extern "C" unsigned char __cdecl Area100_StepHook(long x, long z) {
+extern "C" unsigned char __cdecl Area100_StepHook(std::int32_t x, std::int32_t z) {
     if (Cond_ByteFD != 3) return 0;
     if (AH_CALL(Flags_Test)(StoryFlags(), 0x33) == 0) return 0;
     if (static_cast<std::uint16_t>(High(x) - 0x45) >= 3) return 0;
@@ -287,12 +287,12 @@ extern "C" void __cdecl Area100_EffectB7Run(void) {
 extern "C" void __cdecl Area100_EffectB7Ring(void) {
     const unsigned char* const cur = Sprite_Current;
     const auto* const tCur = rv::AsConst<records::EffectObject>(cur);
-    long point[4];
+    std::int32_t point[4];
     point[0] = tCur->x;
     point[1] = tCur->z;
     point[2] = tCur->height;
     point[3] = 0;
-    AH_AT(void (__cdecl*)(const long*), at::kRingAt.v)(point);
+    AH_AT(void (__cdecl*)(const std::int32_t*), at::kRingAt.v)(point);
 }
 
 void Area100_Inject() {

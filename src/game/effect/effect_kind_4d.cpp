@@ -99,7 +99,7 @@ bool CountDown9(unsigned char** out) {
 void Ground(U lift) {
     const unsigned char* const s = S();
     auto* const so = rv::AsConst<records::EffectObject>(s);
-    const long g = SH_CALL(AreaMap_Elevation)(so->x, so->z);
+    const std::int32_t g = SH_CALL(AreaMap_Elevation)(so->x, so->z);
     rv::Store<U>(rv::Current<records::EffectObject>()->height, (SW(reinterpret_cast<const unsigned char*>(&g)) + lift) << 16);
 }
 
@@ -116,7 +116,7 @@ void DrawMode(int x, int y, int dtd) {
 struct Matrix {
     short m[9];
     short pad;
-    long t[3];
+    std::int32_t t[3];
 };
 
 }  // namespace
@@ -268,8 +268,8 @@ extern "C" void __cdecl EffectKind4A_TrailDraw(void) {
     SH_CALL(EffectGte_LoadMapCamera)();
     float a[3];
     float b[3];
-    SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(At(::bof3::Img(EffectKind30_Shards_addr) + 0x10)), a);
-    SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(At(::bof3::Img(EffectKind30_Shards_addr) + 0x20)), b);
+    SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const std::int32_t*>(At(::bof3::Img(EffectKind30_Shards_addr) + 0x10)), a);
+    SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const std::int32_t*>(At(::bof3::Img(EffectKind30_Shards_addr) + 0x20)), b);
     unsigned char red = 0x40;
     unsigned char half = 0x20;
     U edge = ::bof3::Img(EffectKind30_Shards_addr) + 0x20;
@@ -282,8 +282,8 @@ extern "C" void __cdecl EffectKind4A_TrailDraw(void) {
         Copy12(prim + 0x18, b);
         prim[0x14] = prim[4] = red;
         prim[0x16] = prim[0x15] = prim[6] = prim[5] = half;
-        SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(At(edge - 0x10)), a);
-        SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(At(edge)), b);
+        SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const std::int32_t*>(At(edge - 0x10)), a);
+        SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const std::int32_t*>(At(edge)), b);
         Copy12(prim + 0x28, a);
         Copy12(prim + 0x38, b);
         red = static_cast<unsigned char>(red - 1);
@@ -303,7 +303,7 @@ extern "C" void __cdecl EffectKind4A_TrailDraw(void) {
 // the centre L, the rim points L + ((cos a) * r sar 12, (sin a) * r sar 12)
 // and likewise at b (fild + fadd: each an s32 plus L's float), every depth L's;
 // the centre shaded `centre`, the rim `rim` (bytes); committed 0x34.
-extern "C" void __cdecl EffectKind4A_DrawGlow(const long* point, unsigned size, unsigned centre, unsigned rim) {
+extern "C" void __cdecl EffectKind4A_DrawGlow(const std::int32_t* point, unsigned size, unsigned centre, unsigned rim) {
     float l[3];
     SH_CALL(EffectGte_ProjectPoint)(point, l);
     const short slot[2] = {static_cast<short>(size & 0xFFFFu), static_cast<short>(AddressOf(point) >> 16)};
@@ -381,9 +381,9 @@ extern "C" void __cdecl EffectKind4B_DebrisInit(unsigned char* debris) {
 extern "C" void __cdecl EffectKind4C_DrawSpark(void) {
     const unsigned char* const s = S();
     auto* const so = rv::AsConst<records::EffectObject>(s);
-    long from[3] = {so->x, so->z, so->height};
-    long to[3] = {from[0], from[1], from[2]};
-    auto jitter = [](long v) { return static_cast<long>(static_cast<U>(v) + (((static_cast<U>(SH_CALL(Rand)()) & 0xFFu) - 0x80u) << 8)); };
+    std::int32_t from[3] = {so->x, so->z, so->height};
+    std::int32_t to[3] = {from[0], from[1], from[2]};
+    auto jitter = [](std::int32_t v) { return static_cast<std::int32_t>(static_cast<U>(v) + (((static_cast<U>(SH_CALL(Rand)()) & 0xFFu) - 0x80u) << 8)); };
     from[0] = jitter(from[0]);
     from[1] = jitter(from[1]);
     to[0] = jitter(to[0]);
@@ -473,19 +473,19 @@ extern "C" void __cdecl EffectKind4D_DrawColumn(void) {
     const U x0 = rv::As<records::EffectWork>(s)->work_0c;
     const U z0 = rv::As<records::EffectWork>(s)->work_10;
     U y = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->step_y);
-    long ring[3];
+    std::int32_t ring[3];
     float lower[3];
     float upper[3];
     // the ring point at `turn` and y: the lower and upper projections
     auto project = [&](int angle) {
-        ring[0] = static_cast<long>((static_cast<U>(SH_CALL(Math_Cos)(angle)) << 5) + x0);
-        ring[1] = static_cast<long>((static_cast<U>(SH_CALL(Math_Sin)(angle)) << 5) + z0);
+        ring[0] = static_cast<std::int32_t>((static_cast<U>(SH_CALL(Math_Cos)(angle)) << 5) + x0);
+        ring[1] = static_cast<std::int32_t>((static_cast<U>(SH_CALL(Math_Sin)(angle)) << 5) + z0);
         const unsigned char* r = S();
-        ring[2] = static_cast<long>(y - UL(r + 0x24));
+        ring[2] = static_cast<std::int32_t>(y - UL(r + 0x24));
         if (ring[2] < SL(r + 0x14)) ring[2] = SL(r + 0x14);
         SH_CALL(EffectGte_ProjectPoint)(ring, lower);
         r = S();
-        ring[2] = static_cast<long>(y);
+        ring[2] = static_cast<std::int32_t>(y);
         if (static_cast<std::int32_t>(y) > SL(r + 0x1C)) ring[2] = SL(r + 0x1C);
         SH_CALL(EffectGte_ProjectPoint)(ring, upper);
     };

@@ -72,7 +72,7 @@ void Vertex(unsigned k, U x, U y, U z) {
 // Capcom pushes, a second local, is read by no Gte_RotTransPers4 of ours),
 // then Gte_PrimDepths4_10.
 void Project4(unsigned char* p) {
-    long depth;
+    std::int32_t depth;
     SH_CALL(Gte_RotTransPers4)(reinterpret_cast<const short*>(At(::bof3::Img(Prim_VertexScratch_addr))), reinterpret_cast<const short*>(At(::bof3::Img(Prim_VertexScratch_addr) + 8)),
                                reinterpret_cast<const short*>(At(::bof3::Img(Prim_VertexScratch_addr) + 0x10)), reinterpret_cast<const short*>(At(::bof3::Img(Prim_VertexScratch_addr) + 0x18)),
                                reinterpret_cast<float*>(p + 8), reinterpret_cast<float*>(p + 0x18),
@@ -96,11 +96,11 @@ unsigned char* BeginQuad() {
 void PushMatrix(const short* point, const short* angles) {
     SH_CALL(Gte_PushMatrix)();
     alignas(4) unsigned char m[0x20];
-    SH_CALL(Gte_RotTrans)(point, reinterpret_cast<long*>(m + 0x14));
+    SH_CALL(Gte_RotTrans)(point, reinterpret_cast<std::int32_t*>(m + 0x14));
     SH_CALL(Gte_RotMatrix)(angles, reinterpret_cast<short*>(m));
     SH_CALL(Gte_MulMatrix0)(Camera_Matrix, reinterpret_cast<short*>(m), reinterpret_cast<short*>(m));
-    SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(m));
-    SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(m));
+    SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const std::uint32_t*>(m));
+    SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const std::uint32_t*>(m));
 }
 
 // (v << 12) / 256 as the original computes it (cdq; and edx, 0xFF; add; sar 8).
@@ -251,7 +251,7 @@ unsigned char* Flags() { return At(::bof3::Img(Cond_Flags_addr) + 0xa0); }
 // The four-vertex projection every quad here makes of Prim_VertexScratch into a
 // primitive whose vertices are `stride` apart from +8 (0x10 textured, 0xC flat).
 void Project4Effect5b(unsigned char* prim, unsigned stride) {
-    long p;
+    std::int32_t p;
     SH_CALL(Gte_RotTransPers4)(VertexEffect5b(0), VertexEffect5b(1), VertexEffect5b(2), VertexEffect5b(3), reinterpret_cast<float*>(prim + 8),
                                reinterpret_cast<float*>(prim + 8 + stride), reinterpret_cast<float*>(prim + 8 + 2 * stride),
                                reinterpret_cast<float*>(prim + 8 + 3 * stride), &p);
@@ -345,7 +345,7 @@ extern "C" void __cdecl EffectKind18_0A_Open(void) {
 // original 0x4FF150 (cdecl, three words): a door at x turned by the angle about
 // z: eight parts, each drawn when its texture (by the variant's bit 0) is not
 // 0, linked at (x, 0xB8000) with the variant's dy.
-extern "C" void __cdecl EffectKind18_0A_DrawDoor(unsigned angle, unsigned long x, unsigned variant) {
+extern "C" void __cdecl EffectKind18_0A_DrawDoor(unsigned angle, std::uint32_t x, unsigned variant) {
     const std::int32_t row = static_cast<std::int32_t>(variant) >> 4;
     if (row < 0 || row + 2 * static_cast<std::int32_t>(variant & 1) > 3)
         bof3::Fatal("EffectKind18_0A_DrawDoor: variant 0x%X reads 0x65DF2C past its 32 bytes - the original reads what "
@@ -499,8 +499,8 @@ extern "C" void __cdecl EffectKind18Sub0D_DrawGlow(int column) {
     SetV(0, 2, (0u - gy) << 3);
     const U x = static_cast<U>(gx) << 16;
     const U z = static_cast<U>(gz) << 16;
-    long p;
-    const long depth = SH_CALL(Gte_RotTransPers)(VertexEffect5b(0), reinterpret_cast<unsigned long*>(MapView_ScreenXY), &p);
+    std::int32_t p;
+    const std::int32_t depth = SH_CALL(Gte_RotTransPers)(VertexEffect5b(0), reinterpret_cast<std::uint32_t*>(MapView_ScreenXY), &p);
     const unsigned char* const sx = At(::bof3::Img(0x903820));
     const unsigned char* const sy = At(::bof3::Img(0x903824));
     const float fill = static_cast<float>(Widescreen_Fill());   // DIV-0041 (UC2): x out by the columns
@@ -615,7 +615,7 @@ extern "C" void __cdecl EffectKind18Sub0B_Fade(void) {
 // same in z, y the low word of height), Gte_RotTransPers4, Gte_PrimDepths4_10,
 // Prim_SetTexture(colour | 0xB600B100, prim, 1), linked at the cell with its dy
 // (0x48).
-extern "C" void __cdecl EffectKind18Sub0B_DrawTiles(int height, unsigned long colour) {
+extern "C" void __cdecl EffectKind18Sub0B_DrawTiles(int height, std::uint32_t colour) {
     const U texture = static_cast<U>(colour) | 0xB600B100u;
     const U y = static_cast<U>(height);
     for (U t = ::bof3::Img(at::kSub0BTiles) + 1; static_cast<I>(t) < static_cast<I>(::bof3::Img(at::kSub0BTilesEnd)); t += 3) {

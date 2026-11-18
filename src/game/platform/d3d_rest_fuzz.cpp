@@ -164,16 +164,16 @@ void Disturb(U salt) {
 }
 
 void __cdecl StubPrimColor(unsigned r, unsigned gg, unsigned b, unsigned code, unsigned mode,
-                           unsigned long* diffuse, unsigned long* specular) {
+                           std::uint32_t* diffuse, std::uint32_t* specular) {
     Record(1, r, gg, b, code, mode, diffuse != nullptr, specular != nullptr);
     Disturb(1);
     *diffuse = Mix(2);
     if (specular) *specular = Mix(3);
 }
-long __cdecl StubBind(unsigned tpage, unsigned clut) {
+std::int32_t __cdecl StubBind(unsigned tpage, unsigned clut) {
     Record(2, tpage, clut);
     Disturb(4);
-    return static_cast<long>(Mix(5));
+    return static_cast<std::int32_t>(Mix(5));
 }
 void __cdecl StubRet(unsigned a) {
     Record(3, a);
@@ -203,7 +203,7 @@ template <typename Fn> Fn Clone(const char* name, U original, U size, const bof3
     return reinterpret_cast<Fn>(code);
 }
 
-using DrawFn = long(__cdecl*)(unsigned char*);
+using DrawFn = std::int32_t(__cdecl*)(unsigned char*);
 using AlphaFn = void(__cdecl*)(unsigned);
 using AfterFn = void(__cdecl*)();
 using StoreFn = int(__cdecl*)(const short*, void*);
@@ -230,11 +230,11 @@ struct Handler {
     unsigned char n_colours;
 };
 
-long __cdecl OursF3(unsigned char* p) { return D3d_DrawPolyF3(p); }
-long __cdecl OursFT3(unsigned char* p) { return D3d_DrawPolyFT3(p); }
-long __cdecl OursGT3(unsigned char* p) { return D3d_DrawPolyGT3(p); }
-long __cdecl OursLineG4(unsigned char* p) { return D3d_DrawLineG4(p); }
-long __cdecl OursTile1(unsigned char* p) { return D3d_DrawTile1(p); }
+std::int32_t __cdecl OursF3(unsigned char* p) { return D3d_DrawPolyF3(p); }
+std::int32_t __cdecl OursFT3(unsigned char* p) { return D3d_DrawPolyFT3(p); }
+std::int32_t __cdecl OursGT3(unsigned char* p) { return D3d_DrawPolyGT3(p); }
+std::int32_t __cdecl OursLineG4(unsigned char* p) { return D3d_DrawLineG4(p); }
+std::int32_t __cdecl OursTile1(unsigned char* p) { return D3d_DrawTile1(p); }
 
 #define CALL(off, stub, addr) {off, P(stub), addr}
 const U kPrim = bof3::addr::D3d_PrimColor, kBindAt = bof3::addr::D3d_BindTexture, kBlend = bof3::addr::D3d_SetBlend,
@@ -386,7 +386,7 @@ void RandomPrim(const Handler& h, unsigned char* p) {
 
 d3d_fuzz::Log g_theirs, g_ours;
 
-bool Same(long ret_ours, long ret_theirs, char* why) {
+bool Same(std::int32_t ret_ours, std::int32_t ret_theirs, char* why) {
     if (!d3d_fuzz::SameLog(g_ours, g_theirs, why)) return false;
     if (ret_ours != ret_theirs) {
         std::strcpy(why, "the return value");
@@ -425,7 +425,7 @@ unsigned FuzzHandler(const Handler& h, DrawFn theirs, unsigned rounds) {
         g_theirs.Clear();
         d3d_fuzz::g_log = &g_theirs;
         SetControlWord(cw);
-        const long ret_theirs = theirs(prim);
+        const std::int32_t ret_theirs = theirs(prim);
         SetControlWord(saved_cw);
         Capture(g_theirs_state);
         std::memcpy(prim_theirs, prim, sizeof prim);
@@ -435,7 +435,7 @@ unsigned FuzzHandler(const Handler& h, DrawFn theirs, unsigned rounds) {
         g_ours.Clear();
         d3d_fuzz::g_log = &g_ours;
         SetControlWord(cw);
-        const long ret_ours = h.ours(prim);
+        const std::int32_t ret_ours = h.ours(prim);
         SetControlWord(saved_cw);
         d3d_fuzz::g_log = nullptr;
         g_prim = nullptr;
@@ -500,7 +500,7 @@ unsigned FuzzFlatten(FlattenFn flatten, TexelFn texel, unsigned rounds) {
         g_prim = nullptr;
 
         char why[200] = "";
-        bool same = Same(static_cast<long>(ret_ours), static_cast<long>(ret_theirs), why);
+        bool same = Same(static_cast<std::int32_t>(ret_ours), static_cast<std::int32_t>(ret_theirs), why);
         if (same && std::memcmp(prim, prim_theirs, sizeof prim) != 0) {
             same = false;
             std::strcpy(why, "the primitive");
@@ -610,19 +610,19 @@ void DisturbAfter(U salt) {
     }
 }
 
-long __stdcall FakeBlt(FakeSurface* self, U dst_rect, FakeSurface* src, U src_rect, U flags, U fx) {
+std::int32_t __stdcall FakeBlt(FakeSurface* self, U dst_rect, FakeSurface* src, U src_rect, U flags, U fx) {
     const unsigned char* d = At(dst_rect);
     const unsigned char* s = At(src_rect);
     Record(0x205, self->id, Id(src), flags, fx, GetLong(d), GetLong(d + 4), GetLong(d + 8));
     Record(0x206, GetLong(d + 0xC), GetLong(s), GetLong(s + 4), GetLong(s + 8), GetLong(s + 0xC));
     DisturbAfter(1);
-    return static_cast<long>(Mix(2));
+    return static_cast<std::int32_t>(Mix(2));
 }
 // Lock: the pixels (+0x24) always; the pitch (+0x10) for a back buffer three
 // times in four (a capture surface's pitch is the caller's to ignore, and a
 // description reused from the first lock shows when the second skips it);
 // failing one time in eight.
-long __stdcall FakeLock(FakeSurface* self, U rect, U desc, U flags, U event) {
+std::int32_t __stdcall FakeLock(FakeSurface* self, U rect, U desc, U flags, U event) {
     unsigned char* d = At(desc);
     Record(0x219, self->id, rect, flags, event, GetLong(d), GetLong(d + 0x48));
     const U h = Mix(3);
@@ -630,14 +630,14 @@ long __stdcall FakeLock(FakeSurface* self, U rect, U desc, U flags, U event) {
     PutLong(d + 0x24, Addr(back ? g_back : g_plain));
     if (!back || (h >> 4) % 4) PutLong(d + 0x10, kPitches[(h >> 8) % 6]);
     DisturbAfter(4);
-    return h % 8 == 0 ? static_cast<long>(Mix(5) | 1) : 0;
+    return h % 8 == 0 ? static_cast<std::int32_t>(Mix(5) | 1) : 0;
 }
-long __stdcall FakeUnlock(FakeSurface* self, U rect) {
+std::int32_t __stdcall FakeUnlock(FakeSurface* self, U rect) {
     Record(0x220, self->id, rect);
     DisturbAfter(6);
-    return static_cast<long>(Mix(7));
+    return static_cast<std::int32_t>(Mix(7));
 }
-template <int S> long __stdcall SurfaceTrap(void*) {
+template <int S> std::int32_t __stdcall SurfaceTrap(void*) {
     bof3::Fatal("d3d_rest: the fake surface's slot %d (vtable +0x%X) was called, and nothing records it", S, S * 4);
 }
 template <int... S> void FillSurfaceTraps(std::integer_sequence<int, S...>) {

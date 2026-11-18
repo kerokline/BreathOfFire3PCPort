@@ -20,7 +20,7 @@ struct ClutRow {
     ::bof3::Slot32<void> pixels;      // +4: 0x1000 bytes (a Crt_malloc block, below 4 GB), or null until first wanted
 };
 static_assert(sizeof(ClutRow) == 8, "the image's 8-byte row on every width (common/slot32.h)");
-static_assert(sizeof(ClutRow) * 512 == sizeof(unsigned long) * Gfx_ClutRows_count);
+static_assert(sizeof(ClutRow) * 512 == sizeof(std::uint32_t) * Gfx_ClutRows_count);
 
 ClutRow* Rows() { return reinterpret_cast<ClutRow*>(Gfx_ClutRows); }
 
@@ -31,7 +31,7 @@ struct PixelFormat {
     std::uint32_t r_mask, g_mask, b_mask;
     std::uint32_t opaque_bits;      // +0x1C
 };
-static_assert(sizeof(PixelFormat) == sizeof(unsigned long) * Gfx_PixelFormat_count);
+static_assert(sizeof(PixelFormat) == sizeof(std::uint32_t) * Gfx_PixelFormat_count);
 
 std::uint16_t* ShadowCell(int x, int y) { return Gfx_VramShadow + ((y << 10) + x); }
 

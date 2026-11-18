@@ -368,7 +368,7 @@ extern "C" void __cdecl Area167_Tail32(void) {
 // original 0x426470 (Area_ArriveHook's case for area 167): (x, z) 16.16; z's
 // high word 0x66 and x's high word 0x14..0x16 (u16): ScriptFlags_Set40, tail
 // kind 0x20 at state 0, al 1. Else al 0.
-extern "C" unsigned char __cdecl Area167_ArriveHook(long x, long z) {
+extern "C" unsigned char __cdecl Area167_ArriveHook(std::int32_t x, std::int32_t z) {
     if (static_cast<std::uint16_t>(static_cast<U>(z) >> 16) != 0x66) return 0;
     if (static_cast<std::uint16_t>((static_cast<U>(x) >> 16) - 0x14u) >= 3) return 0;
     AH_CALL(ScriptFlags_Set40)();

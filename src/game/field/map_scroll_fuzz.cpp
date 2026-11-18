@@ -220,9 +220,9 @@ void __cdecl StubCellToMap(int row, int col, unsigned char* out) {
     DisturbHeads(h >> 5);
 }
 
-void __cdecl StubGeomScreen(long h) { Record(3, static_cast<std::uint32_t>(h), Watch()); }
-void __cdecl StubGeomOffset(long x, long y) { Record(4, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y), Watch()); }
-void __cdecl StubBackColor(long r, long gr, long b) {
+void __cdecl StubGeomScreen(std::int32_t h) { Record(3, static_cast<std::uint32_t>(h), Watch()); }
+void __cdecl StubGeomOffset(std::int32_t x, std::int32_t y) { Record(4, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y), Watch()); }
+void __cdecl StubBackColor(std::int32_t r, std::int32_t gr, std::int32_t b) {
     Record(5, static_cast<std::uint32_t>(r), static_cast<std::uint32_t>(gr), static_cast<std::uint32_t>(b));
 }
 // The real ones write the primitive's code and length bytes; these also now
@@ -242,15 +242,15 @@ void __cdecl StubSetShadeTex(unsigned char* prim, unsigned tge) {
 }
 // The result's upper half is noise the caller must drop; the input flags are
 // read again after the call.
-long __cdecl StubElevation(long x, long y) {
+std::int32_t __cdecl StubElevation(std::int32_t x, std::int32_t y) {
     Record(8, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y), Watch());
     const std::uint32_t h = Hash();
     if (h % 4 == 0) Field_InputFlags = static_cast<unsigned char>(h >> 8);
     switch ((h >> 4) % 4) {
-        case 0: return static_cast<long>(h);
-        case 1: return static_cast<long>(h | 0x8000u);
-        case 2: return static_cast<long>(h & 0xFFFF7FFFu);
-        default: return static_cast<long>(static_cast<short>(h >> 16));
+        case 0: return static_cast<std::int32_t>(h);
+        case 1: return static_cast<std::int32_t>(h | 0x8000u);
+        case 2: return static_cast<std::int32_t>(h & 0xFFFF7FFFu);
+        default: return static_cast<std::int32_t>(static_cast<short>(h >> 16));
     }
 }
 void __cdecl StubBake() { Record(9, Watch()); }
@@ -288,7 +288,7 @@ template <unsigned K> void __cdecl SetupStandIn(const unsigned char* entry) {
     if (entry[2] == 1 && Hash() % 4 == 0) const_cast<unsigned char*>(entry)[2] = 2;
 }
 template <unsigned... K> void FillHandlers(std::integer_sequence<unsigned, K...>) {
-    ((AreaMap_SetupHandlers[K] = static_cast<unsigned long>(Address(reinterpret_cast<const void*>(&SetupStandIn<K>)))), ...);
+    ((AreaMap_SetupHandlers[K] = static_cast<std::uint32_t>(Address(reinterpret_cast<const void*>(&SetupStandIn<K>)))), ...);
 }
 
 const void* StubFor(std::uint32_t target) {
@@ -453,7 +453,7 @@ void SelfTestViewReset(Fn theirs) {
         if (OneIn(2)) Field_InputFlags = static_cast<unsigned char>(Field_InputFlags & ~8u);
         else Field_InputFlags = static_cast<unsigned char>(Field_InputFlags | 8u);
         if (OneIn(2)) AreaMap_Word1E = 0;
-        static const long kPos[] = {0, -1, 0x7FFFFFFF, static_cast<long>(0x80000000u), 0x00FF8000, -0x100};
+        static const std::int32_t kPos[] = {0, -1, 0x7FFFFFFF, static_cast<std::int32_t>(0x80000000u), 0x00FF8000, -0x100};
         if (OneIn(4)) Field_Kind2X = Pick(kPos);
         if (OneIn(4)) Field_Kind2Z = Pick(kPos);
         called += !(Field_InputFlags & 8);
@@ -461,7 +461,7 @@ void SelfTestViewReset(Fn theirs) {
         Pair("Field_ViewReset", round, r, n, theirs, [] { Field_ViewReset(); }, bad);
         const Log& l = g_logs[0];
         if (l.counts[8] != 0) {
-            const long e = static_cast<long>(Dword(g_out[0] + DrawItems_count + 8 + 1 + 8));   // MapView_Elevation
+            const std::int32_t e = static_cast<std::int32_t>(Dword(g_out[0] + DrawItems_count + 8 + 1 + 8));   // MapView_Elevation
             negative += e < 0;
         }
     }
@@ -644,7 +644,7 @@ void SelfTestSetup(Fn theirs) {
     constexpr unsigned kRounds = 30000;
     const Region r[] = {R(AreaMap_Header, 0x2000), R(&Cond_ByteFF, 1), R(&Field_StatusBits, 1)};
     constexpr unsigned n = sizeof r / sizeof r[0];
-    static unsigned long saved_handlers[AreaMap_SetupHandlers_count];
+    static std::uint32_t saved_handlers[AreaMap_SetupHandlers_count];
     std::memcpy(saved_handlers, AreaMap_SetupHandlers, sizeof saved_handlers);
     FillHandlers(std::make_integer_sequence<unsigned, AreaMap_SetupHandlers_count>());
     g_watch = nullptr;

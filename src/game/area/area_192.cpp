@@ -204,7 +204,7 @@ extern "C" void __cdecl Area192_Tail54(void) {
 // x, when z's is not 0 one on in z, when both the diagonal (AreaMap_ByteAt,
 // each asked whatever the others answered): any of them 0xA6 - ScriptFlags_Set40,
 // tail kind 0x36 at state 0, al 1; else al 0.
-extern "C" unsigned char __cdecl Area192_StepHook(long x, long z) {
+extern "C" unsigned char __cdecl Area192_StepHook(std::int32_t x, std::int32_t z) {
     const U ux = static_cast<U>(x), uz = static_cast<U>(z);
     const auto cx = static_cast<short>(ux >> 16), cz = static_cast<short>(uz >> 16);
     const auto cx1 = static_cast<short>(cx + 1), cz1 = static_cast<short>(cz + 1);

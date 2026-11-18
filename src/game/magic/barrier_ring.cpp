@@ -212,7 +212,7 @@ MS19_EXPORT void __cdecl BarrierRing_Draw(void) {
                     tnow->z);
             placed = true;
             MH_CALL(Gpu_SetDrawMode)(Prim(), 0, 1, 0x35, 0);
-            MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), 0, 0xC);
+            MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), 0, 0xC);
         } else {
             const std::int32_t b = a - 0x40;
             Put16(::bof3::Img(Prim_VertexScratch_addr), static_cast<std::uint32_t>(MulSar(Cos(b), Long(Mem(::bof3::Img(kAngle.v))), 12)));
@@ -232,7 +232,7 @@ MS19_EXPORT void __cdecl BarrierRing_Draw(void) {
         unsigned char* const prim = Prim();
         MH_CALL(Gpu_SetPolyG4)(prim);
         MH_CALL(Gpu_SetSemiTrans)(prim, 1);
-        long depth;
+        std::int32_t depth;
         MH_CALL(Gte_RotTransPers4)(Vec(::bof3::Img(Prim_VertexScratch_addr)), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x8), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x10), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x18), At(prim, 8), At(prim, 0x18), At(prim, 0x28),
                                    At(prim, 0x38), &depth);
         MH_CALL(Gte_PrimDepths4_10B)(prim);
@@ -250,7 +250,7 @@ MS19_EXPORT void __cdecl BarrierRing_Draw(void) {
             prim[0x34] = 0x20;
             prim[0x35] = 0xC0;
             prim[0x36] = 0x20;
-            MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), 0, 0x44);
+            MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), 0, 0x44);
         } else {
             prim[4] = 1;
             prim[5] = 1;

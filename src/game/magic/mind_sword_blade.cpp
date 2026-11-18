@@ -107,8 +107,8 @@ float AsFloat(std::int32_t v) { return static_cast<float>(v); }
 
 // Gte_RotTransPers3 with the depth and flag pointers the original pushes (the
 // prototype takes the first; cdecl, the caller pops the eighth).
-using Rtp3Fn = long (__cdecl*)(const short*, const short*, const short*, unsigned char*, unsigned char*, unsigned char*,
-                               long*, long*);
+using Rtp3Fn = std::int32_t (__cdecl*)(const short*, const short*, const short*, unsigned char*, unsigned char*, unsigned char*,
+                               std::int32_t*, std::int32_t*);
 
 #define S03_AS(type, name) ::magic_harness::Call(reinterpret_cast<type>(reinterpret_cast<void*>(&::name)))
 
@@ -120,7 +120,7 @@ void DrawModeCommit(unsigned tpage, unsigned slot) {
 void LinkAtSprite(int dy, unsigned size) {
     const unsigned char* const s = Sc();
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->z), dy,
+    MH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(ts->x), static_cast<std::uint32_t>(ts->z), dy,
                                 size);
 }
 
@@ -558,7 +558,7 @@ S03_EXPORT void __cdecl MindSwordFlash_Draw(void) {
         v = MH_CALL(Math_Cos)(a);
         SetVW(0x12, static_cast<unsigned>(Mul12(v, SS(0))));
         {
-            long depth, flag;
+            std::int32_t depth, flag;
             S03_AS(Rtp3Fn, Gte_RotTransPers3)(VP(0), VP(8), VP(0x10), p + 8, p + 0x18, p + 0x28, &depth, &flag);
         }
         MH_CALL(Gte_PrimDepths3_10B)(p);
