@@ -1122,6 +1122,29 @@ the movies. Proposed: the renderer, since tier 2 has no second way to put
 a picture on a window that DXVK also owns; R6m's agent measures whether
 the device can be made before `Display_Setup` first.
 
+### Wave 2 as run (2026-11-18, in progress; branch `linux/wave2`, not merged)
+
+Launched at the owner's word. Merged into `linux/wave2` so far, one at a
+time, at `f7d4fc0f`: step 0 (`linux/w2-s0`, the movie's code in
+`src/game/fmv_play.cpp`), R7 (`linux/w2-r7`, `os::OwnStack` and the
+snapshot's files) and R6 (`linux/w2-r6`, the window on SDL3, the Win32
+window behind `BOF3X_OFF=WindowSdl`). Each group's hosted shadow suite
+passed in its own worktree (922 lines of 0); both presets build on the
+merge; the merge's own suite and the routes have not run. Running: R5, R6m,
+I1 (`input_script.cpp`), R9, M1 (`mp3.cpp`'s stack switch, wrong under the
+System V convention - R7's finding).
+
+**The owner's look at the SDL3 window, 2026-11-18, the 32-bit build of
+`f7d4fc0f` from `game\`:** all eight as expected - a windowed start with
+its placement, icon and title; a few minutes of field and battle; a
+quicksave and a quickload; F8 to borderless and back; a resize from a
+corner and a side; focus away and back; a drag to the second monitor and
+back, kept across a restart; the close button and Alt+F4. **Not looked at
+yet:** the movies and a close during one (R6m is not merged), the same
+steps under `BOF3X_OFF=WindowSdl`, the 64-bit build, a monitor with another
+scale setting, R6's six changes one by one (its hand-back lists them; the
+ledger entries are owed at the merge).
+
 ### Stage LC - link and run on Linux
 
 - A CMake preset for the ELF, clang, SDL3 from source as today.
