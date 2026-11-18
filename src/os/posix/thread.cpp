@@ -5,6 +5,7 @@
 // sampler's answer that there is none (os/sampler.h), the local time of day
 // (os/local_time.h).
 #include "os/local_time.h"
+#include "os/posix/own_stack_range.h"
 #include "os/sampler.h"
 #include "os/stack.h"
 
@@ -15,6 +16,9 @@
 namespace bof3::os {
 
 StackRange CurrentStack() noexcept {
+    // On a stack of the program's own (os/own_stack.h), that stack's range.
+    StackRange own;
+    if (SwitchedStack(&own)) return own;
     // Asked once per thread: for the main thread glibc reads /proc/self/maps
     // to answer, and the harnesses ask for every byte they guard.
     thread_local StackRange cached;

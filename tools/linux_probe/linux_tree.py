@@ -52,6 +52,12 @@ def gen_headers(work):
     run('tools/gen_symbols.py', '--toml', 'symbols.toml', '--out', os.path.join(gen, 'bof3', 'symbols.gen.h'),
         '--bind-out', os.path.join(gen, 'bof3', 'bind.gen.h'))
     run('tools/gen_rebase.py', '--pointers', 'recipes/exe-pointers.tsv', '--out', os.path.join(gen, 'bof3', 'rebase.gen.h'))
+    # CMake's configure_file of src/version.h.in (snapshot.cpp reads the tag): the numbers do not matter to a compile.
+    with open(os.path.join(ROOT, 'src', 'version.h.in'), encoding='utf-8') as f:
+        text = re.sub(r'@PROJECT_VERSION_(MAJOR|MINOR|PATCH)@', '0', f.read())
+    text = text.replace('@PROJECT_VERSION@', '0.0.0').replace('@BOF3X_VERSION_TAG@', 'linux-probe')
+    with open(os.path.join(gen, 'version.gen.h'), 'w', encoding='utf-8') as f:
+        f.write(text)
     return gen
 
 

@@ -1017,14 +1017,16 @@ void InitOnFiber(const Options& options) {
 // out of the main thread's own stack, so the TEB's bounds do not tell them
 // apart. A DXGI present wants far more than 16 KB (the first attempt ran off
 // the task's stack into the scheduler's records, docs/render-backend.md
-// section 5). So every entry into Direct3D runs on a fiber of its own with a
-// 1 MB stack: the game thread converts itself to a fiber once, switches to
-// the render fiber for the length of the call, and gets its own context back
-// exactly as it left it - the game's esp swapping is untouched, because a
-// fiber switch saves and restores esp like any other register.
+// section 5). So every entry into Direct3D runs on a stack of its own, 1 MB
+// (os/own_stack.h; on Windows a fiber, 256 KB committed): the game thread
+// is made a fiber at the first call and stays one, switches to the render
+// stack for the length of the call, and gets its own context back exactly as
+// it left it - the game's esp swapping is untouched, because the switch saves
+// and restores esp like any other register. The render stack keeps its own
+// x87 control word across calls, as the fiber's float switch always kept it.
 
-void* g_game_fiber;
-void* g_render_fiber;
+bof3::os::OwnStack g_render_stack{{256 * 1024, 1024 * 1024, false, false}};
+const bof3::os::OwnStack* g_render_fiber;   // the render stack, once the first call made it (SaveFrame asks)
 enum class Job { kNone, kInit, kPresent, kSave };
 Job g_job;
 Frame* g_job_frame;
@@ -1037,32 +1039,25 @@ void InitOnFiber(const Options& options);
 void PresentOnFiber(Frame& frame);
 bool SaveOnFiber(const wchar_t* path);
 
-void CALLBACK RenderFiber(void*) {
-    for (;;) {
-        switch (g_job) {
-        case Job::kInit: InitOnFiber(*g_job_options); break;
-        case Job::kPresent: PresentOnFiber(*g_job_frame); break;
-        case Job::kSave: g_job_ok = SaveOnFiber(g_job_path); break;
-        case Job::kNone: break;
-        }
-        g_job = Job::kNone;
-        SwitchToFiber(g_game_fiber);
+void RenderJob(void*) {
+    switch (g_job) {
+    case Job::kInit: InitOnFiber(*g_job_options); break;
+    case Job::kPresent: PresentOnFiber(*g_job_frame); break;
+    case Job::kSave: g_job_ok = SaveOnFiber(g_job_path); break;
+    case Job::kNone: break;
     }
+    g_job = Job::kNone;
 }
 
-// Runs `job` on the render fiber and returns when it is done. Game fiber only:
-// a call from the render fiber itself (the rescale hook, say) would switch to
-// the running fiber and overwrite g_job.
+// Runs `job` on the render stack and returns when it is done. A call from
+// the render stack itself (the rescale hook, say) is refused by the seam: it
+// would switch to the running stack and overwrite g_job.
 void RunOnFiber(Job job) {
-    if (!g_render_fiber) {
-        g_game_fiber = ConvertThreadToFiberEx(nullptr, FIBER_FLAG_FLOAT_SWITCH);
-        if (!g_game_fiber) g_game_fiber = GetCurrentFiber();   // already a fiber
-        // 256 KB committed, 1 MB reserved.
-        g_render_fiber = CreateFiberEx(256 * 1024, 1024 * 1024, FIBER_FLAG_FLOAT_SWITCH, &RenderFiber, nullptr);
-        if (!g_render_fiber) bof3::Fatal("render: CreateFiberEx failed, error %u", bof3::os::LastError());
-    }
+    g_render_fiber = &g_render_stack;
     g_job = job;
-    SwitchToFiber(g_render_fiber);
+    const bof3::os::OwnStackResult r = g_render_stack.Run(&RenderJob, nullptr);
+    if (r != bof3::os::OwnStackResult::Done)
+        bof3::Fatal("render: %s, error %u", bof3::os::OwnStackFailure(r), bof3::os::LastError());
 }
 
 }  // namespace

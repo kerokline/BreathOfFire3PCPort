@@ -5,9 +5,11 @@
 //
 // Windows: the TIB's StackLimit and StackBase (NtCurrentTeb), which follow a
 // fiber the thread switched to. POSIX: pthread_getattr_np's stack of the
-// thread, asked once per thread; a stack the program switched onto itself (a
-// fiber of its own, units L3 / R7) is not that one, so on such a stack no
-// address reads as the stack's until that unit gives this call its answer.
+// thread, asked once per thread; while the thread runs on a stack of the
+// program's own (os/own_stack.h), that stack's range instead. A stack switched
+// to by other means (mp3.cpp's decoder block) is not known here: on it, the
+// answer is still the thread's. (The game's task slices lie inside the
+// thread's own stack, so the thread's answer holds for them.)
 // Part of the operating-system seam (docs/linux-round.md, LB1): what the C++20
 // standard library cannot do, behind one header per service, with a backend per
 // system in win32/ and posix/. No Windows or POSIX type appears in a header, and
