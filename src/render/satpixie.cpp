@@ -266,7 +266,7 @@ ID3D11PixelShader* Pixel(ID3D11Device* device, const char* entry, const unsigned
 // and values outside the preset's range are Fatal.
 void ReadKnobs() {
     char text[1024];
-    const DWORD n = bof3::os::GetEnv("BOF3X_SATPIXIE", text, sizeof text);
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_SATPIXIE", text, sizeof text);
     if (n == 0) return;
     if (n >= sizeof text) bof3::Fatal("BOF3X_SATPIXIE: longer than %u bytes", static_cast<unsigned>(sizeof text));
     for (char* item = std::strtok(text, ","); item; item = std::strtok(nullptr, ",")) {

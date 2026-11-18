@@ -7,21 +7,33 @@
 // rhw is 1 / w, and the attributes interpolate perspective-correctly against
 // it as they did then. No depth test (the game never enables one), no
 // culling, no lighting: the ordering table already ordered everything.
+//
+// One source for both systems (docs/linux-round.md section 6, call 1): on
+// Windows the toolchain's Direct3D 11 and DXGI headers and Microsoft's
+// runtime; on Linux DXVK-native's headers and libraries, which take the same
+// calls. Two things differ, each under _WIN32 here: the shader compiler
+// (D3DCompile, which DXVK-native does not have - BOF3X_PIXEL_OFFSET is
+// refused there) and the window's two answers (render_window.h), which the
+// SDL window code gives on Linux.
 #include "render/render_d3d11.h"
 
 #include <filesystem>
 #include <fstream>
 #include <cstdlib>
 #include <d3d11.h>
+#ifdef _WIN32
 #include <d3dcompiler.h>
+#endif
 #include <dxgi.h>
 
+#include <cstddef>
 #include <cstring>
 #include <string>
 
 #include "common/sha256.h"
 #include "hook/log.h"
 #include "render/fb_grab.h"
+#include "render/render_window.h"
 #include "render/satpixie.h"
 #include "render/shaders_compiled.h"
 #include "os/os.h"
@@ -109,7 +121,7 @@ U g_scratch_stp_bytes;
 bool g_scratch_has_stp;         // Convert's last: the surface carries bit 15 (its plane is in g_scratch_stp)
 bool g_stp_view;                // BOF3X_STPVIEW, diagnostic: draw bit-15 texels magenta
 
-DWORD g_main_thread;
+std::uint32_t g_main_thread;
 
 // --- helpers -------------------------------------------------------------------------
 
@@ -139,7 +151,7 @@ void Check(HRESULT hr, const char* what) {
 // screen=crt to satpixie itself).
 Look LookWanted() {
     char text[16];
-    const DWORD n = bof3::os::GetEnv("BOF3X_PRESENT", text, sizeof text);
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_PRESENT", text, sizeof text);
     if (n == 0) return Look::kClean;
     if (n < sizeof text && std::strcmp(text, "clean") == 0) return Look::kClean;
     if (n < sizeof text && std::strcmp(text, "satpixie") == 0) return Look::kSatpixie;
@@ -318,7 +330,7 @@ bool g_compile_at_start;
 
 void ReadPixelOffset() {
     char text[24];
-    const DWORD n = bof3::os::GetEnv("BOF3X_PIXEL_OFFSET", text, sizeof text);
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_PIXEL_OFFSET", text, sizeof text);
     if (n == 0) return;
     if (n >= sizeof text) bof3::Fatal("BOF3X_PIXEL_OFFSET: too long");
     for (const char* p = text; *p; ++p)
@@ -329,7 +341,17 @@ void ReadPixelOffset() {
     bof3::Log("render: scene pixel-centre offset %s (BOF3X_PIXEL_OFFSET); the shaders are compiled at start-up", g_pixel_offset);
 }
 
+// Windows: d3dcompiler_47.dll. Linux: DXVK-native has no HLSL compiler (its
+// d3dcompiler.h declares D3DCompile, and nothing defines it), so asking for a
+// compile at start-up is refused by name rather than drawn some other way.
 ID3DBlob* Compile(const char* source, const char* entry, const char* profile) {
+#ifndef _WIN32
+    (void)source;
+    bof3::Fatal("render: BOF3X_PIXEL_OFFSET=%s asks for the shaders to be compiled at start-up (%s, %s), and this "
+                "system has no HLSL compiler (D3DCompile is Windows' alone; DXVK-native has none): unset "
+                "BOF3X_PIXEL_OFFSET to use the build's bytecode",
+                g_pixel_offset, entry, profile);
+#else
     ID3DBlob* code = nullptr;
     ID3DBlob* errors = nullptr;
     const D3D_SHADER_MACRO macros[] = {{"PIXEL_OFFSET", g_pixel_offset}, {nullptr, nullptr}};
@@ -341,13 +363,14 @@ ID3DBlob* Compile(const char* source, const char* entry, const char* profile) {
     }
     Release(errors);
     return code;
+#endif
 }
 
 // A shader's bytecode: the build's, or - under BOF3X_PIXEL_OFFSET - this
 // start's compile, whose blob is held until Done().
 struct Code {
     const void* data;
-    SIZE_T size;
+    std::size_t size;
     ID3DBlob* blob;
     void Done() { Release(blob); }
 };
@@ -812,14 +835,10 @@ void RunFrame(Frame& frame) {
 void Show(bool in_between) {
     // The window may already be destroyed: WM_DESTROY arrives through the
     // loop's DispatchMessage, and the frame in flight still presents after
-    // it. GetClientRect then fails (an unchecked RECT once reached
-    // ResizeBuffers as E_INVALIDARG). Nothing to show.
-    RECT client = {};
-    if (!GetClientRect(static_cast<HWND>(g_opt.hwnd), &client)) {
-        bof3::Log("render: GetClientRect failed, error %u - window gone, nothing shown", bof3::os::LastError());
-        return;
-    }
-    const U cw = static_cast<U>(client.right - client.left), ch = static_cast<U>(client.bottom - client.top);
+    // it. Its client size then fails (an unchecked RECT once reached
+    // ResizeBuffers as E_INVALIDARG; render_window.h logs why). Nothing to show.
+    U cw = 0, ch = 0;
+    if (!WindowClientSize(g_opt.hwnd, &cw, &ch)) return;
     if (cw == 0 || ch == 0) return;   // minimised: nothing to show
     if (cw != g_window_w || ch != g_window_h) {
         Release(g_window_rtv);
@@ -894,7 +913,7 @@ void InitOnFiber(const Options& options) {
     sd.BufferCount = flip ? 2 : 1;
     sd.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
     sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    sd.OutputWindow = static_cast<HWND>(options.hwnd);
+    sd.OutputWindow = static_cast<HWND>(SwapChainWindow(options.hwnd));
     sd.SampleDesc.Count = 1;
     sd.Windowed = TRUE;
     sd.SwapEffect = flip ? DXGI_SWAP_EFFECT_FLIP_DISCARD : sequential ? DXGI_SWAP_EFFECT_SEQUENTIAL : DXGI_SWAP_EFFECT_DISCARD;
@@ -920,17 +939,17 @@ void InitOnFiber(const Options& options) {
             IDXGIFactory* factory = nullptr;
             if (SUCCEEDED(adapter->GetParent(__uuidof(IDXGIFactory), reinterpret_cast<void**>(&factory)))) {
                 // The game's WndProc owns Alt+Enter and the window's size.
-                factory->MakeWindowAssociation(static_cast<HWND>(options.hwnd), DXGI_MWA_NO_ALT_ENTER | DXGI_MWA_NO_WINDOW_CHANGES);
+                factory->MakeWindowAssociation(static_cast<HWND>(SwapChainWindow(options.hwnd)),
+                                               DXGI_MWA_NO_ALT_ENTER | DXGI_MWA_NO_WINDOW_CHANGES);
                 factory->Release();
             }
             adapter->Release();
         }
         dxgi_device->Release();
     }
-    RECT client;
-    GetClientRect(static_cast<HWND>(options.hwnd), &client);
-    g_window_w = static_cast<U>(client.right - client.left);
-    g_window_h = static_cast<U>(client.bottom - client.top);
+    // Unchecked, as it always was: a window gone before the first present
+    // leaves 0 x 0 here, and the first Show answers it.
+    WindowClientSize(options.hwnd, &g_window_w, &g_window_h);
     MakeWindowTarget();
     g_pad_x = options.pad_x * options.scale;
     g_scale = options.scale;
@@ -1215,5 +1234,24 @@ void RequestScale(U k) {
 
 void SetRescaleHook(void (*hook)(U)) { g_rescale_hook = hook; }
 U TargetHeight() { return g_target_h; }
+
+#ifdef _WIN32
+// render_window.h on Windows: the HWND the set-up handed, and its client
+// rectangle. On Linux the SDL window code defines both (render_window.h).
+void* SwapChainWindow(void* window) { return window; }
+
+bool WindowClientSize(void* window, U* w, U* h) {
+    *w = 0;
+    *h = 0;
+    RECT client = {};
+    if (!GetClientRect(static_cast<HWND>(window), &client)) {
+        bof3::Log("render: GetClientRect failed, error %u - window gone, nothing shown", bof3::os::LastError());
+        return false;
+    }
+    *w = static_cast<U>(client.right - client.left);
+    *h = static_cast<U>(client.bottom - client.top);
+    return true;
+}
+#endif
 
 }  // namespace render

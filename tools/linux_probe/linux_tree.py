@@ -15,6 +15,9 @@ nothing into the repository but the list, and only when asked.
                                                            # compiles fails the check too, until --write)
     options: --sysroot DIR   a Linux root with libstdc++'s headers (on Windows: //wsl.localhost/<distribution>)
              --sdl DIR       SDL3's include folder (default: the first build*/_deps/sdl3-src/include)
+             --dxvk DIR      DXVK-native's headers (docs/linux-round.md section 6, call 1): a DXVK source tree's
+                             include/native (default: the first build*/_deps/dxvk-src/include/native), or an
+                             installed include/dxvk
              --work DIR      where the generated headers go (default: a temporary directory)
              --jobs N
 
@@ -22,6 +25,11 @@ Needs `clang++` (any host: the target is named) and the headers of a Linux C++ l
 option is needed. The reasons in the list: `windows.h` and the other header names (the file includes it), `long`
 (a layout static_assert of the generated header fails: `long` is 8 bytes here), `va_start` (a variadic function
 under ms_abi), `name` (a name only Windows' C library has), `type` (a type that differs on LP64, `size_t` mostly).
+
+DXVK-native's headers (--dxvk) carry a windows.h of their own, which d3d11.h includes. So that a file's own
+windows.h is not answered by it, a file is compiled with them only when it fails without them on a Direct3D or DXGI
+header, and then any windows.h (or other header of DXVK's windows folder) that a file outside DXVK's folders
+includes is still that file's failure: `windows.h`, as without them.
 """
 import argparse, collections, concurrent.futures, glob, os, re, subprocess, sys, tempfile
 
@@ -41,6 +49,12 @@ WINDOWS_ONLY = (
     ('src/hook/crash_win32.cpp', 'R8: the fault catcher - a vectored handler, MiniDumpWriteDump (crash_posix.cpp is its counterpart)'),
     ('src/hook/stackwatch_win32.cpp', "R8: the main thread's TEB and guard page (stackwatch_posix.cpp refuses)"),
 )
+# The headers DXVK-native stands in for: a file that fails on one of these first is compiled again with --dxvk.
+DXVK_HEADERS = ('d3d11.h', 'dxgi.h', 'd3dcompiler.h', 'd3dcommon.h')
+# DXVK-native's include/native/windows at v3.1.1: its stand-ins for Windows' own headers, which only its Direct3D
+# headers may reach.
+WINDOWS_STAND_INS = ('windows.h', 'windows_base.h', 'unknwn.h', 'objbase.h', 'ole2.h', 'oaidl.h', 'ocidl.h', 'rpc.h',
+                     'rpcndr.h', 'poppack.h', 'pshpack4.h')
 HEADER = ('# tools/linux_probe/linux_tree.py: the source files that do not compile for x86_64-linux-gnu, and why. '
           'File names and reasons only.\n#file\treason\terrors\n')
 
@@ -87,14 +101,56 @@ def reason(errs):
     return 'type'
 
 
-def compile_one(args):
-    f, flags = args
+def dxvk_dirs(d):
+    """The include folders of DXVK-native's headers under `d`: a source tree's include/native has windows/ and
+    directx/ (the mingw-directx-headers submodule); an installed include/dxvk holds both flat."""
+    split = [os.path.join(d, 'windows'), os.path.join(d, 'directx')]
+    if all(os.path.isfile(os.path.join(x, h)) for x, h in zip(split, ('windows.h', 'd3d11.h'))):
+        return split
+    if os.path.isfile(os.path.join(d, 'windows.h')) and os.path.isfile(os.path.join(d, 'd3d11.h')):
+        return [d]
+    sys.exit(f'linux_tree: --dxvk {d}: neither windows/windows.h and directx/d3d11.h (the include/native of a source '
+             'tree, with its directx submodule) nor windows.h and d3d11.h (an installed include/dxvk)')
+
+
+def clang(f, flags):
     r = subprocess.run(['clang++', '--target=x86_64-linux-gnu', '-std=c++20', '-fsyntax-only', '-ferror-limit=0', '-w',
                         '-fdeclspec', '-D__cdecl=__attribute__((ms_abi))', *flags, f],
                        capture_output=True, text=True, cwd=ROOT)
     errs = [l for l in r.stderr.splitlines() if ': error: ' in l or ': fatal error: ' in l]
     if r.returncode and not errs:
         errs = ['fatal error: ' + (r.stderr.strip().splitlines() or ['clang++ failed'])[-1]]
+    return r, errs
+
+
+def windows_leak(f, tree, dirs):
+    """A header of DXVK's windows folder (WINDOWS_STAND_INS) that a file outside DXVK's folders includes, from
+    clang's -H tree: the includer and the header, or None."""
+    norm = lambda p: os.path.normcase(os.path.normpath(os.path.join(ROOT, p)))
+    roots = [norm(x) + os.sep for x in dirs]
+    inside = lambda p: any(norm(p).startswith(r) for r in roots)
+    stack = [f]
+    for line in tree.splitlines():
+        m = re.match(r'^([.]+) (.+)$', line)
+        if not m:
+            continue
+        depth, path = len(m.group(1)), m.group(2).strip()
+        del stack[depth:]
+        parent = stack[-1] if stack else f
+        if os.path.basename(path) in WINDOWS_STAND_INS and inside(path) and not inside(parent):
+            return parent, os.path.basename(path)
+        stack.append(path)
+    return None
+
+
+def compile_one(args):
+    f, flags, dxvk = args
+    r, errs = clang(f, flags)
+    if errs and dxvk and reason(errs) in DXVK_HEADERS:
+        r, errs = clang(f, flags + [x for d in dxvk for x in ('-I', d)] + ['-H'])
+        leak = windows_leak(f, r.stderr, dxvk)
+        if leak:   # DXVK's windows.h answered the file's own include: the file still needs the seam
+            errs = [f"{leak[0]}: fatal error: '{leak[1]}' file not found (DXVK-native's own stood in for it)"] + errs
     return f, errs
 
 
@@ -110,6 +166,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('--sysroot')
     ap.add_argument('--sdl')
+    ap.add_argument('--dxvk')
     ap.add_argument('--work')
     ap.add_argument('--jobs', type=int, default=os.cpu_count() or 4)
     ap.add_argument('--write', action='store_true')
@@ -126,20 +183,23 @@ def main():
             flags += ['-I', rev]
     if a.sysroot:
         flags.append('--sysroot=' + a.sysroot)
+    dxvk_root = a.dxvk or next(iter(sorted(glob.glob(os.path.join(ROOT, 'build*', '_deps', 'dxvk-src', 'include', 'native')))), None)
+    dxvk = dxvk_dirs(dxvk_root) if dxvk_root else None
 
     files = sources()
     gone = [f for f, _ in WINDOWS_ONLY if not os.path.isfile(os.path.join(ROOT, f))]
     if gone:
         sys.exit('linux_tree: WINDOWS_ONLY names a file that does not exist: ' + ', '.join(gone))
     with concurrent.futures.ThreadPoolExecutor(a.jobs) as ex:
-        res = dict(ex.map(compile_one, [(f, flags) for f in files]))
+        res = dict(ex.map(compile_one, [(f, flags, dxvk) for f in files]))
     bad = {f: (reason(e), len(e)) for f, e in res.items() if e}
     if len(bad) == len(files):
         sys.exit('linux_tree: no file compiled; clang++ does not find the Linux C++ headers (pass --sysroot), or is absent')
     why = collections.Counter(r for r, _ in bad.values())
     print(f'linux_tree: {len(files)} files, {len(files) - len(bad)} compile for x86_64-linux-gnu, {len(bad)} do not; '
           f'{len(WINDOWS_ONLY)} Windows-only files left out'
-          + (' (no SDL3 headers found: files that include them fail on that)' if not sdl else ''))
+          + (' (no SDL3 headers found: files that include them fail on that)' if not sdl else '')
+          + (' (no DXVK-native headers found: files that include d3d11.h fail on that; --dxvk)' if not dxvk else ''))
     for k, v in why.most_common():
         print(f'  {v:4d}  {k}')
     print(f'linux_tree: {len(WINDOWS_ONLY)} files are Windows-only by design and not compiled (WINDOWS_ONLY)')

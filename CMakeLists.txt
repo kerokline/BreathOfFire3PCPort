@@ -137,6 +137,14 @@ FetchContent_Declare(SDL3
   GIT_SHALLOW TRUE)
 FetchContent_MakeAvailable(SDL3)
 
+# --- DXVK-native's Direct3D 11 headers, for a target that is not Windows ----
+# (docs/linux-round.md section 6, call 1). Read only when the target is not
+# Windows: the i686 and x86_64 presets never enter the file and keep the
+# toolchain's headers. Headers only; nothing links bof3x_dxvk_headers yet.
+if(NOT WIN32)
+  include(cmake/dxvk_headers.cmake)
+endif()
+
 # --- the injected DLL --------------------------------------------------------
 # One source list for both widths. The 64-bit DLL serves the exe host alone,
 # so it drops every fuzz file (any *_fuzz.cpp: the shadow fuzz runs Capcom's
