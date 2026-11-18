@@ -59,8 +59,6 @@
 // Nothing in this file is conditional on the width.
 #include "audio/sound_sdl.h"
 
-#include <windows.h>
-
 #include <SDL3/SDL.h>
 
 #include <cmath>
@@ -69,6 +67,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <mutex>
 
 #include "bof3/symbols.gen.h"
 #include "common/image_base.h"
@@ -140,11 +139,12 @@ void PutObject(void** out, const void* object) {
 
 // --- The lock ----------------------------------------------------------------
 
-CRITICAL_SECTION g_lock;
-bool g_lock_made = false;
+// Recursive, as the critical section it replaced was: Lock holds it and asks
+// GetCurrentPosition, which takes it again.
+std::recursive_mutex g_lock;
 struct Guard {
-    Guard() { EnterCriticalSection(&g_lock); }
-    ~Guard() { LeaveCriticalSection(&g_lock); }
+    Guard() { g_lock.lock(); }
+    ~Guard() { g_lock.unlock(); }
 };
 
 // --- The objects --------------------------------------------------------------
@@ -180,7 +180,7 @@ void WriteFormat(const Format& f, void* p) {
 
 struct Notification {
     std::uint32_t offset;
-    HANDLE event;
+    os::Event event;   // the game's, made through its CreateEventA import
 };
 
 struct Buffer {
@@ -282,7 +282,7 @@ void Signal(Buffer* b, std::uint32_t old_frame, std::uint32_t new_frame, bool wr
     for (unsigned i = 0; i < b->notify_count; ++i) {
         const std::uint32_t at = b->notifies[i].offset / b->format.block;
         const bool hit = whole || (!wrapped ? old_frame < at && at <= new_frame : at > old_frame || at <= new_frame);
-        if (hit) SetEvent(b->notifies[i].event);
+        if (hit) os::EventSet(b->notifies[i].event);
     }
 }
 
@@ -730,7 +730,7 @@ long __stdcall BufPlay(void* self, std::uint32_t, std::uint32_t, std::uint32_t f
     // offset-0 event at Music_Start, which fills the second half.
     const std::uint32_t frame = static_cast<std::uint32_t>(b->pos >> 32);
     for (unsigned i = 0; i < b->notify_count; ++i)
-        if (b->notifies[i].offset / b->format.block == frame) SetEvent(b->notifies[i].event);
+        if (b->notifies[i].offset / b->format.block == frame) os::EventSet(b->notifies[i].event);
     return kOk;
 }
 long __stdcall BufSetCurrentPosition(void* self, std::uint32_t bytes) {
@@ -842,7 +842,7 @@ long __stdcall NotSetNotificationPositions(void* self, std::uint32_t count, cons
     for (unsigned i = 0; i < count; ++i) {
         if (positions[i].offset >= b->size || positions[i].offset % b->format.block || !positions[i].event) return kInvalidParam;
         b->notifies[i].offset = static_cast<std::uint32_t>(positions[i].offset);
-        b->notifies[i].event = static_cast<HANDLE>(positions[i].event);
+        b->notifies[i].event = positions[i].event;
     }
     b->notify_count = count;
     return kOk;
@@ -1125,11 +1125,12 @@ void SelfTest() {
         SDL_CHECK(Method<MQuery>(ring, 0x00)(ring, other, reinterpret_cast<void**>(&w)) == kNoInterface && w == 0, "an unknown IID answered");
     }
     void* const notify = FromSlot(notify_word);
-    HANDLE e0 = CreateEventA(nullptr, FALSE, FALSE, nullptr), e1 = CreateEventA(nullptr, FALSE, FALSE, nullptr);
-    SDL_CHECK(e0 && e1, "CreateEventA");
+    // Auto-reset and unset, as Music_SetNotify makes the game's two.
+    os::Event e0 = os::EventCreate(false, false), e1 = os::EventCreate(false, false);
+    SDL_CHECK(e0 && e1, "EventCreate");
     const Position positions[2] = {{0, e0}, {2000, e1}};
     SDL_CHECK(Method<MPositions>(notify, 0x0C)(notify, 2, positions) == kOk && Self(ring)->notify_count == 2, "SetNotificationPositions");
-    auto fired = [](HANDLE e) { return WaitForSingleObject(e, 0) == WAIT_OBJECT_0; };
+    auto fired = [](os::Event e) { return os::EventWait(e, 0) == os::WaitResult::Signalled; };
     SDL_CHECK(!fired(e0) && !fired(e1), "an event fired before Play");
     SDL_CHECK(Method<MValue>(ring, 0x34)(ring, 0) == kOk && Method<MPlay>(ring, 0x30)(ring, 0, 0, kPlayLooping) == kOk, "the ring plays");
     SDL_CHECK(fired(e0) && !fired(e1), "Play at 0 fires the offset-0 event and not the half's");
@@ -1145,8 +1146,8 @@ void SelfTest() {
     // Release order as Music_Release: the buffer, then the notify facet.
     SDL_CHECK(Method<MCall>(ring, 0x08)(ring) == 1 && Self(ring)->live, "the ring's first Release leaves the facet's reference");
     SDL_CHECK(Method<MCall>(notify, 0x08)(notify) == 0 && !Self(ring)->live && Self(ring)->data == nullptr, "the facet's Release frees the ring");
-    CloseHandle(e0);
-    CloseHandle(e1);
+    os::EventClose(e0);
+    os::EventClose(e1);
 
     // Two full-scale buffers clip; an 8-bit source is centred at 0x80.
     static unsigned char fmt_8[kFormatSize];
@@ -1225,9 +1226,9 @@ bool SoundSdl_On() { return g_on; }
 bool SoundSdl_IsCreate(const void* fn) { return fn == reinterpret_cast<const void*>(&Create); }
 
 void SoundSdl_Start() {
-    if (!g_lock_made) {
-        InitializeCriticalSection(&g_lock);
-        g_lock_made = true;
+    static bool vtables_made = false;
+    if (!vtables_made) {
+        vtables_made = true;
         FillVtables();
     }
     if (g_patched) Fatal("sound_sdl: SoundSdl_Start twice");
