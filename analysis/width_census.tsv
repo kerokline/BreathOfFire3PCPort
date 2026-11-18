@@ -4990,10 +4990,10 @@ site	src/game/field_misc_callees.h	71	narrow_call	image	live	&MapView_HeightScal
 site	src/game/field_misc_callees.h	72	narrow_call	image	live	MapView_Origin	Of	inline U MapView_OriginAt() { return Of(MapView_Origin); }
 site	src/game/field_misc_callees.h	73	narrow_call	image	live	&MapView_Redraw	Of	inline U MapView_RedrawAt() { return Of(&MapView_Redraw); }
 site	src/game/field_misc_callees.h	74	narrow_call	image	live	&MapView_Row	Of	inline U MapView_RowAt() { return Of(&MapView_Row); }
-site	src/game/fmv_play.cpp	132	long	l	live	long	-	const long long n = static_cast<long long>(f.tellg());
-site	src/game/fmv_play.cpp	132	long	l	live	long	-	const long long n = static_cast<long long>(f.tellg());
-site	src/game/fmv_play.cpp	140	long	l	live	long	-	std::snprintf(why, why_n, " ", static_cast<long long>(n));
-site	src/game/fmv_play.cpp	395	handle_array	none	live	nullptr	MsgWaitForMultipleObjects	MsgWaitForMultipleObjects(0, nullptr, FALSE, wait, QS_ALLINPUT);
+site	src/game/fmv_play.cpp	99	long	l	live	long	-	const long long n = static_cast<long long>(f.tellg());
+site	src/game/fmv_play.cpp	99	long	l	live	long	-	const long long n = static_cast<long long>(f.tellg());
+site	src/game/fmv_play.cpp	107	long	l	live	long	-	std::snprintf(why, why_n, " ", static_cast<long long>(n));
+site	src/game/fmv_play_win32.cpp	94	handle_array	none	live	nullptr	MsgWaitForMultipleObjects	void WaitMessages(unsigned ms) { MsgWaitForMultipleObjects(0, nullptr, FALSE, ms, QS_ALLINPUT); }
 site	src/game/magic/accession.cpp	66	low32	helper_def	live	p	Low32	std::uint32_t Key(const void* p) { return Low32(p); }
 site	src/game/magic/accession.cpp	112	narrow_call	image_local	live	s	Key	tchild->owner = static_cast<std::int32_t>(Key(s));
 site	src/game/magic/accession.cpp	123	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(U(move_script::Long(Mem(cell)))));
@@ -13655,8 +13655,8 @@ file	src/game/field/wide_staging.cpp	live	widen	param	1
 file	src/game/field_misc_callees.h	live	low32	helper_def	1
 file	src/game/field_misc_callees.h	live	low32	pool	1
 file	src/game/field_misc_callees.h	live	narrow_call	image	18
-file	src/game/fmv_play.cpp	live	handle_array	none	1
 file	src/game/fmv_play.cpp	live	long	l	3
+file	src/game/fmv_play_win32.cpp	live	handle_array	none	1
 file	src/game/magic/accession.cpp	live	low32	helper_def	1
 file	src/game/magic/accession.cpp	live	narrow_call	image_local	1
 file	src/game/magic/accession.cpp	live	uintptr	-	1
@@ -15613,9 +15613,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count callconv___cdecl	16384
 #count callconv___cdecl_fuzz	2014
 #count callconv___cdecl_live	14370
-#count callconv___stdcall	363
+#count callconv___stdcall	364
 #count callconv___stdcall_fuzz	96
-#count callconv___stdcall_live	267
+#count callconv___stdcall_live	268
 #count img_place_Code	625
 #count img_place_Code_fuzz	6
 #count img_place_Code_live	619
