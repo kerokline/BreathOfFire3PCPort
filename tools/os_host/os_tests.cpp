@@ -1290,6 +1290,38 @@ void TestFileMove() {
     R7Moves(fs::current_path(ec) / tag, "the current folder");
 }
 
+// ---- a key posted to a window (wave 2, I1: os/window_key.h) ----------------------
+// Windows: the two messages the input recipe's `key` step posts, read back off
+// a message-only window's queue with their wParam and lParam; a handle that is
+// no window refuses. POSIX: the call refuses, ENOSYS.
+}  // namespace
+#include <cerrno>
+namespace {
+void TestWindowKey() {
+#ifdef _WIN32
+    HWND w = CreateWindowExA(0, "STATIC", "bof3x_i1", 0, 0, 0, 0, 0, HWND_MESSAGE, nullptr, GetModuleHandleA(nullptr), nullptr);
+    CHECK(w != nullptr);
+    if (w) {
+        CHECK(os::PostWindowKey(w, 0x78, true));    // F9 down
+        CHECK(os::PostWindowKey(w, 0x78, false));   // F9 up
+        MSG m = {};
+        CHECK(PeekMessageA(&m, w, 0, 0, PM_REMOVE) != 0);
+        CHECK(m.message == WM_KEYDOWN && m.wParam == 0x78 && m.lParam == 1);
+        CHECK(PeekMessageA(&m, w, 0, 0, PM_REMOVE) != 0);
+        CHECK(m.message == WM_KEYUP && m.wParam == 0x78 && static_cast<std::uint32_t>(m.lParam) == 0xC0000001u);
+        CHECK(PeekMessageA(&m, w, 0, 0, PM_REMOVE) == 0);
+        DestroyWindow(w);
+    }
+    CHECK(!os::PostWindowKey(reinterpret_cast<void*>(static_cast<std::uintptr_t>(0x5A5A0)), 0x78, true));
+    CHECK(os::LastError() == ERROR_INVALID_WINDOW_HANDLE);
+    std::printf("window key: WM_KEYDOWN and WM_KEYUP posted and read back\n");
+#else
+    CHECK(!os::PostWindowKey(nullptr, 0x78, true));
+    CHECK(os::LastError() == ENOSYS);
+    std::printf("window key: refused (no window messages on this system)\n");
+#endif
+}
+
 }  // namespace
 
 int main() {
@@ -1306,6 +1338,7 @@ int main() {
     TestR1Harness();
     TestOwnStack();
     TestFileMove();
+    TestWindowKey();
     std::printf("os_tests: %d checks, %d failed\n", g_checks, g_fail);
     return g_fail ? 1 : 0;
 }
