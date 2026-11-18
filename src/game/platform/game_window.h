@@ -19,6 +19,7 @@
 #pragma once
 
 #include <cstdint>
+#include <vector>
 
 namespace game_window {
 
@@ -78,6 +79,29 @@ void* RendererWindow(void* window);
 
 // After Display_Teardown: the window and SDL's video subsystem go.
 void Destroy();
+
+// ---- the movie's events (fmv_play.cpp; docs/linux-round.md, wave 2, R6m) ----
+// While a movie plays on the SDL path, its loop takes the window's events
+// here in place of Pump: the movie player no longer puts a procedure of its
+// own in front of the window (on Windows the Win32 path keeps that, as the
+// port had it). What came in since the last call, in order:
+//   Key       a key going down (a: its Windows virtual-key number)
+//   Click     the left or the right button going down over the window
+//   Activate  the application activated (a 1) or deactivated (a 0)
+//   Repaint   the client needs drawing again
+//   Close     the window was closed: the path's close has run (the placement
+//             saved, the quit flag set, the window hidden), and every later
+//             call starts with a Close, as the port's second movie met the
+//             quit message the first one put back
+//   Quit      the thread's quit message: handed back, and kept for Pump
+// A move and a resize are handed to the game as Pump hands them. Fatal on the
+// Win32 path, whose messages go to the movie's own procedure.
+enum class MovieGot : std::uint8_t { Key, Click, Activate, Repaint, Close, Quit };
+struct MovieEvent {
+    MovieGot what;
+    std::int32_t a;
+};
+std::vector<MovieEvent> TakeForMovie();
 
 }  // namespace game_window
 

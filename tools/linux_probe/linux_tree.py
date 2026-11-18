@@ -49,6 +49,7 @@ WINDOWS_ONLY = (
     ('src/hook/crash_win32.cpp', 'R8: the fault catcher - a vectored handler, MiniDumpWriteDump (crash_posix.cpp is its counterpart)'),
     ('src/hook/stackwatch_win32.cpp', "R8: the main thread's TEB and guard page (stackwatch_posix.cpp refuses)"),
     ('src/game/platform/game_window_win32.cpp', 'R6: the Win32 window path and the SDL window\'s HWND steps (game_window_other.cpp is its counterpart)'),
+    ('src/game/fmv_play_win32.cpp', 'R6m: the movie\'s GDI picture, and Fmv_WndProc and its pump on the Win32 window path (fmv_play.cpp refuses or stops elsewhere)'),
 )
 # The headers DXVK-native stands in for: a file that fails on one of these first is compiled again with --dxvk.
 DXVK_HEADERS = ('d3d11.h', 'dxgi.h', 'd3dcompiler.h', 'd3dcommon.h')
