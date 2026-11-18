@@ -11433,9 +11433,7 @@ stores 0x45, and the page names it "NumLock"; a press of NumLock stores
 **What a player would see:** a game button bound to Pause in the launcher
 is worked by NumLock in the game, and the reverse. It was so under
 DirectInput and is so under SDL's keyboard (DIV-0239), whose table keeps
-DirectInput's meaning on purpose so that no stored number changes. The
-function actions (DIV-0240) read the pair as the capture stores it, so a
-binding made on that page works with the key that was pressed.
+DirectInput's meaning on purpose so that no stored number changes.
 
 **Whose:** ours, the launcher's capture (DIV-0050's pages). It predates the
 Linux round.
