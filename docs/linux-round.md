@@ -795,6 +795,9 @@ nothing in the ledger or the defect list.
    written. Proposed: wave 1 here (it is mechanical and needs no Linux
    machine), and R5, R6, R7 and R9 offered to frost first, since they are his
    units L2 and L3 and his machine has the GPU that proves R9.
+   **Decided (the owner, 2026-11-18): wave 2 also runs here**, in worktrees
+   and harness roots apart from the play install; frost takes the round
+   over when he is ready. R9's proof on a Linux GPU stays his.
 2. **R2:** the three watchers Windows-only, or ported.
 3. **R5's switch:** how long DirectInput stays beside SDL3 (proposed: one
    release). **Decided (the owner, 2026-11-18): one release, and the player
