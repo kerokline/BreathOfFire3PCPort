@@ -10,7 +10,7 @@
 
 namespace bof3::code_names {
 
-constexpr int kCount = 103;
+constexpr int kCount = 104;
 constexpr const char* kNames[kCount] = {
     "ApplyMatrixLVExact",
     "Area135MarkerPlaced",
@@ -113,6 +113,7 @@ constexpr const char* kNames[kCount] = {
     "TradeLeaveLayout",
     "Widescreen",
     "WindowResetFull",
+    "WindowSdl",
     "WorldMapLegend",
     "YesNoLayout",
 };
