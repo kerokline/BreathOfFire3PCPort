@@ -36,7 +36,7 @@
 // process (BOF3X_SHADOW='*').
 #include "game/boss_harness.h"
 
-#include <windows.h>
+#include "os/os.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -424,11 +424,11 @@ bool Readable(std::uint32_t p) {
     const std::uint32_t pe = image + *reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(image + 0x3C));
     const std::uint32_t size = *reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(pe + 24 + 56));   // SizeOfImage
     if (p >= image + 0x1000 && p < image + size) return true;
-    // The TIB's StackBase and StackLimit, at the width's TEB (NtCurrentTeb(), whose first member is the TIB:
-    // fs:0x18 on i686, gs:0x30 on x86-64); this is hosted, i686-only code,
+    // The thread's stack (os/stack.h: on Windows the TIB's StackLimit and
+    // StackBase, which follow a fiber); this is hosted, i686-only code,
     // where a stack address is 32 bits.
-    const auto base = Low32(reinterpret_cast<const NT_TIB*>(NtCurrentTeb())->StackBase);
-    const auto limit = Low32(reinterpret_cast<const NT_TIB*>(NtCurrentTeb())->StackLimit);
+    const auto base = Low32(bof3::os::CurrentStack().base);
+    const auto limit = Low32(bof3::os::CurrentStack().limit);
     return p >= limit && p < base;
 }
 // Where an effect may write a string: the compared state, the text buffer,
@@ -437,11 +437,11 @@ bool Readable(std::uint32_t p) {
 bool Writable(std::uint32_t p, unsigned n) {
     if (p >= Key(g_text) && p + n <= Key(g_text) + kTextBytes) return true;
     if (InRegions(reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(p)), n)) return true;
-    // The TIB's StackBase and StackLimit, at the width's TEB (NtCurrentTeb(), whose first member is the TIB:
-    // fs:0x18 on i686, gs:0x30 on x86-64); this is hosted, i686-only code,
+    // The thread's stack (os/stack.h: on Windows the TIB's StackLimit and
+    // StackBase, which follow a fiber); this is hosted, i686-only code,
     // where a stack address is 32 bits.
-    const auto base = Low32(reinterpret_cast<const NT_TIB*>(NtCurrentTeb())->StackBase);
-    const auto limit = Low32(reinterpret_cast<const NT_TIB*>(NtCurrentTeb())->StackLimit);
+    const auto base = Low32(bof3::os::CurrentStack().base);
+    const auto limit = Low32(bof3::os::CurrentStack().limit);
     return p >= limit && p + n <= base;
 }
 // The string at p to its NUL, 64 bytes at most, noted (its hash and length),

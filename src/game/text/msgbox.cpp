@@ -19,8 +19,6 @@
 // BOF3X_ORIGINAL=MsgBox_Step Capcom's body runs and draws the text as it is.
 #include "game/msgbox.h"
 
-#include <windows.h>
-
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -36,6 +34,7 @@
 #include "game/text_pairs.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "input/key_codes.h"
 #include "input/sigma.h"
 #include "os/os.h"
 
@@ -772,8 +771,8 @@ void MsgBox_ArmAfterBinds() {
     // The study key: BOF3X_RUBY_KEY = f1..f12 (any case; default f4) or none.
     {
         char key[16] = "f4";
-        const DWORD n = bof3::os::GetEnv("BOF3X_RUBY_KEY", key, sizeof key);
-        if (n >= sizeof key) bof3::Fatal("BOF3X_RUBY_KEY is %lu characters: f1..f12 or none", n);
+        const std::uint32_t n = bof3::os::GetEnv("BOF3X_RUBY_KEY", key, sizeof key);
+        if (n >= sizeof key) bof3::Fatal("BOF3X_RUBY_KEY is %u characters: f1..f12 or none", n);
         for (char* c = key; *c; ++c)
             if (*c >= 'A' && *c <= 'Z') *c = static_cast<char>(*c - 'A' + 'a');
         if (std::strcmp(key, "none") == 0) {
@@ -784,14 +783,14 @@ void MsgBox_ArmAfterBinds() {
             std::snprintf(again, sizeof again, "f%d", f);
             if (f < 1 || f > 12 || std::strcmp(again, key) != 0)
                 bof3::Fatal("BOF3X_RUBY_KEY is \"%s\": f1..f12 or none", key);
-            ruby::g_key_vk = static_cast<unsigned>(VK_F1 + f - 1);
+            ruby::g_key_vk = static_cast<unsigned>(bof3x::input::kVkF1 + f - 1);
         }
     }
     // The faster text (DIV-0158): BOF3X_TEXT_SPEED = 0 (the original's, the
     // default) or 1. Its home is the printer, so it needs the printer ours.
     {
         char v[8] = "0";
-        const DWORD n = bof3::os::GetEnv("BOF3X_TEXT_SPEED", v, sizeof v);
+        const std::uint32_t n = bof3::os::GetEnv("BOF3X_TEXT_SPEED", v, sizeof v);
         if (n >= sizeof v || (std::strcmp(v, "0") != 0 && std::strcmp(v, "1") != 0))
             bof3::Fatal("BOF3X_TEXT_SPEED is \"%s\": 0 or 1", n >= sizeof v ? "(too long)" : v);
         msgbox::g_text_faster = v[0] == '1';

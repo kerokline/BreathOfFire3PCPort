@@ -46,7 +46,6 @@
 
 #include <filesystem>
 #include <system_error>
-#include <windows.h>
 
 #include <cstdint>
 #include <cstdio>
@@ -63,6 +62,7 @@
 #include "hook/input_script.h"
 #include "hook/log.h"
 #include "hook/snapshot.h"
+#include "input/key_codes.h"
 #include "os/os.h"
 
 namespace {
@@ -456,10 +456,10 @@ namespace bof3 {
 bool QuickMenu_Key(unsigned vk, std::int32_t lparam) {
     const bool repeat = (lparam & (1L << 30)) != 0;
     if (g_open) {
-        if (vk == VK_F5 && !repeat) Close("F5");
+        if (vk == bof3x::input::kVkF5 && !repeat) Close("F5");
         return true;   // every key is the menu's while it is open
     }
-    if (vk != VK_F5) return false;
+    if (vk != bof3x::input::kVkF5) return false;
     if (repeat) return true;
     if (Frame_Counter == 0) return false;   // before the loop's first frame (the intro videos): F5 is nothing, as before
     Open();

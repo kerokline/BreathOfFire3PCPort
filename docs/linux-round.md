@@ -551,9 +551,11 @@ unit that finds it on a profile.
 
 **Windows-only, by design:** the launcher, `write_watch`, `gapwatch`, `calltrace`
 (harness-only watchers), the PE exe host (`exe_host.cpp`, `exe_icon.cpp`,
-`dllmain.cpp`, and the PE-header readers `host.cpp`, `detour.cpp`,
-`exe_image.cpp`), and `MiniDumpWriteDump` in `crash.cpp`. They need the PE
-format or a Windows API with no portable form.
+`dllmain.cpp`, and the PE-header reader `host.cpp`), and `MiniDumpWriteDump`
+in `crash.cpp`. They need the PE format or a Windows API with no portable
+form. (`detour.cpp` and `exe_image.cpp` were listed here too until group R23
+of the 38-file round: neither needs Windows now; `tools/linux_probe/linux_tree.py`'s
+`WINDOWS_ONLY` holds the list.)
 
 **The gate.** `python tools/os_census.py --boundary` (CI job `os-host`) fails
 when a live file outside `src/os` and `src/launcher` includes `<windows.h>` or
@@ -805,6 +807,217 @@ are dead (the census finds no name; no build without them was made); what
 Direct3D's calls in R7 (the fiber exists because the render call wants a
 stack of its own); the size of R5 on the PSX-button and binding pages of the
 launcher, which write the numbers R4 keeps.
+
+### R10 as run: the arena (2026-11-17, branch `linux/w1-r10`)
+
+**Measured first.**
+
+- **The chokepoint** (`grep -rnE "(std::)?(malloc|calloc|free)\s*\(|\.(malloc|free)\s*\(" src/game src/render src/audio src/common`):
+  three entries, `Crt_malloc`, `Crt_calloc`, `Crt_free` (`crt_rest.cpp`), bound at Capcom's
+  `0x5B9660`, `0x5BA221`, `0x5B9577` as a set (crt-rest.md 2.6). There is no `Crt_realloc`: Capcom's
+  `realloc` `0x5C2F8E` is not ours and nothing reaches it (crt-rest.md 2.6). Hosted, the callers are
+  ours, the decoder's (under `BOF3X_MP3=original`) and the executable's runtime start-up.
+- **Others that allocate memory a 32-bit word holds**, read but not changed here: the SOUND self-test's
+  stand-ins (`sound_ours.cpp`, `std::malloc`, `Address(stream)`: moved to `Crt_malloc` below);
+  `music_seq.cpp:634` `TestMalloc` (`std::malloc`, into `Music_File`); `render_shim.cpp:53` `Alloc`
+  (`std::calloc`, the surface objects in `Slot32<ComObject>`); `mp3.cpp:109` `new Decoder` (its frame's
+  address in a game word, a Fatal above 4 GB today). On Linux each needs the arena too, or an
+  `operator new` / `calloc` of its own below 4 GB: stage LC's.
+- **The three `_msize` sites**, all `sound_ours.cpp`: `HeapBlockBytes` (`:881`), the quicksave's SOUND
+  record writing a bank's sample data, the last stream's file and a non-track music's data by their
+  exact length (`:951`, `:990`, `:1018`); and two checks of the SOUND self-test (`:1672`, `:1703`) that
+  the restored blocks have the take's length.
+- **How the 64-bit Windows build keeps its heap low today:** by placement, not code
+  (x64-build-design.md 2 and 5: a fixed-base executable's bottom-up heap, 44 of 48 blocks of 64 MB
+  below 4 GB), guarded by `LowBlock` at the chokepoint. The design named this arena as the fallback.
+- **Threads:** the executable imports no `CreateThread` (crt-rest.md 2.1); our DLL's threads (log
+  writer, crash reporter, stall watch, SDL's audio callback) use `std::malloc`, not the chokepoint.
+  So one thread calls it, by this reading; the arena locks anyway.
+- **Size:** the largest file the game reads whole is `SND\KARA.DAT`, 4,310,831 bytes
+  (`find bof3/ -type f -size +4M`). The game's peak heap was not measured.
+
+**The design.** `src/os/heap.h`, three parts:
+
+- `HeapExactSize` / `HeapHasExactSize` per backend: `_msize` on Windows (`win32/heap.cpp`), no answer
+  on POSIX (`posix/heap.cpp`).
+- `MemReserveBelow4G(size, floor)`, portable over `MemQuery` and `MemReserve`: the free runs in
+  `[floor, 4 GB)`, the highest that holds the size, 64 KB aligned.
+- `LowArena` (`src/os/heap_arena.cpp`, portable): one reservation, committed in 64 KB steps as the
+  used end rises; blocks with a 16-byte header {size, size below, requested, tag}, 16-byte aligned;
+  first fit from a free list; a freed block merges with free neighbours both ways, and one that
+  reaches the used end gives the room back. `Alloc(0)` is a block of its own of size 0; above
+  `0xFFFFFFE0` (MSVC 6's `_HEAP_MAXREQ`) null; `Calloc` refuses a product past it; `Realloc` is C's
+  (null is `Alloc`, 0 frees, in place when it can, moved when not, null and the block kept when there is
+  no room); `SizeOf` answers the request exactly; one `std::mutex`. `Open` takes `[2 GB, 4 GB)` first
+  (above every bind-table top byte, `bind.cpp`, and above `MAP_32BIT`'s room), then the system's own
+  place if it lies below 4 GB (a 32-bit process), then `[64 KB, 2 GB)`.
+
+The chokepoint (`crt_rest.cpp`): with the arena on, `Crt_malloc` / `Crt_calloc` take its blocks
+(256 MB reserved; a request it cannot hold is a Fatal naming the 256 MB, the live bytes and the used
+end); `Crt_free` frees its blocks and hands any other pointer to the toolchain's `free`, as before
+(a block of the runtime's own heap, or a `std::malloc` one); `crt_rest::BlockBytes` is the size
+query, the arena's record for its blocks, else the C runtime's `_msize`, else a Fatal.
+`sound_ours.cpp` asks `BlockBytes` in place of `_msize`, and its self-test takes its blocks from
+`Crt_malloc` / `Crt_free`, so the size query answers for them and they lie below 4 GB.
+
+**The switch: `BOF3X_ARENA`**, read once at the first heap call through `os::GetEnv`: `1` on, `0`
+off, anything else a Fatal. Unset, it is on where the C runtime has no exact size
+(`HeapHasExactSize()` false: Linux), off on Windows; `0` where there is no exact size is a Fatal. On, the
+log has one line: `heap        the arena (BOF3X_ARENA): 256 MB reserved at ...`. Off, the three entries
+call the toolchain's `malloc`, `calloc` and `free` as before, after one test of a static; the block
+size is `_msize` through the seam. `tools/ledger_switches.py` lists the name (`env`). No ledger entry:
+where a block lies and how the heap is cut is nothing a player sees.
+
+**Proof.**
+
+| Check | Result |
+|---|---|
+| `os_tests`, `TestHeapArena` | Win32 32-bit: 153 checks, 0 failed (the arena at `0x015F0000`: no free run above 2 GB in a 32-bit process, so the system's place); 64-bit: 157, 0 failed (at `0xFF000000`); POSIX (g++ 15.2, WSL): 157, 0 failed (at `0xFF000000`) |
+| What the test does | the exact-size call per system; a reservation below 4 GB above a 2 GB floor; zero-size, too-large and double-free cases; 20,000 random rounds of malloc, calloc, realloc and free against a model (sizes, 16-byte alignment, every block below 4 GB, contents kept, calloc zeroed, invariants every 500 rounds); free all, then the used end at 0; 4,177 blocks of 4,000 bytes to the end, every other one freed, the rest freed, one block of 16 MB less 4 KB; a block grown into the reserved room and shrunk in place; four threads at once |
+| The test fails when it should | two mutations, built in the WSL: no merge with the block below (at least 6 checks fail, the output cut at 6: the invariants and the used end after freeing all), `SizeOf` answering the usable size (4 fail) |
+| The hosted shadow suite, 32-bit (`BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'`, a clean launcher folder, the PC install) | arena off: `self-test only: done`, 922 `MISMATCHES` lines, each 0; arena on (`BOF3X_ARENA=1`): the same, 922 and 0, the arena at `0x18440000..0x28440000` (no free run above 2 GB, so the system's place), the SOUND self-test and `crt_rest`'s heap fuzz (200 rounds of 64 blocks) among them |
+| The 64-bit exe host's start-up self-tests (`BOF3X_SELFTEST_ONLY=1 ... --host exe`, `build-x86_64`) | off and on: exit 0, `self-test only: done`; on, the arena at `0xF0000000..0x100000000`; the two logs differ only in process and thread numbers and one free-run size below 16 MB |
+| `linux_tree.py` | 804 files (the two new), 767 compile for x86-64 Linux, 37 do not; `sound_ours.cpp` is not among them |
+
+**Not verified:** the game's peak heap with the arena (the used end's high-water mark is kept,
+`LowArena::HighWater`, and not logged); the ten state-hash routes with it on or off (the
+coordinator's, at the merge); a played game with it on; anything on Linux beyond the compile and
+`os_tests` (no link exists).
+
+#### R3: what a Linux start-up needs from the PE host
+
+Group R23 (wave 1), 2026-11-17. `host.cpp`, `exe_host.cpp`, `exe_icon.cpp`
+and `dllmain.cpp` are in `tools/linux_probe/linux_tree.py`'s `WINDOWS_ONLY`:
+each one reads or patches a PE image in the process or is the DLL's entry.
+`detour.cpp` is not: its only PE part was `VerifyImage`, the hosted build's
+check of `BOF3.exe`'s header, which moved to `host.cpp` (it is called from
+`dllmain.cpp` alone). The rest of `detour.cpp` (`Inject`, `RetargetCall`,
+`PatchBytes`, `CloneOriginal`, the name lists) compiles for Linux and
+already takes its exe-host branch by `IsExeHost()`.
+
+`exe_image.cpp` (the data image from a disc-built install) is on the seam:
+`BOF3X_EXEIMAGE` is read by `os::GetEnvW` and `os::ToUtf8`, and its files
+are opened by `std::ifstream` on `os::PathOfUtf8` (new in `os/file.h`: a
+UTF-8 name as a path, a backslash read as a separator, ill-formed UTF-8
+refused; Windows converts with `MB_ERR_INVALID_CHARS` as the file did, POSIX
+checks the bytes; `TestUtf8Paths` in `tools/os_host`). The three watchers of
+R2 stay Windows files; on another system `src/hook/windows_only.cpp` defines
+their entry functions, each switch a `Fatal` when it is set.
+
+The functions the rest of the engine calls in the four files, measured with
+`grep -rnE '\b(<name>)\(' src` outside the four files and their headers
+(comment lines left out), and what a Linux start-up must supply:
+
+| Function | File | Called from | A Linux start-up must supply |
+|---|---|---|---|
+| `DllMain` | `dllmain.cpp` | the Windows loader | Nothing: it is the hosted build's start-up, and a Linux build is the exe host only (`IsExeHost()` true). Its order (log, host, image check, `InjectAll`, the watchers) is the template for `main`'s |
+| `Engine_Main(hinstance, command_line, show)` | `exe_host.cpp` | `bof3x.exe`'s entry (`tools/make_exe.py`, the import `bof3x.dll!Engine_Main`) | A `main` that does the same steps in the same order: refuse the hosted switches; reserve the linked span 0x400000.. (`Fence`); check the layout; make `.stub` no-access (`TrapStub`); copy `.data` from `BOF3.exe` or from `ExeImage_Source` (`CopyData`, the disc-built image - `exe_image.cpp`, which now compiles for Linux); move the pointer words (`Rebase`); fill the import slots with our functions (`BindSlots`); `SoundSdl_Start`; the x87 word (`SetX87`); `Crash_Start`; `InjectAll`; the watchers' `_Start` calls; `Game_WinMain`. On Linux the image is not mapped by a loader: the start-up maps `bof3x.exe`'s sections (or a layout of its own) at a fixed low address itself |
+| `ExeFile_Present()`, `ExeFile_Read(va, to, n)` | `exe_host.cpp` | `dat_load.cpp:848`, `magic_080.cpp:803`, `rdata_consts.cpp:37`, `:109`, `shell.cpp:113`, `:115`, `exe_image.cpp:617`, `:619`, `:1308`, `:1314`, `exe_own.cpp:350`, `:356` (12 lines in 6 files) | A reader of the player's `BOF3.exe` file: whether it is there, and `n` bytes at a VA of its `.text`, `.rdata` or `.data` from the file's section table. This is a file read and the PE file format, not a Windows call: it can be portable code over `std::ifstream` |
+| `ExeIcon_Frame(hwnd)` | `exe_icon.cpp` | `magic_080.cpp:1017` | The window icon (DIV-0095) from the same picture through SDL3's `SDL_SetWindowIcon` once the window is SDL3's (R6). `exe_icon.cpp`'s picture code (the VRAM read, the Lanczos scale) is portable; the icon, WIC and COM parts are not |
+| `ExeIcon_SelfTest()` | `exe_icon.cpp` | `exe_host.cpp:651` only | The same self-test against the reference `.ico`, without WIC's decoder |
+| `DetectHost()` | `host.cpp` | `dllmain.cpp:45` only | The host's identity and base without the main module's PE header: on Linux the host is the exe host, and the start-up knows where it mapped the image. It must still make the 16 MB window check and the `BOF3X_IMAGEBASE` check and set `Bof3_ImageMove` |
+| `VerifyImage()` | `host.cpp` (from `detour.cpp`, this group) | `dllmain.cpp:47` only | Nothing: hosted only |
+| `Host()`, `IsExeHost()` (inline in `host.h`) | `host.cpp` | 33 lines in 18 files (`grep -rlE '\b(IsExeHost\|Host)\(\)' src`) | `Host()` answering `HostKind::Exe` once the start-up has set it |
+| `CodeLo()`, `CodeHi()`, `InCode()` (inline) | `host.cpp` | `calltrace.cpp:310`, `:311`, `crash.cpp:328`, `:329`; `InCode` in `labels.cpp:454`, `code_bytes.cpp:58`, `detour.cpp` (4 lines) | `.stub`'s range (`exe_layout::kStubVa`, `kStubSize`): no PE read needed |
+| `Bof3_ImageMove` (a variable) | `host.cpp` | the asm of `field_6.cpp` (4 sites) and `task_switch_i686.h` / `task_switch_x86_64.h` (14) | The same 32-bit word: image base minus 0x400000 |
+
+**Proposed for LC:** split `host.cpp` into its portable part (the state,
+`Host`, `CodeLo`, `CodeHi`, `Bof3_ImageMove`, the window and
+`BOF3X_IMAGEBASE` checks) and a per-host part that answers the base and the
+identity (`DetectHost` reading the PE header on Windows, the Linux start-up
+on Linux). Not done here: it changes the Windows file for no Windows gain.
+
+**Found on the way, for LC:** `ImageBase()` (`src/common/image_base.h`, not
+this group's) reads the base from the Windows process environment block
+(`fs:0x30` / `gs:0x60`). It compiles for Linux, so `linux_tree.py` does not
+show it, but on Linux that read is not the image's base; LC must give it
+another source (a variable the start-up sets, read once) before anything
+places an address.
+
+### Wave 1 as run (2026-11-17, branch `linux/wave1`, not merged)
+
+The owner's word on 2026-11-17: the round runs here. Wave 1's six groups ran
+as five agents (R2 and R3 as one), each in a worktree from `b0955695`, and
+were merged one at a time into `linux/wave1`. Calls 2 and 4 stand as
+proposed: the three watchers are Windows files, the arena is on Windows
+behind a switch.
+
+| Group | What it left | Its own proof |
+|---|---|---|
+| R4 | `src/input/key_codes.h` (`kDik*`, `kVk*`, the SDK's values, asserted against the SDK in `src/launcher/key_codes_check.cpp`); the four `dinput.h` includes were dead | Objects equal but for `__LINE__` and one format string; the hosted suite not run, on that ground |
+| R10 | The arena, "R10 as run" above; `BOF3X_ARENA` | Hosted suite off and on, 922 lines of 0 each; the 64-bit exe host's start-up tests off and on |
+| R2, R3 | `WINDOWS_ONLY` in `linux_tree.py`; `src/hook/windows_only.cpp` (a Fatal for `BOF3X_CALLTRACE`, `BOF3X_GAPWATCH`, `BOF3X_WRITEWATCH` off Windows); `detour.cpp` and `exe_image.cpp` on the seam (`os::PathOfUtf8`); "R3" above | Hosted suite 922 of 0; the exe-host self-test. `exe_image.cpp`'s reading of a disc-built image not exercised |
+| R1 | `os/module.h`, `stack.h`, `sampler.h`, `local_time.h`, `named_event.h`, `path_file.h`; five harness files compile; `BOF3X_STALLWATCH` is a Fatal off Windows (no sampler there yet) | Hosted suite 922 of 0. No route, no WAV dump in a game |
+| R8 | `os/event.h`, `thread.h`, `out_file.h`; `crash.cpp` the portable report, `crash_win32.cpp` the old catcher, `crash_posix.cpp` a signal catcher; `stackwatch_win32.cpp` and a refusing `stackwatch_posix.cpp`; `log.cpp` and `sound_sdl.cpp` off Windows' API; `tools/crash_report.py --log` | Hosted suite 922 of 0; a crash on purpose before and after, the same seven `CRASH` lines (32-bit, exe host); `tools/linux_probe/crash_catch_test.sh` in the WSL, nine modes. `music_heard.py`: two ring lines only, the run was stopped |
+
+**At the merge.** Both groups R1 and R8 added `src/os/{win32,posix}/thread.cpp`:
+R1's keeps the name, R8's is `thread_start.cpp`. The other conflicts were
+both-sides-appended (`os.h`, `os_tests.cpp`, `linux_tree.py`,
+`os_census.py`, this file).
+
+| Check on `linux/wave1` after the five merges | Result |
+|---|---|
+| Both presets | build, no error |
+| `os_tests` | Win32 32-bit 234 checks, 64-bit 237; POSIX (g++ 15.2, WSL) 232; 0 failed |
+| `os_census --check --boundary` | ok, 11 files wait |
+| `linux_tree.py` | 806 files, **794 compile for x86-64 Linux, 12 do not**, 9 Windows files by design |
+| `width_census`, `reloc_bare`, `data_census --strict`, `ledger_check` | ok after the censuses were regenerated |
+| `reloc_census` | `range_cmp` 83 to 85, on purpose: `log.cpp`'s queue size is 4 MB, which is `0x400000`; a size, not an address |
+
+The 12: `win_main.cpp`, `display_setup.cpp`, `d3d.cpp`, `magic_080.cpp`,
+`battle_menu_win.cpp` (R6); `d_input.cpp`, `pad_read.cpp`, `rdata_consts.cpp`
+(R5); `snapshot.cpp` (R7); `render_d3d11.cpp`, `satpixie.cpp` (R9);
+`input_script.cpp`, which waits for R6's window (lines 960..969) and takes
+R4's key names (lines 221..223, 1302..1303).
+
+**The ten state-hash routes, run on the merged branch 2026-11-18** (`d4f90201`,
+the exe host, an ini-less launcher copy, the conditions of
+[`state-hash.md`](state-hash.md) section 6; a copy of the recording
+session's `chain3.py`, no compiler seen during any run; ours as
+`cn_<route>_w1`):
+
+- `check` against the `orig5` / `orig5b` pair: on all ten routes the pages
+  and their first tick, last tick and tick count are those of `m1116`'s own
+  check (`D:\bof3x-runs\orig1116\check_<route>.txt`), compared line for line.
+- `diff` against `cn_<route>_m1116` (ours at `main` `df083903`, before the
+  Linux work and before PRs #256 to #258): **identical on every compared
+  tick on seven routes** (field_menu 1,409; menu_screens 1,729; combat
+  2,561; shop 3,137; dragonTransform 4,289; cutsceneAndNue 7,425; whelpBoss
+  13,185). On worldMapAndAreaTransition, caughFish and masterAndManillo one
+  page differs, `0x6C3000`, from the tick the route's glyph pages begin
+  (1,098; 395; 324) to the end. **It is run noise:** a second run of the
+  same launcher copy (`cn_<route>_w1b`) differs from the first on that page
+  over the same ticks, and from `m1116` likewise. Which bytes of the page
+  were not read (no dump was taken).
+
+**The self-tests on the merged branch, 2026-11-18** (the same build, clean
+folders under `C:\Users\kerok\bof3x-runs\lbw1\coord`, `--no-config`):
+hosted with `BOF3X_SHADOW='*'` - the log ends `self-test only: done`, 922
+`MISMATCHES` lines, every one 0; the exe host - game process exit code 0,
+10,388 log lines, 0 FATAL; the exe host at `BOF3X_IMAGEBASE=0xA00000` - the
+same three figures, the span `0x400000..0x98F000` reserved no-access.
+
+**Not run on the merged branch:** `music_heard.py` to its end, a game with
+`BOF3X_ARENA=1`.
+
+**A player on Windows:** nothing by intent, so no ledger entry. Under test
+switches: the stall log's module names are UTF-8; a failed seek of the WAV
+dump is a Fatal (it was ignored); two state-hash messages are one.
+
+**For stage LC, found by the groups:** `ImageBase()` reads the Windows
+process block (above); the game's `CreateEventA`, `CloseHandle` and
+`MsgWaitForMultipleObjects` import slots need stand-ins on `os::Event`;
+memory the game holds in 32-bit words outside the arena
+(`music_seq.cpp:634`, `render_shim.cpp:53`, `mp3.cpp:109`, SDL's sound
+objects not traced); `os::CurrentStack()` on POSIX does not know a stack
+the program switched onto; the crash catcher's alternate stack covers the
+arming thread alone; `tools/input_run.py`'s frozen shots have no Linux side.
+
+**A fault of the run.** One agent started the launcher on its worktree's
+empty `bof3` folder and a dialog stood on the owner's screen. The brief
+named the right form for the self-test and did not forbid other forms: the
+next brief says that a worktree holds no game data, and that a run not in
+the brief is not made.
 
 ### Stage LC - link and run on Linux
 

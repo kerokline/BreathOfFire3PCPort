@@ -22,11 +22,18 @@
 // module's inject, its fuzz and the randlog's hooks.
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 
 void CrtRest_Inject();
 
 namespace crt_rest {
+
+// The exact size asked for a live Crt_malloc / Crt_calloc block, what MSVC's
+// _msize answers: the heap arena's own record when BOF3X_ARENA has it on
+// (always where the C runtime has no exact size: crt_rest.cpp), else the C
+// runtime's _msize. A Fatal for a block it cannot answer for.
+std::size_t BlockBytes(const void* block);
 
 // BOF3X_SHADOW=crt_rest: the start-up fuzz, crt_rest_fuzz.cpp - before
 // CrtRest_Inject patches the entries.

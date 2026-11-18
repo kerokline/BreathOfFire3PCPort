@@ -96,8 +96,13 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      Not read: `long` in `src/render` and `src/audio`. On the 64-bit Windows build the save list's search handle is now a
      slot number (it was a narrowed address): open the save list there once.
    - **The 38 files are staged as one round** of ten groups in two waves ([`linux-round.md`](linux-round.md), "The 38 files,
-     staged as one round"): not launched. It waits for the owner's word, this branch on `main`, and four calls there (who
-     runs which group, the three watchers, DirectInput's switch, the heap arena on Windows).
+     staged as one round"). **Wave 1 ran on 2026-11-17** (the owner: the round runs here) and is merged into the local branch
+     `linux/wave1`, not pushed: 794 of 806 files compile for x86-64 Linux, 12 wait for wave 2, 9 are Windows files by design
+     ("Wave 1 as run"). **The ten state-hash routes ran on the merged branch on 2026-11-18:** seven identical to
+     `m1116` on every tick, three differ on the one page `0x6C3000`, which two runs of the same build also differ on.
+     The hosted shadow suite (922 lines of 0), the exe host and the moved base passed there the same day.
+     **Owed before a PR:** `music_heard.py` to its end. Wave 2 (R5, R6, R7, R9) is not launched: it needs
+     the owner's eye, and call 3 (DirectInput's switch).
    - **The Linux round's next units** are frost's, on his fork ([`linux-round.md`](linux-round.md) 4 and 6; "Waiting on
      someone else"). Here: the renderer's remainder ([`platform-layers-plan.md`](platform-layers-plan.md) 2.2) and the
      second backend (IDEAS I63) gate tier 2, and the API is the owner's call 1 of `linux-round.md` 6. Tier 1's rows 5, 7

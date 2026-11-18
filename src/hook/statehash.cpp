@@ -1,7 +1,5 @@
 #include "hook/statehash.h"
 
-#include <windows.h>
-
 #include <cstdint>
 #include <algorithm>
 #include <cstdio>
@@ -284,21 +282,21 @@ std::uint32_t Identity(const Section& s, std::uint32_t target) {
 }
 
 void ReadDllImage(void* module) {
-    const auto base = Low32(module);
-    const auto* dos = static_cast<const IMAGE_DOS_HEADER*>(module);
-    if (dos->e_magic != IMAGE_DOS_SIGNATURE) Fatal("statehash: our module at 0x%08lX has no MZ header", (unsigned long)base);
-    const auto* nt = reinterpret_cast<const IMAGE_NT_HEADERS32*>(static_cast<std::uintptr_t>(base + dos->e_lfanew));
-    if (nt->Signature != IMAGE_NT_SIGNATURE) Fatal("statehash: our module at 0x%08lX has no PE header", (unsigned long)base);
+    // The loader's image of the module (os/module.h): the PE headers on
+    // Windows - every section but the discardable ones - the PT_LOAD
+    // segments on POSIX. `module` is the module's handle, its base, on
+    // Windows; any address inside it will do.
+    os::ModuleImageInfo image;
+    if (!os::ModuleImage(module, &image))
+        Fatal("statehash: our module at %p has no image headers the loader mapped", module);
+    const auto base = Low32(reinterpret_cast<const void*>(image.base));
     g_dll_lo = base;
-    g_dll_hi = base + nt->OptionalHeader.SizeOfImage;
+    g_dll_hi = base + static_cast<std::uint32_t>(image.extent);
     g_named_lo = g_dll_hi;
     g_named_hi = g_dll_lo;
-    const IMAGE_SECTION_HEADER* s = IMAGE_FIRST_SECTION(nt);
-    for (unsigned i = 0; i < nt->FileHeader.NumberOfSections; ++i, ++s) {
-        if (s->Characteristics & IMAGE_SCN_MEM_DISCARDABLE) continue;
-        const std::uint32_t size = s->Misc.VirtualSize ? s->Misc.VirtualSize : s->SizeOfRawData;
-        const bool content = (s->Characteristics & IMAGE_SCN_MEM_READ) && !(s->Characteristics & IMAGE_SCN_MEM_EXECUTE);
-        const std::uint32_t lo = base + s->VirtualAddress, hi = lo + size;
+    for (const os::ModulePart& s : image.parts) {
+        const bool content = s.readable && !s.executable;
+        const std::uint32_t lo = base + static_cast<std::uint32_t>(s.lo - image.base), hi = lo + static_cast<std::uint32_t>(s.hi - s.lo);
         g_sections.push_back({lo, hi, content});
         if (lo < g_named_lo) g_named_lo = lo;
         if (hi > g_named_hi) g_named_hi = hi;
@@ -674,7 +672,7 @@ void LoadSkips(const char* path) {
 }
 
 void Dump() {
-    char path[MAX_PATH + 32];
+    char path[bof3::os::kMaxPath + 32];
     std::snprintf(path, sizeof path, "%s.%lu.bin", g_path.c_str(), static_cast<unsigned long>(g_tick));
     FILE* f = std::fopen(path, "wb");
     if (!f) Fatal("BOF3X_STATEHASH_DUMP: cannot open %s for writing", path);
@@ -697,7 +695,7 @@ void StateHash_BeforeInjects(void* dll_module) {
     if (bof3::os::GetEnv("BOF3X_SELFTEST_ONLY", nullptr, 0) > 0) SelfTest();
     if (bof3::os::GetEnv("BOF3X_STATEHASH", nullptr, 0) == 0) return;
     char raw[8];
-    const DWORD rn = bof3::os::GetEnv("BOF3X_STATEHASH_RAW", raw, sizeof raw);
+    const std::uint32_t rn = bof3::os::GetEnv("BOF3X_STATEHASH_RAW", raw, sizeof raw);
     if (rn >= sizeof raw || (rn > 0 && std::strcmp(raw, "0") != 0 && std::strcmp(raw, "1") != 0))
         Fatal("BOF3X_STATEHASH_RAW: wants 1 (hash our pointers raw, as BOF3SH2 did) or 0");
     g_normalise = !(rn > 0 && raw[0] == '1');
@@ -706,7 +704,7 @@ void StateHash_BeforeInjects(void* dll_module) {
     // moved, and BOF3X_STATEHASH_FOLD - on a run at 0x400000, the moved run's
     // base, so both sides fold the same range.
     char fold[24];
-    const DWORD fn = bof3::os::GetEnv("BOF3X_STATEHASH_FOLD", fold, sizeof fold);
+    const std::uint32_t fn = bof3::os::GetEnv("BOF3X_STATEHASH_FOLD", fold, sizeof fold);
     if (fn >= sizeof fold) Fatal("BOF3X_STATEHASH_FOLD: wants an address, as 0x70000000");
     if (fn > 0) {
         char* end = nullptr;
@@ -792,19 +790,19 @@ void StateHash_AfterInjects() {
 }
 
 bool StateHash_Start() {
-    char path[MAX_PATH];
-    const DWORD n = bof3::os::GetEnv("BOF3X_STATEHASH", path, sizeof path);
+    char path[bof3::os::kMaxPath];
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_STATEHASH", path, sizeof path);
     if (n == 0) return false;
     if (n >= sizeof path) Fatal("BOF3X_STATEHASH: the path is %lu characters, over MAX_PATH", (unsigned long)n);
     g_path = path;
     if (!g_census) Fatal("BOF3X_STATEHASH: the pointer slots were not recorded before the injects (DllMain)");
-    char skip[MAX_PATH];
-    const DWORD sn = bof3::os::GetEnv("BOF3X_STATEHASH_SKIP", skip, sizeof skip);
+    char skip[bof3::os::kMaxPath];
+    const std::uint32_t sn = bof3::os::GetEnv("BOF3X_STATEHASH_SKIP", skip, sizeof skip);
     if (sn >= sizeof skip) Fatal("BOF3X_STATEHASH_SKIP: the path is over MAX_PATH");
     if (sn > 0) LoadSkips(skip);
     if (g_page_skips.empty()) g_page_skips.assign(kPages, {});
     char dump[256];
-    const DWORD dn = bof3::os::GetEnv("BOF3X_STATEHASH_DUMP", dump, sizeof dump);
+    const std::uint32_t dn = bof3::os::GetEnv("BOF3X_STATEHASH_DUMP", dump, sizeof dump);
     if (dn >= sizeof dump) Fatal("BOF3X_STATEHASH_DUMP: the list is over %u characters", (unsigned)sizeof dump);
     if (dn > 0) {
         for (char* p = dump; *p;) {

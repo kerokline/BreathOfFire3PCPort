@@ -1,0 +1,28 @@
+// bof3::os, the calling thread's stack: where it begins and ends, for a
+// harness that asks whether an address is a caller's local (the self-tests'
+// guarded reads, game/boss_harness.cpp and game/scenario_harness.cpp) and for
+// the stall watch's scan (hook/stallwatch.cpp).
+//
+// Windows: the TIB's StackLimit and StackBase (NtCurrentTeb), which follow a
+// fiber the thread switched to. POSIX: pthread_getattr_np's stack of the
+// thread, asked once per thread; a stack the program switched onto itself (a
+// fiber of its own, units L3 / R7) is not that one, so on such a stack no
+// address reads as the stack's until that unit gives this call its answer.
+// Part of the operating-system seam (docs/linux-round.md, LB1): what the C++20
+// standard library cannot do, behind one header per service, with a backend per
+// system in win32/ and posix/. No Windows or POSIX type appears in a header, and
+// nothing here logs or stops: the caller owns the message (bof3::Fatal).
+#pragma once
+
+namespace bof3::os {
+
+// [limit, base): the stack grows down from base. Windows' limit is the lowest
+// committed page (it moves down as the stack grows); POSIX's is the lowest
+// byte the thread's stack may use. Both null when the system does not say.
+struct StackRange {
+    void* limit = nullptr;
+    void* base = nullptr;
+};
+StackRange CurrentStack() noexcept;
+
+}  // namespace bof3::os

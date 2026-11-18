@@ -14,7 +14,6 @@
 // result.
 #include "game/sound.h"
 
-#include <malloc.h>
 
 #include <chrono>
 #include <cmath>
@@ -27,6 +26,7 @@
 #include "audio/mp3.h"
 #include "bof3/symbols.gen.h"
 #include "common/asm_name.h"
+#include "game/crt_rest.h"
 #include "game/display_env_callees.h"
 #include "game/mode_flow.h"
 #include "game/music_loops.h"
@@ -878,7 +878,9 @@ constexpr unsigned kGetFrequency = 0x20;          // IDirectSoundBuffer::GetFreq
 constexpr unsigned char kNoEntry = 0xFF;
 enum : unsigned char { kMusicNone = 0, kMusicTrack = 1, kMusicOther = 2 };
 
-std::size_t HeapBlockBytes(void* block) { return _msize(block); }
+// The exact size asked for a Crt_malloc block: the C runtime's _msize, or the
+// heap arena's own record where BOF3X_ARENA has it on (crt_rest.cpp).
+std::size_t HeapBlockBytes(void* block) { return crt_rest::BlockBytes(block); }
 
 // The size of the file Music_LoadFile would read for `track` in this
 // process (the cache song, else BGM\NNN.DAT, else BGM\NNNN.DAT), nothing
@@ -905,7 +907,7 @@ struct SnapCallees {
     void (__cdecl* stream_play)(const unsigned char*);   // SndStream_Play
     void (__cdecl* release)(void*);                      // SndBuf_Release
     void* (__cdecl* from_wave)(const unsigned char*);    // SndBuf_FromWave
-    std::size_t (*block_bytes)(void*);                   // a Crt_malloc block's size (the toolchain's heap: crt-rest 2.6)
+    std::size_t (*block_bytes)(void*);                   // a Crt_malloc block's size (crt_rest::BlockBytes)
     int (*music_file_size)(unsigned);                    // MusicFileSize (SnapCheck)
 };
 const SnapCallees kSnapOriginals = {SndStream_Stop, SndStream_Play, SndBuf_Release, SndBuf_FromWave, HeapBlockBytes,
@@ -1305,7 +1307,7 @@ void music_resume::SelfTest() { ResumeMp3_SelfTest(); }
 // SOUND's self-test (docs/quicksave.md section 10.4): the participant driven
 // through its Save, Discard and Restore with SN's span write played by hand
 // (the take's words written back between the two), on stand-ins - DirectSound
-// buffers with a vtable of ours, the heap through std::malloc, the music's
+// buffers with a vtable of ours, the heap through Crt_malloc, the music's
 // file and start recorded. Three parts:
 //   - fades: a duck in progress, a fade to a stop four steps in (DIV-0143's
 //     case) and one whose first tick has not come (DIV-0028's unseen stop), a
@@ -1378,8 +1380,10 @@ void* __cdecl FakeCreate(const unsigned char* wave) {
     return &f;
 }
 
-void* __cdecl TestMalloc(unsigned n) { return std::malloc(n ? n : 1); }
-void __cdecl TestFree(void* p) { std::free(p); }
+// The game's own heap (Crt_malloc), so that HeapBlockBytes answers for the
+// test's blocks and they lie below 4 GB as the words that hold them ask.
+void* __cdecl TestMalloc(unsigned n) { return Crt_malloc(n ? n : 1); }
+void __cdecl TestFree(void* p) { Crt_free(p); }
 
 // The span's words the participant reads and writes: SN's span write, by hand.
 struct SpanWords {
@@ -1635,7 +1639,7 @@ void Banks() {
     // a voice stream playing from the last stream's file
     const std::vector<unsigned char> voice = Payload(13, 1);
     const std::size_t voice_bytes = voice.size() - 0x380;
-    void* const stream = std::malloc(voice_bytes);
+    void* const stream = TestMalloc(static_cast<unsigned>(voice_bytes));
     std::memcpy(stream, voice.data() + 0x380, voice_bytes);
     SaveMenu_StreamData = Address(stream);
     SaveMenu_StreamKind = 1;
@@ -1669,7 +1673,7 @@ void Banks() {
         if ((data == 0) != (take_data == 0)) equal = false;
         if (!data) continue;
         const std::vector<unsigned char>& payload = b == 0 ? one : three;
-        equal = equal && b != 1 && _msize(At(data)) == payload.size() - 0x380 &&
+        equal = equal && b != 1 && HeapBlockBytes(At(data)) == payload.size() - 0x380 &&
                 std::memcmp(At(data), payload.data() + 0x380, payload.size() - 0x380) == 0;
         for (unsigned e = 0; e < 64; ++e) {
             std::uint32_t take_sample;
@@ -1700,7 +1704,7 @@ void Banks() {
           "banks: the looping voices play again at their frequency and position, the stopped one does not");
     const std::uint32_t stream_now = SaveMenu_StreamData;
     FakeBuf* const v = static_cast<FakeBuf*>(SndStream_Buffer);
-    Check(stream_now && _msize(At(stream_now)) == voice_bytes &&
+    Check(stream_now && HeapBlockBytes(At(stream_now)) == voice_bytes &&
               std::memcmp(At(stream_now), voice.data() + 0x380, voice_bytes) == 0 && v && v != voice_buffer &&
               v->playing && v->position == 0x80 && v->hash == voice_buffer->hash && voice_buffer->releases == 1,
           "banks: the last stream's file and its voice, playing again at its position");
@@ -1718,7 +1722,7 @@ void Banks() {
 
 int __cdecl TmLoad(unsigned track) {
     g_loads.push_back({track, Music_File == nullptr});
-    unsigned char* const f = static_cast<unsigned char*>(std::malloc(1000));
+    unsigned char* const f = static_cast<unsigned char*>(TestMalloc(1000));
     for (unsigned i = 0; i < 1000; ++i) f[i] = static_cast<unsigned char>(i * 7);
     Music_File = f;
     Music_FileSize = 1000;
@@ -1730,7 +1734,7 @@ void __cdecl TmStart(const void* file, unsigned size, int loops) {
     g_starts.push_back({file, size, loops, sound::g_restore_skip.armed, sound::g_restore_skip.sample});
     if (sound::g_restore_skip.armed) sound::g_restore_skip.armed = false, sound::g_restore_skip.reached = sound::g_restore_skip.sample;
     Music_Buffer = FakeCreate(nullptr);
-    Music_Data = std::malloc(size);
+    Music_Data = TestMalloc(size);
     Music_Loops = loops;
     Music_Finished = 0;
 }
@@ -1751,7 +1755,7 @@ void Music(bool playing) {
     Music_Track = 200;
     TmLoad(200);
     Music_Loops = 0, Music_Finished = 0, Music_Decoder = nullptr;
-    Music_Data = std::malloc(1000);
+    Music_Data = TestMalloc(1000);
     std::memcpy(Music_Data, Music_File, 1000);
     Music_Volume = 50.0f;
     g_loads.clear();
@@ -1760,7 +1764,7 @@ void Music(bool playing) {
     // a voice stream playing beside the music (D406: it comes back after the music's start)
     const std::vector<unsigned char> voice = Payload(17, 1);
     const std::size_t voice_bytes = voice.size() - 0x380;
-    void* const stream = std::malloc(voice_bytes);
+    void* const stream = TestMalloc(static_cast<unsigned>(voice_bytes));
     std::memcpy(stream, voice.data() + 0x380, voice_bytes);
     SaveMenu_StreamData = Address(stream);
     SaveMenu_StreamKind = 1;

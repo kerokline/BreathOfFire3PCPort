@@ -1,8 +1,6 @@
 #include "input/bindings.h"
 
-#define WIN32_LEAN_AND_MEAN
-#define DIRECTINPUT_VERSION 0x0700
-#include <dinput.h>
+#include "input/key_codes.h"
 
 #include <cstdio>
 #include <cstdlib>
@@ -204,13 +202,13 @@ bool KeysFromTable(const unsigned char* table, size_t bytes, std::vector<KeyBind
 namespace {
 // The rule, by button: the keys of each, in Key_TableDefault's order.
 constexpr KeyBinding kDefaultRule[] = {
-    {DIK_UP, kUp},          {DIK_DOWN, kDown},        {DIK_LEFT, kLeft},       {DIK_RIGHT, kRight},
-    {DIK_Z, kTriangle},     {DIK_X, kCross},          {DIK_C, kSquare},        {DIK_V, kCircle},
-    {DIK_A, kL1},           {DIK_Q, kL2},             {DIK_S, kR1},            {DIK_W, kR2},
-    {DIK_RETURN, kStart},   {DIK_RSHIFT, kSelect},    {DIK_ESCAPE, kCross},    {DIK_SPACE, kCircle},
-    {DIK_NUMPAD8, kUp},     {DIK_NUMPAD2, kDown},     {DIK_NUMPAD4, kLeft},    {DIK_NUMPAD6, kRight},
-    {DIK_NUMPAD9, kUp | kRight}, {DIK_NUMPAD1, kDown | kLeft}, {DIK_NUMPAD7, kUp | kLeft},
-    {DIK_NUMPAD3, kDown | kRight},
+    {kDikUp, kUp},          {kDikDown, kDown},        {kDikLeft, kLeft},       {kDikRight, kRight},
+    {kDikZ, kTriangle},     {kDikX, kCross},          {kDikC, kSquare},        {kDikV, kCircle},
+    {kDikA, kL1},           {kDikQ, kL2},             {kDikS, kR1},            {kDikW, kR2},
+    {kDikReturn, kStart},   {kDikRShift, kSelect},    {kDikEscape, kCross},    {kDikSpace, kCircle},
+    {kDikNumpad8, kUp},     {kDikNumpad2, kDown},     {kDikNumpad4, kLeft},    {kDikNumpad6, kRight},
+    {kDikNumpad9, kUp | kRight}, {kDikNumpad1, kDown | kLeft}, {kDikNumpad7, kUp | kLeft},
+    {kDikNumpad3, kDown | kRight},
 };
 static_assert(sizeof kDefaultRule / sizeof kDefaultRule[0] == kDefaultKeyCount, "the rule's 24 entries");
 }  // namespace

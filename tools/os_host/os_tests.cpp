@@ -5,7 +5,9 @@
 #include "common/sha256.h"
 #include "os/os.h"
 
+#include <atomic>
 #include <chrono>
+#include <ctime>
 #include <filesystem>
 #include <fstream>
 #include <cstdio>
@@ -19,6 +21,8 @@
 #ifdef _WIN32
 #include <windows.h>
 #else
+#include <fcntl.h>
+#include <semaphore.h>
 #include <unistd.h>
 #endif
 
@@ -455,6 +459,585 @@ void TestFindAndStreams() {
     fs::remove_all(os::Path(dir.c_str()), ec);
 }
 
+// ---- the heap arena (os/heap.h; docs/linux-round.md "R10 as run") --------------
+
+// A small deterministic generator, so a failing round can be replayed.
+struct ArenaRng {
+    std::uint64_t s;
+    std::uint32_t Next() {
+        s = s * 6364136223846793005ull + 1442695040888963407ull;
+        return static_cast<std::uint32_t>(s >> 33);
+    }
+};
+
+bool Below4G(const void* p, std::size_t n) {
+    return static_cast<std::uint64_t>(reinterpret_cast<std::uintptr_t>(p)) + n <= 0x100000000ull;
+}
+
+void TestHeapArena() {
+    // The C runtime's exact size: _msize on Windows, none on POSIX.
+    void* const m = std::malloc(37);
+    std::size_t exact = 0;
+#ifdef _WIN32
+    CHECK(os::HeapHasExactSize() && os::HeapExactSize(m, &exact) && exact == 37);
+#else
+    CHECK(!os::HeapHasExactSize() && !os::HeapExactSize(m, &exact) && exact == 0);
+#endif
+    std::free(m);
+
+    // A reservation below 4 GB, at or above the floor asked.
+    void* const r = os::MemReserveBelow4G(0x30000, 0x80000000u);
+    if (sizeof(void*) == 8) CHECK(r != nullptr);   // 32-bit: there may be nothing above 2 GB
+    if (r) {
+        CHECK(Below4G(r, 0x30000) && reinterpret_cast<std::uintptr_t>(r) >= 0x80000000u &&
+              reinterpret_cast<std::uintptr_t>(r) % 0x10000 == 0);
+        os::MemInfo mi;
+        CHECK(os::MemQuery(r, &mi) && mi.state == os::MemState::Reserved);
+        CHECK(os::MemRelease(r, 0x30000));
+    }
+    CHECK(os::MemReserveBelow4G(0, 0x10000) == nullptr);
+
+    // Open: the whole arena below 4 GB; a second Open refused.
+    constexpr std::size_t kBytes = 16u << 20;
+    static os::LowArena a;   // static: never destroyed with blocks live, as the engine keeps its own
+    CHECK(a.Open(kBytes));
+    CHECK(!a.Open(kBytes));
+    CHECK(a.Base() != 0 && Below4G(reinterpret_cast<void*>(a.Base()), a.Reserved()) && a.Reserved() == kBytes);
+    CHECK(a.Committed() == 0 && a.InUse() == 0);
+    const char* why = nullptr;
+    CHECK(a.Verify(&why));
+
+    // The C runtime's edges: zero-size blocks are blocks of their own, size 0;
+    // a request past _HEAP_MAXREQ and a calloc product past it are refused;
+    // a block bigger than the arena is refused; free of a block not live is
+    // refused (the engine's Fatal).
+    void* const z1 = a.Alloc(0);
+    void* const z2 = a.Alloc(0);
+    std::size_t sz = 99;
+    CHECK(z1 && z2 && z1 != z2 && a.SizeOf(z1, &sz) && sz == 0);
+    CHECK(a.Alloc(0xFFFFFFF0u) == nullptr && a.Calloc(0x10000, 0x10000) == nullptr && a.Alloc(kBytes) == nullptr);
+    CHECK(a.Free(z1) && !a.Free(z1) && a.Free(z2));
+    int outside = 0;
+    CHECK(!a.Owns(&outside) && !a.SizeOf(&outside, &sz) && !a.Owns(nullptr));
+    void* const zr = a.Realloc(nullptr, 0);   // realloc(nullptr, 0) is malloc(0)
+    CHECK(zr != nullptr && a.SizeOf(zr, &sz) && sz == 0);
+    CHECK(a.Verify(&why));
+
+    // Random rounds of malloc / calloc / realloc / free against a model: each
+    // live block's size, alignment, place below 4 GB and contents kept.
+    struct Live {
+        unsigned char* p;
+        std::size_t n;
+        unsigned char fill;
+    };
+    std::vector<Live> live;
+    ArenaRng rng{0x5EED0BF3ull};
+    std::size_t model_bytes = 0;
+    bool aligned = true, low = true, sizes = true, kept = true, zeroed = true, invariant = true, frees = true;
+    auto check_contents = [&](const Live& l) {
+        for (std::size_t i = 0; i < l.n; ++i)
+            if (l.p[i] != static_cast<unsigned char>(l.fill + i)) return false;
+        return true;
+    };
+    auto fill = [](Live& l) {
+        for (std::size_t i = 0; i < l.n; ++i) l.p[i] = static_cast<unsigned char>(l.fill + i);
+    };
+    for (unsigned round = 0; round < 20000; ++round) {
+        const std::uint32_t op = rng.Next() % 10;
+        // sizes mostly small, now and then up to 256 KB, sometimes 0
+        const std::uint32_t pick = rng.Next();
+        std::size_t n = (pick % 8 == 0) ? (rng.Next() % 0x40000) : (pick % 13 == 0) ? 0 : (rng.Next() % 600);
+        if (op < 4 || live.empty()) {
+            const bool zero = op == 1;
+            auto* p = static_cast<unsigned char*>(zero ? a.Calloc(1, n) : a.Alloc(n));
+            if (!p) continue;   // the arena full: allowed, the model is unchanged
+            if (zero)
+                for (std::size_t i = 0; i < n; ++i) zeroed = zeroed && p[i] == 0;
+            Live l{p, n, static_cast<unsigned char>(rng.Next())};
+            fill(l);
+            live.push_back(l);
+            model_bytes += n;
+        } else if (op < 7) {
+            const std::size_t i = rng.Next() % live.size();
+            kept = kept && check_contents(live[i]);
+            frees = frees && a.Free(live[i].p);
+            model_bytes -= live[i].n;
+            live[i] = live.back();
+            live.pop_back();
+        } else {
+            const std::size_t i = rng.Next() % live.size();
+            Live& l = live[i];
+            if (n == 0) n = 1;   // realloc to 0 frees: tried apart below
+            auto* q = static_cast<unsigned char*>(a.Realloc(l.p, n));
+            if (!q) {
+                kept = kept && check_contents(l);   // refused: the old block untouched
+                continue;
+            }
+            const std::size_t keep = std::min(l.n, n);
+            for (std::size_t k = 0; k < keep; ++k) kept = kept && q[k] == static_cast<unsigned char>(l.fill + k);
+            model_bytes = model_bytes - l.n + n;
+            l.p = q;
+            l.n = n;
+            fill(l);
+        }
+        if (!live.empty()) {
+            const Live& l = live.back();
+            aligned = aligned && reinterpret_cast<std::uintptr_t>(l.p) % os::LowArena::kAlign == 0;
+            low = low && Below4G(l.p, l.n) && a.Owns(l.p);
+            std::size_t got = 0;
+            sizes = sizes && a.SizeOf(l.p, &got) && got == l.n;
+        }
+        if (round % 500 == 0) invariant = invariant && a.Verify(&why);
+    }
+    CHECK(aligned);
+    CHECK(low);
+    CHECK(sizes);
+    CHECK(kept);
+    CHECK(zeroed);
+    CHECK(invariant);
+    CHECK(frees);
+    CHECK(a.InUse() == model_bytes);
+    bool all_sizes = true;
+    for (const Live& l : live) {
+        std::size_t got = 0;
+        all_sizes = all_sizes && a.SizeOf(l.p, &got) && got == l.n && check_contents(l);
+    }
+    CHECK(all_sizes);
+    if (!a.Verify(&why)) std::fprintf(stderr, "arena: %s\n", why);
+
+    // realloc to 0 frees and answers null.
+    void* const g = a.Alloc(100);
+    CHECK(g && a.Realloc(g, 0) == nullptr && !a.SizeOf(g, &sz));
+
+    // Coalescing: free everything (in a scattered order), then one block of
+    // nearly the arena's size must fit.
+    for (std::size_t i = 0; i < live.size(); ++i) std::swap(live[i], live[rng.Next() % live.size()]);
+    bool freed = true;
+    for (const Live& l : live) freed = freed && a.Free(l.p);
+    live.clear();
+    CHECK(freed);
+    CHECK(a.Free(zr));
+    CHECK(a.End() == 0);   // everything back to the wilderness
+    CHECK(a.Verify(&why));
+    // Fill with small blocks to the end, free all, then the one big block.
+    std::vector<void*> small;
+    while (void* p = a.Alloc(4000)) small.push_back(p);
+    CHECK(small.size() > (kBytes / 4100));
+    CHECK(a.Committed() == kBytes);
+    bool halves = true;
+    for (std::size_t i = 0; i < small.size(); i += 2) halves = halves && a.Free(small[i]);
+    CHECK(halves && a.Verify(&why));   // every other block free: no two free neighbours yet
+    for (std::size_t i = 1; i < small.size(); i += 2) halves = halves && a.Free(small[i]);
+    CHECK(halves && a.Verify(&why));
+    std::printf("arena: %u blocks of 4000 filled %u MB, freed; ", static_cast<unsigned>(small.size()),
+                static_cast<unsigned>(kBytes >> 20));
+    const std::size_t in_use = a.InUse();
+    CHECK(in_use == 0);
+    CHECK(a.End() == 0);
+    void* const big = a.Alloc(kBytes - 0x1000);
+    CHECK(big != nullptr && Below4G(big, kBytes - 0x1000));
+    std::printf("one block of %u bytes at %p\n", static_cast<unsigned>(kBytes - 0x1000), big);
+    if (big) {
+        std::memset(big, 0xA5, kBytes - 0x1000);
+        CHECK(a.SizeOf(big, &sz) && sz == kBytes - 0x1000);
+        // grow it in place into the wilderness, then shrink it, then free it
+        CHECK(a.Realloc(big, kBytes - 0x100) == big && a.Realloc(big, 64) == big && a.SizeOf(big, &sz) && sz == 64);
+        CHECK(a.Free(big));
+    }
+    CHECK(a.Verify(&why) && a.InUse() == 0);
+
+    // Threads: four at once, each its own blocks.
+    std::vector<std::thread> threads;
+    bool threads_ok[4] = {true, true, true, true};
+    for (unsigned t = 0; t < 4; ++t)
+        threads.emplace_back([&threads_ok, t] {
+            ArenaRng tr{t + 1ull};
+            std::vector<std::pair<unsigned char*, std::size_t>> mine;
+            for (unsigned i = 0; i < 4000; ++i) {
+                if (mine.empty() || tr.Next() % 3 != 0) {
+                    const std::size_t n = tr.Next() % 300;
+                    auto* p = static_cast<unsigned char*>(a.Alloc(n));
+                    if (!p) continue;
+                    std::memset(p, static_cast<int>(t), n);
+                    mine.emplace_back(p, n);
+                } else {
+                    const std::size_t k = tr.Next() % mine.size();
+                    for (std::size_t j = 0; j < mine[k].second; ++j)
+                        if (mine[k].first[j] != t) threads_ok[t] = false;
+                    if (!a.Free(mine[k].first)) threads_ok[t] = false;
+                    mine[k] = mine.back();
+                    mine.pop_back();
+                }
+            }
+            for (auto& b : mine)
+                if (!a.Free(b.first)) threads_ok[t] = false;
+        });
+    for (auto& th : threads) th.join();
+    CHECK(threads_ok[0] && threads_ok[1] && threads_ok[2] && threads_ok[3]);
+    CHECK(a.Verify(&why) && a.InUse() == 0);
+    if (!a.Verify(&why)) std::fprintf(stderr, "arena: %s\n", why);
+}
+
+// ---- a UTF-8 name as a path (R23: exe_image.cpp's BOF3X_EXEIMAGE files) -----
+
+std::string AsString(const std::u8string& u) { return std::string(u.begin(), u.end()); }
+
+void TestUtf8Paths() {
+    const fs::path base = os::Path((Scratch() + "_u8").c_str());
+    std::error_code ec;
+    const fs::path leaf(std::u8string(u8"中文é"));   // outside every single ANSI code page at once
+    fs::path file_leaf = leaf;
+    file_leaf += ".bin";
+    fs::create_directories(base / leaf, ec);
+    CHECK(!ec);
+    std::ofstream(base / leaf / file_leaf, std::ios::binary) << "utf8";
+
+    // The engine's spelling: UTF-8 with the game's backslashes.
+    const std::string dir = AsString(base.u8string()) + "\\" + AsString(leaf.u8string());
+    const std::string file = dir + "\\" + AsString(file_leaf.u8string());
+    const fs::path p = os::PathOfUtf8(file.c_str());
+    CHECK(!p.empty() && p.filename() == file_leaf);
+    {
+        std::string read;
+        std::ifstream in(p, std::ios::binary);   // closed at the brace: Windows removes no open file
+        CHECK(static_cast<bool>(in) && static_cast<bool>(in >> read) && read == "utf8");
+    }
+    CHECK(fs::equivalent(os::PathOfUtf8(dir.c_str()), base / leaf, ec) && !ec);
+
+    // Not UTF-8: a lone lead byte, a surrogate, an overlong slash, a byte past U+10FFFF; and nothing.
+    for (const char* bad : {"a\xC3", "\xED\xA0\x80", "\xC0\xAF", "\xF4\x90\x80\x80", "\xFF"})
+        CHECK(os::PathOfUtf8(bad).empty());
+    CHECK(os::PathOfUtf8(nullptr).empty() && os::PathOfUtf8("").empty());
+    CHECK(os::PathOfUtf8("\xE4\xB8\xAD") == fs::path(std::u8string(u8"中")));
+
+    fs::remove_all(base, ec);
+    CHECK(!fs::exists(base, ec));
+}
+
+// ---- the harness's calls (linux round wave 1, group R1) ----------------------
+// os/module.h, os/stack.h, os/sampler.h, os/local_time.h, os/named_event.h,
+// os/path_file.h: what the state hash, the WAV dump, the stall watch, the
+// input queue's frozen shots and the self-tests' stack guards ask.
+
+const char kR1Text[] = "a constant of the test's own image";
+
+volatile std::uint32_t g_r1_spin = 0;
+volatile int g_r1_sink = 0;
+std::atomic<bool> g_r1_stop{false};
+
+void R1Spin(os::SampledThread** self, os::StackRange* stack, std::atomic<bool>* ready) {
+    *self = os::SampleThisThread();
+    *stack = os::CurrentStack();
+    ready->store(true);
+    while (!g_r1_stop.load(std::memory_order_relaxed)) g_r1_spin = g_r1_spin + 1;
+}
+
+struct R1Read {
+    int calls = 0;
+    std::uintptr_t ip = 0, sp = 0;
+    bool held = false;   // the spin did not move while the thread was held
+};
+
+void R1OnSample(void* ctx, std::uintptr_t ip, std::uintptr_t sp) {
+    auto* r = static_cast<R1Read*>(ctx);
+    ++r->calls;
+    r->ip = ip;
+    r->sp = sp;
+    const std::uint32_t a = g_r1_spin;
+    for (int i = 0; i < 200000; ++i) g_r1_sink = i;   // a while, with the thread held
+    r->held = g_r1_spin == a;
+}
+
+void TestR1Harness() {
+    // The module that holds a function of ours: its code and its constants.
+    os::ModuleImageInfo image;
+    const auto code = reinterpret_cast<std::uintptr_t>(&TestR1Harness);
+    const auto text = reinterpret_cast<std::uintptr_t>(kR1Text);
+    CHECK(os::ModuleImage(reinterpret_cast<const void*>(&TestR1Harness), &image));
+    CHECK(image.extent > 0 && code >= image.base && code < image.base + image.extent && !image.parts.empty());
+    bool code_part = false, text_part = false;
+    for (const os::ModulePart& p : image.parts) {
+        code_part = code_part || (code >= p.lo && code < p.hi && p.executable);
+        text_part = text_part || (text >= p.lo && text < p.hi && p.readable && !p.executable);
+        CHECK(p.lo >= image.base && p.hi <= image.base + image.extent && p.lo < p.hi);
+    }
+    CHECK(code_part && text_part);
+    // The base itself names the same module (a Windows module handle is its base).
+    os::ModuleImageInfo again;
+    CHECK(os::ModuleImage(reinterpret_cast<const void*>(image.base), &again) && again.base == image.base &&
+          again.extent == image.extent && again.parts.size() == image.parts.size());
+    void* const heap = os::MemAlloc(nullptr, kPage, os::Prot::ReadWrite);
+    CHECK(heap && !os::ModuleImage(heap, &again));
+    if (heap) os::MemRelease(heap, kPage);
+
+    CHECK(os::ModuleExportByOrdinal("bof3x_no_such_module.dll", 1) == nullptr);
+#ifdef _WIN32
+    // Some ordinal of kernel32 answers, and some lies in kernel32's own image
+    // (many are forwarded: GetProcAddress follows them into another DLL).
+    const auto k32_base = reinterpret_cast<std::uintptr_t>(GetModuleHandleA("kernel32.dll"));
+    bool any = false, own = false, same = true;
+    for (unsigned o = 1; o < 4096 && !own; ++o) {
+        void* const p = os::ModuleExportByOrdinal("kernel32.dll", o);
+        same = same && p == reinterpret_cast<void*>(GetProcAddress(GetModuleHandleA("kernel32.dll"), MAKEINTRESOURCEA(o)));
+        if (!p) continue;
+        any = true;
+        os::ModuleImageInfo k32;
+        own = os::ModuleImage(p, &k32) && k32.base == k32_base;
+    }
+    CHECK(any && own && same);
+    CHECK(os::ModuleExportByOrdinal("kernel32.dll", 0xFFFF) == nullptr);
+#else
+    CHECK(os::ModuleExportByOrdinal("libc.so.6", 1) == nullptr);   // ELF numbers no export
+#endif
+
+    // The stack: a local of ours lies in it, and another thread's is another.
+    int local = 0;
+    const os::StackRange here = os::CurrentStack();
+    const auto at = reinterpret_cast<std::uintptr_t>(&local);
+    CHECK(here.limit && here.base && reinterpret_cast<std::uintptr_t>(here.limit) <= at && at < reinterpret_cast<std::uintptr_t>(here.base));
+    os::StackRange there;
+    std::uintptr_t there_local = 0;
+    std::thread([&] {
+        int other = 0;
+        there = os::CurrentStack();
+        there_local = reinterpret_cast<std::uintptr_t>(&other);
+    }).join();
+    CHECK(there.base != here.base && reinterpret_cast<std::uintptr_t>(there.limit) <= there_local &&
+          there_local < reinterpret_cast<std::uintptr_t>(there.base));
+
+    // The sampler: Windows holds a spinning thread and reads it; POSIX has none.
+    if (os::CanSampleThreads()) {
+        os::SampledThread* t = nullptr;
+        os::StackRange spin_stack;
+        std::atomic<bool> ready{false};
+        g_r1_stop = false;
+        std::thread spinner(&R1Spin, &t, &spin_stack, &ready);
+        while (!ready.load()) std::this_thread::yield();
+        R1Read r;
+        CHECK(t != nullptr && os::SampleThread(t, &R1OnSample, &r));
+        g_r1_stop = true;
+        spinner.join();
+        CHECK(r.calls == 1 && r.held);
+        CHECK(r.sp >= reinterpret_cast<std::uintptr_t>(spin_stack.limit) && r.sp < reinterpret_cast<std::uintptr_t>(spin_stack.base));
+        os::ModuleImageInfo at_ip;
+        CHECK(os::ModuleImage(reinterpret_cast<const void*>(r.ip), &at_ip) && at_ip.base == image.base);
+    } else {
+        CHECK(os::SampleThisThread() == nullptr);
+        R1Read r;
+        CHECK(!os::SampleThread(nullptr, &R1OnSample, &r) && r.calls == 0);
+    }
+
+    // The local time of day, against the C library's.
+    const std::time_t before = std::time(nullptr);
+    const os::LocalTime lt = os::LocalNow();
+    const std::tm* tm = std::localtime(&before);
+    CHECK(lt.hour < 24 && lt.minute < 60 && lt.second < 61 && lt.millisecond < 1000);
+    const int ours = static_cast<int>(lt.hour * 60 + lt.minute), theirs = tm->tm_hour * 60 + tm->tm_min;
+    CHECK(ours == theirs || (ours - theirs + 1440) % 1440 == 1);
+
+    // The named event, set by name as a driver sets it.
+    const std::string name = "bof3x_os_test_" + std::to_string(os::ProcessId());
+    os::NamedEvent* const e = os::CreateNamedEvent(name.c_str());
+    CHECK(e != nullptr);
+    if (e) {
+#ifdef _WIN32
+        HANDLE other = OpenEventW(EVENT_MODIFY_STATE, FALSE, os::ToWide(("Local\\" + name).c_str()).c_str());
+        const auto set = [&] { SetEvent(other); };
+#else
+        sem_t* other = sem_open(("/" + name).c_str(), 0);
+        const auto set = [&] { sem_post(other); };
+#endif
+        CHECK(other != nullptr);
+        const auto t0 = std::chrono::steady_clock::now();
+        CHECK(!os::WaitNamedEvent(e, 60));
+        CHECK(std::chrono::steady_clock::now() - t0 >= std::chrono::milliseconds(40));
+        set();
+        CHECK(os::WaitNamedEvent(e, 1000));
+        CHECK(!os::WaitNamedEvent(e, 20));   // taken by the wait: an auto-reset event
+        set();
+        set();
+        os::ResetNamedEvent(e);
+        CHECK(!os::WaitNamedEvent(e, 20));
+        std::thread late([&] {
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            set();
+        });
+        CHECK(os::WaitNamedEvent(e, 5000));
+        late.join();
+#ifdef _WIN32
+        CloseHandle(other);
+#else
+        sem_close(other);
+        sem_unlink(("/" + name).c_str());
+#endif
+    }
+
+    // A stream on a wide path, made only when it is not there ("x").
+    const std::string dir = Scratch() + "_r1";
+    std::error_code ec;
+    fs::create_directories(os::Path(dir.c_str()), ec);
+    const fs::path file = os::Path(dir.c_str()) / fs::path(L"wav_é中.bin");
+    std::FILE* f = os::OpenPath(file, "wbx");
+    CHECK(f != nullptr);
+    if (f) {
+        CHECK(std::fwrite("RIFF....", 1, 8, f) == 8 && std::fseek(f, 4, SEEK_SET) == 0 && std::fwrite("WAVE", 1, 4, f) == 4 &&
+              std::fseek(f, 0, SEEK_END) == 0 && std::fwrite("!", 1, 1, f) == 1);
+        std::fclose(f);
+    }
+    CHECK(os::OpenPath(file, "wbx") == nullptr);   // there now: CREATE_NEW's refusal
+    f = os::OpenPath(file, "rb");
+    char back[16] = {};
+    CHECK(f && std::fread(back, 1, sizeof back, f) == 9 && std::memcmp(back, "RIFFWAVE!", 9) == 0);
+    if (f) std::fclose(f);
+    fs::remove_all(os::Path(dir.c_str()), ec);
+}
+
+}  // namespace
+#ifndef _WIN32
+#include <sys/wait.h>
+#endif
+#include <atomic>
+#include <iterator>
+namespace {
+
+// EndProcess is tried in a child: this program again with the variable set
+// (Windows) or a fork (POSIX), which ends here with 37 before main runs.
+const bool g_end_process_child = [] {
+    if (os::GetEnv("BOF3X_OS_TESTS_END_PROCESS", nullptr, 0) > 0) {
+        std::atexit([] { std::_Exit(99); });   // must not run
+        os::EndProcess(37);
+    }
+    return false;
+}();
+
+std::uint32_t ChildExitCode() {
+#ifdef _WIN32
+    std::string self;
+    if (!os::ExecutablePath(&self)) return 0xFFFFFFFFu;
+    std::wstring cmd = L"\"" + os::ToWide(self.c_str()) + L"\"";
+    SetEnvironmentVariableW(L"BOF3X_OS_TESTS_END_PROCESS", L"1");
+    STARTUPINFOW si{};
+    si.cb = sizeof si;
+    PROCESS_INFORMATION pi{};
+    const BOOL ok = CreateProcessW(nullptr, cmd.data(), nullptr, nullptr, FALSE, 0, nullptr, nullptr, &si, &pi);
+    SetEnvironmentVariableW(L"BOF3X_OS_TESTS_END_PROCESS", nullptr);
+    if (!ok) return 0xFFFFFFFFu;
+    WaitForSingleObject(pi.hProcess, 10000);
+    DWORD code = 0xFFFFFFFFu;
+    GetExitCodeProcess(pi.hProcess, &code);
+    CloseHandle(pi.hThread);
+    CloseHandle(pi.hProcess);
+    return code;
+#else
+    std::fflush(nullptr);
+    const pid_t pid = fork();
+    if (pid == 0) {
+        std::atexit([] { std::_Exit(99); });
+        os::EndProcess(37);
+    }
+    int status = 0;
+    if (pid < 0 || waitpid(pid, &status, 0) != pid || !WIFEXITED(status)) return 0xFFFFFFFFu;
+    return static_cast<std::uint32_t>(WEXITSTATUS(status));
+#endif
+}
+
+struct Waiter {
+    os::Event on;
+    os::Event done;
+    std::atomic<int>* count;
+};
+void WaitThenCount(void* p) {
+    Waiter* w = static_cast<Waiter*>(p);
+    if (os::EventWait(w->on, os::kWaitForever) == os::WaitResult::Signalled) {
+        if (w->count) w->count->fetch_add(1);
+        if (w->done) os::EventSet(w->done);
+    }
+}
+
+bool Within(const std::function<bool()>& ok, int ms) {
+    for (int i = 0; i < ms; ++i) {
+        if (ok()) return true;
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    return ok();
+}
+
+void TestEventsThreadsFiles() {
+    using os::WaitResult;
+    CHECK(!g_end_process_child);
+    // Auto-reset: one wait, then clear; a set kept until a wait; two sets are one.
+    os::Event a = os::EventCreate(false, false);
+    CHECK(a != nullptr);
+    CHECK(os::EventWait(a, 0) == WaitResult::Timeout);
+    CHECK(os::EventSet(a) && os::EventSet(a));
+    CHECK(os::EventWait(a, 0) == WaitResult::Signalled);
+    CHECK(os::EventWait(a, 0) == WaitResult::Timeout);
+    os::Event s = os::EventCreate(false, true);
+    CHECK(os::EventWait(s, 0) == WaitResult::Signalled && os::EventWait(s, 0) == WaitResult::Timeout);
+    // Manual-reset: stays set for every wait until reset.
+    os::Event m = os::EventCreate(true, false);
+    CHECK(os::EventSet(m) && os::EventWait(m, 0) == WaitResult::Signalled && os::EventWait(m, 0) == WaitResult::Signalled);
+    CHECK(os::EventReset(m) && os::EventWait(m, 0) == WaitResult::Timeout);
+    // A timed wait waits.
+    const auto t0 = std::chrono::steady_clock::now();
+    CHECK(os::EventWait(a, 60) == WaitResult::Timeout);
+    CHECK(std::chrono::steady_clock::now() - t0 >= std::chrono::milliseconds(40));
+    // Across threads: an auto-reset set releases one of two waiters, a manual-reset set both.
+    std::atomic<int> count{0};
+    Waiter w1{a, nullptr, &count}, w2{a, nullptr, &count};
+    os::Thread t1 = os::StartThread(WaitThenCount, &w1), t2 = os::StartThread(WaitThenCount, &w2);
+    CHECK(t1 && t2);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    CHECK(count.load() == 0 && !os::ThreadEnded(t1) && !os::ThreadEnded(t2));
+    CHECK(os::EventSet(a));
+    CHECK(Within([&] { return count.load() == 1; }, 2000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    CHECK(count.load() == 1 && os::ThreadEnded(t1) != os::ThreadEnded(t2));
+    CHECK(os::EventSet(a));
+    CHECK(Within([&] { return count.load() == 2 && os::ThreadEnded(t1) && os::ThreadEnded(t2); }, 2000));
+    std::atomic<int> both{0};
+    Waiter w3{m, nullptr, &both}, w4{m, nullptr, &both};
+    CHECK(os::StartThread(WaitThenCount, &w3) && os::StartThread(WaitThenCount, &w4));
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    CHECK(os::EventSet(m));
+    CHECK(Within([&] { return both.load() == 2; }, 2000));
+    // A wait forever, ended by a set from here; the other side's set seen here.
+    os::Event done = os::EventCreate(false, false);
+    Waiter w5{s, done, nullptr};
+    CHECK(os::StartThread(WaitThenCount, &w5) != nullptr);
+    CHECK(os::EventSet(s) && os::EventWait(done, 5000) == WaitResult::Signalled);
+    // No event: refused.
+    CHECK(!os::EventSet(nullptr) && os::EventWait(nullptr, 0) == WaitResult::Failed);
+    for (os::Event e : {a, s, m, done}) os::EventClose(e);
+    CHECK(!os::ThreadEnded(nullptr));
+
+    // Unbuffered files: a write is readable at once, a second create empties the file.
+    const std::string dir = Scratch() + "_out";
+    std::error_code ec;
+    fs::create_directories(os::Path(dir.c_str()), ec);
+    const fs::path p = os::Path((dir + "/log.txt").c_str());
+    os::OutFile f = os::OutCreate(p);
+    CHECK(f != os::kNoFile);
+    CHECK(os::OutWrite(f, "abc", 3));
+    {
+        std::ifstream in(p, std::ios::binary);
+        std::string got((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+        CHECK(in.is_open() && got == "abc");   // others may read it while it is open
+    }
+    CHECK(os::OutWrite(f, "def\r\n", 5) && os::OutFlush(f));
+    os::OutClose(f);
+    CHECK(fs::file_size(p, ec) == 8);
+    f = os::OutCreate(p);
+    CHECK(f != os::kNoFile && fs::file_size(p, ec) == 0);
+    os::OutClose(f);
+    CHECK(os::OutCreate(os::Path((dir + "/no/such/dir/x").c_str())) == os::kNoFile);
+    CHECK(!os::OutWrite(os::kNoFile, "x", 1) && !os::OutFlush(os::kNoFile));
+    fs::remove_all(os::Path(dir.c_str()), ec);
+
+    // The process's end: the code given, no exit handler run.
+    CHECK(ChildExitCode() == 37);
+}
+
 }  // namespace
 
 int main() {
@@ -462,9 +1045,13 @@ int main() {
     TestFiles();
     TestNarrowNames();
     TestFindAndStreams();
+    TestEventsThreadsFiles();
     TestClocks();
     TestEnvironment();
     TestSha256();
+    TestHeapArena();
+    TestUtf8Paths();
+    TestR1Harness();
     std::printf("os_tests: %d checks, %d failed\n", g_checks, g_fail);
     return g_fail ? 1 : 0;
 }
