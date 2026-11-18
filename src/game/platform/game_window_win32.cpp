@@ -215,6 +215,8 @@ WNDPROC g_sdl_proc = nullptr;   // SDL's procedure, behind ours
 //   WM_KEYDOWN      the key as posted - its virtual-key number and lParam,
 //                   which the game's keys, the recorder and the input
 //                   recipe's posted keys are (input_script.cpp)
+//   WM_LBUTTONDOWN, WM_RBUTTONDOWN
+//                   a click, which skips a movie (fmv_play.cpp)
 //   WM_ACTIVATEAPP  the application's activation, DIV-0033's word (SDL's
 //                   focus is the window's)
 //   WM_SIZING       DIV-0042's drag rule: whole multiples, which SDL's aspect
@@ -231,6 +233,10 @@ LRESULT CALLBACK FrontProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     switch (msg) {
     case WM_KEYDOWN:
         Post({Got::Key, static_cast<std::int32_t>(wparam), static_cast<std::int32_t>(lparam)});
+        break;
+    case WM_LBUTTONDOWN:
+    case WM_RBUTTONDOWN:   // the movie's skip (TakeForMovie), as the messages came
+        Post({Got::Click, 0, 0});
         break;
     case WM_ACTIVATEAPP:
         Post({Got::Activate, wparam ? 1 : 0, 0});

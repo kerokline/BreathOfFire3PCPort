@@ -28,7 +28,9 @@ struct Rect {
 
 // One thing the window system said, kept until the loop's message step
 // (Pump) hands it to the game, in the order it came.
-enum class Got : std::uint8_t { Key, Activate, Moved, Sized, Close, Quit };
+// Click (a left or right button going down) and Exposed (the client needs
+// drawing again) are the movie's alone (TakeForMovie); Pump drops them.
+enum class Got : std::uint8_t { Key, Activate, Moved, Sized, Close, Quit, Click, Exposed };
 struct Event {
     Got what;
     std::int32_t a, b;   // Key: vk, lParam; Activate: 1 / 0; Moved: x, y; Sized: w, h

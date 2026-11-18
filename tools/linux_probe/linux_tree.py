@@ -41,6 +41,7 @@ WINDOWS_ONLY = (
     ('src/hook/crash_win32.cpp', 'R8: the fault catcher - a vectored handler, MiniDumpWriteDump (crash_posix.cpp is its counterpart)'),
     ('src/hook/stackwatch_win32.cpp', "R8: the main thread's TEB and guard page (stackwatch_posix.cpp refuses)"),
     ('src/game/platform/game_window_win32.cpp', 'R6: the Win32 window path and the SDL window\'s HWND steps (game_window_other.cpp is its counterpart)'),
+    ('src/game/fmv_play_win32.cpp', 'R6m: the movie\'s GDI picture, and Fmv_WndProc and its pump on the Win32 window path (fmv_play.cpp refuses or stops elsewhere)'),
 )
 HEADER = ('# tools/linux_probe/linux_tree.py: the source files that do not compile for x86_64-linux-gnu, and why. '
           'File names and reasons only.\n#file\treason\terrors\n')

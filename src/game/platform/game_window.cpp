@@ -31,7 +31,10 @@
 //
 // What is taken is kept in a small queue and handed to the game at the loop's
 // message step (Pump), where the port's PeekMessage stood, so that a key
-// still acts between the input latch and the frame as it did.
+// still acts between the input latch and the frame as it did. While a movie
+// plays, its loop takes the queue instead (TakeForMovie, R6m), with the two
+// events only it reads: a click (WM_LBUTTONDOWN / WM_RBUTTONDOWN on Windows,
+// SDL_EVENT_MOUSE_BUTTON_DOWN elsewhere) and SDL_EVENT_WINDOW_EXPOSED.
 #include "game/platform/game_window.h"
 
 #include <SDL3/SDL.h>
@@ -215,6 +218,14 @@ bool SDLCALL Watch(void*, SDL_Event* e) {
             Post({Got::Key, static_cast<std::int32_t>(VkOf(e->key.scancode)), lparam});
         }
         break;
+    case SDL_EVENT_MOUSE_BUTTON_DOWN:   // the movie's skip (WM_LBUTTONDOWN, WM_RBUTTONDOWN)
+        if (e->button.windowID == id && !native::KeysAndFocusFromMessages() &&
+            (e->button.button == SDL_BUTTON_LEFT || e->button.button == SDL_BUTTON_RIGHT))
+            Post({Got::Click, 0, 0});
+        break;
+    case SDL_EVENT_WINDOW_EXPOSED:      // the movie's WM_PAINT
+        if (e->window.windowID == id) Post({Got::Exposed, 0, 0});
+        break;
     default:
         break;
     }
@@ -334,6 +345,15 @@ bool Start(void* hinstance) {
         bof3::Log("game_window: the Win32 window, since Game_WndProc is Capcom's (BOF3X_ORIGINAL); WindowSdl is not used");
         return win32::Register(hinstance);
     }
+    if (!bof3::IsEnabled(bof3::addr::Fmv_Play) || !bof3::IsEnabled(bof3::addr::Fmv_WndProc)) {
+        // Capcom's player, or Capcom's movie procedure, is put in front of
+        // the window's procedure for the length of a movie (SetWindowLongA):
+        // on SDL's window that would take SDL's procedure out, so the switch
+        // keeps the window that procedure was written for.
+        bof3::Log("game_window: the Win32 window, since %s is Capcom's (BOF3X_ORIGINAL); WindowSdl is not used",
+                  bof3::IsEnabled(bof3::addr::Fmv_Play) ? "Fmv_WndProc" : "Fmv_Play");
+        return win32::Register(hinstance);
+    }
     native::BeforeVideo();
     // The borderless window stays where it is when the focus goes, as the
     // port's WS_POPUP did (SDL's default already, for a mode it did not set).
@@ -410,35 +430,54 @@ void* Create(bool borderless) {
     return g_handle;
 }
 
-bool Pump() {
-    if (!g_on) return win32::Pump();
+namespace {
+
+// SDL pumped and what the watch queued taken, in order.
+std::vector<Event> TakeQueue() {
     SDL_PumpEvents();
     std::vector<Event> got;
-    {
-        std::lock_guard<std::mutex> lock(g_queue_lock);
-        got.swap(g_queue);
-    }
+    std::lock_guard<std::mutex> lock(g_queue_lock);
+    got.swap(g_queue);
+    return got;
+}
+
+// What the watch took stays in SDL's queue for no one: dropped, so that it
+// never fills. The pad's events are left for its poll (pad_sdl.cpp).
+void FlushSdl() {
+    SDL_FlushEvents(SDL_EVENT_FIRST, SDL_EVENT_JOYSTICK_AXIS_MOTION - 1);
+    SDL_FlushEvents(SDL_EVENT_FINGER_DOWN, SDL_EVENT_LAST);
+}
+
+void Moved(const Event& e) { Display_WindowMoved(e.a & 0xFFFF, e.b & 0xFFFF); }
+
+void Sized(const Event& e) {
+    if (e.a > 0 && e.b > 0 && !(SDL_GetWindowFlags(g_window) & SDL_WINDOW_MINIMIZED))
+        WinGame_ClientSized(static_cast<unsigned>(e.a), static_cast<unsigned>(e.b));
+}
+
+}  // namespace
+
+bool Pump() {
+    if (!g_on) return win32::Pump();
+    const std::vector<Event> got = TakeQueue();
     bool quit = false;
     for (const Event& e : got) {
         switch (e.what) {
         case Got::Key: WinGame_Key(static_cast<unsigned>(e.a), e.b); break;
         case Got::Activate: WinGame_Activate(e.a != 0); break;
-        case Got::Moved: Display_WindowMoved(e.a & 0xFFFF, e.b & 0xFFFF); break;
-        case Got::Sized:
-            if (e.a > 0 && e.b > 0 && !(SDL_GetWindowFlags(g_window) & SDL_WINDOW_MINIMIZED))
-                WinGame_ClientSized(static_cast<unsigned>(e.a), static_cast<unsigned>(e.b));
-            break;
+        case Got::Moved: Moved(e); break;
+        case Got::Sized: Sized(e); break;
         case Got::Close: Close(); break;
         case Got::Quit:
             bof3::Log("WinMain: WM_QUIT");
             quit = true;
             break;
+        case Got::Click:     // the movie's alone
+        case Got::Exposed:   // the game's presents draw the client
+            break;
         }
     }
-    // What the watch took stays in SDL's queue for no one: dropped, so that
-    // it never fills. The pad's events are left for its poll (pad_sdl.cpp).
-    SDL_FlushEvents(SDL_EVENT_FIRST, SDL_EVENT_JOYSTICK_AXIS_MOTION - 1);
-    SDL_FlushEvents(SDL_EVENT_FINGER_DOWN, SDL_EVENT_LAST);
+    FlushSdl();
     return !quit;
 }
 
@@ -490,6 +529,37 @@ void Destroy() {
     g_window = nullptr;
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
     bof3::Log("game_window: the window and SDL's video are down");
+}
+
+// ---- the movie's events (fmv_play.cpp, R6m) ----------------------------------
+
+std::vector<MovieEvent> TakeForMovie() {
+    if (!g_on) bof3::Fatal("game_window: TakeForMovie on the Win32 path, where the movie's own procedure takes its messages");
+    const std::vector<Event> got = TakeQueue();
+    std::vector<MovieEvent> out;
+    if (g_closed) out.push_back({MovieGot::Close, 0});
+    bool quit = false;
+    for (const Event& e : got) {
+        switch (e.what) {
+        case Got::Key: out.push_back({MovieGot::Key, e.a}); break;
+        case Got::Click: out.push_back({MovieGot::Click, 0}); break;
+        case Got::Activate: out.push_back({MovieGot::Activate, e.a}); break;
+        case Got::Exposed: out.push_back({MovieGot::Repaint, 0}); break;
+        case Got::Moved: Moved(e); break;
+        case Got::Sized: Sized(e); break;
+        case Got::Close:
+            Close();
+            out.push_back({MovieGot::Close, 0});
+            break;
+        case Got::Quit:
+            out.push_back({MovieGot::Quit, 0});
+            quit = true;
+            break;
+        }
+    }
+    if (quit) Post({Got::Quit, 0, 0});   // for WinMain's loop, as the movie's pump put WM_QUIT back
+    FlushSdl();
+    return out;
 }
 
 }  // namespace game_window
