@@ -29,7 +29,7 @@
 // round, shows.
 #include "game/scenario_harness.h"
 
-#include <windows.h>
+#include "os/os.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -140,9 +140,9 @@ std::uint32_t FieldPhase() {
 // The calling thread's stack from just below the caller's frame to its base
 // (the TIB's StackBase): what a caller's locals are.
 bool OnStack(const void* p, unsigned n) {
-    // The TIB's StackBase at the width's TEB (NtCurrentTeb()); hosted,
-    // i686-only code, where a stack address is 32 bits.
-    const auto base = Low32(reinterpret_cast<const NT_TIB*>(NtCurrentTeb())->StackBase);
+    // The thread's stack's base (os/stack.h: on Windows the TIB's StackBase);
+    // hosted, i686-only code, where a stack address is 32 bits.
+    const auto base = Low32(bof3::os::CurrentStack().base);
     const auto here = Low32(&base);
     const auto at = Low32(p);
     return at > here && at + n > at && at + n <= base;
