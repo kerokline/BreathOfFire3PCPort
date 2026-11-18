@@ -69,6 +69,7 @@
 #include "game/pause_text.h"
 #include "game/quick_menu.h"
 #include "hook/cpu_context.h"
+#include "hook/crash.h"
 #include "hook/detour.h"
 #include "hook/exe_icon.h"
 #include "hook/exe_host.h"
@@ -155,21 +156,16 @@ void WINAPI TracedExitProcess(UINT code) {
 // nobody handled into _exit(code) with no dialog, and the crash reporter
 // skips breakpoints and single steps, which are signals, not faults. This
 // handler is called last, so it sees only what every other vectored handler
-// passed on - the calltrace's among them.
-LONG CALLBACK TracedUnhandled(EXCEPTION_POINTERS* info) {
-    static volatile LONG reports = 0;
-    const DWORD code = info->ExceptionRecord->ExceptionCode;
-    if (code != EXCEPTION_SINGLE_STEP && code != EXCEPTION_BREAKPOINT) return EXCEPTION_CONTINUE_SEARCH;
-    if (InterlockedIncrement(&reports) > 4) return EXCEPTION_CONTINUE_SEARCH;
-    // The context's registers by width (hook/cpu_context.h: read and printed
-    // as wide as the register, so a system DLL's address above 4 GB on x86-64
-    // shows whole; no #if here, a game file).
-    bof3::Log("exittrace   exception 0x%08lX at 0x%s, esp 0x%s, eflags 0x%08X, thread %u, passed on by every handler",
-              code, bof3::CtxHex(bof3::CtxIp(*info->ContextRecord)).text,
-              bof3::CtxHex(bof3::CtxSp(*info->ContextRecord)).text,
-              static_cast<std::uint32_t>(info->ContextRecord->EFlags), static_cast<std::uint32_t>(bof3::os::ThreadId()));
-    LogStack("the exception", reinterpret_cast<const void*>(bof3::CtxSp(*info->ContextRecord)));
-    return EXCEPTION_CONTINUE_SEARCH;
+// passed on - the calltrace's among them. The handler is the crash
+// catcher's (hook/crash.h Crash_WatchBreaks: the filter, the count of four,
+// the pass-on); this is what it logs.
+void TracedBreak(const char* what, std::uintptr_t ip, std::uintptr_t sp, std::uint32_t flags) {
+    // The registers by width (hook/cpu_context.h: printed as wide as the
+    // register, so a system DLL's address above 4 GB on x86-64 shows whole;
+    // no #if here, a game file).
+    bof3::Log("exittrace   %s at 0x%s, esp 0x%s, eflags 0x%08X, thread %u, passed on by every handler",
+              what, bof3::CtxHex(ip).text, bof3::CtxHex(sp).text, flags, static_cast<std::uint32_t>(bof3::os::ThreadId()));
+    LogStack("the exception", reinterpret_cast<const void*>(sp));
 }
 BOOL WINAPI TracedTerminateProcess(HANDLE h, UINT code) {
     LogStack("TerminateProcess", __builtin_frame_address(0));
@@ -212,7 +208,7 @@ void WinMain_Inject() {
         PatchImport(::bof3::Img(Imp_TerminateProcess_addr), g_real_terminate, &TracedTerminateProcess);
         PatchImport(::bof3::Img(Imp_PostQuitMessage_addr), g_real_post_quit, &TracedPostQuitMessage);
         PatchImport(::bof3::Img(PsxRest_ImportMessageBoxA_addr), g_real_message_box, &TracedMessageBoxA);
-        if (!AddVectoredExceptionHandler(0, TracedUnhandled)) bof3::Fatal("exittrace: no vectored handler");
+        if (!bof3::Crash_WatchBreaks(TracedBreak)) bof3::Fatal("exittrace: no vectored handler");
         bof3::Log("exittrace   ExitProcess, TerminateProcess, PostQuitMessage and MessageBoxA log their callers; "
                   "breakpoints and single steps no handler took are logged");
     }
