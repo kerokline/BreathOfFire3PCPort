@@ -6652,11 +6652,11 @@ site	src/game/platform/d3d.cpp	2187	low32	pool	live	ot	Low32	d3d_list::U node = 
 site	src/game/platform/d3d.cpp	2351	low32	image_local	live	surface	Low32	tex_page::Com(tex_page::Long(Low32(surface)), kQueryInterface, tex_page::At(kTexture2Iid), texture);
 site	src/game/platform/d3d.cpp	2547	uintptr	-	live	std::uintptr_t	-	render::NoteDirectPage(reinterpret_cast<void*>(static_cast<std::uintptr_t>(texture)),
 site	src/game/platform/d3d.cpp	2547	widen	param	live	texture	void*	render::NoteDirectPage(reinterpret_cast<void*>(static_cast<std::uintptr_t>(texture)),
-site	src/game/platform/d3d.cpp	3788	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<char*>(static_cast<std::uintptr_t>(::bof3::Img(0x6C3A68) + static_cast<U>(device) * 0x13C));
-site	src/game/platform/d3d.cpp	3788	widen	img_place	live	::bof3::Img(0x6C3A68) + static_cast<U>(device) * 0x13C	char*	return reinterpret_cast<char*>(static_cast<std::uintptr_t>(::bof3::Img(0x6C3A68) + static_cast<U>(device) * 0x13C));
-site	src/game/platform/d3d.cpp	3888	narrow_call	image	live	Snd_BufferDesc	Address	const std::uint32_t desc = Address(Snd_BufferDesc);
-site	src/game/platform/d3d.cpp	3901	narrow_call	image	live	Snd_WaveFormat	Address	const std::uint32_t format = Address(Snd_WaveFormat);
-site	src/game/platform/d3d.cpp	4004	low32	object_ours	live	&g_tile1_quad	Low32	bof3::PatchBytes(" ", Low32(&g_tile1_quad),
+site	src/game/platform/d3d.cpp	3790	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<char*>(static_cast<std::uintptr_t>(::bof3::Img(0x6C3A68) + static_cast<U>(device) * 0x13C));
+site	src/game/platform/d3d.cpp	3790	widen	img_place	live	::bof3::Img(0x6C3A68) + static_cast<U>(device) * 0x13C	char*	return reinterpret_cast<char*>(static_cast<std::uintptr_t>(::bof3::Img(0x6C3A68) + static_cast<U>(device) * 0x13C));
+site	src/game/platform/d3d.cpp	3890	narrow_call	image	live	Snd_BufferDesc	Address	const std::uint32_t desc = Address(Snd_BufferDesc);
+site	src/game/platform/d3d.cpp	3903	narrow_call	image	live	Snd_WaveFormat	Address	const std::uint32_t format = Address(Snd_WaveFormat);
+site	src/game/platform/d3d.cpp	4006	low32	object_ours	live	&g_tile1_quad	Low32	bof3::PatchBytes(" ", Low32(&g_tile1_quad),
 site	src/game/platform/d3d_draw.cpp	49	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/platform/d3d_draw.cpp	49	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/platform/d3d_draw.cpp	145	low32	object_ours	live	&g_cell_vram	Low32	bof3::PatchBytes(" ", Low32(&g_cell_vram), &was, &is, 1);
@@ -6791,6 +6791,12 @@ site	src/game/platform/file.cpp	49	widen	param	live	drive_type_word	DriveTypeFn 
 site	src/game/platform/game_clock.cpp	96	fmt_place	word	live	(unsigned)Imp_GetTickCount_addr	%08X	if (real == 0) bof3::Fatal("Game_Clock: the import slot 0x%08X is empty: GameClock_Inject before it is bound", (unsigned)Imp_GetTickCount_addr);
 site	src/game/platform/game_clock.cpp	97	low32	func_ours	live	&SessionTickCount	Low32	const auto ours = Low32(&SessionTickCount);
 site	src/game/platform/game_clock.cpp	104	uintptr	-	live	std::uintptr_t	-	g_ours = reinterpret_cast<std::uintptr_t>(Imp_GetTickCount.Native()) == ours;
+site	src/game/platform/game_window_other.cpp	56	uintptr	-	live	std::uintptr_t	-	void* handle = reinterpret_cast<void*>(static_cast<std::uintptr_t>(id));
+site	src/game/platform/game_window_other.cpp	56	widen	param	live	id	void*	void* handle = reinterpret_cast<void*>(static_cast<std::uintptr_t>(id));
+site	src/game/platform/game_window_win32.cpp	35	uintptr	-	live	std::uintptr_t	-	const char* StrImage(std::uint32_t address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/game_window_win32.cpp	35	widen	param	live	address	const char*	const char* StrImage(std::uint32_t address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/game_window_win32.cpp	99	uintptr	-	live	std::uintptr_t	-	wc.lpfnWndProc = reinterpret_cast<WNDPROC>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Game_WndProc)));
+site	src/game/platform/game_window_win32.cpp	99	widen	code_place	live	::bof3::Code(bof3::addr::Game_WndProc)	WNDPROC	wc.lpfnWndProc = reinterpret_cast<WNDPROC>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Game_WndProc)));
 site	src/game/platform/gfx_texcache.cpp	148	ptr_overlay	image_local	live	o	FakeObject	if (g_release_n < 2 * kEntries) g_release_log[g_release_n] = reinterpret_cast<FakeObject*>(o)->id;
 site	src/game/platform/gfx_texcache.cpp	173	uintptr	-	live	std::uintptr_t	-	if (*reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(0x5C4168))) == 0) {
 site	src/game/platform/gfx_texcache.cpp	173	widen	img_place	live	::bof3::Img(0x5C4168)	const std::uint32_t*	if (*reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(0x5C4168))) == 0) {
@@ -6824,29 +6830,27 @@ site	src/game/platform/gte.cpp	617	fmt_place	word	live	Gte_Transformed[0]	%08X	"
 site	src/game/platform/gte.cpp	617	fmt_place	word	live	Gte_Transformed[1]	%08X	"original %08X %08X %08X", Gte_Transformed[0], Gte_Transformed[1], Gte_Transformed[2],
 site	src/game/platform/gte.cpp	617	fmt_place	word	live	Gte_Transformed[2]	%08X	"original %08X %08X %08X", Gte_Transformed[0], Gte_Transformed[1], Gte_Transformed[2],
 site	src/game/platform/gte.cpp	910	low32	object_ours	live	&psx_gte::g_lv_exact	Low32	Low32(&psx_gte::g_lv_exact), was, is, 4);
-site	src/game/platform/magic_080.cpp	115	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	115	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	117	uintptr	-	live	std::uintptr_t	-	std::uint32_t* Longs(U address) { return reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	117	widen	param	live	address	std::uint32_t*	std::uint32_t* Longs(U address) { return reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	119	low32	helper_def	live	p	Low32	U Addr(const volatile void* p) { return Low32(p); }
-site	src/game/platform/magic_080.cpp	160	uintptr	-	live	std::uintptr_t	-	const char* StrWinMain(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	160	widen	param	live	address	const char*	const char* StrWinMain(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	406	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(void*)>(static_cast<std::uintptr_t>(::bof3::Code(kSoundSetup.v))), Port_DroppedCall,
-site	src/game/platform/magic_080.cpp	426	long	ul	live	unsigned long	-	if (std::swprintf(slash + 1, room, L" ", static_cast<unsigned long>(Frame_Counter)) < 0) return;
-site	src/game/platform/magic_080.cpp	428	long	ul	live	unsigned long	-	bof3::Log(" ", static_cast<unsigned long>(Frame_Counter), ok ? " " : " ",
-site	src/game/platform/magic_080.cpp	819	uintptr	-	live	std::uintptr_t	-	wc.lpfnWndProc = reinterpret_cast<WNDPROC>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Game_WndProc)));
-site	src/game/platform/magic_080.cpp	819	widen	code_place	live	::bof3::Code(bof3::addr::Game_WndProc)	WNDPROC	wc.lpfnWndProc = reinterpret_cast<WNDPROC>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Game_WndProc)));
-site	src/game/platform/magic_080.cpp	879	long	l	live	long	-	long long draw_ticks = 0, logic_ticks = 0;
-site	src/game/platform/magic_080.cpp	898	uintptr	-	live	std::uintptr_t	-	Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
-site	src/game/platform/magic_080.cpp	898	widen	code_place	live	::bof3::Code(bof3::addr::Boot_Task)	void*	Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
-site	src/game/platform/magic_080.cpp	1052	uintptr	-	live	std::uintptr_t	-	unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride));
-site	src/game/platform/magic_080.cpp	1052	widen	img_place	live	::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride	unsigned char*	unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride));
-site	src/game/platform/magic_080.cpp	1110	naked	-	live	Cfg_Load	-	extern " " __attribute__((naked)) void __cdecl Cfg_Load(void) {
-site	src/game/platform/magic_080.cpp	1111	width_if	asm_pair	live	Cfg_Load	#if defined(__i386__)	#if defined(__i386__)
-site	src/game/platform/magic_080.cpp	1112	asm	stack	live	subl $0x3C, %esp	call leal pushl subl	asm("subl $0x3C, %esp\n\t"
-site	src/game/platform/magic_080.cpp	1124	asm	stack	live	subq $0x68, %rsp	call leaq subq	asm("subq $0x68, %rsp\n\t"
-site	src/game/platform/magic_080.cpp	1194	low32	image_local	live	node	Low32	node[1] = Low32(node);
-site	src/game/platform/magic_080.cpp	1211	narrow_call	image	live	Gfx_CurrentEnv	Addr	const U block = Addr(Gfx_CurrentEnv);
+site	src/game/platform/magic_080.cpp	116	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	116	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	118	uintptr	-	live	std::uintptr_t	-	std::uint32_t* Longs(U address) { return reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	118	widen	param	live	address	std::uint32_t*	std::uint32_t* Longs(U address) { return reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	120	low32	helper_def	live	p	Low32	U Addr(const volatile void* p) { return Low32(p); }
+site	src/game/platform/magic_080.cpp	159	uintptr	-	live	std::uintptr_t	-	const char* StrWinMain(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	159	widen	param	live	address	const char*	const char* StrWinMain(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	306	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(void*)>(static_cast<std::uintptr_t>(::bof3::Code(kSoundSetup.v))), Port_DroppedCall,
+site	src/game/platform/magic_080.cpp	327	long	ul	live	unsigned long	-	if (std::swprintf(slash + 1, room, L" ", static_cast<unsigned long>(Frame_Counter)) < 0) return;
+site	src/game/platform/magic_080.cpp	329	long	ul	live	unsigned long	-	bof3::Log(" ", static_cast<unsigned long>(Frame_Counter), ok ? " " : " ",
+site	src/game/platform/magic_080.cpp	689	long	l	live	long	-	long long draw_ticks = 0, logic_ticks = 0;
+site	src/game/platform/magic_080.cpp	707	uintptr	-	live	std::uintptr_t	-	Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
+site	src/game/platform/magic_080.cpp	707	widen	code_place	live	::bof3::Code(bof3::addr::Boot_Task)	void*	Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
+site	src/game/platform/magic_080.cpp	858	uintptr	-	live	std::uintptr_t	-	unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride));
+site	src/game/platform/magic_080.cpp	858	widen	img_place	live	::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride	unsigned char*	unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride));
+site	src/game/platform/magic_080.cpp	917	naked	-	live	Cfg_Load	-	extern " " __attribute__((naked)) void __cdecl Cfg_Load(void) {
+site	src/game/platform/magic_080.cpp	918	width_if	asm_pair	live	Cfg_Load	#if defined(__i386__)	#if defined(__i386__)
+site	src/game/platform/magic_080.cpp	919	asm	stack	live	subl $0x3C, %esp	call leal pushl subl	asm("subl $0x3C, %esp\n\t"
+site	src/game/platform/magic_080.cpp	931	asm	stack	live	subq $0x68, %rsp	call leaq subq	asm("subq $0x68, %rsp\n\t"
+site	src/game/platform/magic_080.cpp	1001	low32	image_local	live	node	Low32	node[1] = Low32(node);
+site	src/game/platform/magic_080.cpp	1018	narrow_call	image	live	Gfx_CurrentEnv	Addr	const U block = Addr(Gfx_CurrentEnv);
 site	src/game/platform/music.cpp	80	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/platform/music.cpp	80	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/platform/music.cpp	110	uintptr	-	live	std::uintptr_t	-	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
@@ -7263,18 +7267,19 @@ site	src/game/platform/widescreen.cpp	514	uintptr	-	live	std::uintptr_t	-	volati
 site	src/game/platform/widescreen.cpp	514	widen	img_place	live	::bof3::Img(BattleWinStates_Current_addr)	volatile U*	volatile U* const current = reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)));
 site	src/game/platform/widescreen.cpp	521	long	l	live	long	-	unsigned long long frames_run = 0;
 site	src/game/platform/widescreen.cpp	541	low32	image_local	live	rec	Low32	*current = Low32(rec);
-site	src/game/platform/win_main.cpp	150	fmt_place	word	live	code	%08X	bof3::Log("exittrace ExitProcess(0x%08X)", code);
-site	src/game/platform/win_main.cpp	162	uintptr	-	live	std::uintptr_t	-	void TracedBreak(const char* what, std::uintptr_t ip, std::uintptr_t sp, std::uint32_t flags) {
-site	src/game/platform/win_main.cpp	162	uintptr	-	live	std::uintptr_t	-	void TracedBreak(const char* what, std::uintptr_t ip, std::uintptr_t sp, std::uint32_t flags) {
-site	src/game/platform/win_main.cpp	166	fmt_place	word	live	flags	%08X	bof3::Log("exittrace %s at 0x%s, esp 0x%s, eflags 0x%08X, thread %u, passed on by every handler",
-site	src/game/platform/win_main.cpp	192	uintptr	-	live	std::uintptr_t	-	void* at = reinterpret_cast<void*>(static_cast<std::uintptr_t>(slot));
-site	src/game/platform/win_main.cpp	192	widen	param	live	slot	void*	void* at = reinterpret_cast<void*>(static_cast<std::uintptr_t>(slot));
-site	src/game/platform/win_main.cpp	195	uintptr	-	live	std::uintptr_t	-	real = reinterpret_cast<F>(static_cast<std::uintptr_t>(word));
-site	src/game/platform/win_main.cpp	195	widen	param	live	word	F [fn]	real = reinterpret_cast<F>(static_cast<std::uintptr_t>(word));
-site	src/game/platform/win_main.cpp	197	fmt_place	pointer	live	::bof3::VaOf(slot)	%08X	if (!bof3::os::MemProtect(at, 4, bof3::os::Prot::ReadWrite, &old)) bof3::Fatal("exittrace: MemProtect of the import slot 0x%08X failed", ::bof3::VaOf(slot));
-site	src/game/platform/win_main.cpp	198	low32	image_local	live	reinterpret_cast<const void*>(ours)	Low32	word = Low32(reinterpret_cast<const void*>(ours));
-site	src/game/platform/win_main.cpp	218	low32	object_ours	live	&win_main::g_pad_reset	Low32	bof3::PatchBytes(" ", Low32(&win_main::g_pad_reset), &was, &is, 1);
-site	src/game/platform/win_main.cpp	224	low32	object_ours	live	&win_main::g_capcom_movie_only	Low32	bof3::PatchBytes(" ", Low32(&win_main::g_capcom_movie_only), &was, &is, 1);
+site	src/game/platform/win_main.cpp	151	fmt_place	word	live	code	%08X	bof3::Log("exittrace ExitProcess(0x%08X)", code);
+site	src/game/platform/win_main.cpp	163	uintptr	-	live	std::uintptr_t	-	void TracedBreak(const char* what, std::uintptr_t ip, std::uintptr_t sp, std::uint32_t flags) {
+site	src/game/platform/win_main.cpp	163	uintptr	-	live	std::uintptr_t	-	void TracedBreak(const char* what, std::uintptr_t ip, std::uintptr_t sp, std::uint32_t flags) {
+site	src/game/platform/win_main.cpp	167	fmt_place	word	live	flags	%08X	bof3::Log("exittrace %s at 0x%s, esp 0x%s, eflags 0x%08X, thread %u, passed on by every handler",
+site	src/game/platform/win_main.cpp	193	uintptr	-	live	std::uintptr_t	-	void* at = reinterpret_cast<void*>(static_cast<std::uintptr_t>(slot));
+site	src/game/platform/win_main.cpp	193	widen	param	live	slot	void*	void* at = reinterpret_cast<void*>(static_cast<std::uintptr_t>(slot));
+site	src/game/platform/win_main.cpp	196	uintptr	-	live	std::uintptr_t	-	real = reinterpret_cast<F>(static_cast<std::uintptr_t>(word));
+site	src/game/platform/win_main.cpp	196	widen	param	live	word	F [fn]	real = reinterpret_cast<F>(static_cast<std::uintptr_t>(word));
+site	src/game/platform/win_main.cpp	198	fmt_place	pointer	live	::bof3::VaOf(slot)	%08X	if (!bof3::os::MemProtect(at, 4, bof3::os::Prot::ReadWrite, &old)) bof3::Fatal("exittrace: MemProtect of the import slot 0x%08X failed", ::bof3::VaOf(slot));
+site	src/game/platform/win_main.cpp	199	low32	image_local	live	reinterpret_cast<const void*>(ours)	Low32	word = Low32(reinterpret_cast<const void*>(ours));
+site	src/game/platform/win_main.cpp	219	low32	object_ours	live	&win_main::g_pad_reset	Low32	bof3::PatchBytes(" ", Low32(&win_main::g_pad_reset), &was, &is, 1);
+site	src/game/platform/win_main.cpp	225	low32	object_ours	live	&win_main::g_capcom_movie_only	Low32	bof3::PatchBytes(" ", Low32(&win_main::g_capcom_movie_only), &was, &is, 1);
+site	src/game/platform/win_main.cpp	234	low32	object_ours	live	&game_window::g_sdl	Low32	bof3::PatchBytes(" ", Low32(&game_window::g_sdl), &was, &is, 1);
 site	src/game/rdata_consts.h	140	low32	object_ours	live	&kCopies[(pc - kLo) / 4]	Low32	return Low32(&kCopies[(pc - kLo) / 4]);
 site	src/game/scenario/field_modes_fuzz.cpp	48	narrow	helper_def	fuzz	p	-	std::uint32_t Addr(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/scenario/field_modes_fuzz.cpp	48	uintptr	-	fuzz	std::uintptr_t	-	std::uint32_t Addr(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
@@ -14497,6 +14502,11 @@ file	src/game/platform/file.cpp	live	widen	param	3
 file	src/game/platform/game_clock.cpp	live	fmt_place	word	1
 file	src/game/platform/game_clock.cpp	live	low32	func_ours	1
 file	src/game/platform/game_clock.cpp	live	uintptr	-	1
+file	src/game/platform/game_window_other.cpp	live	uintptr	-	1
+file	src/game/platform/game_window_other.cpp	live	widen	param	1
+file	src/game/platform/game_window_win32.cpp	live	uintptr	-	2
+file	src/game/platform/game_window_win32.cpp	live	widen	code_place	1
+file	src/game/platform/game_window_win32.cpp	live	widen	param	1
 file	src/game/platform/gfx_texcache.cpp	live	ptr_overlay	image_local	1
 file	src/game/platform/gfx_texcache.cpp	live	uintptr	-	1
 file	src/game/platform/gfx_texcache.cpp	live	widen	img_place	1
@@ -14522,8 +14532,8 @@ file	src/game/platform/magic_080.cpp	live	low32	helper_def	1
 file	src/game/platform/magic_080.cpp	live	low32	image_local	1
 file	src/game/platform/magic_080.cpp	live	naked	-	1
 file	src/game/platform/magic_080.cpp	live	narrow_call	image	1
-file	src/game/platform/magic_080.cpp	live	uintptr	-	7
-file	src/game/platform/magic_080.cpp	live	widen	code_place	2
+file	src/game/platform/magic_080.cpp	live	uintptr	-	6
+file	src/game/platform/magic_080.cpp	live	widen	code_place	1
 file	src/game/platform/magic_080.cpp	live	widen	img_place	1
 file	src/game/platform/magic_080.cpp	live	widen	param	3
 file	src/game/platform/magic_080.cpp	live	width_if	asm_pair	1
@@ -14661,7 +14671,7 @@ file	src/game/platform/widescreen.cpp	live	widen	img_place	1
 file	src/game/platform/win_main.cpp	live	fmt_place	pointer	1
 file	src/game/platform/win_main.cpp	live	fmt_place	word	2
 file	src/game/platform/win_main.cpp	live	low32	image_local	1
-file	src/game/platform/win_main.cpp	live	low32	object_ours	2
+file	src/game/platform/win_main.cpp	live	low32	object_ours	3
 file	src/game/platform/win_main.cpp	live	uintptr	-	4
 file	src/game/platform/win_main.cpp	live	widen	param	2
 file	src/game/rdata_consts.h	live	low32	object_ours	1
@@ -15278,8 +15288,8 @@ file	symbols.toml	live	ptr_member	ours_render	11
 file	symbols.toml	live	ptr_member	windows_function	14
 file	symbols.toml	live	ptr_member	windows_handle	3
 file	symbols.toml	live	ptr_member	windows_object	10
-#count sites	11269
-#count sites_live	7798
+#count sites	11274
+#count sites_live	7803
 #count sites_fuzz	3471
 #count fuzz_files	250
 #count narrow	357
@@ -15346,23 +15356,23 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count narrow_call_windows	11
 #count narrow_call_windows_live	5
 #count narrow_call_windows_live_files	2
-#count widen	1345
-#count widen_live	1035
-#count widen_live_files	485
+#count widen	1347
+#count widen_live	1037
+#count widen_live_files	487
 #count widen_fuzz	310
 #count widen_fuzz_files	147
 #count widen_code_place	26
 #count widen_code_place_live	26
-#count widen_code_place_live_files	15
+#count widen_code_place_live_files	16
 #count widen_img_place	96
 #count widen_img_place_live	91
 #count widen_img_place_live_files	56
 #count widen_other	209
 #count widen_other_live	195
 #count widen_other_live_files	116
-#count widen_param	641
-#count widen_param_live	359
-#count widen_param_live_files	161
+#count widen_param	643
+#count widen_param_live	361
+#count widen_param_live_files	163
 #count widen_word_read	373
 #count widen_word_read_live	364
 #count widen_word_read_live_files	295
@@ -15454,14 +15464,14 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count sizeof_ptr_-	15
 #count sizeof_ptr_-_live	15
 #count sizeof_ptr_-_live_files	8
-#count uintptr	1936
-#count uintptr_live	1270
-#count uintptr_live_files	517
+#count uintptr	1938
+#count uintptr_live	1272
+#count uintptr_live_files	519
 #count uintptr_fuzz	666
 #count uintptr_fuzz_files	249
-#count uintptr_-	1936
-#count uintptr_-_live	1270
-#count uintptr_-_live_files	517
+#count uintptr_-	1938
+#count uintptr_-_live	1272
+#count uintptr_-_live_files	519
 #count fmt_place	493
 #count fmt_place_live	423
 #count fmt_place_live_files	70
@@ -15516,8 +15526,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count ptr_member_windows_object	10
 #count ptr_member_windows_object_live	10
 #count ptr_member_windows_object_live_files	1
-#count low32	731
-#count low32_live	723
+#count low32	732
+#count low32_live	724
 #count low32_live_files	468
 #count low32_fuzz	8
 #count low32_fuzz_files	1
@@ -15536,8 +15546,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count low32_image_local	139
 #count low32_image_local_live	139
 #count low32_image_local_live_files	91
-#count low32_object_ours	93
-#count low32_object_ours_live	93
+#count low32_object_ours	94
+#count low32_object_ours_live	94
 #count low32_object_ours_live_files	64
 #count low32_pool	18
 #count low32_pool_live	18
@@ -15602,22 +15612,22 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count long_src_game	48
 #count long_src_game_ul	3
 #count long_ctype	1789
-#count callconv_CALLBACK	19
+#count callconv_CALLBACK	20
 #count callconv_CALLBACK_fuzz	1
-#count callconv_CALLBACK_live	18
-#count callconv_WINAPI	23
-#count callconv_WINAPI_live	23
+#count callconv_CALLBACK_live	19
+#count callconv_WINAPI	14
+#count callconv_WINAPI_live	14
 #count callconv___cdecl	16384
 #count callconv___cdecl_fuzz	2014
 #count callconv___cdecl_live	14370
-#count callconv___stdcall	354
+#count callconv___stdcall	364
 #count callconv___stdcall_fuzz	96
-#count callconv___stdcall_live	258
+#count callconv___stdcall_live	268
 #count img_place_Code	625
 #count img_place_Code_fuzz	6
 #count img_place_Code_live	619
-#count img_place_Img	16019
+#count img_place_Img	16020
 #count img_place_Img_fuzz	1070
-#count img_place_Img_live	14949
+#count img_place_Img_live	14950
 #count img_place_VaOf	106
 #count img_place_VaOf_live	106
