@@ -418,12 +418,14 @@ the physical bindings live in the launcher's Controls dialog instead.
 
 ## 7. The function keys (2026-11-18)
 
-**Status: BUILT, host-tested; the page and the keys in play are not yet seen
-by the owner.** The owner asked for the function keys on a page of their own,
+**Status: BUILT, host-tested; seen by the owner 2026-11-18** (the 32-bit
+build of `f32becb3`): rebinding, clearing and a double binding on the page
+work, and the keys in play "seem fine"; a pad-bound action not reported on.
+The owner asked for the function keys on a page of their own,
 rebindable, on 2026-11-18, and the same day widened it: each action takes a
 keyboard key and a pad input "just like the others", and a key or pad input
-that does two things is shown in red. Ledger entry: written at the merge
-(the code says `DIVERGENCE (function keys; numbered at the merge)`).
+that does two things is shown in red. Ledger entry:
+[DIV-0240](DIVERGENCE.md) (the code says `DIVERGENCE DIV-0240`).
 
 ### 7.1 What a function key did before
 

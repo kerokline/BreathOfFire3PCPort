@@ -1,4 +1,4 @@
-// DIVERGENCE (function keys; numbered at the merge): the function keys' table
+// DIVERGENCE DIV-0240: the function keys' table
 // in the game (game/function_keys_game.h). Before it, Game_WndProc compared
 // each key message with F1, F5, F6, F7, F8, F9, F11, F12 and BOF3X_RUBY_KEY's
 // key; now it asks this table, which the launcher's Controls tab can rebind to

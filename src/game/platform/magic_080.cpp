@@ -597,7 +597,7 @@ void WinGame_PadActions() {
 }  // namespace
 
 // WM_KEYDOWN's: `vk` its wParam, `lparam` its lParam.
-// DIVERGENCE (function keys; numbered at the merge): the key's action is the
+// DIVERGENCE DIV-0240: the key's action is the
 // function keys' table's (game/function_keys_game.h), not a fixed F key's.
 void WinGame_Key(unsigned vk, std::int32_t lparam) {
     bof3::InputScript_RecordKey(vk, lparam);   // BOF3X_RECORD only
