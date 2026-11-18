@@ -11,6 +11,7 @@
 #include "os/file.h"
 #include "os/find.h"
 #include "os/hash.h"
+#include "os/heap.h"
 #include "os/memory.h"
 #include "os/stream.h"
 #include "os/text.h"

@@ -806,6 +806,77 @@ Direct3D's calls in R7 (the fiber exists because the render call wants a
 stack of its own); the size of R5 on the PSX-button and binding pages of the
 launcher, which write the numbers R4 keeps.
 
+### R10 as run: the arena (2026-11-17, branch `linux/w1-r10`)
+
+**Measured first.**
+
+- **The chokepoint** (`grep -rnE "(std::)?(malloc|calloc|free)\s*\(|\.(malloc|free)\s*\(" src/game src/render src/audio src/common`):
+  three entries, `Crt_malloc`, `Crt_calloc`, `Crt_free` (`crt_rest.cpp`), bound at Capcom's
+  `0x5B9660`, `0x5BA221`, `0x5B9577` as a set (crt-rest.md 2.6). There is no `Crt_realloc`: Capcom's
+  `realloc` `0x5C2F8E` is not ours and nothing reaches it (crt-rest.md 2.6). Hosted, the callers are
+  ours, the decoder's (under `BOF3X_MP3=original`) and the executable's runtime start-up.
+- **Others that allocate memory a 32-bit word holds**, read but not changed here: the SOUND self-test's
+  stand-ins (`sound_ours.cpp`, `std::malloc`, `Address(stream)`: moved to `Crt_malloc` below);
+  `music_seq.cpp:634` `TestMalloc` (`std::malloc`, into `Music_File`); `render_shim.cpp:53` `Alloc`
+  (`std::calloc`, the surface objects in `Slot32<ComObject>`); `mp3.cpp:109` `new Decoder` (its frame's
+  address in a game word, a Fatal above 4 GB today). On Linux each needs the arena too, or an
+  `operator new` / `calloc` of its own below 4 GB: stage LC's.
+- **The three `_msize` sites**, all `sound_ours.cpp`: `HeapBlockBytes` (`:881`), the quicksave's SOUND
+  record writing a bank's sample data, the last stream's file and a non-track music's data by their
+  exact length (`:951`, `:990`, `:1018`); and two checks of the SOUND self-test (`:1672`, `:1703`) that
+  the restored blocks have the take's length.
+- **How the 64-bit Windows build keeps its heap low today:** by placement, not code
+  (x64-build-design.md 2 and 5: a fixed-base executable's bottom-up heap, 44 of 48 blocks of 64 MB
+  below 4 GB), guarded by `LowBlock` at the chokepoint. The design named this arena as the fallback.
+- **Threads:** the executable imports no `CreateThread` (crt-rest.md 2.1); our DLL's threads (log
+  writer, crash reporter, stall watch, SDL's audio callback) use `std::malloc`, not the chokepoint.
+  So one thread calls it, by this reading; the arena locks anyway.
+- **Size:** the largest file the game reads whole is `SND\KARA.DAT`, 4,310,831 bytes
+  (`find bof3/ -type f -size +4M`). The game's peak heap was not measured.
+
+**The design.** `src/os/heap.h`, three parts:
+
+- `HeapExactSize` / `HeapHasExactSize` per backend: `_msize` on Windows (`win32/heap.cpp`), no answer
+  on POSIX (`posix/heap.cpp`).
+- `MemReserveBelow4G(size, floor)`, portable over `MemQuery` and `MemReserve`: the free runs in
+  `[floor, 4 GB)`, the highest that holds the size, 64 KB aligned.
+- `LowArena` (`src/os/heap_arena.cpp`, portable): one reservation, committed in 64 KB steps as the
+  used end rises; blocks with a 16-byte header {size, size below, requested, tag}, 16-byte aligned;
+  first fit from a free list; a freed block merges with free neighbours both ways, and one that
+  reaches the used end gives the room back. `Alloc(0)` is a block of its own of size 0; above
+  `0xFFFFFFE0` (MSVC 6's `_HEAP_MAXREQ`) null; `Calloc` refuses a product past it; `Realloc` is C's
+  (null is `Alloc`, 0 frees, in place when it can, moved when not, null and the block kept when there is
+  no room); `SizeOf` answers the request exactly; one `std::mutex`. `Open` takes `[2 GB, 4 GB)` first
+  (above every bind-table top byte, `bind.cpp`, and above `MAP_32BIT`'s room), then the system's own
+  place if it lies below 4 GB (a 32-bit process), then `[64 KB, 2 GB)`.
+
+The chokepoint (`crt_rest.cpp`): with the arena on, `Crt_malloc` / `Crt_calloc` take its blocks
+(256 MB reserved; a request it cannot hold is a Fatal naming the 256 MB, the live bytes and the used
+end); `Crt_free` frees its blocks and hands any other pointer to the toolchain's `free`, as before
+(a block of the runtime's own heap, or a `std::malloc` one); `crt_rest::BlockBytes` is the size
+query, the arena's record for its blocks, else the C runtime's `_msize`, else a Fatal.
+`sound_ours.cpp` asks `BlockBytes` in place of `_msize`, and its self-test takes its blocks from
+`Crt_malloc` / `Crt_free`, so the size query answers for them and they lie below 4 GB.
+
+**The switch: `BOF3X_ARENA`**, read once at the first heap call through `os::GetEnv`: `1` on, `0`
+off, anything else a Fatal. Unset, it is on where the C runtime has no exact size
+(`HeapHasExactSize()` false: Linux), off on Windows; `0` where there is no exact size is a Fatal. On, the
+log has one line: `heap        the arena (BOF3X_ARENA): 256 MB reserved at ...`. Off, the three entries
+call the toolchain's `malloc`, `calloc` and `free` as before, after one test of a static; the block
+size is `_msize` through the seam. `tools/ledger_switches.py` lists the name (`env`). No ledger entry:
+where a block lies and how the heap is cut is nothing a player sees.
+
+**Proof.** See R10's hand-back for the measured gate line; in short:
+
+| Check | Result |
+|---|---|
+| `os_tests`, `TestHeapArena` | Win32 32-bit: 153 checks, 0 failed (the arena at `0x015F0000`: no free run above 2 GB in a 32-bit process, so the system's place); 64-bit: 157, 0 failed (at `0xFF000000`); POSIX (g++ 15.2, WSL): 157, 0 failed (at `0xFF000000`) |
+| What the test does | the exact-size call per system; a reservation below 4 GB above a 2 GB floor; zero-size, too-large and double-free cases; 20,000 random rounds of malloc, calloc, realloc and free against a model (sizes, 16-byte alignment, every block below 4 GB, contents kept, calloc zeroed, invariants every 500 rounds); free all, then the used end at 0; 4,177 blocks of 4,000 bytes to the end, every other one freed, the rest freed, one block of 16 MB less 4 KB; a block grown into the reserved room and shrunk in place; four threads at once |
+| The test fails when it should | two mutations, built in the WSL: no merge with the block below (at least 6 checks fail, the output cut at 6: the invariants and the used end after freeing all), `SizeOf` answering the usable size (4 fail) |
+
+**Not verified:** the game's peak heap with the arena; the 64-bit exe host's self-tests and the ten
+state-hash routes with it on; anything on Linux beyond the compile and `os_tests` (no link exists).
+
 ### Stage LC - link and run on Linux
 
 - A CMake preset for the ELF, clang, SDL3 from source as today.

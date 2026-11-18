@@ -455,6 +455,225 @@ void TestFindAndStreams() {
     fs::remove_all(os::Path(dir.c_str()), ec);
 }
 
+// ---- the heap arena (os/heap.h; docs/linux-round.md "R10 as run") --------------
+
+// A small deterministic generator, so a failing round can be replayed.
+struct ArenaRng {
+    std::uint64_t s;
+    std::uint32_t Next() {
+        s = s * 6364136223846793005ull + 1442695040888963407ull;
+        return static_cast<std::uint32_t>(s >> 33);
+    }
+};
+
+bool Below4G(const void* p, std::size_t n) {
+    return static_cast<std::uint64_t>(reinterpret_cast<std::uintptr_t>(p)) + n <= 0x100000000ull;
+}
+
+void TestHeapArena() {
+    // The C runtime's exact size: _msize on Windows, none on POSIX.
+    void* const m = std::malloc(37);
+    std::size_t exact = 0;
+#ifdef _WIN32
+    CHECK(os::HeapHasExactSize() && os::HeapExactSize(m, &exact) && exact == 37);
+#else
+    CHECK(!os::HeapHasExactSize() && !os::HeapExactSize(m, &exact) && exact == 0);
+#endif
+    std::free(m);
+
+    // A reservation below 4 GB, at or above the floor asked.
+    void* const r = os::MemReserveBelow4G(0x30000, 0x80000000u);
+    if (sizeof(void*) == 8) CHECK(r != nullptr);   // 32-bit: there may be nothing above 2 GB
+    if (r) {
+        CHECK(Below4G(r, 0x30000) && reinterpret_cast<std::uintptr_t>(r) >= 0x80000000u &&
+              reinterpret_cast<std::uintptr_t>(r) % 0x10000 == 0);
+        os::MemInfo mi;
+        CHECK(os::MemQuery(r, &mi) && mi.state == os::MemState::Reserved);
+        CHECK(os::MemRelease(r, 0x30000));
+    }
+    CHECK(os::MemReserveBelow4G(0, 0x10000) == nullptr);
+
+    // Open: the whole arena below 4 GB; a second Open refused.
+    constexpr std::size_t kBytes = 16u << 20;
+    static os::LowArena a;   // static: never destroyed with blocks live, as the engine keeps its own
+    CHECK(a.Open(kBytes));
+    CHECK(!a.Open(kBytes));
+    CHECK(a.Base() != 0 && Below4G(reinterpret_cast<void*>(a.Base()), a.Reserved()) && a.Reserved() == kBytes);
+    CHECK(a.Committed() == 0 && a.InUse() == 0);
+    const char* why = nullptr;
+    CHECK(a.Verify(&why));
+
+    // The C runtime's edges: zero-size blocks are blocks of their own, size 0;
+    // a request past _HEAP_MAXREQ and a calloc product past it are refused;
+    // a block bigger than the arena is refused; free of a block not live is
+    // refused (the engine's Fatal).
+    void* const z1 = a.Alloc(0);
+    void* const z2 = a.Alloc(0);
+    std::size_t sz = 99;
+    CHECK(z1 && z2 && z1 != z2 && a.SizeOf(z1, &sz) && sz == 0);
+    CHECK(a.Alloc(0xFFFFFFF0u) == nullptr && a.Calloc(0x10000, 0x10000) == nullptr && a.Alloc(kBytes) == nullptr);
+    CHECK(a.Free(z1) && !a.Free(z1) && a.Free(z2));
+    int outside = 0;
+    CHECK(!a.Owns(&outside) && !a.SizeOf(&outside, &sz) && !a.Owns(nullptr));
+    void* const zr = a.Realloc(nullptr, 0);   // realloc(nullptr, 0) is malloc(0)
+    CHECK(zr != nullptr && a.SizeOf(zr, &sz) && sz == 0);
+    CHECK(a.Verify(&why));
+
+    // Random rounds of malloc / calloc / realloc / free against a model: each
+    // live block's size, alignment, place below 4 GB and contents kept.
+    struct Live {
+        unsigned char* p;
+        std::size_t n;
+        unsigned char fill;
+    };
+    std::vector<Live> live;
+    ArenaRng rng{0x5EED0BF3ull};
+    std::size_t model_bytes = 0;
+    bool aligned = true, low = true, sizes = true, kept = true, zeroed = true, invariant = true, frees = true;
+    auto check_contents = [&](const Live& l) {
+        for (std::size_t i = 0; i < l.n; ++i)
+            if (l.p[i] != static_cast<unsigned char>(l.fill + i)) return false;
+        return true;
+    };
+    auto fill = [](Live& l) {
+        for (std::size_t i = 0; i < l.n; ++i) l.p[i] = static_cast<unsigned char>(l.fill + i);
+    };
+    for (unsigned round = 0; round < 20000; ++round) {
+        const std::uint32_t op = rng.Next() % 10;
+        // sizes mostly small, now and then up to 256 KB, sometimes 0
+        const std::uint32_t pick = rng.Next();
+        std::size_t n = (pick % 8 == 0) ? (rng.Next() % 0x40000) : (pick % 13 == 0) ? 0 : (rng.Next() % 600);
+        if (op < 4 || live.empty()) {
+            const bool zero = op == 1;
+            auto* p = static_cast<unsigned char*>(zero ? a.Calloc(1, n) : a.Alloc(n));
+            if (!p) continue;   // the arena full: allowed, the model is unchanged
+            if (zero)
+                for (std::size_t i = 0; i < n; ++i) zeroed = zeroed && p[i] == 0;
+            Live l{p, n, static_cast<unsigned char>(rng.Next())};
+            fill(l);
+            live.push_back(l);
+            model_bytes += n;
+        } else if (op < 7) {
+            const std::size_t i = rng.Next() % live.size();
+            kept = kept && check_contents(live[i]);
+            frees = frees && a.Free(live[i].p);
+            model_bytes -= live[i].n;
+            live[i] = live.back();
+            live.pop_back();
+        } else {
+            const std::size_t i = rng.Next() % live.size();
+            Live& l = live[i];
+            if (n == 0) n = 1;   // realloc to 0 frees: tried apart below
+            auto* q = static_cast<unsigned char*>(a.Realloc(l.p, n));
+            if (!q) {
+                kept = kept && check_contents(l);   // refused: the old block untouched
+                continue;
+            }
+            const std::size_t keep = std::min(l.n, n);
+            for (std::size_t k = 0; k < keep; ++k) kept = kept && q[k] == static_cast<unsigned char>(l.fill + k);
+            model_bytes = model_bytes - l.n + n;
+            l.p = q;
+            l.n = n;
+            fill(l);
+        }
+        if (!live.empty()) {
+            const Live& l = live.back();
+            aligned = aligned && reinterpret_cast<std::uintptr_t>(l.p) % os::LowArena::kAlign == 0;
+            low = low && Below4G(l.p, l.n) && a.Owns(l.p);
+            std::size_t got = 0;
+            sizes = sizes && a.SizeOf(l.p, &got) && got == l.n;
+        }
+        if (round % 500 == 0) invariant = invariant && a.Verify(&why);
+    }
+    CHECK(aligned);
+    CHECK(low);
+    CHECK(sizes);
+    CHECK(kept);
+    CHECK(zeroed);
+    CHECK(invariant);
+    CHECK(frees);
+    CHECK(a.InUse() == model_bytes);
+    bool all_sizes = true;
+    for (const Live& l : live) {
+        std::size_t got = 0;
+        all_sizes = all_sizes && a.SizeOf(l.p, &got) && got == l.n && check_contents(l);
+    }
+    CHECK(all_sizes);
+    if (!a.Verify(&why)) std::fprintf(stderr, "arena: %s\n", why);
+
+    // realloc to 0 frees and answers null.
+    void* const g = a.Alloc(100);
+    CHECK(g && a.Realloc(g, 0) == nullptr && !a.SizeOf(g, &sz));
+
+    // Coalescing: free everything (in a scattered order), then one block of
+    // nearly the arena's size must fit.
+    for (std::size_t i = 0; i < live.size(); ++i) std::swap(live[i], live[rng.Next() % live.size()]);
+    bool freed = true;
+    for (const Live& l : live) freed = freed && a.Free(l.p);
+    live.clear();
+    CHECK(freed);
+    CHECK(a.Free(zr));
+    CHECK(a.End() == 0);   // everything back to the wilderness
+    CHECK(a.Verify(&why));
+    // Fill with small blocks to the end, free all, then the one big block.
+    std::vector<void*> small;
+    while (void* p = a.Alloc(4000)) small.push_back(p);
+    CHECK(small.size() > (kBytes / 4100));
+    CHECK(a.Committed() == kBytes);
+    bool halves = true;
+    for (std::size_t i = 0; i < small.size(); i += 2) halves = halves && a.Free(small[i]);
+    CHECK(halves && a.Verify(&why));   // every other block free: no two free neighbours yet
+    for (std::size_t i = 1; i < small.size(); i += 2) halves = halves && a.Free(small[i]);
+    CHECK(halves && a.Verify(&why));
+    std::printf("arena: %u blocks of 4000 filled %u MB, freed; ", static_cast<unsigned>(small.size()),
+                static_cast<unsigned>(kBytes >> 20));
+    const std::size_t in_use = a.InUse();
+    CHECK(in_use == 0);
+    CHECK(a.End() == 0);
+    void* const big = a.Alloc(kBytes - 0x1000);
+    CHECK(big != nullptr && Below4G(big, kBytes - 0x1000));
+    std::printf("one block of %u bytes at %p\n", static_cast<unsigned>(kBytes - 0x1000), big);
+    if (big) {
+        std::memset(big, 0xA5, kBytes - 0x1000);
+        CHECK(a.SizeOf(big, &sz) && sz == kBytes - 0x1000);
+        // grow it in place into the wilderness, then shrink it, then free it
+        CHECK(a.Realloc(big, kBytes - 0x100) == big && a.Realloc(big, 64) == big && a.SizeOf(big, &sz) && sz == 64);
+        CHECK(a.Free(big));
+    }
+    CHECK(a.Verify(&why) && a.InUse() == 0);
+
+    // Threads: four at once, each its own blocks.
+    std::vector<std::thread> threads;
+    bool threads_ok[4] = {true, true, true, true};
+    for (unsigned t = 0; t < 4; ++t)
+        threads.emplace_back([&threads_ok, t] {
+            ArenaRng tr{t + 1ull};
+            std::vector<std::pair<unsigned char*, std::size_t>> mine;
+            for (unsigned i = 0; i < 4000; ++i) {
+                if (mine.empty() || tr.Next() % 3 != 0) {
+                    const std::size_t n = tr.Next() % 300;
+                    auto* p = static_cast<unsigned char*>(a.Alloc(n));
+                    if (!p) continue;
+                    std::memset(p, static_cast<int>(t), n);
+                    mine.emplace_back(p, n);
+                } else {
+                    const std::size_t k = tr.Next() % mine.size();
+                    for (std::size_t j = 0; j < mine[k].second; ++j)
+                        if (mine[k].first[j] != t) threads_ok[t] = false;
+                    if (!a.Free(mine[k].first)) threads_ok[t] = false;
+                    mine[k] = mine.back();
+                    mine.pop_back();
+                }
+            }
+            for (auto& b : mine)
+                if (!a.Free(b.first)) threads_ok[t] = false;
+        });
+    for (auto& th : threads) th.join();
+    CHECK(threads_ok[0] && threads_ok[1] && threads_ok[2] && threads_ok[3]);
+    CHECK(a.Verify(&why) && a.InUse() == 0);
+    if (!a.Verify(&why)) std::fprintf(stderr, "arena: %s\n", why);
+}
+
 }  // namespace
 
 int main() {
@@ -465,6 +684,7 @@ int main() {
     TestClocks();
     TestEnvironment();
     TestSha256();
+    TestHeapArena();
     std::printf("os_tests: %d checks, %d failed\n", g_checks, g_fail);
     return g_fail ? 1 : 0;
 }
