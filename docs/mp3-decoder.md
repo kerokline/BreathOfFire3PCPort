@@ -56,6 +56,19 @@ and it is the less accurate of the two.
   register a float - the scratch had run through the slice into the next
   task's saved context. The comparison from WinMain never saw it (a shallow
   frame). Seen fixed: the title and the attract sequence through the MP3s.
+  **Since 2026-11-18** (the Linux round's wave 2, group M1,
+  [`linux-round.md`](linux-round.md) "Wave 2 as run") the stack pointer is
+  no longer switched by hand: the call runs on the seam's `os::OwnStack`
+  (`src/os/own_stack.h`; `src/audio/mp3.cpp` around line 183) - a fiber on
+  Windows, 256 KB committed of 256 KB, and a mapped stack with a guard page
+  and `swapcontext` on POSIX. The hand switch would have written the
+  decoded frame over the caller's stack under the System V convention. The
+  x87 control word is still the caller's at every call; MXCSR is the own
+  stack's (0x1F80), where the hand switch ran with the caller's (also
+  0x1F80; nothing in the source sets it). The self-test decodes one track
+  on the caller's stack and on the own stack and fails unless every sample
+  is the same (782 frames, the same, by the group's run). No ledger entry:
+  nothing a player can hear changes.
 - A stream that is not 44,100 Hz stereo is fatal (the ring is built for
   that format and Capcom's behaviour on another is unmeasured); the game's
   177 files are all that format.

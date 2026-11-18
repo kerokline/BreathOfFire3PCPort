@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 237 entries, DIV-0001..0237, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 239 entries, DIV-0001..0239, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -3903,6 +3903,15 @@ designed in rather than bolted on.
   at about 15.8 s, as with no deactivation - against 1,088 with
   `BOF3X_ORIGINAL=Fmv_WndProc`, the loop at about 23.7 s: the 8 s of
   deactivation spent paused (`analysis/attract/fmv_ours.tsv`, `fmv_capcom.tsv`).
+- **Amended 2026-11-18 (DIV-0238):** the procedure described above is now
+  the Win32 window's path alone (`BOF3X_OFF=WindowSdl`,
+  `src/game/fmv_play_win32.cpp`). On SDL's window, the default, no
+  procedure is put in front of the window's: `Fmv_Play` reads the
+  activation off the window's queue (`game_window::TakeForMovie`) and
+  applies the same rule - no pause under DIV-0033, the pair under
+  `BOF3X_BACKGROUND=0` - and the focus on activation is SDL's to take back.
+  A hosted `BOF3X_ORIGINAL=Fmv_WndProc` now also keeps the Win32 window
+  (the log says so), since Capcom's procedure needs it.
 - **Reversible?** `BOF3X_BACKGROUND=0`, or `BOF3X_ORIGINAL=Fmv_WndProc`.
 - **Switch:** Fmv_WndProc - the narrowest name; the launcher's `background=0` also turns it off, with DIV-0033 (`src/game/fmv_play.cpp` reads `WinMain_Background()`)
 - **Default:** on
@@ -5370,6 +5379,14 @@ designed in rather than bolted on.
   fuzzed - it runs MCI). The owner, 2026-09-30, on the intro videos: "it
   works now" (after the pad's start moved ahead of them). Not yet tried:
   a pad input held from before the video (no skip until released).
+- **Amended 2026-11-18 (DIV-0238):** the pump described above (the queue
+  drained and dispatched, the wait by `MsgWaitForMultipleObjects`) is now
+  the Win32 window's path alone (`BOF3X_OFF=WindowSdl`). On SDL's window,
+  the default, each step takes the window's events from
+  `game_window::TakeForMovie`, then polls the pad as before, then waits
+  with `SDL_Delay` up to 16 ms, which an event does not cut short. The
+  pad's skip, the held-input rule and the `WM_QUIT` put back for WinMain's
+  loop are the same on both paths.
 - **Reversible?** `BOF3X_ORIGINAL=Fmv_Play` runs Capcom's player.
 - **Switch:** Fmv_Play
 - **Default:** on
@@ -15482,6 +15499,17 @@ designed in rather than bolted on.
   Capcom's MCI player on the same build shows too - the figures in
   [`replacing-mci.md`](replacing-mci.md) 8. **Not yet played by the
   owner.**
+- **Amended 2026-11-18 (DIV-0238):** "the subclass, the modal pump ... and
+  the restore of the window procedure ... are as before" now holds on the
+  Win32 window's path alone (`BOF3X_OFF=WindowSdl`; the procedure and the
+  pump in `src/game/fmv_play_win32.cpp`). On SDL's window, the default,
+  there is no subclass and no pump of the player's: the play loop takes the
+  window's events from `game_window::TakeForMovie` (a key, a click, the
+  activation, a repaint, a close, the quit message) and waits with
+  `SDL_Delay`; DIV-0238 lists what a player can tell from that. The
+  decoders, the clock, the audio stream and the GDI picture on Windows are
+  the same on both paths. A hosted `BOF3X_ORIGINAL=Fmv_Play` keeps the Win32
+  window, since Capcom's player subclasses it.
 - **Reversible?** `BOF3X_ORIGINAL=Fmv_Play` runs Capcom's player, MCI and
   all (32-bit only; on the 64-bit build that is D407's silent clip).
 - **Switch:** Fmv_Play
@@ -17701,5 +17729,244 @@ designed in rather than bolted on.
 - **Default:** on
 - **Player:** costly - no switch of its own: the loop's `Inject` (`src/game/win_main.cpp`)
 - **Toward:** none - the PlayStation's loop skips no frame (above)
+- **Languages:** any
+- **State:** active
+
+### The game's window through SDL3, and the movie's events off the window's queue
+
+- **ID:** DIV-0238
+- **Date:** 2026-11-18
+- **Subsystem:** platform - the window (`src/game/platform/game_window.h`,
+  `game_window.cpp`, `game_window_win32.cpp`, `game_window_other.cpp`;
+  `Game_WinMain` `0x4FCB00`'s window steps in `magic_080.cpp`, the switch in
+  `win_main.cpp`, the desktop and the client in `d3d.cpp` and
+  `display_setup.cpp`) and the movie's events (`Fmv_Play` `0x59E360`,
+  `src/game/fmv_play.cpp`; `game_window::TakeForMovie`);
+  [`linux-round.md`](linux-round.md) "Wave 2's read passes" and "Wave 2 as
+  run", groups R6 and R6m
+- **Tier:** Sensible - the window works as designed; it is put on a library
+  that also runs on Linux, so that the native build (IDEAS I62) and Windows
+  have one window path
+- **Original behaviour:** the port registers the class `Bof3` with
+  `Game_WndProc` `0x4FC6F0`, makes the window with `CreateWindowExA`, and
+  runs one `PeekMessage` / `TranslateMessage` / `DispatchMessage` a pass of
+  the loop: one message a pass. Ours kept that through DIV-0032, DIV-0033,
+  DIV-0036, DIV-0042 and DIV-0095 (now the Win32 path,
+  `game_window_win32.cpp`, read 2026-11-18): `WM_SYSKEYDOWN` of F10 or Alt
+  answered 1, so other `SC_KEYMENU` commands (Alt+Space, the system menu)
+  went to `DefWindowProcA`; `WM_DESTROY` saved the placement and posted the
+  quit message, the window destroyed by `DefWindowProcA` before
+  `Display_Teardown`; `WM_MOVE` handed `Display_WindowMoved` its two words.
+  While a movie plays (DIV-0035, DIV-0049, DIV-0066, DIV-0205) `Fmv_Play`
+  puts `Fmv_WndProc` `0x59E570` in front of the window's procedure and
+  pumps the queue itself, waiting with `MsgWaitForMultipleObjects`, so a
+  message ends the wait at once. `Fmv_WndProc` sends every message it has no
+  case for to `DefWindowProcA` (DIV-0049's reading): during a movie a
+  resize took no `WM_SIZING` rule, `WM_SIZE` and `WM_MOVE` did not reach the
+  game, the end of a drag saved no placement, and a close (`WM_DESTROY`:
+  `Fmv_Playing` 0, `Game_QuitFlag` 1, `PostQuitMessage`) saved none either
+  (`fmv_play_win32.cpp` 120..130, read).
+- **New behaviour:** the window is SDL3's (`SDL_CreateWindow`, made
+  hidden, placed, then shown), SDL's display calls give the desktop, the
+  work area and the monitors, and SDL's event watch puts what concerns the
+  window in a small queue of ours. On Windows a procedure of ours stands in
+  front of SDL's (`FrontProc`) and takes `WM_KEYDOWN`, the two clicks,
+  `WM_ACTIVATEAPP`, `WM_SIZING`, `WM_EXITSIZEMOVE` and the screensaver and
+  suspend refusals as the port's procedure did; everything else goes to
+  SDL's. What a player or a harness user can tell, each read in the code at
+  this entry's date:
+  1. **Alt+Space no longer opens the system menu**, nor does any other
+     `SC_KEYMENU`: SDL's procedure answers every one with 0 unless
+     `SDL_HINT_WINDOWS_ENABLE_MENU_MNEMONICS` is set (SDL 3.4.16,
+     `SDL_windowsevents.c` 2129..2135; the hint's default false,
+     `SDL_windowsvideo.c` 142), and nothing in `src/` sets it. Before, only
+     F10 and Alt alone were swallowed.
+  2. **Window events reach the game at the loop's message step, every one
+     queued since the last step, in order** (`game_window::Pump`,
+     `game_window.cpp` 460..482), not one message a pass. SDL's pump
+     dispatches every waiting message unless they run past a millisecond, then
+     at most three more (`SDL_windowsevents.c` 2609, 2647..2658); the rest
+     wait for the next pump. A key still acts between the input latch and
+     the frame, as it did.
+  3. **On a close the window is hidden, not destroyed** (`Close`,
+     `game_window.cpp` 237..248: the placement saved, `Game_QuitFlag` set,
+     `SDL_HideWindow`), and destroyed after `Display_Teardown`
+     (`magic_080.cpp` 895..897), so the swap chain is released on a live
+     window.
+  4. **`Display_WindowMoved` gets SDL's client position**, each coordinate
+     masked to 16 bits as `WM_MOVE`'s words were (`game_window.cpp` 426,
+     451). The unit under a display scale other than 100 % was not measured.
+  5. **A move across monitors with different scaling**: SDL's
+     `WM_DPICHANGED` case keeps the client's pixel size for a move the user
+     makes (`SDL_windowsevents.c` 2456..2486). What the Win32 path did there
+     (the message goes to `DefWindowProcA`) was not measured.
+  6. **Where the thread's messages are dispatched.** With SDL's video up,
+     `SDL_PumpEvents` dispatches all of the thread's window messages. It is
+     called by the loop's message step, by the movie's step
+     (`TakeForMovie`), and - with SDL's keyboard, DIV-0239, or its shadow -
+     by the keyboard read at the input latch (`ReadSdl`, `d_input.cpp`
+     101..106), which comes first in a pass. The pad's poll pumps only when
+     SDL's video is not up (`pad_sdl.cpp` 124..128: the launcher, and the
+     game under `BOF3X_OFF=WindowSdl`). So a title-bar drag's or a resize's
+     modal loop now runs inside the input latch's pump, where it ran inside
+     the message step's `DispatchMessage`; the loop waits in it either way
+     (read, not measured).
+
+  **Kept:** the two window modes and F8 (DIV-0032; borderless is SDL's
+  fullscreen with no mode, on the window's display), the placement file
+  `bof3x.window` and its format (DIV-0042, shared code), the icon
+  (`BOF3_ICON` sent as `WM_SETICON`) and the title (DIV-0039), the
+  `WM_SIZING` aspect rule (DIV-0042, the same function), the pointer hidden
+  in borderless (`ShowCursor`), DIV-0033's focus rule (`WM_ACTIVATEAPP`
+  itself), Alt+F4 and the close button, the DPI awareness (the hint
+  `SDL_WINDOWS_DPI_AWARENESS=unaware`, which leaves the process as its
+  manifest made it).
+
+  **The movie, the same switch:** on SDL's window `Fmv_Play` puts no
+  procedure in front of the window's and pumps nothing itself; each step it
+  takes the window's events from `game_window::TakeForMovie`, with
+  `Fmv_WndProc`'s cases (a key other than Alt or F10, or a click, skips; the
+  activation pauses under DIV-0049's rule; a repaint draws the frame again;
+  a close ends the movie and the game). So, on SDL's window:
+  - a close during a movie hides the window and **saves the placement**
+    (the same `Close`), where the Win32 path destroyed the window and saved
+    none;
+  - a resize or a move during a movie **follows the normal rules**: the
+    `WM_SIZING` rule, the target's scale, `Display_WindowMoved`, the
+    placement at the drag's end (`game_window.cpp` 548..549, `FrontProc`).
+    The movie's own rectangle is still computed once, at its start
+    (`fmv_play.cpp` 311), as before;
+  - the wait between steps is `SDL_Delay`, up to 16 ms, which an event does
+    not cut short: **a skip can come up to 16 ms later** than on the Win32
+    path (`fmv_play.cpp` 382..386).
+  Off Windows the movie's picture is not drawn yet: a movie stops the game
+  with a message naming the open decision ([`replacing-mci.md`](replacing-mci.md)
+  9). That is the Linux build's, which does not link yet.
+- **Rationale:** the Linux native build, tier 2 of
+  [`linux-round.md`](linux-round.md) (IDEAS I62): Linux has no Win32
+  window, and two window paths would be two sets of bugs. The owner
+  launched wave 2 on 2026-11-18. The Win32 path stays behind the switch
+  on Windows, so that the two can be compared.
+- **Also in the PSX version?** Not applicable: the PlayStation has no
+  window.
+- **Verification:** both presets build on the merge (`98ae6e11`), and R6's
+  hosted shadow suite passed in its worktree (922 lines of 0, as step 0's
+  and R7's did); the merge's own suite, the
+  exe-host and moved-base runs and the ten state-hash routes are owed
+  ([`linux-round.md`](linux-round.md) "Owed before a PR"). **The owner's
+  look, 2026-11-18, the 32-bit build of `f7d4fc0f` from `game\`:** all eight
+  as expected - a windowed start with its placement, icon and title; a few
+  minutes of field and battle; a quicksave and a quickload; F8 to
+  borderless and back; a resize from a corner and from a side; focus away
+  and back; a drag to the second monitor and back, kept across a restart;
+  the close button and Alt+F4. **Second look, the same day, the 32-bit
+  build of `f32becb3`:** "the keyboard strokes seem fine" in play. **Not
+  looked at:** the three movies and a close during one, the steps under
+  `BOF3X_OFF=WindowSdl`, the 64-bit build, a monitor with another scale
+  setting, and items 1 to 6 above one by one; each of those is read in the
+  code alone.
+- **Reversible?** `BOF3X_OFF=WindowSdl` (the launcher's `off=`), or hosted
+  `BOF3X_ORIGINAL=WindowSdl`: the Win32 window and the movie's subclass and
+  pump, as before this entry. Wider switches that also keep the Win32
+  window: hosted `BOF3X_ORIGINAL=Game_WndProc`, `Fmv_Play` or `Fmv_WndProc`
+  (each needs the window procedure it was written for; the log names it).
+  Windows only: off Windows the switch stops the game with a message.
+- **Switch:** WindowSdl
+- **Default:** on
+- **Player:** yes - BOF3X_OFF=WindowSdl (ini off=); Windows only, off Windows the name stops the game
+- **Toward:** none - the port's window through another library, not a release's behaviour
+- **Languages:** any
+- **State:** active
+
+### The keyboard through SDL3's keyboard state, DirectInput's numbers kept
+
+- **ID:** DIV-0239
+- **Date:** 2026-11-18
+- **Subsystem:** platform / input (`DInput_Init` `0x5A94C0`, `Pad_Read`
+  `0x5A9700`, `DInput_Shutdown` `0x5A9690`, ours in
+  `src/game/platform/d_input.cpp`; the table `src/input/key_sdl.cpp`;
+  `pad_read.cpp`, `rdata_consts.cpp`, `src/input/pad_sdl.cpp`;
+  [`controls.md`](controls.md) section 6 step 1;
+  [`linux-round.md`](linux-round.md) wave 2, group R5)
+- **Tier:** Sensible - the keyboard works as designed; it is read through
+  the library the pad has used since DIV-0050, so that Linux and Windows
+  read it one way
+- **Original behaviour:** `DInput_Init` creates DirectInput 7 and the system
+  keyboard (`GUID_SysKeyboard`, `c_dfDIKeyboard`, non-exclusive and
+  background), and `Pad_Read` reads its 256 bytes into `Key_State` each
+  latch by `GetDeviceState` - 0x80 for a key down, indexed by DIK number -
+  and applies the 32 pairs of `Key_Table` over them (DIV-0050 kept this
+  path as the original). The bytes are filled whether or not the window is
+  in front; DIV-0033 zeroes the pad words while it is not.
+  `DInput_Object` and `DInput_Keyboard` hold the two objects.
+- **New behaviour:** with SDL's window (DIV-0238) and our `Pad_Read`
+  (`d_input.cpp` 313..323) `DInput_Init` creates no DirectInput object, and
+  each latch pumps SDL and fills the 256 bytes from `SDL_GetKeyboardState`
+  through 159 pairs of SDL scancode and DIK number (`key_sdl.cpp`), each
+  pair the number DirectInput gives the same physical key; `Key_Table` is
+  applied over them as before, and every stored number (`BOF3.CFG` lines 3
+  on, `key.NAME=` in `bof3x.ini`) means what it meant. There is no launcher
+  option (the owner's call, 2026-11-18: the keyboard goes to SDL3 with no
+  release beside DirectInput). What a player or a harness user can tell:
+  - **Ctrl+Pause (Break) acts as Pause** (DIK 0xC5): Windows sends it as
+    the extended scan code 0x46, which SDL's table gives
+    `SDL_SCANCODE_PAUSE` (`SDL_windowsevents.c` 212..237,
+    `scancodes_windows.h` 227). DirectInput gave it 0xC6, a number with no
+    name.
+  - **Print Screen is never seen held**: Windows sends no key-down for it,
+    and SDL sends the press and the release together on the key-up
+    (`SDL_windowsevents.c` 1616..1619).
+  - **Shift and the Windows keys are released at the next pump** when
+    Windows says they are up (`SDL_windowsevents.c` 2665..2688): a release
+    Windows loses is not held on.
+  - **A key already held when the window comes to the front is seen at its
+    first auto-repeat**, not at once: SDL does not read the keyboard on
+    focus (`SDL_windowsevents.c` 378..380, "FIXME: Update keyboard state").
+  - **`Key_State` is all 0 while the window is not in front**: SDL empties
+    its state when its window loses the keyboard (`SDL_keyboard.c`
+    348..350). DirectInput filled the bytes in the background; the pad words
+    were zeroed there already by DIV-0033, so only the bytes themselves (and
+    what reads them, the state hash) differ.
+  - The keypad's Enter (0x9C) and `/` (0xB5) and the international keys
+    have DirectInput's numbers: no change (the pairs, read by the group and
+    held by the host test below).
+  - `DInput_Object` and `DInput_Keyboard` stay 0, so the state hash's page
+    `0x7DE000` differs from a reference made before this entry (read by the
+    group, not run).
+  Off Windows SDL's keyboard is the only reader, and DirectInput's code is
+  not compiled.
+- **Rationale:** DirectInput is Windows only, and the Linux build (IDEAS
+  I62) needs the same 256 bytes; SDL3 is already in the process for the pad
+  and the window. The owner's call, 2026-11-18 ([`linux-round.md`](linux-round.md)
+  "For the owner, before a launch" item 3, as changed): first one release
+  with a player's choice, then, after the read pass found the pad on SDL3
+  since DIV-0050, the keyboard alone to SDL3 with no option.
+- **Also in the PSX version?** Not applicable: the PlayStation has no
+  keyboard.
+- **Verification:** `tools/key_host` holds the 159 pairs against SDL's own
+  Windows table, read as data (every key SDL on Windows knows gives
+  DirectInput's number, the table is one to one, every key name of
+  `bindings.h` is reachable, `FillKeyState` writes 0x80 and 0 only): 132,756 checks, 0 failed, at both widths and in
+  the WSL (the group's run). The reader rule, read: SDL's keyboard only with
+  SDL's window and our `Pad_Read`; `BOF3X_OFF=WindowSdl`,
+  `BOF3X_ORIGINAL=Pad_Read` or `DInput_Init` keep DirectInput's.
+  **The owner, 2026-11-18, the 32-bit build of `f32becb3` from `game\`:**
+  "the keyboard strokes seem fine" in play. **Not checked:** each case
+  above one by one, `BOF3X_OFF=KeyboardSdl`, the 64-bit build, the
+  state-hash routes. The claims about SDL are read in SDL 3.4.16's source
+  (`build/_deps/sdl3-src`), not measured.
+- **Reversible?** On Windows, `BOF3X_OFF=KeyboardSdl` (the launcher's
+  `off=`), or hosted `BOF3X_ORIGINAL=KeyboardSdl`: DirectInput's keyboard as
+  before this entry. With SDL's window up it is also the proof tool: each
+  latch fills SDL's bytes beside DirectInput's and logs every byte the two
+  keep apart for two latches or more while SDL's window has the keyboard
+  (`keyboard    shadow:` lines, a count at the end). Wider switches that
+  also keep DirectInput's: `BOF3X_OFF=WindowSdl`, hosted
+  `BOF3X_ORIGINAL=Pad_Read` or `DInput_Init`. Off Windows the switch stops
+  the game with a message.
+- **Switch:** KeyboardSdl
+- **Default:** on
+- **Player:** yes - BOF3X_OFF=KeyboardSdl (ini off=); Windows only, off Windows the name stops the game
+- **Toward:** none - the port's keyboard through another library, not a release's behaviour
 - **Languages:** any
 - **State:** active

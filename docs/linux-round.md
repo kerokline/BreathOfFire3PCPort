@@ -1122,6 +1122,107 @@ the movies. Proposed: the renderer, since tier 2 has no second way to put
 a picture on a window that DXVK also owns; R6m's agent measures whether
 the device can be made before `Display_Setup` first.
 
+### Wave 2 as run (2026-11-18, in progress; branch `linux/wave2`, not merged)
+
+Launched at the owner's word. Merged into `linux/wave2` so far, one at a
+time, at `f7d4fc0f`: step 0 (`linux/w2-s0`, the movie's code in
+`src/game/fmv_play.cpp`), R7 (`linux/w2-r7`, `os::OwnStack` and the
+snapshot's files) and R6 (`linux/w2-r6`, the window on SDL3, the Win32
+window behind `BOF3X_OFF=WindowSdl`). Each group's hosted shadow suite
+passed in its own worktree (922 lines of 0); both presets build on the
+merge; the merge's own suite and the routes have not run. Running: R5, R6m,
+I1 (`input_script.cpp`), R9, M1 (`mp3.cpp`'s stack switch, wrong under the
+System V convention - R7's finding).
+
+**The owner's look at the SDL3 window, 2026-11-18, the 32-bit build of
+`f7d4fc0f` from `game\`:** all eight as expected - a windowed start with
+its placement, icon and title; a few minutes of field and battle; a
+quicksave and a quickload; F8 to borderless and back; a resize from a
+corner and a side; focus away and back; a drag to the second monitor and
+back, kept across a restart; the close button and Alt+F4. **Not looked at
+yet:** the movies and a close during one (R6m is not merged), the same
+steps under `BOF3X_OFF=WindowSdl`, the 64-bit build, a monitor with another
+scale setting, R6's six changes one by one (its hand-back lists them; the
+ledger entries are owed at the merge).
+
+**Merged since, at `faf9c7c8` (both presets build; the merge's own suite
+has not run):** M1 (`linux/w2-m1`) and R9 (`linux/w2-r9`).
+
+- **M1:** `mp3.cpp`'s decoder runs on `os::OwnStack`; the hand switch is
+  gone. The self-test now decodes one track on the caller's stack and on
+  the own stack and fails unless every sample is the same (782 frames, the
+  same). The old x86-64 switch would have written the decoded frame over
+  the caller's stack under the System V convention. A call costs 32 to
+  56 ns where it cost 2 (about 38 calls a second). No ledger entry: no
+  change is intended. What is left of risk: the decoder now has the own
+  stack's MXCSR (0x1F80) where it had the caller's; they are equal today
+  and nothing in the source sets it.
+- **R9:** `render_d3d11.cpp` and `satpixie.cpp` compile for
+  `x86_64-linux-gnu` against DXVK-native's headers (a compile alone; no
+  link, no Linux GPU). Of the sites call 1 listed, wave 1 and R7 had left
+  two `GetClientRect` calls. The window goes through
+  `src/render/render_window.h` (`SwapChainWindow`, `WindowClientSize`):
+  Windows defines them, stage LC defines them from the SDL window.
+  `BOF3X_PIXEL_OFFSET` is a `Fatal` off Windows. `cmake/dxvk_headers.cmake`
+  fetches DXVK at commit `b1a1c99a` (the v3.1.1 tag's) with its
+  `include/native/directx` submodule, for a target that is not Windows
+  alone; `linux_tree.py --dxvk DIR` points the probe at the headers, and
+  the census is regenerated with them present.
+- **A correction to the staging's words:** "Windows keeps Microsoft's
+  headers" - on this toolchain the Windows builds compile against
+  llvm-mingw's MinGW-w64 headers.
+- **The fetched DirectX headers' licence, the owner's answer
+  (2026-11-18):** the submodule is MinGW-w64's DirectX headers (LGPL 2.1
+  or later). They are part of the toolchain's kind of header, the Windows
+  builds already compile against the same family, and nothing is vendored:
+  it is fine. A notice for DXVK (zlib) in
+  [`THIRD_PARTY.md`](THIRD_PARTY.md) is owed when a tarball ships its
+  libraries (stage LD).
+
+**All eight groups merged, `98ae6e11` (2026-11-18).** R6m
+(`linux/w2-r6m`), R5 (`linux/w2-r5`) and I1 (`linux/w2-i1`) after the five
+above. Both presets build; `data_census --strict`, `reloc_census --check`,
+`reloc_bare --check`, `ledger_check.py` and `ledger_switches.py --check`
+pass. **`linux_tree.py` with DXVK-native's headers: 813 files, 813 compile
+for `x86_64-linux-gnu`, 0 do not; 11 are Windows-only by design.** The
+round's goal is met. Nothing links or runs on Linux.
+
+- **R6m:** on SDL's window the movie has no subclass and no Win32 pump; it
+  takes the window's events (`game_window::TakeForMovie`). The picture on
+  Windows is the same GDI code, in `fmv_play_win32.cpp`. Off Windows the
+  picture is a `Fatal` that names the open decision
+  ([`replacing-mci.md`](replacing-mci.md) 9: the renderer brought up before
+  the movies, or SDL's window surface; neither built).
+- **R5:** `src/input/key_sdl.*`, 159 pairs from SDL's scancode to the DIK
+  number; SDL's keyboard is read at the latch. DirectInput is left under
+  `BOF3X_OFF=WindowSdl` and `BOF3X_OFF=KeyboardSdl` (the proof tool: it logs
+  each key the two readers keep apart). `tools/key_host`: 132,756 checks, 0
+  failed, at both widths and in the WSL. Read, not run: the state hash's
+  page `0x7DE000` will differ from a reference made before R5
+  (`DInput_Object` and `DInput_Keyboard` stay 0).
+- **I1:** `input_script.cpp` has no Win32 site; on SDL's window a recipe's
+  key goes into the window's queue (`game_window::QueueKey`), on the Win32
+  window through `os::PostWindowKey`. None of the ten routes has a key
+  step; the recipes with one are listed in its hand-back (`quick_menu`,
+  `f9ExitMode` and others).
+- **Found, not of this round:** the launcher's key capture stores Pause as
+  0x45 and names it NumLock, and the reverse
+  (`config_dialog.cpp`, the `WH_KEYBOARD` hook); R5 kept DirectInput's
+  meaning so that no stored number changes.
+
+**The owner's second look, 2026-11-18, the 32-bit build of `f32becb3`
+(`launcher/function-keys`, which holds all of the above) from `game\`:**
+rebinding, clearing and a double binding on the launcher's new Function
+keys page work, and "the keyboard strokes seem fine" in play. **Not
+reported on:** the three movies and a close during one, a pad-bound action,
+the pad unplugged and plugged in, MP3 music on the own stack, satpixie,
+`BOF3X_OFF=WindowSdl` and `BOF3X_OFF=KeyboardSdl`, the 64-bit build.
+
+**Owed before a PR:** the hosted shadow suite, the exe-host run and the
+moved-base run on the merge; the ten state-hash routes; the key-step
+recipes on both windows; `music_heard.py`; the ledger entries (the window,
+the keyboard, the movie's events).
+
 ### Stage LC - link and run on Linux
 
 - A CMake preset for the ELF, clang, SDL3 from source as today.
