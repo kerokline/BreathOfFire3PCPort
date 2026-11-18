@@ -3,8 +3,9 @@
 **Status: STAGED, 2026-11-18. Not launched; nothing built.** The owner
 asked for it the same day, while the Linux round's wave 2 ran. It launches
 at the owner's word, after wave 2's R9 is on `main` (R9 edits the files this
-round edits). Section 2 is measured; sections 3 to 6 are a plan, and
-section 7 lists what the plan assumes and nobody has checked.
+round edits). Sections 2 and 2a are measured (stage V0 ran the same day and changed the
+design); sections 3 to 6 are a plan, and section 7 lists what is still
+not checked.
 
 ## 1. What is asked, and the road proposed
 
@@ -61,37 +62,100 @@ I63 for the day DXVK is not enough.
   is off in today's build (`CMakeLists.txt:131..132`; the one `SDL_Init` is
   the pad's, `pad_sdl.cpp:86`). Wave 2's R6 turns it on.
 
+## 2a. Stage V0 as run (2026-11-18, branch `render/vulkan-toggle-v0`, commit `2a1f1c2`)
+
+A standalone probe, `tools/dxvk_win_probe/`, at 32 bits (large-address bit
+off, as the game's) and 64: the same work through Microsoft's Direct3D 11
+and through DXVK v3.1.1, each result one printed line. No game ran. The
+outputs are in `C:/Users/kerok/bof3x-runs/vk0/out/`. The machine: an RTX
+3060 Ti (driver 610.88) and an AMD integrated GPU, Vulkan 1.4 on both.
+
+**The archive:** `dxvk-3.1.1.tar.gz` from the project's GitHub releases,
+18,041,512 bytes, SHA-256
+`40565b4a724aadc4433fa4e010b4b23916d9b1f1baeee64e17186db94f54e608`.
+Direct3D 11 needs two files of it: `d3d11.dll` (8.2 MB at 32 bits, 7.5 MB at
+64) and `dxgi.dll` (5.9 MB, 5.4 MB). None is signed. **The archive holds no
+licence file.**
+
+**It works, and the picture is the same.** The device call answers `S_OK`
+at feature level 11_0 under both at both widths. `DISCARD`, `SEQUENTIAL`
+and `FLIP_DISCARD`, `MakeWindowAssociation` (DXVK ignores its flags),
+`Present(0,0)` and `Present(1,0)` all answer `S_OK`. Read back through a
+staging texture: the present pass at point and at linear, the game's scene
+shader's dual-source variant, and a second dual-source state - 0 of 307,200
+pixels differ between Microsoft's and DXVK's, at both widths, on each GPU.
+Between the two GPUs the linear pass differs on 5,203 pixels by one step
+and a dual-source draw on 108,767 by up to 61: a difference of cards, under
+either API.
+
+| | Microsoft, 32 | DXVK, 32 | Microsoft, 64 | DXVK, 64 |
+|---|---|---|---|---|
+| Load to first present | 1109 ms | 2471 ms | 1852 ms | 2291 ms |
+| `Present(0,0)` x 600, mean / worst | 0.35 / 0.99 ms | 0.60 / 10.8 ms | 0.43 / 57.4 ms | 0.61 / 33.9 ms |
+| Private bytes after 600 presents | 27 MB | 183 MB | - | - |
+| Virtual size after 600 presents | 440 MB | 608 MB | - | - |
+
+**Four findings the design did not have.**
+
+1. **The load-order trap is real, and there is a cure that does not depend
+   on the order.** With the system's `dxgi.dll` loaded first (as SDL's
+   video start-up loads it), DXVK's `d3d11.dll` binds to it and the device
+   call fails with `E_NOINTERFACE` after 5 to 8 seconds. Passing the adapter
+   from DXVK's own `CreateDXGIFactory1` makes the device in either order.
+   With DXVK's pair loaded first, a later load of `dxgi.dll` by name -
+   SDL's - gets DXVK's, and its factory works there.
+2. **The fall-back as section 3 had it is not safe.** Once DXVK's pair is in
+   the process, `LoadLibraryExW(L"d3d11.dll", LOAD_LIBRARY_SEARCH_SYSTEM32)`
+   returns DXVK's module, so a fall-back would get DXVK again; Microsoft's
+   `d3d11.dll` by full path beside DXVK's `dxgi.dll` is an access violation.
+   What works: `FreeLibrary` of both DXVK modules, then the load from
+   System32 (measured with a forced failure). The same shows that the flag
+   is no hardening by itself: the renderer must check the path of the
+   module it got.
+3. **In a full 32-bit process DXVK fails badly, not cleanly.** With address
+   space reserved beforehand to stand in for the game: it works at 1400 MB;
+   at 1500 MB NVIDIA's Vulkan driver is no longer listed, DXVK takes the
+   other GPU without a word and then faults (0xC0000005); at 1600 MB the
+   device call answers `E_FAIL`. Microsoft's works to 1600 MB. The real
+   game's use at the renderer's start is not measured.
+4. **DXVK writes a shader cache** under `%LOCALAPPDATA%\dxvk` by default
+   (`DXVK_SHADER_CACHE_PATH` moves it; tested), and it reports the GPU
+   under another vendor's id by default ("Hiding actual GPU").
+
+**Not run in V0:** the modules in the process at the renderer's start in a
+real game (hosted and exe host); a build of DXVK from source, so call 2's
+signing road is not timed.
+
 ## 3. The design
 
 **The switch.** `BOF3X_RENDER_API=d3d11|vulkan`, set by the launcher from an
 ini key, as `background=` is (`config.cpp:241`, :432, :645). `d3d11` is the
 default. The name says the API a player knows, not the library.
 
-**The load.** The import of `d3d11.dll` goes; the renderer finds
-`D3D11CreateDeviceAndSwapChain` at run time:
+**The load** (changed by V0, section 2a). The import of `d3d11.dll` goes;
+the renderer finds `D3D11CreateDeviceAndSwapChain` at run time and checks
+the full path of the module it got:
 
-- `d3d11`: `LoadLibraryExW(L"d3d11.dll", LOAD_LIBRARY_SEARCH_SYSTEM32)`.
-  This is also a small hardening: a `d3d11.dll` dropped beside the game is
-  no longer loaded by accident.
+- `d3d11`: the module from System32, and a `Fatal` if the one loaded is
+  from anywhere else.
 - `vulkan`: DXVK's `dxgi.dll`, then its `d3d11.dll`, by full path from a
-  folder of our own beside the engine (`dxvk\x32`, `dxvk\x64`), never from
-  the game's folder or the search path.
+  folder of our own beside the engine (`dxvk\x32`, `dxvk\x64`), before
+  SDL's video starts; the device is made on the adapter that DXVK's own
+  `CreateDXGIFactory1` gives, so that the order of the loads cannot decide
+  the result. `DXVK_SHADER_CACHE_PATH` and `DXVK_LOG_PATH` point into the
+  home folder.
+- The adapter DXVK offers is compared with the one Direct3D 11 would use
+  (by its LUID): if DXVK is on another GPU, that is a failure to start, not
+  a picture from the wrong card.
 
-**The trap in the load.** DXVK's `d3d11.dll` imports `dxgi.dll` by name,
-and Windows gives a module that is already loaded under that name. If the
-system's `dxgi.dll` is in the process first, DXVK's Direct3D gets
-Microsoft's DXGI and the device fails or half-works. Today nothing loads it
-first (section 2). After R6, SDL's video start-up does. So the round fixes
-the order: DXVK's pair is loaded before SDL's video starts, or SDL is told
-not to load DXGI. Stage V0 measures which modules are in the process at the
-renderer's start, on both hosts.
-
-**When Vulkan cannot start** (the files are not there, no Vulkan 1.3
-driver, the device call fails): the renderer logs why, makes the Direct3D 11
-device, and the launcher's next start says so in one line. This is a
-defined fall-back, not a silent one: the log line and the notice are part
-of it. A switch `BOF3X_RENDER_API=vulkan!` (the harness's) makes the same
-failure a `Fatal`, so a proof run cannot pass on the wrong API.
+**When Vulkan cannot start** (the files are not there, no driver, another
+GPU, the device call fails - allow 8 seconds): the renderer logs why, frees
+both DXVK modules, loads System32's `d3d11.dll`, checks its path, and makes
+the Direct3D 11 device; the launcher's next start says so in one line. A
+switch `BOF3X_RENDER_API=vulkan!` (the harness's) makes the same failure a
+`Fatal`, so that a proof run cannot pass on the wrong API. A fault inside
+DXVK or a driver cannot be caught this way: that is why the 32-bit game is
+call 3.
 
 **The shaders** do not change: DXVK takes the same compiled bytecode
 (`shaders_compiled.h`) that Direct3D takes. `D3DCompile`, for
@@ -137,10 +201,10 @@ needs the machine hands-off.
    local builds of ours before). Proposed: build DXVK from its pinned
    source in CI and sign that, if V0 shows the build is an hour or less;
    otherwise ship the project's own release binaries unsigned and say so.
-3. **The 32-bit game.** If V0 shows DXVK does not fit the hosted game's
-   2 GB, Vulkan is offered on the 64-bit build alone, and the box is grey
-   with that reason on the 32-bit one. Proposed: accept that, and do not
-   set the large-address bit for it.
+3. **The 32-bit game.** V0: with 1500 MB of a 2 GB process taken, DXVK
+   moves to the other GPU and faults. Proposed: Vulkan on the 64-bit build
+   alone, the box grey on the 32-bit one with that reason; the large-address
+   bit is not set for it.
 4. **Is Vulkan ever the default on Windows.** Proposed: no. Direct3D 11
    needs nothing installed and is the path every route was proven on. This
    is `linux-round.md` call 2 turned round.
@@ -170,15 +234,13 @@ needs the machine hands-off.
 
 ## 7. Not verified
 
-- Every statement about DXVK on Windows: that a current release ships
-  32-bit and 64-bit Windows DLLs, that it needs Vulkan 1.3, the files'
-  sizes, that it accepts the three swap effects and
-  `MakeWindowAssociation`, and that dual-source blending (DIV-0160) and
-  the staging readbacks behave as Microsoft's do. The Linux probe proved
-  the present pass alone, on DXVK-native, at 64 bits.
-- That Windows gives the already-loaded `dxgi.dll` to DXVK's `d3d11.dll`
-  (the trap in section 3). It is how the loader is known to treat a name
-  already loaded; V0 proves or removes it.
+- Settled by V0 (section 2a): the Windows DLLs at both widths and their
+  sizes, the three swap effects, `MakeWindowAssociation`, dual-source
+  blending and the staging readback against Microsoft's, and that Windows
+  gives the `dxgi.dll` already loaded to DXVK's `d3d11.dll`.
+- The Vulkan version DXVK v3.1.1 asks: its log says it only when the check
+  fails, and this machine has 1.4.
+- The game's own address use at the renderer's start, at 32 bits.
 - That `LOAD_LIBRARY_SEARCH_SYSTEM32` is right inside the hosted
   `BOF3.exe` under Wine, where `d3d11.dll` may be an override in the
   prefix. Tier 1 ([`linux-round.md`](linux-round.md) 2) must still draw.
