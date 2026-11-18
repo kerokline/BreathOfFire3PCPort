@@ -405,7 +405,6 @@ BOUNDARY_WAITING = {
     'src/hook/stackwatch.cpp': 'L3: crash catching (the stack walk)',
     'src/hook/cpu_context.h': 'L3: crash catching (CONTEXT)',
     'src/hook/snapshot.cpp': 'L3: fibers (ConvertThreadToFiber)',
-    'src/hook/log.cpp': 'L3: the log writer thread flushes from the crash path',
     'src/game/text/msgbox.cpp': 'L2: key codes (VK_*)',
     'src/game/menu/quick_menu.cpp': 'L2: key codes (VK_*)',
     'src/game/platform/win_main.cpp': 'L2: the window and its message loop',
