@@ -803,7 +803,12 @@ nothing in the ledger or the defect list.
    release). **Decided (the owner, 2026-11-18): one release, and the player
    chooses** between the two paths in it, by a launcher option; SDL3 is the
    default, so that the release tests the path that stays, and DirectInput
-   is the fallback.
+   is the fallback. **Changed the same day, after R5's read pass: no
+   release with both.** The pad has been on SDL3 since DIV-0050, so the
+   choice was the keyboard's alone; the keyboard goes to SDL3 with no
+   launcher option and no DirectInput path kept for a player. A ledger
+   entry for what a player can tell (the keys whose SDL scancode differs
+   from DirectInput's) is still owed at the merge.
 4. **R10:** the arena on Windows too, or on Linux alone (proposed: both, so
    that one heap is tested; behind a switch first).
 
