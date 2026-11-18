@@ -1145,6 +1145,40 @@ steps under `BOF3X_OFF=WindowSdl`, the 64-bit build, a monitor with another
 scale setting, R6's six changes one by one (its hand-back lists them; the
 ledger entries are owed at the merge).
 
+**Merged since, at `faf9c7c8` (both presets build; the merge's own suite
+has not run):** M1 (`linux/w2-m1`) and R9 (`linux/w2-r9`).
+
+- **M1:** `mp3.cpp`'s decoder runs on `os::OwnStack`; the hand switch is
+  gone. The self-test now decodes one track on the caller's stack and on
+  the own stack and fails unless every sample is the same (782 frames, the
+  same). The old x86-64 switch would have written the decoded frame over
+  the caller's stack under the System V convention. A call costs 32 to
+  56 ns where it cost 2 (about 38 calls a second). No ledger entry: no
+  change is intended. What is left of risk: the decoder now has the own
+  stack's MXCSR (0x1F80) where it had the caller's; they are equal today
+  and nothing in the source sets it.
+- **R9:** `render_d3d11.cpp` and `satpixie.cpp` compile for
+  `x86_64-linux-gnu` against DXVK-native's headers (a compile alone; no
+  link, no Linux GPU). Of the sites call 1 listed, wave 1 and R7 had left
+  two `GetClientRect` calls. The window goes through
+  `src/render/render_window.h` (`SwapChainWindow`, `WindowClientSize`):
+  Windows defines them, stage LC defines them from the SDL window.
+  `BOF3X_PIXEL_OFFSET` is a `Fatal` off Windows. `cmake/dxvk_headers.cmake`
+  fetches DXVK at commit `b1a1c99a` (the v3.1.1 tag's) with its
+  `include/native/directx` submodule, for a target that is not Windows
+  alone; `linux_tree.py --dxvk DIR` points the probe at the headers, and
+  the census is regenerated with them present.
+- **A correction to the staging's words:** "Windows keeps Microsoft's
+  headers" - on this toolchain the Windows builds compile against
+  llvm-mingw's MinGW-w64 headers.
+- **The fetched DirectX headers' licence, the owner's answer
+  (2026-11-18):** the submodule is MinGW-w64's DirectX headers (LGPL 2.1
+  or later). They are part of the toolchain's kind of header, the Windows
+  builds already compile against the same family, and nothing is vendored:
+  it is fine. A notice for DXVK (zlib) in
+  [`THIRD_PARTY.md`](THIRD_PARTY.md) is owed when a tarball ships its
+  libraries (stage LD).
+
 ### Stage LC - link and run on Linux
 
 - A CMake preset for the ELF, clang, SDL3 from source as today.
