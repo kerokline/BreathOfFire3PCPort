@@ -73,6 +73,7 @@ src/game/platform/pad_read.cpp
 src/game/platform/d_input.cpp
 src/input/bindings.cpp
 src/input/pad_sdl.cpp
+src/input/key_sdl.cpp
 src/input/sigma.cpp
 src/input/button_tests.cpp
 src/game/field/sprite_clut.cpp
