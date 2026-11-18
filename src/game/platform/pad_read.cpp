@@ -6,12 +6,15 @@
 //   Pad_Read         0x5A9700  builds the PlayStation pad word each latch
 //   DInput_Shutdown  0x5A9690  releases them at WinMain's exit
 //
-// The keyboard is Capcom's, unchanged: the DirectInput 7 system keyboard,
-// non-exclusive and background, read into the 256 key bytes at Key_State and
-// mapped through the 32-entry (DIK scancode, pad bits) table at Key_Table -
-// BOF3.CFG's lines 3 and up, or the default at Key_TableDefault. That path is
-// reproduced instruction for instruction (the shadow check below compares it
-// with a clone of the original over random key states and tables).
+// The keyboard's 256 key bytes at Key_State are mapped through the 32-entry
+// (DIK scancode, pad bits) table at Key_Table - BOF3.CFG's lines 3 and up, or
+// the default at Key_TableDefault - as Capcom's loop maps them, reproduced
+// instruction for instruction (the shadow check below compares it with a
+// clone of the original over random key states and tables). The bytes come
+// from SDL3's keyboard state by DIK number (input/key_sdl.h), each as the
+// port's DirectInput 7 system keyboard filled it; DirectInput itself stays
+// on Windows behind BOF3X_OFF=KeyboardSdl and the Win32 window
+// (d_input.cpp, docs/linux-round.md wave 2 R5).
 //
 // The pad is not Capcom's. The original enumerated the first DirectInput
 // joystick and read it digitally with a fixed button order that matches no
@@ -29,8 +32,6 @@
 // Pad_Read runs from WinMain's loop on the main stack, so SDL's calls have
 // room; nothing here runs on a task's 16 KB stack.
 #include "game/pad_read.h"
-
-#include <dinput.h>
 
 #include <cstdint>
 #include <cstring>
@@ -79,7 +80,7 @@ void PadLogLine(const char* line) { bof3::Log("%s", line); }
 
 Layout LayoutFromEnv(Layout fallback) {
     char v[32] = {};
-    const DWORD n = bof3::os::GetEnv("BOF3X_PAD_LAYOUT", v, sizeof v);
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_PAD_LAYOUT", v, sizeof v);
     if (n == 0 || n >= sizeof v) return fallback;
     const int l = input::LayoutFromName(v);
     if (l < 0) {
@@ -96,7 +97,7 @@ void LoadPadMap() {
     pad_read::g_pad_map = defaults.pad;
     Layout layout = defaults.layout;
     char text[2048] = {};
-    const DWORD n = bof3::os::GetEnv("BOF3X_PAD", text, sizeof text);
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_PAD", text, sizeof text);
     if (n > 0 && n < sizeof text) {
         std::vector<input::PadBinding> pad;
         const int understood = input::ParsePad(text, ',', pad, layout);
