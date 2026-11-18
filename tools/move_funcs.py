@@ -832,6 +832,13 @@ def source_inject_name(source: str) -> str:
     if source not in _inject_names:
         fi = ci.FileItems(read(source))
         names = [it.names[0] for it in fi.functions() if it.names[0].endswith("_Inject") and not it.ns]
+        # a file an earlier move filled from several sources has <Stem>_Inject() beside its
+        # <Stem>From<Source>_Inject()s: the BOF3_INJECT lines sit in the first, and the moved binds'
+        # call goes after its call
+        own = [n for n in names if n in (camel(Path(source).stem) + "_Inject",
+                                         camel(Path(source).parent.name) + camel(Path(source).stem) + "_Inject")]
+        if len(names) > 1 and len(own) == 1:
+            names = own
         if len(names) != 1:
             raise Refused(f"{source}: {len(names)} _Inject() functions")
         _inject_names[source] = names[0]
