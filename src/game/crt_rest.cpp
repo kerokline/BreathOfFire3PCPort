@@ -341,11 +341,100 @@ extern "C" char* __cdecl Crt_fgets(char* buf, int n, void* stream) {
 // (design 2, measured). No second heap: a HeapCreate'd low heap would need
 // Crt_free to tell its blocks by range and the quicksave's _msize of a
 // block (sound.cpp) to follow, so it stays the design's named fallback.
-extern "C" void* __cdecl Crt_malloc(unsigned size) { return ::bof3::LowBlock(std::malloc(size), size); }
-extern "C" void* __cdecl Crt_calloc(unsigned count, unsigned size) {
-    return ::bof3::LowBlock(std::calloc(count, size), count * size);
+//
+// The arena (docs/linux-round.md, "R10 as run: the arena"): that fallback,
+// built, behind BOF3X_ARENA. On Linux glibc's heap puts blocks above 4 GB and
+// has no exact block size, so there the three and the quicksave's size query
+// (BlockBytes) are an arena of ours below 4 GB (os/heap.h LowArena), always.
+// On Windows it is off unless BOF3X_ARENA=1, and off the three are the lines
+// they were, the toolchain's heap. On, Crt_free tells the arena's blocks by
+// range and hands any other block to the toolchain's free, as it did before
+// (a block of the runtime's own heap, or one a caller took from std::malloc).
+namespace {
+
+constexpr std::size_t kArenaBytes = 256u << 20;   // 60 times the largest file the game reads whole (SND\KARA.DAT, 4.3 MB)
+
+bof3::os::LowArena* OpenArena() {
+    char v[8] = {};
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_ARENA", v, sizeof v);
+    const bool exact = bof3::os::HeapHasExactSize();
+    bool on = !exact;   // the default: the arena where the C runtime cannot say a block's exact size
+    if (n != 0) {
+        if (n == 1 && v[0] == '1')
+            on = true;
+        else if (n == 1 && v[0] == '0')
+            on = false;
+        else
+            bof3::Fatal("BOF3X_ARENA=%s: the heap arena's switch is 1 (on) or 0 (off)", v);
+    }
+    if (!on && !exact)
+        bof3::Fatal("BOF3X_ARENA=0: this system's C runtime has no exact block size (the quicksave's SOUND "
+                    "record needs one) and its heap may lie above 4 GB; the arena cannot be off here");
+    if (!on) return nullptr;
+    auto* const arena = new bof3::os::LowArena;   // never deleted: blocks are freed up to the process's end
+    if (!arena->Open(kArenaBytes))
+        bof3::Fatal("the heap arena (BOF3X_ARENA): no free run of %u MB below 4 GB to reserve (system error %u)",
+                    static_cast<unsigned>(kArenaBytes >> 20), bof3::os::LastError());
+    bof3::Log("heap        the arena (BOF3X_ARENA): %u MB reserved at 0x%08llX..0x%08llX, committed as it fills; "
+              "Crt_malloc, Crt_calloc, Crt_free and the quicksave's block size are its",
+              static_cast<unsigned>(kArenaBytes >> 20), static_cast<unsigned long long>(arena->Base()),
+              static_cast<unsigned long long>(arena->Base() + arena->Reserved()));
+    return arena;
 }
-extern "C" void __cdecl Crt_free(void* ptr) { std::free(ptr); }
+
+// The arena, or null when the toolchain's heap serves; read once.
+bof3::os::LowArena* Arena() {
+    static bof3::os::LowArena* const arena = OpenArena();
+    return arena;
+}
+
+[[noreturn]] void ArenaFull(const char* call, unsigned long long bytes) {
+    bof3::os::LowArena* const a = Arena();
+    bof3::Fatal("%s: the heap arena (BOF3X_ARENA) of %u MB has no room for %llu bytes (%llu requested by live blocks, "
+                "the used end at %llu bytes)", call, static_cast<unsigned>(a->Reserved() >> 20), bytes,
+                static_cast<unsigned long long>(a->InUse()), static_cast<unsigned long long>(a->End()));
+}
+
+}  // namespace
+
+extern "C" void* __cdecl Crt_malloc(unsigned size) {
+    bof3::os::LowArena* const a = Arena();
+    if (!a) return ::bof3::LowBlock(std::malloc(size), size);
+    if (size > bof3::os::LowArena::kMaxRequest) return nullptr;   // _HEAP_MAXREQ, as MSVC 6 and the toolchain
+    void* const p = a->Alloc(size);
+    if (!p) ArenaFull("Crt_malloc", size);
+    return p;
+}
+extern "C" void* __cdecl Crt_calloc(unsigned count, unsigned size) {
+    bof3::os::LowArena* const a = Arena();
+    if (!a) return ::bof3::LowBlock(std::calloc(count, size), count * size);
+    const unsigned long long bytes = static_cast<unsigned long long>(count) * size;
+    if (bytes > bof3::os::LowArena::kMaxRequest) return nullptr;   // the product past _HEAP_MAXREQ: null, as the toolchain
+    void* const p = a->Calloc(count, size);
+    if (!p) ArenaFull("Crt_calloc", bytes);
+    return p;
+}
+extern "C" void __cdecl Crt_free(void* ptr) {
+    bof3::os::LowArena* const a = Arena();
+    if (!a || !a->Owns(ptr)) {
+        std::free(ptr);
+        return;
+    }
+    if (!a->Free(ptr)) bof3::Fatal("Crt_free(%p): inside the heap arena (BOF3X_ARENA) but not a live block (freed twice?)", ptr);
+}
+
+std::size_t crt_rest::BlockBytes(const void* block) {
+    bof3::os::LowArena* const a = Arena();
+    std::size_t bytes = 0;
+    if (a && a->Owns(block)) {
+        if (!a->SizeOf(block, &bytes)) bof3::Fatal("crt_rest::BlockBytes(%p): inside the heap arena but not a live block", block);
+        return bytes;
+    }
+    if (!bof3::os::HeapExactSize(block, &bytes))
+        bof3::Fatal("crt_rest::BlockBytes(%p): a block outside the heap arena, and this system's C runtime has no exact "
+                    "size for it (every block whose size is asked must come from Crt_malloc)", block);
+    return bytes;
+}
 
 // original 0x5B9AA6: sscanf, MSVC 6's _input 0x5BCF64 over a string FILE.
 // Two formats in the executable reach it: Cfg_Load's "%d %d" 0x65DAD0, and
