@@ -1215,8 +1215,10 @@ round's goal is met. Nothing links or runs on Linux.
 rebinding, clearing and a double binding on the launcher's new Function
 keys page work, and "the keyboard strokes seem fine" in play. **The
 movie** (the owner, the same day: a normal build has one now): it loaded
-and played to its end once, and was skipped once. **Not reported on:** a
-close of the window during the movie, a pad-bound action,
+and played to its end once, and was skipped once. **The function actions**
+(the owner, the same day): those bound to a pad button and those on the
+function keys "worked great". **Not reported on:** a
+close of the window during the movie,
 the pad unplugged and plugged in, MP3 music on the own stack, satpixie,
 `BOF3X_OFF=WindowSdl` and `BOF3X_OFF=KeyboardSdl`, the 64-bit build.
 
