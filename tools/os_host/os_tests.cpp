@@ -455,6 +455,155 @@ void TestFindAndStreams() {
     fs::remove_all(os::Path(dir.c_str()), ec);
 }
 
+// ---- events, threads, unbuffered files, the process's end (R8: os/event.h,
+// os/thread.h, os/out_file.h) ---------------------------------------------------
+
+}  // namespace
+#ifndef _WIN32
+#include <sys/wait.h>
+#endif
+#include <atomic>
+#include <iterator>
+namespace {
+
+// EndProcess is tried in a child: this program again with the variable set
+// (Windows) or a fork (POSIX), which ends here with 37 before main runs.
+const bool g_end_process_child = [] {
+    if (os::GetEnv("BOF3X_OS_TESTS_END_PROCESS", nullptr, 0) > 0) {
+        std::atexit([] { std::_Exit(99); });   // must not run
+        os::EndProcess(37);
+    }
+    return false;
+}();
+
+std::uint32_t ChildExitCode() {
+#ifdef _WIN32
+    std::string self;
+    if (!os::ExecutablePath(&self)) return 0xFFFFFFFFu;
+    std::wstring cmd = L"\"" + os::ToWide(self.c_str()) + L"\"";
+    SetEnvironmentVariableW(L"BOF3X_OS_TESTS_END_PROCESS", L"1");
+    STARTUPINFOW si{};
+    si.cb = sizeof si;
+    PROCESS_INFORMATION pi{};
+    const BOOL ok = CreateProcessW(nullptr, cmd.data(), nullptr, nullptr, FALSE, 0, nullptr, nullptr, &si, &pi);
+    SetEnvironmentVariableW(L"BOF3X_OS_TESTS_END_PROCESS", nullptr);
+    if (!ok) return 0xFFFFFFFFu;
+    WaitForSingleObject(pi.hProcess, 10000);
+    DWORD code = 0xFFFFFFFFu;
+    GetExitCodeProcess(pi.hProcess, &code);
+    CloseHandle(pi.hThread);
+    CloseHandle(pi.hProcess);
+    return code;
+#else
+    std::fflush(nullptr);
+    const pid_t pid = fork();
+    if (pid == 0) {
+        std::atexit([] { std::_Exit(99); });
+        os::EndProcess(37);
+    }
+    int status = 0;
+    if (pid < 0 || waitpid(pid, &status, 0) != pid || !WIFEXITED(status)) return 0xFFFFFFFFu;
+    return static_cast<std::uint32_t>(WEXITSTATUS(status));
+#endif
+}
+
+struct Waiter {
+    os::Event on;
+    os::Event done;
+    std::atomic<int>* count;
+};
+void WaitThenCount(void* p) {
+    Waiter* w = static_cast<Waiter*>(p);
+    if (os::EventWait(w->on, os::kWaitForever) == os::WaitResult::Signalled) {
+        if (w->count) w->count->fetch_add(1);
+        if (w->done) os::EventSet(w->done);
+    }
+}
+
+bool Within(const std::function<bool()>& ok, int ms) {
+    for (int i = 0; i < ms; ++i) {
+        if (ok()) return true;
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    return ok();
+}
+
+void TestEventsThreadsFiles() {
+    using os::WaitResult;
+    CHECK(!g_end_process_child);
+    // Auto-reset: one wait, then clear; a set kept until a wait; two sets are one.
+    os::Event a = os::EventCreate(false, false);
+    CHECK(a != nullptr);
+    CHECK(os::EventWait(a, 0) == WaitResult::Timeout);
+    CHECK(os::EventSet(a) && os::EventSet(a));
+    CHECK(os::EventWait(a, 0) == WaitResult::Signalled);
+    CHECK(os::EventWait(a, 0) == WaitResult::Timeout);
+    os::Event s = os::EventCreate(false, true);
+    CHECK(os::EventWait(s, 0) == WaitResult::Signalled && os::EventWait(s, 0) == WaitResult::Timeout);
+    // Manual-reset: stays set for every wait until reset.
+    os::Event m = os::EventCreate(true, false);
+    CHECK(os::EventSet(m) && os::EventWait(m, 0) == WaitResult::Signalled && os::EventWait(m, 0) == WaitResult::Signalled);
+    CHECK(os::EventReset(m) && os::EventWait(m, 0) == WaitResult::Timeout);
+    // A timed wait waits.
+    const auto t0 = std::chrono::steady_clock::now();
+    CHECK(os::EventWait(a, 60) == WaitResult::Timeout);
+    CHECK(std::chrono::steady_clock::now() - t0 >= std::chrono::milliseconds(40));
+    // Across threads: an auto-reset set releases one of two waiters, a manual-reset set both.
+    std::atomic<int> count{0};
+    Waiter w1{a, nullptr, &count}, w2{a, nullptr, &count};
+    os::Thread t1 = os::StartThread(WaitThenCount, &w1), t2 = os::StartThread(WaitThenCount, &w2);
+    CHECK(t1 && t2);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    CHECK(count.load() == 0 && !os::ThreadEnded(t1) && !os::ThreadEnded(t2));
+    CHECK(os::EventSet(a));
+    CHECK(Within([&] { return count.load() == 1; }, 2000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    CHECK(count.load() == 1 && os::ThreadEnded(t1) != os::ThreadEnded(t2));
+    CHECK(os::EventSet(a));
+    CHECK(Within([&] { return count.load() == 2 && os::ThreadEnded(t1) && os::ThreadEnded(t2); }, 2000));
+    std::atomic<int> both{0};
+    Waiter w3{m, nullptr, &both}, w4{m, nullptr, &both};
+    CHECK(os::StartThread(WaitThenCount, &w3) && os::StartThread(WaitThenCount, &w4));
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    CHECK(os::EventSet(m));
+    CHECK(Within([&] { return both.load() == 2; }, 2000));
+    // A wait forever, ended by a set from here; the other side's set seen here.
+    os::Event done = os::EventCreate(false, false);
+    Waiter w5{s, done, nullptr};
+    CHECK(os::StartThread(WaitThenCount, &w5) != nullptr);
+    CHECK(os::EventSet(s) && os::EventWait(done, 5000) == WaitResult::Signalled);
+    // No event: refused.
+    CHECK(!os::EventSet(nullptr) && os::EventWait(nullptr, 0) == WaitResult::Failed);
+    for (os::Event e : {a, s, m, done}) os::EventClose(e);
+    CHECK(!os::ThreadEnded(nullptr));
+
+    // Unbuffered files: a write is readable at once, a second create empties the file.
+    const std::string dir = Scratch() + "_out";
+    std::error_code ec;
+    fs::create_directories(os::Path(dir.c_str()), ec);
+    const fs::path p = os::Path((dir + "/log.txt").c_str());
+    os::OutFile f = os::OutCreate(p);
+    CHECK(f != os::kNoFile);
+    CHECK(os::OutWrite(f, "abc", 3));
+    {
+        std::ifstream in(p, std::ios::binary);
+        std::string got((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+        CHECK(in.is_open() && got == "abc");   // others may read it while it is open
+    }
+    CHECK(os::OutWrite(f, "def\r\n", 5) && os::OutFlush(f));
+    os::OutClose(f);
+    CHECK(fs::file_size(p, ec) == 8);
+    f = os::OutCreate(p);
+    CHECK(f != os::kNoFile && fs::file_size(p, ec) == 0);
+    os::OutClose(f);
+    CHECK(os::OutCreate(os::Path((dir + "/no/such/dir/x").c_str())) == os::kNoFile);
+    CHECK(!os::OutWrite(os::kNoFile, "x", 1) && !os::OutFlush(os::kNoFile));
+    fs::remove_all(os::Path(dir.c_str()), ec);
+
+    // The process's end: the code given, no exit handler run.
+    CHECK(ChildExitCode() == 37);
+}
+
 }  // namespace
 
 int main() {
@@ -462,6 +611,7 @@ int main() {
     TestFiles();
     TestNarrowNames();
     TestFindAndStreams();
+    TestEventsThreadsFiles();
     TestClocks();
     TestEnvironment();
     TestSha256();
