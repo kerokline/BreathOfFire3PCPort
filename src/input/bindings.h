@@ -3,7 +3,7 @@
 // which stores them in bof3x.ini and edits them in its Controls dialog, and
 // by the DLL, which receives them as BOF3X_KEYS / BOF3X_PAD and applies them
 // in src/game/pad_read.cpp (DIV-0050). Plain C++, no Windows headers (the
-// .cpp takes the DIK_ names of the default table from dinput.h).
+// .cpp takes the scan codes of the default table from input/key_codes.h).
 //
 // Two text forms, one grammar: `name=action[+action]` items separated by
 // `sep`, where a key item's name is a key's (below) and a pad item's name is

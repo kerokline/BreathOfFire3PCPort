@@ -3,7 +3,6 @@
 
 #include <cstdint>
 #include <cstring>
-#include <dinput.h>
 
 #include "bof3/symbols.gen.h"
 #include "game/lang_layout.h"
