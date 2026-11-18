@@ -98,8 +98,10 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    - **The 38 files are staged as one round** of ten groups in two waves ([`linux-round.md`](linux-round.md), "The 38 files,
      staged as one round"). **Wave 1 ran on 2026-11-17** (the owner: the round runs here) and is merged into the local branch
      `linux/wave1`, not pushed: 794 of 806 files compile for x86-64 Linux, 12 wait for wave 2, 9 are Windows files by design
-     ("Wave 1 as run"). **Owed before a PR:** the hosted shadow suite, the exe-host and moved-base runs and the ten
-     state-hash routes on the merged branch; `music_heard.py` to its end. Wave 2 (R5, R6, R7, R9) is not launched: it needs
+     ("Wave 1 as run"). **The ten state-hash routes ran on the merged branch on 2026-11-18:** seven identical to
+     `m1116` on every tick, three differ on the one page `0x6C3000`, which two runs of the same build also differ on.
+     **Owed before a PR:** the hosted shadow suite, the exe-host and moved-base runs on the merged branch; `music_heard.py`
+     to its end. Wave 2 (R5, R6, R7, R9) is not launched: it needs
      the owner's eye, and call 3 (DirectInput's switch).
    - **The Linux round's next units** are frost's, on his fork ([`linux-round.md`](linux-round.md) 4 and 6; "Waiting on
      someone else"). Here: the renderer's remainder ([`platform-layers-plan.md`](platform-layers-plan.md) 2.2) and the

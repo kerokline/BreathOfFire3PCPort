@@ -970,11 +970,29 @@ The 12: `win_main.cpp`, `display_setup.cpp`, `d3d.cpp`, `magic_080.cpp`,
 `input_script.cpp`, which waits for R6's window (lines 960..969) and takes
 R4's key names (lines 221..223, 1302..1303).
 
+**The ten state-hash routes, run on the merged branch 2026-11-18** (`d4f90201`,
+the exe host, an ini-less launcher copy, the conditions of
+[`state-hash.md`](state-hash.md) section 6; a copy of the recording
+session's `chain3.py`, no compiler seen during any run; ours as
+`cn_<route>_w1`):
+
+- `check` against the `orig5` / `orig5b` pair: on all ten routes the pages
+  and their first tick, last tick and tick count are those of `m1116`'s own
+  check (`D:\bof3x-runs\orig1116\check_<route>.txt`), compared line for line.
+- `diff` against `cn_<route>_m1116` (ours at `main` `df083903`, before the
+  Linux work and before PRs #256 to #258): **identical on every compared
+  tick on seven routes** (field_menu 1,409; menu_screens 1,729; combat
+  2,561; shop 3,137; dragonTransform 4,289; cutsceneAndNue 7,425; whelpBoss
+  13,185). On worldMapAndAreaTransition, caughFish and masterAndManillo one
+  page differs, `0x6C3000`, from the tick the route's glyph pages begin
+  (1,098; 395; 324) to the end. **It is run noise:** a second run of the
+  same launcher copy (`cn_<route>_w1b`) differs from the first on that page
+  over the same ticks, and from `m1116` likewise. Which bytes of the page
+  were not read (no dump was taken).
+
 **Not run on the merged branch:** the hosted shadow suite, the exe-host and
-moved-base runs, the ten state-hash routes (R8, R10 and R1 change what
-runs), `music_heard.py` to its end. Another session's route recordings held
-the machine when the merges ended. Each group ran the hosted suite on its
-own branch.
+moved-base runs, `music_heard.py` to its end, a game with `BOF3X_ARENA=1`.
+Each group ran the hosted suite on its own branch.
 
 **A player on Windows:** nothing by intent, so no ledger entry. Under test
 switches: the stall log's module names are UTF-8; a failed seek of the WAV
