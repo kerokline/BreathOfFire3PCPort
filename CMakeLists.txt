@@ -170,13 +170,17 @@ set(_dll_sources
   src/hook/input_script.cpp
   src/hook/statehash.cpp
   src/hook/wav_dump.cpp
-  src/hook/stackwatch.cpp
   src/hook/stallwatch.cpp
   src/hook/snapshot.cpp
   src/hook/draw_order.cpp
   src/hook/write_watch.cpp
   src/hook/stp_census.cpp
   src/hook/crash.cpp
+  # The fault catcher and the stack watch per system (docs/linux-round.md
+  # LB7): these two on Windows; crash_posix.cpp and stackwatch_posix.cpp are
+  # a Linux build's, which no list here makes yet.
+  src/hook/crash_win32.cpp
+  src/hook/stackwatch_win32.cpp
   src/hook/log.cpp
   src/hook/inject_all.cpp
   ${BOF3X_GAME_SOURCES}

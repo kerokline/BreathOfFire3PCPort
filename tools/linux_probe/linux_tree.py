@@ -27,6 +27,11 @@ import argparse, collections, concurrent.futures, glob, os, re, subprocess, sys,
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 LIST = 'analysis/linux_tree.tsv'
 SKIP = ('src/launcher/', 'src/os/win32/')
+# Files that are Windows by design and leave the Linux source list, each beside its Linux counterpart.
+WINDOWS_ONLY = (
+    'src/hook/crash_win32.cpp',       # the fault catcher: a vectored handler, MiniDumpWriteDump (crash_posix.cpp)
+    'src/hook/stackwatch_win32.cpp',  # the main thread's TEB and guard page (stackwatch_posix.cpp refuses)
+)
 HEADER = ('# tools/linux_probe/linux_tree.py: the source files that do not compile for x86_64-linux-gnu, and why. '
           'File names and reasons only.\n#file\treason\terrors\n')
 
@@ -46,7 +51,7 @@ def sources():
     for d, _, fs in os.walk(os.path.join(ROOT, 'src')):
         for f in fs:
             rel = os.path.relpath(os.path.join(d, f), ROOT).replace('\\', '/')
-            if f.endswith('.cpp') and not f.endswith('_fuzz.cpp') and not rel.startswith(SKIP):
+            if f.endswith('.cpp') and not f.endswith('_fuzz.cpp') and not rel.startswith(SKIP) and rel not in WINDOWS_ONLY:
                 out.append(rel)
     return sorted(out)
 
@@ -113,7 +118,8 @@ def main():
     if len(bad) == len(files):
         sys.exit('linux_tree: no file compiled; clang++ does not find the Linux C++ headers (pass --sysroot), or is absent')
     why = collections.Counter(r for r, _ in bad.values())
-    print(f'linux_tree: {len(files)} files, {len(files) - len(bad)} compile for x86_64-linux-gnu, {len(bad)} do not'
+    print(f'linux_tree: {len(files)} files, {len(files) - len(bad)} compile for x86_64-linux-gnu, {len(bad)} do not; '
+          f'{len(WINDOWS_ONLY)} Windows-only files left out'
           + (' (no SDL3 headers found: files that include them fail on that)' if not sdl else ''))
     for k, v in why.most_common():
         print(f'  {v:4d}  {k}')
