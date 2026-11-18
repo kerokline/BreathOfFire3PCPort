@@ -62,17 +62,12 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      disc-patch round's group D, the release, is held by the owner's call 1, [`disc-patch-round.md`](disc-patch-round.md);
      the owner played the Definitive Edition 1.0 mod on 2026-11-12, and 1.4's rules, a patch added by itself and the
      `en-150` build are not played); whether smooth motion ships as it is (off by default, experimental, its open items
-     in [`frame-interpolation.md`](frame-interpolation.md) 6); the `orig4` state-hash pairs are stale and want recording
-     again at the tip (item 14b; the rounds since have proven against fresh pairs of `main`'s own build instead).
-     **The re-record began on 2026-11-16 at `df083903` and is paused** (the owner came back): the new pairs are
-     `cn_<route>_orig5` / `_orig5b` with ours as `_m1116` (`D:\bof3x-runs\orig1116\chain.py`, which skips a file that
-     exists; `chain.out`, `check_<route>.txt`). Recorded: combat, cutsceneAndNue, dragonTransform, field_menu,
-     masterAndManillo, menu_screens, and caughFish's `orig5b` and `m1116`. Not recorded: caughFish's `orig5` (the first
-     run timed out at 40 minutes, not read why; removed), shop, whelpBoss, worldMapAndAreaTransition. Combat's two
-     runs disagree on 91 pages at scattered ticks (the `orig4` pair had 7): record it a third time. Ours differs from
-     every new pair - `0x5FD000` from tick 0 on all, `0x803000` on combat, the pages `0x904000` / `0x665000` /
-     `0x6BD000` / `0x7DE000` from one tick on four routes, 31 pages on masterAndManillo - and none of it is read
-     against the ledger yet, so the `orig5` pairs gate nothing until it is.
+     in [`frame-interpolation.md`](frame-interpolation.md) 6); **the state-hash pairs are recorded again
+     as `cn_<route>_orig5` / `_orig5b`** (2026-11-16 and 2026-11-18, a build of `main` `df083903`; item 15,
+     [`state-hash.md`](state-hash.md) 6): every pair agrees with itself on every tick, ours at that build
+     (`_m1116`) differs only by ledgered changes, and a hosted run of ours with those changes off is identical to
+     the pair on all ten routes. Not done: a run of ours at the tip after `df083903` (PRs #256 to #258) against
+     the pairs.
    - **The New Game round is merged** (item 18; PR #247, 2026-11-15). The owner saw it right under English and Japanese (2026-11-16). Owed: the rest of the play list
      ([`owner-review.md`](owner-review.md), section "2026-11-14, the New Game round") and what the PR lists as not run.
    - **The solo-character mode is merged** (PR #240, 2026-11-13; IDEAS I56, issue #223 closed;
@@ -501,7 +496,7 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    caughFish / masterAndManillo / worldMapAndAreaTransition, the sound page `0x7DE000` on combat, whelpBoss's
    VRAM window on `main`'s run); dragonTransform's moved run differed once on 28 pages and was identical on
    the second pair. **Merged as PR #217.** Owed: the owner's
-   eye on the reading row, which no route covers. **The `orig4` pairs are stale against `main`** (both builds
+   eye on the reading row, which no route covers. **The `orig4` pairs are stale against `main`** (answered 2026-11-18 by the `orig5` pairs, item 15; both builds
    fail them alike): record them again at the merged tip before they gate anything. **Left of I60:** the self-tests written in a
    file of ours (to fuzz files, with I61), five files whose arming runs before their self-test, the six
    `<group>_ours.cpp` names, the mover's reconciliation (the tool on `main` is B3's; B5's `df5c19ce`,
@@ -523,17 +518,22 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    repo (no stash); `git commit --amend` loses the trailer; shadow suites of several builds on one game
    folder collide (run alone, wait for the log); a merge of two groups that moved out of one source is
    resolved by "what both sides kept", then parsed and scanned for statements at brace depth 0; an exception
-   table or a static local follows its function. **The main-side finding stands:** the shop route's signature
-   moved between b7bd1d29 and 7f215457 (`0x66C000` / `0x7E1000` / `0x7C9000` at ticks 2714..2757, a mode
-   transition one frame apart after the `r2` confirm at recipe frame 2579) - bisect main's merges on
-   `tools/recipes/shop.txt` with the state hash, then ledger or fix; stage D will meet it. Removable now that PR #217 is
+   table or a static local follows its function. **The main-side finding is answered (2026-11-18):** the shop
+   route's signature that moved between b7bd1d29 and 7f215457 (`0x66C000` / `0x7E1000` / `0x7C9000` at ticks
+   2714..2757, a mode transition one frame apart after the `r2` confirm at recipe frame 2579) is DIV-0201's - a
+   hosted run with `SoundSdl` off has none of those pages ([`state-hash.md`](state-hash.md) 6, the `orig5`
+   line). Removable now that PR #217 is
    in `main`: every worktree under `slb1108`, `slb1109`, `sl1107` and `slc1109`, and the launcher copies beside them
    (2026-11-15, `git worktree list`: `slc1109\k1` on `source-layout/k1`, squash-merged as `e17b74e5`, and
    `slc1109\base3`, which stage D has outlived but which the I60 remainder's gate above still names as its
    baseline).
-15. **The state hash's route pairs are `cn_<route>_orig4` / `_orig4b`** (2026-10-23 at `main` `b13eb30a`,
-   [`state-hash.md`](state-hash.md) 6); the `orig3` pairs of 2026-10-20 went stale at the reading-row round's tip
-   (D330). Open from the `orig3` reading: which of the button round's glyph changes moves `masterAndManillo`'s pages
+15. **The state hash's route pairs are `cn_<route>_orig5` / `_orig5b`** (2026-11-16 and 2026-11-18, a build of
+   `main` `df083903`, [`state-hash.md`](state-hash.md) 6, which has each route's signature and the switches that
+   remove it; ours before a change is `cn_<route>_m1116`, for `statehash.py diff`). They stage the owner's save
+   list: a change of the saves in `bof3\` makes them stale. Record or check only on a quiet machine -
+   `D:\bof3x-runs\orig1116\chain3.py` waits for one and sets aside a run made beside a compiler. The `orig4`
+   pairs (2026-10-23 at `main` `b13eb30a`) were stale from 2026-11-11; the `orig3` pairs of 2026-10-20 went
+   stale at the reading-row round's tip (D330). Open from the `orig3` reading: which of the button round's glyph changes moves `masterAndManillo`'s pages
    (not DIV-0138 or DIV-0140 alone), and `Sound_Banks`' heap pointers on whelpBoss (a skip-list candidate). Scripts
    of that reading: `C:\Users\kerok\bof3x-runs\away1020`.
 
@@ -724,8 +724,8 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
   (`ab`, `abu`, `abj`, `abv`, `abx`, `b_rc`) were deleted 2026-10-21.
 - **The state hash** ([`state-hash.md`](state-hash.md)): from an ini-less launcher copy, `BOF3X_OPT=none
   BOF3X_LAYERING=0`, `tools/statehash_skip.txt`; `python tools/input_run.py tools/recipes/R.txt --no-front --game
-  <main>/bof3 --launcher <copy>/bof3x-launcher.exe` with `BOF3X_STATEHASH`, then `statehash.py check cn_R_orig4.sh
-  cn_R_orig4b.sh <run>` (the current pairs, item 15) ([`abc-sweep-1012.md`](abc-sweep-1012.md) 6 is a worked example).
+  <main>/bof3 --launcher <copy>/bof3x-launcher.exe` with `BOF3X_STATEHASH`, then `statehash.py check cn_R_orig5.sh
+  cn_R_orig5b.sh <run>` (the current pairs, item 15) ([`abc-sweep-1012.md`](abc-sweep-1012.md) 6 is a worked example).
 - **Oracle:** `attract_run.py --out ref.tsv --original "*,-Game_Clock"`, the same without `--original`, then
   `attract_diff.py ref.tsv new.tsv` ([`attract-mode.md`](attract-mode.md) §6).
 - **Memory dump:** `attract_run.py --minutes 2.4` and within seconds `mem_dump.py --label X`; `mem_dump.py --compare A
@@ -858,7 +858,7 @@ Local only, gitignored, worth keeping:
 
 - `bof3/BOF3.CFG`, `build/bof3x.ini` (the owner's; do not edit); the owner's saves `bof3/BISLPS*.DAT`; **the
   recipes' saves are `tools/recipe_saves/*.DAT`** ([`input-script.md`](input-script.md) §1a).
-- `analysis/statehash/` - **the route pairs `cn_<route>_orig4` / `_orig4b` (2026-10-23)**, the older `_orig3` / `_orig2` pairs,
+- `analysis/statehash/` - **the route pairs `cn_<route>_orig5` / `_orig5b` (2026-11-18)**, the older `_orig4` / `_orig3` / `_orig2` pairs,
   the overlay pairs `en_<route>_sh3a` / `_sh3b`, `attract_r14_orig*`; `analysis/calltrace/`;
   `analysis/attract/orig_a.tsv`; `analysis/memdump/clutref_*`.
 - `analysis/cache/pc-plus-us`; `bof3/DAT/<tag>.*.DAT`; `analysis/font/`; `analysis/shots/` - every capture and sheet
@@ -997,7 +997,7 @@ _One line each, with a pointer. Add when something costs more than an hour._
   ours. Before blaming a tip, run Capcom's side once (`--original "*,-Game_Clock"`, never `'*'` alone: Capcom's clock
   is the wall clock and the play-time digits drift) and `check` it against the pair; if it differs the same way,
   re-record the pair (state-hash.md 6). The 2026-10-05 pairs went stale this way; `cn_<route>_orig2` / `_orig2b` were
-  their replacements (the current pairs are `_orig4` / `_orig4b`, item 15).
+  their replacements (the current pairs are `_orig5` / `_orig5b`, item 15).
 - **Killing a queued chain by a command-line pattern kills its waiters** (2026-10-10): chains that wait on each
   other's markers name each other in their launch commands when the script text was written and launched in one
   command. Write the script in one command, launch by path in another, and stop one by the exact PID of its `bash`,

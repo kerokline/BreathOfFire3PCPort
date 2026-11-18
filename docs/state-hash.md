@@ -407,6 +407,63 @@ of the same tick as three runs of bytes a tick behind.
   ticks, whelpBoss on one-tick VRAM pages) matched the base on a repeat. So the
   signature from now on is `b1027`'s, and a day whose `src/` change is inert
   (the census's file writes) is expected to match it page for page.
+- **The route pairs re-recorded 2026-11-16 and 2026-11-18** as
+  `cn_<route>_orig5` / `_orig5b` (the `orig4` conditions and skip list; the
+  launcher copy `D:\bof3x-runs\orig1116\L`, a build of `main` `df083903`; the
+  owner's saves as they stood), the `orig4` pairs being stale since
+  2026-11-11. **Use these from now on.** Every pair agrees with itself on
+  every page and tick (0 pages on all ten routes). Three runs were set aside
+  and are kept beside the pairs under their own names: combat's first run of
+  2026-11-16 (`cn_combat_orig5.cold0`, the chain's first launch: 91 pages
+  at scattered ticks off three later runs, which are identical to each other
+  - the pair is the second and third, a fourth is `cn_combat_orig5d`), and
+  whelpBoss's two runs made while another session compiled
+  (`.failed0`, the recipe failed at frame 9,692 as the compile sweep began;
+  `.noisy0`). caughFish's first run of 2026-11-16 timed out and recorded
+  cleanly on 2026-11-18; the cause was not read. The runs of 2026-11-18 were
+  made by `D:\bof3x-runs\orig1116\chain3.py`, which starts a run only after
+  90 quiet seconds (no compiler process, total CPU under 20%) and sets aside
+  a run during which a compiler was seen.
+  Ours at that build (`cn_<route>_m1116`, the exe host) differs from every
+  pair only by ledgered changes, **each shown by a hosted run of ours with
+  the changes off, identical to the pair on every compared tick**
+  (`check_<route>_c1117.txt`, `_c1118.txt`, shop's `_c1118e.txt` in
+  `D:\bof3x-runs\orig1116`). The signature of `m1116`, and the switches whose
+  absence removes it:
+
+  | route | ticks | pages of `m1116` against the pair | off in the identical control |
+  |---|---|---|---|
+  | combat | 2,561 | `0x5FD000` every tick; `0x803000` 1,663..2,315 | `SunderLoop` (DIV-0176), `ExtraRoundClear` (DIV-0154) |
+  | caughFish | 3,841 | `0x5FD000`; 30 VRAM-shadow, draw and display pages from 395 | `SunderLoop`, the six glyph switches |
+  | cutsceneAndNue | 7,361 | `0x5FD000`; `0x904000` / `0x665000` / `0x6BD000` / `0x7DE000` from 204; `0x803000` 4,241..7,053 | `SunderLoop`, `AreaTrackFallback` (DIV-0092), `WindowResetFull` (DIV-0175) |
+  | dragonTransform | 4,289 | `0x5FD000`; the four music pages from 332; `0x803000` 4,192..4,288 | the same three |
+  | field_menu | 1,409 | `0x5FD000`; the four music pages from 752 | `SunderLoop`, `AreaTrackFallback` |
+  | masterAndManillo | 5,505 | `0x5FD000`; 30 VRAM-shadow, draw and display pages from 324 | `SunderLoop`, the six glyph switches |
+  | menu_screens | 1,729 | `0x5FD000`; the four music pages from 752 | `SunderLoop`, `AreaTrackFallback` |
+  | shop | 3,137 | `0x5FD000`; `0x803000` from 1,206 and four draw pages at 1,574..1,575; `0x66C000`, `0x7E0000`, `0x7E1000`, `0x903000`, `0x929000`, `0x7C9000`, `0x7CA000` at 2,714..2,757; `0x7DE000` from 2,715 | `SunderLoop`, `WindowResetFull`, `SoundSdl` (DIV-0201), `InnNightPause` (DIV-0169), `JingleResume` (DIV-0177) |
+  | whelpBoss | 13,185 | `0x5FD000`; `0x803000` from 619; `0x6BD000` / `0x904000` 10,347..12,071 | `SunderLoop`, `WindowResetFull`, `AreaTrackFallback`, `AreaKeepStoppingNone` (DIV-0143) |
+  | worldMapAndAreaTransition | 2,113 | `0x5FD000`; `0x803000` from 684; 30 VRAM-shadow, draw and display pages from 1,098 | `SunderLoop`, `WindowResetFull`, the six glyph switches |
+
+  The six glyph switches are `ShoulderGlyphs`, `ButtonText`, `WorldMapLegend`,
+  `DockLegend`, `EffectKind5E_DrawPanel`, `FishingLabelSigma` (the button
+  round's, as on 2026-10-20). The controls switched the whole set off at once
+  on every route (`c1117`: the 2026-10-20 and 2026-10-23 set; `c1118`: that
+  set and `WindowResetFull`), so the last column names the switches the
+  route's pages are known for, not a bisect of this night's.
+  **Shop, read on its own** (each step one hosted run against the pair): the
+  `c1118` set leaves nine pages at 2,714..2,757 and `0x7DE000` from 2,715;
+  `InnNightPause` off as well changes nothing; `SoundSdl` off instead leaves
+  `0x7DE000` alone, from 2,731 (DIV-0169's morning); both off leave
+  `0x7DE000` from 2,716, and raw dumps at 2,720 and 3,000 show one byte
+  outside the skip list, `Music_Loops` `0x7DE3DC` (1 in ours, 0 in Capcom's);
+  `JingleResume` off as well is identical on all 3,137 ticks. **So the pages
+  at 2,714..2,757 that the source-layout round met and left for a bisect are
+  DIV-0201's**: with `SoundSdl` on, the mode transition after the inn's
+  jingle comes a frame apart from Capcom's. The dumps: `cn_shop_dOrig5`,
+  `cn_shop_dC1117`, `cn_shop_dC1118d`, `cn_dragonTransform_dOrig5` /
+  `_dC1117` (tick 4,250: the window records, every differing byte ours zero).
+  A build after `df083903` is checked against these pairs and, the stronger
+  test, by `statehash.py diff` against the `m1116` run of its route.
 - **After a merge wave:** one run of ours per route, `check` against the pair.
   Exit 0 is the bar; a reported page goes through section 2's loop.
 - **Known and not skipped:** `Sound_Channels` `0x6BC8C8` (23 DirectSound

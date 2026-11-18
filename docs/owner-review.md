@@ -204,7 +204,8 @@ Gathered by the docs audit of 2026-10-31 from the docs that name them; each doc 
   owner's"): a listen to the loss tune on a disc-only install (DIV-0192, D320) and to the PAL banks on a European
   disc-only install (DIV-0194, D257); your eye on DIV-0195's regional boxes on a Western PSX-only install (area
   135's three panel pieces, kind 0x5E's frame and menu box); your word on a fresh `cn_<route>_orig4` re-record
-  with the current saves (section 9a item 4). The nine pending FR / DE music-player labels are the 2026-10-18
+  with the current saves (section 9a item 4) - **given, and done 2026-11-18**: the pairs are `cn_<route>_orig5`
+  ([`state-hash.md`](state-hash.md) 6). The nine pending FR / DE music-player labels are the 2026-10-18
   item below. JA's sheets and DIV-0196 were seen and approved on 2026-10-31.
 - **The Preset page** (ledger-fields stage D, PR #164; [`ledger-fields-round.md`](ledger-fields-round.md) 5): the
   Settings sub-tab at 100 % and 200 % scale, screenshots in `C:\Users\kerok\bof3x-runs\lfd1028\d2\shots`.
