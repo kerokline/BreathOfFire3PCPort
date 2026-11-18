@@ -1038,6 +1038,258 @@ void TestEventsThreadsFiles() {
     CHECK(ChildExitCode() == 37);
 }
 
+// ---- a function on a stack of its own, and the refusing rename (wave 2, group R7) ----
+// os/own_stack.h: call and return, the range os::CurrentStack() answers on it,
+// nesting, the x87 control word both ways, a recursion the game's 16 KB task
+// slice could not hold, a run from another thread, and (POSIX) a guard-page
+// fault taken on an alternate signal stack as the crash catcher arms one.
+// os/file_move.h: the rename that keeps its target and the one that replaces
+// it, in the temporary folder and in the current one (the WSL's /tmp and
+// /mnt/c are different filesystems), and the standard library's neutral
+// answers that snapshot.cpp reads in place of Windows' error numbers.
+
+}  // namespace
+
+#ifndef _WIN32
+#include <signal.h>
+#include <sys/wait.h>
+#endif
+
+namespace {
+
+constexpr std::size_t kR7Reserve = 1024 * 1024;
+os::OwnStack g_r7_a{{256 * 1024, kR7Reserve, false, true}};
+os::OwnStack g_r7_b{{64 * 1024, 256 * 1024, false, true}};
+
+bool R7Inside(const os::StackRange& r, const void* p) {
+    const auto a = reinterpret_cast<std::uintptr_t>(p);
+    return r.limit && r.base && reinterpret_cast<std::uintptr_t>(r.limit) <= a && a < reinterpret_cast<std::uintptr_t>(r.base);
+}
+
+// 160 frames of a little over 4 KB: some 650 KB, which fits in 1 MB and not in
+// the game's 16 KB slice. Each frame's local must lie on the stack the run
+// reports, and the deepest one far below the top.
+[[gnu::noinline]] unsigned R7Deep(unsigned n, std::uintptr_t* lowest) {
+    volatile unsigned char pad[4096];
+    for (unsigned i = 0; i < sizeof pad; i += 512) pad[i] = static_cast<unsigned char>(n + i);
+    const auto here = reinterpret_cast<std::uintptr_t>(&pad[0]);
+    if (here < *lowest) *lowest = here;
+    const unsigned below = n ? R7Deep(n - 1, lowest) : 0;
+    return below + pad[512];
+}
+
+struct R7Probe {
+    os::StackRange seen;
+    bool local_inside = false;
+    std::uintptr_t lowest = ~std::uintptr_t{0};
+    unsigned sum = 0;
+    os::OwnStackResult nested_self = os::OwnStackResult::Done;
+    os::OwnStackResult inner = os::OwnStackResult::NoStack;
+    os::StackRange after_deep;   // Windows' limit is the lowest committed page: it moves down as the stack grows
+    os::StackRange inner_seen, after_inner;
+    bool inner_local_inside = false;
+    int runs = 0;
+};
+
+void R7Inner(void* p) {
+    auto* probe = static_cast<R7Probe*>(p);
+    int local = 0;
+    probe->inner_seen = os::CurrentStack();
+    probe->inner_local_inside = R7Inside(probe->inner_seen, &local);
+}
+
+void R7Outer(void* p) {
+    auto* probe = static_cast<R7Probe*>(p);
+    int local = 0;
+    ++probe->runs;
+    probe->seen = os::CurrentStack();
+    probe->local_inside = R7Inside(probe->seen, &local);
+    probe->sum = R7Deep(160, &probe->lowest);
+    probe->after_deep = os::CurrentStack();
+    probe->nested_self = g_r7_a.Run(&R7Inner, probe);   // a run of the running stack: refused
+    probe->inner = g_r7_b.Run(&R7Inner, probe);         // another stack inside this one: returns here
+    probe->after_inner = os::CurrentStack();
+}
+
+unsigned short R7GetCw() {
+    unsigned short cw = 0;
+    __asm__ volatile("fnstcw %0" : "=m"(cw));
+    return cw;
+}
+void R7SetCw(unsigned short cw) { __asm__ volatile("fldcw %0" : : "m"(cw)); }
+void R7ReadCw(void* p) { *static_cast<unsigned short*>(p) = R7GetCw(); }
+void R7WriteCw(void* p) { R7SetCw(*static_cast<unsigned short*>(p)); }
+
+#ifndef _WIN32
+// The guard page, in a child process: an alternate signal stack and a
+// SIGSEGV handler armed as hook/crash_posix.cpp arms them (sigaltstack,
+// SA_SIGINFO | SA_ONSTACK), then a recursion with no end on a small own
+// stack. The handler answers by its exit code: 42 when the fault's address
+// is the page under the own stack and the handler runs on the alternate stack.
+std::uintptr_t g_r7_guard_lo = 0, g_r7_guard_hi = 0;
+alignas(16) unsigned char g_r7_alt[64 * 1024];
+
+void R7OnSegv(int, siginfo_t* si, void*) {
+    unsigned char here = 0;
+    const auto at = reinterpret_cast<std::uintptr_t>(si->si_addr);
+    const auto sp = reinterpret_cast<std::uintptr_t>(&here);
+    const bool on_alt = sp >= reinterpret_cast<std::uintptr_t>(g_r7_alt) && sp < reinterpret_cast<std::uintptr_t>(g_r7_alt) + sizeof g_r7_alt;
+    const bool in_guard = at >= g_r7_guard_lo && at < g_r7_guard_hi;
+    _exit(on_alt && in_guard ? 42 : on_alt ? 43 : 44);
+}
+
+[[gnu::noinline]] unsigned R7Forever(unsigned n) {
+    volatile unsigned char pad[1024];
+    pad[0] = static_cast<unsigned char>(n);
+    if (n == 0xFFFFFFFFu) return pad[0];   // never reached: 64 KB end long before
+    return R7Forever(n + 1) + pad[0];
+}
+
+void R7Overflow(void*) {
+    const os::StackRange r = os::CurrentStack();
+    const auto page = static_cast<std::uintptr_t>(sysconf(_SC_PAGESIZE));
+    g_r7_guard_hi = reinterpret_cast<std::uintptr_t>(r.limit);
+    g_r7_guard_lo = g_r7_guard_hi - page;
+    R7Forever(0);
+}
+
+int R7GuardChild() {
+    const pid_t child = fork();
+    if (child == 0) {
+        stack_t alt{};
+        alt.ss_sp = g_r7_alt;
+        alt.ss_size = sizeof g_r7_alt;
+        struct sigaction sa{};
+        sa.sa_sigaction = &R7OnSegv;
+        sa.sa_flags = SA_SIGINFO | SA_ONSTACK;
+        sigemptyset(&sa.sa_mask);
+        if (sigaltstack(&alt, nullptr) != 0 || sigaction(SIGSEGV, &sa, nullptr) != 0) _exit(45);
+        static os::OwnStack small{{0, 64 * 1024, false, true}};
+        small.Run(&R7Overflow, nullptr);
+        _exit(46);   // the recursion returned: it cannot
+    }
+    int status = 0;
+    if (child < 0 || waitpid(child, &status, 0) != child) return -1;
+    return WIFEXITED(status) ? WEXITSTATUS(status) : 1000 + (WIFSIGNALED(status) ? WTERMSIG(status) : 0);
+}
+#endif
+
+void TestOwnStack() {
+    // A run: the function ran on a range that is not the thread's, holding its
+    // locals; the deep recursion fit; the stack itself refused a run of itself;
+    // another stack ran inside and came back to this one.
+    const os::StackRange thread_stack = os::CurrentStack();
+    int outer_local = 0;
+    CHECK(R7Inside(thread_stack, &outer_local));
+    CHECK(!g_r7_a.Made());
+    R7Probe probe;
+    CHECK(g_r7_a.Run(&R7Outer, &probe) == os::OwnStackResult::Done);
+    CHECK(g_r7_a.Made() && probe.runs == 1);
+    CHECK(probe.local_inside && probe.seen.base != thread_stack.base);
+    CHECK(probe.after_deep.base == probe.seen.base && R7Inside(probe.after_deep, reinterpret_cast<void*>(probe.lowest)));
+    CHECK(reinterpret_cast<std::uintptr_t>(probe.seen.base) - probe.lowest > 600 * 1024);
+    CHECK(reinterpret_cast<std::uintptr_t>(probe.after_deep.base) - reinterpret_cast<std::uintptr_t>(probe.after_deep.limit) <= kR7Reserve);
+    CHECK(probe.nested_self == os::OwnStackResult::Nested);
+    CHECK(probe.inner == os::OwnStackResult::Done && probe.inner_local_inside);
+    CHECK(probe.inner_seen.base != probe.seen.base && probe.inner_seen.base != thread_stack.base);
+    CHECK(probe.after_inner.base == probe.seen.base);
+    // Back on the thread's stack, the thread's range again.
+    const os::StackRange again = os::CurrentStack();
+    CHECK(again.base == thread_stack.base && R7Inside(again, &outer_local));
+    std::printf("own stack: %p..%p (the thread's %p..%p), %u KB deep\n", probe.after_deep.limit, probe.after_deep.base, thread_stack.limit,
+                thread_stack.base, static_cast<unsigned>((reinterpret_cast<std::uintptr_t>(probe.seen.base) - probe.lowest) / 1024));
+
+    // The stack is kept: a thousand runs, the same range each time.
+    bool same = true;
+    for (int i = 0; i < 1000 && same; ++i) {
+        os::StackRange seen;
+        same = g_r7_b.Run([](void* q) { *static_cast<os::StackRange*>(q) = os::CurrentStack(); }, &seen) == os::OwnStackResult::Done &&
+               seen.base == probe.inner_seen.base;
+    }
+    CHECK(same);
+    CHECK(g_r7_a.Run(&R7Outer, &probe) == os::OwnStackResult::Done && probe.runs == 2 && probe.seen.base != thread_stack.base);
+
+    // From another thread: the same stack, the range on that thread.
+    os::StackRange from_thread;
+    os::OwnStackResult thread_result = os::OwnStackResult::NoStack;
+    std::thread([&] {
+        thread_result = g_r7_b.Run([](void* q) { *static_cast<os::StackRange*>(q) = os::CurrentStack(); }, &from_thread);
+    }).join();
+    CHECK(thread_result == os::OwnStackResult::Done && from_thread.base == probe.inner_seen.base);
+
+    // The x87 control word. Carried: the run sees the caller's word at every
+    // entry. Not carried: the stack keeps the word it last had, whatever the
+    // caller's is now (the fiber's float switch, swapcontext's saved state).
+    const unsigned short cw0 = R7GetCw();
+    static os::OwnStack carried{{64 * 1024, 256 * 1024, true, true}};
+    static os::OwnStack kept{{64 * 1024, 256 * 1024, false, true}};
+    unsigned short seen_cw = 0, want = 0x027F;   // the default with 53-bit precision
+    R7SetCw(want);
+    CHECK(carried.Run(&R7ReadCw, &seen_cw) == os::OwnStackResult::Done && seen_cw == 0x027F);
+    R7SetCw(0x037F);
+    CHECK(carried.Run(&R7ReadCw, &seen_cw) == os::OwnStackResult::Done && seen_cw == 0x037F);
+    unsigned short inside = 0x007F;   // 24-bit precision, set on the stack
+    CHECK(kept.Run(&R7WriteCw, &inside) == os::OwnStackResult::Done);
+    CHECK(R7GetCw() == 0x037F);   // the caller's own word is back after the run
+    CHECK(kept.Run(&R7ReadCw, &seen_cw) == os::OwnStackResult::Done && seen_cw == 0x007F);
+    R7SetCw(cw0);
+    std::printf("own stack: x87 control word carried 0x027F and 0x037F, kept 0x%04X\n", seen_cw);
+
+#ifndef _WIN32
+    const int guard = R7GuardChild();
+    CHECK(guard == 42);
+    std::printf("own stack: a recursion past the stack's end faulted on its guard page, taken on the alternate stack (child exit %d)\n",
+                guard);
+#endif
+}
+
+void R7Write(const fs::path& p, const char* text) {
+    std::ofstream f(p, std::ios::binary | std::ios::trunc);
+    f << text;
+}
+std::string R7Read(const fs::path& p) {
+    std::ifstream f(p, std::ios::binary);
+    return std::string((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+}
+
+void R7Moves(const fs::path& dir, const char* where) {
+    std::error_code ec;
+    fs::remove_all(dir, ec);
+    CHECK(fs::create_directory(dir, ec) && !ec);
+    const fs::path a = dir / "BISLPS1A.DAT", b = dir / "BISLPS1B.DAT", c = dir / "BISLPS1C.DAT";
+    R7Write(a, "a");
+    R7Write(b, "b");
+    // Kept: a target that is there refuses, and nothing moves.
+    CHECK(os::MoveFileKeep(a, b) == os::MoveResult::TargetExists);
+    const int refused_way = os::MoveFileKeepWay();
+    CHECK(R7Read(a) == "a" && R7Read(b) == "b");
+    // Kept: a free target, the file moved.
+    CHECK(os::MoveFileKeep(a, c) == os::MoveResult::Moved);
+    const int moved_way = os::MoveFileKeepWay();
+    CHECK(!fs::exists(a, ec) && R7Read(c) == "a");
+    CHECK(os::MoveFileKeep(a, c) == os::MoveResult::NoSource);
+    // Replaced: the target's bytes are the source's.
+    CHECK(os::MoveFileReplace(c, b) == os::MoveResult::Moved);
+    CHECK(!fs::exists(c, ec) && R7Read(b) == "a");
+    CHECK(os::MoveFileReplace(c, b) == os::MoveResult::NoSource);
+    // The neutral answers: a missing file is "no such file", a folder made twice is no error.
+    (void)fs::file_size(a, ec);
+    CHECK(ec == std::errc::no_such_file_or_directory);
+    ec.clear();
+    CHECK(!fs::create_directory(dir, ec) && !ec);
+    fs::remove_all(dir, ec);
+    std::printf("file move in %s (%s): the refusing rename by %s (refused) and %s (moved)\n", where, os::Narrow(dir).c_str(),
+                refused_way == 0 ? "renameat2 / MoveFileExW" : refused_way == 1 ? "link and unlink" : "nothing",
+                moved_way == 0 ? "renameat2 / MoveFileExW" : moved_way == 1 ? "link and unlink" : "nothing");
+}
+
+void TestFileMove() {
+    std::error_code ec;
+    const std::string tag = "bof3x_r7_move_" + std::to_string(os::ProcessId());
+    R7Moves(fs::temp_directory_path(ec) / tag, "the temporary folder");
+    R7Moves(fs::current_path(ec) / tag, "the current folder");
+}
+
 }  // namespace
 
 int main() {
@@ -1052,6 +1304,8 @@ int main() {
     TestHeapArena();
     TestUtf8Paths();
     TestR1Harness();
+    TestOwnStack();
+    TestFileMove();
     std::printf("os_tests: %d checks, %d failed\n", g_checks, g_fail);
     return g_fail ? 1 : 0;
 }

@@ -401,7 +401,6 @@ BOUNDARY_WAITING = {
     'src/hook/host.cpp': 'W: reads the PE headers of the host process',
     'src/hook/crash_win32.cpp': 'W: the fault catcher on Windows (a vectored handler, MiniDumpWriteDump), Windows only by design',
     'src/hook/stackwatch_win32.cpp': "W: the main thread's TEB and guard page, Windows only by design",
-    'src/hook/snapshot.cpp': 'L3: fibers (ConvertThreadToFiber)',
     'src/game/platform/win_main.cpp': 'L2: the window and its message loop',
     'src/game/platform/display_setup.cpp': 'L2: the window and the monitor',
     'src/game/platform/d3d.cpp': 'L2: the window (HWND)',
