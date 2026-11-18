@@ -1213,8 +1213,10 @@ round's goal is met. Nothing links or runs on Linux.
 **The owner's second look, 2026-11-18, the 32-bit build of `f32becb3`
 (`launcher/function-keys`, which holds all of the above) from `game\`:**
 rebinding, clearing and a double binding on the launcher's new Function
-keys page work, and "the keyboard strokes seem fine" in play. **Not
-reported on:** the three movies and a close during one, a pad-bound action,
+keys page work, and "the keyboard strokes seem fine" in play. **The
+movie** (the owner, the same day: a normal build has one now): it loaded
+and played to its end once, and was skipped once. **Not reported on:** a
+close of the window during the movie, a pad-bound action,
 the pad unplugged and plugged in, MP3 music on the own stack, satpixie,
 `BOF3X_OFF=WindowSdl` and `BOF3X_OFF=KeyboardSdl`, the 64-bit build.
 
