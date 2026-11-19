@@ -239,4 +239,8 @@ void FillKeyState(const bool* sdl_state, int count, unsigned char* key_state) {
         if (p.scancode < count && sdl_state[p.scancode]) key_state[p.dik] = 0x80;
 }
 
+bool IsSystemKeyDown(int scancode, bool alt_held) {
+    return alt_held || scancode == SDL_SCANCODE_LALT || scancode == SDL_SCANCODE_RALT || scancode == SDL_SCANCODE_F10;
+}
+
 }  // namespace bof3x::input

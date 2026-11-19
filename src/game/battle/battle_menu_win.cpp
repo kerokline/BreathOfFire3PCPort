@@ -1005,14 +1005,14 @@ void CloseAudio(SDL_AudioStream* stream) {
 // The SDL path's message step: Fmv_WndProc's cases, read off the window's
 // events (game_window::TakeForMovie) in place of the procedure.
 void TakeSdlEvents(const char* filename) {
-    constexpr std::int32_t kVkMenu = 0x12, kVkF10 = 0x79;
     for (const game_window::MovieEvent& e : game_window::TakeForMovie()) {
         switch (e.what) {
         case game_window::MovieGot::Key:
-            // WM_KEYDOWN's keys: Alt and F10 come to a Win32 window as
-            // WM_SYSKEYDOWN, which never skipped; off Windows SDL's key
-            // events carry them too, and they do not skip either.
-            if (e.a != kVkMenu && e.a != kVkF10) Fmv_Playing = 0;
+            // WM_KEYDOWN's keys: Alt, F10 and a key with Alt held come to a
+            // Win32 window as WM_SYSKEYDOWN, which never skipped; the window
+            // hands none of them on (game_window.cpp's watch, on SDL's key
+            // events; on Windows the messages themselves).
+            Fmv_Playing = 0;
             break;
         case game_window::MovieGot::Click: Fmv_Playing = 0; break;
         case game_window::MovieGot::Activate:

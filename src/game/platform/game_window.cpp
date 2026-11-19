@@ -215,7 +215,12 @@ bool SDLCALL Watch(void*, SDL_Event* e) {
             Post({Got::Activate, e->type == SDL_EVENT_WINDOW_FOCUS_GAINED ? 1 : 0, 0});
         break;
     case SDL_EVENT_KEY_DOWN:
-        if (e->key.windowID == id && !native::KeysAndFocusFromMessages()) {
+        // A key Windows would post as WM_SYSKEYDOWN (Alt, F10, a key with Alt
+        // held) is not a key-down to the game or to the movie's skip, as it
+        // never was one there: the one test for both, since Pump and
+        // TakeForMovie read what is posted here.
+        if (e->key.windowID == id && !native::KeysAndFocusFromMessages() &&
+            !bof3x::input::IsSystemKeyDown(e->key.scancode, (e->key.mod & SDL_KMOD_ALT) != 0)) {
             // The scan code and extended flag as Windows gives them (bits 16..24),
             // from key_sdl.h's DIK number: the function keys' table looks a key
             // that is not an F key up by them (input/function_keys.h).

@@ -189,6 +189,16 @@ void TestFill() {
     Check(set == 0, "no array: zeros");
 }
 
+// The keys Windows posts as WM_SYSKEYDOWN: Alt, F10, a key with Alt held.
+void TestSystemKeys() {
+    namespace in = bof3x::input;
+    for (int s = 0; s < SDL_SCANCODE_COUNT; ++s) {
+        const bool sys = s == SDL_SCANCODE_LALT || s == SDL_SCANCODE_RALT || s == SDL_SCANCODE_F10;
+        Check(in::IsSystemKeyDown(s, false) == sys, "a key alone: Alt and F10 only", s);
+        Check(in::IsSystemKeyDown(s, true), "a key with Alt held", s);
+    }
+}
+
 }  // namespace
 
 int main() {
@@ -197,6 +207,7 @@ int main() {
     TestOneToOne();
     TestNames();
     TestFill();
+    TestSystemKeys();
     std::printf("%d checks, %d failed\n", g_checks, g_failed);
     return g_failed ? 1 : 0;
 }
