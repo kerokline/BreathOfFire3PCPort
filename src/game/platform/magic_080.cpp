@@ -10,6 +10,7 @@
 #include "audio/mp3.h"
 #include "bof3/symbols.gen.h"
 #include "common/asm_name.h"
+#include "common/strto32.h"
 #include "game/area_backdrop_callees.h"
 #include "game/display_setup.h"
 #include "game/effect_5a_callees.h"
@@ -319,23 +320,23 @@ Callees g = kOriginals;
 // module path's parent by std::filesystem, so that it is found with either
 // system's separator; a frame that is not written says why in the log.
 void SaveFrameBesideDll() {
-    const unsigned long frame = static_cast<unsigned long>(Frame_Counter);
+    const unsigned frame = static_cast<unsigned>(Frame_Counter);
     std::string self;
     std::filesystem::path dir;
     if (bof3::os::ModulePath(reinterpret_cast<const void*>(&SaveFrameBesideDll), &self))
         dir = bof3::os::PathOfUtf8(self.c_str()).parent_path();
     wchar_t name[40];
-    std::swprintf(name, sizeof name / sizeof name[0], L"bof3x-frame-%lu.bmp", frame);
+    std::swprintf(name, sizeof name / sizeof name[0], L"bof3x-frame-%u.bmp", frame);
     const std::wstring path = dir.empty() ? std::wstring() : (dir / name).wstring();
     bool ok = false;
     if (path.empty()) {
-        bof3::Log("F11         frame %lu NOT saved: the folder of this module is not known", frame);
+        bof3::Log("F11         frame %u NOT saved: the folder of this module is not known", frame);
     } else if (path.size() >= bof3::os::kMaxPath) {   // the port's MAX_PATH, as before
-        bof3::Log("F11         frame %lu NOT saved: the path is %u characters, the limit is %u", frame,
+        bof3::Log("F11         frame %u NOT saved: the path is %u characters, the limit is %u", frame,
                   static_cast<unsigned>(path.size()), static_cast<unsigned>(bof3::os::kMaxPath - 1));
     } else {
         ok = render::SaveFrame(path.c_str());
-        bof3::Log("F11         frame %lu %s %s", frame, ok ? "saved to" : "NOT saved:", bof3::Utf8Path(path.c_str()).text);
+        bof3::Log("F11         frame %u %s %s", frame, ok ? "saved to" : "NOT saved:", bof3::Utf8Path(path.c_str()).text);
     }
     Overlay_Frames = kOverlayFrames;
     Overlay_Text = ok ? kStrFrameSaved : kStrFrameNotSaved;
@@ -646,7 +647,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
         const std::uint32_t sn = bof3::os::GetEnv("BOF3X_SPEED", text, sizeof text);
         if (sn > 0) {
             char* end = nullptr;
-            const std::int32_t v = sn < sizeof text ? std::strtol(text, &end, 10) : 0;
+            const std::int32_t v = sn < sizeof text ? bof3::StrToL32(text, &end, 10) : 0;
             if (end == nullptr || *end != '\0' || v < 1 || v > 64) bof3::Fatal("BOF3X_SPEED must be 1..64");
             g_speed = static_cast<int>(v);
             g_speed_scripted = g_speed != 1;

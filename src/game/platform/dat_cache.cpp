@@ -18,6 +18,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "common/cache_manifest.h"
+#include "common/strto32.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "os/os.h"
@@ -218,7 +219,7 @@ bool Parse(const char* text, Index* out, char* error, std::size_t cap) {
             while (*p == ' ') ++p;
             bool ok = *p++ == '[' && String(p, &name) && Comma(p);
             char* after = nullptr;
-            const std::uint32_t slot = ok ? std::strtoul(p, &after, 10) : 0;
+            const std::uint32_t slot = ok ? bof3::StrToUL32(p, &after, 10) : 0;
             ok = ok && after && after != p;
             if (ok) p = after;
             ok = ok && Comma(p) && String(p, &layer) && Comma(p) && String(p, &where) && Comma(p) && String(p, &hash) &&

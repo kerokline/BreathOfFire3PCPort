@@ -17848,6 +17848,15 @@ designed in rather than bolted on.
   Off Windows the movie's picture is not drawn yet: a movie stops the game
   with a message naming the open decision ([`replacing-mci.md`](replacing-mci.md)
   9). That is the Linux build's, which does not link yet.
+
+  **Amended 2026-11-18 (the review of PR #262):** off Windows a key that
+  Windows would post as `WM_SYSKEYDOWN` - Alt, F10, or a key with Alt held -
+  is not handed to `WinGame_Key` or to the movie's skip
+  (`input::IsSystemKeyDown`, `key_sdl.h`, applied in the window's event
+  watch; `tools/key_host` checks it over every scancode). Before, every SDL
+  key-down went on there, and only the movie left Alt and F10 out. A key
+  with Ctrl and Alt both held is not told apart (what Windows posts for it
+  was not measured). Compiled for Linux, not run there.
 - **Rationale:** the Linux native build, tier 2 of
   [`linux-round.md`](linux-round.md) (IDEAS I62): Linux has no Win32
   window, and two window paths would be two sets of bugs. The owner
@@ -17870,7 +17879,20 @@ designed in rather than bolted on.
   looked at:** the three movies and a close during one, the steps under
   `BOF3X_OFF=WindowSdl`, the 64-bit build, a monitor with another scale
   setting, and items 1 to 6 above one by one; each of those is read in the
-  code alone.
+  code alone. **The pad's events during a pause (the review of PR #262,
+  2026-11-18):** `FlushSdl` left SDL's joystick and gamepad events
+  (0x600..0x6FF) for the pad's poll, which `Pad_Read` runs; paused (F9, the
+  quick menu) or not in front, `Pad_Read` does not run and the events stayed
+  queued. SDL refuses events past 65,535 (`SDL_events.c` 54, 1049), after
+  which a pad plugged in or pulled out would not be seen. The message step
+  now runs the pad's poll. Measured with eight axis events pushed per paused
+  pass: 14,400 queued after an F9 pause of 1,800 frames before the change, 0
+  after each step with it. No input was ever replayed on resume (the pad
+  word is read from the pad's state). Not run: a physical pad, a filled
+  queue. **The class's name (the same review):** on each window path the
+  game's visible window has class `Bof3` and `FindWindowW` finds it while
+  the game runs, not after; the save editor's refusal box itself was not
+  driven.
 - **Reversible?** `BOF3X_OFF=WindowSdl` (the launcher's `off=`), or hosted
   `BOF3X_ORIGINAL=WindowSdl`: the Win32 window and the movie's subclass and
   pump, as before this entry. Wider switches that also keep the Win32
@@ -17933,6 +17955,14 @@ designed in rather than bolted on.
     348..350). DirectInput filled the bytes in the background; the pad words
     were zeroed there already by DIV-0033, so only the bytes themselves (and
     what reads them, the state hash) differ.
+  - **AltGr is the right Alt alone** (DIK 0xB8; added 2026-11-18 by the
+    review of PR #262): on a layout with AltGr, Windows sends a left Ctrl
+    with the right Alt, and SDL drops that Ctrl on the way down and up
+    (`SDL_windowsevents.c` 1109..1139, called at 1577 and 1605), so byte
+    0x1D stays 0. Whether DirectInput set 0x1D with AltGr is not measured;
+    the shadow (`BOF3X_OFF=KeyboardSdl`) logs `DIK 0x1D ... is down to
+    DirectInput and up to SDL` if it did. Only a key bound to LCtrl can
+    tell, and the default table binds none.
   - The keypad's Enter (0x9C) and `/` (0xB5) and the international keys
     have DirectInput's numbers: no change (the pairs, read by the group and
     held by the host test below).
@@ -17953,12 +17983,12 @@ designed in rather than bolted on.
   Windows table, read as data (every key SDL on Windows knows gives
   DirectInput's number, the table is one to one, every key name of
   `bindings.h` is reachable, `FillKeyState` writes 0x80 and 0 only): 132,756 checks, 0 failed, at both widths and in
-  the WSL (the group's run). The reader rule, read: SDL's keyboard only with
+  the WSL (the group's run; 133,780 checks with the system-key rule's, 2026-11-18). The reader rule, read: SDL's keyboard only with
   SDL's window and our `Pad_Read`; `BOF3X_OFF=WindowSdl`,
   `BOF3X_ORIGINAL=Pad_Read` or `DInput_Init` keep DirectInput's.
   **The owner, 2026-11-18, the 32-bit build of `f32becb3` from `game\`:**
   "the keyboard strokes seem fine" in play. **Not checked:** each case
-  above one by one, `BOF3X_OFF=KeyboardSdl`, the 64-bit build, the
+  above one by one, AltGr on a layout that has it, `BOF3X_OFF=KeyboardSdl`, the 64-bit build, the
   state-hash routes. The claims about SDL are read in SDL 3.4.16's source
   (`build/_deps/sdl3-src`), not measured.
 - **Reversible?** On Windows, `BOF3X_OFF=KeyboardSdl` (the launcher's
