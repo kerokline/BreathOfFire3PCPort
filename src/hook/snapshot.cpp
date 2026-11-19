@@ -661,8 +661,8 @@ bool ReadSlot(const fs::path& dir, unsigned slot, std::vector<unsigned char>& by
 }
 
 // A stack of its own (os/own_stack.h; on Windows a fiber of the calling
-// thread, as the renderer's RunOnFiber has, and the decoder's DecodeFrame a
-// block of its own, for the same reason): Snapshot_Pending runs in WinMain's
+// thread, as the renderer's RunOnFiber and the MP3 decoder's DecodeFrame
+// have, for the same reason): Snapshot_Pending runs in WinMain's
 // loop, about 0x3E00 bytes above slice 0 of the task arena
 // (docs/quicksave-census.md 2.1), and the take, the restore, the file layer,
 // the DLL's hash and every participant's Save and Restore (DirectSound,
