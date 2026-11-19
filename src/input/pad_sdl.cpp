@@ -118,7 +118,9 @@ bool PadSdl_Started() { return g_started; }
 // It pumps only where nothing else does. With SDL's video up (the game's
 // window, game_window.h) the window's owner pumps - game_window::Pump at the
 // loop's message step, and the SDL keyboard's read at the latch (d_input.cpp) -
-// and drops what no one takes; a pump here would dispatch the thread's window
+// and drops what no one takes, and runs this poll at each message step so
+// that the pad's events leave the queue while Pad_Read does not run (a pause,
+// the window not in front); a pump here would dispatch the thread's window
 // messages from inside Pad_Read and the FMV player's skip test, and a title-bar
 // drag's modal loop with them. Without SDL's video (the launcher, and the game
 // under BOF3X_OFF=WindowSdl, whose Win32 pump is PeekMessage alone) this poll
