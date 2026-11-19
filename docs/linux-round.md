@@ -1474,6 +1474,10 @@ C3 writes the order as a table in this file first, and C2 codes to it.
    no window plus a text file, as call 5 decided; the window is
    [`launcher-portable.md`](launcher-portable.md)'s question and does not
    gate this round.
+   **Decided (the owner, 2026-11-19): as proposed for the interim** - a
+   launcher with no window and the text file. The owner's instinct is that
+   the launcher's portable work can follow quickly; its toolkit is call 1 of
+   [`launcher-portable.md`](launcher-portable.md) section 7, not yet answered.
 5. **Whether C0's references need a hands-off machine now.** Ten routes on
    the 64-bit build is about the length of one proof chain; nothing else in
    wave A waits for it but wave B's gate.
