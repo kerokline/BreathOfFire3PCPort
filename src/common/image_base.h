@@ -61,8 +61,17 @@ inline constexpr std::uint32_t kBase = 0x400000;
 // loader maps at 0x400000 or not at all (no .reloc, no DYNAMIC_BASE;
 // x64-build-design.md 1), so the narrowing loses nothing. DetectHost checks
 // it against GetModuleHandle(nullptr), the hosts' identities and the 16 MB
-// window (host.cpp). The launcher, which includes this header through the
-// generated one, never places an address.
+// window (host_win32.cpp, host.cpp). The launcher, which includes this header
+// through the generated one, never places an address.
+//
+// Off Windows (docs/linux-round.md, "R3", found on the way): no process
+// environment block holds the image's base - fs and gs are the thread
+// pointer's there - so ImageBase() reads a variable the start-up sets once,
+// by SetImageBase, when it has mapped the image; a read before that is a
+// Fatal (host.cpp). The places built at namespace scope run before main, so
+// that start-up sets it ahead of them. The Windows spelling below is the one
+// it always had: its machine code is unchanged (tools/codegen_same.py).
+#if defined(_WIN32)
 [[gnu::always_inline]] inline std::uint32_t ImageBase() {
 #if defined(__i386__)
     std::uint32_t base;
@@ -75,11 +84,29 @@ inline constexpr std::uint32_t kBase = 0x400000;
     asm("movq %%gs:0x60, %0" : "=r"(peb));
     std::uintptr_t base;
     asm("movq 0x10(%1), %0" : "=r"(base) : "r"(peb));
-    return static_cast<std::uint32_t>(base);   // checked by DetectHost (host.cpp)
+    return static_cast<std::uint32_t>(base);   // checked by SetHost (host.cpp)
 #else
 #error "ImageBase: no PEB read for this architecture (docs/x64-build-design.md 8)"
 #endif
 }
+#else
+namespace image {
+// The base the start-up mapped the image at; 0 until SetImageBase.
+extern std::uint32_t g_runBase;
+// The Fatal for a read before SetImageBase (host.cpp).
+[[noreturn]] void ImageBaseUnset();
+}  // namespace image
+
+// Once, by the start-up, before anything places an address: a second call
+// with another base, or a base of 0, is a Fatal (host.cpp).
+void SetImageBase(std::uint32_t base);
+
+[[gnu::always_inline]] inline std::uint32_t ImageBase() {
+    const std::uint32_t base = image::g_runBase;
+    if (__builtin_expect(base == 0, 0)) image::ImageBaseUnset();
+    return base;
+}
+#endif
 
 // A VA in the image's data, as a place: a 32-bit value on every host, since
 // the image lies below 16 MB (docs/x64-build-design.md 8.1). The memory
