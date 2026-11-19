@@ -204,6 +204,8 @@ player can use with no text file. P5 can follow.**
 1. **Which way.** Proposed: E (Dear ImGui on SDL3's renderer, vendored,
    MIT), on the reasons of section 4. F if no toolkit may be vendored; D if
    native controls matter more than one file and a small build.
+   **Decided (the owner, 2026-11-19): E, Dear ImGui.** Stage P1 starts when
+   P0 (the Linux round's group C7) hands back.
 2. **The look.** A mock-up from the owner, as the title page had, or the
    first capture of P1 as the starting point for words.
 3. **The Win32 dialogs after P6.** Proposed: removed in the release that
