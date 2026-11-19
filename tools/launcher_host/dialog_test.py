@@ -24,6 +24,9 @@ run on this Python (BOF3X_PYTHON), and mod zips mods.py's own self-test makes - 
 Since group LX (2026-10-22): the Mods tab's sub-row (Data, Extras) and Extras' toggle, ruby_ui=,
 which hides and shows the Row above the text box - captured on both sub-buttons and both ways.
 """
+import sys
+if sys.platform != 'win32':
+    sys.exit("dialog_test.py is a Windows tool: it drives the launcher's dialog through user32, so it does not run here.")
 import ctypes, difflib, os, shutil, subprocess, sys, tempfile, time
 from ctypes import wintypes as W
 

@@ -5,6 +5,9 @@ Four keys of the default table (Z, up, Enter, Q) held 0.4 s each: the word
 must show that key's pad bit and clear on release. Pulls the game to the
 front for about half a minute; leave the machine alone. Exit 0 on ALL OK.
 """
+import sys
+if sys.platform != 'win32':
+    sys.exit('key_probe.py is a Windows tool: it presses keys at the game window through user32, so it does not run here.')
 import ctypes, ctypes.wintypes as w, os, struct, sys, threading, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import attract_run as ar, task_stacks as ts

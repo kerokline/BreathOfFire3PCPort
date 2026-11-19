@@ -7,6 +7,9 @@ Found 2026-09-24: the present read a destroyed window's client rectangle
 Both fixed; a pass prints "alive after close: False" and the four teardown
 lines. Pulls the game to the front; leave the machine alone for a minute.
 """
+import sys
+if sys.platform != 'win32':
+    sys.exit('close_probe.py is a Windows tool: it posts to the game window through user32, so it does not run here.')
 import ctypes, ctypes.wintypes as w, os, struct, sys, threading, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import attract_run as ar, task_stacks as ts

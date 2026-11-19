@@ -19,6 +19,10 @@ launcher, opens the Save Editor, and then:
 It finds every window by the process it started, never by a title (the owner's own launcher may be
 open). Captures go to --out as PNG. Needs a desktop session. Exit code 0 when every check passed.
 """
+import sys
+if sys.platform != 'win32':
+    sys.exit("save_editor_drive.py is a Windows tool: it drives the launcher's windows through user32, so it does not "
+             "run here.")
 import argparse, ctypes, io, contextlib, os, subprocess, sys, time
 from ctypes import wintypes as W
 
