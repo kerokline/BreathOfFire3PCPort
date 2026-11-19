@@ -11,6 +11,12 @@ the process lies in the linked span (the launcher reserves it, src/hook/
 exe_host.cpp Fence), so the two cannot be confused. tools/task_stacks.py,
 tools/attract_watch.py and tools/mem_dump.py read through this.
 """
+import sys
+if sys.platform != 'win32':
+    _WHY = 'proc_image.py is a Windows tool: it reads a running game through psapi, so it does not run here.'
+    if __name__ == '__main__':
+        sys.exit(_WHY)
+    raise ImportError(_WHY)   # crash_report.py catches it and keeps its own place() and va()
 import ctypes
 from ctypes import wintypes as w
 

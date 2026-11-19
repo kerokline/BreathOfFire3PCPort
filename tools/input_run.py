@@ -47,25 +47,47 @@ split: every later input then lands a frame late per shot, the replay drifts
 being random. 2026-09-30 cost a day and a withdrawn ledger entry (DIV-0067).
 One game at a time, too: two runs share build/bof3x.log and build/bof3x.dll.
 Exit status 0 when the recipe finished, 1 when it FAILED or timed out.
-"""
-import argparse, ctypes, ctypes.wintypes as w, os, re, subprocess, sys, threading, time
 
-from PIL import ImageGrab
+--host linux --elf PATH runs the Linux build instead (tools/linux_run.py):
+the ELF itself, directly on Linux or through `wsl -e` from Windows, with the
+same variables and the same output files, every Windows path among them
+written as the WSL sees it. No window is found, raised or grabbed: the game
+writes its frames (BOF3X_SHOT_DIR, kept as BMPs where Python has no PIL), a
+frozen shot is released through the semaphore /bof3x_shot_<pid>, the log is
+the ELF's path with .log, and the game's stdout is OUT/_game_output.txt. The
+launcher is not in the run - its ini and its defaults do not reach the game -
+so the run gets only the variables set here. On Linux this mode is the only
+one, and a recipe save (slot 0) needs Windows' recipe_saves.py: --no-save.
+"""
+import argparse, os, re, subprocess, sys, threading, time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from attract_run import ROOT, game_pid, kill_game, kill_stale, launch, keep_in_front, log_run_time  # noqa: E402
-import recipe_saves  # noqa: E402
 import language_tags  # noqa: E402  (the retired bare codes, DIV-0005)
 import bof3x_home  # noqa: E402  (a release's home; a checkout keeps the repo defaults)
+import linux_run  # noqa: E402  (--host linux)
 
-u = ctypes.WinDLL('user32')
-k32 = ctypes.WinDLL('kernel32', use_last_error=True)
-k32.OpenEventW.restype = w.HANDLE
-k32.OpenEventW.argtypes = [w.DWORD, w.BOOL, w.LPCWSTR]
-try:
-    ctypes.WinDLL('shcore').SetProcessDpiAwareness(2)   # physical pixels for the grab
-except OSError:
-    u.SetProcessDPIAware()
+if sys.platform == 'win32':
+    import ctypes, ctypes.wintypes as w
+
+    from PIL import ImageGrab
+
+    from attract_run import ROOT, game_pid, kill_game, kill_stale, launch, keep_in_front, log_run_time  # noqa: E402
+    import recipe_saves  # noqa: E402
+
+    u = ctypes.WinDLL('user32')
+    k32 = ctypes.WinDLL('kernel32', use_last_error=True)
+    k32.OpenEventW.restype = w.HANDLE
+    k32.OpenEventW.argtypes = [w.DWORD, w.BOOL, w.LPCWSTR]
+    try:
+        ctypes.WinDLL('shcore').SetProcessDpiAwareness(2)   # physical pixels for the grab
+    except OSError:
+        u.SetProcessDPIAware()
+else:
+    # attract_run.py and recipe_saves.py reach user32 and kernel32 as they are
+    # imported: on another system only --host linux runs, without them.
+    ROOT = linux_run.ROOT
+    recipe_saves = None
+    log_run_time = None
 
 LOG = os.path.join(ROOT, 'build', 'bof3x.log')
 SHOT = re.compile(r'input\s+shot (\S+) recipe frame (\d+)( frozen)?')
@@ -103,14 +125,15 @@ def ini_off(launcher):
     return ''
 
 
-def names_known(launcher, names):
+def names_known(launcher, names, files=('bof3x.dll', 'bof3x.exe')):
     """The names the launcher folder's game knows as code names: a build from
     before the round has none of them, and BOF3X_OFF stops the game at start
     on a name that is not a code name (src/hook/detour.cpp). Read as the
-    NUL-ended string in bof3x.dll or bof3x.exe (code_names.h's table)."""
+    NUL-ended string in bof3x.dll or bof3x.exe (code_names.h's table) - or,
+    for --host linux, in the ELF (`files` is then its name)."""
     folder = os.path.dirname(os.path.abspath(launcher))
     blobs = []
-    for fn in ('bof3x.dll', 'bof3x.exe'):
+    for fn in files:
         try:
             with open(os.path.join(folder, fn), 'rb') as f:
                 blobs.append(f.read())
@@ -119,7 +142,7 @@ def names_known(launcher, names):
     return [n for n in names if any(n.encode() + b'\0' in b for b in blobs)]
 
 
-def screens_off(env, launcher):
+def screens_off(env, launcher, files=('bof3x.dll', 'bof3x.exe')):
     """Merge NEW_GAME_SCREENS into env['BOF3X_OFF'], keeping a caller's names
     or else the ini's off=. A name the caller already lists, as off or as
     `-Name`, is left as the caller wrote it. Returns what was added."""
@@ -128,7 +151,7 @@ def screens_off(env, launcher):
         have = ini_off(launcher)
     listed = [n.strip() for n in have.replace(' ', ',').split(',') if n.strip()]
     bare = {n.lstrip('-') for n in listed}
-    add = [n for n in names_known(launcher, NEW_GAME_SCREENS) if n not in bare]
+    add = [n for n in names_known(launcher, NEW_GAME_SCREENS, files) if n not in bare]
     if add:
         env['BOF3X_OFF'] = ','.join(listed + add)
     return add
@@ -209,8 +232,13 @@ def main():
                     help='BOF3X_LANG, an overlay tag, e.g. en-US (the bare en/fr/de/ja are retired, DIV-0005; '
                          'a recipe recorded under the bare `en` plays under en-US)')
     ap.add_argument('--original', default=None, metavar='LIST', help='BOF3X_ORIGINAL')
-    ap.add_argument('--host', choices=('exe', 'bof3'), default=None,
-                    help='bof3x.exe (exe) or the hosted BOF3.exe (bof3); default bof3 with --original, else exe')
+    ap.add_argument('--host', choices=('exe', 'bof3', 'linux'), default=None,
+                    help='bof3x.exe (exe) or the hosted BOF3.exe (bof3); default bof3 with --original, else exe. '
+                         'linux: the Linux build named by --elf, directly on Linux, through wsl -e on Windows '
+                         '(the only mode on Linux)')
+    ap.add_argument('--elf', default=None, metavar='PATH',
+                    help='--host linux: the Linux build to start (its log is PATH with .log); a Windows path or, '
+                         'from Windows, a path inside the WSL (/home/...)')
     ap.add_argument('--env', action='append', default=[], metavar='K=V', help='any other variable')
     ap.add_argument('--wide', choices=('0', '1', '2'), default=None,
                     help="BOF3X_WIDE for the run: 0 the original's 320 x 240, 1 the 16:9 picture (426 x 240), "
@@ -249,13 +277,27 @@ def main():
                     help='seconds to wait for another run to hand slot 0 back (it does on its load)')
     a = ap.parse_args()
     global LOG
-    LOG = os.path.join(os.path.dirname(os.path.abspath(a.launcher)), 'bof3x.log')
+    linux = a.host == 'linux'
+    if not linux and sys.platform != 'win32':
+        sys.exit('input_run.py runs only --host linux on this system: the Windows hosts need Windows.')
+    if linux and not a.elf:
+        sys.exit('--host linux needs --elf, the Linux build to start')
+    if linux:
+        a.elf_here = linux_run.local_path(a.elf)
+        LOG = linux_run.log_of(a.elf)
+    else:
+        LOG = os.path.join(os.path.dirname(os.path.abspath(a.launcher)), 'bof3x.log')
 
     recipe = os.path.abspath(a.recipe)
     if not os.path.isfile(recipe):
         sys.exit(f'no recipe {recipe}')
     os.makedirs(a.out, exist_ok=True)
-    kill_stale(a.launcher)
+    if linux:
+        stale = linux_game(a, {})
+        stale.end_stale()   # as kill_stale: a leftover game of this ELF, by pid
+        stale.close()
+    else:
+        kill_stale(a.launcher)
 
     env = dict(os.environ)
     for k in ('BOF3X_ORIGINAL', 'BOF3X_LANG', 'BOF3X_INPUT', 'BOF3X_WAV_DIR', 'BOF3X_WAV_LABEL'):
@@ -285,22 +327,143 @@ def main():
     if a.new_game_screens or recipe_wants_screens(recipe):
         print('new game: the name and options screens as the build has them (the recipe is about them)')
     else:
-        added = screens_off(env, a.launcher)
+        added = (screens_off(env, a.elf_here, (os.path.basename(a.elf_here),)) if linux else
+                 screens_off(env, a.launcher))
         print(f'new game: BOF3X_OFF={env.get("BOF3X_OFF", "")}' if added else
               'new game: nothing added to BOF3X_OFF (listed already, or a build without the screens)')
+    run_game = run_linux if linux else run
+    if linux:
+        env['BOF3X_LAUNCHER'] = '1'   # as the launcher sets it for bof3x.exe (src/launcher/launcher.cpp)
+        a.env_keys = tuple(kv.partition('=')[0] for kv in a.env)
 
     # The save the recipe loads goes into slot 0 for the run and the owner's
     # slot 0 comes back after it (recipe_saves.py; docs/input-script.md 1a).
-    save = None if a.no_save else (recipe_saves.save_path(a.save, a.game) if a.save
-                                   else recipe_saves.recipe_save(recipe, a.game))
+    if recipe_saves is None:
+        # not Windows: recipe_saves.py cannot be imported here (kernel32 at its top)
+        if not a.no_save and (a.save or recipe_has_save(recipe)):
+            sys.exit('a recipe save needs tools/recipe_saves.py, which runs on Windows only: run this from Windows '
+                     '(the game still runs in the WSL), or pass --no-save when slot 0 already holds the save')
+        save = None
+    else:
+        save = None if a.no_save else (recipe_saves.save_path(a.save, a.game) if a.save
+                                       else recipe_saves.recipe_save(recipe, a.game))
     if save is None:
         print('slot 0: left alone (no `# save NAME` header)' if not a.no_save else 'slot 0: left alone (--no-save)')
-        status = run(a, env, None)
+        status = run_game(a, env, None)
     else:
         with recipe_saves.Slot0(a.game, save, shared=a.slot0_shared, wait=a.slot0_wait, recipe=recipe) as slot0:
-            status = run(a, env, slot0)
+            status = run_game(a, env, slot0)
     print(f'end: {status}')
     sys.exit(0 if status == 'done' else 1)
+
+
+def recipe_has_save(recipe):
+    """True when the recipe has a `# save NAME` header (recipe_saves.HEADER's
+    rule, for the system where that module cannot be imported)."""
+    with open(recipe, encoding='utf-8', errors='replace') as f:
+        return any(re.match(r'^#\s*save\s+(\S+)\s*$', line) for line in f)
+
+
+def linux_game(a, env):
+    return linux_run.LinuxGame(a.elf, a.game, env, os.path.join(a.out, '_game_output.txt'),
+                               keys=getattr(a, 'env_keys', ()))
+
+
+def frame_png(path):
+    """The frame the game wrote for a shot (BOF3X_SHOT_DIR/NAME.bmp, before its
+    log line) as path, a PNG; left a BMP where this Python has no PIL."""
+    bmp = os.path.splitext(path)[0] + '.bmp'
+    for _ in range(40):
+        if os.path.exists(bmp):
+            break
+        time.sleep(0.05)
+    if not os.path.exists(bmp):
+        print(f'  no frame {shown(bmp)} from the game')
+        return
+    try:
+        from PIL import Image
+    except ImportError:
+        print(f'  saved {shown(bmp)} (from the game; no PIL here to make a PNG of it)')
+        return
+    with Image.open(bmp) as im:
+        im.convert('RGB').save(path)
+        size = im.size
+    os.remove(bmp)
+    print(f'  saved {shown(path)} ({size[0]}x{size[1]}, from the game)')
+
+
+def run_linux(a, env, slot0):
+    """--host linux: start the ELF (linux_run.LinuxGame), follow its log to
+    the recipe's end, end it - run()'s steps with no window. The status word."""
+    started, frames = time.time(), ''
+    for _ in range(100):           # the old log first, as run() does
+        try:
+            os.remove(LOG)
+            break
+        except FileNotFoundError:
+            break
+        except OSError:
+            time.sleep(0.1)
+    else:
+        sys.exit(f'{LOG} cannot be removed: a game of this build is still running')
+    language_tags.refuse_retired_run(a.elf_here, env)
+    game = linux_game(a, env)
+    print(f'  host: linux ({"the WSL, through wsl -e" if game.wsl else "directly"}), {a.elf}')
+    game.start()
+    print(f'  started {a.elf} (pid {game.pid}{" in the WSL" if game.wsl else ""}); its output: '
+          f'{shown(game.output)}')
+    status, pos, deadline, quits = None, 0, time.time() + a.minutes * 60, False
+    try:
+        exited = False
+        while status is None and time.time() < deadline:
+            time.sleep(0.05)
+            if exited:
+                status = 'game exited'
+                break
+            exited = not game.alive()     # the log is read once more after the exit, as in run()
+            try:
+                with open(LOG, 'rb') as f:
+                    f.seek(pos)
+                    chunk = f.read()
+            except OSError:
+                continue
+            cut = chunk.rfind(b'\n') + 1
+            pos += cut
+            for line in chunk[:cut].decode('utf-8', errors='replace').splitlines():
+                if 'FATAL' in line:
+                    print(line.strip())
+                    status = 'FATAL'
+                elif m := SHOT.search(line):
+                    print(f'shot {m[1]} at recipe frame {m[2]}{" (frozen)" if m[3] else ""}')
+                    frames = m[2]
+                    frame_png(os.path.join(a.out, m[1] + '.png'))
+                    if m[3] and not game.release(f'bof3x_shot_{game.pid}'):
+                        print(f'  no shot semaphore for pid {game.pid}; the game waits out its timeout')
+                elif m := END.search(line):
+                    print(f'recipe {m[1]} at recipe frame {m[2]}')
+                    status, frames = m[1], m[2]
+                    quits = 'quit step' in line
+                elif re.search(r'input\s+(mark|peek|line) ', line):
+                    print(line.strip())
+                elif m := LOADED.search(line):
+                    print(f'save loaded: slot {m[1]}')
+                    if slot0 and not a.slot0_hold:
+                        slot0.release('the game has loaded it')
+        if status is None:
+            status = 'timed out'
+    finally:
+        if status == 'done' and quits:
+            game.wait(10)   # the recipe's quit: the game is exiting, and its exit code is the run's to report
+        game.end()
+        if game.ended_by_us and env.get('BOF3X_SHOT_WAIT'):
+            game.unlink(f'bof3x_shot_{game.pid}')    # an ended game leaves its semaphore
+        game.close()
+        code = game.exit_code()
+        print(f'game: {"ended by this run" if game.ended_by_us else f"exit code {code}"}')
+        if log_run_time:
+            log_run_time('input_run', os.path.splitext(os.path.basename(a.recipe))[0], started,
+                         status or 'interrupted', env, a.elf, frames)
+    return status
 
 
 def run(a, env, slot0):

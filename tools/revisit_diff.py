@@ -362,6 +362,9 @@ def main():
     p.add_argument('--all', action='store_true')
     p.add_argument('--runs', action='store_true', help='also list every run, not only one row per symbol')
     a = ap.parse_args()
+    if a.cmd == 'run' and sys.platform != 'win32':
+        sys.exit('revisit_diff.py run is a Windows tool: it reads and writes the running game through kernel32, '
+                 'so it does not run here (report runs anywhere).')
     if a.cmd == 'run':
         cmd_run(a)
     else:

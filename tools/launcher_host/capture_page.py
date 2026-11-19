@@ -13,6 +13,12 @@ and writes that dialog as <out>/<name>_jukebox.png, then cancels: the dialog's C
 no ini and starts no game. The launcher folder must be a scratch copy (an ini there would be
 read). Needs a desktop session. Writes only --out; reads nothing of the game itself.
 """
+import sys
+if sys.platform != 'win32':
+    _WHY = "capture_page.py is a Windows tool: it reads the launcher's windows through user32, so it does not run here."
+    if __name__ == '__main__':
+        sys.exit(_WHY)
+    raise ImportError(_WHY)
 import argparse, ctypes, os, subprocess, sys, time
 from ctypes import wintypes as W
 
