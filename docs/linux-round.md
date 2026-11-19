@@ -1459,6 +1459,8 @@ C3 writes the order as a table in this file first, and C2 codes to it.
    renderer is needed a moment later anyway. It changes the Windows order
    too if both systems are to share one path; then it is a ledger entry and
    an owner's look at the three movies.
+   **Decided (the owner, 2026-11-19): as proposed** - the renderer is brought
+   up before the movies.
 3. **Where a Linux install keeps its files, and the case rule.** Proposed:
    the tarball stays a portable folder as on Windows (the home is the
    executable's folder, `BOF3X_HOME` overrides), so one rule serves both
@@ -1466,6 +1468,8 @@ C3 writes the order as a table in this file first, and C2 codes to it.
    name at its source where the engine builds it, and fold case in the
    POSIX backend only for names the player's own files bring (a disc's
    folder, a mod's zip).
+   **Decided (the owner, 2026-11-19): as proposed** - a portable folder, and
+   names fixed at their source.
 4. **The first native release's front end.** Proposed: C7's launcher with
    no window plus a text file, as call 5 decided; the window is
    [`launcher-portable.md`](launcher-portable.md)'s question and does not
@@ -1473,6 +1477,7 @@ C3 writes the order as a table in this file first, and C2 codes to it.
 5. **Whether C0's references need a hands-off machine now.** Ten routes on
    the 64-bit build is about the length of one proof chain; nothing else in
    wave A waits for it but wave B's gate.
+   **Decided (the owner, 2026-11-19): the evening of 2026-11-19.**
 
 **Still owed from waves 1 and 2, the owner's (D3 collects them):** AltGr
 under SDL's keyboard with `BOF3X_OFF=KeyboardSdl` and a look at the log; a
