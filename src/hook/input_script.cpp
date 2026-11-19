@@ -1,7 +1,5 @@
 #include "hook/input_script.h"
 
-#include <windows.h>
-
 #include <cstdint>
 #include <cstdio>
 #include <cwchar>
@@ -14,6 +12,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/crt_rest.h"
 #include "game/game_clock.h"
+#include "game/platform/game_window.h"
 #include "game/win_main.h"
 #include "hook/detour.h"
 #include "hook/exe_layout.h"
@@ -21,6 +20,7 @@
 #include "hook/log.h"
 #include "hook/statehash.h"
 #include "hook/wav_dump.h"
+#include "input/key_codes.h"
 #include "input/sigma.h"
 #include "render/render_d3d11.h"
 #include "os/os.h"
@@ -109,9 +109,11 @@
 //                           BOF3X_SHOT_EVERY does from the start (and in its
 //                           place); `every 0` stops. No frame of its own.
 //   hold KEY N              a keyboard key (f1..f12, escape, enter, space, or a
-//                           virtual-key number) held N frames: WM_KEYDOWN posted
-//                           to the game window as the step starts, WM_KEYUP as
-//                           it ends - a player's press as Game_WndProc sees it.
+//                           virtual-key number) held N frames: down as the step
+//                           starts, up as it ends - a player's press as the
+//                           window hands it to WinGame_Key (the SDL window's
+//                           queue; WM_KEYDOWN / WM_KEYUP posted to the Win32
+//                           window - KeyDown below).
 //                           `key KEY` is the same held one frame; `key KEY 0`
 //                           posts the press and its release and costs no
 //                           frame, so the frame's pad word is the next step's.
@@ -216,11 +218,14 @@ unsigned Number(int line, const std::string& tok) {
     return static_cast<unsigned>(v);
 }
 
+// The keys by their Windows virtual-key numbers (input/key_codes.h), on every
+// system: the number is what WinGame_Key compares, and what a recipe names.
 struct Key { const char* name; unsigned vk; };
+namespace kc = bof3x::input;
 constexpr Key kKeys[] = {
-    {"f1", VK_F1}, {"f2", VK_F2}, {"f3", VK_F3}, {"f4", VK_F4}, {"f5", VK_F5}, {"f6", VK_F6},
-    {"f7", VK_F7}, {"f8", VK_F8}, {"f9", VK_F9}, {"f10", VK_F10}, {"f11", VK_F11}, {"f12", VK_F12},
-    {"escape", VK_ESCAPE}, {"enter", VK_RETURN}, {"space", VK_SPACE},
+    {"f1", kc::kVkF1}, {"f2", kc::kVkF2}, {"f3", kc::kVkF3}, {"f4", kc::kVkF4}, {"f5", kc::kVkF5}, {"f6", kc::kVkF6},
+    {"f7", kc::kVkF7}, {"f8", kc::kVkF8}, {"f9", kc::kVkF9}, {"f10", kc::kVkF10}, {"f11", kc::kVkF11}, {"f12", kc::kVkF12},
+    {"escape", kc::kVkEscape}, {"enter", kc::kVkReturn}, {"space", kc::kVkSpace},
 };
 
 bool IsKeyName(const std::string& tok) {
@@ -764,6 +769,41 @@ unsigned short StepButtons(const Step& s) {
     return g_step_buttons;
 }
 
+// A `key` step's press and release, by the window the game has:
+//
+//   * The SDL window (game_window.h, the default): the press goes into the
+//     window's queue as Got::Key with lParam 1, which the loop's message step
+//     (game_window::Pump, right after this latch) hands to WinGame_Key - where
+//     the WM_KEYDOWN this step posted before reached it, through SDL's pump
+//     and the procedure in front of SDL's, in the same Pump. The release has
+//     no call: the procedure in front of SDL's never took a WM_KEYUP, and
+//     SDL's own keyboard state, the only thing it reached, is not the game's
+//     (Pad_Read fills the key bytes Key_State from the keyboard device, which
+//     a posted message never reached; ScriptedLatch clears them meanwhile).
+//   * The Win32 window (BOF3X_OFF=WindowSdl, BOF3X_ORIGINAL=Game_WndProc, or
+//     Capcom's WinMain, which never starts game_window): WM_KEYDOWN and
+//     WM_KEYUP posted to the HWND as before (os::PostWindowKey), for the
+//     loop's one PeekMessage to dispatch to Game_WndProc.
+//
+// A key not queued is a recipe gone astray, so it stops the run (rule 4);
+// before the seam a failed PostMessageA went unnoticed.
+void KeyDown(const Step& s) {
+    if (game_window::SdlOn()) {
+        game_window::QueueKey(s.value, 1);
+        return;
+    }
+    if (!os::PostWindowKey(static_cast<void*>(Game_Hwnd), s.value, true))
+        Fatal("BOF3X_INPUT line %d: key %s: the key could not be posted to the game window (error %u)", s.line,
+              s.text.c_str(), static_cast<unsigned>(os::LastError()));
+}
+
+void KeyUp(const Step& s) {
+    if (game_window::SdlOn()) return;
+    if (!os::PostWindowKey(static_cast<void*>(Game_Hwnd), s.value, false))
+        Fatal("BOF3X_INPUT line %d: key %s: its release could not be posted to the game window (error %u)", s.line,
+              s.text.c_str(), static_cast<unsigned>(os::LastError()));
+}
+
 // The word for the frame about to run; advances the recipe by one frame.
 unsigned short NextWord() {
     for (;;) {
@@ -952,21 +992,21 @@ unsigned short NextWord() {
             Advance();
             continue;
         case Kind::Key: {
-            // A press as the player's reaches Game_WndProc: WM_KEYDOWN posted
-            // as the step starts (the loop's next PeekMessage dispatches it,
-            // before this frame runs), WM_KEYUP with the transition bits as
-            // the hold ends. The step costs its N frames, like a pad hold;
-            // N 0 posts both now and goes on to the next step in this frame.
-            HWND hwnd = static_cast<HWND>(Game_Hwnd);
-            if (!hwnd) Fatal("BOF3X_INPUT line %d: key %s before the game window exists", s.line, s.text.c_str());
+            // A press as the player's reaches WinGame_Key: down as the step
+            // starts (the loop's message step, right after this latch, hands
+            // it to the game before this frame runs), up as the hold ends. The
+            // step costs its N frames, like a pad hold; N 0 puts both now and
+            // goes on to the next step in this frame. KeyDown and KeyUp below
+            // say how each window takes it.
+            if (!Game_Hwnd) Fatal("BOF3X_INPUT line %d: key %s before the game window exists", s.line, s.text.c_str());
             if (g_t == 0) {
-                PostMessageA(hwnd, WM_KEYDOWN, s.value, 1);
+                KeyDown(s);
                 Log("input       line %d: key %s (vk 0x%02X) down for %u frames, recipe frame %u (Frame_Counter %u, paused %u)",
                     s.line, s.text.c_str(), (unsigned)s.value, s.n, g_frame, (unsigned)Frame_Counter, (unsigned)Game_Paused);
                 LogFlush();
             }
             if (g_t < s.n) { ++g_t; return 0; }
-            PostMessageA(hwnd, WM_KEYUP, s.value, 0xC0000001u);
+            KeyUp(s);
             Advance();
             continue;
         }
@@ -1299,8 +1339,9 @@ void InputScript_PausedLatch() {
 void InputScript_RecordKey(unsigned vk, long lparam) {
     if (!g_rec) return;
     if (lparam & (1L << 30)) return;   // the keyboard's auto-repeat: the key was already down
-    if (vk == VK_F12) return;          // the shot, read from the key bytes (Record)
-    if ((vk < VK_F1 || vk > VK_F11) && !Game_Paused) return;   // a mapped pad key is in the pad word
+    if (vk == static_cast<unsigned>(kc::kVkF12)) return;   // the shot, read from the key bytes (Record)
+    if ((vk < static_cast<unsigned>(kc::kVkF1) || vk > static_cast<unsigned>(kc::kVkF11)) && !Game_Paused)
+        return;   // a mapped pad key is in the pad word
     RecordKey(vk);
 }
 

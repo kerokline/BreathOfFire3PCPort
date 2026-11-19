@@ -97,8 +97,9 @@ bool PadSdl_Start(Layout layout, PadLog log) {
     return true;
 }
 
-// SDL_Quit, not SDL_QuitSubSystem: this file is SDL's only user in the DLL
-// and in the launcher.
+// SDL_Quit, not SDL_QuitSubSystem: in the launcher this file is SDL's only
+// user, and in the DLL its stop is the last of SDL's (Game_WinMain's exit:
+// the window's video, then the sound, then DInput_Shutdown, which calls this).
 void PadSdl_Stop() {
     if (!g_started) return;
     ClosePad();
@@ -108,22 +109,42 @@ void PadSdl_Stop() {
 
 bool PadSdl_Started() { return g_started; }
 
-// SDL_UpdateGamepads notices devices coming and going and queues the events;
-// drain them so the queue never fills, and act on the two that matter.
+// SDL_UpdateGamepads notices devices coming and going (SDL_UpdateJoysticks:
+// each driver's Detect; on Windows the device-change window is SDL's own
+// thread's) and queues the events; this takes the joystick and gamepad events
+// out of SDL's queue (SDL_EVENT_JOYSTICK_AXIS_MOTION up to the touch events)
+// and acts on the two that matter.
+//
+// It pumps only where nothing else does. With SDL's video up (the game's
+// window, game_window.h) the window's owner pumps - game_window::Pump at the
+// loop's message step, and the SDL keyboard's read at the latch (d_input.cpp) -
+// and drops what no one takes; a pump here would dispatch the thread's window
+// messages from inside Pad_Read and the FMV player's skip test, and a title-bar
+// drag's modal loop with them. Without SDL's video (the launcher, and the game
+// under BOF3X_OFF=WindowSdl, whose Win32 pump is PeekMessage alone) this poll
+// is SDL's one pump, as it always was, and it drops every other event so that
+// SDL's queue never fills.
 void PadSdl_Poll() {
     if (!g_started) return;
+    const bool alone = SDL_WasInit(SDL_INIT_VIDEO) == 0;
+    if (alone) SDL_PumpEvents();
     SDL_UpdateGamepads();
-    SDL_Event e;
-    while (SDL_PollEvent(&e)) {
-        if (e.type == SDL_EVENT_GAMEPAD_ADDED) {
-            if (!g_pad) OpenPad(e.gdevice.which);
-        } else if (e.type == SDL_EVENT_GAMEPAD_REMOVED) {
-            if (g_pad && e.gdevice.which == g_pad_id) {
-                ClosePad();
-                OpenAnyPad();
+    SDL_Event events[16];
+    int n = 0;
+    while ((n = SDL_PeepEvents(events, 16, SDL_GETEVENT, SDL_EVENT_JOYSTICK_AXIS_MOTION, SDL_EVENT_FINGER_DOWN - 1)) > 0) {
+        for (int i = 0; i < n; ++i) {
+            const SDL_Event& e = events[i];
+            if (e.type == SDL_EVENT_GAMEPAD_ADDED) {
+                if (!g_pad) OpenPad(e.gdevice.which);
+            } else if (e.type == SDL_EVENT_GAMEPAD_REMOVED) {
+                if (g_pad && e.gdevice.which == g_pad_id) {
+                    ClosePad();
+                    OpenAnyPad();
+                }
             }
         }
     }
+    if (alone) SDL_FlushEvents(SDL_EVENT_FIRST, SDL_EVENT_LAST);
 }
 
 bool PadSdl_Open() { return g_pad != nullptr; }

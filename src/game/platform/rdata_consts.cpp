@@ -1,8 +1,17 @@
 // rdata_consts.h's copies against BOF3.exe's .rdata (docs/exe-import-engine.md section 2).
+//
+// The keyboard's data format (c_dfDIKeyboard: its check against Capcom's, and
+// the header the exe host writes for it) is Windows alone: it is DirectInput's,
+// and DirectInput's keyboard is a Windows path behind BOF3X_OFF=KeyboardSdl
+// (d_input.cpp; docs/linux-round.md, wave 2, R5). Elsewhere the 44 constants
+// are compared and placed as on Windows, and the format's 24 bytes at
+// 0x5C4948 stay zero, as the rest of .rdata does.
 #include "game/rdata_consts.h"
 
+#ifdef _WIN32
 #define DIRECTINPUT_VERSION 0x0700
 #include <dinput.h>
+#endif
 
 #include <cstring>
 
@@ -28,7 +37,7 @@ static_assert(Sorted(), "entries sorted, aligned, not overlapping, inside [kLo, 
 
 namespace {
 
-constexpr ::bof3::image::Va kKeyboardFormat{0x5C4948};   // DInput_KeyboardFormat, Capcom's c_dfDIKeyboard
+constexpr ::bof3::image::Va kKeyboardFormat{0x5C4948};   // the format's place, named on every system   // DInput_KeyboardFormat, Capcom's c_dfDIKeyboard
 
 unsigned char* At(std::uint32_t va) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(va)); }
 
@@ -37,6 +46,8 @@ void Theirs(std::uint32_t va, void* to, std::uint32_t n) {
     if (bof3::IsExeHost()) bof3::ExeFile_Read(va, to, n);
     else std::memcpy(to, At(va), n);
 }
+
+#ifdef _WIN32
 
 // BOF3.exe's bytes of a DIDATAFORMAT and of a DIOBJECTDATAFORMAT: the 32-bit
 // image's layouts, where a pointer (rgodf, pguid) is a 4-byte word. The
@@ -103,13 +114,21 @@ void VerifyKeyboardFormat() {
               "at 0x%06X, their GUIDs by value)", kKeyboardFormat.v, ours.dwNumObjs, (unsigned)table);
 }
 
+#endif  // _WIN32
+
 }  // namespace
+
+#ifdef _WIN32
+constexpr const char* kKeyboardFormatHere = " and the keyboard format";
+#else
+constexpr const char* kKeyboardFormatHere = "";
+#endif
 
 void Verify() {
     if (!bof3::ExeFile_Present()) {
-        bof3::Log("rdata: %u constants (%s .. %s) and the keyboard format held by the engine; no BOF3.exe to compare "
+        bof3::Log("rdata: %u constants (%s .. %s)%s held by the engine; no BOF3.exe to compare "
                   "them with", (unsigned)(sizeof kEntries / sizeof kEntries[0]), kEntries[0].what,
-                  kEntries[sizeof kEntries / sizeof kEntries[0] - 1].what);
+                  kEntries[sizeof kEntries / sizeof kEntries[0] - 1].what, kKeyboardFormatHere);
         return;
     }
     const auto* ours = reinterpret_cast<const unsigned char*>(kCopies.data());
@@ -122,20 +141,35 @@ void Verify() {
     bof3::Log("rdata: %u constants (%s .. %s) held by the engine, each equal to BOF3.exe's .rdata%s",
               (unsigned)(sizeof kEntries / sizeof kEntries[0]), kEntries[0].what,
               kEntries[sizeof kEntries / sizeof kEntries[0] - 1].what, bof3::IsExeHost() ? " (the file's)" : "");
+#ifdef _WIN32
     VerifyKeyboardFormat();
+#else
+    bof3::Log("rdata: the keyboard format at 0x%06X not compared: DirectInput's, and this system has none", kKeyboardFormat.v);
+#endif
 }
 
 void Map() {
     if (!bof3::IsExeHost()) bof3::Fatal("rdata::Map in the hosted build: Capcom's .rdata is the loader's there");
     const auto* ours = reinterpret_cast<const unsigned char*>(kCopies.data());
     for (const Entry& e : kEntries) std::memcpy(At(::bof3::Img(e.pc)), ours + (e.pc - kLo), e.size);   // VA placed
+#ifdef _WIN32
     const ImageDataFormat keyboard = KeyboardFormatAsImage();   // the 32-bit layout, on every width
     std::memcpy(At(::bof3::Img(kKeyboardFormat.v)), &keyboard, sizeof keyboard);
     bof3::Log("rdata: .rdata the engine's - %u constants at their addresses and c_dfDIKeyboard's header at 0x%06X (its "
               "objects the SDK's, at %p); the rest zero", (unsigned)(sizeof kEntries / sizeof kEntries[0]),
               kKeyboardFormat.v, static_cast<const void*>(c_dfDIKeyboard.rgodf));
+#else
+    bof3::Log("rdata: .rdata the engine's - %u constants at their addresses; the keyboard format at 0x%06X zero, as the "
+              "rest (no DirectInput here)", (unsigned)(sizeof kEntries / sizeof kEntries[0]), kKeyboardFormat.v);
+#endif
 }
 
+#ifdef _WIN32
 const ::_DIDATAFORMAT* KeyboardFormat() { return &c_dfDIKeyboard; }
+#else
+const ::_DIDATAFORMAT* KeyboardFormat() {
+    bof3::Fatal("rdata::KeyboardFormat: DirectInput's keyboard format was asked for, and this system has no DirectInput");
+}
+#endif
 
 }  // namespace rdata

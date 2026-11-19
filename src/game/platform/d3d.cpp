@@ -1,5 +1,6 @@
 // Moved here by tools/move_funcs.py from battle_draw.cpp, d3d_draw.cpp, d3d_list.cpp, d3d_rest.cpp, display_env.cpp, display_setup.cpp, field_misc.cpp, gfx_clut.cpp, gfx_image.cpp, gfx_texcache.cpp, gfx_vram_ops.cpp, glyph_draw.cpp, psx_rest.cpp, sound_rest.cpp, sprite_draw.cpp, sprt_draw.cpp, tex_cells.cpp, tex_page.cpp, win_main.cpp (docs/source-layout-round.md).
 #include "game/platform/d3d.h"
+#include "game/platform/game_window.h"
 
 #include <bit>
 #include <cstdint>
@@ -8,7 +9,6 @@
 #include <emmintrin.h>
 #include <string>
 #include <type_traits>
-#include <windows.h>
 
 #include "audio/mp3.h"
 #include "bof3/symbols.gen.h"
@@ -934,18 +934,18 @@ void Rescale(U k) {
 // window takes the largest k whose target fits its client - the monitor - and
 // a window takes the launcher's size, BOF3X_SCALE, 2 when unset. A resize or
 // F8 later changes only the present's integer scale of that target.
-render::Options ReadOptions(HWND hwnd, bool borderless) {
+render::Options ReadOptions(void* hwnd, bool borderless) {
     render::Options o = {};
-    o.hwnd = hwnd;
+    o.hwnd = game_window::RendererWindow(hwnd);   // the HWND on Windows, the SDL window elsewhere
     char text[32];
     // DIV-0042: the client decides, in both modes - the window opened at the
-    // remembered size (win_main.cpp) or the BOF3X_SCALE fallback, the
+    // remembered size (game_window.cpp) or the BOF3X_SCALE fallback, the
     // borderless window at its monitor's.
-    RECT client = {};
-    GetClientRect(hwnd, &client);
-    const U k = DisplaySetup_ScaleForClient(static_cast<U>(client.right - client.left), static_cast<U>(client.bottom - client.top));
-    bof3::Log("DIV-0036    scale %u for the %s client %ld x %ld%s", k, borderless ? "borderless" : "windowed",
-              client.right - client.left, client.bottom - client.top, DisplaySetup_Snap() ? "" : " (DIV-0042: fitted, not snapped)");
+    unsigned cw = 0, ch = 0;
+    game_window::ClientSize(hwnd, &cw, &ch);   // 0 x 0 for a window that is gone, as GetClientRect's cleared rectangle
+    const U k = DisplaySetup_ScaleForClient(cw, ch);
+    bof3::Log("DIV-0036    scale %u for the %s client %u x %u%s", k, borderless ? "borderless" : "windowed",
+              cw, ch, DisplaySetup_Snap() ? "" : " (DIV-0042: fitted, not snapped)");
     o.logical_w = 320;
     o.logical_h = 240;
     o.scale = k;
@@ -3552,14 +3552,16 @@ extern "C" void __cdecl Display_WindowMoved(int x, int y) {
 }
 
 extern "C" int __cdecl Display_Setup(void* hwnd_, int* fullscreen, int* device, int* /*mode*/) {
-    HWND hwnd = static_cast<HWND>(hwnd_);
+    void* const hwnd = hwnd_;
 
     // 2.1 the desktop
-    HDC dc = GetDC(nullptr);
-    Display_DesktopWidth = static_cast<U>(GetDeviceCaps(dc, HORZRES));
-    PsxRest_TexCacheEnd = static_cast<U>(GetDeviceCaps(dc, VERTRES));
-    Display_DesktopBpp = static_cast<U>(GetDeviceCaps(dc, BITSPIXEL) * GetDeviceCaps(dc, PLANES));
-    ReleaseDC(nullptr, dc);
+    {
+        int w = 0, h = 0, bpp = 0;
+        game_window::Desktop(&w, &h, &bpp);
+        Display_DesktopWidth = static_cast<U>(w);
+        PsxRest_TexCacheEnd = static_cast<U>(h);
+        Display_DesktopBpp = static_cast<U>(bpp);
+    }
 
     // 2.2 the caches, reset - every one the original zeroes
     Zero(::bof3::Img(Gfx_TexCache_addr), kTexCacheBytes);
@@ -3996,7 +3998,7 @@ void D3dFromD3dRest_Inject() {
     // DIVERGENCE DIV-0077: after the self-test, which compares Capcom's point.
     {
         char text[16];
-        const DWORD n = bof3::os::GetEnv("BOF3X_TILE1", text, sizeof text);
+        const std::uint32_t n = bof3::os::GetEnv("BOF3X_TILE1", text, sizeof text);
         const bool off = n == 1 && text[0] == '0';
         if (n > 1 || (n == 1 && text[0] != '0' && text[0] != '1')) bof3::Fatal("BOF3X_TILE1 must be 0 or 1");
         if (!off) {
@@ -4040,7 +4042,7 @@ constexpr std::uint32_t kMagFilterImm = 0x5A5B34;   // the 02 of `push 2` at 0x5
 
 void D3dFromGfxFilter_Inject() {
     char mode[16];
-    const DWORD n = bof3::os::GetEnv("BOF3X_FILTER", mode, sizeof mode);
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_FILTER", mode, sizeof mode);
     if (n == 0) return;
     if (n >= sizeof mode || (std::strcmp(mode, "point") != 0 && std::strcmp(mode, "linear") != 0))
         bof3::Fatal("BOF3X_FILTER must be 'point' or 'linear'");

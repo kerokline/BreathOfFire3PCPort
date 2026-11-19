@@ -1606,7 +1606,7 @@ switch	AuraBreathDome_Grow	detour	costly		src/game/magic/aura_breath_dome.cpp:36
 switch	AuraBreathDome_Run	detour	costly		src/game/magic/aura_breath_dome.cpp:358	BOF3_INJECT
 switch	AuraBreathDome_Task	detour	costly		src/game/magic/aura_breath_dome.cpp:357	BOF3_INJECT
 switch	AuraBreathDome_Wait	detour	costly		src/game/magic/aura_breath_dome.cpp:359	BOF3_INJECT
-switch	AutoBattle_FillCommands	detour	costly		src/game/battle/battle_3.cpp:2476	BOF3_INJECT
+switch	AutoBattle_FillCommands	detour	costly		src/game/battle/battle_3.cpp:2481	BOF3_INJECT
 switch	BareRet	detour	costly		src/game/area/bare_ret.cpp:29	BOF3_INJECT
 switch	BareRetZero	detour	costly		src/game/boss/boss_28.cpp:69	BOF3_INJECT
 switch	Barrier_Fade	detour	costly		src/game/magic/barrier.cpp:251	BOF3_INJECT
@@ -1636,51 +1636,51 @@ switch	BarrierRing_Task	detour	costly		src/game/magic/barrier_ring.cpp:274	BOF3_
 switch	Battle_ActionBitSet	detour	costly		src/game/battle/dragon_cmd.cpp:3159	BOF3_INJECT
 switch	Battle_ActionPhase	detour	costly		src/game/battle/battle_action.cpp:2321	BOF3_INJECT
 switch	Battle_ActionSuitsTarget	detour	costly		src/game/battle/dragon_cmd.cpp:3147	BOF3_INJECT
-switch	Battle_ActorCanAct	detour	costly		src/game/battle/battle_3.cpp:2464	BOF3_INJECT
-switch	Battle_ActorCanCommand	detour	costly		src/game/battle/battle_3.cpp:2463	BOF3_INJECT
-switch	Battle_ActorIsOut	detour	costly		src/game/battle/battle_3.cpp:2460	BOF3_INJECT
+switch	Battle_ActorCanAct	detour	costly		src/game/battle/battle_3.cpp:2469	BOF3_INJECT
+switch	Battle_ActorCanCommand	detour	costly		src/game/battle/battle_3.cpp:2468	BOF3_INJECT
+switch	Battle_ActorIsOut	detour	costly		src/game/battle/battle_3.cpp:2465	BOF3_INJECT
 switch	Battle_ActorSkipped	detour	costly		src/game/battle/battle_action.cpp:2367	BOF3_INJECT
-switch	Battle_ActorStanding	detour	costly		src/game/battle/battle_3.cpp:2455	BOF3_INJECT
+switch	Battle_ActorStanding	detour	costly		src/game/battle/battle_3.cpp:2460	BOF3_INJECT
 switch	Battle_AnyFlagF0	detour	costly		src/game/battle/dragon_cmd.cpp:3146	BOF3_INJECT
-switch	Battle_ApplyDamage	detour	costly		src/game/battle/battle_3.cpp:2465	BOF3_INJECT
+switch	Battle_ApplyDamage	detour	costly		src/game/battle/battle_3.cpp:2470	BOF3_INJECT
 switch	Battle_AutoTargetCheck	detour	costly		src/game/battle/dragon_cmd.cpp:3141	BOF3_INJECT
 switch	Battle_BackupFlagged	detour	costly		src/game/battle/battle_fx.cpp:1550	BOF3_INJECT
-switch	Battle_BaseDamage	detour	costly		src/game/battle/battle_3.cpp:2469	BOF3_INJECT
+switch	Battle_BaseDamage	detour	costly		src/game/battle/battle_3.cpp:2474	BOF3_INJECT
 switch	Battle_BeginAction	detour	costly		src/game/battle/battle_action.cpp:2323	BOF3_INJECT
-switch	Battle_BuildEntryOrder	detour	costly		src/game/battle/battle_3.cpp:2452	BOF3_INJECT
-switch	Battle_BuildTurnOrder	detour	costly		src/game/battle/battle_3.cpp:2453	BOF3_INJECT
-switch	Battle_CalcDamage	detour	costly		src/game/battle/battle_3.cpp:2466	BOF3_INJECT
+switch	Battle_BuildEntryOrder	detour	costly		src/game/battle/battle_3.cpp:2457	BOF3_INJECT
+switch	Battle_BuildTurnOrder	detour	costly		src/game/battle/battle_3.cpp:2458	BOF3_INJECT
+switch	Battle_CalcDamage	detour	costly		src/game/battle/battle_3.cpp:2471	BOF3_INJECT
 switch	Battle_ClearActingFlags	detour	costly		src/game/battle/battle_action.cpp:2351	BOF3_INJECT
-switch	Battle_ClearActorBit	detour	costly		src/game/battle/battle_3.cpp:2502	BOF3_INJECT
-switch	Battle_ClearCommands	detour	costly		src/game/battle/battle_3.cpp:2459	BOF3_INJECT
+switch	Battle_ClearActorBit	detour	costly		src/game/battle/battle_3.cpp:2507	BOF3_INJECT
+switch	Battle_ClearCommands	detour	costly		src/game/battle/battle_3.cpp:2464	BOF3_INJECT
 switch	Battle_ClearStatus	detour	costly		src/game/effect/effect.cpp:2616	BOF3_INJECT
 switch	Battle_CommitRound	detour	costly		src/game/battle/battle_action.cpp:2318	BOF3_INJECT
 switch	Battle_CopyEnemyData	detour	costly		src/game/battle/battle_4.cpp:417	BOF3_INJECT
-switch	Battle_DefaultTarget	detour	costly		src/game/battle/battle_3.cpp:2461	BOF3_INJECT
-switch	Battle_DrawLabel	detour	costly		src/game/battle/battle_3.cpp:2440	BOF3_INJECT
-switch	Battle_DrawNumber	detour	costly		src/game/battle/battle_3.cpp:2439	BOF3_INJECT
+switch	Battle_DefaultTarget	detour	costly		src/game/battle/battle_3.cpp:2466	BOF3_INJECT
+switch	Battle_DrawLabel	detour	costly		src/game/battle/battle_3.cpp:2445	BOF3_INJECT
+switch	Battle_DrawNumber	detour	costly		src/game/battle/battle_3.cpp:2444	BOF3_INJECT
 switch	Battle_ElementAffinity	detour	costly		src/game/effect/effect.cpp:2610	BOF3_INJECT
 switch	Battle_EnemyDefeated	detour	costly		src/game/battle/enemy_op.cpp:1685	BOF3_INJECT
 switch	Battle_EnemyKindFlag	detour	costly		src/game/battle/battle_5.cpp:213	BOF3_INJECT
 switch	Battle_EnemyLowestHp	detour	costly		src/game/battle/enemy_op.cpp:1628	BOF3_INJECT
 switch	Battle_EnemyNameToText	detour	costly		src/game/battle/battle_banner.cpp:349	BOF3_INJECT
-switch	Battle_EnemyOutpaces	detour	costly		src/game/battle/battle_3.cpp:2457	BOF3_INJECT
+switch	Battle_EnemyOutpaces	detour	costly		src/game/battle/battle_3.cpp:2462	BOF3_INJECT
 switch	Battle_Frame	detour	costly		src/game/battle/battle_intro.cpp:390	BOF3_INJECT
-switch	Battle_HitOrMissEnemy	detour	costly		src/game/battle/battle_3.cpp:2468	BOF3_INJECT
-switch	Battle_HitOrMissParty	detour	costly		src/game/battle/battle_3.cpp:2467	BOF3_INJECT
+switch	Battle_HitOrMissEnemy	detour	costly		src/game/battle/battle_3.cpp:2473	BOF3_INJECT
+switch	Battle_HitOrMissParty	detour	costly		src/game/battle/battle_3.cpp:2472	BOF3_INJECT
 switch	Battle_InflictStatus	detour	costly		src/game/effect/effect.cpp:2613	BOF3_INJECT
 switch	Battle_Init	detour	costly		src/game/battle/battle_intro.cpp:393	BOF3_INJECT
-switch	Battle_InitActorContext	detour	costly		src/game/battle/battle_3.cpp:2489	BOF3_INJECT
-switch	Battle_InitActorContexts	detour	costly		src/game/battle/battle_3.cpp:2490	BOF3_INJECT
+switch	Battle_InitActorContext	detour	costly		src/game/battle/battle_3.cpp:2494	BOF3_INJECT
+switch	Battle_InitActorContexts	detour	costly		src/game/battle/battle_3.cpp:2495	BOF3_INJECT
 switch	Battle_InitBossEncounter	detour	costly		src/game/battle/battle_4.cpp:414	BOF3_INJECT
 switch	Battle_InitEncounterKind	detour	costly		src/game/battle/battle_4.cpp:413	BOF3_INJECT
 switch	Battle_InitEnemies	detour	costly		src/game/battle/battle_4.cpp:415	BOF3_INJECT
 switch	Battle_ItemSuitsTarget	detour	costly		src/game/battle/dragon_cmd.cpp:3148	BOF3_INJECT
 switch	Battle_LacksAccessory	detour	costly		src/game/effect/effect.cpp:2614	BOF3_INJECT
 switch	Battle_LacksArmour	detour	costly		src/game/effect/effect.cpp:2615	BOF3_INJECT
-switch	Battle_LevelClass	detour	costly		src/game/battle/battle_3.cpp:2458	BOF3_INJECT
-switch	Battle_LoadSoundByKey	detour	costly		src/game/battle/battle_3.cpp:2496	BOF3_INJECT
-switch	Battle_MarkFasterSide	detour	costly		src/game/battle/battle_3.cpp:2454	BOF3_INJECT
+switch	Battle_LevelClass	detour	costly		src/game/battle/battle_3.cpp:2463	BOF3_INJECT
+switch	Battle_LoadSoundByKey	detour	costly		src/game/battle/battle_3.cpp:2501	BOF3_INJECT
+switch	Battle_MarkFasterSide	detour	costly		src/game/battle/battle_3.cpp:2459	BOF3_INJECT
 switch	Battle_MemberActionIs0E	detour	costly		src/game/battle/dragon_cmd.cpp:3167	BOF3_INJECT
 switch	Battle_MemberAutoFixed	detour	costly		src/game/battle/dragon_cmd.cpp:3168	BOF3_INJECT
 switch	Battle_MemberAutoTarget	detour	costly		src/game/battle/dragon_cmd.cpp:3165	BOF3_INJECT
@@ -1689,24 +1689,24 @@ switch	Battle_MemberListFull	detour	costly		src/game/battle/dragon_cmd.cpp:3160	
 switch	Battle_MemberLowestHp	detour	costly		src/game/battle/enemy_op.cpp:1630	BOF3_INJECT
 switch	Battle_MemberNameToText	detour	costly		src/game/battle/battle_banner.cpp:348	BOF3_INJECT
 switch	Battle_MemberOutAction	detour	costly		src/game/battle/dragon_cmd.cpp:3166	BOF3_INJECT
-switch	Battle_MemberReactRoll	detour	costly		src/game/battle/battle_3.cpp:2479	BOF3_INJECT
+switch	Battle_MemberReactRoll	detour	costly		src/game/battle/battle_3.cpp:2484	BOF3_INJECT
 switch	Battle_MemberRollByAction	detour	costly		src/game/battle/dragon_cmd.cpp:3152	BOF3_INJECT
 switch	Battle_OpenEnemyNames	detour	costly		src/game/battle/battle_5.cpp:212	BOF3_INJECT
 switch	Battle_OpeningMessage	detour	costly		src/game/battle/battle_banner.cpp:351	BOF3_INJECT
-switch	Battle_OpenMsgWindow	detour	costly		src/game/battle/battle_3.cpp:2437	BOF3_INJECT
-switch	Battle_OrderPushFront	detour	costly		src/game/battle/battle_3.cpp:2475	BOF3_INJECT
-switch	Battle_PartyDefenceMean	detour	costly		src/game/battle/battle_3.cpp:2470	BOF3_INJECT
-switch	Battle_PartyOutpaces	detour	costly		src/game/battle/battle_3.cpp:2456	BOF3_INJECT
+switch	Battle_OpenMsgWindow	detour	costly		src/game/battle/battle_3.cpp:2442	BOF3_INJECT
+switch	Battle_OrderPushFront	detour	costly		src/game/battle/battle_3.cpp:2480	BOF3_INJECT
+switch	Battle_PartyDefenceMean	detour	costly		src/game/battle/battle_3.cpp:2475	BOF3_INJECT
+switch	Battle_PartyOutpaces	detour	costly		src/game/battle/battle_3.cpp:2461	BOF3_INJECT
 switch	Battle_PhaseDispatch	detour	costly		src/game/battle/battle_intro.cpp:391	BOF3_INJECT
-switch	Battle_PickEnemyTarget	detour	costly		src/game/battle/battle_3.cpp:2487	BOF3_INJECT
+switch	Battle_PickEnemyTarget	detour	costly		src/game/battle/battle_3.cpp:2492	BOF3_INJECT
 switch	Battle_PickFlag8Member	detour	costly		src/game/battle/dragon_cmd.cpp:3151	BOF3_INJECT
 switch	Battle_PlaceBossActor	detour	costly		src/game/battle/battle_4.cpp:436	BOF3_INJECT
 switch	Battle_PlaceBossActors	detour	costly		src/game/battle/battle_4.cpp:435	BOF3_INJECT
-switch	Battle_PlayActorCue	detour	costly		src/game/battle/battle_3.cpp:2485	BOF3_INJECT
+switch	Battle_PlayActorCue	detour	costly		src/game/battle/battle_3.cpp:2490	BOF3_INJECT
 switch	Battle_PlayHitSound	detour	costly		src/game/battle/dragon_cmd.cpp:3170	BOF3_INJECT
-switch	Battle_PrevTarget	detour	costly		src/game/battle/battle_3.cpp:2462	BOF3_INJECT
+switch	Battle_PrevTarget	detour	costly		src/game/battle/battle_3.cpp:2467	BOF3_INJECT
 switch	Battle_PsiStatusDeathAffinity	detour	costly		src/game/effect/effect.cpp:2611	BOF3_INJECT
-switch	Battle_PulseStep	detour	costly		src/game/battle/battle_3.cpp:2484	BOF3_INJECT
+switch	Battle_PulseStep	detour	costly		src/game/battle/battle_3.cpp:2489	BOF3_INJECT
 switch	Battle_RandomEnemy	detour	costly		src/game/battle/enemy_op.cpp:1626	BOF3_INJECT
 switch	Battle_RandomLiveEnemy	detour	costly		src/game/battle/dragon_cmd.cpp:3143	BOF3_INJECT
 switch	Battle_RandomLiveMember	detour	costly		src/game/battle/dragon_cmd.cpp:3142	BOF3_INJECT
@@ -1714,27 +1714,27 @@ switch	Battle_RandomMember	detour	costly		src/game/battle/enemy_op.cpp:1631	BOF3
 switch	Battle_RandomOtherMember	detour	costly		src/game/battle/dragon_cmd.cpp:3169	BOF3_INJECT
 switch	Battle_RecalcMemberStats	detour	costly		src/game/battle/dragon_cmd.cpp:3150	BOF3_INJECT
 switch	Battle_RecalcStats	detour	costly		src/game/battle/dragon_cmd.cpp:3149	BOF3_INJECT
-switch	Battle_ReloadPartyRecords	detour	costly		src/game/battle/battle_3.cpp:2473	BOF3_INJECT
-switch	Battle_RemoveFromTurnOrder	detour	costly		src/game/battle/battle_3.cpp:2474	BOF3_INJECT
-switch	Battle_ReturnItem	detour	costly		src/game/battle/battle_3.cpp:2492	BOF3_INJECT
-switch	Battle_ReturnQueuedItem	detour	costly		src/game/battle/battle_3.cpp:2497	BOF3_INJECT
+switch	Battle_ReloadPartyRecords	detour	costly		src/game/battle/battle_3.cpp:2478	BOF3_INJECT
+switch	Battle_RemoveFromTurnOrder	detour	costly		src/game/battle/battle_3.cpp:2479	BOF3_INJECT
+switch	Battle_ReturnItem	detour	costly		src/game/battle/battle_3.cpp:2497	BOF3_INJECT
+switch	Battle_ReturnQueuedItem	detour	costly		src/game/battle/battle_3.cpp:2502	BOF3_INJECT
 switch	Battle_ReturnTrue	detour	costly		src/game/battle/battle_item_cmd.cpp:2536	BOF3_INJECT
 switch	Battle_RollDrops	detour	costly		src/game/battle/enemy_op.cpp:1686	BOF3_INJECT
 switch	Battle_RollPendingFlag	detour	costly		src/game/battle/dragon_cmd.cpp:3140	BOF3_INJECT
 switch	Battle_RoundStart	detour	costly		src/game/battle/battle_action.cpp:2307	BOF3_INJECT
-switch	Battle_ScaleDamage	detour	costly		src/game/battle/battle_3.cpp:2471	BOF3_INJECT
-switch	Battle_SetActorBit	detour	costly		src/game/battle/battle_3.cpp:2501	BOF3_INJECT
+switch	Battle_ScaleDamage	detour	costly		src/game/battle/battle_3.cpp:2476	BOF3_INJECT
+switch	Battle_SetActorBit	detour	costly		src/game/battle/battle_3.cpp:2506	BOF3_INJECT
 switch	Battle_SetApPopup	detour	costly		src/game/battle/dragon_cmd.cpp:3164	BOF3_INJECT
 switch	Battle_SetDamagePopup	detour	costly		src/game/battle/dragon_cmd.cpp:3163	BOF3_INJECT
 switch	Battle_SetEnemyKindFlag	detour	costly		src/game/battle/battle_5.cpp:214	BOF3_INJECT
 switch	Battle_SetEnemyOffset	detour	costly		src/game/battle/battle_5.cpp:215	BOF3_INJECT
 switch	Battle_SetHitPopup	detour	costly		src/game/battle/dragon_cmd.cpp:3171	BOF3_INJECT
-switch	Battle_SetHpChange	detour	costly		src/game/battle/battle_3.cpp:2472	BOF3_INJECT
+switch	Battle_SetHpChange	detour	costly		src/game/battle/battle_3.cpp:2477	BOF3_INJECT
 switch	Battle_SetTargetFlag40	detour	costly		src/game/battle/dragon_cmd.cpp:3145	BOF3_INJECT
 switch	Battle_SetTargetFlags	detour	costly		src/game/battle/dragon_cmd.cpp:3144	BOF3_INJECT
 switch	Battle_SettleFlag8	detour	costly		src/game/battle/dragon_cmd.cpp:3161	BOF3_INJECT
 switch	Battle_SetupEnemy	detour	costly		src/game/battle/battle_4.cpp:416	BOF3_INJECT
-switch	Battle_SpawnActorCopies	detour	costly		src/game/battle/battle_3.cpp:2503	BOF3_INJECT
+switch	Battle_SpawnActorCopies	detour	costly		src/game/battle/battle_3.cpp:2508	BOF3_INJECT
 switch	Battle_StartAbilityMagic	detour	costly		src/game/battle/battle_2.cpp:78	BOF3_INJECT
 switch	Battle_StartItemMagic	detour	costly		src/game/battle/battle.cpp:155	BOF3_INJECT
 switch	Battle_StatusResisted	detour	costly		src/game/effect/effect.cpp:2618	BOF3_INJECT
@@ -1743,13 +1743,13 @@ switch	Battle_StatusResisted80	detour	costly		src/game/battle/dragon_cmd.cpp:306
 switch	Battle_StatusResistedMask	detour	costly		src/game/battle/dragon_cmd.cpp:3057	BOF3_INJECT
 switch	Battle_StatusResistRate	detour	costly		src/game/battle/dragon_cmd.cpp:3056	BOF3_INJECT
 switch	Battle_StatusResistRate20	detour	costly		src/game/battle/dragon_cmd.cpp:3059	BOF3_INJECT
-switch	Battle_StatusTint	detour	costly		src/game/battle/battle_3.cpp:2488	BOF3_INJECT
+switch	Battle_StatusTint	detour	costly		src/game/battle/battle_3.cpp:2493	BOF3_INJECT
 switch	Battle_TickCounters	detour	costly		src/game/battle/battle_action.cpp:2355	BOF3_INJECT
-switch	Battle_TurnVector18	detour	costly		src/game/battle/battle_3.cpp:2478	BOF3_INJECT
-switch	Battle_TurnVectorC	detour	costly		src/game/battle/battle_3.cpp:2477	BOF3_INJECT
-switch	Battle_WakeRoll	detour	costly		src/game/battle/battle_3.cpp:2491	BOF3_INJECT
-switch	Battle_WrapIndex	detour	costly		src/game/battle/battle_3.cpp:2483	BOF3_INJECT
-switch	Battle_WriteBackMember	detour	costly		src/game/battle/battle_3.cpp:2486	BOF3_INJECT
+switch	Battle_TurnVector18	detour	costly		src/game/battle/battle_3.cpp:2483	BOF3_INJECT
+switch	Battle_TurnVectorC	detour	costly		src/game/battle/battle_3.cpp:2482	BOF3_INJECT
+switch	Battle_WakeRoll	detour	costly		src/game/battle/battle_3.cpp:2496	BOF3_INJECT
+switch	Battle_WrapIndex	detour	costly		src/game/battle/battle_3.cpp:2488	BOF3_INJECT
+switch	Battle_WriteBackMember	detour	costly		src/game/battle/battle_3.cpp:2491	BOF3_INJECT
 switch	Battle_WriteBackParty	detour	costly		src/game/battle/battle_action.cpp:2385	BOF3_INJECT
 switch	BattleAction_AbilityCheck	detour	costly		src/game/battle/battle_action.cpp:2332	BOF3_INJECT
 switch	BattleAction_AbilityCommit	detour	costly		src/game/battle/battle_action.cpp:2335	BOF3_INJECT
@@ -1798,17 +1798,17 @@ switch	BattleBanner_SetMessage	detour	costly		src/game/battle/battle_banner.cpp:
 switch	BattleBanner_ShowName	detour	costly		src/game/battle/battle_banner.cpp:350	BOF3_INJECT
 switch	BattleBanner_TickKind1	detour	costly		src/game/battle/battle_banner.cpp:341	BOF3_INJECT
 switch	BattleBanner_TickKind2	detour	costly		src/game/battle/battle_banner.cpp:342	BOF3_INJECT
-switch	BattleBannerCentre	code	yes		src/game/menu/menu_list.cpp:2834	PatchBytes
+switch	BattleBannerCentre	code	yes		src/game/menu/menu_list.cpp:2833	PatchBytes
 switch	BattleBossFx_Dispatch	detour	costly		src/game/battle/battle_task.cpp:177	BOF3_INJECT
 switch	BattleCommit_Dispatch	detour	costly		src/game/battle/battle_action.cpp:2317	BOF3_INJECT
 switch	BattleCommit_QueueMessages	detour	costly		src/game/battle/battle_action.cpp:2319	BOF3_INJECT
 switch	BattleCommit_WaitLoad	detour	costly		src/game/battle/battle_action.cpp:2320	BOF3_INJECT
-switch	BattleDrawSigned	code	yes		src/game/battle/battle_3.cpp:2417 src/game/menu/menu_list.cpp:2807	PatchBytes
+switch	BattleDrawSigned	code	yes		src/game/battle/battle_3.cpp:2422 src/game/menu/menu_list.cpp:2806	PatchBytes
 switch	BattleEnd_AwaitMemberTasks	detour	costly		src/game/battle/battle_action.cpp:2373	BOF3_INJECT
 switch	BattleEnd_AwaitRestore	detour	costly		src/game/battle/battle_action.cpp:2381	BOF3_INJECT
-switch	BattleEnd_EnterStep1	detour	costly		src/game/battle/battle_3.cpp:2493	BOF3_INJECT
-switch	BattleEnd_EnterStep2	detour	costly		src/game/battle/battle_3.cpp:2494	BOF3_INJECT
-switch	BattleEnd_EnterStep3	detour	costly		src/game/battle/battle_3.cpp:2495	BOF3_INJECT
+switch	BattleEnd_EnterStep1	detour	costly		src/game/battle/battle_3.cpp:2498	BOF3_INJECT
+switch	BattleEnd_EnterStep2	detour	costly		src/game/battle/battle_3.cpp:2499	BOF3_INJECT
+switch	BattleEnd_EnterStep3	detour	costly		src/game/battle/battle_3.cpp:2500	BOF3_INJECT
 switch	BattleEnd_ExitAwaitFade	detour	costly		src/game/battle/battle_action.cpp:2388	BOF3_INJECT
 switch	BattleEnd_ExitHook	detour	costly		src/game/battle/battle_action.cpp:2386	BOF3_INJECT
 switch	BattleEnd_ExitStep	detour	costly		src/game/battle/battle_action.cpp:2384	BOF3_INJECT
@@ -1847,10 +1847,10 @@ switch	BattleEquip_OpenChange	detour	costly		src/game/battle/battle_item_cmd.cpp
 switch	BattleEquip_OpenUse	detour	costly		src/game/battle/battle_item_cmd.cpp:2539	BOF3_INJECT
 switch	BattleEquip_Preview	detour	costly		src/game/battle/battle_item_cmd.cpp:2534	BOF3_INJECT
 switch	BattleEquip_RemoveSlot	detour	costly		src/game/battle/battle_item_cmd.cpp:2535	BOF3_INJECT
-switch	BattleEquipLabelsRow	code	yes		src/game/battle/battle_menu_win.cpp:1227	PatchBytes
-switch	BattleEquipWin_Draw	detour	costly		src/game/battle/battle_menu_win.cpp:1246	BOF3_INJECT
-switch	BattleEquipWin_DrawBar	detour	costly		src/game/battle/battle_menu_win.cpp:1247	BOF3_INJECT
-switch	BattleEquipWin_DrawItems	detour	costly		src/game/battle/battle_menu_win.cpp:1248	BOF3_INJECT
+switch	BattleEquipLabelsRow	code	yes		src/game/battle/battle_menu_win.cpp:849	PatchBytes
+switch	BattleEquipWin_Draw	detour	costly		src/game/battle/battle_menu_win.cpp:1255	BOF3_INJECT
+switch	BattleEquipWin_DrawBar	detour	costly		src/game/battle/battle_menu_win.cpp:1256	BOF3_INJECT
+switch	BattleEquipWin_DrawItems	detour	costly		src/game/battle/battle_menu_win.cpp:1257	BOF3_INJECT
 switch	BattleExtra_ApplyTally	detour	costly		src/game/battle/battle_extra.cpp:665	BOF3_INJECT
 switch	BattleExtra_Dispatch	detour	costly		src/game/battle/battle_extra.cpp:655	BOF3_INJECT
 switch	BattleExtra_DrawPlus	detour	costly		src/game/battle/battle_extra.cpp:666	BOF3_INJECT
@@ -2034,19 +2034,19 @@ switch	BattleMagicFx_Dispatch	detour	costly		src/game/battle/battle_task.cpp:176
 switch	BattleMagicRow_Run	detour	costly		src/game/battle/battle.cpp:158	BOF3_INJECT
 switch	BattleMenu_CommandSelect	detour	costly		src/game/battle/battle_action.cpp:2309	BOF3_INJECT
 switch	BattleMenu_ConfirmDispatch	detour	costly		src/game/battle/battle_action.cpp:2314	BOF3_INJECT
-switch	BattleMenu_DrawItemList	detour	costly		src/game/battle/battle_menu_win.cpp:1244	BOF3_INJECT
-switch	BattleMenu_DrawSkillList	detour	costly		src/game/battle/battle_menu_win.cpp:1245	BOF3_INJECT
-switch	BattleMenuWin_EquipItemsRun	detour	costly		src/game/battle/battle_menu_win.cpp:1241	BOF3_INJECT
-switch	BattleMenuWin_EquipItemsSlideTo98	detour	costly		src/game/battle/battle_menu_win.cpp:1242	BOF3_INJECT
-switch	BattleMenuWin_EquipRun	detour	costly		src/game/battle/battle_menu_win.cpp:1239	BOF3_INJECT
-switch	BattleMenuWin_EquipSlideTo62	detour	costly		src/game/battle/battle_menu_win.cpp:1240	BOF3_INJECT
-switch	BattleMenuWin_ItemListRun	detour	costly		src/game/battle/battle_menu_win.cpp:1234	BOF3_INJECT
-switch	BattleMenuWin_ItemListSlideLeft	detour	costly		src/game/battle/battle_menu_win.cpp:1236	BOF3_INJECT
-switch	BattleMenuWin_ItemListSlideRight	detour	costly		src/game/battle/battle_menu_win.cpp:1235	BOF3_INJECT
-switch	BattleMenuWin_SkillListRun	detour	costly		src/game/battle/battle_menu_win.cpp:1237	BOF3_INJECT
-switch	BattleMenuWin_SkillListSlideIn	detour	costly		src/game/battle/battle_menu_win.cpp:1238	BOF3_INJECT
-switch	BattleMenuWin_VerbPairRun	detour	costly		src/game/battle/battle_menu_win.cpp:1243	BOF3_INJECT
-switch	BattleMsg_Advance	detour	costly		src/game/menu/menu_list.cpp:2891	BOF3_INJECT
+switch	BattleMenu_DrawItemList	detour	costly		src/game/battle/battle_menu_win.cpp:1253	BOF3_INJECT
+switch	BattleMenu_DrawSkillList	detour	costly		src/game/battle/battle_menu_win.cpp:1254	BOF3_INJECT
+switch	BattleMenuWin_EquipItemsRun	detour	costly		src/game/battle/battle_menu_win.cpp:1250	BOF3_INJECT
+switch	BattleMenuWin_EquipItemsSlideTo98	detour	costly		src/game/battle/battle_menu_win.cpp:1251	BOF3_INJECT
+switch	BattleMenuWin_EquipRun	detour	costly		src/game/battle/battle_menu_win.cpp:1248	BOF3_INJECT
+switch	BattleMenuWin_EquipSlideTo62	detour	costly		src/game/battle/battle_menu_win.cpp:1249	BOF3_INJECT
+switch	BattleMenuWin_ItemListRun	detour	costly		src/game/battle/battle_menu_win.cpp:1243	BOF3_INJECT
+switch	BattleMenuWin_ItemListSlideLeft	detour	costly		src/game/battle/battle_menu_win.cpp:1245	BOF3_INJECT
+switch	BattleMenuWin_ItemListSlideRight	detour	costly		src/game/battle/battle_menu_win.cpp:1244	BOF3_INJECT
+switch	BattleMenuWin_SkillListRun	detour	costly		src/game/battle/battle_menu_win.cpp:1246	BOF3_INJECT
+switch	BattleMenuWin_SkillListSlideIn	detour	costly		src/game/battle/battle_menu_win.cpp:1247	BOF3_INJECT
+switch	BattleMenuWin_VerbPairRun	detour	costly		src/game/battle/battle_menu_win.cpp:1252	BOF3_INJECT
+switch	BattleMsg_Advance	detour	costly		src/game/menu/menu_list.cpp:2890	BOF3_INJECT
 switch	BattleObj_AttackStart	detour	costly		src/game/battle/battle_obj.cpp:1453	BOF3_INJECT
 switch	BattleObj_CastCue	detour	costly		src/game/battle/battle_obj.cpp:1483	BOF3_INJECT
 switch	BattleObj_CastDone	detour	costly		src/game/battle/battle_obj.cpp:1487	BOF3_INJECT
@@ -2111,7 +2111,7 @@ switch	BattleParty_RunStates	detour	costly		src/game/battle/battle_obj.cpp:1440	
 switch	BattleParty_UpdateScreens	detour	costly		src/game/battle/battle_obj.cpp:1441	BOF3_INJECT
 switch	BattleQueue_Pending	detour	costly		src/game/battle/battle_banner.cpp:346	BOF3_INJECT
 switch	BattleQueue_Push	detour	costly		src/game/battle/battle_banner.cpp:345	BOF3_INJECT
-switch	BattleResult_AddExp	detour	costly		src/game/battle/battle_3.cpp:2480	BOF3_INJECT
+switch	BattleResult_AddExp	detour	costly		src/game/battle/battle_3.cpp:2485	BOF3_INJECT
 switch	BattleResult_AwardDrops	detour	costly		src/game/battle/battle_result.cpp:526	BOF3_INJECT
 switch	BattleResult_CountExpShares	detour	costly		src/game/battle/battle_result.cpp:513	BOF3_INJECT
 switch	BattleResult_ExpDone	detour	costly		src/game/battle/battle_result.cpp:517	BOF3_INJECT
@@ -2120,7 +2120,7 @@ switch	BattleResult_ExpWaitHeld	detour	costly		src/game/battle/battle_result.cpp
 switch	BattleResult_FindLevelUp	detour	costly		src/game/battle/battle_result.cpp:519	BOF3_INJECT
 switch	BattleResult_LevelUpNotice	detour	costly		src/game/battle/battle_result.cpp:520	BOF3_INJECT
 switch	BattleResult_LevelUpStep	detour	costly		src/game/battle/battle_result.cpp:518	BOF3_INJECT
-switch	BattleResult_MemberTakesExp	detour	costly		src/game/battle/battle_3.cpp:2481	BOF3_INJECT
+switch	BattleResult_MemberTakesExp	detour	costly		src/game/battle/battle_3.cpp:2486	BOF3_INJECT
 switch	BattleResult_OpenExpWindow	detour	costly		src/game/battle/battle_result.cpp:514	BOF3_INJECT
 switch	BattleResult_RewardStep	detour	costly		src/game/battle/battle_result.cpp:521	BOF3_INJECT
 switch	BattleResult_Setup	detour	costly		src/game/battle/battle_result.cpp:522	BOF3_INJECT
@@ -2128,18 +2128,18 @@ switch	BattleResult_SplitExp	detour	costly		src/game/battle/battle_result.cpp:51
 switch	BattleResult_ZennyBonus	detour	costly		src/game/battle/battle_result.cpp:523	BOF3_INJECT
 switch	BattleResult_ZennyTick	detour	costly		src/game/battle/battle_result.cpp:525	BOF3_INJECT
 switch	BattleResult_ZennyWaitHeld	detour	costly		src/game/battle/battle_result.cpp:524	BOF3_INJECT
-switch	BattleResultExpLayout	code	yes		src/game/menu/menu_list.cpp:2848	PatchBytes
-switch	BattleResultWin_DrawDrops	detour	costly		src/game/menu/menu_list.cpp:2897	BOF3_INJECT
-switch	BattleResultWin_DrawExp	detour	costly		src/game/menu/menu_list.cpp:2899	BOF3_INJECT
-switch	BattleResultWin_DrawFrame	detour	costly		src/game/menu/menu_list.cpp:2896	BOF3_INJECT
-switch	BattleResultWin_DrawItem	detour	costly		src/game/menu/menu_list.cpp:2903	BOF3_INJECT
-switch	BattleResultWin_DrawLevelUp	detour	costly		src/game/menu/menu_list.cpp:2895	BOF3_INJECT
-switch	BattleResultWin_DrawZenny	detour	costly		src/game/menu/menu_list.cpp:2902	BOF3_INJECT
-switch	BattleResultWin_ExpState	detour	costly		src/game/menu/menu_list.cpp:2898	BOF3_INJECT
-switch	BattleResultWin_ExpToNext	detour	costly		src/game/menu/menu_list.cpp:2904	BOF3_INJECT
-switch	BattleResultWin_LevelUpStates	detour	costly		src/game/menu/menu_list.cpp:2894	BOF3_INJECT
-switch	BattleResultWin_NextStep	detour	costly		src/game/menu/menu_list.cpp:2901	BOF3_INJECT
-switch	BattleResultWin_ZennyState	detour	costly		src/game/menu/menu_list.cpp:2900	BOF3_INJECT
+switch	BattleResultExpLayout	code	yes		src/game/menu/menu_list.cpp:2847	PatchBytes
+switch	BattleResultWin_DrawDrops	detour	costly		src/game/menu/menu_list.cpp:2896	BOF3_INJECT
+switch	BattleResultWin_DrawExp	detour	costly		src/game/menu/menu_list.cpp:2898	BOF3_INJECT
+switch	BattleResultWin_DrawFrame	detour	costly		src/game/menu/menu_list.cpp:2895	BOF3_INJECT
+switch	BattleResultWin_DrawItem	detour	costly		src/game/menu/menu_list.cpp:2902	BOF3_INJECT
+switch	BattleResultWin_DrawLevelUp	detour	costly		src/game/menu/menu_list.cpp:2894	BOF3_INJECT
+switch	BattleResultWin_DrawZenny	detour	costly		src/game/menu/menu_list.cpp:2901	BOF3_INJECT
+switch	BattleResultWin_ExpState	detour	costly		src/game/menu/menu_list.cpp:2897	BOF3_INJECT
+switch	BattleResultWin_ExpToNext	detour	costly		src/game/menu/menu_list.cpp:2903	BOF3_INJECT
+switch	BattleResultWin_LevelUpStates	detour	costly		src/game/menu/menu_list.cpp:2893	BOF3_INJECT
+switch	BattleResultWin_NextStep	detour	costly		src/game/menu/menu_list.cpp:2900	BOF3_INJECT
+switch	BattleResultWin_ZennyState	detour	costly		src/game/menu/menu_list.cpp:2899	BOF3_INJECT
 switch	BattleRoundEnd_CheckFaster	detour	costly		src/game/battle/battle_action.cpp:2354	BOF3_INJECT
 switch	BattleRoundEnd_FasterNext	detour	costly		src/game/battle/battle_action.cpp:2356	BOF3_INJECT
 switch	BattleRoundEnd_FasterStep	detour	costly		src/game/battle/battle_action.cpp:2353	BOF3_INJECT
@@ -2159,69 +2159,69 @@ switch	BattleStep_Status80	detour	costly		src/game/battle/battle_action.cpp:2364
 switch	BattleTarget_Begin	detour	costly		src/game/battle/battle_item_cmd.cpp:2474	BOF3_INJECT
 switch	BattleTarget_Cancel	detour	costly		src/game/battle/battle_item_cmd.cpp:2478	BOF3_INJECT
 switch	BattleTarget_Confirm	detour	costly		src/game/battle/battle_item_cmd.cpp:2477	BOF3_INJECT
-switch	BattleTarget_Dispatch	detour	costly		src/game/battle/battle_3.cpp:2504	BOF3_INJECT
+switch	BattleTarget_Dispatch	detour	costly		src/game/battle/battle_3.cpp:2509	BOF3_INJECT
 switch	BattleTarget_PickDispatch	detour	costly		src/game/battle/battle_item_cmd.cpp:2473	BOF3_INJECT
 switch	BattleTarget_PickEnemy	detour	costly		src/game/battle/battle_item_cmd.cpp:2475	BOF3_INJECT
 switch	BattleTarget_PickParty	detour	costly		src/game/battle/battle_item_cmd.cpp:2476	BOF3_INJECT
-switch	BattleTarget_ShowPrompt	detour	costly		src/game/battle/battle_3.cpp:2505	BOF3_INJECT
+switch	BattleTarget_ShowPrompt	detour	costly		src/game/battle/battle_3.cpp:2510	BOF3_INJECT
 switch	BattleTask_ClearAll	detour	costly		src/game/battle/battle_task.cpp:174	BOF3_INJECT
 switch	BattleTask_Create	detour	costly		src/game/battle/battle_task.cpp:172	BOF3_INJECT
 switch	BattleTask_FreeCurrent	detour	costly		src/game/battle/battle_task.cpp:173	BOF3_INJECT
 switch	BattleTask_RunAll	detour	costly		src/game/battle/battle_task.cpp:171	BOF3_INJECT
-switch	BattleWin_BannerFrame	detour	costly		src/game/menu/menu_list.cpp:2867	BOF3_INJECT
-switch	BattleWin_BannerRun	detour	costly		src/game/menu/menu_list.cpp:2882	BOF3_INJECT
-switch	BattleWin_BannerSlideIn	detour	costly		src/game/menu/menu_list.cpp:2883	BOF3_INJECT
-switch	BattleWin_BannerSlideOut	detour	costly		src/game/menu/menu_list.cpp:2884	BOF3_INJECT
-switch	BattleWin_BannerStates	detour	costly		src/game/menu/menu_list.cpp:2866	BOF3_INJECT
-switch	BattleWin_CrossFrame	detour	costly		src/game/menu/menu_list.cpp:2863	BOF3_INJECT
-switch	BattleWin_CrossGrow	detour	costly		src/game/menu/menu_list.cpp:2862	BOF3_INJECT
-switch	BattleWin_CrossStates	detour	costly		src/game/menu/menu_list.cpp:2861	BOF3_INJECT
-switch	BattleWin_DimScreen	detour	costly		src/game/battle/battle_3.cpp:2441	BOF3_INJECT
-switch	BattleWin_DrawBar	detour	costly		src/game/battle/battle_3.cpp:2446	BOF3_INJECT
-switch	BattleWin_DrawCell16	detour	costly		src/game/battle/battle_3.cpp:2447	BOF3_INJECT
-switch	BattleWin_DrawCommandCross	detour	costly		src/game/battle/battle_3.cpp:2424	BOF3_INJECT
-switch	BattleWin_DrawCommandIcon	detour	costly		src/game/battle/battle_3.cpp:2425	BOF3_INJECT
-switch	BattleWin_DrawCommandLabel	detour	costly		src/game/battle/battle_3.cpp:2429	BOF3_INJECT
-switch	BattleWin_DrawEnemyStatus	detour	costly		src/game/battle/battle_3.cpp:2431	BOF3_INJECT
-switch	BattleWin_DrawLine	detour	costly		src/game/battle/battle_3.cpp:2448	BOF3_INJECT
-switch	BattleWin_DrawLineAdd	detour	costly		src/game/battle/battle_3.cpp:2450	BOF3_INJECT
-switch	BattleWin_DrawLineHalf	detour	costly		src/game/battle/battle_3.cpp:2449	BOF3_INJECT
-switch	BattleWin_DrawMediumBox	detour	costly		src/game/battle/battle_3.cpp:2428	BOF3_INJECT
-switch	BattleWin_DrawMessage	detour	costly		src/game/menu/menu_list.cpp:2890	BOF3_INJECT
-switch	BattleWin_DrawMessageBox	detour	costly		src/game/battle/battle_3.cpp:2426	BOF3_INJECT
-switch	BattleWin_DrawNumber	detour	costly		src/game/battle/battle_3.cpp:2438	BOF3_INJECT
-switch	BattleWin_DrawPartyStatus	detour	costly		src/game/battle/battle_3.cpp:2423	BOF3_INJECT
-switch	BattleWin_DrawQuadF4	detour	costly		src/game/battle/battle_3.cpp:2443	BOF3_INJECT
-switch	BattleWin_DrawSmallBox	detour	costly		src/game/battle/battle_3.cpp:2427	BOF3_INJECT
-switch	BattleWin_DrawTargetEnemy	detour	costly		src/game/battle/battle_3.cpp:2430	BOF3_INJECT
-switch	BattleWin_DrawTargetMember	detour	costly		src/game/battle/battle_3.cpp:2432	BOF3_INJECT
-switch	BattleWin_DrawTile	detour	costly		src/game/battle/battle_3.cpp:2444	BOF3_INJECT
-switch	BattleWin_DrawTileRgb	detour	costly		src/game/battle/battle_3.cpp:2445	BOF3_INJECT
-switch	BattleWin_DrawTileTint	detour	costly		src/game/battle/battle_3.cpp:2442	BOF3_INJECT
-switch	BattleWin_EnemyGaugeFrame	detour	costly		src/game/menu/menu_list.cpp:2870	BOF3_INJECT
-switch	BattleWin_EnemyGaugeOpen	detour	costly		src/game/menu/menu_list.cpp:2869	BOF3_INJECT
-switch	BattleWin_EnemyGaugeStates	detour	costly		src/game/menu/menu_list.cpp:2868	BOF3_INJECT
-switch	BattleWin_EnemyTargetFrame	detour	costly		src/game/menu/menu_list.cpp:2871	BOF3_INJECT
-switch	BattleWin_FirstOfKind	detour	costly		src/game/battle/battle_3.cpp:2451	BOF3_INJECT
-switch	BattleWin_LabelFrame	detour	costly		src/game/menu/menu_list.cpp:2865	BOF3_INJECT
-switch	BattleWin_LabelStates	detour	costly		src/game/menu/menu_list.cpp:2864	BOF3_INJECT
-switch	BattleWin_MemberGaugeOpen	detour	costly		src/game/menu/menu_list.cpp:2873	BOF3_INJECT
-switch	BattleWin_MemberGaugeStates	detour	costly		src/game/menu/menu_list.cpp:2872	BOF3_INJECT
-switch	BattleWin_MemberGaugeWait	detour	costly		src/game/menu/menu_list.cpp:2874	BOF3_INJECT
-switch	BattleWin_MemberTargetFrame	detour	costly		src/game/menu/menu_list.cpp:2875	BOF3_INJECT
-switch	BattleWin_MessageRun	detour	costly		src/game/menu/menu_list.cpp:2885	BOF3_INJECT
-switch	BattleWin_MessageShow	detour	costly		src/game/menu/menu_list.cpp:2888	BOF3_INJECT
-switch	BattleWin_MessageSlideIn	detour	costly		src/game/menu/menu_list.cpp:2887	BOF3_INJECT
-switch	BattleWin_MessageSlideOut	detour	costly		src/game/menu/menu_list.cpp:2889	BOF3_INJECT
-switch	BattleWin_MessageWait	detour	costly		src/game/menu/menu_list.cpp:2886	BOF3_INJECT
-switch	BattleWin_OpenStatus	detour	costly		src/game/battle/battle_3.cpp:2433	BOF3_INJECT
-switch	BattleWin_OpenSub1	detour	costly		src/game/battle/battle_3.cpp:2434	BOF3_INJECT
-switch	BattleWin_OpenSub2	detour	costly		src/game/battle/battle_3.cpp:2435	BOF3_INJECT
-switch	BattleWin_OpenSub3	detour	costly		src/game/battle/battle_3.cpp:2436	BOF3_INJECT
-switch	BattleWin_PartyRowDraw	detour	costly		src/game/menu/menu_list.cpp:2860	BOF3_INJECT
-switch	BattleWin_PartyRowSlideIn	detour	costly		src/game/menu/menu_list.cpp:2859	BOF3_INJECT
-switch	BattleWin_PartyRowStates	detour	costly		src/game/menu/menu_list.cpp:2858	BOF3_INJECT
-switch	BattleWin_Run	detour	costly		src/game/menu/menu_list.cpp:2857	BOF3_INJECT
+switch	BattleWin_BannerFrame	detour	costly		src/game/menu/menu_list.cpp:2866	BOF3_INJECT
+switch	BattleWin_BannerRun	detour	costly		src/game/menu/menu_list.cpp:2881	BOF3_INJECT
+switch	BattleWin_BannerSlideIn	detour	costly		src/game/menu/menu_list.cpp:2882	BOF3_INJECT
+switch	BattleWin_BannerSlideOut	detour	costly		src/game/menu/menu_list.cpp:2883	BOF3_INJECT
+switch	BattleWin_BannerStates	detour	costly		src/game/menu/menu_list.cpp:2865	BOF3_INJECT
+switch	BattleWin_CrossFrame	detour	costly		src/game/menu/menu_list.cpp:2862	BOF3_INJECT
+switch	BattleWin_CrossGrow	detour	costly		src/game/menu/menu_list.cpp:2861	BOF3_INJECT
+switch	BattleWin_CrossStates	detour	costly		src/game/menu/menu_list.cpp:2860	BOF3_INJECT
+switch	BattleWin_DimScreen	detour	costly		src/game/battle/battle_3.cpp:2446	BOF3_INJECT
+switch	BattleWin_DrawBar	detour	costly		src/game/battle/battle_3.cpp:2451	BOF3_INJECT
+switch	BattleWin_DrawCell16	detour	costly		src/game/battle/battle_3.cpp:2452	BOF3_INJECT
+switch	BattleWin_DrawCommandCross	detour	costly		src/game/battle/battle_3.cpp:2429	BOF3_INJECT
+switch	BattleWin_DrawCommandIcon	detour	costly		src/game/battle/battle_3.cpp:2430	BOF3_INJECT
+switch	BattleWin_DrawCommandLabel	detour	costly		src/game/battle/battle_3.cpp:2434	BOF3_INJECT
+switch	BattleWin_DrawEnemyStatus	detour	costly		src/game/battle/battle_3.cpp:2436	BOF3_INJECT
+switch	BattleWin_DrawLine	detour	costly		src/game/battle/battle_3.cpp:2453	BOF3_INJECT
+switch	BattleWin_DrawLineAdd	detour	costly		src/game/battle/battle_3.cpp:2455	BOF3_INJECT
+switch	BattleWin_DrawLineHalf	detour	costly		src/game/battle/battle_3.cpp:2454	BOF3_INJECT
+switch	BattleWin_DrawMediumBox	detour	costly		src/game/battle/battle_3.cpp:2433	BOF3_INJECT
+switch	BattleWin_DrawMessage	detour	costly		src/game/menu/menu_list.cpp:2889	BOF3_INJECT
+switch	BattleWin_DrawMessageBox	detour	costly		src/game/battle/battle_3.cpp:2431	BOF3_INJECT
+switch	BattleWin_DrawNumber	detour	costly		src/game/battle/battle_3.cpp:2443	BOF3_INJECT
+switch	BattleWin_DrawPartyStatus	detour	costly		src/game/battle/battle_3.cpp:2428	BOF3_INJECT
+switch	BattleWin_DrawQuadF4	detour	costly		src/game/battle/battle_3.cpp:2448	BOF3_INJECT
+switch	BattleWin_DrawSmallBox	detour	costly		src/game/battle/battle_3.cpp:2432	BOF3_INJECT
+switch	BattleWin_DrawTargetEnemy	detour	costly		src/game/battle/battle_3.cpp:2435	BOF3_INJECT
+switch	BattleWin_DrawTargetMember	detour	costly		src/game/battle/battle_3.cpp:2437	BOF3_INJECT
+switch	BattleWin_DrawTile	detour	costly		src/game/battle/battle_3.cpp:2449	BOF3_INJECT
+switch	BattleWin_DrawTileRgb	detour	costly		src/game/battle/battle_3.cpp:2450	BOF3_INJECT
+switch	BattleWin_DrawTileTint	detour	costly		src/game/battle/battle_3.cpp:2447	BOF3_INJECT
+switch	BattleWin_EnemyGaugeFrame	detour	costly		src/game/menu/menu_list.cpp:2869	BOF3_INJECT
+switch	BattleWin_EnemyGaugeOpen	detour	costly		src/game/menu/menu_list.cpp:2868	BOF3_INJECT
+switch	BattleWin_EnemyGaugeStates	detour	costly		src/game/menu/menu_list.cpp:2867	BOF3_INJECT
+switch	BattleWin_EnemyTargetFrame	detour	costly		src/game/menu/menu_list.cpp:2870	BOF3_INJECT
+switch	BattleWin_FirstOfKind	detour	costly		src/game/battle/battle_3.cpp:2456	BOF3_INJECT
+switch	BattleWin_LabelFrame	detour	costly		src/game/menu/menu_list.cpp:2864	BOF3_INJECT
+switch	BattleWin_LabelStates	detour	costly		src/game/menu/menu_list.cpp:2863	BOF3_INJECT
+switch	BattleWin_MemberGaugeOpen	detour	costly		src/game/menu/menu_list.cpp:2872	BOF3_INJECT
+switch	BattleWin_MemberGaugeStates	detour	costly		src/game/menu/menu_list.cpp:2871	BOF3_INJECT
+switch	BattleWin_MemberGaugeWait	detour	costly		src/game/menu/menu_list.cpp:2873	BOF3_INJECT
+switch	BattleWin_MemberTargetFrame	detour	costly		src/game/menu/menu_list.cpp:2874	BOF3_INJECT
+switch	BattleWin_MessageRun	detour	costly		src/game/menu/menu_list.cpp:2884	BOF3_INJECT
+switch	BattleWin_MessageShow	detour	costly		src/game/menu/menu_list.cpp:2887	BOF3_INJECT
+switch	BattleWin_MessageSlideIn	detour	costly		src/game/menu/menu_list.cpp:2886	BOF3_INJECT
+switch	BattleWin_MessageSlideOut	detour	costly		src/game/menu/menu_list.cpp:2888	BOF3_INJECT
+switch	BattleWin_MessageWait	detour	costly		src/game/menu/menu_list.cpp:2885	BOF3_INJECT
+switch	BattleWin_OpenStatus	detour	costly		src/game/battle/battle_3.cpp:2438	BOF3_INJECT
+switch	BattleWin_OpenSub1	detour	costly		src/game/battle/battle_3.cpp:2439	BOF3_INJECT
+switch	BattleWin_OpenSub2	detour	costly		src/game/battle/battle_3.cpp:2440	BOF3_INJECT
+switch	BattleWin_OpenSub3	detour	costly		src/game/battle/battle_3.cpp:2441	BOF3_INJECT
+switch	BattleWin_PartyRowDraw	detour	costly		src/game/menu/menu_list.cpp:2859	BOF3_INJECT
+switch	BattleWin_PartyRowSlideIn	detour	costly		src/game/menu/menu_list.cpp:2858	BOF3_INJECT
+switch	BattleWin_PartyRowStates	detour	costly		src/game/menu/menu_list.cpp:2857	BOF3_INJECT
+switch	BattleWin_Run	detour	costly		src/game/menu/menu_list.cpp:2856	BOF3_INJECT
 switch	Benediction_DrawHalo	detour	costly		src/game/magic/benediction_child.cpp:562	BOF3_INJECT
 switch	Benediction_Spawn	detour	costly		src/game/magic/benediction_child.cpp:560	BOF3_INJECT
 switch	Benediction_Start	detour	costly		src/game/magic/benediction_child.cpp:559	BOF3_INJECT
@@ -2909,12 +2909,12 @@ switch	BurnFlame_Start	detour	costly		src/game/magic/burn.cpp:479	BOF3_INJECT
 switch	BurnFlame_Task	detour	costly		src/game/magic/burn.cpp:478	BOF3_INJECT
 switch	ButtonSigma	code	yes		src/input/sigma.cpp:526	PatchBytes
 switch	ButtonText	code	yes		src/game/text/text_draw.cpp:532	PatchBytes
-switch	Camera_EaseAngleFB	detour	costly		src/game/field/event_cond.cpp:1206	BOF3_INJECT
-switch	Camera_LoadMatrix	detour	costly		src/game/field/event_cond.cpp:1175	BOF3_INJECT
-switch	Camera_TurnFBToDegrees	detour	costly		src/game/field/event_cond.cpp:1204	BOF3_INJECT
-switch	Camera_TurnStep	detour	costly		src/game/field/event_cond.cpp:1203	BOF3_INJECT
-switch	Camera_TurnStepFB	detour	costly		src/game/field/event_cond.cpp:1205	BOF3_INJECT
-switch	Camera_TurnToDegrees	detour	costly		src/game/field/event_cond.cpp:1202	BOF3_INJECT
+switch	Camera_EaseAngleFB	detour	costly		src/game/field/event_cond.cpp:1235	BOF3_INJECT
+switch	Camera_LoadMatrix	detour	costly		src/game/field/event_cond.cpp:1204	BOF3_INJECT
+switch	Camera_TurnFBToDegrees	detour	costly		src/game/field/event_cond.cpp:1233	BOF3_INJECT
+switch	Camera_TurnStep	detour	costly		src/game/field/event_cond.cpp:1232	BOF3_INJECT
+switch	Camera_TurnStepFB	detour	costly		src/game/field/event_cond.cpp:1234	BOF3_INJECT
+switch	Camera_TurnToDegrees	detour	costly		src/game/field/event_cond.cpp:1231	BOF3_INJECT
 switch	CameraTurn_End	detour	costly		src/game/effect/effect_kind_06.cpp:596	BOF3_INJECT
 switch	CameraTurn_Start	detour	costly		src/game/effect/effect_kind_06.cpp:594	BOF3_INJECT
 switch	CameraTurn_Step	detour	costly		src/game/effect/effect_kind_06.cpp:595	BOF3_INJECT
@@ -2922,7 +2922,7 @@ switch	CameraZoom_End	detour	costly		src/game/effect/effect_kind_06.cpp:582	BOF3
 switch	CameraZoom_Start	detour	costly		src/game/effect/effect_kind_06.cpp:580	BOF3_INJECT
 switch	CameraZoom_Step	detour	costly		src/game/effect/effect_kind_06.cpp:581	BOF3_INJECT
 switch	CampMasters	behaviour	yes		src/game/field/field_7.cpp:713 src/game/field/field_7.cpp:717 src/game/field/field_7.cpp:807 src/game/field/field_7.cpp:861 src/game/field/field_7.cpp:965 src/game/field/field_7.cpp:977 src/game/shop/shop_browse.cpp:208	BehaviourOn
-switch	CapcomMovieOnly	code	yes		src/game/platform/win_main.cpp:228	PatchBytes
+switch	CapcomMovieOnly	code	yes		src/game/platform/win_main.cpp:225	PatchBytes
 switch	Celerity_Apply	detour	costly		src/game/magic/celerity_spark.cpp:726	BOF3_INJECT
 switch	Celerity_ApplyStat	detour	costly		src/game/magic/celerity_spark.cpp:728	BOF3_INJECT
 switch	Celerity_End	detour	costly		src/game/magic/celerity_spark.cpp:727	BOF3_INJECT
@@ -2944,9 +2944,9 @@ switch	Cell_Unpack4Flip	detour	costly		src/game/platform/cell.cpp:127	BOF3_INJEC
 switch	Cell_Unpack8	detour	costly		src/game/platform/cell.cpp:126	BOF3_INJECT
 switch	Cell_Unpack8Flip	detour	costly		src/game/platform/cell.cpp:128	BOF3_INJECT
 switch	CellTextureVram	code	yes		src/game/platform/d3d_draw.cpp:145	PatchBytes
-switch	Cfg_Load	detour	costly		src/game/platform/magic_080.cpp:1267	BOF3_INJECT
-switch	Cfg_SetDefaultKeys	detour	costly		src/game/platform/cfg.cpp:71	BOF3_INJECT
-switch	Cfg_SetKeyTable	detour	costly		src/game/platform/cfg.cpp:70	BOF3_INJECT
+switch	Cfg_Load	detour	costly		src/game/platform/magic_080.cpp:1126	BOF3_INJECT
+switch	Cfg_SetDefaultKeys	detour	costly		src/game/platform/cfg.cpp:70	BOF3_INJECT
+switch	Cfg_SetKeyTable	detour	costly		src/game/platform/cfg.cpp:69	BOF3_INJECT
 switch	CfgOwnKeyTable	code	yes		src/game/platform/shell.cpp:159	PatchBytes
 switch	Char_AbilityList	detour	costly		src/game/menu/char.cpp:1133	BOF3_INJECT
 switch	Char_ApplyAccessories	detour	costly		src/game/menu/char.cpp:1114	BOF3_INJECT
@@ -2974,7 +2974,7 @@ switch	ChargeImage_Wait	detour	costly		src/game/magic/kick_image.cpp:907	BOF3_IN
 switch	ChargeTrail_Dash	detour	costly		src/game/magic/kick_image.cpp:912	BOF3_INJECT
 switch	ChargeTrail_Run	detour	costly		src/game/magic/kick_image.cpp:910	BOF3_INJECT
 switch	ChargeTrail_Start	detour	costly		src/game/magic/kick_image.cpp:911	BOF3_INJECT
-switch	CharId_ToRosterIndex	detour	costly		src/game/battle/battle_3.cpp:2482	BOF3_INJECT
+switch	CharId_ToRosterIndex	detour	costly		src/game/battle/battle_3.cpp:2487	BOF3_INJECT
 switch	Charm_PoolAlloc	detour	costly		src/game/magic/charm_mote.cpp:438	BOF3_INJECT
 switch	Charm_Start	detour	costly		src/game/magic/charm_mote.cpp:430	BOF3_INJECT
 switch	Charm_Task	detour	costly		src/game/magic/charm_mote.cpp:429	BOF3_INJECT
@@ -3019,9 +3019,9 @@ switch	ChlorineCopy_Wait	detour	costly		src/game/magic/chlorine.cpp:368	BOF3_INJ
 switch	ChoiceMenu_DataPage	detour	costly		src/game/field/leader_panel.cpp:3461	BOF3_INJECT
 switch	ChoiceMenu_RulePage	detour	costly		src/game/field/leader_panel.cpp:3462	BOF3_INJECT
 switch	ChoiceMenu_Run	detour	costly		src/game/field/leader_panel.cpp:3456	BOF3_INJECT
-switch	ClutMap_FindFree	detour	costly		src/game/field/field_2.cpp:604	BOF3_INJECT
-switch	ClutMap_FindOwner	detour	costly		src/game/field/field_2.cpp:605	BOF3_INJECT
-switch	ClutMap_Mark	detour	costly		src/game/field/field_2.cpp:603	BOF3_INJECT
+switch	ClutMap_FindFree	detour	costly		src/game/field/field_2.cpp:603	BOF3_INJECT
+switch	ClutMap_FindOwner	detour	costly		src/game/field/field_2.cpp:604	BOF3_INJECT
+switch	ClutMap_Mark	detour	costly		src/game/field/field_2.cpp:602	BOF3_INJECT
 switch	ClutStrip_FadeTo	detour	costly		src/game/scenario/scena_16_2.cpp:651	BOF3_INJECT
 switch	ClutStrip_Restore	detour	costly		src/game/scenario/clut_strip.cpp:29	BOF3_INJECT
 switch	Cmd_AutoBattle	detour	costly		src/game/battle/battle_action.cpp:2316	BOF3_INJECT
@@ -3362,24 +3362,24 @@ switch	CounterMark_Place	detour	costly		src/game/battle/counter_mark.cpp:399	BOF
 switch	CounterMark_Run	detour	costly		src/game/battle/counter_mark.cpp:393	BOF3_INJECT
 switch	CounterMark_Start	detour	costly		src/game/battle/counter_mark.cpp:394	BOF3_INJECT
 switch	CounterMark_Swell	detour	costly		src/game/battle/counter_mark.cpp:397	BOF3_INJECT
-switch	Crt_atoi	detour	costly		src/game/crt_rest.cpp:465	BOF3_INJECT
-switch	Crt_calloc	detour	costly		src/game/crt_rest.cpp:468	BOF3_INJECT
-switch	Crt_fclose	detour	costly		src/game/crt_rest.cpp:474	BOF3_INJECT
-switch	Crt_fgets	detour	costly		src/game/crt_rest.cpp:480	BOF3_INJECT
-switch	Crt_filelength	detour	costly		src/game/crt_rest.cpp:479	BOF3_INJECT
-switch	Crt_fileno	detour	costly		src/game/crt_rest.cpp:478	BOF3_INJECT
-switch	Crt_findfirst	detour	costly		src/game/crt_rest.cpp:471	BOF3_INJECT
-switch	Crt_findnext	detour	costly		src/game/crt_rest.cpp:472	BOF3_INJECT
-switch	Crt_fopen	detour	costly		src/game/crt_rest.cpp:473	BOF3_INJECT
-switch	Crt_fread	detour	costly		src/game/crt_rest.cpp:475	BOF3_INJECT
-switch	Crt_free	detour	costly		src/game/crt_rest.cpp:469	BOF3_INJECT
-switch	Crt_fseek	detour	costly		src/game/crt_rest.cpp:477	BOF3_INJECT
-switch	Crt_fwrite	detour	costly		src/game/crt_rest.cpp:476	BOF3_INJECT
-switch	Crt_malloc	detour	costly		src/game/crt_rest.cpp:467	BOF3_INJECT
-switch	Crt_sprintf	detour	costly		src/game/crt_rest.cpp:463	BOF3_INJECT
-switch	Crt_sscanf	detour	costly		src/game/crt_rest.cpp:466	BOF3_INJECT
-switch	Crt_stricmp	detour	costly		src/game/crt_rest.cpp:470	BOF3_INJECT
-switch	Crt_strncpy	detour	costly		src/game/crt_rest.cpp:464	BOF3_INJECT
+switch	Crt_atoi	detour	costly		src/game/crt_rest.cpp:549	BOF3_INJECT
+switch	Crt_calloc	detour	costly		src/game/crt_rest.cpp:552	BOF3_INJECT
+switch	Crt_fclose	detour	costly		src/game/crt_rest.cpp:558	BOF3_INJECT
+switch	Crt_fgets	detour	costly		src/game/crt_rest.cpp:564	BOF3_INJECT
+switch	Crt_filelength	detour	costly		src/game/crt_rest.cpp:563	BOF3_INJECT
+switch	Crt_fileno	detour	costly		src/game/crt_rest.cpp:562	BOF3_INJECT
+switch	Crt_findfirst	detour	costly		src/game/crt_rest.cpp:555	BOF3_INJECT
+switch	Crt_findnext	detour	costly		src/game/crt_rest.cpp:556	BOF3_INJECT
+switch	Crt_fopen	detour	costly		src/game/crt_rest.cpp:557	BOF3_INJECT
+switch	Crt_fread	detour	costly		src/game/crt_rest.cpp:559	BOF3_INJECT
+switch	Crt_free	detour	costly		src/game/crt_rest.cpp:553	BOF3_INJECT
+switch	Crt_fseek	detour	costly		src/game/crt_rest.cpp:561	BOF3_INJECT
+switch	Crt_fwrite	detour	costly		src/game/crt_rest.cpp:560	BOF3_INJECT
+switch	Crt_malloc	detour	costly		src/game/crt_rest.cpp:551	BOF3_INJECT
+switch	Crt_sprintf	detour	costly		src/game/crt_rest.cpp:547	BOF3_INJECT
+switch	Crt_sscanf	detour	costly		src/game/crt_rest.cpp:550	BOF3_INJECT
+switch	Crt_stricmp	detour	costly		src/game/crt_rest.cpp:554	BOF3_INJECT
+switch	Crt_strncpy	detour	costly		src/game/crt_rest.cpp:548	BOF3_INJECT
 switch	Cure_Start	detour	costly		src/game/magic/cure_mote.cpp:484	BOF3_INJECT
 switch	Cure_Task	detour	costly		src/game/magic/cure_mote.cpp:483	BOF3_INJECT
 switch	CureMote_Alloc	detour	costly		src/game/magic/cure_mote.cpp:493	BOF3_INJECT
@@ -3392,70 +3392,70 @@ switch	CureMote_Rise	detour	costly		src/game/magic/cure_mote.cpp:488	BOF3_INJECT
 switch	CureMote_Run	detour	costly		src/game/magic/cure_mote.cpp:486	BOF3_INJECT
 switch	CureMote_Task	detour	costly		src/game/magic/cure_mote.cpp:485	BOF3_INJECT
 switch	CureMote_Wait	detour	costly		src/game/magic/cure_mote.cpp:487	BOF3_INJECT
-switch	Cursor_Sync	detour	costly		src/game/platform/magic_080.cpp:1265	BOF3_INJECT
+switch	Cursor_Sync	detour	costly		src/game/platform/magic_080.cpp:1124	BOF3_INJECT
 switch	Cyclone_Start	detour	costly		src/game/magic/fx_funnel.cpp:500	BOF3_INJECT
 switch	Cyclone_Task	detour	costly		src/game/magic/fx_funnel.cpp:499	BOF3_INJECT
 switch	Cyclone_Wait	detour	costly		src/game/magic/fx_funnel.cpp:501	BOF3_INJECT
-switch	D3d_AfterDraw	detour	costly		src/game/platform/d3d.cpp:3932	BOF3_INJECT
-switch	D3d_BindTexture	detour	costly		src/game/platform/d3d.cpp:3942	BOF3_INJECT
-switch	D3d_BuildCellTexture	detour	costly		src/game/platform/d3d.cpp:3972	BOF3_INJECT
-switch	D3d_BuildPageTexture	detour	costly		src/game/platform/d3d.cpp:3943	BOF3_INJECT
-switch	D3d_CellTexture	detour	costly		src/game/platform/d3d.cpp:3971	BOF3_INJECT
-switch	D3d_DrawCellSprite	detour	costly		src/game/platform/d3d.cpp:3970	BOF3_INJECT
-switch	D3d_DrawGlyph	detour	costly		src/game/platform/d3d.cpp:3966	BOF3_INJECT
-switch	D3d_DrawLineF2	detour	costly		src/game/platform/d3d.cpp:3955	BOF3_INJECT
-switch	D3d_DrawLineF3	detour	costly		src/game/platform/d3d.cpp:3957	BOF3_INJECT
-switch	D3d_DrawLineF4	detour	costly		src/game/platform/d3d.cpp:3959	BOF3_INJECT
-switch	D3d_DrawLineG2	detour	costly		src/game/platform/d3d.cpp:3956	BOF3_INJECT
-switch	D3d_DrawLineG3	detour	costly		src/game/platform/d3d.cpp:3958	BOF3_INJECT
-switch	D3d_DrawLineG4	detour	costly		src/game/platform/d3d.cpp:3960	BOF3_INJECT
-switch	D3d_DrawPolyF3	detour	costly		src/game/platform/d3d.cpp:3937	BOF3_INJECT
-switch	D3d_DrawPolyF4	detour	costly		src/game/platform/d3d.cpp:3949	BOF3_INJECT
-switch	D3d_DrawPolyFT3	detour	costly		src/game/platform/d3d.cpp:3941	BOF3_INJECT
-switch	D3d_DrawPolyFT4	detour	costly		src/game/platform/d3d.cpp:3950	BOF3_INJECT
-switch	D3d_DrawPolyG3	detour	costly		src/game/platform/d3d.cpp:3951	BOF3_INJECT
-switch	D3d_DrawPolyG4	detour	costly		src/game/platform/d3d.cpp:3953	BOF3_INJECT
-switch	D3d_DrawPolyGT3	detour	costly		src/game/platform/d3d.cpp:3952	BOF3_INJECT
-switch	D3d_DrawPolyGT4	detour	costly		src/game/platform/d3d.cpp:3954	BOF3_INJECT
-switch	D3d_DrawSprt	detour	costly		src/game/platform/d3d.cpp:3963	BOF3_INJECT
-switch	D3d_DrawSprt16	detour	costly		src/game/platform/d3d.cpp:3965	BOF3_INJECT
-switch	D3d_DrawSprt8	detour	costly		src/game/platform/d3d.cpp:3964	BOF3_INJECT
-switch	D3d_DrawTile	detour	costly		src/game/platform/d3d.cpp:3961	BOF3_INJECT
-switch	D3d_DrawTile1	detour	costly		src/game/platform/d3d.cpp:3962	BOF3_INJECT
-switch	D3d_FitTextureSize	detour	costly		src/game/platform/d3d.cpp:3936	BOF3_INJECT
-switch	D3d_FlattenFT3	detour	costly		src/game/platform/d3d.cpp:3947	BOF3_INJECT
-switch	D3d_FreeCellTexture	detour	costly		src/game/platform/d3d.cpp:3973	BOF3_INJECT
-switch	D3d_FreeCellTextures	detour	costly		src/game/platform/d3d.cpp:3988	BOF3_INJECT
-switch	D3d_PageTexel4	detour	costly		src/game/platform/d3d.cpp:3948	BOF3_INJECT
-switch	D3d_PrimColor	detour	costly		src/game/platform/d3d.cpp:3938	BOF3_INJECT
-switch	D3d_RefreshCellTexture	detour	costly		src/game/platform/d3d.cpp:3974	BOF3_INJECT
-switch	D3d_RefreshPageTexture	detour	costly		src/game/platform/d3d.cpp:3945	BOF3_INJECT
-switch	D3d_ReleaseAfterDraw	detour	costly		src/game/platform/d3d.cpp:3984	BOF3_INJECT
-switch	D3d_SetAlphaModulate	detour	costly		src/game/platform/d3d.cpp:3931	BOF3_INJECT
-switch	D3d_SetBackColor	detour	costly		src/game/platform/d3d.cpp:3975	BOF3_INJECT
-switch	D3d_SetBlend	detour	costly		src/game/platform/d3d.cpp:3939	BOF3_INJECT
-switch	D3d_SetShadeMode	detour	costly		src/game/platform/d3d.cpp:3940	BOF3_INJECT
-switch	Dd_ClearSurface	detour	costly		src/game/platform/d3d.cpp:3969	BOF3_INJECT
-switch	Dd_CreatePlainSurface	detour	costly		src/game/platform/d3d.cpp:3934	BOF3_INJECT
-switch	Dd_CreateTextureSurface	detour	costly		src/game/platform/d3d.cpp:3935	BOF3_INJECT
-switch	Dd_InitSurfaceDesc	detour	costly		src/game/platform/d3d.cpp:3933	BOF3_INJECT
+switch	D3d_AfterDraw	detour	costly		src/game/platform/d3d.cpp:3934	BOF3_INJECT
+switch	D3d_BindTexture	detour	costly		src/game/platform/d3d.cpp:3944	BOF3_INJECT
+switch	D3d_BuildCellTexture	detour	costly		src/game/platform/d3d.cpp:3974	BOF3_INJECT
+switch	D3d_BuildPageTexture	detour	costly		src/game/platform/d3d.cpp:3945	BOF3_INJECT
+switch	D3d_CellTexture	detour	costly		src/game/platform/d3d.cpp:3973	BOF3_INJECT
+switch	D3d_DrawCellSprite	detour	costly		src/game/platform/d3d.cpp:3972	BOF3_INJECT
+switch	D3d_DrawGlyph	detour	costly		src/game/platform/d3d.cpp:3968	BOF3_INJECT
+switch	D3d_DrawLineF2	detour	costly		src/game/platform/d3d.cpp:3957	BOF3_INJECT
+switch	D3d_DrawLineF3	detour	costly		src/game/platform/d3d.cpp:3959	BOF3_INJECT
+switch	D3d_DrawLineF4	detour	costly		src/game/platform/d3d.cpp:3961	BOF3_INJECT
+switch	D3d_DrawLineG2	detour	costly		src/game/platform/d3d.cpp:3958	BOF3_INJECT
+switch	D3d_DrawLineG3	detour	costly		src/game/platform/d3d.cpp:3960	BOF3_INJECT
+switch	D3d_DrawLineG4	detour	costly		src/game/platform/d3d.cpp:3962	BOF3_INJECT
+switch	D3d_DrawPolyF3	detour	costly		src/game/platform/d3d.cpp:3939	BOF3_INJECT
+switch	D3d_DrawPolyF4	detour	costly		src/game/platform/d3d.cpp:3951	BOF3_INJECT
+switch	D3d_DrawPolyFT3	detour	costly		src/game/platform/d3d.cpp:3943	BOF3_INJECT
+switch	D3d_DrawPolyFT4	detour	costly		src/game/platform/d3d.cpp:3952	BOF3_INJECT
+switch	D3d_DrawPolyG3	detour	costly		src/game/platform/d3d.cpp:3953	BOF3_INJECT
+switch	D3d_DrawPolyG4	detour	costly		src/game/platform/d3d.cpp:3955	BOF3_INJECT
+switch	D3d_DrawPolyGT3	detour	costly		src/game/platform/d3d.cpp:3954	BOF3_INJECT
+switch	D3d_DrawPolyGT4	detour	costly		src/game/platform/d3d.cpp:3956	BOF3_INJECT
+switch	D3d_DrawSprt	detour	costly		src/game/platform/d3d.cpp:3965	BOF3_INJECT
+switch	D3d_DrawSprt16	detour	costly		src/game/platform/d3d.cpp:3967	BOF3_INJECT
+switch	D3d_DrawSprt8	detour	costly		src/game/platform/d3d.cpp:3966	BOF3_INJECT
+switch	D3d_DrawTile	detour	costly		src/game/platform/d3d.cpp:3963	BOF3_INJECT
+switch	D3d_DrawTile1	detour	costly		src/game/platform/d3d.cpp:3964	BOF3_INJECT
+switch	D3d_FitTextureSize	detour	costly		src/game/platform/d3d.cpp:3938	BOF3_INJECT
+switch	D3d_FlattenFT3	detour	costly		src/game/platform/d3d.cpp:3949	BOF3_INJECT
+switch	D3d_FreeCellTexture	detour	costly		src/game/platform/d3d.cpp:3975	BOF3_INJECT
+switch	D3d_FreeCellTextures	detour	costly		src/game/platform/d3d.cpp:3990	BOF3_INJECT
+switch	D3d_PageTexel4	detour	costly		src/game/platform/d3d.cpp:3950	BOF3_INJECT
+switch	D3d_PrimColor	detour	costly		src/game/platform/d3d.cpp:3940	BOF3_INJECT
+switch	D3d_RefreshCellTexture	detour	costly		src/game/platform/d3d.cpp:3976	BOF3_INJECT
+switch	D3d_RefreshPageTexture	detour	costly		src/game/platform/d3d.cpp:3947	BOF3_INJECT
+switch	D3d_ReleaseAfterDraw	detour	costly		src/game/platform/d3d.cpp:3986	BOF3_INJECT
+switch	D3d_SetAlphaModulate	detour	costly		src/game/platform/d3d.cpp:3933	BOF3_INJECT
+switch	D3d_SetBackColor	detour	costly		src/game/platform/d3d.cpp:3977	BOF3_INJECT
+switch	D3d_SetBlend	detour	costly		src/game/platform/d3d.cpp:3941	BOF3_INJECT
+switch	D3d_SetShadeMode	detour	costly		src/game/platform/d3d.cpp:3942	BOF3_INJECT
+switch	Dd_ClearSurface	detour	costly		src/game/platform/d3d.cpp:3971	BOF3_INJECT
+switch	Dd_CreatePlainSurface	detour	costly		src/game/platform/d3d.cpp:3936	BOF3_INJECT
+switch	Dd_CreateTextureSurface	detour	costly		src/game/platform/d3d.cpp:3937	BOF3_INJECT
+switch	Dd_InitSurfaceDesc	detour	costly		src/game/platform/d3d.cpp:3935	BOF3_INJECT
 switch	DemoSkipButtons	behaviour	yes		src/game/core/title.cpp:1869	BehaviourOn
 switch	DesertDirections	code	yes		src/game/battle/dat_load.cpp:920	PatchBytes
 switch	DiagonalIdentity	code	yes		src/game/effect/effect_gte.cpp:222	PatchBytes
 switch	DialTranslucent	code	yes		src/game/area/world_map_ours.cpp:432	PatchBytes
-switch	DInput_EnumJoystick	detour	costly		src/game/platform/d_input.cpp:267	BOF3_INJECT
-switch	DInput_Init	detour	costly		src/game/platform/d_input.cpp:266	BOF3_INJECT
-switch	DInput_Shutdown	detour	costly		src/game/platform/d_input.cpp:268	BOF3_INJECT
+switch	DInput_EnumJoystick	detour	costly		src/game/platform/d_input.cpp:454	BOF3_INJECT
+switch	DInput_Init	detour	costly		src/game/platform/d_input.cpp:453	BOF3_INJECT
+switch	DInput_Shutdown	detour	costly		src/game/platform/d_input.cpp:455	BOF3_INJECT
 switch	DirectOpaque	code	yes		src/game/text/tex.cpp:278	PatchBytes
 switch	Disc_Probe	detour	costly		src/game/platform/file.cpp:169	BOF3_INJECT
-switch	Display_DeviceName	detour	costly		src/game/platform/d3d.cpp:3985	BOF3_INJECT
-switch	Display_ErrorBox	detour	costly		src/game/platform/d3d.cpp:3987	BOF3_INJECT
-switch	Display_ReleaseBackdrop	detour	costly		src/game/platform/d3d.cpp:3983	BOF3_INJECT
-switch	Display_ReleaseOrphans	detour	costly		src/game/platform/d3d.cpp:3982	BOF3_INJECT
-switch	Display_Setup	detour	costly		src/game/platform/d3d.cpp:3977	BOF3_INJECT
-switch	Display_Teardown	detour	costly		src/game/platform/d3d.cpp:3978	BOF3_INJECT
-switch	Display_TextOut	detour	costly		src/game/platform/d3d.cpp:3986	BOF3_INJECT
-switch	Display_WindowMoved	detour	costly		src/game/platform/d3d.cpp:3976	BOF3_INJECT
+switch	Display_DeviceName	detour	costly		src/game/platform/d3d.cpp:3987	BOF3_INJECT
+switch	Display_ErrorBox	detour	costly		src/game/platform/d3d.cpp:3989	BOF3_INJECT
+switch	Display_ReleaseBackdrop	detour	costly		src/game/platform/d3d.cpp:3985	BOF3_INJECT
+switch	Display_ReleaseOrphans	detour	costly		src/game/platform/d3d.cpp:3984	BOF3_INJECT
+switch	Display_Setup	detour	costly		src/game/platform/d3d.cpp:3979	BOF3_INJECT
+switch	Display_Teardown	detour	costly		src/game/platform/d3d.cpp:3980	BOF3_INJECT
+switch	Display_TextOut	detour	costly		src/game/platform/d3d.cpp:3988	BOF3_INJECT
+switch	Display_WindowMoved	detour	costly		src/game/platform/d3d.cpp:3978	BOF3_INJECT
 switch	DivineBeam_Descend	detour	costly		src/game/magic/breath_mote.cpp:1631	BOF3_INJECT
 switch	DivineBeam_DrawDisc	detour	costly		src/game/magic/breath_mote.cpp:1633	BOF3_INJECT
 switch	DivineBeam_DrawWall	detour	costly		src/game/magic/breath_mote.cpp:1634	BOF3_INJECT
@@ -3713,8 +3713,8 @@ switch	Effect_RollStatStepQuiet	detour	costly		src/game/battle/dragon_cmd.cpp:30
 switch	Effect_RunObjects	detour	costly		src/game/effect/effect_gte.cpp:235	BOF3_INJECT
 switch	Effect_SkillDamage	detour	costly		src/game/effect/effect.cpp:2609	BOF3_INJECT
 switch	Effect_SkillDamageLessDef	detour	costly		src/game/effect/effect.cpp:2583	BOF3_INJECT
-switch	Effect_Spawn	detour	costly		src/game/field/event_cond.cpp:1221	BOF3_INJECT
-switch	Effect_SpawnAt	detour	costly		src/game/field/event_cond.cpp:1222	BOF3_INJECT
+switch	Effect_Spawn	detour	costly		src/game/field/event_cond.cpp:1250	BOF3_INJECT
+switch	Effect_SpawnAt	detour	costly		src/game/field/event_cond.cpp:1251	BOF3_INJECT
 switch	Effect_SpawnAtCell	detour	costly		src/game/field/party_action.cpp:3987	BOF3_INJECT
 switch	Effect_SpawnAtCellHigh	detour	costly		src/game/field/party_action.cpp:3941	BOF3_INJECT
 switch	Effect_StateNext	detour	costly		src/game/effect/effect_kind_ae.cpp:722	BOF3_INJECT
@@ -3924,7 +3924,7 @@ switch	EffectKind17_Settle	detour	costly		src/game/effect/effect_kind_17.cpp:775
 switch	EffectKind17_Slide	detour	costly		src/game/effect/effect_kind_17.cpp:774	BOF3_INJECT
 switch	EffectKind17_Start	detour	costly		src/game/effect/effect_kind_17.cpp:772	BOF3_INJECT
 switch	EffectKind17_TakeCell	detour	costly		src/game/effect/effect_kind_17.cpp:778	BOF3_INJECT
-switch	EffectKind18_01_Sunset	detour	costly		src/game/platform/magic_080.cpp:1272	BOF3_INJECT
+switch	EffectKind18_01_Sunset	detour	costly		src/game/platform/magic_080.cpp:1131	BOF3_INJECT
 switch	EffectKind18_04_DrawPanel	detour	costly		src/game/effect/effect_kind_18.cpp:859	BOF3_INJECT
 switch	EffectKind18_04_Open	detour	costly		src/game/effect/effect_kind_18.cpp:858	BOF3_INJECT
 switch	EffectKind18_04_Run	detour	costly		src/game/effect/effect_kind_18.cpp:854	BOF3_INJECT
@@ -4032,12 +4032,12 @@ switch	EffectKind18Sub11_Run	detour	costly		src/game/effect/effect_kind_18_sub_1
 switch	EffectKind18Sub11_Sink	detour	costly		src/game/effect/effect_kind_18_sub_11.cpp:201	BOF3_INJECT
 switch	EffectKind18Sub11_Start	detour	costly		src/game/effect/effect_kind_18_sub_11.cpp:198	BOF3_INJECT
 switch	EffectKind18Sub11_Wait	detour	costly		src/game/effect/effect_kind_18_sub_11.cpp:199	BOF3_INJECT
-switch	EffectKind18Sub12_DrawTiles	detour	costly		src/game/effect/effect_kind_18_sub_12.cpp:584	BOF3_INJECT
-switch	EffectKind18Sub12_Open	detour	costly		src/game/effect/effect_kind_18_sub_12.cpp:582	BOF3_INJECT
-switch	EffectKind18Sub12_Run	detour	costly		src/game/effect/effect_kind_18_sub_12.cpp:579	BOF3_INJECT
-switch	EffectKind18Sub12_Sink	detour	costly		src/game/effect/effect_kind_18_sub_12.cpp:583	BOF3_INJECT
-switch	EffectKind18Sub12_Start	detour	costly		src/game/effect/effect_kind_18_sub_12.cpp:580	BOF3_INJECT
-switch	EffectKind18Sub12_Wait	detour	costly		src/game/effect/effect_kind_18_sub_12.cpp:581	BOF3_INJECT
+switch	EffectKind18Sub12_DrawTiles	detour	costly		src/game/effect/effect_kind_18_sub_12.cpp:632	BOF3_INJECT
+switch	EffectKind18Sub12_Open	detour	costly		src/game/effect/effect_kind_18_sub_12.cpp:630	BOF3_INJECT
+switch	EffectKind18Sub12_Run	detour	costly		src/game/effect/effect_kind_18_sub_12.cpp:627	BOF3_INJECT
+switch	EffectKind18Sub12_Sink	detour	costly		src/game/effect/effect_kind_18_sub_12.cpp:631	BOF3_INJECT
+switch	EffectKind18Sub12_Start	detour	costly		src/game/effect/effect_kind_18_sub_12.cpp:628	BOF3_INJECT
+switch	EffectKind18Sub12_Wait	detour	costly		src/game/effect/effect_kind_18_sub_12.cpp:629	BOF3_INJECT
 switch	EffectKind18Sub13_DrawLine	detour	costly		src/game/effect/effect_kind_18_sub_0e.cpp:446	BOF3_INJECT
 switch	EffectKind18Sub13_DrawPanel	detour	costly		src/game/effect/effect_kind_18_sub_0e.cpp:445	BOF3_INJECT
 switch	EffectKind18Sub13_Fall	detour	costly		src/game/effect/effect_kind_18_sub_0e.cpp:442	BOF3_INJECT
@@ -4053,11 +4053,11 @@ switch	EffectKind18Sub14_Run	detour	costly		src/game/effect/effect_kind_18_sub_1
 switch	EffectKind18Sub14_ScaleClut	detour	costly		src/game/effect/effect_kind_18_sub_1c.cpp:593	BOF3_INJECT
 switch	EffectKind18Sub14_Start	detour	costly		src/game/effect/effect_kind_18_sub_1c.cpp:591	BOF3_INJECT
 switch	EffectKind18Sub14_WaitFlag	detour	costly		src/game/effect/effect_kind_18_sub_1c.cpp:595	BOF3_INJECT
-switch	EffectKind18Sub15_Draw	detour	costly		src/game/effect/effect_kind_18_sub_12.cpp:587	BOF3_INJECT
-switch	EffectKind18Sub15_LinkLayer	detour	costly		src/game/effect/effect_kind_18_sub_12.cpp:588	BOF3_INJECT
-switch	EffectKind18Sub15_Run	detour	costly		src/game/effect/effect_kind_18_sub_12.cpp:585	BOF3_INJECT
-switch	EffectKind18Sub15_Start	detour	costly		src/game/effect/effect_kind_18_sub_12.cpp:586	BOF3_INJECT
-switch	EffectKind18Sub16_Run	detour	costly		src/game/effect/effect_kind_18_sub_12.cpp:589	BOF3_INJECT
+switch	EffectKind18Sub15_Draw	detour	costly		src/game/effect/effect_kind_18_sub_12.cpp:635	BOF3_INJECT
+switch	EffectKind18Sub15_LinkLayer	detour	costly		src/game/effect/effect_kind_18_sub_12.cpp:636	BOF3_INJECT
+switch	EffectKind18Sub15_Run	detour	costly		src/game/effect/effect_kind_18_sub_12.cpp:633	BOF3_INJECT
+switch	EffectKind18Sub15_Start	detour	costly		src/game/effect/effect_kind_18_sub_12.cpp:634	BOF3_INJECT
+switch	EffectKind18Sub16_Run	detour	costly		src/game/effect/effect_kind_18_sub_12.cpp:637	BOF3_INJECT
 switch	EffectKind18Sub17_Close	detour	costly		src/game/effect/effect_kind_18_sub_17.cpp:967	BOF3_INJECT
 switch	EffectKind18Sub17_CopyFrame	detour	costly		src/game/effect/effect_kind_18_sub_17.cpp:970	BOF3_INJECT
 switch	EffectKind18Sub17_Count	detour	costly		src/game/effect/effect_kind_18_sub_17.cpp:958	BOF3_INJECT
@@ -5817,22 +5817,22 @@ switch	Escape_StepBack	detour	costly		src/game/battle/battle_item_cmd.cpp:2545	B
 switch	Escape_StepOn	detour	costly		src/game/battle/battle_item_cmd.cpp:2546	BOF3_INJECT
 switch	Escape_WinDispatch	detour	costly		src/game/battle/battle_item_cmd.cpp:2548	BOF3_INJECT
 switch	EventBattleKeepsMusic	code	yes		src/game/core/transition.cpp:1598	PatchBytes
-switch	EventCond_Area	detour	costly		src/game/field/event_cond.cpp:1182	BOF3_INJECT
-switch	EventCond_ByteFA	detour	costly		src/game/field/event_cond.cpp:1181	BOF3_INJECT
-switch	EventCond_ByteFD	detour	costly		src/game/field/event_cond.cpp:1185	BOF3_INJECT
-switch	EventCond_ChapterAtMost	detour	costly		src/game/field/event_cond.cpp:1190	BOF3_INJECT
-switch	EventCond_Counter0	detour	costly		src/game/field/event_cond.cpp:1194	BOF3_INJECT
-switch	EventCond_Counter1	detour	costly		src/game/field/event_cond.cpp:1195	BOF3_INJECT
-switch	EventCond_Counter2	detour	costly		src/game/field/event_cond.cpp:1196	BOF3_INJECT
-switch	EventCond_Counter3	detour	costly		src/game/field/event_cond.cpp:1197	BOF3_INJECT
-switch	EventCond_Flag	detour	costly		src/game/field/event_cond.cpp:1183	BOF3_INJECT
-switch	EventCond_Gene	detour	costly		src/game/field/event_cond.cpp:1192	BOF3_INJECT
-switch	EventCond_KeyItem	detour	costly		src/game/field/event_cond.cpp:1189	BOF3_INJECT
-switch	EventCond_LeaderId	detour	costly		src/game/field/event_cond.cpp:1187	BOF3_INJECT
-switch	EventCond_RecordBit0	detour	costly		src/game/field/event_cond.cpp:1191	BOF3_INJECT
-switch	EventCond_Run	detour	costly		src/game/field/event_cond.cpp:1184	BOF3_INJECT
-switch	EventCond_Status1	detour	costly		src/game/field/event_cond.cpp:1186	BOF3_INJECT
-switch	EventCond_StoryFlag	detour	costly		src/game/field/event_cond.cpp:1188	BOF3_INJECT
+switch	EventCond_Area	detour	costly		src/game/field/event_cond.cpp:1211	BOF3_INJECT
+switch	EventCond_ByteFA	detour	costly		src/game/field/event_cond.cpp:1210	BOF3_INJECT
+switch	EventCond_ByteFD	detour	costly		src/game/field/event_cond.cpp:1214	BOF3_INJECT
+switch	EventCond_ChapterAtMost	detour	costly		src/game/field/event_cond.cpp:1219	BOF3_INJECT
+switch	EventCond_Counter0	detour	costly		src/game/field/event_cond.cpp:1223	BOF3_INJECT
+switch	EventCond_Counter1	detour	costly		src/game/field/event_cond.cpp:1224	BOF3_INJECT
+switch	EventCond_Counter2	detour	costly		src/game/field/event_cond.cpp:1225	BOF3_INJECT
+switch	EventCond_Counter3	detour	costly		src/game/field/event_cond.cpp:1226	BOF3_INJECT
+switch	EventCond_Flag	detour	costly		src/game/field/event_cond.cpp:1212	BOF3_INJECT
+switch	EventCond_Gene	detour	costly		src/game/field/event_cond.cpp:1221	BOF3_INJECT
+switch	EventCond_KeyItem	detour	costly		src/game/field/event_cond.cpp:1218	BOF3_INJECT
+switch	EventCond_LeaderId	detour	costly		src/game/field/event_cond.cpp:1216	BOF3_INJECT
+switch	EventCond_RecordBit0	detour	costly		src/game/field/event_cond.cpp:1220	BOF3_INJECT
+switch	EventCond_Run	detour	costly		src/game/field/event_cond.cpp:1213	BOF3_INJECT
+switch	EventCond_Status1	detour	costly		src/game/field/event_cond.cpp:1215	BOF3_INJECT
+switch	EventCond_StoryFlag	detour	costly		src/game/field/event_cond.cpp:1217	BOF3_INJECT
 switch	EventObj_Face	detour	costly		src/game/field/event_script.cpp:1023	BOF3_INJECT
 switch	EventObj_Reset	detour	costly		src/game/field/event_script.cpp:1025	BOF3_INJECT
 switch	EventObj_SetFlags	detour	costly		src/game/field/event_script.cpp:1024	BOF3_INJECT
@@ -5932,7 +5932,7 @@ switch	Field_ContentTake	detour	costly		src/game/field/field_4.cpp:2214	BOF3_INJ
 switch	Field_CopyInput	detour	costly		src/game/field/field_6.cpp:3269	BOF3_INJECT
 switch	Field_CornerTurn	detour	costly		src/game/field/field_core.cpp:1813	BOF3_INJECT
 switch	Field_DirectionTo	detour	costly		src/game/field/member.cpp:861	BOF3_INJECT
-switch	Field_DrawFrame	detour	costly		src/game/field/sprite_2.cpp:658	BOF3_INJECT
+switch	Field_DrawFrame	detour	costly		src/game/field/sprite_2.cpp:663	BOF3_INJECT
 switch	Field_EffectAhead	detour	costly		src/game/field/field_4.cpp:2227	BOF3_INJECT
 switch	Field_EncounterArea	detour	costly		src/game/field/field_6.cpp:3262	BOF3_INJECT
 switch	Field_EncounterDue	detour	costly		src/game/field/field_4.cpp:2219	BOF3_INJECT
@@ -6067,16 +6067,16 @@ switch	Field_ProbeHeight	detour	costly		src/game/field/field_6.cpp:3272	BOF3_INJ
 switch	Field_RaisedEdgeTurns	detour	costly		src/game/field/field_core.cpp:1818	BOF3_INJECT
 switch	Field_ReadCells	detour	costly		src/game/field/field_core.cpp:1819	BOF3_INJECT
 switch	Field_ReadCellsRaised	detour	costly		src/game/field/field_core.cpp:1823	BOF3_INJECT
-switch	Field_RunSlot	detour	costly		src/game/field/field_2.cpp:609	BOF3_INJECT
-switch	Field_RunSlots	detour	costly		src/game/field/field_2.cpp:607	BOF3_INJECT
-switch	Field_RunTaskRecords	detour	costly		src/game/battle/battle_menu_win.cpp:1250	BOF3_INJECT
+switch	Field_RunSlot	detour	costly		src/game/field/field_2.cpp:608	BOF3_INJECT
+switch	Field_RunSlots	detour	costly		src/game/field/field_2.cpp:606	BOF3_INJECT
+switch	Field_RunTaskRecords	detour	costly		src/game/battle/battle_menu_win.cpp:1259	BOF3_INJECT
 switch	Field_SetStatus80	detour	costly		src/game/field/field_7.cpp:1350	BOF3_INJECT
 switch	Field_SlopeBetween	detour	costly		src/game/field/field_core.cpp:1815	BOF3_INJECT
-switch	Field_SlotClutCopy	detour	costly		src/game/field/field_2.cpp:610	BOF3_INJECT
-switch	Field_SlotRelease	detour	costly		src/game/field/field_2.cpp:596	BOF3_INJECT
-switch	Field_SlotsReleaseAll	detour	costly		src/game/field/field_2.cpp:598	BOF3_INJECT
-switch	Field_SlotsReleaseOwner	detour	costly		src/game/field/field_2.cpp:597	BOF3_INJECT
-switch	Field_SlotStart	detour	costly		src/game/field/field_2.cpp:608	BOF3_INJECT
+switch	Field_SlotClutCopy	detour	costly		src/game/field/field_2.cpp:609	BOF3_INJECT
+switch	Field_SlotRelease	detour	costly		src/game/field/field_2.cpp:595	BOF3_INJECT
+switch	Field_SlotsReleaseAll	detour	costly		src/game/field/field_2.cpp:597	BOF3_INJECT
+switch	Field_SlotsReleaseOwner	detour	costly		src/game/field/field_2.cpp:596	BOF3_INJECT
+switch	Field_SlotStart	detour	costly		src/game/field/field_2.cpp:607	BOF3_INJECT
 switch	Field_SpotFree	detour	costly		src/game/field/field_4.cpp:2178	BOF3_INJECT
 switch	Field_StartEventBattle	detour	costly		src/game/field/field.cpp:50	BOF3_INJECT
 switch	Field_SwapEnd	detour	costly		src/game/field/field_4.cpp:2183	BOF3_INJECT
@@ -6255,16 +6255,16 @@ switch	FieldPanel_DrawShade	detour	costly		src/game/field/leader_panel.cpp:3515	
 switch	FieldPanel_DrawTotal	detour	costly		src/game/field/leader_panel.cpp:3513	BOF3_INJECT
 switch	FieldPanel_KindPoints	detour	costly		src/game/field/leader_panel.cpp:3503	BOF3_INJECT
 switch	FieldPanel_KindTotal	detour	costly		src/game/field/leader_panel.cpp:3504	BOF3_INJECT
-switch	FieldSave_Begin	detour	costly		src/game/shop/field_save.cpp:1067	BOF3_INJECT
-switch	FieldSave_Choose	detour	costly		src/game/shop/field_save.cpp:1069	BOF3_INJECT
-switch	FieldSave_Confirm	detour	costly		src/game/shop/field_save.cpp:1070	BOF3_INJECT
-switch	FieldSave_Dispatch	detour	costly		src/game/shop/field_save.cpp:1066	BOF3_INJECT
-switch	FieldSave_End	detour	costly		src/game/shop/field_save.cpp:1074	BOF3_INJECT
-switch	FieldSave_PromptAnswer	detour	costly		src/game/shop/field_save.cpp:1075	BOF3_INJECT
-switch	FieldSave_SlotsIn	detour	costly		src/game/shop/field_save.cpp:1068	BOF3_INJECT
-switch	FieldSave_SlotsOut	detour	costly		src/game/shop/field_save.cpp:1073	BOF3_INJECT
-switch	FieldSave_Write	detour	costly		src/game/shop/field_save.cpp:1071	BOF3_INJECT
-switch	FieldSave_Written	detour	costly		src/game/shop/field_save.cpp:1072	BOF3_INJECT
+switch	FieldSave_Begin	detour	costly		src/game/shop/field_save.cpp:1066	BOF3_INJECT
+switch	FieldSave_Choose	detour	costly		src/game/shop/field_save.cpp:1068	BOF3_INJECT
+switch	FieldSave_Confirm	detour	costly		src/game/shop/field_save.cpp:1069	BOF3_INJECT
+switch	FieldSave_Dispatch	detour	costly		src/game/shop/field_save.cpp:1065	BOF3_INJECT
+switch	FieldSave_End	detour	costly		src/game/shop/field_save.cpp:1073	BOF3_INJECT
+switch	FieldSave_PromptAnswer	detour	costly		src/game/shop/field_save.cpp:1074	BOF3_INJECT
+switch	FieldSave_SlotsIn	detour	costly		src/game/shop/field_save.cpp:1067	BOF3_INJECT
+switch	FieldSave_SlotsOut	detour	costly		src/game/shop/field_save.cpp:1072	BOF3_INJECT
+switch	FieldSave_Write	detour	costly		src/game/shop/field_save.cpp:1070	BOF3_INJECT
+switch	FieldSave_Written	detour	costly		src/game/shop/field_save.cpp:1071	BOF3_INJECT
 switch	FieldTail_DropInMove	detour	costly		src/game/field/field_7.cpp:1359	BOF3_INJECT
 switch	FieldTail_FlagMessage	detour	costly		src/game/field/field_7.cpp:1363	BOF3_INJECT
 switch	FieldTail_HealAndMenu	detour	costly		src/game/field/field_7.cpp:1360	BOF3_INJECT
@@ -6322,10 +6322,10 @@ switch	FishingLabelSigma	code	yes		src/game/text/fishing_text.cpp:494	PatchBytes
 switch	FishingLowGlyph	code	yes		src/game/effect/effect_1a.cpp:244	PatchBytes
 switch	FishPanelDuck	code	yes		src/game/field/leader_panel.cpp:3534	PatchBytes
 switch	Fixed_HighRoundUp	detour	costly		src/game/boss/boss_myria_fx.cpp:384	BOF3_INJECT
-switch	Flags_Clear	detour	costly		src/game/field/event_cond.cpp:1178	BOF3_INJECT
-switch	Flags_Set	detour	costly		src/game/field/event_cond.cpp:1177	BOF3_INJECT
-switch	Flags_Test	detour	costly		src/game/field/event_cond.cpp:1179	BOF3_INJECT
-switch	Flags_Toggle	detour	costly		src/game/field/event_cond.cpp:1180	BOF3_INJECT
+switch	Flags_Clear	detour	costly		src/game/field/event_cond.cpp:1207	BOF3_INJECT
+switch	Flags_Set	detour	costly		src/game/field/event_cond.cpp:1206	BOF3_INJECT
+switch	Flags_Test	detour	costly		src/game/field/event_cond.cpp:1208	BOF3_INJECT
+switch	Flags_Toggle	detour	costly		src/game/field/event_cond.cpp:1209	BOF3_INJECT
 switch	FlameColumn_DrawBand	detour	costly		src/game/magic/magic_092.cpp:1026	BOF3_INJECT
 switch	FlameColumn_DrawDisc	detour	costly		src/game/magic/magic_092.cpp:1025	BOF3_INJECT
 switch	FlameColumn_Fade	detour	costly		src/game/magic/magic_092.cpp:1024	BOF3_INJECT
@@ -6350,8 +6350,8 @@ switch	FlyingKickImage_FadeOut	detour	costly		src/game/magic/kick_image.cpp:926	
 switch	FlyingKickImage_Rise	detour	costly		src/game/magic/kick_image.cpp:923	BOF3_INJECT
 switch	FlyingKickImage_Run	detour	costly		src/game/magic/kick_image.cpp:921	BOF3_INJECT
 switch	FlyingKickImage_Start	detour	costly		src/game/magic/kick_image.cpp:922	BOF3_INJECT
-switch	Fmv_Play	detour	costly		src/game/battle/battle_menu_win.cpp:1254	BOF3_INJECT
-switch	Fmv_WndProc	detour	costly		src/game/battle/battle_menu_win.cpp:1255	BOF3_INJECT
+switch	Fmv_Play	detour	costly		src/game/battle/battle_menu_win.cpp:1263	BOF3_INJECT
+switch	Fmv_WndProc	detour	costly		src/game/battle/battle_menu_win.cpp:1264	BOF3_INJECT
 switch	Focus_Kind	detour	costly		src/game/magic/focus_aura.cpp:545	BOF3_INJECT
 switch	Focus_Start	detour	costly		src/game/magic/focus_aura.cpp:544	BOF3_INJECT
 switch	Focus_Task	detour	costly		src/game/magic/focus_aura.cpp:543	BOF3_INJECT
@@ -6370,10 +6370,10 @@ switch	FocusMote_Grow	detour	costly		src/game/magic/focus_aura.cpp:556	BOF3_INJE
 switch	FocusMote_Rise	detour	costly		src/game/magic/focus_aura.cpp:557	BOF3_INJECT
 switch	FocusMote_Run	detour	costly		src/game/magic/focus_aura.cpp:554	BOF3_INJECT
 switch	FocusMote_Start	detour	costly		src/game/magic/focus_aura.cpp:555	BOF3_INJECT
-switch	Font_BuildGlyphTexture	detour	costly		src/game/platform/d3d.cpp:3968	BOF3_INJECT
-switch	Font_GlyphTexture	detour	costly		src/game/platform/d3d.cpp:3967	BOF3_INJECT
-switch	Font_ReleaseTexCache	detour	costly		src/game/platform/d3d.cpp:3981	BOF3_INJECT
-switch	Font_SetGlyphData	detour	costly		src/game/platform/d3d.cpp:3991	BOF3_INJECT
+switch	Font_BuildGlyphTexture	detour	costly		src/game/platform/d3d.cpp:3970	BOF3_INJECT
+switch	Font_GlyphTexture	detour	costly		src/game/platform/d3d.cpp:3969	BOF3_INJECT
+switch	Font_ReleaseTexCache	detour	costly		src/game/platform/d3d.cpp:3983	BOF3_INJECT
+switch	Font_SetGlyphData	detour	costly		src/game/platform/d3d.cpp:3993	BOF3_INJECT
 switch	Font_UnpackGlyph	detour	costly		src/game/text/tex.cpp:271	BOF3_INJECT
 switch	Foretell_DrawTiles	detour	costly		src/game/magic/foretell.cpp:471	BOF3_INJECT
 switch	Foretell_End	detour	costly		src/game/magic/foretell.cpp:470	BOF3_INJECT
@@ -6486,9 +6486,9 @@ switch	FxSpiral_Task	detour	costly		src/game/magic/fx_spiral.cpp:467	BOF3_INJECT
 switch	FxSpiral_Wait	detour	costly		src/game/magic/fx_spiral.cpp:468	BOF3_INJECT
 switch	Game_Clock	code	yes		src/game/platform/game_clock.cpp:103	PatchBytes
 switch	Game_ClockTick	detour	costly		src/game/core/transition.cpp:1581	BOF3_INJECT
-switch	Game_Init	detour	costly		src/game/platform/magic_080.cpp:1268	BOF3_INJECT
-switch	Game_WinMain	detour	costly		src/game/platform/magic_080.cpp:1266	BOF3_INJECT
-switch	Game_WndProc	detour	costly		src/game/platform/magic_080.cpp:1264	BOF3_INJECT
+switch	Game_Init	detour	costly		src/game/platform/magic_080.cpp:1127	BOF3_INJECT
+switch	Game_WinMain	detour	costly		src/game/platform/magic_080.cpp:1125	BOF3_INJECT
+switch	Game_WndProc	detour	costly		src/game/platform/magic_080.cpp:1123	BOF3_INJECT
 switch	GameMode10_Enter	detour	costly		src/game/core/transition.cpp:1640	BOF3_INJECT
 switch	GameMode10_Run	detour	costly		src/game/core/transition.cpp:1639	BOF3_INJECT
 switch	GameMode11_Frame	detour	costly		src/game/core/transition.cpp:1642	BOF3_INJECT
@@ -6523,36 +6523,36 @@ switch	GameMode_LookEnd	detour	costly		src/game/core/transition.cpp:1619	BOF3_IN
 switch	GameMode_Shop	detour	costly		src/game/core/transition.cpp:1620	BOF3_INJECT
 switch	GameMode_Start	detour	costly		src/game/core/transition.cpp:1578	BOF3_INJECT
 switch	GeneNameNul	code	yes		src/game/field/field_7.cpp:1378	PatchBytes
-switch	GeneWin_ChoiceOpen	detour	costly		src/game/menu/menu_list.cpp:2913	BOF3_INJECT
-switch	GeneWin_ChoiceSlideIn	detour	costly		src/game/menu/menu_list.cpp:2914	BOF3_INJECT
-switch	GeneWin_ChoiceSlideOut	detour	costly		src/game/menu/menu_list.cpp:2915	BOF3_INJECT
-switch	GeneWin_ChoiceStates	detour	costly		src/game/menu/menu_list.cpp:2912	BOF3_INJECT
-switch	GeneWin_DrawChoices	detour	costly		src/game/menu/menu_list.cpp:2916	BOF3_INJECT
-switch	GeneWin_DrawCursorBox	detour	costly		src/game/menu/menu_list.cpp:2935	BOF3_INJECT
-switch	GeneWin_DrawFormIcon	detour	costly		src/game/menu/menu_list.cpp:2934	BOF3_INJECT
-switch	GeneWin_DrawFrame	detour	costly		src/game/menu/menu_list.cpp:2911	BOF3_INJECT
-switch	GeneWin_DrawGrid	detour	costly		src/game/menu/menu_list.cpp:2910	BOF3_INJECT
-switch	GeneWin_DrawList	detour	costly		src/game/menu/menu_list.cpp:2923	BOF3_INJECT
-switch	GeneWin_DrawList2	detour	costly		src/game/menu/menu_list.cpp:2932	BOF3_INJECT
-switch	GeneWin_DrawListFrame	detour	costly		src/game/menu/menu_list.cpp:2933	BOF3_INJECT
-switch	GeneWin_GridOpen	detour	costly		src/game/menu/menu_list.cpp:2907	BOF3_INJECT
-switch	GeneWin_GridSlideIn	detour	costly		src/game/menu/menu_list.cpp:2908	BOF3_INJECT
-switch	GeneWin_GridSlideOut	detour	costly		src/game/menu/menu_list.cpp:2909	BOF3_INJECT
-switch	GeneWin_GridStates	detour	costly		src/game/menu/menu_list.cpp:2906	BOF3_INJECT
-switch	GeneWin_List2Open	detour	costly		src/game/menu/menu_list.cpp:2925	BOF3_INJECT
-switch	GeneWin_List2SlideIn	detour	costly		src/game/menu/menu_list.cpp:2926	BOF3_INJECT
-switch	GeneWin_List2SlideOut	detour	costly		src/game/menu/menu_list.cpp:2927	BOF3_INJECT
-switch	GeneWin_List2States	detour	costly		src/game/menu/menu_list.cpp:2924	BOF3_INJECT
-switch	GeneWin_List3Open	detour	costly		src/game/menu/menu_list.cpp:2929	BOF3_INJECT
-switch	GeneWin_List3SlideIn	detour	costly		src/game/menu/menu_list.cpp:2930	BOF3_INJECT
-switch	GeneWin_List3SlideOut	detour	costly		src/game/menu/menu_list.cpp:2931	BOF3_INJECT
-switch	GeneWin_List3States	detour	costly		src/game/menu/menu_list.cpp:2928	BOF3_INJECT
-switch	GeneWin_ListOpen	detour	costly		src/game/menu/menu_list.cpp:2918	BOF3_INJECT
-switch	GeneWin_ListShiftLeft	detour	costly		src/game/menu/menu_list.cpp:2921	BOF3_INJECT
-switch	GeneWin_ListShiftRight	detour	costly		src/game/menu/menu_list.cpp:2922	BOF3_INJECT
-switch	GeneWin_ListSlideIn	detour	costly		src/game/menu/menu_list.cpp:2919	BOF3_INJECT
-switch	GeneWin_ListSlideOut	detour	costly		src/game/menu/menu_list.cpp:2920	BOF3_INJECT
-switch	GeneWin_ListStates	detour	costly		src/game/menu/menu_list.cpp:2917	BOF3_INJECT
+switch	GeneWin_ChoiceOpen	detour	costly		src/game/menu/menu_list.cpp:2912	BOF3_INJECT
+switch	GeneWin_ChoiceSlideIn	detour	costly		src/game/menu/menu_list.cpp:2913	BOF3_INJECT
+switch	GeneWin_ChoiceSlideOut	detour	costly		src/game/menu/menu_list.cpp:2914	BOF3_INJECT
+switch	GeneWin_ChoiceStates	detour	costly		src/game/menu/menu_list.cpp:2911	BOF3_INJECT
+switch	GeneWin_DrawChoices	detour	costly		src/game/menu/menu_list.cpp:2915	BOF3_INJECT
+switch	GeneWin_DrawCursorBox	detour	costly		src/game/menu/menu_list.cpp:2934	BOF3_INJECT
+switch	GeneWin_DrawFormIcon	detour	costly		src/game/menu/menu_list.cpp:2933	BOF3_INJECT
+switch	GeneWin_DrawFrame	detour	costly		src/game/menu/menu_list.cpp:2910	BOF3_INJECT
+switch	GeneWin_DrawGrid	detour	costly		src/game/menu/menu_list.cpp:2909	BOF3_INJECT
+switch	GeneWin_DrawList	detour	costly		src/game/menu/menu_list.cpp:2922	BOF3_INJECT
+switch	GeneWin_DrawList2	detour	costly		src/game/menu/menu_list.cpp:2931	BOF3_INJECT
+switch	GeneWin_DrawListFrame	detour	costly		src/game/menu/menu_list.cpp:2932	BOF3_INJECT
+switch	GeneWin_GridOpen	detour	costly		src/game/menu/menu_list.cpp:2906	BOF3_INJECT
+switch	GeneWin_GridSlideIn	detour	costly		src/game/menu/menu_list.cpp:2907	BOF3_INJECT
+switch	GeneWin_GridSlideOut	detour	costly		src/game/menu/menu_list.cpp:2908	BOF3_INJECT
+switch	GeneWin_GridStates	detour	costly		src/game/menu/menu_list.cpp:2905	BOF3_INJECT
+switch	GeneWin_List2Open	detour	costly		src/game/menu/menu_list.cpp:2924	BOF3_INJECT
+switch	GeneWin_List2SlideIn	detour	costly		src/game/menu/menu_list.cpp:2925	BOF3_INJECT
+switch	GeneWin_List2SlideOut	detour	costly		src/game/menu/menu_list.cpp:2926	BOF3_INJECT
+switch	GeneWin_List2States	detour	costly		src/game/menu/menu_list.cpp:2923	BOF3_INJECT
+switch	GeneWin_List3Open	detour	costly		src/game/menu/menu_list.cpp:2928	BOF3_INJECT
+switch	GeneWin_List3SlideIn	detour	costly		src/game/menu/menu_list.cpp:2929	BOF3_INJECT
+switch	GeneWin_List3SlideOut	detour	costly		src/game/menu/menu_list.cpp:2930	BOF3_INJECT
+switch	GeneWin_List3States	detour	costly		src/game/menu/menu_list.cpp:2927	BOF3_INJECT
+switch	GeneWin_ListOpen	detour	costly		src/game/menu/menu_list.cpp:2917	BOF3_INJECT
+switch	GeneWin_ListShiftLeft	detour	costly		src/game/menu/menu_list.cpp:2920	BOF3_INJECT
+switch	GeneWin_ListShiftRight	detour	costly		src/game/menu/menu_list.cpp:2921	BOF3_INJECT
+switch	GeneWin_ListSlideIn	detour	costly		src/game/menu/menu_list.cpp:2918	BOF3_INJECT
+switch	GeneWin_ListSlideOut	detour	costly		src/game/menu/menu_list.cpp:2919	BOF3_INJECT
+switch	GeneWin_ListStates	detour	costly		src/game/menu/menu_list.cpp:2916	BOF3_INJECT
 switch	GeoBreath_PoolAlloc	detour	costly		src/game/magic/geo_breath_child.cpp:710	BOF3_INJECT
 switch	GeoBreath_Start	detour	costly		src/game/magic/geo_breath_child.cpp:692	BOF3_INJECT
 switch	GeoBreath_Task	detour	costly		src/game/magic/geo_breath_child.cpp:691	BOF3_INJECT
@@ -6573,35 +6573,35 @@ switch	GeoBreathRecord_Fly	detour	costly		src/game/magic/geo_breath_child.cpp:70
 switch	GeoBreathRecord_Run	detour	costly		src/game/magic/geo_breath_child.cpp:705	BOF3_INJECT
 switch	GeoBreathRecord_Start	detour	costly		src/game/magic/geo_breath_child.cpp:706	BOF3_INJECT
 switch	GeoBreathRecord_Task	detour	costly		src/game/magic/geo_breath_child.cpp:704	BOF3_INJECT
-switch	Gfx_BeginFrame	detour	costly		src/game/platform/magic_080.cpp:1270	BOF3_INJECT
-switch	Gfx_ClearImage	detour	costly		src/game/platform/d3d.cpp:3922	BOF3_INJECT
-switch	Gfx_ClearPresent	detour	costly		src/game/platform/d3d.cpp:3929	BOF3_INJECT
+switch	Gfx_BeginFrame	detour	costly		src/game/platform/magic_080.cpp:1129	BOF3_INJECT
+switch	Gfx_ClearImage	detour	costly		src/game/platform/d3d.cpp:3924	BOF3_INJECT
+switch	Gfx_ClearPresent	detour	costly		src/game/platform/d3d.cpp:3931	BOF3_INJECT
 switch	Gfx_ClearRect	detour	costly		src/game/core/title.cpp:2232	BOF3_INJECT
 switch	Gfx_ClutAdjust	detour	costly		src/game/field/area_map.cpp:3594	BOF3_INJECT
-switch	Gfx_ClutPixels	detour	costly		src/game/platform/d3d.cpp:3944	BOF3_INJECT
+switch	Gfx_ClutPixels	detour	costly		src/game/platform/d3d.cpp:3946	BOF3_INJECT
 switch	Gfx_ClutStripCopy16	detour	costly		src/game/effect/effect_kind_18.cpp:866	BOF3_INJECT
-switch	Gfx_ClutStripCopyRow	detour	costly		src/game/field/field_2.cpp:594	BOF3_INJECT
-switch	Gfx_ClutStripRestore	detour	costly		src/game/field/field_2.cpp:593	BOF3_INJECT
+switch	Gfx_ClutStripCopyRow	detour	costly		src/game/field/field_2.cpp:593	BOF3_INJECT
+switch	Gfx_ClutStripRestore	detour	costly		src/game/field/field_2.cpp:592	BOF3_INJECT
 switch	Gfx_CommitPrim	detour	costly		src/game/core/title.cpp:2211	BOF3_INJECT
-switch	Gfx_ConvertRow	detour	costly		src/game/platform/d3d.cpp:3928	BOF3_INJECT
+switch	Gfx_ConvertRow	detour	costly		src/game/platform/d3d.cpp:3930	BOF3_INJECT
 switch	Gfx_DrawOTag	detour	costly		src/game/platform/d3d_draw.cpp:157	BOF3_INJECT
-switch	Gfx_DrawSkyGradient	detour	costly		src/game/platform/magic_080.cpp:1273	BOF3_INJECT
-switch	Gfx_DrawSunsetGlow	detour	costly		src/game/platform/magic_080.cpp:1274	BOF3_INJECT
-switch	Gfx_FilterPoint	code	yes		src/game/platform/d3d.cpp:4052 src/game/platform/d3d.cpp:4053	PatchBytes
-switch	Gfx_FlushDirtyStrip	detour	costly		src/game/field/field_2.cpp:592	BOF3_INJECT
+switch	Gfx_DrawSkyGradient	detour	costly		src/game/platform/magic_080.cpp:1132	BOF3_INJECT
+switch	Gfx_DrawSunsetGlow	detour	costly		src/game/platform/magic_080.cpp:1133	BOF3_INJECT
+switch	Gfx_FilterPoint	code	yes		src/game/platform/d3d.cpp:4054 src/game/platform/d3d.cpp:4055	PatchBytes
+switch	Gfx_FlushDirtyStrip	detour	costly		src/game/field/field_2.cpp:591	BOF3_INJECT
 switch	Gfx_FlushUploadQueue	detour	costly		src/game/core/title.cpp:2219	BOF3_INJECT
-switch	Gfx_FreeClutRows	detour	costly		src/game/platform/d3d.cpp:3979	BOF3_INJECT
-switch	Gfx_InitBufferBlock	detour	costly		src/game/platform/magic_080.cpp:1269	BOF3_INJECT
-switch	Gfx_InvalidateTextures	detour	costly		src/game/platform/d3d.cpp:3923	BOF3_INJECT
-switch	Gfx_LinkOTags	detour	costly		src/game/platform/magic_080.cpp:1271	BOF3_INJECT
-switch	Gfx_LoadImage	detour	costly		src/game/platform/d3d.cpp:3926	BOF3_INJECT
-switch	Gfx_LoadImageIfChanged	detour	costly		src/game/platform/d3d.cpp:3927	BOF3_INJECT
+switch	Gfx_FreeClutRows	detour	costly		src/game/platform/d3d.cpp:3981	BOF3_INJECT
+switch	Gfx_InitBufferBlock	detour	costly		src/game/platform/magic_080.cpp:1128	BOF3_INJECT
+switch	Gfx_InvalidateTextures	detour	costly		src/game/platform/d3d.cpp:3925	BOF3_INJECT
+switch	Gfx_LinkOTags	detour	costly		src/game/platform/magic_080.cpp:1130	BOF3_INJECT
+switch	Gfx_LoadImage	detour	costly		src/game/platform/d3d.cpp:3928	BOF3_INJECT
+switch	Gfx_LoadImageIfChanged	detour	costly		src/game/platform/d3d.cpp:3929	BOF3_INJECT
 switch	Gfx_MoveCells	detour	costly		src/game/platform/gfx.cpp:42	BOF3_INJECT
-switch	Gfx_MoveImage	detour	costly		src/game/platform/d3d.cpp:3925	BOF3_INJECT
-switch	Gfx_Present	detour	costly		src/game/platform/d3d.cpp:3930	BOF3_INJECT
-switch	Gfx_ReleaseTexCache	detour	costly		src/game/platform/d3d.cpp:3980	BOF3_INJECT
-switch	Gfx_StoreImage	detour	costly		src/game/platform/d3d.cpp:3924	BOF3_INJECT
-switch	Gfx_TexCacheFind	detour	costly		src/game/platform/d3d.cpp:3946	BOF3_INJECT
+switch	Gfx_MoveImage	detour	costly		src/game/platform/d3d.cpp:3927	BOF3_INJECT
+switch	Gfx_Present	detour	costly		src/game/platform/d3d.cpp:3932	BOF3_INJECT
+switch	Gfx_ReleaseTexCache	detour	costly		src/game/platform/d3d.cpp:3982	BOF3_INJECT
+switch	Gfx_StoreImage	detour	costly		src/game/platform/d3d.cpp:3926	BOF3_INJECT
+switch	Gfx_TexCacheFind	detour	costly		src/game/platform/d3d.cpp:3948	BOF3_INJECT
 switch	Gfx_UploadLzss	detour	costly		src/game/core/title.cpp:2224	BOF3_INJECT
 switch	Gfx_UploadPacked5	detour	costly		src/game/core/title.cpp:2223	BOF3_INJECT
 switch	GiftChestRow	code	yes		src/game/scenario/scena_07_2.cpp:1371	PatchBytes
@@ -6817,29 +6817,29 @@ switch	InkInkPuff_Start	detour	costly		src/game/magic/wall_of_fire_child.cpp:857
 switch	InkPuff_Run	detour	costly		src/game/magic/wall_of_fire_child.cpp:847	BOF3_INJECT
 switch	InkPuff_Start	detour	costly		src/game/magic/wall_of_fire_child.cpp:848	BOF3_INJECT
 switch	InkPuff_Task	detour	costly		src/game/magic/wall_of_fire_child.cpp:846	BOF3_INJECT
-switch	Inn_Begin	detour	costly		src/game/shop/field_save.cpp:1050	BOF3_INJECT
-switch	Inn_Dispatch	detour	costly		src/game/shop/field_save.cpp:1049	BOF3_INJECT
-switch	Inn_TitleOut	detour	costly		src/game/shop/field_save.cpp:1076	BOF3_INJECT
-switch	InnNight_AskSave	detour	costly		src/game/shop/field_save.cpp:1064	BOF3_INJECT
-switch	InnNight_Dispatch	detour	costly		src/game/shop/field_save.cpp:1058	BOF3_INJECT
-switch	InnNight_FadeOut	detour	costly		src/game/shop/field_save.cpp:1060	BOF3_INJECT
-switch	InnNight_Jingle	detour	costly		src/game/shop/field_save.cpp:1061	BOF3_INJECT
-switch	InnNight_Leave	detour	costly		src/game/shop/field_save.cpp:1065	BOF3_INJECT
-switch	InnNight_Message	detour	costly		src/game/shop/field_save.cpp:1059	BOF3_INJECT
-switch	InnNight_Restore	detour	costly		src/game/shop/field_save.cpp:1063	BOF3_INJECT
-switch	InnNight_Wait	detour	costly		src/game/shop/field_save.cpp:1062	BOF3_INJECT
+switch	Inn_Begin	detour	costly		src/game/shop/field_save.cpp:1049	BOF3_INJECT
+switch	Inn_Dispatch	detour	costly		src/game/shop/field_save.cpp:1048	BOF3_INJECT
+switch	Inn_TitleOut	detour	costly		src/game/shop/field_save.cpp:1075	BOF3_INJECT
+switch	InnNight_AskSave	detour	costly		src/game/shop/field_save.cpp:1063	BOF3_INJECT
+switch	InnNight_Dispatch	detour	costly		src/game/shop/field_save.cpp:1057	BOF3_INJECT
+switch	InnNight_FadeOut	detour	costly		src/game/shop/field_save.cpp:1059	BOF3_INJECT
+switch	InnNight_Jingle	detour	costly		src/game/shop/field_save.cpp:1060	BOF3_INJECT
+switch	InnNight_Leave	detour	costly		src/game/shop/field_save.cpp:1064	BOF3_INJECT
+switch	InnNight_Message	detour	costly		src/game/shop/field_save.cpp:1058	BOF3_INJECT
+switch	InnNight_Restore	detour	costly		src/game/shop/field_save.cpp:1062	BOF3_INJECT
+switch	InnNight_Wait	detour	costly		src/game/shop/field_save.cpp:1061	BOF3_INJECT
 switch	InnNightPause	code	yes		src/game/platform/sound_in.cpp:404	PatchBytes
-switch	InnPrompt_ChoicesIn	detour	costly		src/game/shop/field_save.cpp:1054	BOF3_INJECT
-switch	InnPrompt_ChoicesOut	detour	costly		src/game/shop/field_save.cpp:1057	BOF3_INJECT
-switch	InnPrompt_Choose	detour	costly		src/game/shop/field_save.cpp:1055	BOF3_INJECT
-switch	InnPrompt_Dispatch	detour	costly		src/game/shop/field_save.cpp:1051	BOF3_INJECT
-switch	InnPrompt_Greeting	detour	costly		src/game/shop/field_save.cpp:1053	BOF3_INJECT
-switch	InnPrompt_NotEnough	detour	costly		src/game/shop/field_save.cpp:1056	BOF3_INJECT
-switch	InnPrompt_TitleIn	detour	costly		src/game/shop/field_save.cpp:1052	BOF3_INJECT
+switch	InnPrompt_ChoicesIn	detour	costly		src/game/shop/field_save.cpp:1053	BOF3_INJECT
+switch	InnPrompt_ChoicesOut	detour	costly		src/game/shop/field_save.cpp:1056	BOF3_INJECT
+switch	InnPrompt_Choose	detour	costly		src/game/shop/field_save.cpp:1054	BOF3_INJECT
+switch	InnPrompt_Dispatch	detour	costly		src/game/shop/field_save.cpp:1050	BOF3_INJECT
+switch	InnPrompt_Greeting	detour	costly		src/game/shop/field_save.cpp:1052	BOF3_INJECT
+switch	InnPrompt_NotEnough	detour	costly		src/game/shop/field_save.cpp:1055	BOF3_INJECT
+switch	InnPrompt_TitleIn	detour	costly		src/game/shop/field_save.cpp:1051	BOF3_INJECT
 switch	Input_AutoRepeat	detour	costly		src/game/core/title.cpp:2228	BOF3_INJECT
-switch	Input_Latch	detour	costly		src/game/platform/magic_080.cpp:1263	BOF3_INJECT
-switch	InputRecord	instrument			src/hook/input_script.cpp:1180	RetargetCall
-switch	InputScript	instrument			src/hook/input_script.cpp:1353	RetargetCall
+switch	Input_Latch	detour	costly		src/game/platform/magic_080.cpp:1122	BOF3_INJECT
+switch	InputRecord	instrument			src/hook/input_script.cpp:1235	RetargetCall
+switch	InputScript	instrument			src/hook/input_script.cpp:1410	RetargetCall
 switch	Intimidate_Start	detour	costly		src/game/magic/intimidate_trail.cpp:643	BOF3_INJECT
 switch	Intimidate_Task	detour	costly		src/game/magic/intimidate_trail.cpp:642	BOF3_INJECT
 switch	IntimidateBurst_DrawDisc	detour	costly		src/game/magic/intimidate_trail.cpp:659	BOF3_INJECT
@@ -7000,6 +7000,7 @@ switch	KaiserSprite_Run	detour	costly		src/game/magic/magic_fx.cpp:371	BOF3_INJE
 switch	KaiserSprite_Start	detour	costly		src/game/magic/magic_fx.cpp:372	BOF3_INJECT
 switch	KaiserSprite_Tick	detour	costly		src/game/magic/magic_fx.cpp:375	BOF3_INJECT
 switch	KaiserSprite_WaitScript	detour	costly		src/game/magic/magic_fx.cpp:377	BOF3_INJECT
+switch	KeyboardSdl	code	yes		src/game/platform/d_input.cpp:446	PatchBytes
 switch	KeyItem_Add	detour	costly		src/game/menu/char.cpp:1121	BOF3_INJECT
 switch	KeyItem_Has	detour	costly		src/game/menu/char.cpp:1120	BOF3_INJECT
 switch	KeyItem_Remove	detour	costly		src/game/menu/char.cpp:1122	BOF3_INJECT
@@ -7160,7 +7161,7 @@ switch	LeechShell_PushMatrix	detour	costly		src/game/magic/leech_shell.cpp:611	B
 switch	LeechShell_Task	detour	costly		src/game/magic/leech_shell.cpp:601	BOF3_INJECT
 switch	LeechShell_WaitOrb	detour	costly		src/game/magic/leech_shell.cpp:606	BOF3_INJECT
 switch	LevelSkillCatchUp	behaviour	yes		src/game/field/field_ability_2.cpp:2117	BehaviourOn
-switch	Light_ObjectDirection	detour	costly		src/game/field/event_cond.cpp:1173	BOF3_INJECT
+switch	Light_ObjectDirection	detour	costly		src/game/field/event_cond.cpp:1202	BOF3_INJECT
 switch	Lightning_Start	detour	costly		src/game/magic/lightning_bolt.cpp:532	BOF3_INJECT
 switch	Lightning_Task	detour	costly		src/game/magic/lightning_bolt.cpp:531	BOF3_INJECT
 switch	LightningBolt_DrawArcs	detour	costly		src/game/magic/lightning_bolt.cpp:539	BOF3_INJECT
@@ -7191,14 +7192,14 @@ switch	LinkedObjectD_Run	detour	costly		src/game/scenario/linked_object.cpp:425	
 switch	LinkedObjectD_ShowAmount	detour	costly		src/game/scenario/linked_object.cpp:427	BOF3_INJECT
 switch	LinkedObjectD_WaitMessage	detour	costly		src/game/scenario/linked_object.cpp:428	BOF3_INJECT
 switch	LoadDatFile	detour	costly		src/game/battle/dragon_cmd.cpp:3172	BOF3_INJECT
-switch	LoadMenu_Apply	detour	costly		src/game/core/sound.cpp:1474	BOF3_INJECT
-switch	LoadMenu_Choose	detour	costly		src/game/core/sound.cpp:1469	BOF3_INJECT
-switch	LoadMenu_Confirm	detour	costly		src/game/core/sound.cpp:1470	BOF3_INJECT
-switch	LoadMenu_Error	detour	costly		src/game/core/sound.cpp:1472	BOF3_INJECT
-switch	LoadMenu_List	detour	costly		src/game/core/sound.cpp:1467	BOF3_INJECT
-switch	LoadMenu_Loaded	detour	costly		src/game/core/sound.cpp:1473	BOF3_INJECT
-switch	LoadMenu_Open	detour	costly		src/game/core/sound.cpp:1468	BOF3_INJECT
-switch	LoadMenu_Read	detour	costly		src/game/core/sound.cpp:1471	BOF3_INJECT
+switch	LoadMenu_Apply	detour	costly		src/game/core/sound.cpp:1473	BOF3_INJECT
+switch	LoadMenu_Choose	detour	costly		src/game/core/sound.cpp:1468	BOF3_INJECT
+switch	LoadMenu_Confirm	detour	costly		src/game/core/sound.cpp:1469	BOF3_INJECT
+switch	LoadMenu_Error	detour	costly		src/game/core/sound.cpp:1471	BOF3_INJECT
+switch	LoadMenu_List	detour	costly		src/game/core/sound.cpp:1466	BOF3_INJECT
+switch	LoadMenu_Loaded	detour	costly		src/game/core/sound.cpp:1472	BOF3_INJECT
+switch	LoadMenu_Open	detour	costly		src/game/core/sound.cpp:1467	BOF3_INJECT
+switch	LoadMenu_Read	detour	costly		src/game/core/sound.cpp:1470	BOF3_INJECT
 switch	Look_PadControl	detour	costly		src/game/core/transition.cpp:1624	BOF3_INJECT
 switch	Look_Return	detour	costly		src/game/core/transition.cpp:1625	BOF3_INJECT
 switch	Magic001_EndWhenChildDone	detour	costly		src/game/field/jump_child.cpp:364	BOF3_INJECT
@@ -7350,11 +7351,11 @@ switch	Magic074_SparkleRise	detour	costly		src/game/magic/sparkle.cpp:1397	BOF3_
 switch	Magic074_SparkleUpdate	detour	costly		src/game/magic/sparkle.cpp:1395	BOF3_INJECT
 switch	Magic074_Spawn	detour	costly		src/game/magic/sparkle.cpp:1387	BOF3_INJECT
 switch	Magic074_Task	detour	costly		src/game/magic/sparkle.cpp:1386	BOF3_INJECT
-switch	Magic080_DrawGlyphs	detour	costly		src/game/platform/magic_080.cpp:1262	BOF3_INJECT
-switch	Magic080_DrawText	detour	costly		src/game/platform/magic_080.cpp:1261	BOF3_INJECT
-switch	Magic080_Run	detour	costly		src/game/platform/magic_080.cpp:1260	BOF3_INJECT
-switch	Magic080_Start	detour	costly		src/game/platform/magic_080.cpp:1259	BOF3_INJECT
-switch	Magic080_Task	detour	costly		src/game/platform/magic_080.cpp:1258	BOF3_INJECT
+switch	Magic080_DrawGlyphs	detour	costly		src/game/platform/magic_080.cpp:1121	BOF3_INJECT
+switch	Magic080_DrawText	detour	costly		src/game/platform/magic_080.cpp:1120	BOF3_INJECT
+switch	Magic080_Run	detour	costly		src/game/platform/magic_080.cpp:1119	BOF3_INJECT
+switch	Magic080_Start	detour	costly		src/game/platform/magic_080.cpp:1118	BOF3_INJECT
+switch	Magic080_Task	detour	costly		src/game/platform/magic_080.cpp:1117	BOF3_INJECT
 switch	Magic087_Child	detour	costly		src/game/magic/magic_087.cpp:631	BOF3_INJECT
 switch	Magic087_ChildEnd	detour	costly		src/game/magic/magic_087.cpp:637	BOF3_INJECT
 switch	Magic087_ChildGrow	detour	costly		src/game/magic/magic_087.cpp:636	BOF3_INJECT
@@ -7638,7 +7639,7 @@ switch	MasterPanel_DrawFace	detour	costly		src/game/menu/master_talk_2.cpp:407	B
 switch	MasterPanel_DrawMember	detour	costly		src/game/menu/master_talk.cpp:380	BOF3_INJECT
 switch	MasterPanel_DrawStats	detour	costly		src/game/menu/master_talk.cpp:379	BOF3_INJECT
 switch	MasterPanel_ExpForLevel	detour	costly		src/game/menu/master_talk.cpp:382	BOF3_INJECT
-switch	MasterPupilLabel	code	yes		src/game/shop/shop_win_2.cpp:772	PatchBytes
+switch	MasterPupilLabel	code	yes		src/game/shop/shop_win_2.cpp:771	PatchBytes
 switch	MasterQuit_ByStep	detour	costly		src/game/menu/master_quit.cpp:425	BOF3_INJECT
 switch	MasterQuit_Step2Pick	detour	costly		src/game/menu/master_quit.cpp:426	BOF3_INJECT
 switch	MasterQuit_Step3Ask	detour	costly		src/game/menu/master_quit.cpp:427	BOF3_INJECT
@@ -7669,17 +7670,17 @@ switch	MasterTalk_Say5	detour	costly		src/game/menu/master_talk_2.cpp:414	BOF3_I
 switch	MasterTalk_Say6	detour	costly		src/game/menu/master_talk_2.cpp:415	BOF3_INJECT
 switch	MasterTalk_Say8	detour	costly		src/game/menu/master_talk_2.cpp:417	BOF3_INJECT
 switch	MasterTalk_SayFarewell	detour	costly		src/game/menu/master_talk_2.cpp:419	BOF3_INJECT
-switch	MasterWin_Available	detour	costly		src/game/shop/shop_win_2.cpp:811	BOF3_INJECT
-switch	MasterWin_CaptionSlideTo8C	detour	costly		src/game/shop/shop_win_2.cpp:804	BOF3_INJECT
-switch	MasterWin_DrawCaption	detour	costly		src/game/shop/shop_win_2.cpp:813	BOF3_INJECT
-switch	MasterWin_DrawList	detour	costly		src/game/shop/shop_win_2.cpp:810	BOF3_INJECT
-switch	MasterWin_DrawPortrait	detour	costly		src/game/shop/shop_win_2.cpp:815	BOF3_INJECT
-switch	MasterWin_DrawPupils	detour	costly		src/game/shop/shop_win_2.cpp:814	BOF3_INJECT
-switch	MasterWin_PupilsSlideDown	detour	costly		src/game/shop/shop_win_2.cpp:806	BOF3_INJECT
-switch	MasterWin_PupilsSlideUp	detour	costly		src/game/shop/shop_win_2.cpp:807	BOF3_INJECT
-switch	MasterWin_SkillKnown	detour	costly		src/game/shop/shop_win_2.cpp:812	BOF3_INJECT
-switch	MasterWin_SlideOut	detour	costly		src/game/shop/shop_win_2.cpp:801	BOF3_INJECT
-switch	MasterWin_SlideTo64	detour	costly		src/game/shop/shop_win_2.cpp:802	BOF3_INJECT
+switch	MasterWin_Available	detour	costly		src/game/shop/shop_win_2.cpp:810	BOF3_INJECT
+switch	MasterWin_CaptionSlideTo8C	detour	costly		src/game/shop/shop_win_2.cpp:803	BOF3_INJECT
+switch	MasterWin_DrawCaption	detour	costly		src/game/shop/shop_win_2.cpp:812	BOF3_INJECT
+switch	MasterWin_DrawList	detour	costly		src/game/shop/shop_win_2.cpp:809	BOF3_INJECT
+switch	MasterWin_DrawPortrait	detour	costly		src/game/shop/shop_win_2.cpp:814	BOF3_INJECT
+switch	MasterWin_DrawPupils	detour	costly		src/game/shop/shop_win_2.cpp:813	BOF3_INJECT
+switch	MasterWin_PupilsSlideDown	detour	costly		src/game/shop/shop_win_2.cpp:805	BOF3_INJECT
+switch	MasterWin_PupilsSlideUp	detour	costly		src/game/shop/shop_win_2.cpp:806	BOF3_INJECT
+switch	MasterWin_SkillKnown	detour	costly		src/game/shop/shop_win_2.cpp:811	BOF3_INJECT
+switch	MasterWin_SlideOut	detour	costly		src/game/shop/shop_win_2.cpp:800	BOF3_INJECT
+switch	MasterWin_SlideTo64	detour	costly		src/game/shop/shop_win_2.cpp:801	BOF3_INJECT
 switch	Math_Cos	detour	costly		src/game/platform/gte.cpp:846	BOF3_INJECT
 switch	Math_Ratan2	detour	costly		src/game/platform/gte.cpp:847	BOF3_INJECT
 switch	Math_Sin	detour	costly		src/game/platform/gte.cpp:845	BOF3_INJECT
@@ -7695,7 +7696,7 @@ switch	Member_JumpAir	detour	costly		src/game/field/member.cpp:867	BOF3_INJECT
 switch	Member_JumpState	detour	costly		src/game/field/member.cpp:866	BOF3_INJECT
 switch	Member_ResumeUnlessHeld	detour	costly		src/game/field/member.cpp:862	BOF3_INJECT
 switch	Member_ResumeUnlessHeld800	detour	costly		src/game/field/member.cpp:863	BOF3_INJECT
-switch	Member_SetState2_8	detour	costly		src/game/field/event_cond.cpp:1212	BOF3_INJECT
+switch	Member_SetState2_8	detour	costly		src/game/field/event_cond.cpp:1241	BOF3_INJECT
 switch	Member_Start	detour	costly		src/game/field/member.cpp:853	BOF3_INJECT
 switch	Member_StepAhead	detour	costly		src/game/field/member.cpp:859	BOF3_INJECT
 switch	Member_Walk	detour	costly		src/game/field/member.cpp:856	BOF3_INJECT
@@ -7703,7 +7704,7 @@ switch	Member_WalkEnd	detour	costly		src/game/field/member.cpp:857	BOF3_INJECT
 switch	Menu_DrawAbilityPanel	detour	costly		src/game/menu/menu.cpp:1524	BOF3_INJECT
 switch	Menu_DrawBackdrop	detour	costly		src/game/menu/menu.cpp:1521	BOF3_INJECT
 switch	Menu_DrawBigIcon	detour	costly		src/game/menu/menu.cpp:1506	BOF3_INJECT
-switch	Menu_DrawBlackScreen	detour	costly		src/game/shop/field_save.cpp:1088	BOF3_INJECT
+switch	Menu_DrawBlackScreen	detour	costly		src/game/shop/field_save.cpp:1087	BOF3_INJECT
 switch	Menu_DrawBorder	detour	costly		src/game/menu/menu.cpp:1525	BOF3_INJECT
 switch	Menu_DrawBox	detour	costly		src/game/menu/menu_2.cpp:764	BOF3_INJECT
 switch	Menu_DrawButtonRow	detour	costly		src/game/menu/menu.cpp:1515	BOF3_INJECT
@@ -7739,75 +7740,75 @@ switch	Menu_DrawSkillRow	detour	costly		src/game/menu/menu_2.cpp:776	BOF3_INJECT
 switch	Menu_DrawStatsPanel	detour	costly		src/game/menu/menu.cpp:1502	BOF3_INJECT
 switch	Menu_DrawTile16	detour	costly		src/game/menu/menu.cpp:1509	BOF3_INJECT
 switch	Menu_DrawTitleBox	detour	costly		src/game/menu/menu.cpp:1518	BOF3_INJECT
-switch	Menu_DrawVerbPair	detour	costly		src/game/battle/battle_menu_win.cpp:1249	BOF3_INJECT
+switch	Menu_DrawVerbPair	detour	costly		src/game/battle/battle_menu_win.cpp:1258	BOF3_INJECT
 switch	Menu_Frame	detour	costly		src/game/field/field_3.cpp:1544	BOF3_INJECT
 switch	Menu_ListScroll	detour	costly		src/game/menu/menu_2.cpp:778	BOF3_INJECT
 switch	Menu_PieceRect	detour	costly		src/game/menu/menu_2.cpp:770	BOF3_INJECT
 switch	Menu_StepAfterTimer	detour	costly		src/game/shop/shared_list.cpp:952	BOF3_INJECT
 switch	Menu_WaitTransition	detour	costly		src/game/core/transition.cpp:1623	BOF3_INJECT
 switch	Menu_YesNo	detour	costly		src/game/menu/menu.cpp:1514	BOF3_INJECT
-switch	MenuList_AbilityPanel	detour	costly		src/game/menu/menu_list.cpp:2985	BOF3_INJECT
-switch	MenuList_ButtonRow	detour	costly		src/game/menu/menu_list.cpp:2977	BOF3_INJECT
-switch	MenuList_CursorBox	detour	costly		src/game/menu/menu_list.cpp:2968	BOF3_INJECT
-switch	MenuList_DrawLabelList	detour	costly		src/game/menu/menu_list.cpp:2980	BOF3_INJECT
-switch	MenuList_DrawMemberPanel	detour	costly		src/game/menu/menu_list.cpp:2938	BOF3_INJECT
-switch	MenuList_EquipCompare	detour	costly		src/game/menu/menu_list.cpp:2981	BOF3_INJECT
-switch	MenuList_EquipPanel	detour	costly		src/game/menu/menu_list.cpp:2959	BOF3_INJECT
-switch	MenuList_ExpPanel	detour	costly		src/game/menu/menu_list.cpp:2961	BOF3_INJECT
-switch	MenuList_GeneWinDraw	detour	costly		src/game/menu/menu_list.cpp:2992	BOF3_INJECT
-switch	MenuList_GeneWinRun	detour	costly		src/game/menu/menu_list.cpp:2991	BOF3_INJECT
-switch	MenuList_IconWheel	detour	costly		src/game/menu/menu_list.cpp:2969	BOF3_INJECT
-switch	MenuList_ItemList	detour	costly		src/game/menu/menu_list.cpp:2972	BOF3_INJECT
-switch	MenuList_ItemPanel	detour	costly		src/game/menu/menu_list.cpp:2987	BOF3_INJECT
-switch	MenuList_LabelList	detour	costly		src/game/menu/menu_list.cpp:2979	BOF3_INJECT
-switch	MenuList_MemberPanel	detour	costly		src/game/menu/menu_list.cpp:2937	BOF3_INJECT
-switch	MenuList_MoneyBox	detour	costly		src/game/menu/menu_list.cpp:2945	BOF3_INJECT
-switch	MenuList_NextLevelPanel	detour	costly		src/game/menu/menu_list.cpp:2963	BOF3_INJECT
-switch	MenuList_ReservePanel	detour	costly		src/game/menu/menu_list.cpp:2988	BOF3_INJECT
-switch	MenuList_ReserveWinDraw	detour	costly		src/game/menu/menu_list.cpp:2990	BOF3_INJECT
-switch	MenuList_Run	detour	costly		src/game/menu/menu_list.cpp:2936	BOF3_INJECT
-switch	MenuList_SlideDownTo42	detour	costly		src/game/menu/menu_list.cpp:2951	BOF3_INJECT
-switch	MenuList_SlideDownToPanelRow	detour	costly		src/game/menu/menu_list.cpp:2956	BOF3_INJECT
-switch	MenuList_SlideLeftBesidePanel	detour	costly		src/game/menu/menu_list.cpp:2954	BOF3_INJECT
-switch	MenuList_SlideLeftOff100	detour	costly		src/game/menu/menu_list.cpp:2948	BOF3_INJECT
-switch	MenuList_SlideLeftOff110	detour	costly		src/game/menu/menu_list.cpp:2964	BOF3_INJECT
-switch	MenuList_SlideLeftOff180	detour	costly		src/game/menu/menu_list.cpp:2957	BOF3_INJECT
-switch	MenuList_SlideLeftOff300	detour	costly		src/game/menu/menu_list.cpp:2942	BOF3_INJECT
-switch	MenuList_SlideLeftTo150	detour	costly		src/game/menu/menu_list.cpp:2989	BOF3_INJECT
-switch	MenuList_SlideLeftTo152	detour	costly		src/game/menu/menu_list.cpp:2976	BOF3_INJECT
-switch	MenuList_SlideLeftTo165	detour	costly		src/game/menu/menu_list.cpp:2982	BOF3_INJECT
-switch	MenuList_SlideLeftTo166	detour	costly		src/game/menu/menu_list.cpp:2960	BOF3_INJECT
-switch	MenuList_SlideLeftTo17	detour	costly		src/game/menu/menu_list.cpp:2983	BOF3_INJECT
-switch	MenuList_SlideLeftTo182	detour	costly		src/game/menu/menu_list.cpp:2944	BOF3_INJECT
-switch	MenuList_SlideLeftTo200	detour	costly		src/game/menu/menu_list.cpp:2946	BOF3_INJECT
-switch	MenuList_SlideLeftTo92	detour	costly		src/game/menu/menu_list.cpp:2940	BOF3_INJECT
-switch	MenuList_SlideLeftToColumn	detour	costly		src/game/menu/menu_list.cpp:2971	BOF3_INJECT
-switch	MenuList_SlideRightOffColumn	detour	costly		src/game/menu/menu_list.cpp:2970	BOF3_INJECT
-switch	MenuList_SlideRightTo137Ge	detour	costly		src/game/menu/menu_list.cpp:2958	BOF3_INJECT
-switch	MenuList_SlideRightTo150	detour	costly		src/game/menu/menu_list.cpp:2986	BOF3_INJECT
-switch	MenuList_SlideRightTo16	detour	costly		src/game/menu/menu_list.cpp:2949	BOF3_INJECT
-switch	MenuList_SlideRightTo165	detour	costly		src/game/menu/menu_list.cpp:2984	BOF3_INJECT
-switch	MenuList_SlideRightTo17Ge	detour	costly		src/game/menu/menu_list.cpp:2943	BOF3_INJECT
-switch	MenuList_SlideRightTo182	detour	costly		src/game/menu/menu_list.cpp:2939	BOF3_INJECT
-switch	MenuList_SlideRightTo45	detour	costly		src/game/menu/menu_list.cpp:2962	BOF3_INJECT
-switch	MenuList_SlideRightTo92	detour	costly		src/game/menu/menu_list.cpp:2941	BOF3_INJECT
-switch	MenuList_SlideUpTo62Le	detour	costly		src/game/menu/menu_list.cpp:2955	BOF3_INJECT
-switch	MenuList_StatsPanel	detour	costly		src/game/menu/menu_list.cpp:2953	BOF3_INJECT
-switch	MenuList_TimeBox	detour	costly		src/game/menu/menu_list.cpp:2947	BOF3_INJECT
-switch	MenuList_TitleBox	detour	costly		src/game/menu/menu_list.cpp:2952	BOF3_INJECT
-switch	MenuList_TopBarIcons	detour	costly		src/game/menu/menu_list.cpp:2950	BOF3_INJECT
-switch	MenuList_WideTitleBox	detour	costly		src/game/menu/menu_list.cpp:2965	BOF3_INJECT
+switch	MenuList_AbilityPanel	detour	costly		src/game/menu/menu_list.cpp:2984	BOF3_INJECT
+switch	MenuList_ButtonRow	detour	costly		src/game/menu/menu_list.cpp:2976	BOF3_INJECT
+switch	MenuList_CursorBox	detour	costly		src/game/menu/menu_list.cpp:2967	BOF3_INJECT
+switch	MenuList_DrawLabelList	detour	costly		src/game/menu/menu_list.cpp:2979	BOF3_INJECT
+switch	MenuList_DrawMemberPanel	detour	costly		src/game/menu/menu_list.cpp:2937	BOF3_INJECT
+switch	MenuList_EquipCompare	detour	costly		src/game/menu/menu_list.cpp:2980	BOF3_INJECT
+switch	MenuList_EquipPanel	detour	costly		src/game/menu/menu_list.cpp:2958	BOF3_INJECT
+switch	MenuList_ExpPanel	detour	costly		src/game/menu/menu_list.cpp:2960	BOF3_INJECT
+switch	MenuList_GeneWinDraw	detour	costly		src/game/menu/menu_list.cpp:2991	BOF3_INJECT
+switch	MenuList_GeneWinRun	detour	costly		src/game/menu/menu_list.cpp:2990	BOF3_INJECT
+switch	MenuList_IconWheel	detour	costly		src/game/menu/menu_list.cpp:2968	BOF3_INJECT
+switch	MenuList_ItemList	detour	costly		src/game/menu/menu_list.cpp:2971	BOF3_INJECT
+switch	MenuList_ItemPanel	detour	costly		src/game/menu/menu_list.cpp:2986	BOF3_INJECT
+switch	MenuList_LabelList	detour	costly		src/game/menu/menu_list.cpp:2978	BOF3_INJECT
+switch	MenuList_MemberPanel	detour	costly		src/game/menu/menu_list.cpp:2936	BOF3_INJECT
+switch	MenuList_MoneyBox	detour	costly		src/game/menu/menu_list.cpp:2944	BOF3_INJECT
+switch	MenuList_NextLevelPanel	detour	costly		src/game/menu/menu_list.cpp:2962	BOF3_INJECT
+switch	MenuList_ReservePanel	detour	costly		src/game/menu/menu_list.cpp:2987	BOF3_INJECT
+switch	MenuList_ReserveWinDraw	detour	costly		src/game/menu/menu_list.cpp:2989	BOF3_INJECT
+switch	MenuList_Run	detour	costly		src/game/menu/menu_list.cpp:2935	BOF3_INJECT
+switch	MenuList_SlideDownTo42	detour	costly		src/game/menu/menu_list.cpp:2950	BOF3_INJECT
+switch	MenuList_SlideDownToPanelRow	detour	costly		src/game/menu/menu_list.cpp:2955	BOF3_INJECT
+switch	MenuList_SlideLeftBesidePanel	detour	costly		src/game/menu/menu_list.cpp:2953	BOF3_INJECT
+switch	MenuList_SlideLeftOff100	detour	costly		src/game/menu/menu_list.cpp:2947	BOF3_INJECT
+switch	MenuList_SlideLeftOff110	detour	costly		src/game/menu/menu_list.cpp:2963	BOF3_INJECT
+switch	MenuList_SlideLeftOff180	detour	costly		src/game/menu/menu_list.cpp:2956	BOF3_INJECT
+switch	MenuList_SlideLeftOff300	detour	costly		src/game/menu/menu_list.cpp:2941	BOF3_INJECT
+switch	MenuList_SlideLeftTo150	detour	costly		src/game/menu/menu_list.cpp:2988	BOF3_INJECT
+switch	MenuList_SlideLeftTo152	detour	costly		src/game/menu/menu_list.cpp:2975	BOF3_INJECT
+switch	MenuList_SlideLeftTo165	detour	costly		src/game/menu/menu_list.cpp:2981	BOF3_INJECT
+switch	MenuList_SlideLeftTo166	detour	costly		src/game/menu/menu_list.cpp:2959	BOF3_INJECT
+switch	MenuList_SlideLeftTo17	detour	costly		src/game/menu/menu_list.cpp:2982	BOF3_INJECT
+switch	MenuList_SlideLeftTo182	detour	costly		src/game/menu/menu_list.cpp:2943	BOF3_INJECT
+switch	MenuList_SlideLeftTo200	detour	costly		src/game/menu/menu_list.cpp:2945	BOF3_INJECT
+switch	MenuList_SlideLeftTo92	detour	costly		src/game/menu/menu_list.cpp:2939	BOF3_INJECT
+switch	MenuList_SlideLeftToColumn	detour	costly		src/game/menu/menu_list.cpp:2970	BOF3_INJECT
+switch	MenuList_SlideRightOffColumn	detour	costly		src/game/menu/menu_list.cpp:2969	BOF3_INJECT
+switch	MenuList_SlideRightTo137Ge	detour	costly		src/game/menu/menu_list.cpp:2957	BOF3_INJECT
+switch	MenuList_SlideRightTo150	detour	costly		src/game/menu/menu_list.cpp:2985	BOF3_INJECT
+switch	MenuList_SlideRightTo16	detour	costly		src/game/menu/menu_list.cpp:2948	BOF3_INJECT
+switch	MenuList_SlideRightTo165	detour	costly		src/game/menu/menu_list.cpp:2983	BOF3_INJECT
+switch	MenuList_SlideRightTo17Ge	detour	costly		src/game/menu/menu_list.cpp:2942	BOF3_INJECT
+switch	MenuList_SlideRightTo182	detour	costly		src/game/menu/menu_list.cpp:2938	BOF3_INJECT
+switch	MenuList_SlideRightTo45	detour	costly		src/game/menu/menu_list.cpp:2961	BOF3_INJECT
+switch	MenuList_SlideRightTo92	detour	costly		src/game/menu/menu_list.cpp:2940	BOF3_INJECT
+switch	MenuList_SlideUpTo62Le	detour	costly		src/game/menu/menu_list.cpp:2954	BOF3_INJECT
+switch	MenuList_StatsPanel	detour	costly		src/game/menu/menu_list.cpp:2952	BOF3_INJECT
+switch	MenuList_TimeBox	detour	costly		src/game/menu/menu_list.cpp:2946	BOF3_INJECT
+switch	MenuList_TitleBox	detour	costly		src/game/menu/menu_list.cpp:2951	BOF3_INJECT
+switch	MenuList_TopBarIcons	detour	costly		src/game/menu/menu_list.cpp:2949	BOF3_INJECT
+switch	MenuList_WideTitleBox	detour	costly		src/game/menu/menu_list.cpp:2964	BOF3_INJECT
 switch	MenuSignedXY	code	yes		src/game/menu/menu_2.cpp:757	PatchBytes
-switch	MenuSlide_DownTo16	detour	costly		src/game/menu/menu_list.cpp:2967	BOF3_INJECT
-switch	MenuSlide_DownTo38	detour	costly		src/game/menu/menu_list.cpp:2978	BOF3_INJECT
+switch	MenuSlide_DownTo16	detour	costly		src/game/menu/menu_list.cpp:2966	BOF3_INJECT
+switch	MenuSlide_DownTo38	detour	costly		src/game/menu/menu_list.cpp:2977	BOF3_INJECT
 switch	MenuSlide_DownTo40	detour	costly		src/game/menu/window.cpp:1283	BOF3_INJECT
-switch	MenuSlide_LeftOff	detour	costly		src/game/menu/menu_list.cpp:2973	BOF3_INJECT
+switch	MenuSlide_LeftOff	detour	costly		src/game/menu/menu_list.cpp:2972	BOF3_INJECT
 switch	MenuSlide_LeftOff170	detour	costly		src/game/menu/window.cpp:1278	BOF3_INJECT
-switch	MenuSlide_RightOff	detour	costly		src/game/menu/menu_list.cpp:2975	BOF3_INJECT
-switch	MenuSlide_RightTo17	detour	costly		src/game/menu/menu_list.cpp:2974	BOF3_INJECT
+switch	MenuSlide_RightOff	detour	costly		src/game/menu/menu_list.cpp:2974	BOF3_INJECT
+switch	MenuSlide_RightTo17	detour	costly		src/game/menu/menu_list.cpp:2973	BOF3_INJECT
 switch	MenuSlide_RightTo80	detour	costly		src/game/menu/window.cpp:1279	BOF3_INJECT
-switch	MenuSlide_UpOff	detour	costly		src/game/menu/menu_list.cpp:2966	BOF3_INJECT
-switch	MenuTitleCentre	code	yes		src/game/menu/menu_list.cpp:2820	PatchBytes
+switch	MenuSlide_UpOff	detour	costly		src/game/menu/menu_list.cpp:2965	BOF3_INJECT
+switch	MenuTitleCentre	code	yes		src/game/menu/menu_list.cpp:2819	PatchBytes
 switch	MenuVerbs	code	yes		src/game/menu/menu_verbs.cpp:140	RetargetCall
 switch	MenuWin_Hand	detour	costly		src/game/menu/window_2.cpp:66	BOF3_INJECT
 switch	MenuWin_SlideOutLeft	detour	costly		src/game/menu/menu_win.cpp:76	BOF3_INJECT
@@ -7898,20 +7899,20 @@ switch	MoveCmd_Op87Start	detour	costly		src/game/field/move_cmd.cpp:212	BOF3_INJ
 switch	MoveCmd_Op88	detour	costly		src/game/field/move_cmd.cpp:208	BOF3_INJECT
 switch	MoveCmd_Op88Fade	detour	costly		src/game/field/move_cmd.cpp:210	BOF3_INJECT
 switch	MoveCmd_Op88Start	detour	costly		src/game/field/move_cmd.cpp:209	BOF3_INJECT
-switch	MoveCmd_OpDB	detour	costly		src/game/field/event_cond.cpp:1218	BOF3_INJECT
+switch	MoveCmd_OpDB	detour	costly		src/game/field/event_cond.cpp:1247	BOF3_INJECT
 switch	MoveCmd_OpE7	detour	costly		src/game/field/field_3.cpp:1575	BOF3_INJECT
-switch	MoveCmd_OpE9	detour	costly		src/game/field/event_cond.cpp:1213	BOF3_INJECT
-switch	MoveCmd_OpE9Arc	detour	costly		src/game/field/event_cond.cpp:1215	BOF3_INJECT
-switch	MoveCmd_OpE9Fall	detour	costly		src/game/field/event_cond.cpp:1217	BOF3_INJECT
-switch	MoveCmd_OpE9Kind2	detour	costly		src/game/field/event_cond.cpp:1216	BOF3_INJECT
-switch	MoveCmd_OpE9Start	detour	costly		src/game/field/event_cond.cpp:1214	BOF3_INJECT
+switch	MoveCmd_OpE9	detour	costly		src/game/field/event_cond.cpp:1242	BOF3_INJECT
+switch	MoveCmd_OpE9Arc	detour	costly		src/game/field/event_cond.cpp:1244	BOF3_INJECT
+switch	MoveCmd_OpE9Fall	detour	costly		src/game/field/event_cond.cpp:1246	BOF3_INJECT
+switch	MoveCmd_OpE9Kind2	detour	costly		src/game/field/event_cond.cpp:1245	BOF3_INJECT
+switch	MoveCmd_OpE9Start	detour	costly		src/game/field/event_cond.cpp:1243	BOF3_INJECT
 switch	MoveCmd_OpF7	detour	costly		src/game/field/move_script.cpp:1278	BOF3_INJECT
 switch	MoveCmd_OpF9	detour	costly		src/game/field/move_script.cpp:1281	BOF3_INJECT
 switch	MoveCmd_TestFB	detour	costly		src/game/field/area_map.cpp:3610	BOF3_INJECT
 switch	MoveCmd_TestFC	detour	costly		src/game/field/area_map.cpp:3611	BOF3_INJECT
-switch	MoveScript_CounterSet	detour	costly		src/game/field/event_cond.cpp:1198	BOF3_INJECT
-switch	MoveScript_CounterStep	detour	costly		src/game/field/event_cond.cpp:1200	BOF3_INJECT
-switch	MoveScript_CounterTest	detour	costly		src/game/field/event_cond.cpp:1199	BOF3_INJECT
+switch	MoveScript_CounterSet	detour	costly		src/game/field/event_cond.cpp:1227	BOF3_INJECT
+switch	MoveScript_CounterStep	detour	costly		src/game/field/event_cond.cpp:1229	BOF3_INJECT
+switch	MoveScript_CounterTest	detour	costly		src/game/field/event_cond.cpp:1228	BOF3_INJECT
 switch	MoveScript_FindLabel	detour	costly		src/game/field/move_cmd.cpp:207	BOF3_INJECT
 switch	MoveScript_Flow	detour	costly		src/game/field/move_script.cpp:1268	BOF3_INJECT
 switch	MoveScript_Group6	detour	costly		src/game/field/move_script.cpp:1276	BOF3_INJECT
@@ -7922,11 +7923,11 @@ switch	MoveScript_GroupC	detour	costly		src/game/field/move_script.cpp:1273	BOF3
 switch	MoveScript_GroupD	detour	costly		src/game/field/move_script.cpp:1272	BOF3_INJECT
 switch	MoveScript_GroupE	detour	costly		src/game/field/move_script.cpp:1270	BOF3_INJECT
 switch	MoveScript_GroupF	detour	costly		src/game/field/move_script.cpp:1271	BOF3_INJECT
-switch	MoveScript_ObjectKind	detour	costly		src/game/field/event_cond.cpp:1211	BOF3_INJECT
+switch	MoveScript_ObjectKind	detour	costly		src/game/field/event_cond.cpp:1240	BOF3_INJECT
 switch	MoveScript_Step	detour	costly		src/game/field/move_script.cpp:1267	BOF3_INJECT
-switch	MoveScript_TintFrame	detour	costly		src/game/field/field_2.cpp:599	BOF3_INJECT
-switch	MoveScript_TintReset	detour	costly		src/game/field/field_2.cpp:595	BOF3_INJECT
-switch	MoveScript_Variable	detour	costly		src/game/field/event_cond.cpp:1193	BOF3_INJECT
+switch	MoveScript_TintFrame	detour	costly		src/game/field/field_2.cpp:598	BOF3_INJECT
+switch	MoveScript_TintReset	detour	costly		src/game/field/field_2.cpp:594	BOF3_INJECT
+switch	MoveScript_Variable	detour	costly		src/game/field/event_cond.cpp:1222	BOF3_INJECT
 switch	Msg_OpenScript	detour	costly		src/game/text/msg_box.cpp:1542	BOF3_INJECT
 switch	Msg_OpenSystem	detour	costly		src/game/text/msg_box.cpp:1529	BOF3_INJECT
 switch	Msg_SystemPtr	detour	costly		src/game/text/msg_box.cpp:1538	BOF3_INJECT
@@ -7991,26 +7992,26 @@ switch	MsgBox_SysChoice8D	detour	costly		src/game/text/msg_box.cpp:1523	BOF3_INJ
 switch	MsgBox_SysChoice8E	detour	costly		src/game/text/msg_box.cpp:1524	BOF3_INJECT
 switch	MsgBox_SysChoice8F	detour	costly		src/game/text/msg_box.cpp:1525	BOF3_INJECT
 switch	MsgBox_SystemChoice	detour	costly		src/game/text/msg_box.cpp:1534	BOF3_INJECT
-switch	MsgBoxEffectSpaceSkips	code	yes		src/game/text/msgbox.cpp:761	PatchBytes
-switch	Music_CreateBuffer	detour	costly		src/game/platform/music.cpp:821	BOF3_INJECT
-switch	Music_Decode	detour	costly		src/game/platform/music.cpp:822	BOF3_INJECT
-switch	Music_FadeIn	detour	costly		src/game/core/sound.cpp:1449	BOF3_INJECT
-switch	Music_FadeOut	detour	costly		src/game/core/sound.cpp:1450	BOF3_INJECT
-switch	Music_FadeOutStop	detour	costly		src/game/core/sound.cpp:1446	BOF3_INJECT
-switch	Music_Halt	detour	costly		src/game/platform/music.cpp:824	BOF3_INJECT
-switch	Music_IsPlaying	detour	costly		src/game/platform/music.cpp:825	BOF3_INJECT
-switch	Music_LoadFile	detour	costly		src/game/core/sound.cpp:1444	BOF3_INJECT
-switch	Music_OpenDecoder	detour	costly		src/game/platform/music.cpp:819	BOF3_INJECT
-switch	Music_Play	detour	costly		src/game/core/sound.cpp:1445	BOF3_INJECT
-switch	Music_Pump	detour	costly		src/game/platform/music.cpp:832	BOF3_INJECT
-switch	Music_Release	detour	costly		src/game/platform/music.cpp:828	BOF3_INJECT
-switch	Music_Resume	detour	costly		src/game/platform/music.cpp:827	BOF3_INJECT
-switch	Music_SetNotify	detour	costly		src/game/platform/music.cpp:820	BOF3_INJECT
-switch	Music_SetVolume	detour	costly		src/game/platform/music.cpp:823	BOF3_INJECT
-switch	Music_Start	detour	costly		src/game/platform/music.cpp:818	BOF3_INJECT
-switch	Music_Stop	detour	costly		src/game/platform/music.cpp:826	BOF3_INJECT
+switch	MsgBoxEffectSpaceSkips	code	yes		src/game/text/msgbox.cpp:760	PatchBytes
+switch	Music_CreateBuffer	detour	costly		src/game/platform/music.cpp:820	BOF3_INJECT
+switch	Music_Decode	detour	costly		src/game/platform/music.cpp:821	BOF3_INJECT
+switch	Music_FadeIn	detour	costly		src/game/core/sound.cpp:1448	BOF3_INJECT
+switch	Music_FadeOut	detour	costly		src/game/core/sound.cpp:1449	BOF3_INJECT
+switch	Music_FadeOutStop	detour	costly		src/game/core/sound.cpp:1445	BOF3_INJECT
+switch	Music_Halt	detour	costly		src/game/platform/music.cpp:823	BOF3_INJECT
+switch	Music_IsPlaying	detour	costly		src/game/platform/music.cpp:824	BOF3_INJECT
+switch	Music_LoadFile	detour	costly		src/game/core/sound.cpp:1443	BOF3_INJECT
+switch	Music_OpenDecoder	detour	costly		src/game/platform/music.cpp:818	BOF3_INJECT
+switch	Music_Play	detour	costly		src/game/core/sound.cpp:1444	BOF3_INJECT
+switch	Music_Pump	detour	costly		src/game/platform/music.cpp:831	BOF3_INJECT
+switch	Music_Release	detour	costly		src/game/platform/music.cpp:827	BOF3_INJECT
+switch	Music_Resume	detour	costly		src/game/platform/music.cpp:826	BOF3_INJECT
+switch	Music_SetNotify	detour	costly		src/game/platform/music.cpp:819	BOF3_INJECT
+switch	Music_SetVolume	detour	costly		src/game/platform/music.cpp:822	BOF3_INJECT
+switch	Music_Start	detour	costly		src/game/platform/music.cpp:817	BOF3_INJECT
+switch	Music_Stop	detour	costly		src/game/platform/music.cpp:825	BOF3_INJECT
 switch	MusicFadePerFrame	code	yes		src/game/platform/sound_ours.cpp:824	PatchBytes
-switch	MusicPlayRefusesNone	code	yes		src/game/platform/sound_ours.cpp:1296	PatchBytes
+switch	MusicPlayRefusesNone	code	yes		src/game/platform/sound_ours.cpp:1298	PatchBytes
 switch	Myollnir_Darken	detour	costly		src/game/magic/myollnir.cpp:657	BOF3_INJECT
 switch	Myollnir_DrawBand	detour	costly		src/game/magic/myollnir.cpp:670	BOF3_INJECT
 switch	Myollnir_DrawFlash	detour	costly		src/game/magic/myollnir.cpp:677	BOF3_INJECT
@@ -8035,8 +8036,8 @@ switch	MyollnirRing_Grow	detour	costly		src/game/magic/myollnir.cpp:673	BOF3_INJ
 switch	MyollnirRing_Run	detour	costly		src/game/magic/myollnir.cpp:671	BOF3_INJECT
 switch	MyollnirRing_Start	detour	costly		src/game/magic/myollnir.cpp:672	BOF3_INJECT
 switch	NewGame_InitCharacters	detour	costly		src/game/battle/battle.cpp:157	BOF3_INJECT
-switch	NewGame_RollGrowth	detour	costly		src/game/core/sound.cpp:1478	BOF3_INJECT
-switch	NewGame_RollSum	detour	costly		src/game/core/sound.cpp:1479	BOF3_INJECT
+switch	NewGame_RollGrowth	detour	costly		src/game/core/sound.cpp:1477	BOF3_INJECT
+switch	NewGame_RollSum	detour	costly		src/game/core/sound.cpp:1478	BOF3_INJECT
 switch	NewGameNameEntry	code	yes		src/game/core/new_game.cpp:461	PatchBytes
 switch	NewGameOptions	code	yes		src/game/core/new_game.cpp:462	PatchBytes
 switch	NueStomp_Start	detour	costly		src/game/magic/nue_stomp_child.cpp:343	BOF3_INJECT
@@ -8053,8 +8054,8 @@ switch	NueStompChild_Rise	detour	costly		src/game/magic/nue_stomp_child.cpp:348	
 switch	NueStompChild_Run	detour	costly		src/game/magic/nue_stomp_child.cpp:345	BOF3_INJECT
 switch	NueStompChild_Stomp	detour	costly		src/game/magic/nue_stomp_child.cpp:353	BOF3_INJECT
 switch	NueStompChild_Task	detour	costly		src/game/magic/nue_stomp_child.cpp:344	BOF3_INJECT
-switch	ObjTrio_ClearBit40	detour	costly		src/game/field/event_cond.cpp:1209	BOF3_INJECT
-switch	ObjTrio_SetBit40	detour	costly		src/game/field/event_cond.cpp:1210	BOF3_INJECT
+switch	ObjTrio_ClearBit40	detour	costly		src/game/field/event_cond.cpp:1238	BOF3_INJECT
+switch	ObjTrio_SetBit40	detour	costly		src/game/field/event_cond.cpp:1239	BOF3_INJECT
 switch	ObjTrio_SwapFields	detour	costly		src/game/field/field_6.cpp:3279	BOF3_INJECT
 switch	OneShotKeyOff	code	yes		src/game/platform/sound_st.cpp:98	PatchBytes
 switch	Ovum_End	detour	costly		src/game/magic/ovum.cpp:175	BOF3_INJECT
@@ -8064,8 +8065,8 @@ switch	Ovum_Task	detour	costly		src/game/magic/ovum.cpp:172	BOF3_INJECT
 switch	OvumChild_Run	detour	costly		src/game/magic/ovum.cpp:177	BOF3_INJECT
 switch	OvumChild_Start	detour	costly		src/game/magic/ovum.cpp:178	BOF3_INJECT
 switch	OvumChild_Task	detour	costly		src/game/magic/ovum.cpp:176	BOF3_INJECT
-switch	Pad_Read	detour	costly		src/game/platform/d_input.cpp:269	BOF3_INJECT
-switch	PadReset	code	yes		src/game/platform/win_main.cpp:222	PatchBytes
+switch	Pad_Read	detour	costly		src/game/platform/d_input.cpp:456	BOF3_INJECT
+switch	PadReset	code	yes		src/game/platform/win_main.cpp:219	PatchBytes
 switch	Panel_DrawEdgeQuad	detour	costly		src/game/effect/effect_kind_0f.cpp:3259	BOF3_INJECT
 switch	Panel_DrawWindow	detour	costly		src/game/effect/effect_kind_0f.cpp:3269	BOF3_INJECT
 switch	Panel_DrawWindowBevel	detour	costly		src/game/effect/effect_kind_0f.cpp:3270	BOF3_INJECT
@@ -8079,8 +8080,8 @@ switch	Party_ClearActive	detour	costly		src/game/field/mode_11.cpp:771	BOF3_INJE
 switch	Party_ClearAll	detour	costly		src/game/field/mode_11.cpp:770	BOF3_INJECT
 switch	Party_Count	detour	costly		src/game/field/field_6.cpp:3268	BOF3_INJECT
 switch	Party_DropIn	detour	costly		src/game/field/field_6.cpp:3275	BOF3_INJECT
-switch	Party_ExtraFrame	detour	costly		src/game/field/event_cond.cpp:1168	BOF3_INJECT
-switch	Party_ExtraScreens	detour	costly		src/game/field/event_cond.cpp:1167	BOF3_INJECT
+switch	Party_ExtraFrame	detour	costly		src/game/field/event_cond.cpp:1197	BOF3_INJECT
+switch	Party_ExtraScreens	detour	costly		src/game/field/event_cond.cpp:1196	BOF3_INJECT
 switch	Party_HealJoined	detour	costly		src/game/field/field_6.cpp:3305	BOF3_INJECT
 switch	Party_Join	detour	costly		src/game/field/field_6.cpp:3306	BOF3_INJECT
 switch	Party_JoinReset	detour	costly		src/game/field/field_6.cpp:3307	BOF3_INJECT
@@ -8092,7 +8093,7 @@ switch	Party_PlaceInFormation	detour	costly		src/game/field/field_6.cpp:3290	BOF
 switch	Party_PlacesByList	detour	costly		src/game/field/field_6.cpp:3288	BOF3_INJECT
 switch	Party_ReloadPalettes	detour	costly		src/game/field/field_6.cpp:3304	BOF3_INJECT
 switch	Party_Remove	detour	costly		src/game/field/field_6.cpp:3308	BOF3_INJECT
-switch	Party_RestoreAll	detour	costly		src/game/shop/field_save.cpp:1085	BOF3_INJECT
+switch	Party_RestoreAll	detour	costly		src/game/shop/field_save.cpp:1084	BOF3_INJECT
 switch	Party_ScriptTicks	detour	costly		src/game/field/field_6.cpp:3287	BOF3_INJECT
 switch	Party_SetUpMembers	detour	costly		src/game/field/field_6.cpp:3276	BOF3_INJECT
 switch	Party_SwapMembers	detour	costly		src/game/field/field_6.cpp:3278	BOF3_INJECT
@@ -8462,17 +8463,17 @@ switch	Quake_Rumble	detour	costly		src/game/field/quake.cpp:664	BOF3_INJECT
 switch	Quake_Start	detour	costly		src/game/field/quake.cpp:663	BOF3_INJECT
 switch	Quake_Task	detour	costly		src/game/field/quake.cpp:662	BOF3_INJECT
 switch	Quake_VertexLift	detour	costly		src/game/field/quake.cpp:671	BOF3_INJECT
-switch	Rand	detour	costly		src/game/crt_rest.cpp:130 src/game/crt_rest.cpp:462	BOF3_INJECT, Inject
+switch	Rand	detour	costly		src/game/crt_rest.cpp:129 src/game/crt_rest.cpp:546	BOF3_INJECT, Inject
 switch	Records_CountUnpaired	detour	costly		src/game/field/field_6.cpp:3312	BOF3_INJECT
 switch	Records_CountUnpairedOfKind	detour	costly		src/game/field/field_6.cpp:3313	BOF3_INJECT
-switch	Rest_Begin	detour	costly		src/game/shop/field_save.cpp:1078	BOF3_INJECT
-switch	Rest_Dispatch	detour	costly		src/game/shop/field_save.cpp:1077	BOF3_INJECT
-switch	Rest_End	detour	costly		src/game/shop/field_save.cpp:1083	BOF3_INJECT
-switch	Rest_EndAfterMessage	detour	costly		src/game/shop/field_save.cpp:1084	BOF3_INJECT
-switch	Rest_LoadJingle	detour	costly		src/game/shop/field_save.cpp:1080	BOF3_INJECT
-switch	Rest_PlaceParty	detour	costly		src/game/shop/field_save.cpp:1079	BOF3_INJECT
-switch	Rest_Restore	detour	costly		src/game/shop/field_save.cpp:1082	BOF3_INJECT
-switch	Rest_WaitJingle	detour	costly		src/game/shop/field_save.cpp:1081	BOF3_INJECT
+switch	Rest_Begin	detour	costly		src/game/shop/field_save.cpp:1077	BOF3_INJECT
+switch	Rest_Dispatch	detour	costly		src/game/shop/field_save.cpp:1076	BOF3_INJECT
+switch	Rest_End	detour	costly		src/game/shop/field_save.cpp:1082	BOF3_INJECT
+switch	Rest_EndAfterMessage	detour	costly		src/game/shop/field_save.cpp:1083	BOF3_INJECT
+switch	Rest_LoadJingle	detour	costly		src/game/shop/field_save.cpp:1079	BOF3_INJECT
+switch	Rest_PlaceParty	detour	costly		src/game/shop/field_save.cpp:1078	BOF3_INJECT
+switch	Rest_Restore	detour	costly		src/game/shop/field_save.cpp:1081	BOF3_INJECT
+switch	Rest_WaitJingle	detour	costly		src/game/shop/field_save.cpp:1080	BOF3_INJECT
 switch	RestoreForm_Start	detour	costly		src/game/battle/dragon_cmd.cpp:3125	BOF3_INJECT
 switch	RestoreForm_Task	detour	costly		src/game/battle/dragon_cmd.cpp:3124	BOF3_INJECT
 switch	RestoreForm_Wait	detour	costly		src/game/battle/dragon_cmd.cpp:3126	BOF3_INJECT
@@ -8548,19 +8549,19 @@ switch	SanctuaryRing_Draw	detour	costly		src/game/magic/sanctuary_mote.cpp:517	B
 switch	SanctuaryRing_Spread	detour	costly		src/game/magic/sanctuary_mote.cpp:510	BOF3_INJECT
 switch	SanctuaryRing_Start	detour	costly		src/game/magic/sanctuary_mote.cpp:509	BOF3_INJECT
 switch	SanctuaryRing_Task	detour	costly		src/game/magic/sanctuary_mote.cpp:508	BOF3_INJECT
-switch	Save_BuildBlock	detour	costly		src/game/shop/field_save.cpp:1086	BOF3_INJECT
-switch	Save_ListFiles	detour	costly		src/game/field/save.cpp:97	BOF3_INJECT
-switch	Save_QuickWrite	detour	costly		src/game/shop/field_save.cpp:1089	BOF3_INJECT
-switch	Save_ReadFile	detour	costly		src/game/field/save.cpp:95	BOF3_INJECT
-switch	Save_ReadSummaries	detour	costly		src/game/core/sound.cpp:1483	BOF3_INJECT
-switch	Save_WriteFile	detour	costly		src/game/field/save.cpp:96	BOF3_INJECT
+switch	Save_BuildBlock	detour	costly		src/game/shop/field_save.cpp:1085	BOF3_INJECT
+switch	Save_ListFiles	detour	costly		src/game/field/save.cpp:96	BOF3_INJECT
+switch	Save_QuickWrite	detour	costly		src/game/shop/field_save.cpp:1088	BOF3_INJECT
+switch	Save_ReadFile	detour	costly		src/game/field/save.cpp:94	BOF3_INJECT
+switch	Save_ReadSummaries	detour	costly		src/game/core/sound.cpp:1482	BOF3_INJECT
+switch	Save_WriteFile	detour	costly		src/game/field/save.cpp:95	BOF3_INJECT
 switch	SaveLists	code	yes		src/game/core/save_menu.cpp:231	PatchBytes
-switch	SaveMenu_DrawChoices	detour	costly		src/game/shop/field_save.cpp:1087	BOF3_INJECT
-switch	SaveMenu_DrawSlots	detour	costly		src/game/core/sound.cpp:1482	BOF3_INJECT
+switch	SaveMenu_DrawChoices	detour	costly		src/game/shop/field_save.cpp:1086	BOF3_INJECT
+switch	SaveMenu_DrawSlots	detour	costly		src/game/core/sound.cpp:1481	BOF3_INJECT
 switch	SaveNameInset	code	yes		src/game/menu/yes_no_layout.cpp:394	PatchBytes
 switch	SaveSlotBlank	code	yes		src/game/menu/menu.cpp:1544	PatchBytes
 switch	SaveSlotExpBar	code	yes		src/game/menu/menu.cpp:1552	PatchBytes
-switch	SaveSummaryRecord0	code	yes		src/game/shop/field_save.cpp:1042	PatchBytes
+switch	SaveSummaryRecord0	code	yes		src/game/shop/field_save.cpp:1041	PatchBytes
 switch	Scena00_Area02	detour	costly		src/game/scenario/scena_00.cpp:1193	BOF3_INJECT
 switch	Scena00_Area18	detour	costly		src/game/scenario/scena_00.cpp:1194	BOF3_INJECT
 switch	Scena00_EnterArea	detour	costly		src/game/scenario/scena_00.cpp:1192	BOF3_INJECT
@@ -9283,8 +9284,8 @@ switch	Scenario_SubInit	detour	costly		src/game/field/field_7.cpp:1356	BOF3_INJE
 switch	ScenaShared_State0	detour	costly		src/game/scenario/scena_14_2.cpp:1707	BOF3_INJECT
 switch	Screen_TriangleWinding	detour	costly		src/game/effect/effect_gte.cpp:239	BOF3_INJECT
 switch	ScriptContext_Reset	detour	costly		src/game/field/field_6.cpp:3277	BOF3_INJECT
-switch	ScriptFlags_Clear40	detour	costly		src/game/field/event_cond.cpp:1207	BOF3_INJECT
-switch	ScriptFlags_Set40	detour	costly		src/game/field/event_cond.cpp:1208	BOF3_INJECT
+switch	ScriptFlags_Clear40	detour	costly		src/game/field/event_cond.cpp:1236	BOF3_INJECT
+switch	ScriptFlags_Set40	detour	costly		src/game/field/event_cond.cpp:1237	BOF3_INJECT
 switch	ShadowBreath_Start	detour	costly		src/game/magic/shadow_mote.cpp:918	BOF3_INJECT
 switch	ShadowBreath_Task	detour	costly		src/game/magic/shadow_mote.cpp:917	BOF3_INJECT
 switch	ShadowBreathFx_Task	detour	costly		src/game/magic/shadow_mote.cpp:919	BOF3_INJECT
@@ -9387,17 +9388,17 @@ switch	Shisu_ShowFlash	detour	costly		src/game/minigame/shisu.cpp:1001	BOF3_INJE
 switch	Shisu_ShowLanded	detour	costly		src/game/minigame/shisu.cpp:1000	BOF3_INJECT
 switch	Shisu_ShowStart	detour	costly		src/game/minigame/shisu.cpp:998	BOF3_INJECT
 switch	Shop_Close	detour	costly		src/game/core/transition.cpp:1622	BOF3_INJECT
-switch	Shop_DrawBuyDetail	detour	costly		src/game/shop/shop_win_2.cpp:789	BOF3_INJECT
-switch	Shop_DrawBuyList	detour	costly		src/game/shop/shop_win_2.cpp:785	BOF3_INJECT
+switch	Shop_DrawBuyDetail	detour	costly		src/game/shop/shop_win_2.cpp:788	BOF3_INJECT
+switch	Shop_DrawBuyList	detour	costly		src/game/shop/shop_win_2.cpp:784	BOF3_INJECT
 switch	Shop_DrawMemberStats	detour	costly		src/game/menu/menu.cpp:1520	BOF3_INJECT
-switch	Shop_DrawSellDetail	detour	costly		src/game/shop/shop_win_2.cpp:793	BOF3_INJECT
-switch	Shop_Equip	detour	costly		src/game/shop/shop_trade.cpp:1319	BOF3_INJECT
+switch	Shop_DrawSellDetail	detour	costly		src/game/shop/shop_win_2.cpp:792	BOF3_INJECT
+switch	Shop_Equip	detour	costly		src/game/shop/shop_trade.cpp:1318	BOF3_INJECT
 switch	Shop_Frame	detour	costly		src/game/field/field_3.cpp:1545	BOF3_INJECT
-switch	Shop_InitWindows	detour	costly		src/game/shop/shop_trade.cpp:1318	BOF3_INJECT
+switch	Shop_InitWindows	detour	costly		src/game/shop/shop_trade.cpp:1317	BOF3_INJECT
 switch	Shop_Open	detour	costly		src/game/core/transition.cpp:1621	BOF3_INJECT
-switch	Shop_PriceRate	detour	costly		src/game/shop/shop_trade.cpp:1315	BOF3_INJECT
-switch	Shop_ScalePrice	detour	costly		src/game/shop/shop_trade.cpp:1316	BOF3_INJECT
-switch	Shop_SellPrice	detour	costly		src/game/shop/shop_trade.cpp:1317	BOF3_INJECT
+switch	Shop_PriceRate	detour	costly		src/game/shop/shop_trade.cpp:1314	BOF3_INJECT
+switch	Shop_ScalePrice	detour	costly		src/game/shop/shop_trade.cpp:1315	BOF3_INJECT
+switch	Shop_SellPrice	detour	costly		src/game/shop/shop_trade.cpp:1316	BOF3_INJECT
 switch	ShopAskRow	code	yes		src/game/field/leader_panel.cpp:3527	PatchBytes
 switch	ShopBrowse_Choose	detour	costly		src/game/shop/shop_browse.cpp:337	BOF3_INJECT
 switch	ShopBrowse_ChooseStep	detour	costly		src/game/shop/shop_browse.cpp:336	BOF3_INJECT
@@ -9427,62 +9428,62 @@ switch	ShopResist_Notice	detour	costly		src/game/shop/shop_resist.cpp:384	BOF3_I
 switch	ShopResist_Open	detour	costly		src/game/shop/shop_resist.cpp:377	BOF3_INJECT
 switch	ShopResist_PickBit	detour	costly		src/game/shop/shop_resist.cpp:379	BOF3_INJECT
 switch	ShopResist_PickMember	detour	costly		src/game/shop/shop_resist.cpp:378	BOF3_INJECT
-switch	ShopSell_Dispatch	detour	costly		src/game/shop/shop_trade.cpp:1310	BOF3_INJECT
-switch	ShopSell_Leave	detour	costly		src/game/shop/shop_trade.cpp:1312	BOF3_INJECT
-switch	ShopSell_LeaveWait	detour	costly		src/game/shop/shop_trade.cpp:1314	BOF3_INJECT
-switch	ShopSell_Open	detour	costly		src/game/shop/shop_trade.cpp:1311	BOF3_INJECT
-switch	ShopSell_SellStep	detour	costly		src/game/shop/shop_trade.cpp:1313	BOF3_INJECT
-switch	ShopTrade_BuyAskEquip	detour	costly		src/game/shop/shop_trade.cpp:1300	BOF3_INJECT
-switch	ShopTrade_BuyConfirm	detour	costly		src/game/shop/shop_trade.cpp:1299	BOF3_INJECT
-switch	ShopTrade_BuyCount	detour	costly		src/game/shop/shop_trade.cpp:1298	BOF3_INJECT
-switch	ShopTrade_BuyEquipped	detour	costly		src/game/shop/shop_trade.cpp:1303	BOF3_INJECT
-switch	ShopTrade_BuyList	detour	costly		src/game/shop/shop_trade.cpp:1297	BOF3_INJECT
-switch	ShopTrade_BuyMember	detour	costly		src/game/shop/shop_trade.cpp:1301	BOF3_INJECT
-switch	ShopTrade_BuySetup	detour	costly		src/game/shop/shop_trade.cpp:1296	BOF3_INJECT
-switch	ShopTrade_BuySlot	detour	costly		src/game/shop/shop_trade.cpp:1302	BOF3_INJECT
-switch	ShopTrade_BuyStep	detour	costly		src/game/shop/shop_trade.cpp:1295	BOF3_INJECT
-switch	ShopTrade_Choice	detour	costly		src/game/shop/shop_trade.cpp:1294	BOF3_INJECT
-switch	ShopTrade_ChoiceStep	detour	costly		src/game/shop/shop_trade.cpp:1293	BOF3_INJECT
+switch	ShopSell_Dispatch	detour	costly		src/game/shop/shop_trade.cpp:1309	BOF3_INJECT
+switch	ShopSell_Leave	detour	costly		src/game/shop/shop_trade.cpp:1311	BOF3_INJECT
+switch	ShopSell_LeaveWait	detour	costly		src/game/shop/shop_trade.cpp:1313	BOF3_INJECT
+switch	ShopSell_Open	detour	costly		src/game/shop/shop_trade.cpp:1310	BOF3_INJECT
+switch	ShopSell_SellStep	detour	costly		src/game/shop/shop_trade.cpp:1312	BOF3_INJECT
+switch	ShopTrade_BuyAskEquip	detour	costly		src/game/shop/shop_trade.cpp:1299	BOF3_INJECT
+switch	ShopTrade_BuyConfirm	detour	costly		src/game/shop/shop_trade.cpp:1298	BOF3_INJECT
+switch	ShopTrade_BuyCount	detour	costly		src/game/shop/shop_trade.cpp:1297	BOF3_INJECT
+switch	ShopTrade_BuyEquipped	detour	costly		src/game/shop/shop_trade.cpp:1302	BOF3_INJECT
+switch	ShopTrade_BuyList	detour	costly		src/game/shop/shop_trade.cpp:1296	BOF3_INJECT
+switch	ShopTrade_BuyMember	detour	costly		src/game/shop/shop_trade.cpp:1300	BOF3_INJECT
+switch	ShopTrade_BuySetup	detour	costly		src/game/shop/shop_trade.cpp:1295	BOF3_INJECT
+switch	ShopTrade_BuySlot	detour	costly		src/game/shop/shop_trade.cpp:1301	BOF3_INJECT
+switch	ShopTrade_BuyStep	detour	costly		src/game/shop/shop_trade.cpp:1294	BOF3_INJECT
+switch	ShopTrade_Choice	detour	costly		src/game/shop/shop_trade.cpp:1293	BOF3_INJECT
+switch	ShopTrade_ChoiceStep	detour	costly		src/game/shop/shop_trade.cpp:1292	BOF3_INJECT
 switch	ShopTrade_Close	detour	costly		src/game/shop/shared_list.cpp:960	BOF3_INJECT
-switch	ShopTrade_Open	detour	costly		src/game/shop/shop_trade.cpp:1291	BOF3_INJECT
-switch	ShopTrade_OpenStep	detour	costly		src/game/shop/shop_trade.cpp:1290	BOF3_INJECT
-switch	ShopTrade_OpenWait	detour	costly		src/game/shop/shop_trade.cpp:1292	BOF3_INJECT
-switch	ShopTrade_SellClose	detour	costly		src/game/shop/shop_trade.cpp:1309	BOF3_INJECT
-switch	ShopTrade_SellConfirm	detour	costly		src/game/shop/shop_trade.cpp:1308	BOF3_INJECT
-switch	ShopTrade_SellCount	detour	costly		src/game/shop/shop_trade.cpp:1307	BOF3_INJECT
-switch	ShopTrade_SellList	detour	costly		src/game/shop/shop_trade.cpp:1306	BOF3_INJECT
-switch	ShopTrade_SellSetup	detour	costly		src/game/shop/shop_trade.cpp:1305	BOF3_INJECT
-switch	ShopTrade_SellStep	detour	costly		src/game/shop/shop_trade.cpp:1304	BOF3_INJECT
-switch	ShopTrade_Step	detour	costly		src/game/shop/shop_trade.cpp:1289	BOF3_INJECT
+switch	ShopTrade_Open	detour	costly		src/game/shop/shop_trade.cpp:1290	BOF3_INJECT
+switch	ShopTrade_OpenStep	detour	costly		src/game/shop/shop_trade.cpp:1289	BOF3_INJECT
+switch	ShopTrade_OpenWait	detour	costly		src/game/shop/shop_trade.cpp:1291	BOF3_INJECT
+switch	ShopTrade_SellClose	detour	costly		src/game/shop/shop_trade.cpp:1308	BOF3_INJECT
+switch	ShopTrade_SellConfirm	detour	costly		src/game/shop/shop_trade.cpp:1307	BOF3_INJECT
+switch	ShopTrade_SellCount	detour	costly		src/game/shop/shop_trade.cpp:1306	BOF3_INJECT
+switch	ShopTrade_SellList	detour	costly		src/game/shop/shop_trade.cpp:1305	BOF3_INJECT
+switch	ShopTrade_SellSetup	detour	costly		src/game/shop/shop_trade.cpp:1304	BOF3_INJECT
+switch	ShopTrade_SellStep	detour	costly		src/game/shop/shop_trade.cpp:1303	BOF3_INJECT
+switch	ShopTrade_Step	detour	costly		src/game/shop/shop_trade.cpp:1288	BOF3_INJECT
 switch	ShopWin_ButtonsRun	detour	costly		src/game/shop/shop_win.cpp:175	BOF3_INJECT
-switch	ShopWin_BuyDetailRun	detour	costly		src/game/shop/shop_win_2.cpp:788	BOF3_INJECT
-switch	ShopWin_BuyListRun	detour	costly		src/game/shop/shop_win_2.cpp:784	BOF3_INJECT
-switch	ShopWin_BuyListSlideTo46	detour	costly		src/game/shop/shop_win_2.cpp:787	BOF3_INJECT
-switch	ShopWin_BuyListSlideTo84	detour	costly		src/game/shop/shop_win_2.cpp:786	BOF3_INJECT
+switch	ShopWin_BuyDetailRun	detour	costly		src/game/shop/shop_win_2.cpp:787	BOF3_INJECT
+switch	ShopWin_BuyListRun	detour	costly		src/game/shop/shop_win_2.cpp:783	BOF3_INJECT
+switch	ShopWin_BuyListSlideTo46	detour	costly		src/game/shop/shop_win_2.cpp:786	BOF3_INJECT
+switch	ShopWin_BuyListSlideTo84	detour	costly		src/game/shop/shop_win_2.cpp:785	BOF3_INJECT
 switch	ShopWin_CursorBoxDraw	detour	costly		src/game/shop/shop_win.cpp:178	BOF3_INJECT
-switch	ShopWin_DrawRowMenu	detour	costly		src/game/shop/shop_win_2.cpp:799	BOF3_INJECT
-switch	ShopWin_EquipRun	detour	costly		src/game/shop/shop_win_2.cpp:782	BOF3_INJECT
-switch	ShopWin_EquipSlideIn	detour	costly		src/game/shop/shop_win_2.cpp:783	BOF3_INJECT
-switch	ShopWin_ItemCountRun	detour	costly		src/game/shop/shop_win_2.cpp:808	BOF3_INJECT
-switch	ShopWin_ItemCountSlideToD2	detour	costly		src/game/shop/shop_win_2.cpp:809	BOF3_INJECT
-switch	ShopWin_ItemListRun	detour	costly		src/game/shop/shop_win_2.cpp:790	BOF3_INJECT
-switch	ShopWin_ItemListSlideIn	detour	costly		src/game/shop/shop_win_2.cpp:791	BOF3_INJECT
-switch	ShopWin_MasterCaptionRun	detour	costly		src/game/shop/shop_win_2.cpp:803	BOF3_INJECT
-switch	ShopWin_MasterListRun	detour	costly		src/game/shop/shop_win_2.cpp:800	BOF3_INJECT
-switch	ShopWin_MemberSlideDown	detour	costly		src/game/shop/shop_win_2.cpp:781	BOF3_INJECT
-switch	ShopWin_MemberSlideUp	detour	costly		src/game/shop/shop_win_2.cpp:780	BOF3_INJECT
+switch	ShopWin_DrawRowMenu	detour	costly		src/game/shop/shop_win_2.cpp:798	BOF3_INJECT
+switch	ShopWin_EquipRun	detour	costly		src/game/shop/shop_win_2.cpp:781	BOF3_INJECT
+switch	ShopWin_EquipSlideIn	detour	costly		src/game/shop/shop_win_2.cpp:782	BOF3_INJECT
+switch	ShopWin_ItemCountRun	detour	costly		src/game/shop/shop_win_2.cpp:807	BOF3_INJECT
+switch	ShopWin_ItemCountSlideToD2	detour	costly		src/game/shop/shop_win_2.cpp:808	BOF3_INJECT
+switch	ShopWin_ItemListRun	detour	costly		src/game/shop/shop_win_2.cpp:789	BOF3_INJECT
+switch	ShopWin_ItemListSlideIn	detour	costly		src/game/shop/shop_win_2.cpp:790	BOF3_INJECT
+switch	ShopWin_MasterCaptionRun	detour	costly		src/game/shop/shop_win_2.cpp:802	BOF3_INJECT
+switch	ShopWin_MasterListRun	detour	costly		src/game/shop/shop_win_2.cpp:799	BOF3_INJECT
+switch	ShopWin_MemberSlideDown	detour	costly		src/game/shop/shop_win_2.cpp:780	BOF3_INJECT
+switch	ShopWin_MemberSlideUp	detour	costly		src/game/shop/shop_win_2.cpp:779	BOF3_INJECT
 switch	ShopWin_MemberStatsRun	detour	costly		src/game/shop/shop_win.cpp:179	BOF3_INJECT
-switch	ShopWin_MemberStatusRun	detour	costly		src/game/shop/shop_win_2.cpp:797	BOF3_INJECT
+switch	ShopWin_MemberStatusRun	detour	costly		src/game/shop/shop_win_2.cpp:796	BOF3_INJECT
 switch	ShopWin_MoneyRun	detour	costly		src/game/shop/shop_win.cpp:176	BOF3_INJECT
 switch	ShopWin_MoneySlideUp	detour	costly		src/game/shop/shop_win.cpp:177	BOF3_INJECT
-switch	ShopWin_PupilsRun	detour	costly		src/game/shop/shop_win_2.cpp:805	BOF3_INJECT
-switch	ShopWin_RowMenuRun	detour	costly		src/game/shop/shop_win_2.cpp:798	BOF3_INJECT
-switch	ShopWin_SellDetailRun	detour	costly		src/game/shop/shop_win_2.cpp:792	BOF3_INJECT
-switch	ShopWin_SharedListRun	detour	costly		src/game/shop/shop_win_2.cpp:794	BOF3_INJECT
-switch	ShopWin_SharedListSlideTo28	detour	costly		src/game/shop/shop_win_2.cpp:795	BOF3_INJECT
-switch	ShopWin_SharedMemberRun	detour	costly		src/game/shop/shop_win_2.cpp:796	BOF3_INJECT
+switch	ShopWin_PupilsRun	detour	costly		src/game/shop/shop_win_2.cpp:804	BOF3_INJECT
+switch	ShopWin_RowMenuRun	detour	costly		src/game/shop/shop_win_2.cpp:797	BOF3_INJECT
+switch	ShopWin_SellDetailRun	detour	costly		src/game/shop/shop_win_2.cpp:791	BOF3_INJECT
+switch	ShopWin_SharedListRun	detour	costly		src/game/shop/shop_win_2.cpp:793	BOF3_INJECT
+switch	ShopWin_SharedListSlideTo28	detour	costly		src/game/shop/shop_win_2.cpp:794	BOF3_INJECT
+switch	ShopWin_SharedMemberRun	detour	costly		src/game/shop/shop_win_2.cpp:795	BOF3_INJECT
 switch	ShopWin_TitleRun	detour	costly		src/game/shop/shop_win.cpp:174	BOF3_INJECT
-switch	ShopYesNoLayout	code	yes		src/game/shop/field_s.cpp:177 src/game/shop/shop_trade.cpp:1282 src/game/shop/shop_win.cpp:170	PatchBytes
+switch	ShopYesNoLayout	code	yes		src/game/shop/field_s.cpp:177 src/game/shop/shop_trade.cpp:1281 src/game/shop/shop_win.cpp:170	PatchBytes
 switch	Short_Abs	detour	costly		src/game/field/encounter.cpp:675	BOF3_INJECT
 switch	Short_Sign	detour	costly		src/game/field/encounter.cpp:676	BOF3_INJECT
 switch	ShortSkillLockout	behaviour	yes		src/game/core/transition.cpp:162	BehaviourOn
@@ -9533,36 +9534,36 @@ switch	SnapWave_Run	detour	costly		src/game/magic/snap_wave.cpp:641	BOF3_INJECT
 switch	SnapWave_Start	detour	costly		src/game/magic/snap_wave.cpp:642	BOF3_INJECT
 switch	SnapWave_Swing	detour	costly		src/game/magic/snap_wave.cpp:644	BOF3_INJECT
 switch	SnapWave_Task	detour	costly		src/game/magic/snap_wave.cpp:640	BOF3_INJECT
-switch	Snd_Init	detour	costly		src/game/platform/d3d.cpp:3992	BOF3_INJECT
-switch	Snd_LoadBank	detour	costly		src/game/core/sound.cpp:1454	BOF3_INJECT
+switch	Snd_Init	detour	costly		src/game/platform/d3d.cpp:3994	BOF3_INJECT
+switch	Snd_LoadBank	detour	costly		src/game/core/sound.cpp:1453	BOF3_INJECT
 switch	Snd_LoadBankFile	detour	costly		src/game/battle/dragon_cmd.cpp:3173	BOF3_INJECT
-switch	SndBuf_CreateFromWave	detour	costly		src/game/platform/music.cpp:811	BOF3_INJECT
-switch	SndBuf_FromWave	detour	costly		src/game/platform/music.cpp:810	BOF3_INJECT
-switch	SndBuf_Play	detour	costly		src/game/platform/music.cpp:814	BOF3_INJECT
-switch	SndBuf_Release	detour	costly		src/game/platform/music.cpp:817	BOF3_INJECT
-switch	SndBuf_SetVolume	detour	costly		src/game/platform/music.cpp:816	BOF3_INJECT
-switch	SndBuf_Stop	detour	costly		src/game/platform/music.cpp:815	BOF3_INJECT
-switch	SndBuf_Write	detour	costly		src/game/platform/music.cpp:813	BOF3_INJECT
-switch	SndStream_IsPlaying	detour	costly		src/game/platform/music.cpp:831	BOF3_INJECT
-switch	SndStream_Play	detour	costly		src/game/platform/music.cpp:829	BOF3_INJECT
-switch	SndStream_Stop	detour	costly		src/game/platform/music.cpp:830	BOF3_INJECT
+switch	SndBuf_CreateFromWave	detour	costly		src/game/platform/music.cpp:810	BOF3_INJECT
+switch	SndBuf_FromWave	detour	costly		src/game/platform/music.cpp:809	BOF3_INJECT
+switch	SndBuf_Play	detour	costly		src/game/platform/music.cpp:813	BOF3_INJECT
+switch	SndBuf_Release	detour	costly		src/game/platform/music.cpp:816	BOF3_INJECT
+switch	SndBuf_SetVolume	detour	costly		src/game/platform/music.cpp:815	BOF3_INJECT
+switch	SndBuf_Stop	detour	costly		src/game/platform/music.cpp:814	BOF3_INJECT
+switch	SndBuf_Write	detour	costly		src/game/platform/music.cpp:812	BOF3_INJECT
+switch	SndStream_IsPlaying	detour	costly		src/game/platform/music.cpp:830	BOF3_INJECT
+switch	SndStream_Play	detour	costly		src/game/platform/music.cpp:828	BOF3_INJECT
+switch	SndStream_Stop	detour	costly		src/game/platform/music.cpp:829	BOF3_INJECT
 switch	SoloChampionIfPresent	behaviour	yes		src/game/solo/solo.cpp:158 src/game/solo/solo.cpp:206	BehaviourOn
 switch	SoloCharacter	behaviour	yes		src/game/solo/solo.cpp:156 src/game/solo/solo.cpp:205 src/game/solo/solo.cpp:240 src/game/solo/solo.cpp:258 src/game/solo/solo_battle.cpp:382	BehaviourOn
-switch	Sound_LoadStream	detour	costly		src/game/core/sound.cpp:1442	BOF3_INJECT
-switch	Sound_MusicPlaying	detour	costly		src/game/core/sound.cpp:1451	BOF3_INJECT
-switch	Sound_PauseAll	detour	costly		src/game/core/sound.cpp:1452	BOF3_INJECT
-switch	Sound_PlayById	detour	costly		src/game/core/sound.cpp:1441	BOF3_INJECT
-switch	Sound_PlayEffect	detour	costly		src/game/core/sound.cpp:1438	BOF3_INJECT
+switch	Sound_LoadStream	detour	costly		src/game/core/sound.cpp:1441	BOF3_INJECT
+switch	Sound_MusicPlaying	detour	costly		src/game/core/sound.cpp:1450	BOF3_INJECT
+switch	Sound_PauseAll	detour	costly		src/game/core/sound.cpp:1451	BOF3_INJECT
+switch	Sound_PlayById	detour	costly		src/game/core/sound.cpp:1440	BOF3_INJECT
+switch	Sound_PlayEffect	detour	costly		src/game/core/sound.cpp:1437	BOF3_INJECT
 switch	Sound_PlayEffectUnlessNone	detour	costly		src/game/battle/enemy_op.cpp:1684	BOF3_INJECT
-switch	Sound_ResumeAll	detour	costly		src/game/core/sound.cpp:1448	BOF3_INJECT
-switch	Sound_SetCueVolume	detour	costly		src/game/core/sound.cpp:1440	BOF3_INJECT
-switch	Sound_Shutdown	detour	costly		src/game/platform/music.cpp:809	BOF3_INJECT
-switch	Sound_StopChannels	detour	costly		src/game/core/sound.cpp:1439	BOF3_INJECT
-switch	Sound_StopMusic	detour	costly		src/game/core/sound.cpp:1447	BOF3_INJECT
-switch	Sound_StreamDone	detour	costly		src/game/core/sound.cpp:1443	BOF3_INJECT
-switch	Sound_Tick	detour	costly		src/game/core/sound.cpp:1453	BOF3_INJECT
+switch	Sound_ResumeAll	detour	costly		src/game/core/sound.cpp:1447	BOF3_INJECT
+switch	Sound_SetCueVolume	detour	costly		src/game/core/sound.cpp:1439	BOF3_INJECT
+switch	Sound_Shutdown	detour	costly		src/game/platform/music.cpp:808	BOF3_INJECT
+switch	Sound_StopChannels	detour	costly		src/game/core/sound.cpp:1438	BOF3_INJECT
+switch	Sound_StopMusic	detour	costly		src/game/core/sound.cpp:1446	BOF3_INJECT
+switch	Sound_StreamDone	detour	costly		src/game/core/sound.cpp:1442	BOF3_INJECT
+switch	Sound_Tick	detour	costly		src/game/core/sound.cpp:1452	BOF3_INJECT
 switch	SoundLevelGate	code	yes		src/game/platform/sound_sp.cpp:674	PatchBytes
-switch	SoundSdl	code	yes		src/audio/sound_sdl.cpp:1255	PatchBytes
+switch	SoundSdl	code	yes		src/audio/sound_sdl.cpp:1256	PatchBytes
 switch	Sparkle_Alloc	detour	costly		src/game/magic/sparkle.cpp:1342	BOF3_INJECT
 switch	Sparkle_Dispatch	detour	costly		src/game/magic/sparkle.cpp:1334	BOF3_INJECT
 switch	Sparkle_DrawDisc	detour	costly		src/game/magic/sparkle.cpp:1341	BOF3_INJECT
@@ -9633,35 +9634,35 @@ switch	SpellSleep_PushSwayMatrix	detour	costly		src/game/magic/spell_sleep.cpp:6
 switch	SpellSleep_PushTurnMatrix	detour	costly		src/game/magic/spell_sleep.cpp:670	BOF3_INJECT
 switch	SpellSleep_Start	detour	costly		src/game/magic/spell_sleep.cpp:660	BOF3_INJECT
 switch	SpellSleep_Task	detour	costly		src/game/magic/spell_sleep.cpp:659	BOF3_INJECT
-switch	Sprite_AddDrawRecords	detour	costly		src/game/field/event_cond.cpp:1172	BOF3_INJECT
+switch	Sprite_AddDrawRecords	detour	costly		src/game/field/event_cond.cpp:1201	BOF3_INJECT
 switch	Sprite_AnimFromSet	detour	costly		src/game/field/sprite.cpp:687	BOF3_INJECT
 switch	Sprite_ApplyVelocity	detour	costly		src/game/field/field_6.cpp:3361	BOF3_INJECT
 switch	Sprite_ClearSteps	detour	costly		src/game/field/field_6.cpp:3360	BOF3_INJECT
-switch	Sprite_ClutWord	detour	costly		src/game/field/sprite_2.cpp:665	BOF3_INJECT
+switch	Sprite_ClutWord	detour	costly		src/game/field/sprite_2.cpp:670	BOF3_INJECT
 switch	Sprite_CopyFrames	detour	costly		src/game/field/sprite.cpp:686	BOF3_INJECT
-switch	Sprite_Draw	detour	costly		src/game/field/sprite_2.cpp:664	BOF3_INJECT
-switch	Sprite_DrawListSwap	detour	costly		src/game/field/sprite_2.cpp:662	BOF3_INJECT
-switch	Sprite_DrawOverlays	detour	costly		src/game/field/sprite_2.cpp:659	BOF3_INJECT
-switch	Sprite_DrawPass	detour	costly		src/game/field/sprite_2.cpp:661	BOF3_INJECT
-switch	Sprite_DrawRecordSwap	detour	costly		src/game/field/sprite_2.cpp:663	BOF3_INJECT
+switch	Sprite_Draw	detour	costly		src/game/field/sprite_2.cpp:669	BOF3_INJECT
+switch	Sprite_DrawListSwap	detour	costly		src/game/field/sprite_2.cpp:667	BOF3_INJECT
+switch	Sprite_DrawOverlays	detour	costly		src/game/field/sprite_2.cpp:664	BOF3_INJECT
+switch	Sprite_DrawPass	detour	costly		src/game/field/sprite_2.cpp:666	BOF3_INJECT
+switch	Sprite_DrawRecordSwap	detour	costly		src/game/field/sprite_2.cpp:668	BOF3_INJECT
 switch	Sprite_EnsureAnimation	detour	costly		src/game/field/sprite.cpp:690	BOF3_INJECT
-switch	Sprite_FaceDirection	detour	costly		src/game/field/event_cond.cpp:1201	BOF3_INJECT
-switch	Sprite_FindFree	detour	costly		src/game/field/event_cond.cpp:1219	BOF3_INJECT
+switch	Sprite_FaceDirection	detour	costly		src/game/field/event_cond.cpp:1230	BOF3_INJECT
+switch	Sprite_FindFree	detour	costly		src/game/field/event_cond.cpp:1248	BOF3_INJECT
 switch	Sprite_FindNearby	detour	costly		src/game/field/sprite.cpp:697	BOF3_INJECT
 switch	Sprite_FlashClut	detour	costly		src/game/field/field_6.cpp:3326	BOF3_INJECT
 switch	Sprite_InheritDrawKey	detour	costly		src/game/field/sprite.cpp:698	BOF3_INJECT
-switch	Sprite_InitFromEntry	detour	costly		src/game/field/event_cond.cpp:1171	BOF3_INJECT
+switch	Sprite_InitFromEntry	detour	costly		src/game/field/event_cond.cpp:1200	BOF3_INJECT
 switch	Sprite_LoadPalette	detour	costly		src/game/field/mode_11.cpp:767	BOF3_INJECT
 switch	Sprite_ObjectAt	detour	costly		src/game/field/field_6.cpp:3271	BOF3_INJECT
-switch	Sprite_ObjectByHandle	detour	costly		src/game/field/event_cond.cpp:1176	BOF3_INJECT
-switch	Sprite_ObjectMatrix	detour	costly		src/game/field/event_cond.cpp:1174	BOF3_INJECT
+switch	Sprite_ObjectByHandle	detour	costly		src/game/field/event_cond.cpp:1205	BOF3_INJECT
+switch	Sprite_ObjectMatrix	detour	costly		src/game/field/event_cond.cpp:1203	BOF3_INJECT
 switch	Sprite_PointInReach	detour	costly		src/game/field/field_6.cpp:3270	BOF3_INJECT
 switch	Sprite_PoseFromSet	detour	costly		src/game/field/sprite.cpp:685	BOF3_INJECT
-switch	Sprite_ProjectA	detour	costly		src/game/field/event_cond.cpp:1170	BOF3_INJECT
+switch	Sprite_ProjectA	detour	costly		src/game/field/event_cond.cpp:1199	BOF3_INJECT
 switch	Sprite_QueueOverlay	detour	costly		src/game/field/sprite.cpp:684	BOF3_INJECT
-switch	Sprite_ReleaseTint	detour	costly		src/game/field/field_2.cpp:602	BOF3_INJECT
+switch	Sprite_ReleaseTint	detour	costly		src/game/field/field_2.cpp:601	BOF3_INJECT
 switch	Sprite_RestoreClut	detour	costly		src/game/field/field_6.cpp:3327	BOF3_INJECT
-switch	Sprite_ScriptPeek	detour	costly		src/game/field/event_cond.cpp:1220	BOF3_INJECT
+switch	Sprite_ScriptPeek	detour	costly		src/game/field/event_cond.cpp:1249	BOF3_INJECT
 switch	Sprite_ScriptStart	detour	costly		src/game/field/sprite.cpp:691	BOF3_INJECT
 switch	Sprite_ScriptStep	detour	costly		src/game/field/sprite.cpp:694	BOF3_INJECT
 switch	Sprite_ScriptTick	detour	costly		src/game/field/sprite.cpp:692	BOF3_INJECT
@@ -9669,26 +9670,26 @@ switch	Sprite_ScriptTickOnce	detour	costly		src/game/field/sprite.cpp:693	BOF3_I
 switch	Sprite_SetAnimation	detour	costly		src/game/field/sprite.cpp:688	BOF3_INJECT
 switch	Sprite_SetAnimationAt	detour	costly		src/game/field/sprite.cpp:689	BOF3_INJECT
 switch	Sprite_SetAnimationBank	detour	costly		src/game/field/sprite.cpp:696	BOF3_INJECT
-switch	Sprite_SetClutStp	detour	costly		src/game/field/field_2.cpp:606	BOF3_INJECT
+switch	Sprite_SetClutStp	detour	costly		src/game/field/field_2.cpp:605	BOF3_INJECT
 switch	Sprite_SetFrameQueueUpload	detour	costly		src/game/field/sprite.cpp:695	BOF3_INJECT
 switch	Sprite_SetPoseWait	detour	costly		src/game/field/field_3.cpp:1574	BOF3_INJECT
-switch	Sprite_SetTint	detour	costly		src/game/field/field_2.cpp:600	BOF3_INJECT
+switch	Sprite_SetTint	detour	costly		src/game/field/field_2.cpp:599	BOF3_INJECT
 switch	Sprite_ShadeFadeBegin	detour	costly		src/game/field/field_6.cpp:3315	BOF3_INJECT
 switch	Sprite_ShadeFadeStep	detour	costly		src/game/field/field_6.cpp:3319	BOF3_INJECT
 switch	Sprite_ShadeLower	detour	costly		src/game/field/field_6.cpp:3321	BOF3_INJECT
 switch	Sprite_ShadeRaise	detour	costly		src/game/field/field_6.cpp:3320	BOF3_INJECT
 switch	Sprite_StateRestart	detour	costly		src/game/battle/battle_fx.cpp:1536	BOF3_INJECT
-switch	Sprite_SwapOverlays	detour	costly		src/game/field/sprite_2.cpp:660	BOF3_INJECT
+switch	Sprite_SwapOverlays	detour	costly		src/game/field/sprite_2.cpp:665	BOF3_INJECT
 switch	Sprite_TurnSense	detour	costly		src/game/field/field_4.cpp:2191	BOF3_INJECT
 switch	Sprite_UpdateAllScaled	detour	costly		src/game/field/leader_panel.cpp:3501	BOF3_INJECT
 switch	Sprite_UpdateObjectScreens	detour	costly		src/game/field/field_3.cpp:1550	BOF3_INJECT
 switch	Sprite_UpdateScreen	detour	costly		src/game/field/sprite.cpp:683	BOF3_INJECT
-switch	Sprite_UpdateScreenA	detour	costly		src/game/field/event_cond.cpp:1169	BOF3_INJECT
+switch	Sprite_UpdateScreenA	detour	costly		src/game/field/event_cond.cpp:1198	BOF3_INJECT
 switch	Sprite_UpdateScreenScaled	detour	costly		src/game/field/leader_panel.cpp:3500	BOF3_INJECT
 switch	Sprite_UpdateScreenSlot	detour	costly		src/game/field/sprite.cpp:682	BOF3_INJECT
 switch	SpriteCapture	code	yes		src/game/effect/effect_kind_9d.cpp:489 src/game/field/sprite_draw.cpp:781	PatchBytes
-switch	SpriteCell_Add	detour	costly		src/game/platform/d3d.cpp:3990	BOF3_INJECT
-switch	SpriteCell_Reset	detour	costly		src/game/platform/d3d.cpp:3989	BOF3_INJECT
+switch	SpriteCell_Add	detour	costly		src/game/platform/d3d.cpp:3992	BOF3_INJECT
+switch	SpriteCell_Reset	detour	costly		src/game/platform/d3d.cpp:3991	BOF3_INJECT
 switch	SpriteClut_ClearEntry31	detour	costly		src/game/magic/magic_fx_4.cpp:748	BOF3_INJECT
 switch	SpriteClut_CopyToFxRow	detour	costly		src/game/magic/magic_fx_4.cpp:749	BOF3_INJECT
 switch	SpriteClut_RestoreFxRow	detour	costly		src/game/magic/magic_fx_4.cpp:750	BOF3_INJECT
@@ -9703,10 +9704,10 @@ switch	Stat_AddCap999	detour	costly		src/game/menu/char.cpp:1105	BOF3_INJECT
 switch	Stat_AddClamped	detour	costly		src/game/menu/char.cpp:1107	BOF3_INJECT
 switch	Stat_AddClampedTo	detour	costly		src/game/menu/char.cpp:1108	BOF3_INJECT
 switch	Stat_AddResist	detour	costly		src/game/menu/char.cpp:1109	BOF3_INJECT
-switch	Stat_PercentCap100	detour	costly		src/game/battle/battle_3.cpp:2500	BOF3_INJECT
-switch	Stat_PercentCap999	detour	costly		src/game/battle/battle_3.cpp:2498	BOF3_INJECT
-switch	Stat_PercentCap9999	detour	costly		src/game/battle/battle_3.cpp:2499	BOF3_INJECT
-switch	StateHash	instrument			src/hook/input_script.cpp:1319	RetargetCall
+switch	Stat_PercentCap100	detour	costly		src/game/battle/battle_3.cpp:2505	BOF3_INJECT
+switch	Stat_PercentCap999	detour	costly		src/game/battle/battle_3.cpp:2503	BOF3_INJECT
+switch	Stat_PercentCap9999	detour	costly		src/game/battle/battle_3.cpp:2504	BOF3_INJECT
+switch	StateHash	instrument			src/hook/input_script.cpp:1375	RetargetCall
 switch	Steal_Report	detour	costly		src/game/magic/steal.cpp:291	BOF3_INJECT
 switch	Steal_Start	detour	costly		src/game/magic/steal.cpp:289	BOF3_INJECT
 switch	Steal_Task	detour	costly		src/game/magic/steal.cpp:288	BOF3_INJECT
@@ -9830,7 +9831,7 @@ switch	Text_DrawImmediate	detour	costly		src/game/menu/window.cpp:1269	BOF3_INJE
 switch	Text_DrawSmall	detour	costly		src/game/text/text.cpp:489	BOF3_INJECT
 switch	Text_DrawString	detour	costly		src/game/text/text.cpp:487	BOF3_INJECT
 switch	Text_EmitGlyph	detour	costly		src/game/text/text.cpp:488	BOF3_INJECT
-switch	Text_GlyphCount	detour	costly		src/game/menu/menu_list.cpp:2892	BOF3_INJECT
+switch	Text_GlyphCount	detour	costly		src/game/menu/menu_list.cpp:2891	BOF3_INJECT
 switch	TextRecord_Set	detour	costly		src/game/menu/char.cpp:1123	BOF3_INJECT
 switch	ThunderBolt_Aim	detour	costly		src/game/magic/breath_mote.cpp:1614	BOF3_INJECT
 switch	ThunderBolt_Draw	detour	costly		src/game/magic/breath_mote.cpp:1618	BOF3_INJECT
@@ -9860,7 +9861,7 @@ switch	ThunderSpark_Fade	detour	costly		src/game/magic/breath_mote.cpp:1622	BOF3
 switch	ThunderSpark_Grow	detour	costly		src/game/magic/breath_mote.cpp:1621	BOF3_INJECT
 switch	ThunderSpark_Start	detour	costly		src/game/magic/breath_mote.cpp:1620	BOF3_INJECT
 switch	ThunderSpark_Task	detour	costly		src/game/magic/breath_mote.cpp:1619	BOF3_INJECT
-switch	Tile1Quad	code	yes		src/game/platform/d3d.cpp:4004	PatchBytes
+switch	Tile1Quad	code	yes		src/game/platform/d3d.cpp:4006	PatchBytes
 switch	TimedBlow_DrawFlash	detour	costly		src/game/magic/timed_blow.cpp:262	BOF3_INJECT
 switch	TimedBlow_Start	detour	costly		src/game/magic/timed_blow.cpp:255	BOF3_INJECT
 switch	TimedBlow_Task	detour	costly		src/game/magic/timed_blow.cpp:254	BOF3_INJECT
@@ -9869,7 +9870,7 @@ switch	TimedBlowCopy_Flash	detour	costly		src/game/magic/timed_blow.cpp:260	BOF3
 switch	TimedBlowCopy_Run	detour	costly		src/game/magic/timed_blow.cpp:258	BOF3_INJECT
 switch	TimedBlowCopy_Strike	detour	costly		src/game/magic/timed_blow.cpp:259	BOF3_INJECT
 switch	TimedBlowCopy_Task	detour	costly		src/game/magic/timed_blow.cpp:257	BOF3_INJECT
-switch	Tint_Release	detour	costly		src/game/field/field_2.cpp:601	BOF3_INJECT
+switch	Tint_Release	detour	costly		src/game/field/field_2.cpp:600	BOF3_INJECT
 switch	Title_CheckStart	detour	costly		src/game/core/title.cpp:2237	BOF3_INJECT
 switch	Title_DrawBackdrop	detour	costly		src/game/core/title.cpp:2239	BOF3_INJECT
 switch	Title_DrawBadge	detour	costly		src/game/core/title.cpp:2303	BOF3_INJECT
@@ -9890,26 +9891,26 @@ switch	Title_StateMenu	detour	costly		src/game/core/title.cpp:2300	BOF3_INJECT
 switch	Title_StateStartDemo	detour	costly		src/game/core/title.cpp:2297	BOF3_INJECT
 switch	Title_StopMusic	detour	costly		src/game/core/title.cpp:2302	BOF3_INJECT
 switch	Title_Task	detour	costly		src/game/core/title.cpp:2236	BOF3_INJECT
-switch	TitleFlow_Begin	detour	costly		src/game/core/sound.cpp:1456	BOF3_INJECT
-switch	TitleFlow_EnterGame	detour	costly		src/game/core/sound.cpp:1475	BOF3_INJECT
-switch	TitleFlow_Load	detour	costly		src/game/core/sound.cpp:1466	BOF3_INJECT
-switch	TitleFlow_Menu	detour	costly		src/game/core/sound.cpp:1457	BOF3_INJECT
-switch	TitleFlow_NewGame	detour	costly		src/game/core/sound.cpp:1465	BOF3_INJECT
-switch	TitleFlow_Step	detour	costly		src/game/core/sound.cpp:1455	BOF3_INJECT
-switch	TitleMenu_Choose	detour	costly		src/game/core/sound.cpp:1463	BOF3_INJECT
-switch	TitleMenu_DrawFrame	detour	costly		src/game/core/sound.cpp:1480	BOF3_INJECT
-switch	TitleMenu_DrawPiece	detour	costly		src/game/core/sound.cpp:1481	BOF3_INJECT
-switch	TitleMenu_DrawRow	detour	costly		src/game/core/sound.cpp:1477	BOF3_INJECT
-switch	TitleMenu_DrawRows	detour	costly		src/game/core/sound.cpp:1476	BOF3_INJECT
-switch	TitleMenu_FrameUp	detour	costly		src/game/core/sound.cpp:1460	BOF3_INJECT
-switch	TitleMenu_Leave	detour	costly		src/game/core/sound.cpp:1464	BOF3_INJECT
-switch	TitleMenu_Open	detour	costly		src/game/core/sound.cpp:1458	BOF3_INJECT
-switch	TitleMenu_OpenWait	detour	costly		src/game/core/sound.cpp:1459	BOF3_INJECT
-switch	TitleMenu_RowsFadeIn	detour	costly		src/game/core/sound.cpp:1462	BOF3_INJECT
-switch	TitleMenu_RowsStart	detour	costly		src/game/core/sound.cpp:1461	BOF3_INJECT
+switch	TitleFlow_Begin	detour	costly		src/game/core/sound.cpp:1455	BOF3_INJECT
+switch	TitleFlow_EnterGame	detour	costly		src/game/core/sound.cpp:1474	BOF3_INJECT
+switch	TitleFlow_Load	detour	costly		src/game/core/sound.cpp:1465	BOF3_INJECT
+switch	TitleFlow_Menu	detour	costly		src/game/core/sound.cpp:1456	BOF3_INJECT
+switch	TitleFlow_NewGame	detour	costly		src/game/core/sound.cpp:1464	BOF3_INJECT
+switch	TitleFlow_Step	detour	costly		src/game/core/sound.cpp:1454	BOF3_INJECT
+switch	TitleMenu_Choose	detour	costly		src/game/core/sound.cpp:1462	BOF3_INJECT
+switch	TitleMenu_DrawFrame	detour	costly		src/game/core/sound.cpp:1479	BOF3_INJECT
+switch	TitleMenu_DrawPiece	detour	costly		src/game/core/sound.cpp:1480	BOF3_INJECT
+switch	TitleMenu_DrawRow	detour	costly		src/game/core/sound.cpp:1476	BOF3_INJECT
+switch	TitleMenu_DrawRows	detour	costly		src/game/core/sound.cpp:1475	BOF3_INJECT
+switch	TitleMenu_FrameUp	detour	costly		src/game/core/sound.cpp:1459	BOF3_INJECT
+switch	TitleMenu_Leave	detour	costly		src/game/core/sound.cpp:1463	BOF3_INJECT
+switch	TitleMenu_Open	detour	costly		src/game/core/sound.cpp:1457	BOF3_INJECT
+switch	TitleMenu_OpenWait	detour	costly		src/game/core/sound.cpp:1458	BOF3_INJECT
+switch	TitleMenu_RowsFadeIn	detour	costly		src/game/core/sound.cpp:1461	BOF3_INJECT
+switch	TitleMenu_RowsStart	detour	costly		src/game/core/sound.cpp:1460	BOF3_INJECT
 switch	TitleMenu_Widths	code	yes		src/game/core/title_menu.cpp:66	PatchBytes
-switch	TitleMode_Load	detour	costly		src/game/core/sound.cpp:1485	BOF3_INJECT
-switch	TitleTask_Run	detour	costly		src/game/core/sound.cpp:1484	BOF3_INJECT
+switch	TitleMode_Load	detour	costly		src/game/core/sound.cpp:1484	BOF3_INJECT
+switch	TitleTask_Run	detour	costly		src/game/core/sound.cpp:1483	BOF3_INJECT
 switch	Tornado_AverageHeight	detour	costly		src/game/magic/tornado_mote.cpp:679	BOF3_INJECT
 switch	Tornado_Spin	detour	costly		src/game/magic/tornado_mote.cpp:664	BOF3_INJECT
 switch	Tornado_Start	detour	costly		src/game/magic/tornado_mote.cpp:663	BOF3_INJECT
@@ -10063,8 +10064,8 @@ switch	WarShoutMote_Circle	detour	costly		src/game/magic/war_shout_mote.cpp:334	
 switch	WarShoutMote_Fade	detour	costly		src/game/magic/war_shout_mote.cpp:335	BOF3_INJECT
 switch	WarShoutMote_Rise	detour	costly		src/game/magic/war_shout_mote.cpp:333	BOF3_INJECT
 switch	WarShoutMote_Run	detour	costly		src/game/magic/war_shout_mote.cpp:331	BOF3_INJECT
-switch	WavDump	instrument			src/hook/input_script.cpp:1320	RetargetCall
-switch	Wave_FindData	detour	costly		src/game/platform/music.cpp:812	BOF3_INJECT
+switch	WavDump	instrument			src/hook/input_script.cpp:1376	RetargetCall
+switch	Wave_FindData	detour	costly		src/game/platform/music.cpp:811	BOF3_INJECT
 switch	Weretiger_Burst	detour	costly		src/game/magic/weretiger.cpp:859	BOF3_INJECT
 switch	Weretiger_Copy	detour	costly		src/game/magic/weretiger.cpp:860	BOF3_INJECT
 switch	Weretiger_DrawSprite	detour	costly		src/game/magic/weretiger.cpp:890	BOF3_INJECT
@@ -10138,25 +10139,25 @@ switch	Win2_EquipCompare	detour	costly		src/game/menu/window.cpp:1281	BOF3_INJEC
 switch	Win2_ItemList	detour	costly		src/game/menu/window.cpp:1277	BOF3_INJECT
 switch	Win2_ItemPanel	detour	costly		src/game/menu/window.cpp:1280	BOF3_INJECT
 switch	Win2_TitleBox	detour	costly		src/game/menu/window.cpp:1282	BOF3_INJECT
-switch	Window_Alloc	detour	costly		src/game/battle/battle_menu_win.cpp:1251	BOF3_INJECT
-switch	Window_DispatchKind	detour	costly		src/game/menu/menu_list.cpp:2878	BOF3_INJECT
+switch	Window_Alloc	detour	costly		src/game/battle/battle_menu_win.cpp:1260	BOF3_INJECT
+switch	Window_DispatchKind	detour	costly		src/game/menu/menu_list.cpp:2877	BOF3_INJECT
 switch	Window_DrawCursor	detour	costly		src/game/menu/window.cpp:1266	BOF3_INJECT
 switch	Window_DrawFrame	detour	costly		src/game/menu/window.cpp:1262	BOF3_INJECT
 switch	Window_DrawLine	detour	costly		src/game/menu/window.cpp:1268	BOF3_INJECT
 switch	Window_DrawOutline	detour	costly		src/game/menu/window.cpp:1263	BOF3_INJECT
-switch	Window_FlagAndAdvance	detour	costly		src/game/menu/menu_list.cpp:2876	BOF3_INJECT
-switch	Window_FreeCurrent	detour	costly		src/game/battle/battle_menu_win.cpp:1252	BOF3_INJECT
+switch	Window_FlagAndAdvance	detour	costly		src/game/menu/menu_list.cpp:2875	BOF3_INJECT
+switch	Window_FreeCurrent	detour	costly		src/game/battle/battle_menu_win.cpp:1261	BOF3_INJECT
 switch	Window_FreeState	detour	costly		src/game/menu/window.cpp:1258	BOF3_INJECT
 switch	Window_Grow	detour	costly		src/game/menu/window.cpp:1251	BOF3_INJECT
 switch	Window_Handler1Kinds	detour	costly		src/game/menu/window.cpp:1271	BOF3_INJECT
 switch	Window_Handler2Kinds	detour	costly		src/game/menu/window.cpp:1276	BOF3_INJECT
-switch	Window_Handler4Kinds	detour	costly		src/game/menu/menu_list.cpp:2893	BOF3_INJECT
-switch	Window_Handler5Kinds	detour	costly		src/game/menu/menu_list.cpp:2905	BOF3_INJECT
-switch	Window_Handler7Kinds	detour	costly		src/game/menu/menu_list.cpp:2993	BOF3_INJECT
+switch	Window_Handler4Kinds	detour	costly		src/game/menu/menu_list.cpp:2892	BOF3_INJECT
+switch	Window_Handler5Kinds	detour	costly		src/game/menu/menu_list.cpp:2904	BOF3_INJECT
+switch	Window_Handler7Kinds	detour	costly		src/game/menu/menu_list.cpp:2992	BOF3_INJECT
 switch	Window_Handler8Kinds	detour	costly		src/game/menu/window_2.cpp:65	BOF3_INJECT
-switch	Window_HpGaugeDrain	detour	costly		src/game/menu/menu_list.cpp:2880	BOF3_INJECT
-switch	Window_HpGaugeFill	detour	costly		src/game/menu/menu_list.cpp:2881	BOF3_INJECT
-switch	Window_HpGaugeTrack	detour	costly		src/game/menu/menu_list.cpp:2879	BOF3_INJECT
+switch	Window_HpGaugeDrain	detour	costly		src/game/menu/menu_list.cpp:2879	BOF3_INJECT
+switch	Window_HpGaugeFill	detour	costly		src/game/menu/menu_list.cpp:2880	BOF3_INJECT
+switch	Window_HpGaugeTrack	detour	costly		src/game/menu/menu_list.cpp:2878	BOF3_INJECT
 switch	Window_Kind0Close	detour	costly		src/game/menu/window.cpp:1254	BOF3_INJECT
 switch	Window_Kind0Frame	detour	costly		src/game/menu/window.cpp:1252	BOF3_INJECT
 switch	Window_Kind0Open	detour	costly		src/game/menu/window.cpp:1250	BOF3_INJECT
@@ -10171,11 +10172,12 @@ switch	Window_Kind2Frame	detour	costly		src/game/menu/window.cpp:1261	BOF3_INJEC
 switch	Window_Kind2List	detour	costly		src/game/menu/window.cpp:1264	BOF3_INJECT
 switch	Window_Kind2Open	detour	costly		src/game/menu/window.cpp:1260	BOF3_INJECT
 switch	Window_Kind2States	detour	costly		src/game/menu/window.cpp:1259	BOF3_INJECT
-switch	Window_ResetAll	detour	costly		src/game/battle/battle_menu_win.cpp:1253	BOF3_INJECT
-switch	Window_RestoreAndBack	detour	costly		src/game/menu/menu_list.cpp:2877	BOF3_INJECT
+switch	Window_ResetAll	detour	costly		src/game/battle/battle_menu_win.cpp:1262	BOF3_INJECT
+switch	Window_RestoreAndBack	detour	costly		src/game/menu/menu_list.cpp:2876	BOF3_INJECT
 switch	Window_Run	detour	costly		src/game/menu/window.cpp:1248	BOF3_INJECT
 switch	Window_Shrink	detour	costly		src/game/menu/window.cpp:1253	BOF3_INJECT
-switch	WindowResetFull	code	yes		src/game/battle/battle_menu_win.cpp:1262	PatchBytes
+switch	WindowResetFull	code	yes		src/game/battle/battle_menu_win.cpp:1271	PatchBytes
+switch	WindowSdl	code	yes		src/game/platform/win_main.cpp:234	PatchBytes
 switch	WorldMap33_DrawDrift	detour	costly		src/game/area/world_map_33.cpp:805	BOF3_INJECT
 switch	WorldMap33_FrameShown	detour	costly		src/game/area/world_map_33.cpp:792	BOF3_INJECT
 switch	WorldMap33_FrameSlideIn	detour	costly		src/game/area/world_map_33.cpp:791	BOF3_INJECT
@@ -10217,7 +10219,8 @@ switch	env:BOF3X_AR3B_GROUP	env	yes		src/game/area/area_w3b_fuzz.cpp:859	read in
 switch	env:BOF3X_AR3G_GROUP	env	yes		src/game/area/area_w3g_fuzz.cpp:82	read in src/
 switch	env:BOF3X_AR4A_AREA	env	yes		src/game/area/area_w4a_fuzz.cpp:688	read in src/
 switch	env:BOF3X_AREA4_WALLS	env	yes		src/game/battle/dat_load.cpp:683	read in src/
-switch	env:BOF3X_BACKGROUND	launcher	yes		src/launcher/config.cpp:646 src/game/platform/magic_080.cpp:761 src/launcher/config.cpp:645 src/launcher/config.cpp:1724	read in src/, set by the launcher
+switch	env:BOF3X_ARENA	env	yes		src/game/crt_rest.cpp:359	read in src/
+switch	env:BOF3X_BACKGROUND	launcher	yes		src/launcher/config.cpp:646 src/game/platform/magic_080.cpp:594 src/launcher/config.cpp:645 src/launcher/config.cpp:1724	read in src/, set by the launcher
 switch	env:BOF3X_BANDLOG	env	yes		src/game/field/band_census.cpp:661	read in src/
 switch	env:BOF3X_BANDLOG_PARK	env	yes		src/game/field/band_census.cpp:664	read in src/
 switch	env:BOF3X_BANDLOG_SPAN	env	yes		src/game/field/band_census.cpp:665	read in src/
@@ -10230,6 +10233,7 @@ switch	env:BOF3X_BE4_RUN	env	yes		src/game/battle/battle_e4_fuzz.cpp:475	read in
 switch	env:BOF3X_BE5_ONLY	env	yes		src/game/battle/battle_e5_fuzz.cpp:483	read in src/
 switch	env:BOF3X_BE6_RUN	env	yes		src/game/battle/battle_e6_fuzz.cpp:550	read in src/
 switch	env:BOF3X_BH_RUN	env	yes		src/game/boss/boss_h_fuzz.cpp:291	read in src/
+switch	env:BOF3X_BRIDGE_ROWS	env	yes		src/game/effect/effect_kind_18_sub_12.cpp:220	read in src/
 switch	env:BOF3X_BSA_RUN	env	yes		src/game/boss/boss_sa_fuzz.cpp:382	read in src/
 switch	env:BOF3X_BSB_RUN	env	yes		src/game/boss/boss_sb_fuzz.cpp:279	read in src/
 switch	env:BOF3X_BSC_RUN	env	yes		src/game/boss/boss_sc_fuzz.cpp:351	read in src/
@@ -10244,17 +10248,17 @@ switch	env:BOF3X_BW_TRACE	env	yes		src/game/battle/battle_windows_fuzz.cpp:746	r
 switch	env:BOF3X_BWS_TRACE	env	yes		src/game/menu/battle_win_states_fuzz.cpp:534	read in src/
 switch	env:BOF3X_CACHE	launcher	yes		src/launcher/config.cpp:628 src/game/core/psp_code.cpp:38 src/game/platform/dat_cache.cpp:384 src/game/platform/music_seq.cpp:443 src/game/text/shoulder_glyphs.cpp:417 src/hook/exe_image.cpp:1024 src/input/sigma.cpp:140 src/launcher/config.cpp:626 src/launcher/config.cpp:630 src/launcher/config.cpp:775 src/launcher/config.cpp:1723 src/launcher/config_dialog.cpp:256 src/launcher/launcher.cpp:539 src/launcher/music_player.cpp:417	read in src/, set by the launcher
 switch	env:BOF3X_CACHE_DATA	env	yes		src/game/platform/dat_cache.cpp:380 src/hook/exe_image.cpp:1021 src/launcher/config.cpp:768 src/launcher/config.cpp:1708 src/launcher/config_dialog.cpp:274	read in src/
-switch	env:BOF3X_CALLTRACE	hosted-only	costly		src/hook/exe_host.cpp:102 src/launcher/launcher.cpp:68 src/game/crt_rest.cpp:455 src/hook/calltrace.cpp:318 src/hook/input_script.cpp:1204	read in src/, refused by bof3x.exe
+switch	env:BOF3X_CALLTRACE	hosted-only	costly		src/hook/exe_host.cpp:102 src/launcher/launcher.cpp:68 src/game/crt_rest.cpp:539 src/hook/calltrace.cpp:318 src/hook/input_script.cpp:1259 src/hook/windows_only.cpp:48	read in src/, refused by bof3x.exe
 switch	env:BOF3X_CALLTRACE_DETAIL	env	yes		src/hook/calltrace.cpp:390	read in src/
 switch	env:BOF3X_CALLTRACE_MODE	env	yes		src/hook/calltrace.cpp:382	read in src/
 switch	env:BOF3X_CALLTRACE_REACH	env	yes		src/hook/calltrace.cpp:330	read in src/
 switch	env:BOF3X_CALLTRACE_SPIN	env	yes		src/hook/calltrace.cpp:402	read in src/
 switch	env:BOF3X_CALLTRACE_STOP	env	yes		src/hook/calltrace.cpp:387	read in src/
-switch	env:BOF3X_CRASH_TEST	env	yes		src/hook/crash.cpp:349	read in src/
-switch	env:BOF3X_D3D_DEBUG	env	yes		src/render/render_d3d11.cpp:905	read in src/
+switch	env:BOF3X_CRASH_TEST	env	yes		src/hook/crash_posix.cpp:304 src/hook/crash_win32.cpp:260	read in src/
+switch	env:BOF3X_D3D_DEBUG	env	yes		src/render/render_d3d11.cpp:924	read in src/
 switch	env:BOF3X_DATLOG	env	yes		src/game/battle/dat_load.cpp:915	read in src/
 switch	env:BOF3X_DESERT_FAERIE	launcher	yes		src/launcher/config.cpp:664 src/game/field/event_script_ours.cpp:153 src/launcher/config.cpp:663 src/launcher/config.cpp:1730	read in src/, set by the launcher
-switch	env:BOF3X_DRAWLOG_RGB	env	yes		src/render/render_shim.cpp:844	read in src/
+switch	env:BOF3X_DRAWLOG_RGB	env	yes		src/render/render_shim.cpp:865	read in src/
 switch	env:BOF3X_DRAWORDER	env	yes		src/hook/draw_order.cpp:205	read in src/
 switch	env:BOF3X_E1A_ONLY	env	yes		src/game/effect/effect_1a_fuzz.cpp:504	read in src/
 switch	env:BOF3X_E1B_ONLY	env	yes		src/game/effect/effect_1b_fuzz.cpp:395	read in src/
@@ -10307,22 +10311,22 @@ switch	env:BOF3X_ENEMY_INFO	launcher	yes		src/launcher/config.cpp:688 src/game/c
 switch	env:BOF3X_EVENT_OPS_ONLY	env	yes		src/game/field/event_ops_fuzz.cpp:1237	read in src/
 switch	env:BOF3X_EXEFILE	env	yes		src/launcher/config.cpp:1713 src/launcher/launcher.cpp:651	read in src/
 switch	env:BOF3X_EXEIMAGE	env	yes		src/hook/exe_host.cpp:283 src/hook/exe_image.cpp:119 src/launcher/launcher.cpp:500 src/launcher/launcher.cpp:540 src/launcher/launcher.cpp:609 src/launcher/launcher.cpp:612 src/launcher/launcher.cpp:650 src/launcher/launcher.cpp:656	read in src/
-switch	env:BOF3X_EXEIMAGE_STRICT	env	yes		src/hook/exe_image.cpp:211 src/launcher/config.cpp:1710	read in src/
-switch	env:BOF3X_EXITTRACE	env	yes		src/game/platform/win_main.cpp:210	read in src/
+switch	env:BOF3X_EXEIMAGE_STRICT	env	yes		src/hook/exe_image.cpp:213 src/launcher/config.cpp:1710	read in src/
+switch	env:BOF3X_EXITTRACE	env	yes		src/game/platform/win_main.cpp:207	read in src/
 switch	env:BOF3X_EXP	launcher	yes		src/launcher/config.cpp:682 src/game/core/cheats.cpp:143 src/launcher/config.cpp:681 src/launcher/config.cpp:1727	read in src/, set by the launcher
 switch	env:BOF3X_FBGRAB	env	yes		src/render/fb_grab.cpp:17	read in src/
 switch	env:BOF3X_FC2_ONLY	env	yes		src/game/effect/field_c2_fuzz.cpp:424	read in src/
 switch	env:BOF3X_FE2_ONLY	env	yes		src/game/field/field_e2_fuzz.cpp:876	read in src/
 switch	env:BOF3X_FE2_ROUNDS	env	yes		src/game/field/field_e2_fuzz.cpp:883	read in src/
 switch	env:BOF3X_FFMPEG	env	yes		src/launcher/sources_dialog.cpp:454 src/launcher/sources_dialog.cpp:493	read in src/
-switch	env:BOF3X_FILTER	launcher	yes		src/launcher/config.cpp:643 src/game/platform/d3d.cpp:955 src/game/platform/d3d.cpp:4043 src/hook/input_script.cpp:1169 src/launcher/config.cpp:641 src/launcher/config.cpp:1723	read in src/, set by the launcher
+switch	env:BOF3X_FILTER	launcher	yes		src/launcher/config.cpp:643 src/game/platform/d3d.cpp:955 src/game/platform/d3d.cpp:4045 src/hook/input_script.cpp:1224 src/launcher/config.cpp:641 src/launcher/config.cpp:1723	read in src/, set by the launcher
 switch	env:BOF3X_FO_ONLY	env	yes		src/game/field/field_o_fuzz.cpp:530	read in src/
 switch	env:BOF3X_FO_ROUNDS	env	yes		src/game/field/field_o_fuzz.cpp:547	read in src/
-switch	env:BOF3X_FPS_LOG	env	yes		src/game/platform/magic_080.cpp:769	read in src/
-switch	env:BOF3X_FRAME_MS	env	yes		src/game/platform/magic_080.cpp:762 src/hook/wav_dump.cpp:653	read in src/
+switch	env:BOF3X_FPS_LOG	env	yes		src/game/platform/magic_080.cpp:602	read in src/
+switch	env:BOF3X_FRAME_MS	env	yes		src/game/platform/magic_080.cpp:595 src/hook/wav_dump.cpp:708	read in src/
 switch	env:BOF3X_FRAMEHASH	env	yes		src/render/render_shim.cpp:319	read in src/
 switch	env:BOF3X_FS_RUN	env	yes		src/game/shop/field_s_fuzz.cpp:563	read in src/
-switch	env:BOF3X_GAPWATCH	env	yes		src/hook/gapwatch.cpp:621 src/hook/gapwatch.cpp:771 src/hook/snapshot.cpp:1149 src/hook/write_watch.cpp:193	read in src/
+switch	env:BOF3X_GAPWATCH	env	yes		src/hook/gapwatch.cpp:621 src/hook/gapwatch.cpp:771 src/hook/snapshot.cpp:1168 src/hook/windows_only.cpp:52 src/hook/write_watch.cpp:193	read in src/
 switch	env:BOF3X_GAPWATCH_BUDGET	env	yes		src/hook/gapwatch.cpp:796	read in src/
 switch	env:BOF3X_GAPWATCH_CLASSES	env	yes		src/hook/gapwatch.cpp:783	read in src/
 switch	env:BOF3X_GAPWATCH_DR	env	yes		src/hook/gapwatch.cpp:830	read in src/
@@ -10332,14 +10336,16 @@ switch	env:BOF3X_HOME	env	yes		src/common/home.cpp:23	read in src/
 switch	env:BOF3X_ICON_REF	env	yes		src/hook/exe_icon.cpp:640	read in src/
 switch	env:BOF3X_ICON_VRAM	env	yes		src/hook/exe_host.cpp:656 src/hook/exe_icon.cpp:638	read in src/
 switch	env:BOF3X_IMAGEBASE	env	yes		src/hook/host.cpp:105 src/launcher/launcher.cpp:397	read in src/
-switch	env:BOF3X_INPUT	env	yes		src/game/crt_rest.cpp:453 src/hook/dllmain.cpp:50 src/hook/draw_order.cpp:216 src/hook/exe_host.cpp:639 src/hook/gapwatch.cpp:803 src/hook/input_script.cpp:1302 src/hook/wav_dump.cpp:635	read in src/
-switch	env:BOF3X_INTERP	launcher	yes		src/launcher/config.cpp:670 src/launcher/config.cpp:669 src/launcher/config.cpp:1726 src/render/interp.cpp:125	read in src/, set by the launcher
-switch	env:BOF3X_INTERP_DEBUG	env	yes		src/render/render_shim.cpp:1234	read in src/
+switch	env:BOF3X_INPUT	env	yes		src/game/crt_rest.cpp:537 src/hook/dllmain.cpp:50 src/hook/draw_order.cpp:216 src/hook/exe_host.cpp:639 src/hook/gapwatch.cpp:803 src/hook/input_script.cpp:1358 src/hook/wav_dump.cpp:690	read in src/
+switch	env:BOF3X_INTERP	launcher	yes		src/launcher/config.cpp:670 src/launcher/config.cpp:669 src/launcher/config.cpp:1726 src/render/interp.cpp:160	read in src/, set by the launcher
+switch	env:BOF3X_INTERP_DEBUG	env	yes		src/render/render_shim.cpp:1261	read in src/
 switch	env:BOF3X_INTERP_DUMP	env	yes		src/game/platform/magic_080.cpp:189	read in src/
 switch	env:BOF3X_INTERP_DUMP_EVERY	env	yes		src/game/platform/magic_080.cpp:192	read in src/
-switch	env:BOF3X_INTERP_MAX	env	yes		src/render/render_shim.cpp:1220	read in src/
-switch	env:BOF3X_KEYS	launcher	yes		src/launcher/config.cpp:702 src/game/platform/d_input.cpp:121 src/launcher/config.cpp:699	read in src/, set by the launcher
-switch	env:BOF3X_LANG	launcher	yes		src/launcher/config.cpp:498 src/game/battle/dat_load.cpp:874 src/game/text/lang_layout.cpp:10 src/game/text/lang_layout.cpp:21 src/game/text/lang_layout.cpp:28 src/hook/input_script.cpp:1168 src/launcher/config.cpp:494 src/launcher/config.cpp:516 src/launcher/config.cpp:1071 src/launcher/config.cpp:1606 src/launcher/config.cpp:1721 src/launcher/config.cpp:1869	read in src/, set by the launcher
+switch	env:BOF3X_INTERP_MAX	env	yes		src/render/render_shim.cpp:1247	read in src/
+switch	env:BOF3X_INTERP_STATS	env	yes		src/render/render_shim.cpp:444	read in src/
+switch	env:BOF3X_KEYS	launcher	yes		src/launcher/config.cpp:702 src/game/platform/d_input.cpp:228 src/launcher/config.cpp:699	read in src/, set by the launcher
+switch	env:BOF3X_LANG	launcher	yes		src/launcher/config.cpp:498 src/game/battle/dat_load.cpp:874 src/game/text/lang_layout.cpp:10 src/game/text/lang_layout.cpp:21 src/game/text/lang_layout.cpp:28 src/hook/input_script.cpp:1223 src/launcher/config.cpp:494 src/launcher/config.cpp:516 src/launcher/config.cpp:1071 src/launcher/config.cpp:1606 src/launcher/config.cpp:1721 src/launcher/config.cpp:1869	read in src/, set by the launcher
+switch	env:BOF3X_LATE_EVERY	env	yes		src/game/platform/magic_080.cpp:603	read in src/
 switch	env:BOF3X_LAUNCHER	env	yes		src/hook/exe_host.cpp:587 src/launcher/launcher.cpp:672	read in src/
 switch	env:BOF3X_LAYERING	env	yes		src/game/field/layering.cpp:612	read in src/
 switch	env:BOF3X_LAYERING_AHEAD	env	yes		src/game/field/layering.cpp:614	read in src/
@@ -10349,27 +10355,27 @@ switch	env:BOF3X_LAYERING_RISE	env	yes		src/game/field/layering.cpp:615	read in 
 switch	env:BOF3X_LAYERING_SPRITEBOX	env	yes		src/game/field/layering.cpp:618	read in src/
 switch	env:BOF3X_LEARN	launcher	yes		src/launcher/config.cpp:692 src/game/core/cheats.cpp:153 src/launcher/config.cpp:691 src/launcher/config.cpp:1729	read in src/, set by the launcher
 switch	env:BOF3X_LINES	env	yes		src/game/platform/d3d_lines.cpp:117	read in src/
-switch	env:BOF3X_MP3	env	yes		src/audio/mp3.cpp:607 src/hook/exe_host.cpp:92 src/launcher/launcher.cpp:71	read in src/
+switch	env:BOF3X_MP3	env	yes		src/audio/mp3.cpp:602 src/hook/exe_host.cpp:92 src/launcher/launcher.cpp:71	read in src/
 switch	env:BOF3X_MP3=original	hosted-only	costly		src/hook/exe_host.cpp:92 src/launcher/launcher.cpp:71	refused by bof3x.exe
-switch	env:BOF3X_MP3_COMPARE	hosted-only	costly		src/hook/exe_host.cpp:99 src/launcher/launcher.cpp:68 src/audio/mp3.cpp:632	read in src/, refused by bof3x.exe
-switch	env:BOF3X_MP3_DUMP	env	yes		src/audio/mp3.cpp:510	read in src/
-switch	env:BOF3X_MP3_DUMP_FILES	env	yes		src/audio/mp3.cpp:511	read in src/
+switch	env:BOF3X_MP3_COMPARE	hosted-only	costly		src/hook/exe_host.cpp:99 src/launcher/launcher.cpp:68 src/audio/mp3.cpp:627	read in src/, refused by bof3x.exe
+switch	env:BOF3X_MP3_DUMP	env	yes		src/audio/mp3.cpp:505	read in src/
+switch	env:BOF3X_MP3_DUMP_FILES	env	yes		src/audio/mp3.cpp:506	read in src/
 switch	env:BOF3X_MUSIC	launcher	yes		src/launcher/config.cpp:637 src/game/platform/music_seq.cpp:433 src/launcher/config.cpp:634 src/launcher/config.cpp:1723	read in src/, set by the launcher
 switch	env:BOF3X_MUSIC_LOG	env	yes		src/audio/sound_sdl.cpp:230 src/game/platform/sound_ours.cpp:76	read in src/
 switch	env:BOF3X_MUSIC_LOOPS	env	yes		src/game/platform/music_loops.cpp:36	read in src/
 switch	env:BOF3X_MW_TRACE	env	yes		src/game/menu/menu_windows_fuzz.cpp:985	read in src/
 switch	env:BOF3X_NO_FAIL	launcher	yes		src/launcher/config.cpp:690 src/game/core/cheats.cpp:150 src/launcher/config.cpp:689 src/launcher/config.cpp:1729	read in src/, set by the launcher
-switch	env:BOF3X_OFF	launcher	yes		src/launcher/config.cpp:587 src/hook/behaviour.cpp:102 src/hook/detour.cpp:66 src/hook/detour.cpp:122 src/launcher/config.cpp:586 src/launcher/config.cpp:596 src/launcher/config.cpp:598 src/launcher/config.cpp:615 src/launcher/config.cpp:1722	read in src/, set by the launcher
+switch	env:BOF3X_OFF	launcher	yes		src/launcher/config.cpp:587 src/hook/behaviour.cpp:102 src/hook/detour.cpp:65 src/hook/detour.cpp:121 src/launcher/config.cpp:586 src/launcher/config.cpp:596 src/launcher/config.cpp:598 src/launcher/config.cpp:615 src/launcher/config.cpp:1722	read in src/, set by the launcher
 switch	env:BOF3X_ON	launcher	yes		src/launcher/config.cpp:603 src/hook/behaviour.cpp:99 src/launcher/config.cpp:594 src/launcher/config.cpp:615 src/launcher/config.cpp:1722	read in src/, set by the launcher
 switch	env:BOF3X_OPT	launcher	yes		src/launcher/config.cpp:563 src/game/battle/dat_load.cpp:625 src/hook/exe_image.cpp:1018 src/launcher/config.cpp:514 src/launcher/config.cpp:636 src/launcher/config.cpp:1721	read in src/, set by the launcher
-switch	env:BOF3X_ORIGINAL	hosted-only	costly		src/hook/exe_host.cpp:85 src/launcher/launcher.cpp:68 src/hook/detour.cpp:51 src/hook/detour.cpp:122 src/hook/detour.cpp:438	read in src/, refused by bof3x.exe
-switch	env:BOF3X_PAD	launcher	yes		src/launcher/config.cpp:711 src/game/platform/d_input.cpp:95 src/game/platform/pad_read.cpp:99 src/launcher/config.cpp:708	read in src/, set by the launcher
-switch	env:BOF3X_PAD_LAYOUT	env	yes		src/game/platform/d_input.cpp:78 src/game/platform/pad_read.cpp:82	read in src/
-switch	env:BOF3X_PILLARBOX	env	yes		src/game/platform/pillarbox.cpp:273	read in src/
-switch	env:BOF3X_PIXEL_OFFSET	env	yes		src/render/render_d3d11.cpp:321	read in src/
+switch	env:BOF3X_ORIGINAL	hosted-only	costly		src/hook/exe_host.cpp:85 src/launcher/launcher.cpp:68 src/hook/detour.cpp:50 src/hook/detour.cpp:121 src/hook/detour.cpp:414	read in src/, refused by bof3x.exe
+switch	env:BOF3X_PAD	launcher	yes		src/launcher/config.cpp:711 src/game/platform/d_input.cpp:202 src/game/platform/pad_read.cpp:100 src/launcher/config.cpp:708	read in src/, set by the launcher
+switch	env:BOF3X_PAD_LAYOUT	env	yes		src/game/platform/d_input.cpp:185 src/game/platform/pad_read.cpp:83	read in src/
+switch	env:BOF3X_PILLARBOX	env	yes		src/game/platform/pillarbox.cpp:275	read in src/
+switch	env:BOF3X_PIXEL_OFFSET	env	yes		src/render/render_d3d11.cpp:333	read in src/
 switch	env:BOF3X_PM_ONLY	env	yes		src/game/core/mode_rest_fuzz.cpp:272	read in src/
 switch	env:BOF3X_POSELOG	env	yes		src/game/core/title.cpp:1627 src/game/field/sprite.cpp:249 src/game/platform/d3d_draw.cpp:115	read in src/
-switch	env:BOF3X_PRESENT	launcher	yes		src/launcher/config.cpp:649 src/launcher/config.cpp:648 src/launcher/config.cpp:1724 src/render/render_d3d11.cpp:142	read in src/, set by the launcher
+switch	env:BOF3X_PRESENT	launcher	yes		src/launcher/config.cpp:649 src/launcher/config.cpp:648 src/launcher/config.cpp:1724 src/render/render_d3d11.cpp:154	read in src/, set by the launcher
 switch	env:BOF3X_PRESET	env	yes		src/game/battle/dat_load.cpp:885 src/launcher/config.cpp:1829 src/launcher/config.cpp:1880	read in src/
 switch	env:BOF3X_PSP	launcher	yes		src/launcher/config.cpp:581 src/game/core/psp_code.cpp:52 src/game/core/psp_code.cpp:148 src/launcher/config.cpp:580 src/launcher/config.cpp:1722	read in src/, set by the launcher
 switch	env:BOF3X_PYTHON	env	yes		src/launcher/sources_dialog.cpp:82	read in src/
@@ -10405,49 +10411,49 @@ switch	env:BOF3X_R4D_ONLY	env	yes		src/game/community/rest_4d_fuzz.cpp:969 src/g
 switch	env:BOF3X_R4E_ONLY	env	yes		src/game/community/rest_4e_fuzz.cpp:480	read in src/
 switch	env:BOF3X_R4F_ONLY	env	yes		src/game/effect/rest_4f_fuzz.cpp:632	read in src/
 switch	env:BOF3X_R4F_ROUNDS	env	yes		src/game/effect/rest_4f_fuzz.cpp:644	read in src/
-switch	env:BOF3X_RECORD	env	yes		src/game/crt_rest.cpp:454 src/hook/input_script.cpp:1301	read in src/
-switch	env:BOF3X_RUBY_KEY	launcher	yes		src/launcher/config.cpp:576 src/game/text/msgbox.cpp:775 src/launcher/config.cpp:575 src/launcher/config.cpp:1722	read in src/, set by the launcher
-switch	env:BOF3X_SATPIXIE	launcher	yes		src/launcher/config.cpp:654 src/launcher/config.cpp:651 src/render/satpixie.cpp:262	read in src/, set by the launcher
-switch	env:BOF3X_SCALE	launcher	yes		src/launcher/config.cpp:678 src/game/platform/display_setup.cpp:98 src/launcher/config.cpp:676 src/launcher/config.cpp:1727	read in src/, set by the launcher
-switch	env:BOF3X_SELFTEST_ONLY	env	yes		src/audio/sound_sdl.cpp:1238 src/game/menu/quick_menu.cpp:535 src/game/platform/sound_ours.cpp:1287 src/game/solo/solo_rows.h:61 src/hook/behaviour.cpp:127 src/hook/bind.cpp:415 src/hook/dllmain.cpp:51 src/hook/dllmain.cpp:64 src/hook/exe_host.cpp:639 src/hook/exe_host.cpp:650 src/hook/exe_image.cpp:587 src/hook/log.cpp:189 src/hook/snapshot.cpp:1184 src/hook/statehash.cpp:697 src/launcher/launcher.cpp:63 src/render/gfx_snapshot.cpp:447	read in src/
-switch	env:BOF3X_SHADOW	hosted-only	costly		src/hook/exe_host.cpp:88 src/launcher/launcher.cpp:68 src/hook/detour.cpp:381	read in src/, refused by bof3x.exe
-switch	env:BOF3X_SHOT_DIR	env	yes		src/hook/input_script.cpp:1327	read in src/
-switch	env:BOF3X_SHOT_EVERY	env	yes		src/hook/input_script.cpp:1333	read in src/
-switch	env:BOF3X_SHOT_WAIT	env	yes		src/hook/input_script.cpp:1343	read in src/
+switch	env:BOF3X_RECORD	env	yes		src/game/crt_rest.cpp:538 src/hook/input_script.cpp:1357	read in src/
+switch	env:BOF3X_RUBY_KEY	launcher	yes		src/launcher/config.cpp:576 src/game/text/msgbox.cpp:774 src/launcher/config.cpp:575 src/launcher/config.cpp:1722	read in src/, set by the launcher
+switch	env:BOF3X_SATPIXIE	launcher	yes		src/launcher/config.cpp:654 src/launcher/config.cpp:651 src/render/satpixie.cpp:269	read in src/, set by the launcher
+switch	env:BOF3X_SCALE	launcher	yes		src/launcher/config.cpp:678 src/game/platform/display_setup.cpp:88 src/launcher/config.cpp:676 src/launcher/config.cpp:1727	read in src/, set by the launcher
+switch	env:BOF3X_SELFTEST_ONLY	env	yes		src/audio/sound_sdl.cpp:1239 src/game/menu/quick_menu.cpp:535 src/game/platform/sound_ours.cpp:1289 src/game/solo/solo_rows.h:61 src/hook/behaviour.cpp:127 src/hook/bind.cpp:415 src/hook/dllmain.cpp:51 src/hook/dllmain.cpp:64 src/hook/exe_host.cpp:639 src/hook/exe_host.cpp:650 src/hook/exe_image.cpp:587 src/hook/log.cpp:231 src/hook/snapshot.cpp:1203 src/hook/statehash.cpp:695 src/launcher/launcher.cpp:63 src/render/gfx_snapshot.cpp:447	read in src/
+switch	env:BOF3X_SHADOW	hosted-only	costly		src/hook/exe_host.cpp:88 src/launcher/launcher.cpp:68 src/hook/detour.cpp:357	read in src/, refused by bof3x.exe
+switch	env:BOF3X_SHOT_DIR	env	yes		src/hook/input_script.cpp:1383	read in src/
+switch	env:BOF3X_SHOT_EVERY	env	yes		src/hook/input_script.cpp:1389	read in src/
+switch	env:BOF3X_SHOT_WAIT	env	yes		src/hook/input_script.cpp:1399	read in src/
 switch	env:BOF3X_SIDE_DUP	env	yes		src/game/field/map_layers.cpp:128	read in src/
 switch	env:BOF3X_SIDE_ZERO	env	yes		src/game/field/map_layers.cpp:74	read in src/
 switch	env:BOF3X_SL_CONTROL	env	yes		src/game/platform/widescreen.cpp:233	read in src/
-switch	env:BOF3X_SNAP	launcher	yes		src/launcher/config.cpp:667 src/game/platform/display_setup.cpp:113 src/launcher/config.cpp:666 src/launcher/config.cpp:1725	read in src/, set by the launcher
+switch	env:BOF3X_SNAP	launcher	yes		src/launcher/config.cpp:667 src/game/platform/display_setup.cpp:103 src/launcher/config.cpp:666 src/launcher/config.cpp:1725	read in src/, set by the launcher
 switch	env:BOF3X_SOLO	launcher	yes		src/launcher/config.cpp:616 src/game/solo/solo.cpp:192 src/launcher/config.cpp:614 src/launcher/config.cpp:1730	read in src/, set by the launcher
-switch	env:BOF3X_SPEED	env	yes		src/game/platform/magic_080.cpp:770 src/hook/wav_dump.cpp:661	read in src/
-switch	env:BOF3X_STACKWATCH	env	yes		src/hook/stackwatch.cpp:280 src/hook/stackwatch.cpp:282	read in src/
-switch	env:BOF3X_STALLWATCH	env	yes		src/hook/stallwatch.cpp:205	read in src/
-switch	env:BOF3X_STATEHASH	env	yes		src/hook/gapwatch.cpp:861 src/hook/statehash.cpp:698 src/hook/statehash.cpp:796	read in src/
-switch	env:BOF3X_STATEHASH_DUMP	env	yes		src/hook/statehash.cpp:807	read in src/
-switch	env:BOF3X_STATEHASH_FOLD	env	yes		src/hook/statehash.cpp:709 src/hook/statehash.cpp:715	read in src/
-switch	env:BOF3X_STATEHASH_RAW	env	yes		src/hook/statehash.cpp:700	read in src/
-switch	env:BOF3X_STATEHASH_SKIP	env	yes		src/hook/statehash.cpp:802	read in src/
+switch	env:BOF3X_SPEED	env	yes		src/game/platform/magic_080.cpp:608 src/hook/wav_dump.cpp:716	read in src/
+switch	env:BOF3X_STACKWATCH	env	yes		src/hook/stackwatch_posix.cpp:31 src/hook/stackwatch_win32.cpp:283 src/hook/stackwatch_win32.cpp:285	read in src/
+switch	env:BOF3X_STALLWATCH	env	yes		src/hook/stallwatch.cpp:200	read in src/
+switch	env:BOF3X_STATEHASH	env	yes		src/hook/gapwatch.cpp:861 src/hook/statehash.cpp:696 src/hook/statehash.cpp:794	read in src/
+switch	env:BOF3X_STATEHASH_DUMP	env	yes		src/hook/statehash.cpp:805	read in src/
+switch	env:BOF3X_STATEHASH_FOLD	env	yes		src/hook/statehash.cpp:707 src/hook/statehash.cpp:713	read in src/
+switch	env:BOF3X_STATEHASH_RAW	env	yes		src/hook/statehash.cpp:698	read in src/
+switch	env:BOF3X_STATEHASH_SKIP	env	yes		src/hook/statehash.cpp:800	read in src/
 switch	env:BOF3X_STEAL	launcher	yes		src/launcher/config.cpp:686 src/game/core/cheats.cpp:158 src/launcher/config.cpp:685 src/launcher/config.cpp:1728	read in src/, set by the launcher
 switch	env:BOF3X_STPCENSUS	env	yes		src/hook/stp_census.cpp:128	read in src/
-switch	env:BOF3X_STPVIEW	env	yes		src/render/render_d3d11.cpp:906	read in src/
-switch	env:BOF3X_SWAP	env	yes		src/render/render_d3d11.cpp:892	read in src/
+switch	env:BOF3X_STPVIEW	env	yes		src/render/render_d3d11.cpp:925	read in src/
+switch	env:BOF3X_SWAP	env	yes		src/render/render_d3d11.cpp:911	read in src/
 switch	env:BOF3X_TEXPAGELOG	env	yes		src/game/platform/d3d.cpp:2589	read in src/
-switch	env:BOF3X_TEXT_SPEED	launcher	yes		src/launcher/config.cpp:658 src/game/text/msgbox.cpp:794 src/launcher/config.cpp:657 src/launcher/config.cpp:1724	read in src/, set by the launcher
+switch	env:BOF3X_TEXT_SPEED	launcher	yes		src/launcher/config.cpp:658 src/game/text/msgbox.cpp:793 src/launcher/config.cpp:657 src/launcher/config.cpp:1724	read in src/, set by the launcher
 switch	env:BOF3X_TEXTLOG	env	yes		src/game/text/text_draw.cpp:261	read in src/
 switch	env:BOF3X_TICK_BASE	env	yes		src/game/platform/game_clock.cpp:78	read in src/
-switch	env:BOF3X_TILE1	env	yes		src/game/platform/d3d.cpp:3999	read in src/
+switch	env:BOF3X_TILE1	env	yes		src/game/platform/d3d.cpp:4001	read in src/
 switch	env:BOF3X_UNLEARNED_BLUE	launcher	yes		src/launcher/config.cpp:661 src/game/battle/battle_action.cpp:2286 src/launcher/config.cpp:660 src/launcher/config.cpp:1725	read in src/, set by the launcher
 switch	env:BOF3X_VSYNC	env	yes		src/game/platform/d3d.cpp:959	read in src/
-switch	env:BOF3X_WAV_DIR	env	yes		src/hook/wav_dump.cpp:623	read in src/
-switch	env:BOF3X_WAV_LABEL	env	yes		src/hook/wav_dump.cpp:630	read in src/
+switch	env:BOF3X_WAV_DIR	env	yes		src/hook/wav_dump.cpp:678	read in src/
+switch	env:BOF3X_WAV_LABEL	env	yes		src/hook/wav_dump.cpp:685	read in src/
 switch	env:BOF3X_WIDE	launcher	yes		src/launcher/config.cpp:673 src/game/platform/widescreen.cpp:348 src/launcher/config.cpp:672 src/launcher/config.cpp:1725	read in src/, set by the launcher
-switch	env:BOF3X_WIDE_HIDE	env	yes		src/game/field/wide_staging.cpp:1113	read in src/
+switch	env:BOF3X_WIDE_HIDE	env	yes		src/game/field/wide_staging.cpp:1114	read in src/
 switch	env:BOF3X_WIDE_INSET	env	yes		src/game/platform/widescreen.cpp:446	read in src/
 switch	env:BOF3X_WIDE_RING	env	yes		src/game/field/map_rim.cpp:682	read in src/
-switch	env:BOF3X_WIDE_STAGING	env	yes		src/game/field/wide_staging.cpp:1112	read in src/
-switch	env:BOF3X_WIDE_STAGING_LOG	env	yes		src/game/field/wide_staging.cpp:1102	read in src/
+switch	env:BOF3X_WIDE_STAGING	env	yes		src/game/field/wide_staging.cpp:1113	read in src/
+switch	env:BOF3X_WIDE_STAGING_LOG	env	yes		src/game/field/wide_staging.cpp:1103	read in src/
 switch	env:BOF3X_WIDE_TERRAIN	env	yes		src/game/platform/widescreen.cpp:431	read in src/
-switch	env:BOF3X_WRITEWATCH	env	yes		src/hook/write_watch.cpp:190	read in src/
+switch	env:BOF3X_WRITEWATCH	env	yes		src/hook/windows_only.cpp:73 src/hook/write_watch.cpp:190	read in src/
 switch	env:BOF3X_ZENNY	launcher	yes		src/launcher/config.cpp:684 src/game/core/cheats.cpp:144 src/launcher/config.cpp:683 src/launcher/config.cpp:1727	read in src/, set by the launcher
 switch	ini:background	launcher	yes		src/launcher/config.cpp:241	ini key -> BOF3X_BACKGROUND
 switch	ini:cache	launcher	yes		src/launcher/config.cpp:222	ini key -> BOF3X_CACHE
@@ -10526,7 +10532,7 @@ entry	DIV-0037	launcher	yes	env:BOF3X_PRESENT, ini:screen		tier Sensible; kind l
 entry	DIV-0038	code,lang,launcher	yes	PauseText, lang, env:BOF3X_OFF, ini:off		tier Sensible; kind code
 entry	DIV-0039	detour	costly	Game_WinMain		tier Sensible; kind detour
 entry	DIV-0040	detour	costly	Game_WndProc		tier Sensible; kind detour
-entry	DIV-0041	code,detour,env,launcher	yes	Widescreen, env:BOF3X_WIDE, env:BOF3X_WIDE_INSET, env:BOF3X_WIDE_TERRAIN, env:BOF3X_SL_CONTROL, env:BOF3X_WIDE_RING, env:BOF3X_PILLARBOX		tier Sensible; kind mixed; Reversible? is 28978 characters: read it by hand
+entry	DIV-0041	code,detour,env,launcher	yes	Widescreen, env:BOF3X_WIDE, env:BOF3X_WIDE_INSET, env:BOF3X_WIDE_TERRAIN, env:BOF3X_SL_CONTROL, env:BOF3X_WIDE_RING, env:BOF3X_PILLARBOX		tier Sensible; kind mixed; Reversible? is 32461 characters: read it by hand
 entry	DIV-0042	detour,launcher	yes	env:BOF3X_SNAP		tier Sensible; kind detour
 entry	DIV-0043	launcher	yes	env:BOF3X_PRESENT		tier Sensible; kind launcher
 entry	DIV-0044	detour	costly	Display_Setup		tier Intent; kind detour; the prose starts "No" but names a switch
@@ -10722,3 +10728,6 @@ entry	DIV-0233	code,launcher	yes	CommuNameGrid, env:BOF3X_OFF, ini:off		tier Int
 entry	DIV-0234	code,launcher	yes	GlyphCacheReuse, env:BOF3X_OFF, ini:off		tier Intent; kind code
 entry	DIV-0235	detour	costly	Commu_DrawTiledFrame		tier Intent; kind detour
 entry	DIV-0236	lang	yes	lang		tier Sensible; kind lang
+entry	DIV-0237	detour	costly	Game_WinMain		tier Intent; kind detour
+entry	DIV-0238	code,detour,launcher	yes	WindowSdl, env:BOF3X_OFF, ini:off		tier Sensible; kind mixed
+entry	DIV-0239	code,detour,launcher	yes	KeyboardSdl, env:BOF3X_OFF, ini:off		tier Sensible; kind mixed

@@ -11414,3 +11414,30 @@ skips no frame. Not run under `BOF3X_ORIGINAL`.
 pass that draws presents the waiting frame when `Gpu_PutDispEnv` did not.
 The same run: none of 1,927 walks drawn without a clear, where 172 of 1,921
 were.
+
+## D427 — The launcher's key capture stores Pause as NumLock's number and NumLock as Pause's (ours, the launcher; read 2026-11-18; open)
+
+**Seen:** not seen in play. Read on 2026-11-18 by the Linux round's group R5
+([`linux-round.md`](linux-round.md), "Wave 2 as run"), while it made the
+table from SDL's scancodes to DirectInput's key numbers. Nobody has pressed
+the two keys in the launcher to confirm it.
+
+**Cause, as read:** the Controls pages take a key with a `WH_KEYBOARD` hook
+(`src/launcher/config_dialog.cpp`, the capture near lines 1245..1263) and
+store the message's scan code with its extended flag as bit 7. Windows
+flags NumLock as extended and Pause as not, where DirectInput's numbers are
+the other way round: Pause is 0xC5 and NumLock is 0x45. So a press of Pause
+stores 0x45, and the page names it "NumLock"; a press of NumLock stores
+0xC5, named "Pause".
+
+**What a player would see:** a game button bound to Pause in the launcher
+is worked by NumLock in the game, and the reverse. It was so under
+DirectInput and is so under SDL's keyboard (DIV-0239), whose table keeps
+DirectInput's meaning on purpose so that no stored number changes.
+
+**Whose:** ours, the launcher's capture (DIV-0050's pages). It predates the
+Linux round.
+
+**Status:** open. Proposed: the capture maps 0x45 to 0xC5 and 0xC5 to 0x45
+before it stores; `tools/key_host`'s `kCaptureDiffers` lists the pair. A
+fix must say what happens to an ini that already holds one of the two.

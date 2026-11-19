@@ -795,9 +795,20 @@ nothing in the ledger or the defect list.
    written. Proposed: wave 1 here (it is mechanical and needs no Linux
    machine), and R5, R6, R7 and R9 offered to frost first, since they are his
    units L2 and L3 and his machine has the GPU that proves R9.
+   **Decided (the owner, 2026-11-18): wave 2 also runs here**, in worktrees
+   and harness roots apart from the play install; frost takes the round
+   over when he is ready. R9's proof on a Linux GPU stays his.
 2. **R2:** the three watchers Windows-only, or ported.
 3. **R5's switch:** how long DirectInput stays beside SDL3 (proposed: one
-   release).
+   release). **Decided (the owner, 2026-11-18): one release, and the player
+   chooses** between the two paths in it, by a launcher option; SDL3 is the
+   default, so that the release tests the path that stays, and DirectInput
+   is the fallback. **Changed the same day, after R5's read pass: no
+   release with both.** The pad has been on SDL3 since DIV-0050, so the
+   choice was the keyboard's alone; the keyboard goes to SDL3 with no
+   launcher option and no DirectInput path kept for a player. A ledger
+   entry for what a player can tell (the keys whose SDL scancode differs
+   from DirectInput's) is still owed at the merge.
 4. **R10:** the arena on Windows too, or on Linux alone (proposed: both, so
    that one heap is tested; behind a switch first).
 
@@ -1018,6 +1029,247 @@ empty `bof3` folder and a dialog stood on the owner's screen. The brief
 named the right form for the self-test and did not forbid other forms: the
 next brief says that a worktree holds no game data, and that a run not in
 the brief is not made.
+
+### Wave 2's read passes (2026-11-18; read, nothing built or run)
+
+Three agents read the source for the three questions the staging left
+unmeasured. Each finding below is from reading at `main` `5683387a`; the
+lines are theirs and none was checked by a build or a run.
+
+**R6: `battle_menu_win.cpp`'s window is the movie player, and it is live.**
+
+- `tools/move_funcs.py` built the file from eight, `fmv_play.cpp` among
+  them (its line 1). All its window and GDI sites are `Fmv_Play` (:1017)
+  and `Fmv_WndProc` (:1185): lines 127..302 and 1017..1221. The picture is
+  `StretchDIBits` (:220..238); the player subclasses the game window's
+  procedure (:1066) and runs a message pump of its own (:1107..1155).
+- Its one caller is `Game_WinMain`, `magic_080.cpp:850..851`: after the
+  window is made, before `Display_Setup` (:858). The movies play before a
+  Direct3D device exists.
+- `magic_080.cpp` is three jobs: the window, its geometry and its procedure
+  (:291..348, :562, :841..847, :909..916); the desktop's size (:830..834);
+  two `_wfopen` calls for the placement file (:284, :298).
+- `src/os` has no window, event or present service (`os.h:4`), and no
+  `SDL_CreateWindow` is anywhere in `src`.
+- Not reconciled: the agent's count of `magic_080.cpp`'s rows was about 136;
+  the staging says 131.
+
+**R5: the pad is on SDL3 already; DirectInput holds the keyboard alone.**
+
+- `DInput_Init` (`d_input.cpp:164..200`) opens `GUID_SysKeyboard` only.
+  `DInput_EnumJoystick` (:210..231) is reached through
+  `BOF3X_ORIGINAL=DInput_Init` alone. The pad is `src/input/pad_sdl.cpp`
+  (DIV-0050, 2026-09-24).
+- `Pad_Read` fills `Key_State[256]`, indexed by DIK number, and reads the
+  32 pairs of `Key_Table`. `Key_State` is game memory that the state hash
+  reads: an SDL reader must fill it byte for byte the same.
+- The stored numbers: `key.NAME=` lines of `bof3x.ini` and lines 3 on of
+  `BOF3.CFG` hold DIK numbers; `pad.INPUT=` lines hold SDL's names. None is
+  in a save. The launcher takes a key by a `WH_KEYBOARD` hook
+  (`config_dialog.cpp:1242..1263`) and never opens DirectInput: its pages
+  need no change.
+- No table from `SDL_Scancode` to DIK numbers is in the tree.
+- The check of `c_dfDIKeyboard` (`rdata_consts.cpp:62..139`) also writes
+  the format's header into the image, so that the original `DInput_Init`
+  runs.
+- Not verified: how SDL3 on Windows reads the keyboard, and whether the
+  window messages `input_script.cpp` posts reach it; that SDL's keyboard
+  state needs an SDL window (so R5 is after R6).
+
+**R7: neither the task switch nor a thread; a call in the seam that runs a
+function on a stack of its own.**
+
+- The render fiber (`render_d3d11.cpp:1013..1066`, commit `340d3739`) is
+  there because the game presents from inside a task on a 16 KB slice of
+  the main thread's stack, and the first DXGI present ran off it
+  ([`render-backend.md`](render-backend.md) 4). The snapshot's
+  (`snapshot.cpp:636..680`, commit `e04db5b4`) is there so that a take
+  copies slice 0 as the tasks left it. Both ask 256 KB committed of 1 MB.
+- The task switch (`src/game/task_switch*.h`) is the game's scheduler: four
+  fixed records, slices of 0x4000 or 0x8000 bytes, no System V half. Its
+  slices are the stacks the fibers were made to leave.
+- A thread: DXGI sends messages to the window's thread, which would wait on
+  the hand-off; the hosted self-test runs under the loader lock, where a
+  thread cannot start (`snapshot.cpp:296..299`).
+- Proposed: `os::RunOnOwnStack`, call and return. Windows keeps its fibers
+  behind it (they keep the thread block's stack bounds right, so nothing
+  changes there and no ledger entry); POSIX gets a mapped stack with a
+  guard page and a switch of its own, and registers the range so that
+  `os::CurrentStack()` answers for it (wave 1's gap).
+- `snapshot.cpp`'s 52 file sites: the seam covers the writes, reads and
+  name calls. It lacks a rename that refuses an existing target (:562), a
+  way for the self-test to make the rotation fail (:1068..1070 hold a file
+  open with no sharing), and neutral error codes (:615, :1088).
+- Not verified: the stack depth DXVK and a Vulkan driver need; whether a
+  snapshot participant calls the renderer (nesting).
+
+**What the passes change in the staging.**
+
+- R5 is the keyboard alone, engine alone, and runs after R6 (the owner's
+  call 3 above, as changed).
+- R6 splits: **R6** the window, its procedure and its loop on SDL3
+  (`magic_080.cpp`, `win_main.cpp`, `display_setup.cpp`, `d3d.cpp`), and
+  **R6m** the movie's picture and its events, after R6. Before either, the
+  movie's code moves back to a file of its own, so that the battle menu's
+  code is in no group.
+- R7 is the seam call and `snapshot.cpp`'s file sites. It shares no file
+  with R6 and can run beside it.
+- The order: R6 and R7 side by side; then R5, R6m and R9.
+
+**For the owner:** where the movie's frame is drawn (R6m) - an SDL texture
+on the window before the device exists, or the renderer brought up before
+the movies. Proposed: the renderer, since tier 2 has no second way to put
+a picture on a window that DXVK also owns; R6m's agent measures whether
+the device can be made before `Display_Setup` first.
+
+### Wave 2 as run (2026-11-18, in progress; branch `linux/wave2`, not merged)
+
+Launched at the owner's word. Merged into `linux/wave2` so far, one at a
+time, at `f7d4fc0f`: step 0 (`linux/w2-s0`, the movie's code in
+`src/game/fmv_play.cpp`), R7 (`linux/w2-r7`, `os::OwnStack` and the
+snapshot's files) and R6 (`linux/w2-r6`, the window on SDL3, the Win32
+window behind `BOF3X_OFF=WindowSdl`). Each group's hosted shadow suite
+passed in its own worktree (922 lines of 0); both presets build on the
+merge; the merge's own suite and the routes have not run. Running: R5, R6m,
+I1 (`input_script.cpp`), R9, M1 (`mp3.cpp`'s stack switch, wrong under the
+System V convention - R7's finding).
+
+**The owner's look at the SDL3 window, 2026-11-18, the 32-bit build of
+`f7d4fc0f` from `game\`:** all eight as expected - a windowed start with
+its placement, icon and title; a few minutes of field and battle; a
+quicksave and a quickload; F8 to borderless and back; a resize from a
+corner and a side; focus away and back; a drag to the second monitor and
+back, kept across a restart; the close button and Alt+F4. **Not looked at
+yet:** the movies and a close during one (R6m is not merged), the same
+steps under `BOF3X_OFF=WindowSdl`, the 64-bit build, a monitor with another
+scale setting, R6's six changes one by one (its hand-back lists them; the
+ledger entries are owed at the merge).
+
+**Merged since, at `faf9c7c8` (both presets build; the merge's own suite
+has not run):** M1 (`linux/w2-m1`) and R9 (`linux/w2-r9`).
+
+- **M1:** `mp3.cpp`'s decoder runs on `os::OwnStack`; the hand switch is
+  gone. The self-test now decodes one track on the caller's stack and on
+  the own stack and fails unless every sample is the same (782 frames, the
+  same). The old x86-64 switch would have written the decoded frame over
+  the caller's stack under the System V convention. A call costs 32 to
+  56 ns where it cost 2 (about 38 calls a second). No ledger entry: no
+  change is intended. What is left of risk: the decoder now has the own
+  stack's MXCSR (0x1F80) where it had the caller's; they are equal today
+  and nothing in the source sets it.
+- **R9:** `render_d3d11.cpp` and `satpixie.cpp` compile for
+  `x86_64-linux-gnu` against DXVK-native's headers (a compile alone; no
+  link, no Linux GPU). Of the sites call 1 listed, wave 1 and R7 had left
+  two `GetClientRect` calls. The window goes through
+  `src/render/render_window.h` (`SwapChainWindow`, `WindowClientSize`):
+  Windows defines them, stage LC defines them from the SDL window.
+  `BOF3X_PIXEL_OFFSET` is a `Fatal` off Windows. `cmake/dxvk_headers.cmake`
+  fetches DXVK at commit `b1a1c99a` (the v3.1.1 tag's) with its
+  `include/native/directx` submodule, for a target that is not Windows
+  alone; `linux_tree.py --dxvk DIR` points the probe at the headers, and
+  the census is regenerated with them present.
+- **A correction to the staging's words:** "Windows keeps Microsoft's
+  headers" - on this toolchain the Windows builds compile against
+  llvm-mingw's MinGW-w64 headers.
+- **The fetched DirectX headers' licence, the owner's answer
+  (2026-11-18):** the submodule is MinGW-w64's DirectX headers (LGPL 2.1
+  or later). They are part of the toolchain's kind of header, the Windows
+  builds already compile against the same family, and nothing is vendored:
+  it is fine. A notice for DXVK (zlib) in
+  [`THIRD_PARTY.md`](THIRD_PARTY.md) is owed when a tarball ships its
+  libraries (stage LD).
+
+**All eight groups merged, `98ae6e11` (2026-11-18).** R6m
+(`linux/w2-r6m`), R5 (`linux/w2-r5`) and I1 (`linux/w2-i1`) after the five
+above. Both presets build; `data_census --strict`, `reloc_census --check`,
+`reloc_bare --check`, `ledger_check.py` and `ledger_switches.py --check`
+pass. **`linux_tree.py` with DXVK-native's headers: 813 files, 813 compile
+for `x86_64-linux-gnu`, 0 do not; 11 are Windows-only by design.** The
+round's goal is met. Nothing links or runs on Linux.
+
+- **R6m:** on SDL's window the movie has no subclass and no Win32 pump; it
+  takes the window's events (`game_window::TakeForMovie`). The picture on
+  Windows is the same GDI code, in `fmv_play_win32.cpp`. Off Windows the
+  picture is a `Fatal` that names the open decision
+  ([`replacing-mci.md`](replacing-mci.md) 9: the renderer brought up before
+  the movies, or SDL's window surface; neither built).
+- **R5:** `src/input/key_sdl.*`, 159 pairs from SDL's scancode to the DIK
+  number; SDL's keyboard is read at the latch. DirectInput is left under
+  `BOF3X_OFF=WindowSdl` and `BOF3X_OFF=KeyboardSdl` (the proof tool: it logs
+  each key the two readers keep apart). `tools/key_host`: 132,756 checks, 0
+  failed, at both widths and in the WSL. Read, not run: the state hash's
+  page `0x7DE000` will differ from a reference made before R5
+  (`DInput_Object` and `DInput_Keyboard` stay 0).
+- **I1:** `input_script.cpp` has no Win32 site; on SDL's window a recipe's
+  key goes into the window's queue (`game_window::QueueKey`), on the Win32
+  window through `os::PostWindowKey`. None of the ten routes has a key
+  step; the recipes with one are listed in its hand-back (`quick_menu`,
+  `f9ExitMode` and others).
+- **Found, not of this round:** the launcher's key capture stores Pause as
+  0x45 and names it NumLock, and the reverse
+  (`config_dialog.cpp`, the `WH_KEYBOARD` hook); R5 kept DirectInput's
+  meaning so that no stored number changes.
+
+**The owner's second look, 2026-11-18, the 32-bit build of `f32becb3`
+(`launcher/function-keys`, which holds all of the above) from `game\`:**
+rebinding, clearing and a double binding on the launcher's new Function
+keys page work, and "the keyboard strokes seem fine" in play. **The
+movie** (the owner, the same day: a normal build has one now): it loaded
+and played to its end once, and was skipped once. **The function actions**
+(the owner, the same day): those bound to a pad button and those on the
+function keys "worked great". **Not reported on:** a
+close of the window during the movie,
+the pad unplugged and plugged in, MP3 music on the own stack, satpixie,
+`BOF3X_OFF=WindowSdl` and `BOF3X_OFF=KeyboardSdl`, the 64-bit build.
+
+**The long proofs on the merged branch, 2026-11-18** (`94307c45`, 32-bit,
+clean launcher folders under `C:\Users\kerok\bof3x-runs\lbw2\coord`, the
+machine hands-off, no compiler seen during any run; the chain is
+`proofs.py` there):
+
+- **Self-tests:** hosted with `BOF3X_SHADOW='*'` - `self-test only: done`,
+  922 `MISMATCHES` lines, every one 0, 0 FATAL; the exe host - exit code 0,
+  10,392 log lines, 0 FATAL; the exe host at `BOF3X_IMAGEBASE=0xA00000` -
+  the same three figures, the image moved from `0x400000`.
+- **The ten routes** (the exe host, ours as `cn_<route>_w2`): `diff`
+  against `_w1` and against `_m1116` is identical on every compared tick on
+  the seven routes of wave 1's list; the other three differ on `0x6C3000`
+  alone, over wave 1's ticks (its run noise). `check` against the `orig5`
+  pair gives `m1116`'s lines on every route. Page `0x7DE000`, which the
+  read pass expected the keyboard to change, did not change.
+- **whelpBoss's length is a race at the close, not a difference:** the hash
+  file is written 64 ticks at a time and the recipe ends at frame 13,181.
+  Of three runs of this build two ended with 13,121 ticks (`_w2`, `_w2b`)
+  and one with 13,185 (`_w2c`, identical to `_w1` on all of them). Whether
+  the SDL window closes sooner than the old one was not measured.
+- **Key steps on both paths** (`quick_menu`, `f9ExitMode`,
+  `quick_combat_keys` under `en-US`; `field_f9`; a harness game folder):
+  each ran to `done` on the SDL window and keyboard, with
+  `BOF3X_OFF=WindowSdl` and with `BOF3X_OFF=KeyboardSdl`, and the state
+  hash of the three is identical on every tick (961; 313; 2,625; 4,673).
+- **`music_heard.py`:** pass on whelpBoss (164 ring lines, 6 tracks) and
+  cutsceneAndNue (116 ring lines, 5 tracks).
+- **`BOF3X_ARENA=1`:** combat and cutsceneAndNue ran to `done`, identical
+  to `_w2` on every tick (2,561; 7,425).
+
+**Not run:** anything at 64 bits beyond the build; a route with
+`BOF3X_OFF=WindowSdl` other than the four key recipes.
+
+**After the proofs, step 0 undone (CI's source-layout gate, 2026-11-18).**
+Step 0 broke a rule the wave's gate line did not run: every function of
+Capcom's is in its unit's file (`tu_census.py --check --strict`,
+`retire_shells.py --check --strict`). `Fmv_Play` and `Fmv_WndProc` are
+`battle_menu_win.cpp`'s. The portable player (R6m left it with no Windows
+header) is back in that file, text unchanged; `fmv_play.cpp` and
+`fmv_play.h` are gone; the Win32 half is
+`src/game/platform/fmv_play_win32.cpp`, and `Fmv_WndProc` in the unit's
+file calls its `fmv_play::native::WndProc` on Windows and stops the game
+elsewhere, as before. Read "fmv_play.cpp" above as that code. On the
+change: both presets build; the 26 steps of CI's "Ledgers and symbols" job
+pass locally; `linux_tree.py` 812 of 812 (one file fewer), 11 Windows-only;
+the hosted shadow suite and the exe host as in the list above. The long
+proofs were not run again, and the movie was not looked at again. **A
+later wave's gate line must hold those two checks.**
 
 ### Stage LC - link and run on Linux
 

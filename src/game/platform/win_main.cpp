@@ -56,8 +56,6 @@
 
 #include "game/game_clock.h"
 
-#include <windows.h>
-
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
@@ -66,6 +64,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/display_setup.h"
 #include "game/msgbox.h"
+#include "game/platform/game_window.h"
 #include "game/pause_text.h"
 #include "game/quick_menu.h"
 #include "hook/cpu_context.h"
@@ -126,9 +125,11 @@ namespace {
 // kImpExitProcess: now Imp_ExitProcess (symbols.toml).
 // kImpTerminateProcess: now Imp_TerminateProcess (symbols.toml).
 // kImpPostQuitMessage: now Imp_PostQuitMessage (symbols.toml).
-void (WINAPI* g_real_exit)(UINT);
-BOOL (WINAPI* g_real_terminate)(HANDLE, UINT);
-void (WINAPI* g_real_post_quit)(int);
+// The imports' shapes, spelled without the SDK's names: UINT a 32-bit word,
+// BOOL an int, HANDLE and HWND pointers, WINAPI __stdcall.
+void (__stdcall* g_real_exit)(std::uint32_t);
+int (__stdcall* g_real_terminate)(void*, std::uint32_t);
+void (__stdcall* g_real_post_quit)(int);
 
 void LogStack(const char* what, const void* frame) {
     char line[1024];
@@ -146,7 +147,7 @@ void LogStack(const char* what, const void* frame) {
     bof3::LogFlush();
 }
 
-void WINAPI TracedExitProcess(UINT code) {
+void __stdcall TracedExitProcess(std::uint32_t code) {
     bof3::Log("exittrace   ExitProcess(0x%08X)", code);
     LogStack("ExitProcess", __builtin_frame_address(0));
     g_real_exit(code);
@@ -167,17 +168,17 @@ void TracedBreak(const char* what, std::uintptr_t ip, std::uintptr_t sp, std::ui
               what, bof3::CtxHex(ip).text, bof3::CtxHex(sp).text, flags, static_cast<std::uint32_t>(bof3::os::ThreadId()));
     LogStack("the exception", reinterpret_cast<const void*>(sp));
 }
-BOOL WINAPI TracedTerminateProcess(HANDLE h, UINT code) {
+int __stdcall TracedTerminateProcess(void* h, std::uint32_t code) {
     LogStack("TerminateProcess", __builtin_frame_address(0));
     return g_real_terminate(h, code);
 }
-void WINAPI TracedPostQuitMessage(int code) {
+void __stdcall TracedPostQuitMessage(int code) {
     LogStack("PostQuitMessage", __builtin_frame_address(0));
     g_real_post_quit(code);
 }
 // kImpMessageBoxA: now PsxRest_ImportMessageBoxA (symbols.toml).
-int (WINAPI* g_real_message_box)(HWND, const char*, const char*, UINT);
-int WINAPI TracedMessageBoxA(HWND h, const char* text, const char* caption, UINT type) {
+int (__stdcall* g_real_message_box)(void*, const char*, const char*, std::uint32_t);
+int __stdcall TracedMessageBoxA(void* h, const char* text, const char* caption, std::uint32_t type) {
     LogStack("MessageBoxA", __builtin_frame_address(0));
     const int r = g_real_message_box(h, text, caption, type);
     bof3::Log("exittrace   MessageBoxA returned %d", r);
@@ -224,5 +225,13 @@ void WinMain_Inject() {
         bof3::PatchBytes("CapcomMovieOnly", Low32(&win_main::g_capcom_movie_only), &was, &is, 1);
         bof3::Log("DIV-0202    the start plays CAPCOM.AVI alone: %s",
                   win_main::g_capcom_movie_only ? "on" : "OFF (LOGOS.AVI plays if it is in the folder)");
+    }
+    {
+        // The game's window made, placed and pumped by SDL3 (game_window.h;
+        // docs/linux-round.md, wave 2, R6). BOF3X_OFF=WindowSdl keeps the
+        // Win32 window the port had, on Windows.
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("WindowSdl", Low32(&game_window::g_sdl), &was, &is, 1);
+        bof3::Log("window      SDL3's window: %s", game_window::g_sdl ? "on" : "OFF (the Win32 window)");
     }
 }

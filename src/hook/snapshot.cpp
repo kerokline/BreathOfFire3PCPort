@@ -8,14 +8,14 @@
 // since DIV-0040), its F6 nothing.
 #include "hook/snapshot.h"
 
-#include <windows.h>
-
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
-#include <cwchar>
+#include <filesystem>
+#include <fstream>
 #include <functional>
 #include <string>
+#include <system_error>
 #include <vector>
 
 #include "bof3/symbols.gen.h"
@@ -284,13 +284,6 @@ bool ArenaReady(U top, U bytes) {
 
 // --- the build ---------------------------------------------------------------
 
-HMODULE OurModule() {
-    HMODULE module = nullptr;
-    GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                       reinterpret_cast<LPCWSTR>(&OurModule), &module);
-    return module;
-}
-
 // The launcher's version block's tag and bof3x.dll's file hash
 // (docs/releases/README.md): the build whose code the task stacks' return
 // addresses name. Hashed once, at the first F6 or F7, on the game's thread (a
@@ -304,15 +297,15 @@ const BuildId& EnsureBuild() {
     if (done) return build;
     build.host = IsExeHost() ? kHostExe : kHostBof3;
     std::snprintf(build.tag, sizeof build.tag, "%s", BOF3X_VERSION_TAG);
-    wchar_t path[MAX_PATH];
-    HMODULE module = OurModule();
-    const DWORD n = GetModuleFileNameW(module, path, MAX_PATH);
-    if (n == 0 || n >= MAX_PATH) Fatal("snapshot: bof3x.dll's own path is not known (%lu)", static_cast<unsigned long>(bof3::os::LastError()));
+    std::string path;          // UTF-8 (os/env.h)
+    std::uintptr_t module = 0;  // the module's base: a Windows module handle is its base
+    if (!os::ModulePath(reinterpret_cast<const void*>(&EnsureBuild), &path, &module) || path.empty())
+        Fatal("snapshot: bof3x.dll's own path is not known (%lu)", static_cast<unsigned long>(bof3::os::LastError()));
     std::string hex, why;
-    if (!bof3x::Sha256Hex(path, hex, why) || hex.size() != sizeof build.sha)
-        Fatal("snapshot: cannot hash bof3x.dll (%s): %s", Utf8Path(path).text, why.c_str());
+    if (!bof3x::Sha256Hex(os::ToWide(path.c_str()).c_str(), hex, why) || hex.size() != sizeof build.sha)
+        Fatal("snapshot: cannot hash bof3x.dll (%s): %s", path.c_str(), why.c_str());
     std::memcpy(build.sha, hex.data(), sizeof build.sha);
-    build.dll_base = Va(module);
+    build.dll_base = Va(reinterpret_cast<const void*>(module));
     Log("quicksave   this build: %s, bof3x.dll sha256 %.64s at 0x%08X, %s host", build.tag, build.sha, build.dll_base,
         build.host == kHostExe ? "exe" : "BOF3.exe");
     done = true;
@@ -536,31 +529,60 @@ void Restore(const Parsed& p, const Registry& registry) {
 }
 
 // --- the files ---------------------------------------------------------------
+//
+// Through the standard library and os/file_move.h. A folder is a
+// std::filesystem::path: the game's is the empty one (the current folder,
+// where the quicksaves always were), the self-test's a temporary folder.
 
-std::wstring SlotPath(const std::wstring& dir, unsigned slot) {
-    wchar_t name[32];
-    std::swprintf(name, 32, L"BISLPS%02X.DAT", slot);
-    return dir + name;
+namespace fs = std::filesystem;
+
+fs::path SlotPath(const fs::path& dir, unsigned slot) {
+    char name[32];
+    std::snprintf(name, sizeof name, "BISLPS%02X.DAT", slot);
+    return dir / name;
 }
 std::string SlotName(unsigned slot) { return Printf("BISLPS%02X.DAT", slot); }
 
-bool Exists(const std::wstring& path) { return GetFileAttributesW(path.c_str()) != INVALID_FILE_ATTRIBUTES; }
+// A path for a log line, as UTF-8.
+std::string PathText(const fs::path& path) {
+    try {
+        const std::u8string u = path.u8string();
+        return std::string(u.begin(), u.end());
+    } catch (...) {
+        return "(a name that does not convert)";
+    }
+}
+
+bool Exists(const fs::path& path) {
+    std::error_code ec;
+    return fs::exists(path, ec);
+}
+
+// The rename of one slot, the rotation's step: the target must not be there
+// (os::MoveFileKeep). The self-test hands one of its own, to make a step fail.
+using MoveFn = os::MoveResult (*)(const fs::path& from, const fs::path& to);
+os::MoveResult SystemMove(const fs::path& from, const fs::path& to) { return os::MoveFileKeep(from, to); }
 
 // F6's history (the owner, 2026-10-17): 1F deleted, then 1E -> 1F down to
 // 10 -> 11, renames only, top down; a gap is passed over, so every file
 // moves up one. A failure stops the rotation where it is: every file still
-// present under some name, nothing half-moved.
-bool Rotate(const std::wstring& dir, std::string& why) {
-    const std::wstring top = SlotPath(dir, kLastSlot);
-    if (Exists(top) && !DeleteFileW(top.c_str())) {
-        why = Printf("%s could not be deleted (error %lu)", SlotName(kLastSlot).c_str(), static_cast<unsigned long>(bof3::os::LastError()));
+// present under some name, nothing half-moved. A rename never replaces: a
+// file at the target (one made there since the step above moved it) stops
+// the rotation, never lost.
+bool Rotate(const fs::path& dir, std::string& why, MoveFn move = &SystemMove) {
+    const fs::path top = SlotPath(dir, kLastSlot);
+    std::error_code ec;
+    if (Exists(top) && !fs::remove(top, ec)) {
+        why = Printf("%s could not be deleted (error %d)", SlotName(kLastSlot).c_str(), ec.value());
         return false;
     }
     for (unsigned slot = kLastSlot - 1; slot + 1 > kFirstSlot; --slot) {
-        const std::wstring from = SlotPath(dir, slot);
+        const fs::path from = SlotPath(dir, slot);
         if (!Exists(from)) continue;
-        if (!MoveFileExW(from.c_str(), SlotPath(dir, slot + 1).c_str(), 0)) {
-            why = Printf("%s could not be renamed to %s (error %lu)", SlotName(slot).c_str(), SlotName(slot + 1).c_str(),
+        const os::MoveResult moved = move(from, SlotPath(dir, slot + 1));
+        if (moved != os::MoveResult::Moved) {
+            why = Printf("%s could not be renamed to %s (%s, error %lu)", SlotName(slot).c_str(), SlotName(slot + 1).c_str(),
+                         moved == os::MoveResult::TargetExists ? "the target is there" : "refused",
                          static_cast<unsigned long>(bof3::os::LastError()));
             return false;
         }
@@ -568,23 +590,22 @@ bool Rotate(const std::wstring& dir, std::string& why) {
     return true;
 }
 
-bool WriteAll(const std::wstring& path, const std::vector<unsigned char>& bytes, std::string& why) {
-    HANDLE f = CreateFileW(path.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
-    if (f == INVALID_HANDLE_VALUE) {
-        why = Printf("cannot create %s (error %lu)", Utf8Path(path.c_str()).text, static_cast<unsigned long>(bof3::os::LastError()));
+bool WriteAll(const fs::path& path, const std::vector<unsigned char>& bytes, std::string& why) {
+    const os::OutFile f = os::OutCreate(path);
+    if (f == os::kNoFile) {
+        why = Printf("cannot create %s (error %lu)", PathText(path).c_str(), static_cast<unsigned long>(bof3::os::LastError()));
         return false;
     }
-    DWORD wrote = 0;
-    BOOL ok = WriteFile(f, bytes.data(), static_cast<DWORD>(bytes.size()), &wrote, nullptr);
+    bool ok = os::OutWrite(f, bytes.data(), bytes.size());
     // On the disk before the rename makes it the newest: a power cut after the
     // rename must not leave a slot of zeros (the review of PR #95).
-    if (ok) ok = FlushFileBuffers(f);
-    const DWORD error = bof3::os::LastError();
-    CloseHandle(f);
-    if (!ok || wrote != bytes.size()) {
-        DeleteFileW(path.c_str());
-        why = Printf("writing %s failed after %lu of %u bytes (error %lu)", Utf8Path(path.c_str()).text, wrote,
-                     (unsigned)bytes.size(), error);
+    if (ok) ok = os::OutFlush(f);
+    const unsigned long error = bof3::os::LastError();
+    os::OutClose(f);
+    if (!ok) {
+        std::error_code ec;
+        fs::remove(path, ec);
+        why = Printf("writing %s failed, %u bytes (error %lu)", PathText(path).c_str(), (unsigned)bytes.size(), error);
         return false;
     }
     return true;
@@ -592,14 +613,15 @@ bool WriteAll(const std::wstring& path, const std::vector<unsigned char>& bytes,
 
 // The newest quicksave: written whole under a temporary name first, so a
 // failed write rotates nothing; then the rotation; then the rename to 10.
-bool WriteNewest(const std::wstring& dir, const std::vector<unsigned char>& bytes, std::string& why) {
-    const std::wstring tmp = dir + L"BISLPS10.TMP";
+bool WriteNewest(const fs::path& dir, const std::vector<unsigned char>& bytes, std::string& why, MoveFn move = &SystemMove) {
+    const fs::path tmp = dir / "BISLPS10.TMP";
     if (!WriteAll(tmp, bytes, why)) return false;
-    if (!Rotate(dir, why)) {
-        DeleteFileW(tmp.c_str());
+    if (!Rotate(dir, why, move)) {
+        std::error_code ec;
+        fs::remove(tmp, ec);
         return false;
     }
-    if (!MoveFileExW(tmp.c_str(), SlotPath(dir, kFirstSlot).c_str(), MOVEFILE_REPLACE_EXISTING)) {
+    if (os::MoveFileReplace(tmp, SlotPath(dir, kFirstSlot)) != os::MoveResult::Moved) {
         why = Printf("BISLPS10.TMP could not be renamed to %s (error %lu); the history moved up a slot", SlotName(kFirstSlot).c_str(),
                      static_cast<unsigned long>(bof3::os::LastError()));
         return false;
@@ -607,76 +629,57 @@ bool WriteNewest(const std::wstring& dir, const std::vector<unsigned char>& byte
     return true;
 }
 
-bool ReadSlot(const std::wstring& dir, unsigned slot, std::vector<unsigned char>& bytes, std::string& why) {
-    const std::wstring path = SlotPath(dir, slot);
-    HANDLE f = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-    if (f == INVALID_HANDLE_VALUE) {
-        const DWORD error = bof3::os::LastError();
-        why = error == ERROR_FILE_NOT_FOUND ? Printf("no quicksave in slot %X (%s)", slot, SlotName(slot).c_str())
-                                            : Printf("cannot open %s (error %lu)", SlotName(slot).c_str(), error);
+bool ReadSlot(const fs::path& dir, unsigned slot, std::vector<unsigned char>& bytes, std::string& why) {
+    const fs::path path = SlotPath(dir, slot);
+    std::error_code ec;
+    const std::uintmax_t size = fs::file_size(path, ec);
+    if (ec) {
+        why = ec == std::errc::no_such_file_or_directory ? Printf("no quicksave in slot %X (%s)", slot, SlotName(slot).c_str())
+                                                         : Printf("cannot open %s (error %d)", SlotName(slot).c_str(), ec.value());
         return false;
     }
-    LARGE_INTEGER size{};
-    if (!GetFileSizeEx(f, &size) || size.QuadPart > static_cast<LONGLONG>(kMaxFile)) {
-        CloseHandle(f);
+    if (size > kMaxFile) {
         why = Printf("%s is larger than any quicksave", SlotName(slot).c_str());
         return false;
     }
-    bytes.resize(static_cast<std::size_t>(size.QuadPart));
-    DWORD got = 0;
-    const BOOL ok = bytes.empty() || ReadFile(f, bytes.data(), static_cast<DWORD>(bytes.size()), &got, nullptr);
-    CloseHandle(f);
-    if (!ok || got != bytes.size()) {
-        why = Printf("reading %s failed (%lu of %u bytes)", SlotName(slot).c_str(), got, (unsigned)bytes.size());
+    bytes.resize(static_cast<std::size_t>(size));
+    std::ifstream f(path, std::ios::binary);
+    if (!f) {
+        why = Printf("cannot open %s (error %lu)", SlotName(slot).c_str(), static_cast<unsigned long>(bof3::os::LastError()));
+        return false;
+    }
+    std::size_t got = 0;
+    if (!bytes.empty()) {
+        f.read(reinterpret_cast<char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+        got = static_cast<std::size_t>(f.gcount());
+    }
+    if (got != bytes.size()) {
+        why = Printf("reading %s failed (%u of %u bytes)", SlotName(slot).c_str(), (unsigned)got, (unsigned)bytes.size());
         return false;
     }
     return true;
 }
 
-// A stack of its own, as a fiber of the calling thread (the renderer's
-// RunOnFiber and the decoder's DecodeFrame have theirs for the same reason):
-// Snapshot_Pending runs in WinMain's loop, about 0x3E00 bytes above slice 0
-// of the task arena (docs/quicksave-census.md 2.1), and the take, the
-// restore, the file layer, the DLL's hash and every participant's Save and
-// Restore (DirectSound, Direct3D) are kept off that stack - a take must copy
-// slice 0 as the tasks left it, and a restore must not overwrite it after.
-// The x87 control word is carried over: the game's (SetX87), not the new
-// fiber's default.
-void* g_own_fiber = nullptr;
-void* g_return_fiber = nullptr;
-const std::function<void()>* g_own_job = nullptr;
-unsigned short g_own_cw = 0;
+// A stack of its own (os/own_stack.h; on Windows a fiber of the calling
+// thread, as the renderer's RunOnFiber has, and the decoder's DecodeFrame a
+// block of its own, for the same reason): Snapshot_Pending runs in WinMain's
+// loop, about 0x3E00 bytes above slice 0 of the task arena
+// (docs/quicksave-census.md 2.1), and the take, the restore, the file layer,
+// the DLL's hash and every participant's Save and Restore (DirectSound,
+// Direct3D) are kept off that stack - a take must copy slice 0 as the tasks
+// left it, and a restore must not overwrite it after. The x87 control word is
+// carried over: the game's (SetX87), not the new stack's default. A thread
+// made a fiber for the run is given back as it came (the renderer converts
+// the main thread itself later). Measured for R7 (2026-11-18): no
+// participant calls the renderer's present, set-up or frame save, so no run
+// of the render stack nests inside this one; the seam would let it.
+os::OwnStack g_own_stack{{256 * 1024, 1024 * 1024, true, true}};
 
-void CALLBACK OwnFiber(void*) {
-    for (;;) {
-        asm volatile("fldcw %0" : : "m"(g_own_cw));
-        (*g_own_job)();
-        g_own_job = nullptr;
-        SwitchToFiber(g_return_fiber);
-    }
-}
+void RunJob(void* job) { (*static_cast<const std::function<void()>*>(job))(); }
 
 void OnOwnStack(const std::function<void()>& job) {
-    bool converted = false;
-    void* caller = nullptr;
-    if (IsThreadAFiber()) {
-        caller = GetCurrentFiber();
-    } else {
-        caller = ConvertThreadToFiberEx(nullptr, FIBER_FLAG_FLOAT_SWITCH);
-        if (!caller) Fatal("snapshot: ConvertThreadToFiberEx failed (%lu)", static_cast<unsigned long>(bof3::os::LastError()));
-        converted = true;
-    }
-    if (!g_own_fiber) {
-        g_own_fiber = CreateFiberEx(256 * 1024, 1024 * 1024, FIBER_FLAG_FLOAT_SWITCH, &OwnFiber, nullptr);
-        if (!g_own_fiber) Fatal("snapshot: CreateFiberEx failed (%lu)", static_cast<unsigned long>(bof3::os::LastError()));
-    }
-    asm volatile("fnstcw %0" : "=m"(g_own_cw));
-    g_return_fiber = caller;
-    g_own_job = &job;
-    SwitchToFiber(g_own_fiber);
-    // Back on the caller's own fiber: a thread made a fiber here is given
-    // back as it came (the renderer converts the main thread itself later).
-    if (converted && !ConvertFiberToThread()) Fatal("snapshot: ConvertFiberToThread failed (%lu)", static_cast<unsigned long>(bof3::os::LastError()));
+    const os::OwnStackResult r = g_own_stack.Run(&RunJob, const_cast<std::function<void()>*>(&job));
+    if (r != os::OwnStackResult::Done) Fatal("snapshot: %s (%lu)", os::OwnStackFailure(r), static_cast<unsigned long>(bof3::os::LastError()));
 }
 
 // --- the keys ------------------------------------------------------------------
@@ -715,7 +718,7 @@ void DoTake() {
     const auto* h = reinterpret_cast<const Header*>(file.data() + kSaveHalf);
     std::string why;
     Stamp(file, EnsureBuild());
-    if (!WriteNewest(L"", file, why)) {
+    if (!WriteNewest(fs::path(), file, why)) {
         Log("quicksave   F6 at Frame_Counter %u refused: %s", h->frame_counter, why.c_str());
         Show("Quicksave refused: " + why);
         return;
@@ -732,7 +735,7 @@ void DoLoad(unsigned slot) {
     std::vector<unsigned char> file;
     std::string why;
     const BuildId& build = EnsureBuild();
-    if (!ReadSlot(L"", slot, file, why)) {
+    if (!ReadSlot(fs::path(), slot, file, why)) {
         Log("quicksave   F7 refused: %s", why.c_str());
         Show("Quickload refused: " + why);
         return;
@@ -899,7 +902,7 @@ bool Same(const Range& r, const std::vector<unsigned char>& v) { return r.bytes 
 // the file read back and restored, the pages equal but the process-owned
 // words, which keep the live (scribbled) values; then the participant cases
 // and the build. The game's memory is put back from a raw copy at the end.
-void SelfTestSpan(const std::wstring& dir) {
+void SelfTestSpan(const fs::path& dir) {
     const Span span = CurrentSpan();
     const auto image0 = ReadRaw(span.image), pool0 = ReadRaw(span.pool);
     // A stand-in arena on the heap: at start-up Task_StackTop is not set yet.
@@ -1022,29 +1025,46 @@ void SelfTestSpan(const std::wstring& dir) {
     WriteRange(span.image.base, image0.data(), span.image.bytes);
     if (span.pool.bytes) WriteRange(span.pool.base, pool0.data(), span.pool.bytes);
     Check(Same(span.image, image0) && Same(span.pool, pool0), "the span is put back after the self-test");
-    DeleteFileW(SlotPath(dir, kFirstSlot).c_str());
+    std::error_code ec;
+    fs::remove(SlotPath(dir, kFirstSlot), ec);
+    std::vector<unsigned char> none;
+    Check(!ReadSlot(dir, kFirstSlot, none, why) && why.rfind("no quicksave in slot", 0) == 0,
+          "an empty slot reads as no quicksave, not as an error");
 }
 
 std::vector<unsigned char> Text(const std::string& s) { return std::vector<unsigned char>(s.begin(), s.end()); }
 
-bool HoldsText(const std::wstring& path, const std::string& want) {
-    HANDLE f = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-    if (f == INVALID_HANDLE_VALUE) return false;
+bool HoldsText(const fs::path& path, const std::string& want) {
+    std::ifstream f(path, std::ios::binary);
+    if (!f) return false;
     char buf[64] = {};
-    DWORD got = 0;
-    ReadFile(f, buf, sizeof buf - 1, &got, nullptr);
-    CloseHandle(f);
-    return std::string(buf, got) == want;
+    f.read(buf, sizeof buf - 1);
+    return std::string(buf, static_cast<std::size_t>(f.gcount())) == want;
 }
 
-void ClearDir(const std::wstring& dir) {
-    for (unsigned s = kFirstSlot; s <= kLastSlot; ++s) DeleteFileW(SlotPath(dir, s).c_str());
-    DeleteFileW((dir + L"BISLPS10.TMP").c_str());
+void ClearDir(const fs::path& dir) {
+    std::error_code ec;
+    for (unsigned s = kFirstSlot; s <= kLastSlot; ++s) fs::remove(SlotPath(dir, s), ec);
+    fs::remove(dir / "BISLPS10.TMP", ec);
+}
+
+// The rotation's failing step, made the same way on every system: as 1A is
+// to be renamed, a file appears at 1B - which 1B's own step had just moved
+// away - and the system's refusing rename (os::MoveFileKeep) refuses for real.
+// (Before the seam the self-test held 1A open with no sharing, which only
+// Windows refuses a rename for.)
+fs::path g_rival_dir;
+os::MoveResult RivalAt1B(const fs::path& from, const fs::path& to) {
+    if (from == SlotPath(g_rival_dir, 0x1A)) {
+        std::string why;
+        WriteAll(to, Text("rival"), why);
+    }
+    return os::MoveFileKeep(from, to);
 }
 
 // The rotation: sixteen files each move up one, 1F's gone, 10 new; a gapped
 // set moves the same; a rename that fails stops it with every file present.
-void SelfTestRotation(const std::wstring& dir) {
+void SelfTestRotation(const fs::path& dir) {
     std::string why;
     ClearDir(dir);
     for (unsigned s = kFirstSlot; s <= kLastSlot; ++s) WriteAll(SlotPath(dir, s), Text(SlotName(s)), why);
@@ -1065,38 +1085,37 @@ void SelfTestRotation(const std::wstring& dir) {
 
     ClearDir(dir);
     for (unsigned s = kFirstSlot; s <= kLastSlot; ++s) WriteAll(SlotPath(dir, s), Text(SlotName(s)), why);
-    HANDLE hold = CreateFileW(SlotPath(dir, 0x1A).c_str(), GENERIC_READ, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-    ok = WriteNewest(dir, Text("new"), why);
-    if (hold != INVALID_HANDLE_VALUE) CloseHandle(hold);
-    bool stopped = !ok && why.find("BISLPS1A.DAT could not be renamed") != std::string::npos;
-    // 1F deleted (the oldest goes first), 1E..1B moved up, 1A and below where they were, no 10 written.
-    stopped = stopped && !Exists(SlotPath(dir, 0x1B)) && HoldsText(SlotPath(dir, 0x1A), SlotName(0x1A)) &&
+    g_rival_dir = dir;
+    ok = WriteNewest(dir, Text("new"), why, &RivalAt1B);
+    bool stopped = !ok && why.find("BISLPS1A.DAT could not be renamed") != std::string::npos &&
+                   why.find("the target is there") != std::string::npos;
+    // 1F deleted (the oldest goes first), 1E..1B moved up, the rival at 1B kept,
+    // 1A and below where they were, no 10 written.
+    stopped = stopped && HoldsText(SlotPath(dir, 0x1B), "rival") && HoldsText(SlotPath(dir, 0x1A), SlotName(0x1A)) &&
               HoldsText(SlotPath(dir, 0x1F), SlotName(0x1E)) && HoldsText(SlotPath(dir, 0x1C), SlotName(0x1B)) &&
-              HoldsText(SlotPath(dir, 0x10), SlotName(0x10)) && !Exists(dir + L"BISLPS10.TMP");
-    Check(stopped, "a rename that fails stops the rotation with a refusal, every file present, no new 10");
+              HoldsText(SlotPath(dir, 0x10), SlotName(0x10)) && !Exists(dir / "BISLPS10.TMP");
+    Check(stopped, "a rename that fails stops the rotation with a refusal, every file present, the rival kept, no new 10");
     if (!ok) Log("shadow      snapshot: the refusal read \"%s\"", why.c_str());
     ClearDir(dir);
 }
 
 void SelfTest() {
-    wchar_t temp[MAX_PATH];
-    const DWORD n = GetTempPathW(MAX_PATH, temp);
-    if (n == 0 || n >= MAX_PATH - 48) Fatal("snapshot self-test: no temporary directory");
-    wchar_t name[48];
-    std::swprintf(name, 48, L"bof3x-snapshot-%lu\\", static_cast<unsigned long>(bof3::os::ProcessId()));
-    const std::wstring dir = std::wstring(temp) + name;
-    if (!CreateDirectoryW(dir.c_str(), nullptr) && bof3::os::LastError() != ERROR_ALREADY_EXISTS)
-        Fatal("snapshot self-test: cannot create %s", Utf8Path(dir.c_str()).text);
+    std::error_code ec;
+    const fs::path temp = fs::temp_directory_path(ec);
+    if (ec || temp.empty()) Fatal("snapshot self-test: no temporary directory");
+    const fs::path dir = temp / Printf("bof3x-snapshot-%lu", static_cast<unsigned long>(bof3::os::ProcessId()));
+    fs::create_directory(dir, ec);   // false with no error when it is there already
+    if (ec) Fatal("snapshot self-test: cannot create %s (error %d)", PathText(dir).c_str(), ec.value());
     SelfTestSpan(dir);
     SelfTestStCheck();
     SelfTestRotation(dir);
     ClearDir(dir);
-    RemoveDirectoryW(dir.c_str());
+    fs::remove(dir, ec);
     if (g_fails) Fatal("snapshot self-test: %d check(s) failed (the log has each)", g_fails);
     const Span span = CurrentSpan();
     Log("shadow      snapshot: self-test passed - span 0x%08X+0x%X and pool 0x%08X+0x%X copied, scribbled and restored equal; "
         "a missing participant either side, a participant's check, another language, another build, DLL base, arena top "
-        "and a truncated file refused; the "
+        "and a truncated file refused; an empty slot; the "
         "rotation over sixteen files, a gapped set and a failed rename",
         span.image.base, span.image.bytes, span.pool.base, span.pool.bytes);
 }
