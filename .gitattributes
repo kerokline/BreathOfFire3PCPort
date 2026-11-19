@@ -2,3 +2,5 @@
 fixtures/*.tsv text eol=lf
 # recipes/exe.toml hashes recipes/exe-pointers.tsv over LF line ends too.
 recipes/*.tsv text eol=lf
+# Shell scripts run under bash, in the WSL too: CRLF breaks `set -euo pipefail` there.
+*.sh text eol=lf
