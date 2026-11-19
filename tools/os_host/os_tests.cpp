@@ -1560,7 +1560,7 @@ void TestProcess() {
     std::string out;
     if (started) {
         char buf[256];
-        for (long long n; (n = os::ChildRead(child, buf, sizeof buf)) > 0;) out.append(buf, static_cast<std::size_t>(n));
+        for (std::int64_t n; (n = os::ChildRead(child, buf, sizeof buf)) > 0;) out.append(buf, static_cast<std::size_t>(n));
         std::uint32_t code = 0;
         CHECK(os::ChildWait(child, &code));
         CHECK(code == 7);

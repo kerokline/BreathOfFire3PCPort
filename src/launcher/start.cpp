@@ -24,7 +24,7 @@ namespace bof3x {
 
 namespace {
 
-std::wstring Num(unsigned long long n) { return std::to_wstring(n); }
+std::wstring Num(std::uint64_t n) { return std::to_wstring(n); }
 
 // The file's SHA-256 as lowercase hex (common/sha256.cpp, the engine's routine
 // too). Any I/O or CNG failure ends the launcher.

@@ -66,7 +66,7 @@ bool ChildResume(Child& child) noexcept;
 // Up to `n` bytes of the captured output. The count read, 0 when the child has
 // closed its end (it ended, or closed its output), -1 on an error or when the
 // output is not captured.
-long long ChildRead(Child& child, void* to, std::size_t n) noexcept;
+std::int64_t ChildRead(Child& child, void* to, std::size_t n) noexcept;
 // Waits for the child's end. Its exit code: the code it gave on Windows (a
 // process ended by an exception has the exception's code), the code it gave
 // on POSIX, and there 128 and the signal's number for a child a signal ended.

@@ -1368,7 +1368,7 @@ bool DatHasChunk(const std::wstring& path, int kind, std::uint32_t tag) {
     std::uint64_t size_bytes = 0;
     bool found = false;
     if (bof3::os::InSize(f, &size_bytes)) {
-        const long long size = static_cast<long long>(size_bytes);
+        const std::int64_t size = static_cast<std::int64_t>(size_bytes);
         long long off = 0;
         for (int n = 0; n < 4096 && off < size; ++n) {
             unsigned char h[16];

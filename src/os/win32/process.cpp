@@ -113,7 +113,7 @@ bool ChildResume(Child& child) noexcept {
     return child.thread != -1 && ResumeThread(reinterpret_cast<HANDLE>(child.thread)) != static_cast<DWORD>(-1);
 }
 
-long long ChildRead(Child& child, void* to, std::size_t n) noexcept {
+std::int64_t ChildRead(Child& child, void* to, std::size_t n) noexcept {
     if (child.out == -1) return -1;
     DWORD got = 0;
     const DWORD want = n > 0x7FFFFFFF ? 0x7FFFFFFF : static_cast<DWORD>(n);

@@ -158,7 +158,7 @@ bool ChildResume(Child&) noexcept {
     return false;
 }
 
-long long ChildRead(Child& child, void* to, std::size_t n) noexcept {
+std::int64_t ChildRead(Child& child, void* to, std::size_t n) noexcept {
     if (child.out == -1) return -1;
     for (;;) {
         const ssize_t got = read(static_cast<int>(child.out), to, n);
