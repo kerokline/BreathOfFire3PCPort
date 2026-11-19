@@ -17820,7 +17820,13 @@ designed in rather than bolted on.
   in borderless (`ShowCursor`), DIV-0033's focus rule (`WM_ACTIVATEAPP`
   itself), Alt+F4 and the close button, the DPI awareness (the hint
   `SDL_WINDOWS_DPI_AWARENESS=unaware`, which leaves the process as its
-  manifest made it).
+  manifest made it), and the window class's name `Bof3`
+  (`SDL_RegisterApp` before SDL's video start, `game_window_win32.cpp`
+  `BeforeVideo`). **Amended 2026-11-18:** the class's name was not kept at
+  first. From this entry's merge to that fix SDL's window had SDL's default
+  class, `SDL_app`, and the launcher's save editor, which finds a running
+  game by the class `Bof3` (`save_dialog.cpp` `GameRuns`), did not refuse a
+  save to a PC slot while the game ran.
 
   **The movie, the same switch:** on SDL's window `Fmv_Play` puts no
   procedure in front of the window's and pumps nothing itself; each step it

@@ -96,7 +96,8 @@ std::wstring Text(HWND dlg, int id) {
 void Status(HWND dlg, const std::wstring& text) { SetDlgItemTextW(dlg, IDC_SE_STATUS, text.c_str()); }
 int Selected(HWND dlg, int id) { return static_cast<int>(SendDlgItemMessageW(dlg, id, CB_GETCURSEL, 0, 0)); }
 
-// The game's window, by the class it registers (magic_080.cpp: "Bof3"). The
+// The game's window, by the class it registers: "Bof3", on SDL's window and
+// on the Win32 one (game_window_win32.cpp BeforeVideo and Register). The
 // game reads and writes the same files, so the editor does not write while it runs.
 bool GameRuns() { return FindWindowW(L"Bof3", nullptr) != nullptr; }
 
