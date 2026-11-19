@@ -1213,15 +1213,63 @@ round's goal is met. Nothing links or runs on Linux.
 **The owner's second look, 2026-11-18, the 32-bit build of `f32becb3`
 (`launcher/function-keys`, which holds all of the above) from `game\`:**
 rebinding, clearing and a double binding on the launcher's new Function
-keys page work, and "the keyboard strokes seem fine" in play. **Not
-reported on:** the three movies and a close during one, a pad-bound action,
+keys page work, and "the keyboard strokes seem fine" in play. **The
+movie** (the owner, the same day: a normal build has one now): it loaded
+and played to its end once, and was skipped once. **The function actions**
+(the owner, the same day): those bound to a pad button and those on the
+function keys "worked great". **Not reported on:** a
+close of the window during the movie,
 the pad unplugged and plugged in, MP3 music on the own stack, satpixie,
 `BOF3X_OFF=WindowSdl` and `BOF3X_OFF=KeyboardSdl`, the 64-bit build.
 
-**Owed before a PR:** the hosted shadow suite, the exe-host run and the
-moved-base run on the merge; the ten state-hash routes; the key-step
-recipes on both windows; `music_heard.py`; the ledger entries (the window,
-the keyboard, the movie's events).
+**The long proofs on the merged branch, 2026-11-18** (`94307c45`, 32-bit,
+clean launcher folders under `C:\Users\kerok\bof3x-runs\lbw2\coord`, the
+machine hands-off, no compiler seen during any run; the chain is
+`proofs.py` there):
+
+- **Self-tests:** hosted with `BOF3X_SHADOW='*'` - `self-test only: done`,
+  922 `MISMATCHES` lines, every one 0, 0 FATAL; the exe host - exit code 0,
+  10,392 log lines, 0 FATAL; the exe host at `BOF3X_IMAGEBASE=0xA00000` -
+  the same three figures, the image moved from `0x400000`.
+- **The ten routes** (the exe host, ours as `cn_<route>_w2`): `diff`
+  against `_w1` and against `_m1116` is identical on every compared tick on
+  the seven routes of wave 1's list; the other three differ on `0x6C3000`
+  alone, over wave 1's ticks (its run noise). `check` against the `orig5`
+  pair gives `m1116`'s lines on every route. Page `0x7DE000`, which the
+  read pass expected the keyboard to change, did not change.
+- **whelpBoss's length is a race at the close, not a difference:** the hash
+  file is written 64 ticks at a time and the recipe ends at frame 13,181.
+  Of three runs of this build two ended with 13,121 ticks (`_w2`, `_w2b`)
+  and one with 13,185 (`_w2c`, identical to `_w1` on all of them). Whether
+  the SDL window closes sooner than the old one was not measured.
+- **Key steps on both paths** (`quick_menu`, `f9ExitMode`,
+  `quick_combat_keys` under `en-US`; `field_f9`; a harness game folder):
+  each ran to `done` on the SDL window and keyboard, with
+  `BOF3X_OFF=WindowSdl` and with `BOF3X_OFF=KeyboardSdl`, and the state
+  hash of the three is identical on every tick (961; 313; 2,625; 4,673).
+- **`music_heard.py`:** pass on whelpBoss (164 ring lines, 6 tracks) and
+  cutsceneAndNue (116 ring lines, 5 tracks).
+- **`BOF3X_ARENA=1`:** combat and cutsceneAndNue ran to `done`, identical
+  to `_w2` on every tick (2,561; 7,425).
+
+**Not run:** anything at 64 bits beyond the build; a route with
+`BOF3X_OFF=WindowSdl` other than the four key recipes.
+
+**After the proofs, step 0 undone (CI's source-layout gate, 2026-11-18).**
+Step 0 broke a rule the wave's gate line did not run: every function of
+Capcom's is in its unit's file (`tu_census.py --check --strict`,
+`retire_shells.py --check --strict`). `Fmv_Play` and `Fmv_WndProc` are
+`battle_menu_win.cpp`'s. The portable player (R6m left it with no Windows
+header) is back in that file, text unchanged; `fmv_play.cpp` and
+`fmv_play.h` are gone; the Win32 half is
+`src/game/platform/fmv_play_win32.cpp`, and `Fmv_WndProc` in the unit's
+file calls its `fmv_play::native::WndProc` on Windows and stops the game
+elsewhere, as before. Read "fmv_play.cpp" above as that code. On the
+change: both presets build; the 26 steps of CI's "Ledgers and symbols" job
+pass locally; `linux_tree.py` 812 of 812 (one file fewer), 11 Windows-only;
+the hosted shadow suite and the exe host as in the list above. The long
+proofs were not run again, and the movie was not looked at again. **A
+later wave's gate line must hold those two checks.**
 
 ### Stage LC - link and run on Linux
 

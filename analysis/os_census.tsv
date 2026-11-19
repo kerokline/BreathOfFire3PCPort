@@ -29,66 +29,6 @@ site	src/game/field/field_o_fuzz.cpp	519	const	harness-only	fault/const	EXCEPTIO
 site	src/game/field/field_o_fuzz.cpp	530	type	harness-only	type_only/type	DWORD
 site	src/game/field/field_o_fuzz.cpp	540	call	harness-only	fault/filter	AddVectoredExceptionHandler
 site	src/game/field/field_o_fuzz.cpp	547	type	harness-only	type_only/type	DWORD
-site	src/game/fmv_play_win32.cpp	9	include	umbrella	api	windows.h
-site	src/game/fmv_play_win32.cpp	10	include	sound	header	mmsystem.h
-site	src/game/fmv_play_win32.cpp	25	type	type_only	type	HDC
-site	src/game/fmv_play_win32.cpp	30	type	type_only	type	RECT
-site	src/game/fmv_play_win32.cpp	31	call	window	geometry	GetClientRect
-site	src/game/fmv_play_win32.cpp	31	type	type_only	type	HWND
-site	src/game/fmv_play_win32.cpp	34	call	window	gdi	GetStockObject
-site	src/game/fmv_play_win32.cpp	34	const	window	const	BLACK_BRUSH
-site	src/game/fmv_play_win32.cpp	34	type	type_only	type	HBRUSH
-site	src/game/fmv_play_win32.cpp	39	type	type_only	type	BITMAPINFO
-site	src/game/fmv_play_win32.cpp	41	type	type_only	type	LONG
-site	src/game/fmv_play_win32.cpp	42	type	type_only	type	LONG
-site	src/game/fmv_play_win32.cpp	45	const	window	const	BI_RGB
-site	src/game/fmv_play_win32.cpp	47	call	window	gdi	SetStretchBltMode
-site	src/game/fmv_play_win32.cpp	47	const	window	const	COLORONCOLOR
-site	src/game/fmv_play_win32.cpp	49	call	window	gdi	SetStretchBltMode
-site	src/game/fmv_play_win32.cpp	49	const	window	const	HALFTONE
-site	src/game/fmv_play_win32.cpp	50	call	window	gdi	SetBrushOrgEx
-site	src/game/fmv_play_win32.cpp	52	call	window	gdi	StretchDIBits
-site	src/game/fmv_play_win32.cpp	53	const	window	const	DIB_RGB_COLORS
-site	src/game/fmv_play_win32.cpp	53	const	window	const	SRCCOPY
-site	src/game/fmv_play_win32.cpp	61	type	type_only	type	HWND
-site	src/game/fmv_play_win32.cpp	61	type	type_only	type	HWND
-site	src/game/fmv_play_win32.cpp	62	call	window	gdi	GetDC
-site	src/game/fmv_play_win32.cpp	62	type	type_only	type	HDC
-site	src/game/fmv_play_win32.cpp	65	call	window	gdi	ReleaseDC
-site	src/game/fmv_play_win32.cpp	72	call	window	longptr	SetWindowLongPtrA
-site	src/game/fmv_play_win32.cpp	72	const	window	const	GWLP_WNDPROC
-site	src/game/fmv_play_win32.cpp	72	type	type_only	type	HWND
-site	src/game/fmv_play_win32.cpp	73	type	type_only	type	LONG_PTR
-site	src/game/fmv_play_win32.cpp	77	call	window	longptr	SetWindowLongPtrA
-site	src/game/fmv_play_win32.cpp	77	const	window	const	GWLP_WNDPROC
-site	src/game/fmv_play_win32.cpp	77	type	type_only	type	HWND
-site	src/game/fmv_play_win32.cpp	77	type	type_only	type	LONG_PTR
-site	src/game/fmv_play_win32.cpp	81	type	type_only	type	MSG
-site	src/game/fmv_play_win32.cpp	82	call	window	loop	PeekMessageA
-site	src/game/fmv_play_win32.cpp	82	const	window	const	PM_REMOVE
-site	src/game/fmv_play_win32.cpp	83	const	window	const	WM_QUIT
-site	src/game/fmv_play_win32.cpp	85	call	window	loop	PostQuitMessage
-site	src/game/fmv_play_win32.cpp	88	call	window	loop	TranslateMessage
-site	src/game/fmv_play_win32.cpp	89	call	window	loop	DispatchMessageA
-site	src/game/fmv_play_win32.cpp	94	call	thread	event	MsgWaitForMultipleObjects
-site	src/game/fmv_play_win32.cpp	122	type	type_only	type	HWND
-site	src/game/fmv_play_win32.cpp	122	type	type_only	type	HWND
-site	src/game/fmv_play_win32.cpp	124	const	window	const	WM_KEYDOWN
-site	src/game/fmv_play_win32.cpp	125	const	window	const	WM_LBUTTONDOWN
-site	src/game/fmv_play_win32.cpp	126	const	window	const	WM_RBUTTONDOWN
-site	src/game/fmv_play_win32.cpp	129	const	window	const	WM_DESTROY
-site	src/game/fmv_play_win32.cpp	132	call	window	loop	PostQuitMessage
-site	src/game/fmv_play_win32.cpp	134	const	window	const	WM_ACTIVATEAPP
-site	src/game/fmv_play_win32.cpp	136	call	window	state	SetFocus
-site	src/game/fmv_play_win32.cpp	142	const	window	const	WM_PAINT
-site	src/game/fmv_play_win32.cpp	144	type	type_only	type	PAINTSTRUCT
-site	src/game/fmv_play_win32.cpp	145	call	window	gdi	BeginPaint
-site	src/game/fmv_play_win32.cpp	145	type	type_only	type	HDC
-site	src/game/fmv_play_win32.cpp	147	call	window	gdi	EndPaint
-site	src/game/fmv_play_win32.cpp	150	call	window	class	DefWindowProcA
-site	src/game/fmv_play_win32.cpp	150	type	type_only	type	LPARAM
-site	src/game/fmv_play_win32.cpp	155	call	window	class	DefWindowProcA
-site	src/game/fmv_play_win32.cpp	155	type	type_only	type	LPARAM
 site	src/game/platform/d_input.cpp	35	include	input	header	dinput.h
 site	src/game/platform/d_input.cpp	110	type	type_only	type	HRESULT
 site	src/game/platform/d_input.cpp	110	type	type_only	type	HRESULT
@@ -123,6 +63,66 @@ site	src/game/platform/d_input.cpp	369	type	type_only	type	IUnknown
 site	src/game/platform/d_input.cpp	393	type	input	type	IDirectInputDeviceA
 site	src/game/platform/d_input.cpp	398	type	type_only	type	IUnknown
 site	src/game/platform/d_input.cpp	407	type	type_only	type	IUnknown
+site	src/game/platform/fmv_play_win32.cpp	9	include	umbrella	api	windows.h
+site	src/game/platform/fmv_play_win32.cpp	10	include	sound	header	mmsystem.h
+site	src/game/platform/fmv_play_win32.cpp	25	type	type_only	type	HDC
+site	src/game/platform/fmv_play_win32.cpp	30	type	type_only	type	RECT
+site	src/game/platform/fmv_play_win32.cpp	31	call	window	geometry	GetClientRect
+site	src/game/platform/fmv_play_win32.cpp	31	type	type_only	type	HWND
+site	src/game/platform/fmv_play_win32.cpp	34	call	window	gdi	GetStockObject
+site	src/game/platform/fmv_play_win32.cpp	34	const	window	const	BLACK_BRUSH
+site	src/game/platform/fmv_play_win32.cpp	34	type	type_only	type	HBRUSH
+site	src/game/platform/fmv_play_win32.cpp	39	type	type_only	type	BITMAPINFO
+site	src/game/platform/fmv_play_win32.cpp	41	type	type_only	type	LONG
+site	src/game/platform/fmv_play_win32.cpp	42	type	type_only	type	LONG
+site	src/game/platform/fmv_play_win32.cpp	45	const	window	const	BI_RGB
+site	src/game/platform/fmv_play_win32.cpp	47	call	window	gdi	SetStretchBltMode
+site	src/game/platform/fmv_play_win32.cpp	47	const	window	const	COLORONCOLOR
+site	src/game/platform/fmv_play_win32.cpp	49	call	window	gdi	SetStretchBltMode
+site	src/game/platform/fmv_play_win32.cpp	49	const	window	const	HALFTONE
+site	src/game/platform/fmv_play_win32.cpp	50	call	window	gdi	SetBrushOrgEx
+site	src/game/platform/fmv_play_win32.cpp	52	call	window	gdi	StretchDIBits
+site	src/game/platform/fmv_play_win32.cpp	53	const	window	const	DIB_RGB_COLORS
+site	src/game/platform/fmv_play_win32.cpp	53	const	window	const	SRCCOPY
+site	src/game/platform/fmv_play_win32.cpp	61	type	type_only	type	HWND
+site	src/game/platform/fmv_play_win32.cpp	61	type	type_only	type	HWND
+site	src/game/platform/fmv_play_win32.cpp	62	call	window	gdi	GetDC
+site	src/game/platform/fmv_play_win32.cpp	62	type	type_only	type	HDC
+site	src/game/platform/fmv_play_win32.cpp	65	call	window	gdi	ReleaseDC
+site	src/game/platform/fmv_play_win32.cpp	72	call	window	longptr	SetWindowLongPtrA
+site	src/game/platform/fmv_play_win32.cpp	72	const	window	const	GWLP_WNDPROC
+site	src/game/platform/fmv_play_win32.cpp	72	type	type_only	type	HWND
+site	src/game/platform/fmv_play_win32.cpp	73	type	type_only	type	LONG_PTR
+site	src/game/platform/fmv_play_win32.cpp	77	call	window	longptr	SetWindowLongPtrA
+site	src/game/platform/fmv_play_win32.cpp	77	const	window	const	GWLP_WNDPROC
+site	src/game/platform/fmv_play_win32.cpp	77	type	type_only	type	HWND
+site	src/game/platform/fmv_play_win32.cpp	77	type	type_only	type	LONG_PTR
+site	src/game/platform/fmv_play_win32.cpp	81	type	type_only	type	MSG
+site	src/game/platform/fmv_play_win32.cpp	82	call	window	loop	PeekMessageA
+site	src/game/platform/fmv_play_win32.cpp	82	const	window	const	PM_REMOVE
+site	src/game/platform/fmv_play_win32.cpp	83	const	window	const	WM_QUIT
+site	src/game/platform/fmv_play_win32.cpp	85	call	window	loop	PostQuitMessage
+site	src/game/platform/fmv_play_win32.cpp	88	call	window	loop	TranslateMessage
+site	src/game/platform/fmv_play_win32.cpp	89	call	window	loop	DispatchMessageA
+site	src/game/platform/fmv_play_win32.cpp	94	call	thread	event	MsgWaitForMultipleObjects
+site	src/game/platform/fmv_play_win32.cpp	122	type	type_only	type	HWND
+site	src/game/platform/fmv_play_win32.cpp	122	type	type_only	type	HWND
+site	src/game/platform/fmv_play_win32.cpp	124	const	window	const	WM_KEYDOWN
+site	src/game/platform/fmv_play_win32.cpp	125	const	window	const	WM_LBUTTONDOWN
+site	src/game/platform/fmv_play_win32.cpp	126	const	window	const	WM_RBUTTONDOWN
+site	src/game/platform/fmv_play_win32.cpp	129	const	window	const	WM_DESTROY
+site	src/game/platform/fmv_play_win32.cpp	132	call	window	loop	PostQuitMessage
+site	src/game/platform/fmv_play_win32.cpp	134	const	window	const	WM_ACTIVATEAPP
+site	src/game/platform/fmv_play_win32.cpp	136	call	window	state	SetFocus
+site	src/game/platform/fmv_play_win32.cpp	142	const	window	const	WM_PAINT
+site	src/game/platform/fmv_play_win32.cpp	144	type	type_only	type	PAINTSTRUCT
+site	src/game/platform/fmv_play_win32.cpp	145	call	window	gdi	BeginPaint
+site	src/game/platform/fmv_play_win32.cpp	145	type	type_only	type	HDC
+site	src/game/platform/fmv_play_win32.cpp	147	call	window	gdi	EndPaint
+site	src/game/platform/fmv_play_win32.cpp	150	call	window	class	DefWindowProcA
+site	src/game/platform/fmv_play_win32.cpp	150	type	type_only	type	LPARAM
+site	src/game/platform/fmv_play_win32.cpp	155	call	window	class	DefWindowProcA
+site	src/game/platform/fmv_play_win32.cpp	155	type	type_only	type	LPARAM
 site	src/game/platform/game_window_win32.cpp	9	include	umbrella	api	windows.h
 site	src/game/platform/game_window_win32.cpp	27	const	window	const	WS_OVERLAPPEDWINDOW
 site	src/game/platform/game_window_win32.cpp	27	type	type_only	type	DWORD
@@ -3592,8 +3592,8 @@ type	file	folder	standing	windows_h	takes	sites
 file	src/game/core/sound.cpp	game/core	live		nothing	1
 file	src/game/crt_rest_fuzz.cpp	game(root)	harness-only	api	crt,file,process,type_only	19
 file	src/game/field/field_o_fuzz.cpp	game/field	harness-only	api	fault,type_only	9
-file	src/game/fmv_play_win32.cpp	game(root)	live	api	thread,type_only,window	60
 file	src/game/platform/d_input.cpp	game/platform	live		input,process,type_only	34
+file	src/game/platform/fmv_play_win32.cpp	game/platform	live	api	thread,type_only,window	60
 file	src/game/platform/game_window_win32.cpp	game/platform	live	api	dialog,process,type_only,window	166
 file	src/game/platform/music.cpp	game/platform	live		nothing	1
 file	src/game/platform/rdata_consts.cpp	game/platform	live		input,type_only	6
@@ -3677,10 +3677,10 @@ file	src/render/satpixie.h	render	live		graphics	7
 #count	call_or_keyword_class:sound	6
 #count	call_or_keyword_class:thread	113
 #count	call_or_keyword_class:window	362
-#count	files_in:game(root)	2
+#count	files_in:game(root)	1
 #count	files_in:game/core	1
 #count	files_in:game/field	1
-#count	files_in:game/platform	4
+#count	files_in:game/platform	5
 #count	files_in:game/shop	1
 #count	files_in:hook	9
 #count	files_in:launcher	12
