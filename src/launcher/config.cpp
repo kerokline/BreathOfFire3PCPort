@@ -1,10 +1,13 @@
 #include "launcher/config.h"
 
-#include <windows.h>
-
 #include "launcher/suites.h"
 #include "common/home.h"
 #include "hook/code_names.h"   // the behaviours block: the release's behaviours (docs/mods.md 11)
+#include "os/env.h"
+#include "os/file.h"
+#include "os/process.h"
+#include "os/wide_file.h"
+#include "os/wide_text.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -12,39 +15,42 @@
 #include <cstdlib>
 #include <cstring>
 #include <cwchar>
+#include <filesystem>
 #include <string>
 #include <vector>
 
 namespace bof3x {
 namespace {
 
-// Whether `pattern` (FindFirstFileW's) matches a file.
-bool AnyMatch(const std::wstring& pattern) {
-    WIN32_FIND_DATAW fd;
-    HANDLE h = FindFirstFileW(pattern.c_str(), &fd);
-    if (h == INVALID_HANDLE_VALUE) return false;
-    FindClose(h);
-    return true;
+// A part of a path as written with backslashes ("\\opt\\"), with the system's
+// own separator: on Windows the text unchanged, on POSIX a slash.
+std::wstring Sep(const wchar_t* part) {
+    std::wstring s(part);
+    for (wchar_t& c : s)
+        if (c == L'\\') c = static_cast<wchar_t>(std::filesystem::path::preferred_separator);
+    return s;
 }
+
+// Whether `pattern` (FindFirstFileW's: os/wide_file.h) matches a file.
+bool AnyMatch(const std::wstring& pattern) { return bof3::os::AnyMatchW(pattern); }
 
 // The cache's manifest through the one reader the DLL shares
 // (common/cache_manifest.h), read again only when the file changes: the
 // dialog asks for a layer many times over a manifest of some megabytes.
 const CacheManifest& CachedManifest(const std::wstring& cache) {
     static std::wstring s_root;
-    static FILETIME s_time{};
-    static ULONGLONG s_size = ~0ull;
+    static std::uint64_t s_time = 0;
+    static std::uint64_t s_size = ~0ull;
     static bool s_read = false;
     static CacheManifest s_man;
-    WIN32_FILE_ATTRIBUTE_DATA a{};
-    const bool there = !cache.empty() &&
-                       GetFileAttributesExW((cache + L"\\manifest.toml").c_str(), GetFileExInfoStandard, &a);
-    const ULONGLONG size = there ? (static_cast<ULONGLONG>(a.nFileSizeHigh) << 32) | a.nFileSizeLow : ~0ull;
-    if (!s_read || cache != s_root || size != s_size || CompareFileTime(&a.ftLastWriteTime, &s_time) != 0) {
+    std::uint64_t size = ~0ull, time = 0;
+    const bool there = !cache.empty() && bof3::os::StampW(cache + Sep(L"\\manifest.toml"), &size, &time);
+    if (!there) size = ~0ull, time = 0;
+    if (!s_read || cache != s_root || size != s_size || time != s_time) {
         s_read = true;
         s_root = cache;
         s_size = size;
-        s_time = a.ftLastWriteTime;
+        s_time = time;
         s_man = there ? ManifestRead(cache) : CacheManifest();
     }
     return s_man;
@@ -54,12 +60,12 @@ const CacheManifest& CachedManifest(const std::wstring& cache) {
 // own test (dat_cache::HasLayerPart), the manifest's listing included.
 bool CacheHasLayerPart(const std::wstring& cache, const char* name, const wchar_t* part) {
     if (cache.empty() || !ManifestOffersLayer(CachedManifest(cache), name)) return false;
-    std::wstring pattern = cache + L"\\opt\\";
+    std::wstring pattern = cache + Sep(L"\\opt\\");
     for (const char* c = name; *c; ++c) pattern += static_cast<wchar_t>(*c);
-    pattern += L"\\";
+    pattern += Sep(L"\\");
     pattern += part;
-    if (std::wcscmp(part, L"exe") != 0) return AnyMatch(pattern + L"\\*.DAT");
-    return AnyMatch(pattern + L"\\tables.toml") || AnyMatch(pattern + L"\\place.toml");
+    if (std::wcscmp(part, L"exe") != 0) return AnyMatch(pattern + Sep(L"\\*.DAT"));
+    return AnyMatch(pattern + Sep(L"\\tables.toml")) || AnyMatch(pattern + Sep(L"\\place.toml"));
 }
 
 // DIV-0089: <cache>\<kind>\<name>\dat\ holds a .DAT - the DLL's own test
@@ -78,42 +84,33 @@ bool CacheHasLayer(const std::wstring& cache, const wchar_t* kind, const char* n
     if (opt && CacheHasLayerPart(music.empty() ? cache : music, name, L"bgm")) return true;
     if (cache.empty()) return false;
     if (opt && !ManifestOffersLayer(CachedManifest(cache), name)) return false;
-    std::wstring pattern = cache + L"\\" + kind + L"\\";
+    std::wstring pattern = cache + Sep(L"\\") + kind + Sep(L"\\");
     for (const char* c = name; *c; ++c) pattern += static_cast<wchar_t>(*c);
-    if (AnyMatch(pattern + L"\\dat\\*.DAT")) return true;
+    if (AnyMatch(pattern + Sep(L"\\dat\\*.DAT"))) return true;
     return opt && (CacheHasLayerPart(cache, name, L"snd") || CacheHasLayerPart(cache, name, L"exe"));
 }
 
 // Whole file as bytes, or false if it cannot be opened. Absent is not an error
 // to this function's callers; they all have a defined behaviour for it.
 bool ReadWhole(const std::wstring& path, std::string& out) {
-    HANDLE f = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
-                           OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-    if (f == INVALID_HANDLE_VALUE) return false;
+    const bof3::os::InFile f = bof3::os::InOpenW(path, true);
+    if (f == bof3::os::kNoInFile) return false;
     out.clear();
     char buf[4096];
     for (;;) {
-        DWORD got = 0;
-        if (!ReadFile(f, buf, sizeof buf, &got, nullptr)) {
-            CloseHandle(f);
+        std::uint32_t got = 0;
+        if (!bof3::os::InRead(f, buf, sizeof buf, &got)) {
+            bof3::os::InClose(f);
             return false;
         }
         if (got == 0) break;
         out.append(buf, got);
     }
-    CloseHandle(f);
+    bof3::os::InClose(f);
     return true;
 }
 
-bool WriteWhole(const std::wstring& path, const std::string& data) {
-    HANDLE f = CreateFileW(path.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS,
-                           FILE_ATTRIBUTE_NORMAL, nullptr);
-    if (f == INVALID_HANDLE_VALUE) return false;
-    DWORD wrote = 0;
-    const BOOL ok = WriteFile(f, data.data(), static_cast<DWORD>(data.size()), &wrote, nullptr);
-    CloseHandle(f);
-    return ok && wrote == data.size();
-}
+bool WriteWhole(const std::wstring& path, const std::string& data) { return bof3::os::WriteWholeW(path, data); }
 
 // Splits on \n and drops one trailing \r, so a CRLF file and an LF file parse
 // the same. A trailing newline does not produce a final empty line - which
@@ -147,12 +144,17 @@ std::string Trim(const std::string& s) {
 
 // An environment variable's value, empty when it is not set.
 std::string EnvValue(const char* name) {
-    const DWORD n = GetEnvironmentVariableA(name, nullptr, 0);
+    const std::uint32_t n = bof3::os::GetEnv(name, nullptr, 0);
     if (n == 0) return std::string();
     std::string v(n, '\0');
-    v.resize(GetEnvironmentVariableA(name, v.data(), n));
+    v.resize(bof3::os::GetEnv(name, v.data(), n));
     return v;
 }
+
+// The environment's narrow and wide setters (os/process.h): the game inherits
+// what is set here.
+void SetEnv(const char* name, const char* value) { bof3::os::SetEnv(name, value); }
+void SetEnvW(const wchar_t* name, const wchar_t* value) { bof3::os::SetEnvW(name, value); }
 
 }  // namespace
 
@@ -354,7 +356,51 @@ bool ConfigLoad(const std::wstring& path, Config& cfg, std::string& error) {
     return true;
 }
 
-bool ConfigSave(const std::wstring& path, const Config& cfg) {
+bool ConfigSave(const std::wstring& path, const Config& cfg) { return WriteWhole(path, ConfigText(cfg)); }
+
+bool ConfigSetLine(Config& cfg, const std::string& key_in, const std::string& value_in, std::string& why) {
+    const std::string key = Trim(key_in), value = Trim(value_in);
+    const std::string line = key + "=" + value;
+    const std::vector<std::string> lines = SplitLines(ConfigText(cfg));
+    // A key of the file: one it writes, or one it writes only once it is
+    // chosen (language=, the function keys) or only when it differs from the
+    // defaults (the keys, the pad).
+    bool known = key == "language";
+    for (const char* family : {"key.", "pad.", "fkey.", "fpad."})
+        known = known || (key.size() > std::strlen(family) && key.compare(0, std::strlen(family), family) == 0);
+    for (const std::string& l : lines) known = known || (!l.empty() && l[0] != '#' && l.compare(0, key.size() + 1, key + "=") == 0);
+    if (key.empty() || key.find_first_of("=#;[ \t") != std::string::npos || !known) {
+        why = "bof3x.ini has no setting " + key + ". Use --list to see the settings.";
+        return false;
+    }
+    std::string text;
+    bool put = false;
+    for (const std::string& l : lines) {
+        if (!put && l.compare(0, key.size() + 1, key + "=") == 0) {
+            text += line + "\r\n";
+            put = true;
+        } else {
+            text += l + "\r\n";
+        }
+    }
+    if (!put) text += line + "\r\n";
+    Config next;
+    std::string error;
+    ConfigLoad(text, next, error);
+    if (!error.empty()) {
+        why = error;
+        return false;
+    }
+    for (const std::string& l : SplitLines(ConfigText(next)))
+        if (l == line) {
+            cfg = next;
+            return true;
+        }
+    why = "The setting " + key + " does not take the value \"" + value + "\". Use --list to see the settings.";
+    return false;
+}
+
+std::string ConfigText(const Config& cfg) {
     std::string out;
     out += "# bof3x-launcher settings.\r\n";
     out += "# Rewritten whenever the launcher's dialog is used; hand-editing works too.\r\n";
@@ -471,7 +517,7 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
         out += "# none yet: the defaults F1 F4 F5 F6 F7 F8 F9 F11 F12, no pad input, and ruby_key= above\r\n";
     out += "# 0 hides this launcher's dialog and starts the game straight away\r\n";
     out += std::string("show_launcher=") + (cfg.show_launcher ? "1" : "0") + "\r\n";
-    return WriteWhole(path, out);
+    return out;
 }
 
 std::string SatpixieLine(const Config::Satpixie& sp, const char* prefix, const char* sep) {
@@ -509,11 +555,11 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, boo
     // but a hand-edited or carried-over bof3x.ini can name one never built,
     // and the dll would then lay the shipped text out for an overlay that is
     // not there (the Latin layouts of DIV-0058..0061 over the Chinese).
-    if (GetEnvironmentVariableW(L"BOF3X_LANG", existing, 64) == 0 &&
+    if (bof3::os::GetEnvW(L"BOF3X_LANG", existing, 64) == 0 &&
         cfg.language != kLanguageOriginal) {
         const std::vector<std::string> built = ConfigLanguagesAvailable(game_dir, cache);
         if (std::find(built.begin(), built.end(), cfg.language) != built.end())
-            SetEnvironmentVariableA("BOF3X_LANG", cfg.language.c_str());
+            SetEnv("BOF3X_LANG", cfg.language.c_str());
         else
             std::fprintf(stderr, "bof3x-launcher: bof3x.ini asks for language %s, but DAT\\%s.* is not there; "
                          "playing the original text\n", cfg.language.c_str(), cfg.language.c_str());
@@ -529,9 +575,9 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, boo
     // the ini's, when it is built for the language played.
     std::vector<ModAsk> asks;   // the mods whose layers are offered, with the behaviours they need
     std::string handed;         // the BOF3X_OPT the game is given (empty when the environment had one)
-    if (GetEnvironmentVariableW(L"BOF3X_OPT", existing, 64) == 0) {
+    if (bof3::os::GetEnvW(L"BOF3X_OPT", existing, 64) == 0) {
         char played[8];  // as the DLL reads it (dat_load.cpp g_lang): longer is none
-        const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", played, sizeof played);
+        const std::uint32_t n = bof3::os::GetEnv("BOF3X_LANG", played, sizeof played);
         const std::string language = (n == 0 || n >= sizeof played) ? std::string() : std::string(played, n);
         std::string wanted = ConfigOptWanted(game_dir, cfg.opt, cache);
         const std::string ruby = ConfigRubyPlayable(game_dir, cfg.ruby, language, cache, music);
@@ -578,7 +624,7 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, boo
                                  "for this run\n", names.c_str());
             }
             handed = playable;
-            if (!playable.empty()) SetEnvironmentVariableA("BOF3X_OPT", playable.c_str());
+            if (!playable.empty()) SetEnv("BOF3X_OPT", playable.c_str());
         }
     }
 
@@ -590,35 +636,35 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, boo
     // DIV-0155: the reading row's study key, as the ini has it (f4 unless it
     // says otherwise); the DLL reads it whether or not a reading-row layer is
     // played, and an environment's value wins, as for the others.
-    if (GetEnvironmentVariableW(L"BOF3X_RUBY_KEY", existing, 64) == 0)
-        SetEnvironmentVariableA("BOF3X_RUBY_KEY", cfg.ruby_key.c_str());
+    if (bof3::os::GetEnvW(L"BOF3X_RUBY_KEY", existing, 64) == 0)
+        SetEnv("BOF3X_RUBY_KEY", cfg.ruby_key.c_str());
 
     // DIV-0108: the PSP's battle rules as the ini lists them; empty leaves
     // the DLL its default (the cache's base_policy). The DLL checks the names.
-    if (GetEnvironmentVariableW(L"BOF3X_PSP", existing, 64) == 0 && !cfg.psp.empty())
-        SetEnvironmentVariableA("BOF3X_PSP", cfg.psp.c_str());
+    if (bof3::os::GetEnvW(L"BOF3X_PSP", existing, 64) == 0 && !cfg.psp.empty())
+        SetEnv("BOF3X_PSP", cfg.psp.c_str());
 
     // The player's switch: the ini's off= as BOF3X_OFF, for both hosts (the
     // game checks the names: detour.cpp InjectReport). An environment's
     // BOF3X_OFF wins, as for the others; empty sends nothing.
-    if (GetEnvironmentVariableW(L"BOF3X_OFF", nullptr, 0) == 0 && !cfg.off.empty())
-        SetEnvironmentVariableA("BOF3X_OFF", cfg.off.c_str());
+    if (bof3::os::GetEnvW(L"BOF3X_OFF", nullptr, 0) == 0 && !cfg.off.empty())
+        SetEnv("BOF3X_OFF", cfg.off.c_str());
 
     // DIV-0157 as amended 2026-11-12 (docs/mods.md 11): the behaviours on -
     // the ini's on=, then the needs of each mod whose layers the game is
     // handed (both or neither), less what BOF3X_OFF turns off (off= wins: the
     // mod is said not to be complete). Each one a mod turns on is a line that
     // names the mod. An environment's BOF3X_ON wins, as for the others.
-    if (GetEnvironmentVariableW(L"BOF3X_ON", nullptr, 0) == 0) {
+    if (bof3::os::GetEnvW(L"BOF3X_ON", nullptr, 0) == 0) {
         std::string off_now = cfg.off;   // what the game reads: the environment's, when it has one
-        if (const DWORD n = GetEnvironmentVariableA("BOF3X_OFF", nullptr, 0); n > 0) {
+        if (const std::uint32_t n = bof3::os::GetEnv("BOF3X_OFF", nullptr, 0); n > 0) {
             off_now.assign(n, '\0');
-            off_now.resize(GetEnvironmentVariableA("BOF3X_OFF", off_now.data(), n));
+            off_now.resize(bof3::os::GetEnv("BOF3X_OFF", off_now.data(), n));
         }
         std::vector<std::string> said;
         const std::string on = ConfigModOn(asks, handed, cfg.on, off_now, said);
         for (const std::string& line : said) std::fprintf(stderr, "bof3x-launcher: %s\n", line.c_str());
-        if (!on.empty()) SetEnvironmentVariableA("BOF3X_ON", on.c_str());
+        if (!on.empty()) SetEnv("BOF3X_ON", on.c_str());
     } else if (!asks.empty()) {
         std::fprintf(stderr, "bof3x-launcher: BOF3X_ON is set in the environment, so the behaviours the mods need are "
                      "not added to it\n");
@@ -629,9 +675,9 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, boo
     // and BOF3X_OFF it is given, set above or by the environment - so that
     // BOF3X_SOLO is unset when the mode is off or no champion is chosen. The
     // value as the ini has it: the game checks it. An environment's wins.
-    if (GetEnvironmentVariableW(L"BOF3X_SOLO", nullptr, 0) == 0 && !cfg.solo_champion.empty()) {
+    if (bof3::os::GetEnvW(L"BOF3X_SOLO", nullptr, 0) == 0 && !cfg.solo_champion.empty()) {
         if (ConfigBehaviourOn(EnvValue("BOF3X_ON"), EnvValue("BOF3X_OFF"), kSoloBehaviour))
-            SetEnvironmentVariableA("BOF3X_SOLO", cfg.solo_champion.c_str());
+            SetEnv("BOF3X_SOLO", cfg.solo_champion.c_str());
         else
             std::fprintf(stderr, "bof3x-launcher: bof3x.ini's solo.champion=%s is not given to the game: the behaviour "
                          "%s is off\n", cfg.solo_champion.c_str(), kSoloBehaviour);
@@ -641,83 +687,83 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, boo
     // dll checks both.
     // Neither names one: the home's own cache, when the Sources page built it
     // (ConfigCacheRoot).
-    if (GetEnvironmentVariableW(L"BOF3X_CACHE", existing, 64) == 0) {
+    if (bof3::os::GetEnvW(L"BOF3X_CACHE", existing, 64) == 0) {
         if (!cfg.cache.empty())
-            SetEnvironmentVariableW(L"BOF3X_CACHE", ConfigFromUtf8(cfg.cache).c_str());   // the character, not the bytes
+            SetEnvW(L"BOF3X_CACHE", ConfigFromUtf8(cfg.cache).c_str());   // the character, not the bytes
         else if (const std::wstring home = HomeCacheDefault(); !home.empty())
-            SetEnvironmentVariableW(L"BOF3X_CACHE", home.c_str());
+            SetEnvW(L"BOF3X_CACHE", home.c_str());
     }
     // DIV-0150: always a source, the ini's or the default's by the layers the
     // game is handed (ConfigMusicSource; BOF3X_OPT is set above)
-    if (GetEnvironmentVariableW(L"BOF3X_MUSIC", existing, 64) == 0) {
+    if (bof3::os::GetEnvW(L"BOF3X_MUSIC", existing, 64) == 0) {
         char opt[512];
-        const DWORD n = GetEnvironmentVariableA("BOF3X_OPT", opt, sizeof opt);
-        SetEnvironmentVariableA("BOF3X_MUSIC",
+        const std::uint32_t n = bof3::os::GetEnv("BOF3X_OPT", opt, sizeof opt);
+        SetEnv("BOF3X_MUSIC",
                                 ConfigMusicSource(cfg.music, n > 0 && n < sizeof opt ? opt : cfg.opt.c_str()).c_str());
     }
 
-    if (GetEnvironmentVariableW(L"BOF3X_FILTER", existing, 64) == 0 &&
+    if (bof3::os::GetEnvW(L"BOF3X_FILTER", existing, 64) == 0 &&
         cfg.filter == Filter::kPoint)
-        SetEnvironmentVariableW(L"BOF3X_FILTER", L"point");
+        SetEnvW(L"BOF3X_FILTER", L"point");
 
-    if (GetEnvironmentVariableW(L"BOF3X_BACKGROUND", existing, 64) == 0 && !cfg.background)
-        SetEnvironmentVariableW(L"BOF3X_BACKGROUND", L"0");
+    if (bof3::os::GetEnvW(L"BOF3X_BACKGROUND", existing, 64) == 0 && !cfg.background)
+        SetEnvW(L"BOF3X_BACKGROUND", L"0");
 
-    if (GetEnvironmentVariableW(L"BOF3X_PRESENT", existing, 64) == 0 && cfg.satpixie)
-        SetEnvironmentVariableW(L"BOF3X_PRESENT", L"satpixie");
+    if (bof3::os::GetEnvW(L"BOF3X_PRESENT", existing, 64) == 0 && cfg.satpixie)
+        SetEnvW(L"BOF3X_PRESENT", L"satpixie");
 
-    if (cfg.satpixie && GetEnvironmentVariableW(L"BOF3X_SATPIXIE", existing, 64) == 0) {
+    if (cfg.satpixie && bof3::os::GetEnvW(L"BOF3X_SATPIXIE", existing, 64) == 0) {
         std::string line = SatpixieLine(cfg.sp, "", ",");
         if (!line.empty()) line.pop_back();   // the trailing comma
-        SetEnvironmentVariableA("BOF3X_SATPIXIE", line.c_str());
+        SetEnv("BOF3X_SATPIXIE", line.c_str());
     }
 
-    if (GetEnvironmentVariableW(L"BOF3X_TEXT_SPEED", existing, 64) == 0 && cfg.text_faster)
-        SetEnvironmentVariableW(L"BOF3X_TEXT_SPEED", L"1");
+    if (bof3::os::GetEnvW(L"BOF3X_TEXT_SPEED", existing, 64) == 0 && cfg.text_faster)
+        SetEnvW(L"BOF3X_TEXT_SPEED", L"1");
 
-    if (GetEnvironmentVariableW(L"BOF3X_UNLEARNED_BLUE", existing, 64) == 0 && cfg.unlearned_blue)
-        SetEnvironmentVariableW(L"BOF3X_UNLEARNED_BLUE", L"1");
+    if (bof3::os::GetEnvW(L"BOF3X_UNLEARNED_BLUE", existing, 64) == 0 && cfg.unlearned_blue)
+        SetEnvW(L"BOF3X_UNLEARNED_BLUE", L"1");
 
-    if (GetEnvironmentVariableW(L"BOF3X_DESERT_FAERIE", existing, 64) == 0 && cfg.desert_faerie)
-        SetEnvironmentVariableW(L"BOF3X_DESERT_FAERIE", L"1");
+    if (bof3::os::GetEnvW(L"BOF3X_DESERT_FAERIE", existing, 64) == 0 && cfg.desert_faerie)
+        SetEnvW(L"BOF3X_DESERT_FAERIE", L"1");
 
-    if (GetEnvironmentVariableW(L"BOF3X_SNAP", existing, 64) == 0 && !cfg.snap)
-        SetEnvironmentVariableW(L"BOF3X_SNAP", L"0");
+    if (bof3::os::GetEnvW(L"BOF3X_SNAP", existing, 64) == 0 && !cfg.snap)
+        SetEnvW(L"BOF3X_SNAP", L"0");
 
-    if (GetEnvironmentVariableW(L"BOF3X_INTERP", existing, 64) == 0 && cfg.interp)
-        SetEnvironmentVariableW(L"BOF3X_INTERP", L"1");
+    if (bof3::os::GetEnvW(L"BOF3X_INTERP", existing, 64) == 0 && cfg.interp)
+        SetEnvW(L"BOF3X_INTERP", L"1");
 
-    if (GetEnvironmentVariableW(L"BOF3X_WIDE", existing, 64) == 0 && (cfg.wide == 1 || cfg.wide == 2))
-        SetEnvironmentVariableW(L"BOF3X_WIDE", cfg.wide == 2 ? L"2" : L"1");
+    if (bof3::os::GetEnvW(L"BOF3X_WIDE", existing, 64) == 0 && (cfg.wide == 1 || cfg.wide == 2))
+        SetEnvW(L"BOF3X_WIDE", cfg.wide == 2 ? L"2" : L"1");
 
     // D395: whenever the ini named scale=, 2 included; unnamed, the game follows the display
-    if (GetEnvironmentVariableW(L"BOF3X_SCALE", existing, 64) == 0 && cfg.scale_named) {
+    if (bof3::os::GetEnvW(L"BOF3X_SCALE", existing, 64) == 0 && cfg.scale_named) {
         const wchar_t k[2] = {static_cast<wchar_t>(L'0' + cfg.scale), 0};
-        SetEnvironmentVariableW(L"BOF3X_SCALE", k);
+        SetEnvW(L"BOF3X_SCALE", k);
     }
 
-    if (GetEnvironmentVariableW(L"BOF3X_EXP", existing, 64) == 0 && cfg.cheats.exp != 1)
-        SetEnvironmentVariableA("BOF3X_EXP", std::to_string(cfg.cheats.exp).c_str());
-    if (GetEnvironmentVariableW(L"BOF3X_ZENNY", existing, 64) == 0 && cfg.cheats.zenny != 1)
-        SetEnvironmentVariableA("BOF3X_ZENNY", std::to_string(cfg.cheats.zenny).c_str());
-    if (GetEnvironmentVariableW(L"BOF3X_STEAL", existing, 64) == 0 && cfg.cheats.steal)
-        SetEnvironmentVariableW(L"BOF3X_STEAL", L"1");
-    if (GetEnvironmentVariableW(L"BOF3X_ENEMY_INFO", existing, 64) == 0 && cfg.cheats.enemy_info)
-        SetEnvironmentVariableW(L"BOF3X_ENEMY_INFO", L"1");
-    if (GetEnvironmentVariableW(L"BOF3X_NO_FAIL", existing, 64) == 0 && cfg.cheats.no_fail)
-        SetEnvironmentVariableW(L"BOF3X_NO_FAIL", L"1");
-    if (GetEnvironmentVariableW(L"BOF3X_LEARN", existing, 64) == 0 && cfg.cheats.learn)
-        SetEnvironmentVariableW(L"BOF3X_LEARN", L"1");
+    if (bof3::os::GetEnvW(L"BOF3X_EXP", existing, 64) == 0 && cfg.cheats.exp != 1)
+        SetEnv("BOF3X_EXP", std::to_string(cfg.cheats.exp).c_str());
+    if (bof3::os::GetEnvW(L"BOF3X_ZENNY", existing, 64) == 0 && cfg.cheats.zenny != 1)
+        SetEnv("BOF3X_ZENNY", std::to_string(cfg.cheats.zenny).c_str());
+    if (bof3::os::GetEnvW(L"BOF3X_STEAL", existing, 64) == 0 && cfg.cheats.steal)
+        SetEnvW(L"BOF3X_STEAL", L"1");
+    if (bof3::os::GetEnvW(L"BOF3X_ENEMY_INFO", existing, 64) == 0 && cfg.cheats.enemy_info)
+        SetEnvW(L"BOF3X_ENEMY_INFO", L"1");
+    if (bof3::os::GetEnvW(L"BOF3X_NO_FAIL", existing, 64) == 0 && cfg.cheats.no_fail)
+        SetEnvW(L"BOF3X_NO_FAIL", L"1");
+    if (bof3::os::GetEnvW(L"BOF3X_LEARN", existing, 64) == 0 && cfg.cheats.learn)
+        SetEnvW(L"BOF3X_LEARN", L"1");
 
     // The function keys: BOF3X_FKEYS only when they differ from what the game
     // builds without it (the defaults and BOF3X_RUBY_KEY's key), so an ini
     // that never named one sends nothing new.
-    if (GetEnvironmentVariableW(L"BOF3X_FKEYS", existing, 64) == 0) {
+    if (bof3::os::GetEnvW(L"BOF3X_FKEYS", existing, 64) == 0) {
         const input::FnBindings fkeys = ConfigFnKeys(cfg);
         if (fkeys != ConfigFnKeysBaseline(cfg)) {
             std::string line = input::FnFormat(fkeys, ",");
             if (!line.empty()) line.pop_back();
-            SetEnvironmentVariableA("BOF3X_FKEYS", line.c_str());
+            SetEnv("BOF3X_FKEYS", line.c_str());
         }
     }
 
@@ -726,19 +772,19 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, boo
         [&] { for (size_t i = 0; i < defaults.keys.size(); ++i)
                   if (cfg.bindings.keys[i].dik != defaults.keys[i].dik || cfg.bindings.keys[i].bits != defaults.keys[i].bits) return false;
               return true; }();
-    if (GetEnvironmentVariableW(L"BOF3X_KEYS", existing, 64) == 0 && !keys_default) {
+    if (bof3::os::GetEnvW(L"BOF3X_KEYS", existing, 64) == 0 && !keys_default) {
         std::string line = input::FormatKeys(cfg.bindings.keys, "", ",");
         if (!line.empty()) line.pop_back();
-        SetEnvironmentVariableA("BOF3X_KEYS", line.c_str());
+        SetEnv("BOF3X_KEYS", line.c_str());
     }
     const bool pad_default = cfg.bindings.layout == defaults.layout && cfg.bindings.pad.size() == defaults.pad.size() &&
         [&] { for (size_t i = 0; i < defaults.pad.size(); ++i)
                   if (cfg.bindings.pad[i].input != defaults.pad[i].input || cfg.bindings.pad[i].bits != defaults.pad[i].bits) return false;
               return true; }();
-    if (GetEnvironmentVariableW(L"BOF3X_PAD", existing, 64) == 0 && !pad_default) {
+    if (bof3::os::GetEnvW(L"BOF3X_PAD", existing, 64) == 0 && !pad_default) {
         std::string line = input::FormatPad(cfg.bindings.pad, cfg.bindings.layout, "", ",");
         if (!line.empty()) line.pop_back();
-        SetEnvironmentVariableA("BOF3X_PAD", line.c_str());
+        SetEnv("BOF3X_PAD", line.c_str());
     }
 
     // None is set for its default value: an unset variable is exactly what
@@ -769,7 +815,7 @@ void ConfigFnKeysSet(Config& cfg, const input::FnBindings& fkeys) {
 
 void ConfigSeedFromGameCfg(const std::wstring& game_dir, Config& cfg) {
     std::string text;
-    if (!ReadWhole(game_dir + L"\\BOF3.CFG", text)) return;
+    if (!ReadWhole(game_dir + Sep(L"\\BOF3.CFG"), text)) return;
     const std::vector<std::string> lines = SplitLines(text);
 
     // Cfg_Load 0x4FD030 runs each line through atoi, so anything that is not a
@@ -788,7 +834,7 @@ void ConfigSeedFromGameCfg(const std::wstring& game_dir, Config& cfg) {
 }
 
 bool ConfigApplyGameCfg(const std::wstring& game_dir, const Config& cfg, std::wstring& error) {
-    const std::wstring path = game_dir + L"\\BOF3.CFG";
+    const std::wstring path = game_dir + Sep(L"\\BOF3.CFG");
     const std::string want_line1 = cfg.display == Display::kWindowed ? "0" : "1";
     const std::string want_line2 = cfg.renderer ? "1" : "0";
 
@@ -816,16 +862,17 @@ bool ConfigApplyGameCfg(const std::wstring& game_dir, const Config& cfg, std::ws
 
 std::wstring ConfigCacheDataRoot(const Config& cfg) {
     wchar_t text[4];
-    const DWORD m = GetEnvironmentVariableW(L"BOF3X_CACHE_DATA", text, 4);
+    const std::uint32_t m = bof3::os::GetEnvW(L"BOF3X_CACHE_DATA", text, 4);
     if (m == 1 && text[0] == L'0') return std::wstring();  // the cache for the music only
     return ConfigCacheRoot(cfg);
 }
 
 std::wstring ConfigCacheRoot(const Config& cfg) {
-    wchar_t root[MAX_PATH];
-    const DWORD n = GetEnvironmentVariableW(L"BOF3X_CACHE", root, MAX_PATH);
+    // MAX_PATH's units on both systems: UTF-16 units on Windows, code points on POSIX
+    wchar_t root[bof3::os::kMaxPath];
+    const std::uint32_t n = bof3::os::GetEnvW(L"BOF3X_CACHE", root, bof3::os::kMaxPath);
     std::wstring out;
-    if (n > 0 && n < MAX_PATH) out.assign(root, n);
+    if (n > 0 && n < bof3::os::kMaxPath) out.assign(root, n);
     else if (n == 0 && !cfg.cache.empty()) {
         // Config::cache is UTF-8 (ConfigCacheFromIni), as the launcher hands
         // it to the game wide - not the ANSI code page, which could not hold
@@ -841,36 +888,23 @@ std::wstring ConfigCacheRoot(const Config& cfg) {
     return out;
 }
 
-std::wstring ConfigFromUtf8(const std::string& s) {
-    if (s.empty()) return std::wstring();
-    const int n = MultiByteToWideChar(CP_UTF8, 0, s.data(), static_cast<int>(s.size()), nullptr, 0);
-    std::wstring w(static_cast<size_t>(n > 0 ? n : 0), L'\0');
-    if (n > 0) MultiByteToWideChar(CP_UTF8, 0, s.data(), static_cast<int>(s.size()), w.data(), n);
-    return w;
-}
+// The two conversions convert every text, as Windows' converters do: what is
+// not UTF-8, and a UTF-16 half without its pair, is U+FFFD (os/wide_text.h).
+std::wstring ConfigFromUtf8(const std::string& s) { return bof3::os::WideOfUtf8(s); }
 
-std::string ConfigToUtf8(const std::wstring& w) {
-    if (w.empty()) return std::string();
-    const int n = WideCharToMultiByte(CP_UTF8, 0, w.data(), static_cast<int>(w.size()), nullptr, 0, nullptr, nullptr);
-    std::string s(static_cast<size_t>(n > 0 ? n : 0), '\0');
-    if (n > 0) WideCharToMultiByte(CP_UTF8, 0, w.data(), static_cast<int>(w.size()), s.data(), n, nullptr, nullptr);
-    return s;
-}
+std::string ConfigToUtf8(const std::wstring& w) { return bof3::os::Utf8OfWide(w); }
 
 std::string ConfigCacheFromIni(const std::string& raw) {
     if (raw.empty()) return raw;
-    if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, raw.data(), static_cast<int>(raw.size()), nullptr, 0) > 0)
-        return raw;   // valid UTF-8 (ASCII included): as written
-    const int n = MultiByteToWideChar(CP_ACP, 0, raw.data(), static_cast<int>(raw.size()), nullptr, 0);
-    std::wstring w(static_cast<size_t>(n > 0 ? n : 0), L'\0');
-    if (n > 0) MultiByteToWideChar(CP_ACP, 0, raw.data(), static_cast<int>(raw.size()), w.data(), n);
-    return ConfigToUtf8(w);
+    if (bof3::os::IsUtf8(raw)) return raw;   // valid UTF-8 (ASCII included): as written
+    // an older ini's ANSI bytes (POSIX has no ANSI page: Latin-1, os/wide_text.h)
+    return ConfigToUtf8(bof3::os::WideOfAnsi(raw));
 }
 
 std::vector<std::string> ConfigLanguagesAvailable(const std::wstring& game_dir, const std::wstring& cache) {
     std::vector<std::string> out;
     for (const LanguageInfo& lang : kLanguages) {
-        std::wstring pattern = game_dir + L"\\DAT\\";
+        std::wstring pattern = game_dir + Sep(L"\\DAT\\");
         for (const char* c = lang.code; *c; ++c) pattern += static_cast<wchar_t>(*c);
         pattern += L".*";
         if (!AnyMatch(pattern) && !CacheHasLayer(cache, L"loc", lang.code)) continue;  // DIV-0089
@@ -889,7 +923,7 @@ std::string ConfigOptPlayable(const std::wstring& game_dir, const std::string& o
         const std::string layer = opt.substr(at, end - at);
         at = end + 1;
         if (layer.empty()) continue;
-        std::wstring pattern = game_dir + L"\\DAT\\";
+        std::wstring pattern = game_dir + Sep(L"\\DAT\\");
         for (char c : layer) pattern += static_cast<wchar_t>(c);
         pattern += L".*";
         if (!AnyMatch(pattern) && !CacheHasLayer(cache, L"opt", layer.c_str(), music)) {  // DIV-0089: or the cache's
@@ -916,7 +950,7 @@ std::string ConfigOptPlayable(const std::wstring& game_dir, const std::string& o
 
 bool ConfigOptInstalled(const std::wstring& game_dir, const char* layer, const std::wstring& cache,
                         const std::wstring& music) {
-    std::wstring pattern = game_dir + L"\\DAT\\";
+    std::wstring pattern = game_dir + Sep(L"\\DAT\\");
     for (const char* c = layer; *c; ++c) pattern += static_cast<wchar_t>(*c);
     pattern += L".*.DAT";   // the DLL's own pattern (dat_load.cpp ReadOptLayers)
     return AnyMatch(pattern) || CacheHasLayer(cache, L"opt", layer, music);  // DIV-0089: or the cache's
@@ -1102,7 +1136,7 @@ bool ConfigLanguageKnown(const std::string& code) {
 }
 
 bool ConfigOriginalAvailable(const std::wstring& game_dir, const std::wstring& cache) {
-    return AnyMatch(game_dir + L"\\BOF3.exe") || CacheHasLayer(cache, L"loc", "zh-CN");
+    return AnyMatch(game_dir + Sep(L"\\BOF3.exe")) || CacheHasLayer(cache, L"loc", "zh-CN");
 }
 
 bool ConfigResolveLanguage(const std::wstring& game_dir, Config& cfg, std::string& error) {
@@ -1119,7 +1153,7 @@ bool ConfigResolveLanguage(const std::wstring& game_dir, Config& cfg, std::strin
                                     "install --lang <tag>).")
                       : "The languages it holds: " + list + ".");
     char lang[16];
-    const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", lang, sizeof lang);
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_LANG", lang, sizeof lang);
     if (n > 0) {
         if (n >= sizeof lang || std::string(lang) == kLanguageOriginal) {
             error = std::string("BOF3X_LANG=") + (n >= sizeof lang ? "(too long, read as original)" : lang) +
@@ -1190,7 +1224,7 @@ std::wstring Wide(const std::string& s) { return ConfigFromUtf8(s); }
 std::vector<ModInfo> ConfigModsInstalled(const std::wstring& home) {
     std::vector<ModInfo> out;
     std::string text;
-    if (home.empty() || !ReadWhole(home + L"\\mods.toml", text)) return out;
+    if (home.empty() || !ReadWhole(home + Sep(L"\\mods.toml"), text)) return out;
     for (const std::string& raw : SplitLines(text)) {
         const std::string line = Trim(raw);
         if (line == "[[mod]]") {
@@ -1329,20 +1363,18 @@ namespace {
 // size at +8, the next header after the payload. False when the file cannot
 // be opened or its headers do not end exactly at its end.
 bool DatHasChunk(const std::wstring& path, int kind, std::uint32_t tag) {
-    HANDLE f = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
-                           FILE_ATTRIBUTE_NORMAL, nullptr);
-    if (f == INVALID_HANDLE_VALUE) return false;
-    LARGE_INTEGER size{};
+    const bof3::os::InFile f = bof3::os::InOpenW(path, true);
+    if (f == bof3::os::kNoInFile) return false;
+    std::uint64_t size_bytes = 0;
     bool found = false;
-    if (GetFileSizeEx(f, &size)) {
+    if (bof3::os::InSize(f, &size_bytes)) {
+        const long long size = static_cast<long long>(size_bytes);
         long long off = 0;
-        for (int n = 0; n < 4096 && off < size.QuadPart; ++n) {
+        for (int n = 0; n < 4096 && off < size; ++n) {
             unsigned char h[16];
-            DWORD got = 0;
-            LARGE_INTEGER at;
-            at.QuadPart = off;
-            if (off + 16 > size.QuadPart || !SetFilePointerEx(f, at, nullptr, FILE_BEGIN) ||
-                !ReadFile(f, h, 16, &got, nullptr) || got != 16)
+            std::uint32_t got = 0;
+            if (off + 16 > size || !bof3::os::InSeek(f, static_cast<std::uint64_t>(off)) ||
+                !bof3::os::InRead(f, h, 16, &got) || got != 16)
                 break;
             const std::int8_t k = static_cast<std::int8_t>(h[0]);
             const std::uint32_t t = h[4] | h[5] << 8 | h[6] << 16 | static_cast<std::uint32_t>(h[7]) << 24;
@@ -1351,13 +1383,13 @@ bool DatHasChunk(const std::wstring& path, int kind, std::uint32_t tag) {
             if (len < 0) break;
             if (k == kind && t == tag && len > 0) found = true;
             off += 16 + static_cast<long long>(len);
-            if (off == size.QuadPart) {
-                CloseHandle(f);
+            if (off == size) {
+                bof3::os::InClose(f);
                 return found;
             }
         }
     }
-    CloseHandle(f);
+    bof3::os::InClose(f);
     return false;
 }
 }  // namespace
@@ -1369,8 +1401,8 @@ bool ConfigLayerHasNameGrid(const std::wstring& game_dir, const std::string& lan
     // DIV-0089's precedence (dat_cache::PickOverlay): a cache that has the
     // layer is the one read, whole - its FIRST.DAT or none.
     if (CacheHasLayer(cache, L"loc", language.c_str()))
-        return DatHasChunk(cache + L"\\loc\\" + tag + L"\\dat\\FIRST.DAT", 22, 0);
-    return DatHasChunk(game_dir + L"\\DAT\\" + tag + L".FIRST.DAT", 22, 0);
+        return DatHasChunk(cache + Sep(L"\\loc\\") + tag + Sep(L"\\dat\\FIRST.DAT"), 22, 0);
+    return DatHasChunk(game_dir + Sep(L"\\DAT\\") + tag + L".FIRST.DAT", 22, 0);
 }
 
 NewGameState ConfigNewGameState(const Config& cfg, const std::string& language, bool has_grid,
@@ -1602,20 +1634,16 @@ std::vector<RubyChoice> ConfigRubyChoices(const std::wstring& game_dir, const st
     if (!chinese) {
         const std::string suffix = "-" + language;
         std::vector<std::string> found;
-        WIN32_FIND_DATAW fd;
-        const std::wstring patterns[] = {cache.empty() ? std::wstring() : cache + L"\\opt\\ruby-*",
-                                         game_dir + L"\\DAT\\ruby-*.DAT"};
+        const std::wstring patterns[] = {cache.empty() ? std::wstring() : cache + Sep(L"\\opt\\ruby-*"),
+                                         game_dir + Sep(L"\\DAT\\ruby-*.DAT")};
         for (const std::wstring& pattern : patterns) {
             if (pattern.empty()) continue;
-            HANDLE h = FindFirstFileW(pattern.c_str(), &fd);
-            if (h == INVALID_HANDLE_VALUE) continue;
-            do {
-                std::string name = ConfigToUtf8(fd.cFileName);
-                if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) name = name.substr(0, name.find('.'));
+            for (const bof3::os::MatchW& m : bof3::os::MatchesW(pattern)) {
+                std::string name = ConfigToUtf8(m.name);
+                if (!m.directory) name = name.substr(0, name.find('.'));
                 if (name.size() > 5 + suffix.size() && name.compare(name.size() - suffix.size(), suffix.size(), suffix) == 0)
                     found.push_back(name.substr(5, name.size() - 5 - suffix.size()));
-            } while (FindNextFileW(h, &fd));
-            FindClose(h);
+            }
         }
         std::sort(found.begin(), found.end());
         found.erase(std::unique(found.begin(), found.end()), found.end());
@@ -1654,7 +1682,7 @@ std::string ConfigRubyPlayable(const std::wstring& game_dir, const std::string& 
 
 bool ConfigCheckEnvironmentLanguage(std::string& error) {
     char lang[16];
-    const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", lang, sizeof lang);
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_LANG", lang, sizeof lang);
     if (n == 0 || n >= sizeof lang) return true;
     if (const char* use = RetiredLanguageReplacement(lang)) {
         error = std::string("BOF3X_LANG=") + lang + " is retired; use " + use + " (DIV-0005)";
@@ -1726,10 +1754,7 @@ bool PresetWantsOn(Preset preset, const ledger::Entry& e) {
     return false;
 }
 
-bool IsDir(const std::wstring& d) {
-    const DWORD a = GetFileAttributesW(d.c_str());
-    return a != INVALID_FILE_ATTRIBUTES && (a & FILE_ATTRIBUTE_DIRECTORY);
-}
+bool IsDir(const std::wstring& d) { return bof3::os::IsDirectoryW(d); }
 
 // Why this install cannot take an ini: value, or empty when it can. The Music
 // box's own test (config_dialog.cpp MusicRefresh) for music=; any other key
@@ -1739,8 +1764,8 @@ std::string IniNotHere(const std::wstring& game_dir, const Config& cfg, const st
     if (key != "music") return std::string();
     const std::wstring cache = ConfigCacheRoot(cfg), data = ConfigCacheDataRoot(cfg);
     const bool psp_base = ManifestPspBase(CachedManifest(cache));
-    const bool songs = !cache.empty() && IsDir(cache + L"\\base\\bgm");
-    if ((value == "pc" || value == "mp3") && !AnyMatch(game_dir + L"\\BGM\\*.DAT"))
+    const bool songs = !cache.empty() && IsDir(cache + Sep(L"\\base\\bgm"));
+    if ((value == "pc" || value == "mp3") && !AnyMatch(game_dir + Sep(L"\\BGM\\*.DAT")))
         return "no BGM\\ folder with the PC's MP3 music in the game folder";
     if (value == "psx" && !(songs && !psp_base)) return "the cache has no PlayStation music";
     if (value == "psp" && !(psp_base ? songs : ConfigOptInstalled(game_dir, "psp-music", data, cache)))
@@ -1755,7 +1780,7 @@ std::string IniNotHere(const std::wstring& game_dir, const Config& cfg, const st
 // refuses only a gap that recipes/exe-gaps-accepted.tsv does not answer, and
 // =0 refuses none, so only =1 is kept from a disc-built install.
 std::string EnvNotHere(const std::wstring& game_dir, const std::string& name, const std::string& value) {
-    const bool pc = AnyMatch(game_dir + L"\\BOF3.exe");
+    const bool pc = AnyMatch(game_dir + Sep(L"\\BOF3.exe"));
     if (name == "BOF3X_CACHE_DATA" && value == "0" && !pc)
         return "a disc-built install (no BOF3.exe) has no PC DAT folder to read in place of the cache";
     if (name == "BOF3X_EXEIMAGE_STRICT" && value != "0" && !pc)
@@ -1784,7 +1809,7 @@ const char* IniVariable(std::string_view key) {
     return nullptr;
 }
 
-bool EnvironmentHas(const std::string& name) { return GetEnvironmentVariableA(name.c_str(), nullptr, 0) > 0; }
+bool EnvironmentHas(const std::string& name) { return bof3::os::GetEnv(name.c_str(), nullptr, 0) > 0; }
 
 void AddOnce(std::vector<std::pair<std::string, std::string>>& list, const std::string& k, const std::string& v) {
     for (const auto& kv : list)
@@ -1877,9 +1902,9 @@ Config ConfigPresetApply(const Config& cfg, const PresetPlan& plan) {
 }
 
 void ConfigPresetEnvironment(const PresetPlan& plan) {
-    if (!EnvironmentHas("BOF3X_PRESET")) SetEnvironmentVariableA("BOF3X_PRESET", PresetOf(plan.preset).name);
+    if (!EnvironmentHas("BOF3X_PRESET")) SetEnv("BOF3X_PRESET", PresetOf(plan.preset).name);
     for (const auto& [name, value] : plan.env)
-        if (!EnvironmentHas(name)) SetEnvironmentVariableA(name.c_str(), value.c_str());
+        if (!EnvironmentHas(name)) SetEnv(name.c_str(), value.c_str());
 }
 
 void ConfigPresetReport(const PresetPlan& plan) {
@@ -1917,7 +1942,7 @@ void ConfigPresetReport(const PresetPlan& plan) {
 
 std::string ConfigLanguagePlayed(const std::wstring& game_dir, const Config& cfg) {
     char lang[8];   // as the DLL reads it (dat_load.cpp g_lang): longer is none
-    const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", lang, sizeof lang);
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_LANG", lang, sizeof lang);
     if (n > 0) return n >= sizeof lang || std::strcmp(lang, kLanguageOriginal) == 0 ? kLanguageOriginal : lang;
     if (cfg.language != kLanguageOriginal) {
         const std::vector<std::string> built = ConfigLanguagesAvailable(game_dir, ConfigCacheDataRoot(cfg));
@@ -1928,7 +1953,7 @@ std::string ConfigLanguagePlayed(const std::wstring& game_dir, const Config& cfg
 
 bool ConfigPresetFromEnvironment(Config& cfg, std::string& error) {
     char name[32];
-    const DWORD n = GetEnvironmentVariableA("BOF3X_PRESET", name, sizeof name);
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_PRESET", name, sizeof name);
     if (n == 0) return true;
     const PresetInfo* p = n < sizeof name ? PresetNamed(name) : nullptr;
     if (!p) {

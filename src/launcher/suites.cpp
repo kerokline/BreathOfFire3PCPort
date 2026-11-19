@@ -1,7 +1,5 @@
 #include "launcher/suites.h"
 
-#include <windows.h>
-
 #include <algorithm>
 #include <string>
 #include <vector>

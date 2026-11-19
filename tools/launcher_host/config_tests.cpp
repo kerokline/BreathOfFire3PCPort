@@ -1,18 +1,36 @@
 // Host tests for the launcher's settings (src/launcher/config.cpp, suites.cpp):
 // the ini's round trip through ConfigLoad / ConfigSave, ConfigOptEdit, and the
 // three suites - what the settings dialog makes of a cache's manifest.toml and
-// of an `opt=` line (docs/launcher-suites.md). No game data; a Windows host
-// (config.cpp is Win32). docs/launcher-settings.md section 3.
+// of an `opt=` line (docs/launcher-suites.md). No game data. Windows or POSIX:
+// config.cpp reaches the system through the OS seam (src/os) since the Linux
+// round's C7, so the suite runs on both. docs/launcher-settings.md section 3.
 //
 //   cmake -S tools/launcher_host -B <scratch>/lh -G Ninja -DCMAKE_CXX_COMPILER=clang++
 //   cmake --build <scratch>/lh && <scratch>/lh/config_tests.exe
+//
+// In the WSL (g++, no cmake), from the checkout, with suites.gen.h made first
+// (python tools/suites.py gen --out <scratch>/gen/launcher/suites.gen.h):
+//   g++ -std=c++20 -Wall -Wextra -Isrc -I<scratch>/gen -DBOF3X_LAUNCHER_HOST_DIR='"tools/launcher_host"'
+//       tools/launcher_host/config_tests.cpp src/launcher/config.cpp src/launcher/suites.cpp
+//       src/common/cache_manifest.cpp src/common/home.cpp src/input/bindings.cpp src/input/function_keys.cpp
+//       src/os/posix/*.cpp src/os/file.cpp src/os/heap_arena.cpp -o /tmp/config_tests -lpthread -ldl
 #include "common/home.h"
 #include "launcher/config.h"
 #include "launcher/suites.h"
 
-#include <windows.h>
+#include "os/env.h"
+#include "os/path_file.h"
+#include "os/process.h"
+#include "os/wide_file.h"
+
+#ifdef _WIN32
+#include <windows.h>   // TestCacheCodePage alone: the ANSI code page is Windows'
+#endif
 
 #include <algorithm>
+#include <cwchar>
+#include <filesystem>
+#include <system_error>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -31,15 +49,35 @@ void Check(bool ok, const char* what, const std::string& got = std::string()) {
     }
 }
 
+// A path written with backslashes, with the system's separator (config.cpp's Sep).
+std::wstring P(const wchar_t* part) {
+    std::wstring s(part);
+    for (wchar_t& c : s)
+        if (c == L'\\') c = static_cast<wchar_t>(std::filesystem::path::preferred_separator);
+    return s;
+}
+
 std::wstring Temp(const wchar_t* name) {
-    wchar_t dir[MAX_PATH];
-    GetTempPathW(MAX_PATH, dir);
-    return std::wstring(dir) + name;
+    std::error_code ec;
+    std::wstring dir = std::filesystem::temp_directory_path(ec).wstring();
+    if (!dir.empty() && dir.back() != static_cast<wchar_t>(std::filesystem::path::preferred_separator))
+        dir += static_cast<wchar_t>(std::filesystem::path::preferred_separator);
+    return dir + name;
+}
+
+void MakeDir(const std::wstring& path) {
+    std::error_code ec;
+    std::filesystem::create_directory(bof3::os::PathW(path), ec);
+}
+
+void Remove(const std::wstring& path) {
+    std::error_code ec;
+    std::filesystem::remove(bof3::os::PathW(path), ec);
 }
 
 std::string ReadAll(const std::wstring& path) {
     std::string out;
-    if (FILE* f = _wfopen(path.c_str(), L"rb")) {
+    if (FILE* f = bof3::os::OpenPath(bof3::os::PathW(path), "rb")) {
         char buf[4096];
         size_t n;
         while ((n = std::fread(buf, 1, sizeof buf, f)) > 0) out.append(buf, n);
@@ -49,7 +87,12 @@ std::string ReadAll(const std::wstring& path) {
 }
 
 void WriteAll(const std::wstring& path, const std::string& text) {
-    FILE* f = _wfopen(path.c_str(), L"wb");
+    FILE* f = bof3::os::OpenPath(bof3::os::PathW(path), "wb");
+    if (!f) {
+        std::printf("  FAIL cannot write a test file\n");
+        ++g_failures;
+        return;
+    }
     std::fwrite(text.data(), 1, text.size(), f);
     std::fclose(f);
 }
@@ -61,13 +104,13 @@ void WriteAll(const std::wstring& path, const std::string& text) {
 // caught it and this keeps it caught on the host.
 void TestInstalled() {
     const std::wstring game = Temp(L"bof3x_cfg_game"), cache = Temp(L"bof3x_cfg_cache");
-    CreateDirectoryW(game.c_str(), nullptr);
-    CreateDirectoryW((game + L"\\DAT").c_str(), nullptr);
+    MakeDir(game);
+    MakeDir((game + P(L"\\DAT")));
     for (const wchar_t* part : {L"", L"\\opt", L"\\opt\\psp-tiles", L"\\opt\\psp-tiles\\dat"})
-        CreateDirectoryW((cache + part).c_str(), nullptr);
-    const std::wstring art = game + L"\\DAT\\psp-art.AREA067.DAT", walls = game + L"\\DAT\\area4-walls.AREA004.DAT",
-                       tiles = cache + L"\\opt\\psp-tiles\\dat\\AREA000.DAT";
-    DeleteFileW(art.c_str()); DeleteFileW(walls.c_str()); DeleteFileW(tiles.c_str());
+        MakeDir(cache + P(part));
+    const std::wstring art = game + P(L"\\DAT\\psp-art.AREA067.DAT"), walls = game + P(L"\\DAT\\area4-walls.AREA004.DAT"),
+                       tiles = cache + P(L"\\opt\\psp-tiles\\dat\\AREA000.DAT");
+    Remove(art); Remove(walls); Remove(tiles);
     Check(!bof3x::ConfigOptInstalled(game, "psp-art"), "nothing installed: psp-art absent");
     Check(bof3x::ConfigOptDefaultInstalled(game).empty(), "nothing installed: no default layer");
     Check(bof3x::ConfigOptWanted(game, "").empty(), "nothing installed: empty opt= plays nothing");
@@ -82,20 +125,20 @@ void TestInstalled() {
     Check(def.size() == 1 && def[0] == "area4-walls", "area4-walls installed: the default list");
     Check(bof3x::ConfigOptWanted(game, "") == "area4-walls", "empty opt= plays area4-walls", bof3x::ConfigOptWanted(game, ""));
     Check(bof3x::ConfigOptWanted(game, "none").empty(), "opt=none plays nothing");
-    DeleteFileW(art.c_str()); DeleteFileW(walls.c_str()); DeleteFileW(tiles.c_str());
+    Remove(art); Remove(walls); Remove(tiles);
     // TG: a layer of songs, sound files or .data ranges counts as the DLL counts it (dat_cache::HasLayerPart)
     struct Part { const char* layer; const wchar_t* sub; const wchar_t* file; } parts[] = {
         {"psp-music", L"bgm", L"000.DAT"}, {"psp-snd", L"snd", L"ABC.DAT"}, {"psp-tables", L"exe", L"place.toml"}};
     for (const Part& pt : parts) {
-        std::wstring dir = cache + L"\\opt\\";
+        std::wstring dir = cache + P(L"\\opt\\");
         for (const char* c = pt.layer; *c; ++c) dir += static_cast<wchar_t>(*c);
-        CreateDirectoryW(dir.c_str(), nullptr);
+        MakeDir(dir);
         dir += std::wstring(L"\\") + pt.sub;
-        CreateDirectoryW(dir.c_str(), nullptr);
+        MakeDir(dir);
         Check(!bof3x::ConfigOptInstalled(game, pt.layer, cache), (std::string(pt.layer) + ": an empty part is no layer").c_str());
-        WriteAll(dir + L"\\" + pt.file, "");
+        WriteAll(dir + P(L"\\") + pt.file, "");
         Check(bof3x::ConfigOptInstalled(game, pt.layer, cache), (std::string(pt.layer) + ": the cache's part counts").c_str());
-        DeleteFileW((dir + L"\\" + pt.file).c_str());
+        Remove((dir + P(L"\\") + pt.file));
     }
 }
 
@@ -187,8 +230,8 @@ void TestRoundTrip() {
     Check(bof3x::ConfigMusicSource("", "psp-musical") == "psx", "  a name that only begins so is not it");
     Check(bof3x::ConfigMusicSource("mp3", "psp-music") == "pc", "music=mp3: the PC's");
     Check(bof3x::ConfigMusicSource("psx", "psp-music") == "psx", "a source named wins over opt=");
-    DeleteFileW(a.c_str());
-    DeleteFileW(b.c_str());
+    Remove(a);
+    Remove(b);
 }
 
 // The ini's cache= is bytes in the ANSI code page (the dialog's ToAnsi; the
@@ -197,8 +240,9 @@ void TestRoundTrip() {
 // character, so a folder named outside Latin-1 was looked for elsewhere and
 // its layers went unseen (docs/code-page-audit.md).
 void TestCacheCodePage() {
-    SetEnvironmentVariableW(L"BOF3X_CACHE", nullptr);
-    SetEnvironmentVariableW(L"BOF3X_CACHE_DATA", nullptr);
+#ifdef _WIN32
+    bof3::os::SetEnvW(L"BOF3X_CACHE", nullptr);
+    bof3::os::SetEnvW(L"BOF3X_CACHE_DATA", nullptr);
     // A character this code page holds whose bytes are not its Latin-1 widening.
     std::wstring name;
     std::string bytes;
@@ -228,11 +272,11 @@ void TestCacheCodePage() {
         return;
     }
     const std::wstring game = Temp(L"bof3x_cfg_game"), cache = Temp(name.c_str());
-    CreateDirectoryW(game.c_str(), nullptr);
-    CreateDirectoryW((game + L"\\DAT").c_str(), nullptr);
+    MakeDir(game);
+    MakeDir((game + P(L"\\DAT")));
     for (const wchar_t* part : {L"", L"\\opt", L"\\opt\\psp-tiles", L"\\opt\\psp-tiles\\dat"})
-        CreateDirectoryW((cache + part).c_str(), nullptr);
-    const std::wstring tiles = cache + L"\\opt\\psp-tiles\\dat\\AREA000.DAT";
+        MakeDir(cache + P(part));
+    const std::wstring tiles = cache + P(L"\\opt\\psp-tiles\\dat\\AREA000.DAT");
     WriteAll(tiles, "");
     bof3x::Config cfg;
     // Through ConfigLoad's reading of the line (ConfigCacheFromIni): since state 3
@@ -243,7 +287,10 @@ void TestCacheCodePage() {
     Check(bof3x::ConfigCacheDataRoot(cfg) == cache, "cache= widened through the ANSI code page");
     Check(bof3x::ConfigOptInstalled(game, "psp-tiles", bof3x::ConfigCacheDataRoot(cfg)),
           "a layer in a cache named outside Latin-1: installed (DIV-0089)");
-    DeleteFileW(tiles.c_str());
+    Remove(tiles);
+#else
+    std::printf("  (no ANSI code page on this system: ConfigCacheFromIni reads Latin-1 here; not checked)\n");
+#endif
 }
 
 // ---- The three suites (src/launcher/suites.cpp, docs/launcher-suites.md) -----------
@@ -592,9 +639,8 @@ void TestCodeMembers() {
 
 // A directory and its parents.
 void MakeDirs(const std::wstring& path) {
-    for (size_t at = path.find(L'\\', 3); at != std::wstring::npos; at = path.find(L'\\', at + 1))
-        CreateDirectoryW(path.substr(0, at).c_str(), nullptr);
-    CreateDirectoryW(path.c_str(), nullptr);
+    std::error_code ec;
+    std::filesystem::create_directories(bof3::os::PathW(path), ec);
 }
 
 std::wstring WideOf(const char* s) {
@@ -609,13 +655,13 @@ std::wstring FakeCache(const wchar_t* name, const std::vector<std::pair<const ch
                        const char* manifest) {
     const std::wstring cache = Temp(name);
     MakeDirs(cache);
-    DeleteFileW((cache + L"\\manifest.toml").c_str());
+    Remove((cache + P(L"\\manifest.toml")));
     for (const auto& [layer, part] : trees) {
-        const std::wstring dir = cache + L"\\opt\\" + WideOf(layer) + L"\\" + part;
+        const std::wstring dir = cache + P(L"\\opt\\") + WideOf(layer) + P(L"\\") + part;
         MakeDirs(dir);
-        WriteAll(dir + (std::wcscmp(part, L"exe") == 0 ? L"\\place.toml" : L"\\001.DAT"), "");
+        WriteAll(dir + (std::wcscmp(part, L"exe") == 0 ? P(L"\\place.toml") : P(L"\\001.DAT")), "");
     }
-    if (manifest) WriteAll(cache + L"\\manifest.toml", manifest);
+    if (manifest) WriteAll(cache + P(L"\\manifest.toml"), manifest);
     return cache;
 }
 
@@ -623,10 +669,10 @@ std::wstring FakeCache(const wchar_t* name, const std::vector<std::pair<const ch
 // with the ledger's 92nd code name off (2026-11-14), and a fixed buffer then
 // read it as unset.
 std::string Env(const char* name) {
-    const DWORD need = GetEnvironmentVariableA(name, nullptr, 0);
+    const std::uint32_t need = bof3::os::GetEnv(name, nullptr, 0);
     if (need == 0) return std::string();
     std::string v(need, '\0');
-    const DWORD n = GetEnvironmentVariableA(name, v.data(), need);
+    const std::uint32_t n = bof3::os::GetEnv(name, v.data(), need);
     if (n == 0 || n >= need) return std::string();
     v.resize(n);
     return v;
@@ -635,7 +681,7 @@ std::string Env(const char* name) {
 void ClearEnv() {
     for (const char* v : {"BOF3X_OPT", "BOF3X_CACHE", "BOF3X_CACHE_DATA", "BOF3X_LANG", "BOF3X_PSP", "BOF3X_MUSIC",
                           "BOF3X_RUBY_KEY", "BOF3X_OFF", "BOF3X_ON", "BOF3X_SCALE", "BOF3X_SOLO"})
-        SetEnvironmentVariableA(v, nullptr);
+        bof3::os::SetEnv(v, nullptr);
 }
 
 // The PC + US + PSP-EU cache as importer.py build --opt writes it: base_policy
@@ -660,7 +706,7 @@ const char kManifestLayers[] =
 // start (dat_load.cpp ReadOptLayers): the launcher leaves it out, by part.
 void TestHostedOpt() {
     const std::wstring game = Temp(L"bof3x_rf_game");
-    MakeDirs(game + L"\\DAT");
+    MakeDirs(game + P(L"\\DAT"));
     const std::wstring cache = FakeCache(L"bof3x_rf_cache_all",
                                          {{"psp-music", L"bgm"}, {"psp-snd", L"snd"}, {"psp-tables", L"exe"},
                                           {"psp-ryu-forms", L"dat"}, {"psp-names-en-150", L"dat"}},
@@ -685,7 +731,7 @@ void TestHostedOpt() {
     Check(Env("BOF3X_OPT") == "psp-ryu-forms", "hosted: the hosted build does not get psp-tables (an exe part)",
           Env("BOF3X_OPT"));
     ClearEnv();
-    SetEnvironmentVariableA("BOF3X_OPT", "psp-tables");
+    bof3::os::SetEnv("BOF3X_OPT", "psp-tables");
     bof3x::ConfigApplyEnvironment(game, cfg, true);
     Check(Env("BOF3X_OPT") == "psp-tables", "hosted: a hand-set BOF3X_OPT is the DLL's to refuse, untouched");
     ClearEnv();
@@ -698,7 +744,7 @@ void TestHostedOpt() {
         // DIV-0213: the table-edit mods of mods.toml, in its order, after the other layers
         const std::wstring th = Temp(L"bof3x_te_home");
         MakeDirs(th);
-        WriteAll(th + L"\\mods.toml",
+        WriteAll(th + P(L"\\mods.toml"),
                  "[[mod]]\nid = \"b-mod\"\nname = \"B\"\nversion = \"1.0\"\nkind = \"table-edit\"\nrequires = []\n\n"
                  "[[mod]]\nid = \"furigana\"\nname = \"F\"\nversion = \"1.0\"\nkind = \"reading-row\"\nrequires = [\"ja-JP\"]\n\n"
                  "[[mod]]\nid = \"a-mod\"\nname = \"A\"\nversion = \"1.0\"\nkind = \"table-edit\"\nrequires = []\n\n"
@@ -729,7 +775,7 @@ void TestHostedOpt() {
         // both or neither, under its text's language alone
         const std::wstring ph = Temp(L"bof3x_dp_home");
         MakeDirs(ph);
-        WriteAll(ph + L"\\mods.toml",
+        WriteAll(ph + P(L"\\mods.toml"),
                  "[[mod]]\nid = \"hack\"\nname = \"H\"\nversion = \"1.0\"\nkind = \"disc-patch\"\nrequires = [\"en-US\"]\n\n"
                  "[[mod]]\nid = \"t-mod\"\nname = \"T\"\nversion = \"1.0\"\nkind = \"table-edit\"\nrequires = []\n\n"
                  "[[mod]]\nid = \"textonly\"\nname = \"X\"\nversion = \"1.0\"\nkind = \"disc-patch\"\nrequires = [\"en-US\"]\n\n"
@@ -775,7 +821,7 @@ void TestHostedOpt() {
 
         // the ini's mods_off= and the whole hand-over
         const std::wstring game = Temp(L"bof3x_rf_game");
-        MakeDirs(game + L"\\DAT");
+        MakeDirs(game + P(L"\\DAT"));
         const std::wstring ini = Temp(L"bof3x_config_tests_modsoff.ini");
         WriteAll(ini, "[bof3x]\r\nmods_off=hack, t-mod\r\n");
         bof3x::Config c1, c2, none;
@@ -793,7 +839,7 @@ void TestHostedOpt() {
         const std::vector<std::string> known = {"SelfTestAlpha", "SelfTestBeta"};
         const std::wstring nh = Temp(L"bof3x_needs_home");
         MakeDirs(nh);
-        WriteAll(nh + L"\\mods.toml",
+        WriteAll(nh + P(L"\\mods.toml"),
                  "[[mod]]\nid = \"hack\"\nname = \"H\"\nversion = \"1.0\"\nkind = \"disc-patch\"\nrequires = [\"en-US\"]\n"
                  "needs = [\"SelfTestBeta\", \"SelfTestAlpha\"]\nskip = [[\"shop_records\", 40, 49]]\n\n"
                  "[[mod]]\nid = \"t-mod\"\nname = \"T\"\nversion = \"1.0\"\nkind = \"table-edit\"\nrequires = []\n"
@@ -892,7 +938,7 @@ void TestHostedOpt() {
 // The names are the game's to check (detour.cpp InjectReport), not the ini's.
 void TestOff() {
     const std::wstring game = Temp(L"bof3x_rf_game");
-    MakeDirs(game + L"\\DAT");
+    MakeDirs(game + P(L"\\DAT"));
     const std::wstring a = Temp(L"bof3x_config_tests_off_a.ini"), b = Temp(L"bof3x_config_tests_off_b.ini");
     WriteAll(a, "[bof3x]\r\noff=*, -SunderLoop,NoSuchName\r\n");
     bof3x::Config c1;
@@ -919,13 +965,13 @@ void TestOff() {
               Env("BOF3X_OFF"));
     }
     ClearEnv();
-    SetEnvironmentVariableA("BOF3X_OFF", "Game_Clock");
+    bof3::os::SetEnv("BOF3X_OFF", "Game_Clock");
     bof3x::ConfigApplyEnvironment(game, cfg, false);
     Check(Env("BOF3X_OFF") == "Game_Clock", "an environment's BOF3X_OFF wins over off=", Env("BOF3X_OFF"));
     ClearEnv();
     bof3x::ConfigApplyEnvironment(game, none, false);
-    Check(GetEnvironmentVariableA("BOF3X_OFF", nullptr, 0) == 0, "an empty off= sends no BOF3X_OFF");
-    Check(GetEnvironmentVariableA("BOF3X_ON", nullptr, 0) == 0, "an empty on= (and no mod) sends no BOF3X_ON");
+    Check(bof3::os::GetEnv("BOF3X_OFF", nullptr, 0) == 0, "an empty off= sends no BOF3X_OFF");
+    Check(bof3::os::GetEnv("BOF3X_ON", nullptr, 0) == 0, "an empty on= (and no mod) sends no BOF3X_ON");
     // its other half (docs/mods.md 11): on= as BOF3X_ON, as written; the game checks the names
     bof3x::Config on;
     on.on = "SelfTestAlpha,-SelfTestBeta";
@@ -937,7 +983,7 @@ void TestOff() {
               Env("BOF3X_ON"));
     }
     ClearEnv();
-    SetEnvironmentVariableA("BOF3X_ON", "SelfTestGamma");
+    bof3::os::SetEnv("BOF3X_ON", "SelfTestGamma");
     bof3x::ConfigApplyEnvironment(game, on, false);
     Check(Env("BOF3X_ON") == "SelfTestGamma", "an environment's BOF3X_ON wins over on=", Env("BOF3X_ON"));
     ClearEnv();
@@ -950,7 +996,7 @@ void TestOff() {
 // this test's own, so the checks do not wait on the generated header.
 void TestSolo() {
     const std::wstring game = Temp(L"bof3x_rf_game");
-    MakeDirs(game + L"\\DAT");
+    MakeDirs(game + P(L"\\DAT"));
     const std::wstring a = Temp(L"bof3x_config_tests_solo_a.ini"), b = Temp(L"bof3x_config_tests_solo_b.ini");
     WriteAll(a, "[bof3x]\r\non=SoloCharacter, SoloChampionIfPresent\r\nsolo.champion= nina \r\n");
     bof3x::Config c1;
@@ -1057,18 +1103,18 @@ void TestSolo() {
     for (const Hand& h : hands) {
         for (bool hosted : {false, true}) {
             ClearEnv();
-            if (h.env_on) SetEnvironmentVariableA("BOF3X_ON", h.env_on);
+            if (h.env_on) bof3::os::SetEnv("BOF3X_ON", h.env_on);
             bof3x::Config cfg;
             cfg.on = h.on;
             cfg.off = h.off;
             cfg.solo_champion = h.champion;
             bof3x::ConfigApplyEnvironment(game, cfg, hosted);
-            const bool set = GetEnvironmentVariableA("BOF3X_SOLO", nullptr, 0) > 0;
+            const bool set = bof3::os::GetEnv("BOF3X_SOLO", nullptr, 0) > 0;
             Check(h.want ? set && Env("BOF3X_SOLO") == h.want : !set, h.what, Env("BOF3X_SOLO"));
         }
     }
     ClearEnv();
-    SetEnvironmentVariableA("BOF3X_SOLO", "peco");
+    bof3::os::SetEnv("BOF3X_SOLO", "peco");
     bof3x::Config cfg;
     cfg.on = "SoloCharacter";
     cfg.solo_champion = "ryu";
@@ -1099,10 +1145,10 @@ std::string FakeContainer(const std::vector<std::pair<int, std::uint32_t>>& chun
 // own, so the checks do not wait on the generated header.
 void TestNewGame() {
     const std::wstring game = Temp(L"bof3x_ng_game"), cache = Temp(L"bof3x_ng_cache");
-    MakeDirs(game + L"\\DAT");
-    MakeDirs(cache + L"\\loc\\en-US\\dat");
-    const std::wstring first = game + L"\\DAT\\en-US.FIRST.DAT", cached = cache + L"\\loc\\en-US\\dat\\FIRST.DAT";
-    DeleteFileW(cached.c_str());
+    MakeDirs(game + P(L"\\DAT"));
+    MakeDirs(cache + P(L"\\loc\\en-US\\dat"));
+    const std::wstring first = game + P(L"\\DAT\\en-US.FIRST.DAT"), cached = cache + P(L"\\loc\\en-US\\dat\\FIRST.DAT");
+    Remove(cached);
     WriteAll(first, FakeContainer({{0, 0}, {22, 0}, {7, 3}}));
     Check(bof3x::ConfigLayerHasNameGrid(game, "en-US"), "DAT\\en-US.FIRST.DAT with kind 22 tag 0: the grid");
     Check(!bof3x::ConfigLayerHasNameGrid(game, "original"), "the original Chinese: no grid");
@@ -1120,11 +1166,11 @@ void TestNewGame() {
           "a cache with the layer is read whole (DIV-0089): its FIRST.DAT without the chunk, no grid");
     WriteAll(cached, FakeContainer({{0, 0}, {22, 0}}));
     Check(bof3x::ConfigLayerHasNameGrid(game, "en-US", cache), "the cache's FIRST.DAT with the chunk: the grid");
-    DeleteFileW(cached.c_str());
-    WriteAll(cache + L"\\loc\\en-US\\dat\\AREA000.DAT", "");
+    Remove(cached);
+    WriteAll(cache + P(L"\\loc\\en-US\\dat\\AREA000.DAT"), "");
     Check(!bof3x::ConfigLayerHasNameGrid(game, "en-US", cache),
           "a cache with the layer and no FIRST.DAT: none, the install's not read");
-    DeleteFileW((cache + L"\\loc\\en-US\\dat\\AREA000.DAT").c_str());
+    Remove((cache + P(L"\\loc\\en-US\\dat\\AREA000.DAT")));
     Check(bof3x::ConfigLayerHasNameGrid(game, "en-US", cache), "a cache without the layer: the install's file");
 
     const std::vector<std::string> all = {"NewGameNameEntry", "CommuNameGrid", "NewGameOptions", "SunderLoop"};
@@ -1205,8 +1251,8 @@ void TestNewGame() {
               Env("BOF3X_OFF"));
     }
     ClearEnv();
-    DeleteFileW(ini.c_str());
-    DeleteFileW(first.c_str());
+    Remove(ini);
+    Remove(first);
 }
 
 // D395 (docs/known-defects.md): scale= 2..8 is named and goes to the game as
@@ -1215,7 +1261,7 @@ void TestNewGame() {
 // both "k = 2" and "follow the display".
 void TestScale() {
     const std::wstring game = Temp(L"bof3x_rf_game");
-    MakeDirs(game + L"\\DAT");
+    MakeDirs(game + P(L"\\DAT"));
     const std::wstring a = Temp(L"bof3x_config_tests_scale_a.ini"), b = Temp(L"bof3x_config_tests_scale_b.ini");
     struct Case {
         const char* line;   // the ini's scale= line, or null for none
@@ -1243,7 +1289,7 @@ void TestScale() {
               std::to_string(cfg.scale_named) + " " + std::to_string(cfg.scale));
         ClearEnv();
         bof3x::ConfigApplyEnvironment(game, cfg, false);
-        Check(c.sent ? Env("BOF3X_SCALE") == c.sent : GetEnvironmentVariableA("BOF3X_SCALE", nullptr, 0) == 0,
+        Check(c.sent ? Env("BOF3X_SCALE") == c.sent : bof3::os::GetEnv("BOF3X_SCALE", nullptr, 0) == 0,
               (what + ": BOF3X_SCALE sent as named").c_str(), Env("BOF3X_SCALE"));
         Check(bof3x::ConfigSave(b, cfg) && ReadAll(b).find(c.saved) != std::string::npos,
               (what + ": written back").c_str());
@@ -1255,7 +1301,7 @@ void TestScale() {
     cfg.scale = 4;
     cfg.scale_named = true;
     ClearEnv();
-    SetEnvironmentVariableA("BOF3X_SCALE", "3");
+    bof3::os::SetEnv("BOF3X_SCALE", "3");
     bof3x::ConfigApplyEnvironment(game, cfg, false);
     Check(Env("BOF3X_SCALE") == "3", "an environment's BOF3X_SCALE wins over scale=", Env("BOF3X_SCALE"));
     ClearEnv();
@@ -1358,11 +1404,11 @@ void TestPresetsFixture() {
 void TestPresetPlan() {
     using bof3x::Preset;
     const std::wstring pc = Temp(L"bof3x_pr_pc"), disc = Temp(L"bof3x_pr_disc");
-    MakeDirs(pc + L"\\DAT");
-    MakeDirs(pc + L"\\BGM");
-    MakeDirs(disc + L"\\DAT");
-    WriteAll(pc + L"\\BOF3.exe", "");          // an empty file: the install rules ask only that it is there
-    WriteAll(pc + L"\\BGM\\001.DAT", "");
+    MakeDirs(pc + P(L"\\DAT"));
+    MakeDirs(pc + P(L"\\BGM"));
+    MakeDirs(disc + P(L"\\DAT"));
+    WriteAll(pc + P(L"\\BOF3.exe"), "");          // an empty file: the install rules ask only that it is there
+    WriteAll(pc + P(L"\\BGM\\001.DAT"), "");
     ClearEnv();
 
     // preset= round trip, the default, an unknown value
@@ -1390,13 +1436,13 @@ void TestPresetPlan() {
     {
         bof3x::Config c;
         std::string err;
-        SetEnvironmentVariableA("BOF3X_PRESET", "playstation");
+        bof3::os::SetEnv("BOF3X_PRESET", "playstation");
         Check(bof3x::ConfigPresetFromEnvironment(c, err) && c.preset == Preset::kPlayStation,
               "BOF3X_PRESET wins over preset=");
-        SetEnvironmentVariableA("BOF3X_PRESET", "asshipped");
+        bof3::os::SetEnv("BOF3X_PRESET", "asshipped");
         Check(!bof3x::ConfigPresetFromEnvironment(c, err) && err.find("asshipped") != std::string::npos,
               "an unknown BOF3X_PRESET is refused, named", err);
-        SetEnvironmentVariableA("BOF3X_PRESET", nullptr);
+        bof3::os::SetEnv("BOF3X_PRESET", nullptr);
     }
 
     // Recommended: nothing
@@ -1477,8 +1523,8 @@ void TestPresetPlan() {
 
         ClearEnv();
         for (const char* v : {"BOF3X_PRESET", "BOF3X_FRAME_MS", "BOF3X_LAYERING", "BOF3X_BACKGROUND"})
-            SetEnvironmentVariableA(v, nullptr);
-        SetEnvironmentVariableA("BOF3X_LAYERING", "1");   // the environment's wins
+            bof3::os::SetEnv(v, nullptr);
+        bof3::os::SetEnv("BOF3X_LAYERING", "1");   // the environment's wins
         bof3x::ConfigPresetEnvironment(plan);
         Check(Env("BOF3X_PRESET") == "shipped", "BOF3X_PRESET goes to the game", Env("BOF3X_PRESET"));
         Check(Env("BOF3X_FRAME_MS") == "33.334", "an env value is set", Env("BOF3X_FRAME_MS"));
@@ -1487,13 +1533,13 @@ void TestPresetPlan() {
         Check(Env("BOF3X_SCALE") == "2" && Env("BOF3X_BACKGROUND") == "0" && Env("BOF3X_MUSIC") == "pc",
               "the launcher sends the preset's ini values", Env("BOF3X_SCALE") + Env("BOF3X_BACKGROUND") + Env("BOF3X_MUSIC"));
         Check(Env("BOF3X_OFF") == played.off, "BOF3X_OFF is the union", Env("BOF3X_OFF"));
-        SetEnvironmentVariableA("BOF3X_OFF", "Game_Clock");
+        bof3::os::SetEnv("BOF3X_OFF", "Game_Clock");
         bof3x::ConfigApplyEnvironment(pc, played, false);
         Check(Env("BOF3X_OFF") == "Game_Clock", "an environment's BOF3X_OFF wins over the preset", Env("BOF3X_OFF"));
         for (const char* v : {"BOF3X_PRESET", "BOF3X_FRAME_MS", "BOF3X_LAYERING", "BOF3X_BACKGROUND", "BOF3X_TILE1",
                               "BOF3X_LINES", "BOF3X_MUSIC_LOOPS", "BOF3X_SIDE_DUP", "BOF3X_EXEIMAGE_STRICT",
                               "BOF3X_WIDE_STAGING", "BOF3X_WIDE_HIDE", "BOF3X_FBGRAB"})
-            SetEnvironmentVariableA(v, nullptr);
+            bof3::os::SetEnv(v, nullptr);
         ClearEnv();
     }
 
@@ -1554,12 +1600,12 @@ void TestPresetPlan() {
         bof3x::Config mine = cfg;
         mine.language = "en-US";
         Check(bof3x::ConfigLanguagePlayed(disc, mine) == "original", "a language not built here plays the original");
-        WriteAll(disc + L"\\DAT\\en-US.AREA000.DAT", "");
+        WriteAll(disc + P(L"\\DAT\\en-US.AREA000.DAT"), "");
         Check(bof3x::ConfigLanguagePlayed(disc, mine) == "en-US", "a built language is played");
-        SetEnvironmentVariableA("BOF3X_LANG", "fr-FR");
+        bof3::os::SetEnv("BOF3X_LANG", "fr-FR");
         Check(bof3x::ConfigLanguagePlayed(disc, mine) == "fr-FR", "BOF3X_LANG wins");
-        SetEnvironmentVariableA("BOF3X_LANG", nullptr);
-        DeleteFileW((disc + L"\\DAT\\en-US.AREA000.DAT").c_str());
+        bof3::os::SetEnv("BOF3X_LANG", nullptr);
+        Remove((disc + P(L"\\DAT\\en-US.AREA000.DAT")));
         Check(bof3x::PresetLanguageBit("original") == bof3x::ledger::kLangOriginal &&
                   bof3x::PresetLanguageBit("de-DE") == bof3x::ledger::kLangDeDe && bof3x::PresetLanguageBit("xx") == 0,
               "the language bits");
@@ -1588,7 +1634,7 @@ void TestListedLayers() {
         Check(!bof3x::ConfigOptInstalled(game, l, cache), (std::string("listing: unlisted ") + l + " not offered").c_str());
     const std::string played = bof3x::ConfigOptPlayable(game, "psp-music,psp-snd,psp-tables", "", cache);
     Check(played == "psp-music", "listing: ConfigOptPlayable drops the unlisted layers", played);
-    DeleteFileW((cache + L"\\manifest.toml").c_str());
+    Remove((cache + P(L"\\manifest.toml")));
     Check(bof3x::ConfigOptInstalled(game, "psp-snd", cache), "no manifest: the tree is its own evidence, as before");
 }
 
@@ -1608,7 +1654,7 @@ void TestMusicOnly() {
     cfg.cache = bof3x::ConfigToUtf8(cache);
     cfg.opt = "psp-music,psp-snd,psp-chord-one-tone";
     ClearEnv();
-    SetEnvironmentVariableA("BOF3X_CACHE_DATA", "0");
+    bof3::os::SetEnv("BOF3X_CACHE_DATA", "0");
     Check(bof3x::ConfigCacheDataRoot(cfg).empty() && bof3x::ConfigCacheRoot(cfg) == cache,
           "music only: no data root, the cache root kept");
     bof3x::ConfigApplyEnvironment(game, cfg, false);
@@ -1680,7 +1726,7 @@ void TestChordRoundTrip() {
 // a BOF3X_WIDE already set (the run tools' --wide) wins over the ini.
 void TestWide() {
     const std::wstring a = Temp(L"bof3x_config_tests_wide.ini"), game = Temp(L"bof3x_wide_game");
-    MakeDirs(game + L"\\DAT");
+    MakeDirs(game + P(L"\\DAT"));
     std::string err;
     for (int v = 0; v <= 2; ++v) {
         WriteAll(a, "[bof3x]\r\nwide=" + std::to_string(v) + "\r\n");
@@ -1688,10 +1734,10 @@ void TestWide() {
         Check(bof3x::ConfigLoad(a, c, err) && err.empty() && c.wide == v, "wide= read", std::to_string(c.wide));
         Check(bof3x::ConfigSave(a, c), "save");
         Check(ReadAll(a).find("\r\nwide=" + std::to_string(v) + "\r\n") != std::string::npos, "the wide= line written");
-        SetEnvironmentVariableA("BOF3X_WIDE", nullptr);
+        bof3::os::SetEnv("BOF3X_WIDE", nullptr);
         bof3x::ConfigApplyEnvironment(game, c, false);
         Check(Env("BOF3X_WIDE") == (v == 0 ? "" : std::to_string(v)), "BOF3X_WIDE from wide=", Env("BOF3X_WIDE"));
-        SetEnvironmentVariableA("BOF3X_WIDE", "0");
+        bof3::os::SetEnv("BOF3X_WIDE", "0");
         bof3x::ConfigApplyEnvironment(game, c, false);
         Check(Env("BOF3X_WIDE") == "0", "a BOF3X_WIDE already set is kept", Env("BOF3X_WIDE"));
     }
@@ -1701,9 +1747,9 @@ void TestWide() {
         Check(bof3x::ConfigLoad(a, c, err) && c.wide == 0, (std::string("wide=") + bad + " is the default").c_str(),
               std::to_string(c.wide));
     }
-    SetEnvironmentVariableA("BOF3X_WIDE", nullptr);
+    bof3::os::SetEnv("BOF3X_WIDE", nullptr);
     ClearEnv();
-    DeleteFileW(a.c_str());
+    Remove(a);
 }
 
 // DIV-0230, the in-between frame (docs/frame-interpolation.md): interp= 0 or 1
@@ -1712,7 +1758,7 @@ void TestWide() {
 // default; a BOF3X_INTERP already set (a run tool's --env) wins over the ini.
 void TestInterp() {
     const std::wstring a = Temp(L"bof3x_config_tests_interp.ini"), game = Temp(L"bof3x_interp_game");
-    MakeDirs(game + L"\\DAT");
+    MakeDirs(game + P(L"\\DAT"));
     std::string err;
     for (int v = 0; v <= 1; ++v) {
         WriteAll(a, "[bof3x]\r\ninterp=" + std::to_string(v) + "\r\n");
@@ -1722,10 +1768,10 @@ void TestInterp() {
         Check(bof3x::ConfigSave(a, c), "save");
         Check(ReadAll(a).find("\r\ninterp=" + std::to_string(v) + "\r\n") != std::string::npos,
               "the interp= line written");
-        SetEnvironmentVariableA("BOF3X_INTERP", nullptr);
+        bof3::os::SetEnv("BOF3X_INTERP", nullptr);
         bof3x::ConfigApplyEnvironment(game, c, false);
         Check(Env("BOF3X_INTERP") == (v == 0 ? "" : "1"), "BOF3X_INTERP from interp=", Env("BOF3X_INTERP"));
-        SetEnvironmentVariableA("BOF3X_INTERP", "0");
+        bof3::os::SetEnv("BOF3X_INTERP", "0");
         bof3x::ConfigApplyEnvironment(game, c, false);
         Check(Env("BOF3X_INTERP") == "0", "a BOF3X_INTERP already set is kept", Env("BOF3X_INTERP"));
     }
@@ -1738,9 +1784,9 @@ void TestInterp() {
         Check(bof3x::ConfigLoad(a, c, err) && !c.interp, (std::string("interp=") + bad + " is the default").c_str(),
               std::to_string(c.interp));
     }
-    SetEnvironmentVariableA("BOF3X_INTERP", nullptr);
+    bof3::os::SetEnv("BOF3X_INTERP", nullptr);
     ClearEnv();
-    DeleteFileW(a.c_str());
+    Remove(a);
 }
 
 // Finding 7: psp= checked up front by the DLL's rule, as opt= is.
@@ -1763,37 +1809,37 @@ void TestPspValid() {
 // the default is never written to the ini. ffmpeg= round-trips.
 void TestHomeDefaults() {
     const std::wstring home = Temp(L"bof3x_home_test");
-    SetEnvironmentVariableW(L"BOF3X_HOME", home.c_str());
+    bof3::os::SetEnvW(L"BOF3X_HOME", home.c_str());
     // a previous run's folders, removed so the home starts empty
-    DeleteFileW((home + L"\\cache\\manifest.toml").c_str());
-    DeleteFileW((home + L"\\bof3x.ini").c_str());
-    for (const wchar_t* dir : {L"\\cache", L"\\game\\DAT", L"\\game"}) RemoveDirectoryW((home + dir).c_str());
-    CreateDirectoryW(home.c_str(), nullptr);
+    Remove((home + P(L"\\cache\\manifest.toml")));
+    Remove((home + P(L"\\bof3x.ini")));
+    for (const wchar_t* dir : {L"\\cache", L"\\game\\DAT", L"\\game"}) Remove(home + P(dir));   // an empty folder
+    MakeDir(home);
     ClearEnv();
     bof3x::Config cfg;
     Check(bof3x::HomeDir() == home, "BOF3X_HOME names the home", bof3x::ConfigToUtf8(bof3x::HomeDir()));
     Check(bof3x::HomeCacheDefault().empty() && bof3x::HomeGameDefault().empty(), "an empty home: no default");
     Check(bof3x::ConfigCacheRoot(cfg).empty(), "an empty home: no cache");
-    CreateDirectoryW((home + L"\\cache").c_str(), nullptr);
+    MakeDir((home + P(L"\\cache")));
     Check(bof3x::HomeCacheDefault().empty(), "cache\\ without manifest.toml: no default");
-    WriteAll(home + L"\\cache\\manifest.toml", "[meta]\n");
-    CreateDirectoryW((home + L"\\game").c_str(), nullptr);
-    CreateDirectoryW((home + L"\\game\\DAT").c_str(), nullptr);
-    Check(bof3x::HomeGameDefault() == home + L"\\game", "game\\DAT: the home's game folder");
-    Check(bof3x::ConfigCacheRoot(cfg) == home + L"\\cache", "no env, no ini: the home's cache");
+    WriteAll(home + P(L"\\cache\\manifest.toml"), "[meta]\n");
+    MakeDir((home + P(L"\\game")));
+    MakeDir((home + P(L"\\game\\DAT")));
+    Check(bof3x::HomeGameDefault() == home + P(L"\\game"), "game\\DAT: the home's game folder");
+    Check(bof3x::ConfigCacheRoot(cfg) == home + P(L"\\cache"), "no env, no ini: the home's cache");
     const std::wstring game = Temp(L"bof3x_home_game");
     bof3x::ConfigApplyEnvironment(game, cfg, false);
-    Check(Env("BOF3X_CACHE") == bof3x::ConfigToUtf8(home + L"\\cache"), "the game is given the home's cache",
+    Check(Env("BOF3X_CACHE") == bof3x::ConfigToUtf8(home + P(L"\\cache")), "the game is given the home's cache",
           Env("BOF3X_CACHE"));
     ClearEnv();
     cfg.cache = "C:\\elsewhere";
     Check(bof3x::ConfigCacheRoot(cfg) == L"C:\\elsewhere", "the ini's cache= wins");
-    SetEnvironmentVariableW(L"BOF3X_CACHE", L"D:\\env");
+    bof3::os::SetEnvW(L"BOF3X_CACHE", L"D:\\env");
     Check(bof3x::ConfigCacheRoot(cfg) == L"D:\\env", "BOF3X_CACHE wins");
     ClearEnv();
     cfg.cache.clear();
     cfg.ffmpeg = "C:\\tools\\ffmpeg.exe";
-    const std::wstring ini = home + L"\\bof3x.ini";
+    const std::wstring ini = home + P(L"\\bof3x.ini");
     Check(bof3x::ConfigSave(ini, cfg), "save");
     const std::string text = ReadAll(ini);
     Check(text.find("\r\ncache=\r\n") != std::string::npos, "the home's cache is not written to the ini");
@@ -1805,7 +1851,7 @@ void TestHomeDefaults() {
     // must not name "original": the disc-only install it builds would refuse it.
     Check(text.find("\r\nlanguage=") == std::string::npos && !back.language_named,
           "an unchosen language is not written");
-    SetEnvironmentVariableW(L"BOF3X_HOME", nullptr);
+    bof3::os::SetEnvW(L"BOF3X_HOME", nullptr);
 }
 
 // The row above the text (docs/mods.md 5): ruby= read, saved, and composed into
@@ -1818,11 +1864,11 @@ void TestHomeDefaults() {
 void TestFnKeys() {
     namespace in = bof3x::input;
     const std::wstring a = Temp(L"bof3x_config_tests_fkeys.ini"), game = Temp(L"bof3x_fkeys_game");
-    MakeDirs(game + L"\\DAT");
+    MakeDirs(game + P(L"\\DAT"));
     std::string err;
     const auto Sent = [&](const bof3x::Config& c) {
         ClearEnv();
-        SetEnvironmentVariableA("BOF3X_FKEYS", nullptr);
+        bof3::os::SetEnv("BOF3X_FKEYS", nullptr);
         bof3x::ConfigApplyEnvironment(game, c, false);
         return Env("BOF3X_FKEYS");
     };
@@ -1881,16 +1927,16 @@ void TestFnKeys() {
           "on R: ruby_key= kept, BOF3X_FKEYS carries R", Env("BOF3X_FKEYS"));
     // An environment's BOF3X_FKEYS wins, as for the others.
     ClearEnv();
-    SetEnvironmentVariableA("BOF3X_FKEYS", "fkey.speed=F2");
+    bof3::os::SetEnv("BOF3X_FKEYS", "fkey.speed=F2");
     bof3x::ConfigApplyEnvironment(game, c, false);
     Check(Env("BOF3X_FKEYS") == "fkey.speed=F2", "an environment's BOF3X_FKEYS wins");
-    SetEnvironmentVariableA("BOF3X_FKEYS", nullptr);
+    bof3::os::SetEnv("BOF3X_FKEYS", nullptr);
     ClearEnv();
 }
 
 void TestRuby() {
     const std::wstring game = Temp(L"bof3x_ruby_game");
-    MakeDirs(game + L"\\DAT");
+    MakeDirs(game + P(L"\\DAT"));
     const std::string manifest =
         std::string("[meta]\ntarget = \"pc-zh\"\n\n[cache]\nassets = [\n  [\"A.DAT\", 0, \"base\", \"pc-zh:chunk\", \"h\"],\n]\n") +
         "opt = [\n  [\"AREA004.DAT\", \"opt/area4-walls\", 0, \"psx-us:copy\", \"h\"],\n"
@@ -1901,12 +1947,12 @@ void TestRuby() {
                                           {"ruby-en-US-ja-JP", L"dat"}, {"ruby-de-DE-ja-JP", L"dat"}},
                                          manifest.c_str());
     for (const wchar_t* tag : {L"ja-JP", L"en-US", L"de-DE"}) {
-        MakeDirs(cache + L"\\loc\\" + tag + L"\\dat");
-        WriteAll(cache + L"\\loc\\" + tag + L"\\dat\\AREA000.DAT", "");
+        MakeDirs(cache + P(L"\\loc\\") + tag + P(L"\\dat"));
+        WriteAll(cache + P(L"\\loc\\") + tag + P(L"\\dat\\AREA000.DAT"), "");
     }
     const std::wstring home = Temp(L"bof3x_ruby_home");
     MakeDirs(home);
-    WriteAll(home + L"\\mods.toml",
+    WriteAll(home + P(L"\\mods.toml"),
              "# test\n\n[[mod]]\nid = \"furigana\"\nname = \"Japanese (Furigana)\"\nversion = \"0.1.0\"\n"
              "kind = \"reading-row\"\nrequires = [\"ja-JP\"]\nbase = \"ja-JP\"\nreadings = \"readings.toml\"\n\n"
              "[[mod]]\nid = \"pinyin\"\nname = \"Caf\\u00e9 \\\"test\\\"\"\nversion = \"2.0\"\nkind = \"reading-row\"\n"
@@ -1958,7 +2004,7 @@ void TestRuby() {
         Check(Env("BOF3X_OPT") == k.want, k.what, Env("BOF3X_OPT"));
     }
     ClearEnv();
-    SetEnvironmentVariableA("BOF3X_OPT", "psp-art");
+    bof3::os::SetEnv("BOF3X_OPT", "psp-art");
     cfg.language = "ja-JP";
     cfg.ruby = "furigana";
     bof3x::ConfigApplyEnvironment(game, cfg, false);
@@ -2005,7 +2051,7 @@ void TestRuby() {
         Check(Env("BOF3X_RUBY_KEY") == k.want, "  handed to the game as BOF3X_RUBY_KEY", Env("BOF3X_RUBY_KEY"));
     }
     ClearEnv();
-    SetEnvironmentVariableA("BOF3X_RUBY_KEY", "f2");
+    bof3::os::SetEnv("BOF3X_RUBY_KEY", "f2");
     bof3x::Config ke;
     ke.ruby_key = "none";
     bof3x::ConfigApplyEnvironment(game, ke, false);
@@ -2043,7 +2089,7 @@ void TestRuby() {
     }
     const std::wstring other = Temp(L"bof3x_ruby_home_other");
     MakeDirs(other);
-    WriteAll(other + L"\\mods.toml", "[[mod]]\nid = \"x\"\nname = \"X\"\nversion = \"1\"\nkind = \"art\"\n");
+    WriteAll(other + P(L"\\mods.toml"), "[[mod]]\nid = \"x\"\nname = \"X\"\nversion = \"1\"\nkind = \"art\"\n");
     bof3x::Config uo;
     bof3x::ConfigRubyUiDefault(uo, other);
     Check(bof3x::ConfigModsInstalled(other).size() == 1 && !uo.ruby_ui, "a mod of another kind installed: the toggle stays off");
@@ -2061,7 +2107,42 @@ void TestRuby() {
               Env("BOF3X_OPT"));
     }
     ClearEnv();
-    DeleteFileW(a.c_str());
+    Remove(a);
+}
+
+// The windowless launcher's --set (ConfigSetLine, launcher/headless.cpp): a
+// setting changed as its line of bof3x.ini would be, refused when the key is
+// none of the file's or the value is not one it takes; and the text ConfigSave
+// writes is ConfigText's.
+void TestSetLine() {
+    bof3x::Config cfg;
+    std::string why;
+    Check(bof3x::ConfigSetLine(cfg, "filter", "point", why) && cfg.filter == bof3x::Filter::kPoint, "--set filter=point",
+          why);
+    Check(bof3x::ConfigSetLine(cfg, " wide ", " 2 ", why) && cfg.wide == 2, "--set wide=2, key and value trimmed", why);
+    Check(bof3x::ConfigSetLine(cfg, "opt", "psp-art,area4-walls", why) && cfg.opt == "psp-art,area4-walls",
+          "--set opt= a list", why);
+    Check(bof3x::ConfigSetLine(cfg, "opt", "", why) && cfg.opt.empty(), "--set opt= empty", why);
+    Check(bof3x::ConfigSetLine(cfg, "cheat.exp", "4", why) && cfg.cheats.exp == 4, "--set cheat.exp=4", why);
+    Check(bof3x::ConfigSetLine(cfg, "language", "en-US", why) && cfg.language == "en-US" && cfg.language_named,
+          "--set language=en-US", why);
+    const bof3x::Config before = cfg;
+    Check(!bof3x::ConfigSetLine(cfg, "filter", "blurry", why) && !why.empty() && cfg.filter == bof3x::Filter::kPoint,
+          "--set filter=blurry refused, the setting kept", why);
+    Check(!bof3x::ConfigSetLine(cfg, "no_such_key", "1", why) && why.find("no setting") != std::string::npos,
+          "--set of a key bof3x.ini has not refused", why);
+    Check(!bof3x::ConfigSetLine(cfg, "language", "en", why) && why.find("DIV-0005") != std::string::npos &&
+              cfg.language == "en-US",
+          "--set language=en (retired) refused with its tag", why);
+    Check(!bof3x::ConfigSetLine(cfg, "wide", "9", why) && cfg.wide == 2, "--set wide=9 refused", why);
+    Check(bof3x::ConfigText(cfg) == bof3x::ConfigText(before), "a refused --set changes nothing");
+    const std::wstring ini = Temp(L"bof3x_config_tests_set.ini");
+    Check(bof3x::ConfigSave(ini, cfg) && ReadAll(ini) == bof3x::ConfigText(cfg), "ConfigSave writes ConfigText");
+    bof3x::Config back;
+    Check(bof3x::ConfigLoad(ini, back, why) && back.filter == bof3x::Filter::kPoint && back.wide == 2 &&
+              back.cheats.exp == 4,
+          "the --set values read back from the file");
+    Remove(ini);
 }
 
 int main() {
@@ -2110,6 +2191,8 @@ int main() {
     TestRuby();
     std::printf("the function keys (fkey., fpad., BOF3X_FKEYS)\n");
     TestFnKeys();
+    std::printf("--set (the launcher with no window)\n");
+    TestSetLine();
     std::printf("%d checks, %d failures\n", g_checks, g_failures);
     return g_failures ? 1 : 0;
 }
