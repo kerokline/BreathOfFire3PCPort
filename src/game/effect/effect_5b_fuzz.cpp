@@ -18,6 +18,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "common/strto32.h"
 #include "game/effect_5b_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"
@@ -443,7 +444,7 @@ void SelfTest() {
     sh::Group g = {"effect_5b", chosen, n, kCallees, sizeof kCallees / sizeof kCallees[0], kTables,
                    sizeof kTables / sizeof kTables[0], kRegions, sizeof kRegions / sizeof kRegions[0],
                    [](unsigned k) { Seed(s_index[k]); }, &Disturb,
-                   rounds && *rounds ? static_cast<unsigned>(std::strtoul(rounds, nullptr, 0)) : 4000u};
+                   rounds && *rounds ? static_cast<unsigned>(bof3::StrToUL32(rounds, nullptr, 0)) : 4000u};
     g.args = [](unsigned k, U* a) { Args(s_index[k], a); };
     g.effect = true;
     g.kinds = kKinds;

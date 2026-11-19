@@ -17,6 +17,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "common/strto32.h"
 #include "game/record_views.h"
 #include "game/effect_4a_callees.h"
 #include "game/move_script_bytes.h"
@@ -255,7 +256,7 @@ void SelfTest() {
     sh::Group g = {"effect_4a", chosen, n, kCallees, sizeof kCallees / sizeof kCallees[0], kTables,
                    sizeof kTables / sizeof kTables[0], kRegions, sizeof kRegions / sizeof kRegions[0],
                    &Seed, &Disturb,
-                   rounds && *rounds ? static_cast<unsigned>(std::strtoul(rounds, nullptr, 0)) : 4000u};
+                   rounds && *rounds ? static_cast<unsigned>(bof3::StrToUL32(rounds, nullptr, 0)) : 4000u};
     g.effect = true;
     g.kinds = kKinds;
     g.n_kinds = sizeof kKinds;

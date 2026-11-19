@@ -14,6 +14,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "common/strto32.h"
 #include "game/record_views.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"
@@ -616,7 +617,7 @@ void SelfTest() {
     sh::Group g = {"rest_1g", chosen, n, kCallees, sizeof kCallees / sizeof kCallees[0], kTables,
                    sizeof kTables / sizeof kTables[0], kRegions, sizeof kRegions / sizeof kRegions[0],
                    [](unsigned k) { Seed(s_index[k]); }, &Disturb,
-                   rounds && *rounds ? static_cast<unsigned>(std::strtoul(rounds, nullptr, 10)) : 6000u};
+                   rounds && *rounds ? static_cast<unsigned>(bof3::StrToUL32(rounds, nullptr, 10)) : 6000u};
     g.args = [](unsigned k, U* a) { Args(s_index[k], a); };
     g.field = true;
     g.sprite_span = 7;   // +1..+4 below Fish_States' 7, which Fish_RunAll reads after a call

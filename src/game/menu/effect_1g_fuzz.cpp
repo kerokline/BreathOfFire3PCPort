@@ -26,6 +26,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "common/strto32.h"
 #include "game/effect_1g.h"
 #include "game/effect_1g_callees.h"
 #include "game/move_script_bytes.h"
@@ -312,12 +313,12 @@ void SelfTest() {
     unsigned first = 0, count = kCount, rounds = 6000;
     if (const char* only = std::getenv("BOF3X_E1G_ONLY")) {
         char* end = nullptr;
-        first = static_cast<unsigned>(std::strtoul(only, &end, 10));
-        if (end && *end == ',') count = static_cast<unsigned>(std::strtoul(end + 1, nullptr, 10));
+        first = static_cast<unsigned>(bof3::StrToUL32(only, &end, 10));
+        if (end && *end == ',') count = static_cast<unsigned>(bof3::StrToUL32(end + 1, nullptr, 10));
         if (first >= kCount) first = kCount - 1;
         if (count == 0 || first + count > kCount) count = kCount - first;
     }
-    if (const char* r = std::getenv("BOF3X_E1G_ROUNDS")) rounds = static_cast<unsigned>(std::strtoul(r, nullptr, 10));
+    if (const char* r = std::getenv("BOF3X_E1G_ROUNDS")) rounds = static_cast<unsigned>(bof3::StrToUL32(r, nullptr, 10));
     g_first = first;
     sh::Group group = {"effect_1g", kClones + first, count, kCallees, sizeof kCallees / sizeof kCallees[0],
                        kTables, sizeof kTables / sizeof kTables[0], kRegions, sizeof kRegions / sizeof kRegions[0],

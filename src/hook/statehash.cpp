@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "bof3/symbols.gen.h"
+#include "common/strto32.h"
 #include "hook/bind.h"
 #include "hook/exe_layout.h"
 #include "hook/input_script.h"
@@ -807,7 +808,7 @@ bool StateHash_Start() {
     if (dn > 0) {
         for (char* p = dump; *p;) {
             char* end = nullptr;
-            const unsigned long t = std::strtoul(p, &end, 0);
+            const std::uint32_t t = bof3::StrToUL32(p, &end, 0);
             if (end == p) Fatal("BOF3X_STATEHASH_DUMP: wants ticks separated by commas, got '%s'", dump);
             g_dump_ticks.push_back(static_cast<std::uint32_t>(t));
             p = *end == ',' ? end + 1 : end;

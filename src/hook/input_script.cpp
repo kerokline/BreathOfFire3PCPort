@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "bof3/symbols.gen.h"
+#include "common/strto32.h"
 #include "game/crt_rest.h"
 #include "game/game_clock.h"
 #include "game/platform/game_window.h"
@@ -213,7 +214,7 @@ std::vector<std::string> Split(const std::string& s) {
 
 unsigned Number(int line, const std::string& tok) {
     char* end = nullptr;
-    unsigned long v = std::strtoul(tok.c_str(), &end, 0);
+    std::uint32_t v = bof3::StrToUL32(tok.c_str(), &end, 0);
     if (tok.empty() || *end) ParseError(line, "not a number", tok);
     return static_cast<unsigned>(v);
 }

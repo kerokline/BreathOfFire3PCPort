@@ -3,13 +3,16 @@
 // with the system compiler on Linux (src/os/posix) and with llvm-mingw on
 // Windows (src/os/win32), both in CI. See tools/os_host/CMakeLists.txt.
 #include "common/sha256.h"
+#include "common/strto32.h"
 #include "os/os.h"
 
 #include <atomic>
+#include <cerrno>
 #include <chrono>
 #include <ctime>
 #include <filesystem>
 #include <fstream>
+#include <iterator>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -402,6 +405,56 @@ void TestSha256() {
           hex == "cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0");
     CHECK(!bof3x::Sha256Hex(os::Path((dir + "/none").c_str()).wstring().c_str(), hex, why) && !why.empty());
     fs::remove_all(os::Path(dir.c_str()), ec);
+}
+
+// common/strto32.h: one text, one 32-bit answer on every width. The table is
+// what a 32-bit `long` library returns (held to std::strtol / std::strtoul
+// themselves where `long` is 32 bits, which is every Windows build); the
+// narrowing a 64-bit `long` build takes is run here on strtoll / strtoull's
+// results, so a Windows run checks the Linux path's arithmetic too.
+void TestStrTo32() {
+    struct Signed { const char* text; int base; std::int32_t want; };
+    const Signed kSigned[] = {
+        {"0", 10, 0}, {"10", 10, 10}, {"-7", 10, -7}, {"  42", 10, 42}, {"2147483647", 10, INT32_MAX},
+        {"2147483648", 10, INT32_MAX}, {"-2147483648", 10, INT32_MIN}, {"-2147483649", 10, INT32_MIN},
+        {"4294967298", 10, INT32_MAX}, {"-4294967298", 10, INT32_MIN}, {"99999999999999", 10, INT32_MAX},
+        {"99999999999999999999999", 10, INT32_MAX}, {"0x7FFFFFFF", 0, INT32_MAX}, {"0x100000002", 0, INT32_MAX},
+        {"12abc", 10, 12}, {"", 10, 0}, {"x", 10, 0},
+    };
+    for (const Signed& c : kSigned) {
+        char *end = nullptr, *wide_end = nullptr, *lib_end = nullptr;
+        CHECK(bof3::StrToL32(c.text, &end, c.base) == c.want);
+        CHECK(bof3::Narrow32(std::strtoll(c.text, &wide_end, c.base)) == c.want);
+        CHECK(end == wide_end);
+        if (sizeof(long) == 4) {
+            CHECK(static_cast<std::int32_t>(std::strtol(c.text, &lib_end, c.base)) == c.want);
+            CHECK(end == lib_end);
+        }
+    }
+    struct Unsigned { const char* text; int base; std::uint32_t want; };
+    const Unsigned kUnsigned[] = {
+        {"0", 10, 0}, {"10", 10, 10}, {"4294967295", 10, UINT32_MAX}, {"4294967296", 10, UINT32_MAX},
+        {"4294967298", 10, UINT32_MAX}, {"99999999999999", 10, UINT32_MAX}, {"99999999999999999999999", 10, UINT32_MAX},
+        {"-0", 10, 0}, {"-1", 10, UINT32_MAX}, {"-2", 10, 0xFFFFFFFEu}, {" \t-2", 10, 0xFFFFFFFEu},
+        {"-4294967295", 10, 1}, {"-4294967296", 10, UINT32_MAX}, {"-4294967298", 10, UINT32_MAX},
+        {"-99999999999999999999999", 10, UINT32_MAX}, {"FFFFFFFF", 16, UINT32_MAX}, {"100000002", 16, UINT32_MAX},
+        {"0x4A7F10", 0, 0x4A7F10}, {"12,13", 10, 12}, {"", 10, 0}, {"-", 10, 0},
+    };
+    for (const Unsigned& c : kUnsigned) {
+        char *end = nullptr, *wide_end = nullptr, *lib_end = nullptr;
+        CHECK(bof3::StrToUL32(c.text, &end, c.base) == c.want);
+        errno = 0;
+        const unsigned long long wide = std::strtoull(c.text, &wide_end, c.base);
+        const bool overflowed = errno == ERANGE;
+        CHECK(bof3::NarrowU32(wide, bof3::StrToMinus(c.text), overflowed) == c.want);
+        CHECK(end == wide_end);
+        if (sizeof(unsigned long) == 4) {
+            CHECK(static_cast<std::uint32_t>(std::strtoul(c.text, &lib_end, c.base)) == c.want);
+            CHECK(end == lib_end);
+        }
+    }
+    std::printf("strto32: %zu signed and %zu unsigned texts give the 32-bit library's answers (long is %zu bytes here)\n",
+                std::size(kSigned), std::size(kUnsigned), sizeof(long));
 }
 
 // The search with a handle (os/find.h) and the two stream questions
@@ -1333,6 +1386,7 @@ int main() {
     TestClocks();
     TestEnvironment();
     TestSha256();
+    TestStrTo32();
     TestHeapArena();
     TestUtf8Paths();
     TestR1Harness();
