@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Which source files compile for x86-64 Linux today (docs/linux-round.md, unit LB0).
 
-Every `.cpp` under src/ but the launcher's, the Win32 backend's and the fuzz files (`*_fuzz.cpp`: the 64-bit host
+Every `.cpp` under src/ but the launcher's window files (SKIP), the Win32 backend's and the fuzz files (`*_fuzz.cpp`: the 64-bit host
 drops them, CMakeLists.txt, and a Linux build is the 64-bit host) and the Windows-only files by design
 (WINDOWS_ONLY below, each with its reason) is compiled `-fsyntax-only` for
 `x86_64-linux-gnu` with clang, with no stub for any Windows header: a file that needs one fails on the include,
@@ -35,7 +35,11 @@ import argparse, collections, concurrent.futures, glob, os, re, subprocess, sys,
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 LIST = 'analysis/linux_tree.tsv'
-SKIP = ('src/launcher/', 'src/os/win32/')
+# The launcher's windows (the Win32 dialogs, and launcher.cpp, the window half of its start): its settings model,
+# the start of the game with no window (start.cpp) and the windowless main (headless.cpp) are compiled
+# (docs/launcher-portable.md, stage P0; the Linux round's C7).
+SKIP = ('src/os/win32/', 'src/launcher/config_dialog.cpp', 'src/launcher/sources_dialog.cpp',
+        'src/launcher/save_dialog.cpp', 'src/launcher/music_player.cpp', 'src/launcher/launcher.cpp')
 # Files that are Windows files by design and leave the Linux source list (docs/linux-round.md, "The 38 files, staged
 # as one round"): exact names, one reason each. Not compiled; --check and --write do not list them.
 WINDOWS_ONLY = (
@@ -68,6 +72,9 @@ def gen_headers(work):
     run('tools/gen_symbols.py', '--toml', 'symbols.toml', '--out', os.path.join(gen, 'bof3', 'symbols.gen.h'),
         '--bind-out', os.path.join(gen, 'bof3', 'bind.gen.h'))
     run('tools/gen_rebase.py', '--pointers', 'recipes/exe-pointers.tsv', '--out', os.path.join(gen, 'bof3', 'rebase.gen.h'))
+    # the launcher's suites (CMakeLists.txt bof3x_suites): its settings model and the start compile here since C7
+    os.makedirs(os.path.join(gen, 'launcher'), exist_ok=True)
+    run('tools/suites.py', 'gen', '--out', os.path.join(gen, 'launcher', 'suites.gen.h'))
     # CMake's configure_file of src/version.h.in (snapshot.cpp reads the tag): the numbers do not matter to a compile.
     with open(os.path.join(ROOT, 'src', 'version.h.in'), encoding='utf-8') as f:
         text = re.sub(r'@PROJECT_VERSION_(MAJOR|MINOR|PATCH)@', '0', f.read())
