@@ -427,3 +427,68 @@ the player's files. The one data repair it applies, the logo movie, is
 DIV-0001's own command. Precedent: the launcher's settings dialog and the
 Jukebox got no entry of their own; the suites did (DIV-0107) because they
 change what the game plays. So no new entry.
+
+## 9. The importer under a system Python (Linux)
+
+The Linux release has no bundled interpreter: the importer runs under the
+system's Python 3.11 or later (`tomllib`) with the packages of
+[`tools/requirements.txt`](../tools/requirements.txt), kept in `tools/` so the
+release script ships it beside the importer.
+
+```
+python3 -m venv .venv && .venv/bin/pip install -r tools/requirements.txt
+.venv/bin/python tools/importer.py setup --home HOME
+```
+
+**What it needs** (measured 2026-11-19 by an `ast` walk of every `import`,
+at any depth, from `importer.py`, `player_sources.py`, `mods.py` and the
+scripts they run by path: `loc_build.py`, `ruby_build.py`,
+`disc_patch_build.py`, `table_edit_build.py`; 35 of our modules):
+
+| Import | Package, pinned | Where | File |
+|---|---|---|---|
+| `PIL` | pillow 12.0.0 | `loc_build.py`, `font_pc.py` | `requirements.txt` |
+| `capstone` | capstone 5.0.9 | `exe_tables.py`, `exe_imm.py` | `requirements.txt` |
+| `numpy` | numpy 2.2.6 | `at3.py recipe` only | `requirements-extra.txt` |
+| `sudachipy` | sudachipy 0.6.11, sudachidict-core 20260723 | `ruby_build.py` (a reading-row mod) | `requirements-extra.txt` |
+| `ahocorasick` | pyahocorasick 2.3.1 | `exe_twins.py` (recipe generators) | `requirements-extra.txt` |
+| `inventory` | none: the sibling checkout's `tools/bgm/` | `seq.py verify` | - |
+
+The pins are the versions on the owner's machine, which are also the Windows
+release's wheels (`make_release.py` `WHEELS`). numpy is in the Windows bundle
+but not in `requirements.txt`: no command of `importer.py` or
+`player_sources.py` reaches it, only `python tools/at3.py recipe`. numpy 2.2.6
+has wheels for CPython 3.10 to 3.13 only. Under 3.14, pip builds it from
+source, and that needs the Python headers.
+
+**Measured in the WSL** (Ubuntu, CPython 3.14.4, `uv` 0.13.7, no root):
+`uv venv` and `uv pip install -r tools/requirements.txt` installed pillow
+12.0.0 and capstone 5.0.9 from wheels. With `requirements-extra.txt` the
+install stopped at numpy 2.2.6 (meson: "Python dependency not found", no
+headers); without its numpy line the other three installed from wheels.
+Then `importer.py --help` gave
+the same text as on Windows. `identify --json` on eight paths that hold no
+game data (nothing there, an empty folder, a text file, a `.cue` whose `.bin`
+is missing, a `.zip` with no disc, a folder with a stand-in `BOF3.EXE`, that
+file alone, a folder with a name outside ASCII) gave the same rows as on
+Windows, with only the paths different. `importer.py check` and `mods.py
+selftest` gave 0 errors. No `setup` was run: that needs game data.
+
+**What is Windows's, and what it does on Linux:**
+
+- `_winapi.CreateJunction` (`disc_patch_build._link_dir`): on Linux the
+  import fails and a symbolic link is made. `_unlink_dir` now removes that
+  link. Before this change, `rmdir` and `rmtree` both refused it, so it stayed.
+- A PC game folder copied on Linux can spell its names in lower case
+  (`dat/area000.dat`). `identify` reads any case already
+  (`region_diff.tree_files`), and `copy_pc` / `lay_out_pc` write upper case.
+  `importer.PcSource` and `build_languages`, and the mods' text build against
+  the PC (`disc_patch_build.run_loc`), now find each file in any case
+  (`importer.in_any_case`). On Windows these find the same paths as before.
+- The MCI path-length warning comes only on Windows. The "no ffmpeg" message
+  links to ffmpeg's builds for this system.
+- External programs: ffmpeg (`--ffmpeg`, then `BOF3X_FFMPEG`, then the
+  `PATH` by `shutil.which`); the player's font upscaler command
+  (`loc_build.py`, split by `shlex` in POSIX mode off Windows); every other
+  child process is `sys.executable` running one of our scripts. `.7z` is read
+  by `sevenzip.py` in Python, and no 7-Zip program is started.

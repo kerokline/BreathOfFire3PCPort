@@ -494,8 +494,8 @@ def write_image_part(cache, root, layer, changes, where, skip=(), cat=None):
         with open(os.path.join(exe, "tables", "tables.toml"), "rb") as f:
             rows = sorted(tomllib.load(f)["tables"], key=lambda r: r[1])
     except (OSError, KeyError, tomllib.TOMLDecodeError):
-        raise Bad("this install's game data has no table files (base\\exe\\tables): it was built by an older "
-                  "release. Build the install again on the Sources page")
+        raise Bad("this install's game data has no table files (%s): it was built by an older "
+                  "release. Build the install again on the Sources page" % os.path.join("base", "exe", "tables"))
     classes = sorted((r[0], r[1], r[2]) for r in image["ranges"])
     bodies, cells, raw, kept = {}, collections.defaultdict(set), [], 0
     for pc in sorted(changes):
@@ -1071,9 +1071,12 @@ def _link_dir(src, dst):
 
 def _unlink_dir(dst):
     try:
-        os.rmdir(dst)           # a junction or a link: the name alone
+        os.rmdir(dst)           # a junction or a link: the name alone (Windows)
     except OSError:
-        shutil.rmtree(dst, ignore_errors=True)
+        if os.path.islink(dst):
+            os.unlink(dst)      # a symbolic link off Windows: rmdir refuses it and rmtree will not follow it
+        else:
+            shutil.rmtree(dst, ignore_errors=True)
 
 
 def run_loc(mode, tag, build_id, orig_path, patched_path, cache, pc_rows, work, enemy_names, say, warp_lba=None,
@@ -1109,14 +1112,15 @@ def run_loc(mode, tag, build_id, orig_path, patched_path, cache, pc_rows, work, 
             if pc is None:
                 raise Bad("the install's %s text was built against the PC game, and the source list has no PC game "
                           "folder to build it against again" % tag)
-            exe = os.path.join(pc["path"], "BOF3.exe")
+            exe = importer.in_any_case(pc["path"], "BOF3.exe")
             if not os.path.isfile(exe):
                 raise Bad("%s is not there" % exe)
             game = os.path.join(work, "game")
             os.makedirs(os.path.join(game, "DAT"))
             importer._place(exe, os.path.join(game, "BOF3.exe"))
+            pc_dat = importer.in_any_case(pc["path"], "DAT")
             for name in importer._manifest_rows("fixtures/pc-zh.DAT.files.tsv"):
-                importer._place(os.path.join(pc["path"], "DAT", name), os.path.join(game, "DAT", name))
+                importer._place(importer.in_any_case(pc_dat, name), os.path.join(game, "DAT", name))
             cmd += ["--game", game]
             out = os.path.join(work, "loc")
         p = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")

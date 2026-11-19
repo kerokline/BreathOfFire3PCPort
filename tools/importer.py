@@ -143,13 +143,27 @@ def identify(path):
     return None
 
 
+def in_any_case(folder, name):
+    """folder/name, or on a case-sensitive system the entry of `folder` that
+    is `name` in another case: a PC game folder as the player copied it
+    (`dat/`, `area000.dat`), whose names the recipes spell in upper case.
+    Windows opens any case, so there it is always the first path."""
+    p = os.path.join(folder, name)
+    if os.path.exists(p):
+        return p
+    try:
+        return next((os.path.join(folder, e) for e in sorted(os.listdir(folder)) if e.lower() == name.lower()), p)
+    except OSError:
+        return p
+
+
 class PcSource:
     def __init__(self, bid, path):
         self.id, self.path, self._cache = bid, path, {}
 
     def chunks(self, name):
         if name not in self._cache:
-            self._cache = {name: dat.load(os.path.join(self.path, name))}
+            self._cache = {name: dat.load(in_any_case(self.path, name))}
         return self._cache[name]
 
     def get(self, name, slot, how):
@@ -1382,7 +1396,7 @@ def build_languages(asked, sources, out, reuse=None):
         os.makedirs(os.path.join(game, "DAT"))
         _place(exe.path, os.path.join(game, "BOF3.exe"))
         for name in _manifest_rows("fixtures/pc-zh.DAT.files.tsv"):
-            _place(os.path.join(pc.path, name), os.path.join(game, "DAT", name))
+            _place(in_any_case(pc.path, name), os.path.join(game, "DAT", name))
         for tag, donor in resolve_languages(asked, sources):
             t = time.perf_counter()
             d = os.path.join(out, "loc", tag, "dat")

@@ -1234,8 +1234,8 @@ def cmd_build(a):
     h = os.path.abspath(a.home)
     cache = os.path.join(h, "cache")
     if not os.path.isfile(os.path.join(cache, "manifest.toml")):
-        print("No install has been built yet (no cache\\manifest.toml in %s): the mods are built with it, on the "
-              "Sources page." % h, flush=True)
+        print("No install has been built yet (no %s in %s): the mods are built with it, on the "
+              "Sources page." % (os.path.join("cache", "manifest.toml"), h), flush=True)
         return 2
 
     def say(text, quiet=False):
