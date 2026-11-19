@@ -1502,6 +1502,148 @@ launcher's `config.cpp` under a 4-byte `wchar_t`; a whole-tree link under
 `mmap_min_addr`; whether the Windows 64-bit build's routes equal the 32-bit
 ones today (C0).
 
+### Wave A as run (2026-11-19, branch `linux/lcA`, not merged to `main`)
+
+Launched at the owner's word, six groups side by side in worktrees from
+`75aa7b53`, each merged `--no-ff` into `linux/lcA` when it handed back: C9,
+C8, C1, C4, C7, C2. One conflict, in `tools/os_host/os_tests.cpp`, where C4
+and C7 each added a block: both kept. C0, the 64-bit references, is not run
+yet (the owner: the evening of 2026-11-19).
+
+**The measure after the merge** (`33de9f1b`): `linux_tree.py` 831 files, 831
+compile for `x86_64-linux-gnu`, 0 do not, 11 Windows-only. The count rose from
+814 because the launcher's model, `start.cpp`, `headless.cpp`, `save/` and the
+new portable files are compiled now (the staging's 813 was stale by one: 825
+candidates less 11 at `75aa7b53`).
+
+**C1, the first link.** A preset `linux-x86_64` and `cmake/linux_target.cmake`;
+CMake and `linux_tree.py` read one source list (`--cmake-list`). Cross-compiled
+on Windows against a sysroot copied out of the WSL (`cmake/linux_sysroot.sh`):
+**1,052 objects, 0 errors; the link with `ld.lld` is 14 names short**
+(`tools/linux_probe/linux_link.py`): 12 of ours not yet written (`bof3::Host`,
+`CodeLo`, `CodeHi`, `Bof3_ImageMove`, `ExeFile_Present`, `ExeFile_Read`, `main`,
+`ExeIcon_Frame`, `GapWatch_Pause`, `GapWatch_Tick`, `render::SwapChainWindow`,
+`render::WindowClientSize`), the PE linker's `__ImageBase`, and DXVK's
+`D3D11CreateDeviceAndSwapChain`. C2 has since written six of the twelve; the
+link was not measured again after the merge. Linked with the undefined names
+ignored, the ELF spans `0x10000000` to about `0x12708948` (text 12.7 MB, bss
+28.1 MB): **the high link is needed, not merely safe.** `ld.lld` refuses
+`-Ttext-segment`; the build passes `--image-base` to it.
+- **Found: DXVK-native opens SDL3 by name** (`LoadLibraryA("libSDL3.so.0")`,
+  its `src/wsi/sdl3/wsi_platform_sdl3.cpp:12-20` at `b1a1c99a`). With SDL3
+  static in the ELF it would load a second copy, and our window would be the
+  other copy's. Wave B: SDL3 shared off Windows, `$ORIGIN` as RUNPATH,
+  `libSDL3.so.0` beside the ELF. Call 5's tarball then holds three libraries.
+- The Windows builds: every object and binary of both presets hashed equal
+  to the base's (C1's `objhash.py`).
+
+**C2, the host.** `host.cpp` is portable (`SetHost`, the checks, the state);
+`DetectHost` and `VerifyImage` are in `host_win32.cpp`, which takes
+`host.cpp`'s place in `WINDOWS_ONLY`. `src/hook/exe_file.cpp` reads the
+player's `BOF3.exe` through the seam by the PE format's offsets; the 12 call
+lines are unchanged. `ImageBase()` is the same code on Windows
+(`codegen_same.py --by-function`: 32 symbols differ at 32 bits and 30 at 64,
+every one in the four files changed) and reads a variable the start-up sets
+off Windows, a `Fatal` if read first. `src/hook/exe_host_steps.h` lists
+`Engine_Main`'s 25 steps with what each needs of Windows: wave B's work order.
+- **A Windows difference a player cannot see:** `BOF3.exe` is opened without
+  denying writers, where `CreateFileW` with `FILE_SHARE_READ` denied them.
+- In "R3: what a Linux start-up needs from the PE host", read `host_win32.cpp`
+  for `DetectHost` and `VerifyImage`, `magic_080.cpp:668` for `:803`, and
+  `rdata_consts.cpp:46` and `:128` for `:37` and `:109`.
+
+**C4, the case of the paths (LA5, LB8).** `BOF3X_CASECHECK=1` (off by
+default) logs a name that opens only by Windows' case folding
+(`src/os/case_check.h`; the disk's spelling by `FindFirstFileExW` on each
+part, not the final path, which needs an open and resolves links).
+`os::OpenNarrow` takes the game's `fopen` and three others, so a backslash is
+a separator on POSIX; `home.cpp` joins with the system's separator.
+- **Measured from 125 existing logs** (1,575 distinct names, 17,841 opens,
+  checked for case against `<main checkout>\bof3`): 1,574 the same; 1
+  differs, `SND\OYASUMI.DAT`, on disk `Oyasumi.DAT`.
+- **By reading:** nine kind-0 `SND` streams, `BGM\000.dat` and the two movies
+  (`capcom.avi`, `logos.avi`) differ in case, each a name in Capcom's data
+  against a file of the player's PC disc. None is ours to fix at its source;
+  by call 3 they are the POSIX fold's (relative names in the game folder
+  alone), or the importer lays them out in upper case. The cache's names all
+  agree (two caches listed).
+- **D431's open item, proposed and not made:** remove a zero-byte
+  `BISLPS1x.DAT` at the target in `snapshot.cpp`'s `Rotate`; the POSIX-only
+  form would break the seam's own rule (`os_tests.cpp`, "An empty file at the
+  target is a file: refused too").
+- Its one game run, the hosted suite with the switch on, opened no misspelled
+  game file (one line, from a self-test's own pattern). The routes with the
+  switch are not run.
+
+**C7, the settings without a window** (stage P0 of
+[`launcher-portable.md`](launcher-portable.md)). `config.cpp`, `suites.cpp` and
+the launcher's `exe_image.cpp` take nothing from `<windows.h>` (164, 1 and 30
+sites, now 0). The seam has `os/process.h` (a child with an environment, a
+working folder, pipes, a wait), `os/wide_file.h` and `os/wide_text.h`.
+`launcher.cpp` is split: the steps with no window are `start.cpp`; a launcher
+with no window is `headless.cpp` (`--set key=value`, `--list`), compiled for
+Linux and not linked.
+- **The two Windows launchers, measured the same:** the base's and the
+  branch's player's launcher, one `bof3x.ini`, a stand-in game that writes
+  down what it is given, five runs: environment (120 or 121 lines), command
+  line, working folder, output, `BOF3.CFG` and the ini afterwards
+  byte-identical but for the pid. The player's launcher imports none of
+  `VirtualAllocEx`, `WriteProcessMemory`, `CreateRemoteThread`.
+- **Found, not fixed (a Windows change):** `TomlString` decodes `\uXXXX` one
+  UTF-16 half at a time; a mod's name beyond the BMP shows as two U+FFFD.
+- **Not measured:** a launcher stderr line with a character the C locale
+  cannot convert, now one `%ls`.
+
+**C8, the harness.** `input_run.py` and `abc_run.py` take `--host linux
+--elf PATH` (`tools/linux_run.py`): the ELF started directly on Linux, or
+through `wsl -e` from Windows with the `BOF3X_` paths translated. Shown
+against a stand-in (`tools/linux_probe/run_standin.cpp`), no ELF yet.
+`statehash.py`, `music_heard.py` and `recipe_shots.py` run under the WSL's
+Python 3.14 as they are.
+- **The staging's count of Windows tools was short.** Its `grep` missed
+  comma-list imports: `grep -rnE "WinDLL|windll|import winreg|msvcrt|'tasklist'|'taskkill'|'powershell'|wintypes" tools`
+  finds 18 files, not 9. Seven more are Windows tools with no guard yet:
+  `attract_run.py`, `attract_watch.py`, `recipe_saves.py`, `mem_dump.py`,
+  `task_stacks.py`, `cell_peek.py`, `solo_harness.py`.
+- **A run that starts the ELF directly has not the launcher's layer** (the
+  ini and its defaults). Wave B's runs go through C7's launcher, or the
+  Linux and Windows sides of a route differ in environment.
+
+**C9, the importer.** `tools/requirements.txt` (pillow 12.0.0, capstone
+5.0.9: the only third-party modules on a player's path) and
+`tools/requirements-extra.txt`. Under the WSL's Python 3.14: `identify
+--json` on eight paths with no game data, `importer.py check` and `mods.py
+selftest` as on Windows. `in_any_case` finds a PC folder's names in another
+case. No `setup` was run and no disc read.
+- **numpy** is used by `at3.py`'s recipe generator alone and has no wheel
+  for Python 3.14: whether a release still carries it is the owner's.
+- **Found, not changed:** the mods' text build in "game" mode reads the
+  player's folder without the CD pressing's repairs that set-up applies.
+
+**Proven on the merged branch** (`33de9f1b`, 2026-11-19): both presets build;
+`data_census --strict`, `reloc_census --check`, `reloc_bare --check`,
+`width_census --check`, `ledger_check.py`, `ledger_switches.py --check`,
+`tu_census.py --check --strict`, `retire_shells.py --check --strict`,
+`os_census.py --check` (3,520 sites) and `--check --boundary`, `linux_tree.py
+--check` pass; in the WSL `os_tests` 518 checks and `config_tests` 4,220, 0
+failed (C7 had handed back three failures there, all `home.cpp`'s backslash,
+which C4 fixed); the hosted shadow suite `self-test only: done`, 922
+`MISMATCHES` lines, every one 0, 0 FATAL; the exe host and the moved base,
+10,392 log lines each, 0 FATAL.
+
+**Not run:** C0; the ten routes and `music_heard.py` on the merged branch;
+`os_tests` on Windows on the merged branch (each group ran its own);
+`dialog_test.py`; anything at 64 bits beyond the build; the link after the
+merge. One `os_tests` check (line 1113, the auto-reset event's two waiters)
+failed for two groups while builds ran beside it and passed on a quiet
+machine, on the base too.
+
+**The WSL since** (the owner, 2026-11-19): clang 21.1.8, lld, cmake 4.2.3,
+pkgconf, glslang, and the headers of X11, Wayland, ALSA, PulseAudio,
+PipeWire and Vulkan are installed, so wave B can configure and build there
+natively. `vulkaninfo` offers one device, `llvmpipe`; section 2a drew at
+about 22 frames a second on it at 3440 x 1440 under Proton.
+
 ## 5. What stands in for the launcher in tier 2
 
 The launcher is Win32 dialogs: `config_dialog.cpp` 1,861 lines, `config.cpp`
