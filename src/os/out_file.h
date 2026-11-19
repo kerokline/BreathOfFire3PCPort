@@ -26,7 +26,9 @@ inline constexpr OutFile kNoFile = -1;   // INVALID_HANDLE_VALUE's value; no des
 
 // The file made empty, or made, for writing. kNoFile on failure (LastError).
 OutFile OutCreate(const std::filesystem::path& path) noexcept;
-// `n` bytes appended. False if the system took fewer.
+// `n` bytes appended. False if the system took fewer: LastError is the
+// system's refusal, or 0 where it took a part and reported no error (Windows;
+// the POSIX backend writes the rest, so a false there always has its errno).
 bool OutWrite(OutFile f, const void* bytes, std::size_t n) noexcept;
 // What was written, onto the disk.
 bool OutFlush(OutFile f) noexcept;

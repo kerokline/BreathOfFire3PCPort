@@ -18,6 +18,7 @@
 #include <initializer_list>
 
 #include "bof3/symbols.gen.h"
+#include "common/strto32.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
 #include "game/rest_3a_callees.h"
@@ -431,7 +432,7 @@ void RunGroup(const char* shadow, const bh::Clone* all, unsigned count, U want, 
 
 void SelfTest() {
     const char* const only = std::getenv("BOF3X_R3A_ONLY");
-    const U want = only && *only ? static_cast<U>(std::strtoul(only, nullptr, 16)) : 0;
+    const U want = only && *only ? static_cast<U>(bof3::StrToUL32(only, nullptr, 16)) : 0;
     if (want != 0) {
         bool found = false;
         for (const bh::Clone& c : kOutside) found = found || c.base == want;

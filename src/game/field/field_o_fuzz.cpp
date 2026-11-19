@@ -27,6 +27,7 @@
 #include <initializer_list>
 
 #include "bof3/symbols.gen.h"
+#include "common/strto32.h"
 #include "game/record_views.h"
 #include "game/field_o.h"
 #include "game/field_o_callees.h"
@@ -545,7 +546,7 @@ void SelfTest() {
     g.field = true;
     char rounds[16];   // BOF3X_FO_ROUNDS=n: the rounds per function (a control's re-run)
     const DWORD rn = bof3::os::GetEnv("BOF3X_FO_ROUNDS", rounds, sizeof rounds);
-    if (rn > 0 && rn < sizeof rounds) g.rounds = static_cast<unsigned>(std::strtoul(rounds, nullptr, 10));
+    if (rn > 0 && rn < sizeof rounds) g.rounds = static_cast<unsigned>(bof3::StrToUL32(rounds, nullptr, 10));
     sh::Run(g);
 }
 
