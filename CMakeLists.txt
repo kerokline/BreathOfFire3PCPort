@@ -341,6 +341,7 @@ add_library(bof3x_launcher_parts OBJECT
   src/launcher/save/namemap.cpp
   src/launcher/save/names.cpp
   src/launcher/sources_dialog.cpp
+  src/launcher/start.cpp
   src/launcher/suites.cpp
   src/audio/spu.cpp
   src/audio/seq.cpp

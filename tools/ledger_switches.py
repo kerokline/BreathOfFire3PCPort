@@ -380,7 +380,7 @@ def scan_launcher(inv, texts):
     if body is None:
         inv.problems.append(f'{rel}: no ConfigApplyEnvironment')
     else:
-        for m in re.finditer(r'SetEnvironmentVariable[AW]\(\s*L?"(BOF3X_\w+)"', body):
+        for m in re.finditer(r'(?:SetEnvironmentVariable[AW]|SetEnvW?)\(\s*L?"(BOF3X_\w+)"', body):
             name = m.group(1)
             # The statement that guards it: back to the test of the same name.
             g = body.rfind(f'"{name}"', 0, m.start())

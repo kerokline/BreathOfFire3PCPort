@@ -1620,9 +1620,187 @@ void TestCaseCheck() {
     fs::remove_all(os::Path(dir.c_str()), ec);
 }
 
+// ---- the launcher's seam (C7: os/process.h, os/wide_file.h, os/wide_text.h) ------
+// A child started from this program itself, in child mode (C7ChildMain): its
+// exit code, its output read from the pipe (stdout and stderr), a variable
+// passed for it alone and one it inherits, its arguments, and its working
+// folder under a name outside ASCII. Then the wide-name files and the wide
+// text as Windows' converters make it.
+}  // namespace
+namespace {
+
+// The child: what it was given, on its stdout and stderr, and exit code 7.
+int C7ChildMain(int argc, char** argv) {
+    char v[64];
+    std::printf("passed=%s\n", os::GetEnv("BOF3X_C7_PASSED", v, sizeof v) ? v : "(none)");
+    std::printf("inherited=%s\n", os::GetEnv("BOF3X_C7_INHERITED", v, sizeof v) ? v : "(none)");
+    std::printf("removed=%s\n", os::GetEnv("BOF3X_C7_REMOVED", v, sizeof v) ? v : "(none)");
+    for (int i = 1; i < argc; ++i) std::printf("arg=%s\n", argv[i]);
+    std::error_code ec;
+    const std::u8string leaf = std::filesystem::current_path(ec).filename().u8string();
+    std::printf("folder=%s\n", std::string(leaf.begin(), leaf.end()).c_str());
+    std::fflush(stdout);
+    std::fprintf(stderr, "on stderr\n");
+    return 7;
+}
+
+bool C7IsChild() {
+    char v[8];
+    return os::GetEnv("BOF3X_C7_CHILD", v, sizeof v) > 0;
+}
+
+void TestProcess() {
+    namespace fs = std::filesystem;
+    std::string self8;
+    CHECK(os::ExecutablePath(&self8));
+    const std::wstring self = os::ToWide(self8.c_str());
+    std::error_code ec;
+    // the working folder: "c7_" and e-acute, CJK and Cyrillic letters
+    const fs::path dir = fs::temp_directory_path(ec) / fs::path(L"bof3x_c7_é中Ж");
+    fs::create_directories(dir, ec);
+    CHECK(fs::is_directory(dir, ec));
+
+    CHECK(os::SetEnvW(L"BOF3X_C7_INHERITED", L"yes"));
+    CHECK(os::SetEnv("BOF3X_C7_REMOVED", "there"));
+    os::ChildSpec spec;
+    spec.program = self;
+    spec.args = {L"one", L"two words"};
+    spec.directory = dir.wstring();
+    spec.env = {{L"BOF3X_C7_CHILD", L"1"}, {L"BOF3X_C7_PASSED", L"c7-value"}, {L"BOF3X_C7_REMOVED", L""}};
+    spec.capture = true;
+    spec.no_window = true;
+    os::Child child;
+    std::uint32_t error = 0;
+    const bool started = os::ChildStart(spec, &child, &error);
+    CHECK(started);
+    std::string out;
+    if (started) {
+        char buf[256];
+        for (std::int64_t n; (n = os::ChildRead(child, buf, sizeof buf)) > 0;) out.append(buf, static_cast<std::size_t>(n));
+        std::uint32_t code = 0;
+        CHECK(os::ChildWait(child, &code));
+        CHECK(code == 7);
+        os::ChildClose(child);
+    }
+    const auto has = [&out](const std::string& line) { return out.find(line + "\n") != std::string::npos ||
+                                                             out.find(line + "\r\n") != std::string::npos; };
+    CHECK(has("passed=c7-value"));
+    CHECK(has("inherited=yes"));
+    CHECK(has("removed=(none)"));
+    CHECK(has("arg=one"));
+    CHECK(has("arg=two words"));
+    CHECK(has("folder=bof3x_c7_\xC3\xA9\xE4\xB8\xAD\xD0\x96"));
+    CHECK(has("on stderr"));
+    char v[8];
+    CHECK(os::GetEnv("BOF3X_C7_PASSED", v, sizeof v) == 0);   // the child's alone
+    CHECK(os::SetEnvW(L"BOF3X_C7_INHERITED", nullptr));
+    CHECK(os::GetEnv("BOF3X_C7_INHERITED", v, sizeof v) == 0);
+    CHECK(os::SetEnv("BOF3X_C7_REMOVED", nullptr));
+
+    // no output asked: ChildRead refuses; the exit code still comes back
+    os::ChildSpec quiet = spec;
+    quiet.capture = false;
+    quiet.args = {};
+    quiet.env = {{L"BOF3X_C7_CHILD", L"1"}};
+    std::FILE* keep = nullptr;
+    (void)keep;
+    if (os::ChildStart(quiet, &child, &error)) {
+        char buf[8];
+        CHECK(os::ChildRead(child, buf, sizeof buf) == -1);
+        std::uint32_t code = 0;
+        CHECK(os::ChildWait(child, &code) && code == 7);
+        os::ChildClose(child);
+    } else {
+        CHECK(!"the child without a pipe started");
+    }
+
+    // a program that is not there: no child, the system's error number
+    os::ChildSpec none;
+    none.program = (dir / L"no_such_program.exe").wstring();
+    error = 0;
+    CHECK(!os::ChildStart(none, &child, &error));
+    CHECK(error != 0);
+#ifndef _WIN32
+    os::ChildSpec held = spec;
+    held.suspended = true;
+    CHECK(!os::ChildStart(held, &child, &error) && error == EINVAL);   // no suspended start on POSIX
+#endif
+    std::printf("process: a child's exit code, its output on the pipe, its environment, its arguments, a folder "
+                "outside ASCII\n");
+
+    // ---- files under a wide name ----
+    const std::wstring wdir = dir.wstring();
+    const wchar_t sep = static_cast<wchar_t>(fs::path::preferred_separator);
+    const std::wstring file = wdir + sep + L"Layer.AREA001.DAT";
+    CHECK(os::WriteWholeW(file, std::string("0123456789")));
+    CHECK(os::IsFileW(file) && !os::IsDirectoryW(file));
+    CHECK(os::IsDirectoryW(wdir) && !os::IsFileW(wdir));
+    CHECK(!os::IsFileW(wdir + sep + L"absent"));
+    CHECK(os::AnyMatchW(wdir + sep + L"layer.*.dat"));   // the leaf's ASCII case does not count, as FindFirstFile
+    CHECK(os::AnyMatchW(wdir + L"\\Layer.AREA00?.DAT"));   // a backslash is a separator on both systems
+    CHECK(!os::AnyMatchW(wdir + sep + L"other.*"));
+    fs::create_directories(dir / L"sub", ec);
+    const std::vector<os::MatchW> m = os::MatchesW(wdir + sep + L"*");
+    bool saw_file = false, saw_dir = false;
+    std::size_t named = 0;   // Windows hands "." and ".." to "*" as FindFirstFileW does; the walk never does
+    for (const os::MatchW& e : m) {
+        saw_file = saw_file || (e.name == L"Layer.AREA001.DAT" && !e.directory);
+        saw_dir = saw_dir || (e.name == L"sub" && e.directory);
+        named += e.name != L"." && e.name != L"..";
+    }
+    CHECK(named == 2 && saw_file && saw_dir);
+    const os::InFile in = os::InOpenW(file, true);
+    CHECK(in != os::kNoInFile);
+    if (in != os::kNoInFile) {
+        std::uint64_t size = 0;
+        CHECK(os::InSize(in, &size) && size == 10);
+        char b[16] = {};
+        std::uint32_t got = 0;
+        CHECK(os::InSeek(in, 4) && os::InRead(in, b, 3, &got) && got == 3 && std::memcmp(b, "456", 3) == 0);
+        CHECK(os::InRead(in, b, 16, &got) && got == 3);
+        CHECK(os::InRead(in, b, 16, &got) && got == 0);   // its end
+        os::InClose(in);
+    }
+    CHECK(os::InOpenW(wdir + sep + L"absent", false) == os::kNoInFile);
+    std::uint64_t size = 0, time = 0, time2 = 0;
+    CHECK(os::StampW(file, &size, &time) && size == 10);
+    CHECK(os::WriteWholeW(file, std::string("abc")));
+    CHECK(os::StampW(file, &size, &time2) && size == 3);
+    CHECK(!os::StampW(wdir + sep + L"absent", &size, &time));
+    std::wstring full;
+    CHECK(os::FullPathW(wdir + sep + L"sub" + sep + L".." + sep + L"Layer.AREA001.DAT", &full) && full == file);
+    CHECK(os::FullPathW(L"rel", &full) && full.size() > 3 && full.substr(full.size() - 4) == std::wstring(1, sep) + L"rel");
+    CHECK(!os::FullPathW(wdir + sep + std::wstring(300, L'x'), &full));
+    fs::remove_all(dir, ec);
+    std::printf("wide files: open, read, seek, size, write, stamp, match, full name\n");
+
+    // ---- wide text ----
+    CHECK(os::WideOfUtf8("a\xC3\xA9\xE4\xB8\xAD") == L"aé中");
+    CHECK(os::Utf8OfWide(L"aé中") == "a\xC3\xA9\xE4\xB8\xAD");
+    CHECK(os::Utf8OfWide(os::WideOfUtf8("\xF0\x9F\x98\x80")) == "\xF0\x9F\x98\x80");   // beyond the BMP, both ways
+    CHECK(os::WideOfUtf8("a\xFF" "b") == L"a�" L"b");         // a byte that is no UTF-8
+    CHECK(os::WideOfUtf8("\xE4\xB8") == L"�");                // cut short at the end
+    CHECK(os::Utf8OfWide(std::wstring(1, static_cast<wchar_t>(0xD83D))) == "\xEF\xBF\xBD");   // a lone surrogate
+    CHECK(os::IsUtf8("plain") && os::IsUtf8("\xC3\xA9") && os::IsUtf8("\xEF\xBF\xBD"));
+    CHECK(!os::IsUtf8("") && !os::IsUtf8("\xC3") && !os::IsUtf8("\xC0\x80") && !os::IsUtf8("\xED\xA0\x80"));
+#ifdef _WIN32
+    // WideOfMessage is the C runtime's own %hs in the "C" locale, byte for byte
+    std::string all;
+    for (int c = 1; c < 256; ++c) all += static_cast<char>(c);
+    wchar_t hs[512];
+    std::swprintf(hs, 512, L"%hs", all.c_str());
+    CHECK(os::WideOfMessage(all) == hs);
+#else
+    CHECK(os::WideOfMessage("\xC3\xA9") == L"é");
+    CHECK(os::WideOfAnsi("\xE9") == L"é");   // no ANSI page here: Latin-1
+#endif
+    std::printf("wide text: UTF-8 and wide both ways, U+FFFD for what does not convert\n");
+}
+
 }  // namespace
 
-int main() {
+int main(int argc, char** argv) {
+    if (C7IsChild()) return C7ChildMain(argc, argv);   // TestProcess's child
     TestMemory();
     TestFiles();
     TestNarrowNames();
@@ -1639,6 +1817,7 @@ int main() {
     TestFileMove();
     TestWindowKey();
     TestCaseCheck();
+    TestProcess();
     std::printf("os_tests: %d checks, %d failed\n", g_checks, g_fail);
     return g_fail ? 1 : 0;
 }

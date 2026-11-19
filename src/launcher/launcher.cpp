@@ -1,6 +1,11 @@
 // Windows-only by design (docs/linux-round.md, LB1): the launcher is a Windows program (section 5).
 // bof3x-launcher: the settings, then the game - our own bof3x.exe by default,
 // or the player's own BOF3.exe with bof3x.dll injected (--host bof3).
+// This file is the window half: the windows, the dialogs, the hosted
+// injection and ForwardToDevLauncher. The steps with no window between them
+// (the game folder, bof3x.ini, the environment, the start of bof3x) are
+// launcher/start.cpp's, which the windowless launcher (headless.cpp) shares
+// (docs/launcher-portable.md, stage P0).
 //
 //   bof3x-launcher [--game <dir containing BOF3.exe>] [--config|--no-config]
 //                  [--host exe|bof3] [-- <args for the game>]
@@ -40,7 +45,9 @@
 #include "launcher/config_dialog.h"
 #include "launcher/exe_image.h"
 #include "launcher/sources_dialog.h"
+#include "launcher/start.h"
 #include "game/draw_pool_room.h"
+#include "os/process.h"
 #include "input/pad_sdl.h"
 
 #include <cstdio>
@@ -60,7 +67,7 @@ HANDLE g_child = nullptr;
 // window, no dialogs; the launcher's exit code is the game process's (0 all
 // passed, 3 a Fatal). Lets several checkouts self-test at once
 // (docs/SCAFFOLDING.md section 2).
-bool SelfTestOnly() { return GetEnvironmentVariableW(L"BOF3X_SELFTEST_ONLY", nullptr, 0) > 0; }
+bool SelfTestOnly() { return bof3x::StartSelfTestOnly(); }
 
 // The switches that need Capcom's code, which only the hosted build maps
 // (src/hook/exe_host.cpp RefuseHostedSwitches).
@@ -88,46 +95,11 @@ bool HostedOnlyAsked() {
     ExitProcess(1);
 }
 
-bool FileExists(const std::wstring& path) {
-    DWORD attr = GetFileAttributesW(path.c_str());
-    return attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY);
-}
-
-// Whether <cache>\base\exe\data.toml is an image tools/exe_tables.py built from
-// BOF3.exe (`build = "pc-zh"`): the PC's own bytes, which a PC install may read
-// in place of the file's (DIV-0212). A disc-built image is not.
-bool CacheImageIsPcBuilt(const std::wstring& cache) {
-    FILE* f = _wfopen((cache + L"\\base\\exe\\data.toml").c_str(), L"rb");
-    if (!f) return false;
-    char line[1024];
-    bool pc = false;
-    while (!pc && std::fgets(line, sizeof line, f)) pc = std::strncmp(line, "build = \"pc-zh\"", 15) == 0;
-    std::fclose(f);
-    return pc;
-}
-
-std::wstring FullPath(const std::wstring& path) {
-    wchar_t buf[MAX_PATH];
-    DWORD n = GetFullPathNameW(path.c_str(), MAX_PATH, buf, nullptr);
-    if (n == 0 || n >= MAX_PATH) Die(L"cannot resolve path: %ls", path.c_str());
-    return buf;
-}
-
-std::wstring OwnDirectory() {
-    wchar_t buf[MAX_PATH];
-    DWORD n = GetModuleFileNameW(nullptr, buf, MAX_PATH);
-    if (n == 0 || n >= MAX_PATH) Die(L"GetModuleFileName failed (%lu)", GetLastError());
-    std::wstring path(buf);
-    return path.substr(0, path.find_last_of(L"\\/"));
-}
-
-// The file's SHA-256 as lowercase hex (common/sha256.cpp, the engine's routine
-// too). Any I/O or CNG failure Die()s.
-std::string Sha256Hex(const std::wstring& path) {
-    std::string hex, why;
-    if (!bof3x::Sha256Hex(path.c_str(), hex, why)) Die(L"cannot hash %ls: %hs", path.c_str(), why.c_str());
-    return hex;
-}
+// The start's own (launcher/start.cpp): the steps with no window that this
+// file runs between its windows.
+bool FileExists(const std::wstring& path) { return bof3x::StartFileExists(path); }
+std::wstring FullPath(const std::wstring& path) { return bof3x::StartFullPath(path); }
+std::wstring OwnDirectory() { return bof3x::StartOwnDirectory(); }
 
 // Until 2026-10-15 the game wrote bof3x.exe.new with an icon generated from
 // the game's data and the bof3x.icon stamp, and the launcher moved the new
@@ -313,12 +285,27 @@ void AttachParentConsole() {
     if (!err) std::freopen("CONOUT$", "w", stderr);
 }
 
+#if BOF3X_HOSTED
+std::uint32_t g_moved_base = 0;   // BOF3X_IMAGEBASE's base, for the fence
+
+// The developer launcher's moved image (BOF3X_IMAGEBASE): the suspended
+// child fenced before it runs (launcher/start.h StartGame). From here a
+// failure must not leave a suspended game process behind; Die() ends it.
+void FenceSuspended(bof3::os::Child& child) {
+    g_child = reinterpret_cast<HANDLE>(child.process);
+    FenceLinkedSpan(g_child, g_moved_base);
+}
+#endif
+
 }  // namespace
+
+// The start's refusals (launcher/start.h): Die's own, a message box included.
+[[noreturn]] void bof3x::StartDie(const std::wstring& message) { Die(L"%ls", message.c_str()); }
 
 int wmain(int argc, wchar_t** argv) {
     AttachParentConsole();
     std::wstring game_dir;
-    std::wstring game_args;
+    std::vector<std::wstring> game_args;
     // Neither flag given: the settings file decides, and its default is to
     // show the dialog. --config forces it (the way back after "Show this
     // window every time" is unticked); --no-config suppresses it, which is
@@ -339,11 +326,7 @@ int wmain(int argc, wchar_t** argv) {
         } else if (arg == L"--no-config") {
             want_dialog = 0;
         } else if (arg == L"--") {
-            for (++i; i < argc; ++i) {
-                game_args += L" \"";
-                game_args += argv[i];
-                game_args += L"\"";
-            }
+            for (++i; i < argc; ++i) game_args.push_back(argv[i]);
         } else {
             Die(L"unknown argument: %ls\nusage: bof3x-launcher [--game <dir>] "
                 L"[--config|--no-config] [--host exe|bof3] [-- <game args>]",
@@ -392,7 +375,7 @@ int wmain(int argc, wchar_t** argv) {
     // allocations hold all but 64 KB of the span by Engine_Main). The player's
     // launcher writes nothing into another process, so it hands the switch on.
     std::wstring ours = OwnDirectory() + L"\\bof3x.exe";
-    bool moved = false;
+    [[maybe_unused]] bool moved = false;   // the developer launcher's suspended start (BOF3X_HOSTED)
     [[maybe_unused]] std::uint32_t moved_base = 0;   // the developer launcher's fence (BOF3X_HOSTED)
     if (wchar_t base_text[32]; GetEnvironmentVariableW(L"BOF3X_IMAGEBASE", base_text, 32) > 0) {
         wchar_t* end = nullptr;
@@ -434,91 +417,9 @@ int wmain(int argc, wchar_t** argv) {
     bof3x::Config cfg;
     for (bool again = true; again;) {
         again = false;
-        game_dir = named_game;
-        if (game_dir.empty()) {
-            if (FileExists(L"BOF3.exe")) game_dir = L".";
-            else if (const std::wstring home_game = bof3x::HomeGameDefault(); !home_game.empty()) game_dir = home_game;
-            else game_dir = L"bof3";
-        }
-        game_dir = FullPath(game_dir);
-
-        exe = game_dir + L"\\BOF3.exe";
-        // Optional for our own executable when a cache is the .data source (a
-        // disc-built install, docs/disc-only-round.md): decided once the settings
-        // are read, below. The hosted build runs inside the file.
-        exe_present = FileExists(exe);
-        bool no_install = false;
-        if (hosted && !exe_present)
-            Die(L"no BOF3.exe in %ls.\nThe hosted build (--host bof3, or a hosted-only switch: BOF3X_ORIGINAL, "
-                L"BOF3X_SHADOW, BOF3X_CALLTRACE, BOF3X_MP3_COMPARE, BOF3X_MP3=original) runs inside the player's own BOF3.exe; a "
-                L"disc-built install has none. Point --game or BOF3_GAME_DIR at an install that has it.",
-                game_dir.c_str());
-        if (exe_present) {
-            std::string sha = Sha256Hex(exe);
-            if (sha != bof3x::kExpectedSha256)
-                Die(L"%ls is not the build this project targets.\n\nsha256   %hs\nexpected %hs\n\n"
-                    L"Every address bof3x patches is specific to that one file; refusing to start. "
-                    L"If this is an uncatalogued release, see fixtures.toml.",
-                    exe.c_str(), sha.c_str(), bof3x::kExpectedSha256);
-
-            // The default key table is the engine's rule (input::DefaultKeys, the
-            // owner's call of 2026-10-11); where the file is there, it must be
-            // Key_TableDefault's 24 entries exactly.
-            std::vector<bof3x::input::KeyBinding> keys;
-            std::string why;
-            if (!bof3x::ExeDefaultKeys(exe, keys, why))
-                Die(L"cannot read the default key table from %ls: %hs", exe.c_str(), why.c_str());
-            const std::vector<bof3x::input::KeyBinding>& rule = bof3x::input::DefaultKeys();
-            bool same = keys.size() == rule.size();
-            for (size_t i = 0; same && i < keys.size(); ++i) same = keys[i].dik == rule[i].dik && keys[i].bits == rule[i].bits;
-            if (!same)
-                Die(L"the default key table in %ls (%u keys) is not the engine's rule (%u keys):\n%hs\nbut\n%hs", exe.c_str(),
-                    static_cast<unsigned>(keys.size()), static_cast<unsigned>(rule.size()),
-                    bof3x::input::FormatKeys(keys, "", " ").c_str(), bof3x::input::FormatKeys(rule, "", " ").c_str());
-            if (SelfTestOnly())
-                std::fwprintf(stderr, L"bof3x-launcher: the default key table, %u keys by the engine's rule, equal to "
-                                      L"BOF3.exe's: %hs\n",
-                              static_cast<unsigned>(rule.size()), bof3x::input::FormatKeys(rule, "", " ").c_str());
-        }
-
-        {
-            // DIV-0005: a retired bare language code (en, fr, de, ja) in the ini
-            // or the environment stops here, before the dialog, naming its tag.
-            std::string why;
-            const bool had_ini = bof3x::ConfigLoad(ini, cfg, why);
-            if (!why.empty()) Die(L"%hs\n\n%ls", why.c_str(), ini.c_str());
-            if (!had_ini) bof3x::ConfigSeedFromGameCfg(game_dir, cfg);
-            // An ini without ruby_ui= (older than the toggle): on when a
-            // reading-row mod is installed (docs/launcher-settings.md 2a, Extra).
-            bof3x::ConfigRubyUiDefault(cfg, bof3x::HomeDir());
-            if (!bof3x::ConfigCheckEnvironmentLanguage(why)) Die(L"%hs", why.c_str());
-            // No install at all - no BOF3.exe, no cache, no BOF3X_EXEIMAGE, and a
-            // game folder the player did not name: the Sources page below makes
-            // one (its first run). Never under a self-test or --no-config, which
-            // keep the refusals.
-            no_install = !hosted && !exe_present && named_game.empty() && bof3x::ConfigCacheDataRoot(cfg).empty() &&
-                         GetEnvironmentVariableW(L"BOF3X_EXEIMAGE", nullptr, 0) == 0 && !SelfTestOnly() &&
-                         want_dialog != 0;
-            // DIV-0102: "original" on an install without the Chinese text is
-            // refused here, before the dialog; the default becomes a language
-            // held. Not asked of no install: there is no language to hold yet.
-            if (!no_install && !bof3x::ConfigResolveLanguage(game_dir, cfg, why)) Die(L"%hs", why.c_str());
-            // DIV-0086 / DIV-0080: a bad opt= is refused, not dropped - dropped, it
-            // would read as empty and play the default layers the player may have
-            // meant to turn off.
-            if (!bof3x::ConfigOptValid(cfg.opt, why))
-                Die(L"%ls says opt=%hs: %hs.\n\nopt= is empty (the default layers installed), none, or a "
-                    L"comma-separated list of layer names (docs/launcher-settings.md).",
-                    ini.c_str(), cfg.opt.c_str(), why.c_str());
-            // The PSP's battle rules (psp=), refused here by the DLL's own rule
-            // rather than by a game that has started (psp_code.cpp keeps its check
-            // for a hand-set BOF3X_PSP).
-            if (!bof3x::ConfigPspValid(cfg.psp, why))
-                Die(L"%ls says psp=%hs: %hs.\n\npsp= is empty (the default: on when the cache's base is the PSP's), "
-                    L"none, or a comma-separated list of the PSP's battle changes, duel-loss and myria-item "
-                    L"(docs/psp-battle-changes.md).",
-                    ini.c_str(), cfg.psp.c_str(), why.c_str());
-        }
+        exe_present = bof3x::StartFindGame(named_game, hosted, &game_dir, &exe);
+        const bool no_install =
+            bof3x::StartReadSettings(ini, game_dir, named_game, hosted, exe_present, want_dialog, cfg);
 
         if (no_install) {   // the Sources page's first run (above)
             const bool built = bof3x::SourcesDialogRun(nullptr, cfg, true);
@@ -586,118 +487,27 @@ int wmain(int argc, wchar_t** argv) {
         }
     }
 
-    {
-        // The cache's manifest through the one reader the DLL shares
-        // (common/cache_manifest.h): a base_policy or exe_tables_from it cannot
-        // honour stops the launcher here, with the sentence the DLL would stop
-        // the game on. The cache BOF3X_CACHE or cache= names, whatever
-        // BOF3X_CACHE_DATA says, as the DLL reads base_policy.
-        const std::wstring root = bof3x::ConfigCacheRoot(cfg);
-        const bof3x::CacheManifest manifest = bof3x::ManifestRead(root);
-        if (!manifest.error.empty())
-            Die(L"%ls", bof3x::ConfigFromUtf8(bof3x::ManifestRefusal(manifest, bof3x::ConfigToUtf8(root + L"\\manifest.toml")))
-                            .c_str());
-    }
+    bof3x::StartApply(game_dir, cfg, hosted, exe_present);
 
-    if (!exe_present) {
-        // A disc-built install: the cache is the .data source (BOF3X_EXEIMAGE,
-        // docs/exe-import-engine.md section 4.4), nothing is read from a file.
-        // BOF3X_EXEIMAGE already set names it; else the settings' cache does.
-        // Without either the refusal is the one there always was.
-        const std::wstring cache = bof3x::ConfigCacheDataRoot(cfg);
-        wchar_t set[4];
-        const bool image_set = GetEnvironmentVariableW(L"BOF3X_EXEIMAGE", set, 4) > 0;
-        if (cache.empty() && !image_set)
-            Die(L"no BOF3.exe in %ls.\nPoint --game or BOF3_GAME_DIR at your own install.", game_dir.c_str());
-        if (!image_set) SetEnvironmentVariableW(L"BOF3X_EXEIMAGE", cache.c_str());
-        std::fwprintf(stderr, L"bof3x-launcher: no BOF3.exe in %ls: a disc-built install - no hash check, the default "
-                              L"keys by the engine's rule, .data from %ls\n",
-                      game_dir.c_str(), image_set ? L"BOF3X_EXEIMAGE's cache (the environment's)" : cache.c_str());
-    }
-
-    // The preset (launcher/config.h, docs/launcher-settings.md "preset="), at
-    // launch on top of the settings, which it does not rewrite: its code names
-    // go into BOF3X_OFF with the player's off=, its ini values are what the game
-    // gets in place of the ini's (BOF3.CFG's display line too), its env values
-    // are set where the environment has none, and BOF3X_PRESET names it for the
-    // game's log. BOF3X_PRESET in the environment chooses it, as every variable wins.
-    std::string preset_error;
-    if (!bof3x::ConfigPresetFromEnvironment(cfg, preset_error)) Die(L"%hs", preset_error.c_str());
-    const bof3x::PresetPlan plan =
-        bof3x::ConfigPresetPlan(game_dir, cfg, cfg.preset, bof3x::ConfigLanguagePlayed(game_dir, cfg));
-    bof3x::ConfigPresetReport(plan);
-    const bof3x::Config played = bof3x::ConfigPresetApply(cfg, plan);
-
-    std::wstring cfg_error;
-    if (!SelfTestOnly() && !bof3x::ConfigApplyGameCfg(game_dir, played, cfg_error))
-        Die(L"%ls\n\nDisplay and renderer are set through that file, which is the game's "
-            L"own input. Check that the game directory is writable.", cfg_error.c_str());
-    bof3x::ConfigPresetEnvironment(plan);   // before the ini's, which then keep them
-    bof3x::ConfigApplyEnvironment(game_dir, played, hosted);   // hosted: no layer that build refuses
-
-    if (exe_present && !hosted) {
-        // DIVERGENCE DIV-0212: a PC install whose cache holds the image built
-        // from BOF3.exe reads .data from the cache too - the image and its
-        // table files (docs/image-layer-round.md 5b) - so that every install
-        // kind has one source. The bytes are the file's: the engine compares
-        // them with BOF3.exe's .data before it goes on (exe_image.cpp). The
-        // file stays the source with no cache, with a cache whose image a
-        // disc built (those are not the PC's bytes), under BOF3X_EXEFILE=1,
-        // and in the hosted build, which runs inside the file. After the
-        // preset and the ini, which may set the switch or the cache.
-        const std::wstring cache = bof3x::ConfigCacheDataRoot(played);
-        wchar_t set[4];
-        const bool image_set = GetEnvironmentVariableW(L"BOF3X_EXEIMAGE", set, 4) > 0;
-        const DWORD from_file = GetEnvironmentVariableW(L"BOF3X_EXEFILE", set, 4);
-        if (from_file != 0 && !(from_file == 1 && (set[0] == L'0' || set[0] == L'1')))
-            Die(L"BOF3X_EXEFILE takes 1 (read .data from BOF3.exe though the cache holds its image) or 0.");
-        const bool want_file = from_file == 1 && set[0] == L'1';
-        if (!image_set && !want_file && !cache.empty() && CacheImageIsPcBuilt(cache)) {
-            SetEnvironmentVariableW(L"BOF3X_EXEIMAGE", cache.c_str());
-            std::fwprintf(stderr, L"bof3x-launcher: .data from %ls (the image built from BOF3.exe and its table files; "
-                                  L"BOF3X_EXEFILE=1 for the file)\n", cache.c_str());
-        }
-    }
-
-    STARTUPINFOW si{};
-    si.cb = sizeof si;
-    PROCESS_INFORMATION pi{};
     if (!hosted) {
-        // Our own executable: the game directory as its current directory, as
-        // BOF3.exe's (it opens DAT\, BGM\, SND\ and BOF3.exe itself by
-        // relative path); nothing else to do from here - it maps the player's
-        // data, binds its imports and starts the game on its own main thread.
-        std::wstring line = L"\"" + ours + L"\"" + game_args;
-        // Started by us: bof3x.exe started any other way hands over to us (exe_host.cpp HandOffToLauncher).
-        SetEnvironmentVariableW(L"BOF3X_LAUNCHER", L"1");
-        if (!CreateProcessW(ours.c_str(), line.data(), nullptr, nullptr, FALSE, moved ? CREATE_SUSPENDED : 0, nullptr,
-                            game_dir.c_str(), &si, &pi))
-            Die(L"CreateProcess failed for %ls (%lu)", ours.c_str(), GetLastError());
+        bool waited = false;
 #if BOF3X_HOSTED
-        if (moved) {
-            g_child = pi.hProcess;
-            FenceLinkedSpan(pi.hProcess, moved_base);
-            if (ResumeThread(pi.hThread) == static_cast<DWORD>(-1)) Die(L"ResumeThread failed (%lu)", GetLastError());
-            g_child = nullptr;
-        }
+        g_moved_base = moved_base;
+        const std::uint32_t code = bof3x::StartGame(ours, game_args, game_dir, moved ? FenceSuspended : nullptr, &waited);
+        g_child = nullptr;
+#else
+        const std::uint32_t code = bof3x::StartGame(ours, game_args, game_dir, nullptr, &waited);
 #endif
-        if (SelfTestOnly()) {   // as the hosted path: the pid, then the game process's exit code
-            std::fwprintf(stderr, L"bof3x-launcher: self-test only, game pid %lu (bof3x.exe)\n", pi.dwProcessId);
-            std::fflush(stderr);
-            WaitForSingleObject(pi.hProcess, INFINITE);
-            DWORD code = 1;
-            GetExitCodeProcess(pi.hProcess, &code);
-            std::fwprintf(stderr, L"bof3x-launcher: self-test only, game process exit code %lu\n", code);
-            ExitProcess(code);
-        }
-        std::wprintf(L"bof3x-launcher: started %ls (pid %lu)\n", ours.c_str(), pi.dwProcessId);
-        CloseHandle(pi.hThread);
-        CloseHandle(pi.hProcess);
+        if (waited) ExitProcess(code);
         return 0;
     }
 
 #if BOF3X_HOSTED
-    std::wstring cmdline = L"\"" + exe + L"\"" + game_args;
+    STARTUPINFOW si{};
+    si.cb = sizeof si;
+    PROCESS_INFORMATION pi{};
+    std::wstring cmdline = L"\"" + exe + L"\"";
+    for (const std::wstring& a : game_args) cmdline += L" \"" + a + L"\"";
     // Current directory = the game directory: BOF3.exe opens DAT\, BGM\ and SND\
     // by relative path.
     if (!CreateProcessW(exe.c_str(), cmdline.data(), nullptr, nullptr, FALSE, CREATE_SUSPENDED,
