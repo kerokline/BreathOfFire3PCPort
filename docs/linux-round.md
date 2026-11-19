@@ -1631,7 +1631,36 @@ which C4 fixed); the hosted shadow suite `self-test only: done`, 922
 `MISMATCHES` lines, every one 0, 0 FATAL; the exe host and the moved base,
 10,392 log lines each, 0 FATAL.
 
-**Not run:** C0; the ten routes and `music_heard.py` on the merged branch;
+**C0, the Windows 64-bit references** (the same day, hands off, at `75aa7b53`,
+builds `build` and `build-x86_64` of the staging worktree; root
+`C:\Users\kerok\bof3x-runs\lcA\coord`, script `c0.py`). The 64-bit exe host's
+self-test: `done`, 10,392 log lines, 0 FATAL. Its moved base (`0xA00000`, the
+mixed copy of [`x64-build-round.md`](x64-build-round.md) stage D: the 32-bit
+launcher pair beside the 64-bit exe, DLL and moved exe): the same, the fence
+0x58F000 bytes reserved, 0 held. The ten routes at 64 bits
+(`cn_<route>_c0x64.sh`) and at 32 bits the same day (`cn_<route>_c0x32.sh`),
+no retry: `combat`, `cutsceneAndNue`, `dragonTransform`, `field_menu`,
+`menu_screens`, `shop` and `whelpBoss` identical on every tick, 32 against 64
+and 32 against wave 2's `_w2`; `caughFish`, `masterAndManillo` and
+`worldMapAndAreaTransition` differ on one page, `0x6C3000`, Direct3D's state,
+which differs between two runs of one build on these routes
+([`garr-fire.md`](garr-fire.md), [`faerie-fix.md`](faerie-fix.md) 4): here
+`_w2`, `_c0x32` and `_c0x64` disagree pairwise on that page from the same
+tick. The bytes were not dumped this day. `music_heard.py` at 64 bits:
+`whelpBoss` pass (164 ring lines, 6 tracks), `cutsceneAndNue` pass (116, 5).
+The first pass of the script ran the moved base through the 64-bit player
+launcher, which stops with its "developer launcher's" message; that was the
+script's fault and the step ran on the second pass.
+
+**The merged branch's routes** (the same evening, hands off, the build of
+`33de9f1b`, `cn_<route>_lcA.sh`, script `merge_routes.py`, no retry):
+against `_c0x32` and against `_w2`, the same seven routes identical on every
+tick and the same three different on `0x6C3000` alone. `music_heard.py`:
+`whelpBoss` pass (164, 6), `cutsceneAndNue` pass (116, 5). A first
+`field_menu` run made while the owner used the machine was set aside
+(`cn_field_menu_lcA.busy1.sh`) and made again.
+
+**Not run:** the routes with `BOF3X_CASECHECK=1`;
 `os_tests` on Windows on the merged branch (each group ran its own);
 `dialog_test.py`; anything at 64 bits beyond the build; the link after the
 merge. One `os_tests` check (line 1113, the auto-reset event's two waiters)
