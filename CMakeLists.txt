@@ -194,7 +194,9 @@ add_subdirectory(src/os)
 set(_dll_sources
   src/hook/dllmain.cpp
   src/hook/host.cpp
+  src/hook/host_win32.cpp
   src/hook/exe_host.cpp
+  src/hook/exe_file.cpp
   src/hook/exe_icon.cpp
   src/hook/code_bytes.cpp
   src/common/sha256.cpp

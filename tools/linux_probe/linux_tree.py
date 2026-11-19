@@ -51,7 +51,7 @@ WINDOWS_ONLY = (
     ('src/hook/exe_host.cpp', 'R3: the PE exe host - maps, rebases and binds bof3x.exe in the process (Engine_Main)'),
     ('src/hook/exe_icon.cpp', 'R3: the window icon through HICON, WIC and COM'),
     ('src/hook/dllmain.cpp', 'R3: the DLL entry point'),
-    ('src/hook/host.cpp', "R3: tells the hosts apart by the main module's PE headers (DetectHost, VerifyImage)"),
+    ('src/hook/host_win32.cpp', "R3: tells the hosts apart by the main module's PE headers (DetectHost, VerifyImage; host.cpp is the portable part)"),
     ('src/hook/crash_win32.cpp', 'R8: the fault catcher - a vectored handler, MiniDumpWriteDump (crash_posix.cpp is its counterpart)'),
     ('src/hook/stackwatch_win32.cpp', "R8: the main thread's TEB and guard page (stackwatch_posix.cpp refuses)"),
     ('src/game/platform/game_window_win32.cpp', 'R6: the Win32 window path and the SDL window\'s HWND steps (game_window_other.cpp is its counterpart)'),
