@@ -314,6 +314,7 @@ add_library(bof3x_launcher_parts OBJECT
   src/common/cache_manifest.cpp
   src/common/home.cpp
   src/input/bindings.cpp
+  src/input/function_keys.cpp
   src/input/pad_sdl.cpp)
 # symbols.gen.h for exe_image.cpp alone: Key_TableDefault is read out of the
 # player's BOF3.exe, not copied (docs/exe-table-audit.md).
@@ -331,7 +332,7 @@ function(bof3x_add_launcher target output hosted)
 # shell32 and ole32: the Cache folder box's Browse... (SHBrowseForFolderW);
 # comdlg32: the Sources page's File... and Locate ffmpeg.exe... (GetOpenFileNameW);
 # windowscodecs: the title page's picture, decoded by WIC (docs/launcher-settings.md 2a).
-  target_link_libraries(${target} PRIVATE bof3x_media comctl32 comdlg32 shell32 ole32 windowscodecs winmm SDL3::SDL3-static bof3x_os)
+  target_link_libraries(${target} PRIVATE bof3x_media comctl32 comdlg32 shell32 ole32 windowscodecs winmm uxtheme SDL3::SDL3-static bof3x_os)
   # -mwindows: no console of its own; wmain still the entry, AttachParentConsole
   # (launcher.cpp) writes to the terminal it was started from.
   target_link_options(${target} PRIVATE -municode -mwindows)

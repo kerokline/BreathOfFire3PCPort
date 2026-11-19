@@ -53,11 +53,18 @@ std::string KeyName(int dik);
 
 // Pad inputs, SDL's gamepad model by position: the face buttons south / east
 // / west / north, the shoulders and triggers, the d-pad, the sticks' four
-// directions each and their clicks, start / back / guide.
+// directions each and their clicks, start / back / guide; then (the function
+// keys page, 2026-11-18) every other button SDL 3's gamepad reports, in
+// SDL_GamepadButton's order: MISC1, the four back paddles, the touchpad's
+// click, MISC2..MISC6 - spare buttons a pad may have, bindable on every page.
+// Appended, never inserted: the names, not the numbers, are in the files, but
+// the order is the dialog's and the capture's.
 enum class PadInput : unsigned char {
     kSouth, kEast, kWest, kNorth, kLb, kRb, kLt, kRt, kStart, kBack, kGuide, kLs, kRs,
     kDpadUp, kDpadDown, kDpadLeft, kDpadRight,
     kLsUp, kLsDown, kLsLeft, kLsRight, kRsUp, kRsDown, kRsLeft, kRsRight,
+    kMisc1, kRightPaddle1, kLeftPaddle1, kRightPaddle2, kLeftPaddle2, kTouchpad,
+    kMisc2, kMisc3, kMisc4, kMisc5, kMisc6,
     kCount
 };
 struct PadInputInfo {

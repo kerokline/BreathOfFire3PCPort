@@ -415,3 +415,130 @@ the physical bindings live in the launcher's Controls dialog instead.
    menu for mapping controllers to PSX buttons, in-game PSX button mapping
    - for now"): the seventh row and the binding screen of §4.3 are
    [`IDEAS.md`](IDEAS.md) I20.
+
+## 7. The function keys (2026-11-18)
+
+**Status: BUILT, host-tested; seen by the owner 2026-11-18** (the 32-bit
+build of `f32becb3`): rebinding, clearing and a double binding on the page
+work, and the keys in play "seem fine"; a pad-bound action not reported on.
+The owner asked for the function keys on a page of their own,
+rebindable, on 2026-11-18, and the same day widened it: each action takes a
+keyboard key and a pad input "just like the others", and a key or pad input
+that does two things is shown in red. Ledger entry:
+[DIV-0240](DIVERGENCE.md) (the code says `DIVERGENCE DIV-0240`).
+
+### 7.1 What a function key did before
+
+`Game_WndProc`'s key half (`WinGame_Key`, `src/game/platform/magic_080.cpp`)
+compared each `WM_KEYDOWN`'s virtual key with fixed keys, in this order:
+
+| Key | Action | Whose |
+|---|---|---|
+| F5 | the quick menu (`QuickMenu_Key`; it takes every key while open) | ours, the quicksave round |
+| F9 | pause; pressed again, back to the title (at the title: the game stops). Any other key ends a pause | Capcom's |
+| F8 | full screen or window | Capcom's, DIV-0032 |
+| `BOF3X_RUBY_KEY` (F4) | the row above the text shown or hidden (`MsgBox_ReadingRowKey`) | ours, DIV-0155 |
+| F6 / F7 | quicksave / quick-load of `BISLPS10.DAT` | ours, the quicksave round |
+| F12 | `Save_QuickWrite`, an ordinary save to the first slot, and "Save OK" | Capcom's |
+| F11 | the picture to `bof3x-frame-<n>.bmp` beside `bof3x.dll` | tooling |
+| F1 | double speed | ours, DIV-0048 |
+
+Other places that read a function key, unchanged: the recorder
+(`BOF3X_RECORD`, `InputScript_RecordKey`: F12 is its shot, F1..F11 recorded
+as `key` steps), the input recipes' `key f6` names
+(`src/hook/input_script.cpp`), the movie player (any key but Alt and F10
+skips, `src/game/fmv_play.cpp`), and the window procedures, which swallow
+F10 and Alt as `WM_SYSKEYDOWN` (`game_window_win32.cpp`) - so neither ever
+reaches `WinGame_Key` on Windows. The pause lines name F9: they are
+Capcom's text and its translations (DIV-0038), left as they are.
+
+### 7.2 What it does now
+
+- **One table** (`src/input/function_keys.h`), shared by the launcher and
+  the DLL: nine actions - code names `speed`, `reading_rows`, `quick_menu`,
+  `quicksave`, `quickload`, `window`, `pause`, `picture`, `save_write` - each
+  with one key and one pad input, either of them none. Defaults: the keys
+  above, no pad input.
+- **Any key, any pad input.** A key is the number the Controls cells store
+  (the set-1 scan code, the extended flag as bit 7). The game finds a key
+  message's number with `FnKeyOfMessage`: F1..F12 by their virtual key, as
+  before (and as an input recipe's key, which has no scan code, needs);
+  every other key by the scan code and extended flag of the lParam - what the
+  capture's keyboard hook reads from the same lParam. Off Windows the SDL
+  window builds those lParam bits from `key_sdl.h`'s number
+  (`FnMessageBitsOfDik`), so a key reads the same there. One pair reads
+  as the capture stores it, not as DirectInput numbers it: Pause is 0x45 and
+  NumLock 0xC5 (the capture's swap, R5's note; not changed here).
+- **Double bindings are allowed.** A key that is also a game button's key
+  does both when pressed: the action through `WinGame_Key`, the button
+  through the key bytes. Two actions on one key: the first in the old order
+  above (`kFnOrder`) runs alone - which is also how `BOF3X_RUBY_KEY` on F5,
+  F8 or F9 behaved before. A pad input bound to an action and a game button
+  does both.
+- **The pad.** Once a pass of WinMain's loop, after the message step,
+  `FunctionKeys_PadPressed` reads each bound pad input and fires an action
+  on its press edge (never while held, no repeat) through the same code as
+  its key (`WinGame_Action`): the pause, the quick menu's rule (every key is
+  the menu's while it is open; its own action closes it), the pause ending on
+  any other action, the repeat rules (a pad press is never a repeat). Nothing
+  fires while the window is not in front (`App_Active` and
+  `win_main::g_foreground`); an input held then counts once released. With no
+  pad input bound nothing is polled: the loop is as before. The loop runs in
+  play, paused and with the quick menu open; a movie has its own loop, so
+  neither keys nor pad presses start an action during a movie (as before for
+  keys). Under Capcom's WinMain (`BOF3X_ORIGINAL=Game_WinMain`) the pad
+  starts no action. Every action works from the pad; none is greyed.
+- **F10 and Alt** are refused by the page's capture: Windows sends them as
+  `WM_SYSKEYDOWN`, which never reaches the handler.
+- **The quick menu** closes with its own action's key or pad input.
+
+### 7.3 Storage and transport
+
+- `bof3x.ini`: `fkey.ACTION=KEY` (a key name as `key.` lines take, `0x1A`
+  hex for an unnamed one, or `none`) and `fpad.ACTION=INPUT` (a pad input's
+  name, or `none`). Per action, not `key.NAME=`: one key must be able to hold
+  a game button and an action at once. The first such line starts from the
+  defaults; each is applied in order; a line not understood is said on
+  stderr and left out. Written - every action, key then pad - only once the
+  ini had such a line or the page was changed (`Config::fkeys_named`).
+- `BOF3X_FKEYS`: the same items comma-separated, sent only when the table
+  differs from what the game builds without it (the defaults with
+  `ruby_key=`'s key for the row above the text), so an ini that never named a
+  function key sends nothing new. An environment's `BOF3X_FKEYS` wins. The
+  game logs each item it does not understand (`fkeys       BOF3X_FKEYS: ... -
+  left out`) and a count, and leaves the item out: as `BOF3X_KEYS`, which
+  only counts, it does not stop.
+- **`BOF3X_RUBY_KEY`** still moves the row above the text (f1..f12 or none;
+  another value stops the game, as before). The game applies it to the
+  defaults, then `BOF3X_FKEYS` over it, so `BOF3X_FKEYS` wins when both are
+  set. The launcher keeps `ruby_key=` in step: when the page puts the row on
+  an F key or none, `ruby_key=` says so; on another key `ruby_key=` keeps its
+  value and `BOF3X_FKEYS` carries the key.
+- **The harness keeps the default layout:** under `BOF3X_INPUT` or
+  `BOF3X_RECORD` the game does not read `BOF3X_FKEYS` (one log line says so),
+  since recipes name the default keys and the recorder uses F12.
+  `BOF3X_RUBY_KEY` is read as before.
+
+### 7.4 The page
+
+The Controls tab's third sub-page, **Function keys**: one row an action, its
+label, a Keyboard cell and a Pad cell, and a note for three rows. Click a
+cell and press a key or a pad button (Escape cancels, Clear empties it), as
+on the other two pages. Nothing is taken from another cell. A cell whose key
+or pad input does two or more things - on any of the three pages - has red
+text (`FnRedCells`; drawn by the page's custom draw with the button's theme),
+redrawn at once; the line under the rows says what red means. Defaults puts
+this page back to its defaults. The Settings page's Display box names the
+window action's key ("Full screen (F8 changes to a window)"), or no key.
+
+The pad inputs: SDL 3's whole button list since this page - `misc1`,
+`rpaddle1`, `lpaddle1`, `rpaddle2`, `lpaddle2`, `touchpad`, `misc2`..`misc6`
+appended to `PadInput` (`input/bindings.h`) - bindable on all three pages; an
+old ini's names read as before. On a pad with few spare buttons most pad
+bindings are double and red, by design; L2 and R2 keep their game rule
+(outside the Config's permutation, ORed into Speak and confirm).
+
+**Tests:** `tools/fkeys_host` (the table, the text forms, bad items, the
+key message of every producer, the order, the red cells, the pad inputs) and
+`tools/launcher_host`'s `TestFnKeys` (the ini lines, `BOF3X_FKEYS`,
+`ruby_key=`).

@@ -232,6 +232,64 @@ BEGIN
                     -1, 7, 155, 340, 18
 END
 
+// The function keys (the owner's call, 2026-11-18; docs/controls.md section
+// 4.3): the Controls tab's third sub-page. One row an action of the game that
+// a key starts (input/function_keys.h, FnAction's order), with a key cell and
+// a pad cell - click one (or press cross on it) and the capture dialog takes
+// the next key or pad input, as on the two pages above. A cell whose key or
+// pad input also does another thing, on any of the three pages, is drawn in
+// red (config_dialog.cpp FnRedRefresh). The cells' ids are base + action
+// (resource.h); the labels are set from the table (FnPopulate).
+IDD_PAGE_CONTROLS3 DIALOGEX 0, 0, 350, 176
+STYLE DS_SETFONT | DS_CONTROL | WS_CHILD
+EXSTYLE WS_EX_CONTROLPARENT
+FONT 9, "Segoe UI", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "Function keys", -1, 0, 0, 346, 150
+    LTEXT           "Keyboard", -1, 150, 12, 54, 9
+    LTEXT           "Pad", -1, 207, 12, 80, 9
+    LTEXT           "", 1480, 7, 24, 141, 9
+    PUSHBUTTON      "", 1420, 150, 22, 54, 13
+    PUSHBUTTON      "", 1440, 207, 22, 80, 13
+    LTEXT           "", 1490, 290, 24, 53, 9
+    LTEXT           "", 1481, 7, 38, 141, 9
+    PUSHBUTTON      "", 1421, 150, 36, 54, 13
+    PUSHBUTTON      "", 1441, 207, 36, 80, 13
+    LTEXT           "", 1491, 290, 38, 53, 9
+    LTEXT           "", 1482, 7, 52, 141, 9
+    PUSHBUTTON      "", 1422, 150, 50, 54, 13
+    PUSHBUTTON      "", 1442, 207, 50, 80, 13
+    LTEXT           "", 1492, 290, 52, 53, 9
+    LTEXT           "", 1483, 7, 66, 141, 9
+    PUSHBUTTON      "", 1423, 150, 64, 54, 13
+    PUSHBUTTON      "", 1443, 207, 64, 80, 13
+    LTEXT           "", 1493, 290, 66, 53, 9
+    LTEXT           "", 1484, 7, 80, 141, 9
+    PUSHBUTTON      "", 1424, 150, 78, 54, 13
+    PUSHBUTTON      "", 1444, 207, 78, 80, 13
+    LTEXT           "", 1494, 290, 80, 53, 9
+    LTEXT           "", 1485, 7, 94, 141, 9
+    PUSHBUTTON      "", 1425, 150, 92, 54, 13
+    PUSHBUTTON      "", 1445, 207, 92, 80, 13
+    LTEXT           "", 1495, 290, 94, 53, 9
+    LTEXT           "", 1486, 7, 108, 141, 9
+    PUSHBUTTON      "", 1426, 150, 106, 54, 13
+    PUSHBUTTON      "", 1446, 207, 106, 80, 13
+    LTEXT           "", 1496, 290, 108, 53, 9
+    LTEXT           "", 1487, 7, 122, 141, 9
+    PUSHBUTTON      "", 1427, 150, 120, 54, 13
+    PUSHBUTTON      "", 1447, 207, 120, 80, 13
+    LTEXT           "", 1497, 290, 122, 53, 9
+    LTEXT           "", 1488, 7, 136, 141, 9
+    PUSHBUTTON      "", 1428, 150, 134, 54, 13
+    PUSHBUTTON      "", 1448, 207, 134, 80, 13
+    LTEXT           "", 1498, 290, 136, 53, 9
+
+    LTEXT           "Red text: one key or pad button does two or more things.", -1, 7, 153, 276, 9
+    LTEXT           "Click a cell, then press a key or a pad button. Escape cancels.", -1, 7, 164, 276, 9
+    PUSHBUTTON      "&Defaults", IDC_FK_DEFAULTS, 289, 161, 52, 14
+END
+
 // DIV-0087: the music source (docs/music-seq-engine.md).
 IDD_PAGE_MUSIC DIALOGEX 0, 0, 280, 60
 STYLE DS_SETFONT | DS_CONTROL | WS_CHILD

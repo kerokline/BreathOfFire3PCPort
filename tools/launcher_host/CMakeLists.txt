@@ -25,7 +25,7 @@ add_custom_command(
   VERBATIM)
 add_executable(config_tests config_tests.cpp ${REPO_SRC}/launcher/config.cpp ${REPO_SRC}/launcher/suites.cpp
                ${REPO_SRC}/common/cache_manifest.cpp ${REPO_SRC}/common/home.cpp
-               ${REPO_SRC}/input/bindings.cpp "${_suites_hdr}")
+               ${REPO_SRC}/input/bindings.cpp ${REPO_SRC}/input/function_keys.cpp "${_suites_hdr}")
 add_subdirectory(${REPO_SRC}/os "${CMAKE_BINARY_DIR}/os")
 target_include_directories(config_tests PRIVATE ${REPO_SRC} "${CMAKE_BINARY_DIR}/gen")
 target_link_libraries(config_tests PRIVATE bof3x_os)

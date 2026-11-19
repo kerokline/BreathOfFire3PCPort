@@ -6826,27 +6826,27 @@ site	src/game/platform/gte.cpp	617	fmt_place	word	live	Gte_Transformed[0]	%08X	"
 site	src/game/platform/gte.cpp	617	fmt_place	word	live	Gte_Transformed[1]	%08X	"original %08X %08X %08X", Gte_Transformed[0], Gte_Transformed[1], Gte_Transformed[2],
 site	src/game/platform/gte.cpp	617	fmt_place	word	live	Gte_Transformed[2]	%08X	"original %08X %08X %08X", Gte_Transformed[0], Gte_Transformed[1], Gte_Transformed[2],
 site	src/game/platform/gte.cpp	910	low32	object_ours	live	&psx_gte::g_lv_exact	Low32	Low32(&psx_gte::g_lv_exact), was, is, 4);
-site	src/game/platform/magic_080.cpp	116	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	116	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	118	uintptr	-	live	std::uintptr_t	-	std::uint32_t* Longs(U address) { return reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	118	widen	param	live	address	std::uint32_t*	std::uint32_t* Longs(U address) { return reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	120	low32	helper_def	live	p	Low32	U Addr(const volatile void* p) { return Low32(p); }
-site	src/game/platform/magic_080.cpp	159	uintptr	-	live	std::uintptr_t	-	const char* StrWinMain(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	159	widen	param	live	address	const char*	const char* StrWinMain(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	306	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(void*)>(static_cast<std::uintptr_t>(::bof3::Code(kSoundSetup.v))), Port_DroppedCall,
-site	src/game/platform/magic_080.cpp	327	long	ul	live	unsigned long	-	if (std::swprintf(slash + 1, room, L" ", static_cast<unsigned long>(Frame_Counter)) < 0) return;
-site	src/game/platform/magic_080.cpp	329	long	ul	live	unsigned long	-	bof3::Log(" ", static_cast<unsigned long>(Frame_Counter), ok ? " " : " ",
-site	src/game/platform/magic_080.cpp	689	long	l	live	long	-	long long draw_ticks = 0, logic_ticks = 0;
-site	src/game/platform/magic_080.cpp	707	uintptr	-	live	std::uintptr_t	-	Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
-site	src/game/platform/magic_080.cpp	707	widen	code_place	live	::bof3::Code(bof3::addr::Boot_Task)	void*	Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
-site	src/game/platform/magic_080.cpp	858	uintptr	-	live	std::uintptr_t	-	unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride));
-site	src/game/platform/magic_080.cpp	858	widen	img_place	live	::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride	unsigned char*	unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride));
-site	src/game/platform/magic_080.cpp	917	naked	-	live	Cfg_Load	-	extern " " __attribute__((naked)) void __cdecl Cfg_Load(void) {
-site	src/game/platform/magic_080.cpp	918	width_if	asm_pair	live	Cfg_Load	#if defined(__i386__)	#if defined(__i386__)
-site	src/game/platform/magic_080.cpp	919	asm	stack	live	subl $0x3C, %esp	call leal pushl subl	asm("subl $0x3C, %esp\n\t"
-site	src/game/platform/magic_080.cpp	931	asm	stack	live	subq $0x68, %rsp	call leaq subq	asm("subq $0x68, %rsp\n\t"
-site	src/game/platform/magic_080.cpp	1001	low32	image_local	live	node	Low32	node[1] = Low32(node);
-site	src/game/platform/magic_080.cpp	1018	narrow_call	image	live	Gfx_CurrentEnv	Addr	const U block = Addr(Gfx_CurrentEnv);
+site	src/game/platform/magic_080.cpp	118	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	118	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	120	uintptr	-	live	std::uintptr_t	-	std::uint32_t* Longs(U address) { return reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	120	widen	param	live	address	std::uint32_t*	std::uint32_t* Longs(U address) { return reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	122	low32	helper_def	live	p	Low32	U Addr(const volatile void* p) { return Low32(p); }
+site	src/game/platform/magic_080.cpp	161	uintptr	-	live	std::uintptr_t	-	const char* StrWinMain(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	161	widen	param	live	address	const char*	const char* StrWinMain(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	308	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(void*)>(static_cast<std::uintptr_t>(::bof3::Code(kSoundSetup.v))), Port_DroppedCall,
+site	src/game/platform/magic_080.cpp	329	long	ul	live	unsigned long	-	if (std::swprintf(slash + 1, room, L" ", static_cast<unsigned long>(Frame_Counter)) < 0) return;
+site	src/game/platform/magic_080.cpp	331	long	ul	live	unsigned long	-	bof3::Log(" ", static_cast<unsigned long>(Frame_Counter), ok ? " " : " ",
+site	src/game/platform/magic_080.cpp	720	long	l	live	long	-	long long draw_ticks = 0, logic_ticks = 0;
+site	src/game/platform/magic_080.cpp	738	uintptr	-	live	std::uintptr_t	-	Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
+site	src/game/platform/magic_080.cpp	738	widen	code_place	live	::bof3::Code(bof3::addr::Boot_Task)	void*	Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
+site	src/game/platform/magic_080.cpp	890	uintptr	-	live	std::uintptr_t	-	unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride));
+site	src/game/platform/magic_080.cpp	890	widen	img_place	live	::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride	unsigned char*	unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride));
+site	src/game/platform/magic_080.cpp	949	naked	-	live	Cfg_Load	-	extern " " __attribute__((naked)) void __cdecl Cfg_Load(void) {
+site	src/game/platform/magic_080.cpp	950	width_if	asm_pair	live	Cfg_Load	#if defined(__i386__)	#if defined(__i386__)
+site	src/game/platform/magic_080.cpp	951	asm	stack	live	subl $0x3C, %esp	call leal pushl subl	asm("subl $0x3C, %esp\n\t"
+site	src/game/platform/magic_080.cpp	963	asm	stack	live	subq $0x68, %rsp	call leaq subq	asm("subq $0x68, %rsp\n\t"
+site	src/game/platform/magic_080.cpp	1033	low32	image_local	live	node	Low32	node[1] = Low32(node);
+site	src/game/platform/magic_080.cpp	1050	narrow_call	image	live	Gfx_CurrentEnv	Addr	const U block = Addr(Gfx_CurrentEnv);
 site	src/game/platform/music.cpp	80	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/platform/music.cpp	80	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/platform/music.cpp	110	uintptr	-	live	std::uintptr_t	-	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
@@ -9087,7 +9087,7 @@ site	src/hook/write_watch.cpp	220	fmt_place	word	live	g_word[k].last	%08X	bof3::
 site	src/hook/write_watch.cpp	220	fmt_place	word	live	g_word[k].place	%08X	bof3::Log("writewatch watching 0x%08X (place %08X, now %08X) for writes on thread %lu, debug register %d", g_word[k].va,
 site	src/hook/write_watch.cpp	220	fmt_place	word	live	g_word[k].va	%08X	bof3::Log("writewatch watching 0x%08X (place %08X, now %08X) for writes on thread %lu, debug register %d", g_word[k].va,
 site	src/hook/write_watch.cpp	221	long	ul	live	unsigned long	-	g_word[k].place, g_word[k].last, static_cast<unsigned long>(g_thread), k);
-site	src/input/bindings.cpp	160	long	l	live	long	-	const long v = std::strtol(name.c_str() + 2, &end, 16);
+site	src/input/bindings.cpp	171	long	l	live	long	-	const long v = std::strtol(name.c_str() + 2, &end, 16);
 site	src/input/button_tests.cpp	112	uintptr	-	live	std::uintptr_t	-	return *reinterpret_cast<const U16*>(static_cast<std::uintptr_t>(::bof3::Img(Battle_CommandPadMasks_addr) + 2 * k));
 site	src/input/button_tests.cpp	112	widen	img_place	live	::bof3::Img(Battle_CommandPadMasks_addr) + 2 * k	const U16*	return *reinterpret_cast<const U16*>(static_cast<std::uintptr_t>(::bof3::Img(Battle_CommandPadMasks_addr) + 2 * k));
 site	src/input/button_tests.cpp	208	uintptr	-	live	std::uintptr_t	-	U16* Words() { return reinterpret_cast<U16*>(static_cast<std::uintptr_t>(::bof3::Img(0x903580))); }
@@ -9104,12 +9104,12 @@ site	src/input/sigma.cpp	195	uintptr	-	live	std::uintptr_t	-	Check(std::memcmp(j
 site	src/input/sigma.cpp	195	widen	img_place	live	::bof3::Img(kBootDefaults.v)	const void*	Check(std::memcmp(jp, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(::bof3::Img(kBootDefaults.v))), sizeof jp) == 0,
 site	src/input/sigma.cpp	526	low32	object_ours	live	&g_sigma_on	Low32	bof3::PatchBytes(" ", Low32(&g_sigma_on), &was, &is, 1);
 site	src/input/sigma.cpp	527	low32	object_ours	live	&g_by_source	Low32	bof3::PatchBytes(" ", Low32(&g_by_source), &was,
-site	src/launcher/config.cpp	295	long	l	live	long	-	const long v = std::strtol(value.c_str(), &end, 10);
-site	src/launcher/config.cpp	1287	long	l	live	long	-	long long off = 0;
-site	src/launcher/config.cpp	1302	long	l	live	long	-	off += 16 + static_cast<long long>(len);
-site	src/launcher/config_dialog.cpp	1268	ptr_overlay	unread	live	lp	Capture	auto* c = reinterpret_cast<Capture*>(lp);
-site	src/launcher/config_dialog.cpp	1729	ptr_overlay	unread	live	GetWindowLongPtrW(dlg, GWLP_USERDATA)	DialogState	auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
-site	src/launcher/config_dialog.cpp	1733	ptr_overlay	unread	live	lp	DialogState	state = reinterpret_cast<DialogState*>(lp);
+site	src/launcher/config.cpp	298	long	l	live	long	-	const long v = std::strtol(value.c_str(), &end, 10);
+site	src/launcher/config.cpp	1338	long	l	live	long	-	long long off = 0;
+site	src/launcher/config.cpp	1353	long	l	live	long	-	off += 16 + static_cast<long long>(len);
+site	src/launcher/config_dialog.cpp	1286	ptr_overlay	unread	live	lp	Capture	auto* c = reinterpret_cast<Capture*>(lp);
+site	src/launcher/config_dialog.cpp	1889	ptr_overlay	unread	live	GetWindowLongPtrW(dlg, GWLP_USERDATA)	DialogState	auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
+site	src/launcher/config_dialog.cpp	1893	ptr_overlay	unread	live	lp	DialogState	state = reinterpret_cast<DialogState*>(lp);
 site	src/launcher/launcher.cpp	160	uintptr	-	live	std::uintptr_t	-	if (!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base)), &dos, sizeof dos, nullptr) ||
 site	src/launcher/launcher.cpp	160	widen	param	live	base	LPCVOID	if (!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base)), &dos, sizeof dos, nullptr) ||
 site	src/launcher/launcher.cpp	162	uintptr	-	live	std::uintptr_t	-	!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base + dos.e_lfanew)), &nt, sizeof nt,

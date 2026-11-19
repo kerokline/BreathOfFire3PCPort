@@ -71,7 +71,7 @@ struct Entry {
     std::uint8_t languages;        // kLang* bits, or kLangAny
 };
 
-inline constexpr std::size_t kSwitchCount = 231;
+inline constexpr std::size_t kSwitchCount = 232;
 inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "Save_WriteFile", 0, 14},   // DIV-0002
     {SwitchForm::Name, "File_OpenWrite", 0, 14},   // DIV-0003
@@ -304,9 +304,10 @@ inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "Game_WinMain", 0, 12},   // DIV-0237
     {SwitchForm::Name, "WindowSdl", 0, 9},   // DIV-0238
     {SwitchForm::Name, "KeyboardSdl", 0, 11},   // DIV-0239
+    {SwitchForm::Env, "env:BOF3X_FKEYS=", 4, 11},   // DIV-0240
 };
 
-inline constexpr std::size_t kEntryCount = 239;
+inline constexpr std::size_t kEntryCount = 240;
 inline constexpr Entry kEntries[kEntryCount] = {
     {1, "Re-encode `capcom.avi` from Indeo 5 to Cinepak",
      Tier::Intent, State::Active, 0, 0, 0, true, Player::Never, 0, kLangAny},
@@ -786,6 +787,8 @@ inline constexpr Entry kEntries[kEntryCount] = {
      Tier::Sensible, State::Active, 0, 229, 1, true, Player::Yes, 0, kLangAny},
     {239, "The keyboard through SDL3's keyboard state, DirectInput's numbers kept",
      Tier::Sensible, State::Active, 0, 230, 1, true, Player::Yes, 0, kLangAny},
+    {240, "The function actions rebindable to any key and to a pad input",
+     Tier::Sensible, State::Active, 0, 231, 1, false, Player::Yes, 0, kLangAny},
 };
 
 // The switches of one entry.

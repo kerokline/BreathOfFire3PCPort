@@ -23,6 +23,7 @@
 
 #include "game/language_tags.h"
 #include "input/bindings.h"
+#include "input/function_keys.h"
 #include "launcher/ledger_registry.h"
 
 namespace bof3x {
@@ -257,6 +258,15 @@ struct Config {
     // map and the face-button layout (BOF3X_PAD). Edited in the Controls...
     // dialog; `key.NAME=action` and `pad.NAME=action` lines in the ini.
     input::Bindings bindings = input::Bindings::Defaults();
+    // The function keys (input/function_keys.h; docs/controls.md section 7):
+    // each action's key and pad input, as `fkey.ACTION=KEY` and
+    // `fpad.ACTION=INPUT` lines say over the defaults, edited on the Controls
+    // tab's Function keys page. fkeys_named: the ini had such a line or the
+    // page was changed - only then are the lines written, and only then does
+    // `fkeys` decide the row above the text's key (ConfigFnKeys); without,
+    // ruby_key= does, as before.
+    input::FnBindings fkeys = input::FnBindings::Defaults();
+    bool fkeys_named = false;
     // Cleared by the dialog's "Show this window every time" box. --config
     // brings the dialog back whatever this says.
     bool show_launcher = true;
@@ -616,6 +626,20 @@ void ConfigRubyUiDefault(Config& cfg, const std::wstring& home);
 // ruby_key='s value as the DLL reads BOF3X_RUBY_KEY: "none" or "f1".."f12"
 // (any case in, lower case out), or empty when `value` is neither.
 std::string ConfigRubyKey(const std::string& value);
+
+// The function keys the game builds without BOF3X_FKEYS: the defaults, the
+// row above the text on ruby_key='s key (BOF3X_RUBY_KEY; f4 when it names
+// none the game takes).
+input::FnBindings ConfigFnKeysBaseline(const Config& cfg);
+// The function keys the game is to use, and the page shows: `fkeys` when
+// fkeys_named, else ConfigFnKeysBaseline. ConfigApplyEnvironment hands them
+// over as BOF3X_FKEYS (input::FnFormat, comma-separated) when they differ from
+// the baseline and the environment has no BOF3X_FKEYS.
+input::FnBindings ConfigFnKeys(const Config& cfg);
+// The page's table into `cfg`: fkeys, fkeys_named, and ruby_key= when the row
+// above the text's key is an F key (f1..f12) or none, so that the two lines
+// agree; another key leaves ruby_key= as it was (BOF3X_FKEYS carries it).
+void ConfigFnKeysSet(Config& cfg, const input::FnBindings& fkeys);
 
 // The optional text layer a ruby= value names under `language` (a tag; empty or
 // "original" for the port's Chinese): ruby-<ruby>-<language>, or empty when

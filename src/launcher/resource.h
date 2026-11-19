@@ -109,6 +109,16 @@
 #define IDC_CT_LAYOUT   1380
 #define IDC_CT_DEFAULTS 1381
 
+// The Controls tab's third sub-page, Function keys (input/function_keys.h;
+// docs/controls.md section 7): one row an action (FnAction's order), a key
+// cell and a pad cell each - the ids are base + action - and its Defaults.
+#define IDD_PAGE_CONTROLS3 125
+#define IDC_FK_KEY      1420
+#define IDC_FK_PAD      1440
+#define IDC_FK_DEFAULTS 1460
+#define IDC_FK_LABEL    1480   // the row's label (the table's), base + action
+#define IDC_FK_NOTE     1490   // the row's note, base + action
+
 // The capture over a Controls cell: press a key or a pad input.
 #define IDD_CAPTURE      104
 #define IDC_CP_PROMPT   1400

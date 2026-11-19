@@ -12,6 +12,7 @@
 #include "game/area_backdrop_callees.h"
 #include "game/display_setup.h"
 #include "game/effect_5a_callees.h"
+#include "game/function_keys_game.h"
 #include "game/game_clock.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
@@ -41,6 +42,7 @@
 #include "hook/stallwatch.h"
 #include "hook/statehash.h"
 #include "input/bindings.h"
+#include "input/function_keys.h"
 #include "input/key_codes.h"
 #include "render/render_d3d11.h"
 #include "render/render_shim.h"
@@ -492,20 +494,24 @@ void WinGame_Activate(bool active) {
     }
 }
 
-// WM_KEYDOWN's: `vk` its wParam, `lparam` its lParam.
-void WinGame_Key(unsigned vk, std::int32_t lparam) {
-    using namespace bof3x::input;
-    const unsigned wparam = vk;
-    bof3::InputScript_RecordKey(wparam, lparam);   // BOF3X_RECORD only
+namespace {
+
+// One function key's action (input/function_keys.h; -1 for a key that holds
+// none), from a key message or a pad press (WinGame_Key, WinGame_PadActions):
+// the same code either way. `repeat`: a held key's auto-repeat (bit 30 of a
+// WM_KEYDOWN's lParam); a pad press never is one.
+void WinGame_Action(int act, bool repeat) {
+    using bof3x::input::FnAction;
+    const auto Is = [act](FnAction a) { return act == static_cast<int>(a); };
     // DIVERGENCE (the quicksave round's draft D, docs/quicksave.md, section QM): F5
     // opens the quick menu, pausing; while it is open every key is its own.
-    if (bof3::QuickMenu_Key(wparam, lparam)) return;
+    if (bof3::QuickMenu_Key(Is(FnAction::kQuickMenu), repeat)) return;
     const bool was_paused = Game_Paused != 0;
-    if (was_paused && wparam != kVkF9) {
+    if (was_paused && !Is(FnAction::kPause)) {
         Game_Paused = 0;
         Sound_ResumeAll();
     }
-    if (wparam == kVkF9) {
+    if (Is(FnAction::kPause)) {
         if (!was_paused) {
             Game_Paused = 1;
             Sound_PauseAll();
@@ -516,7 +522,7 @@ void WinGame_Key(unsigned vk, std::int32_t lparam) {
         }
         return;
     }
-    if (wparam == kVkF8) {
+    if (Is(FnAction::kWindow)) {
         if (Desktop_Width > 640 && Desktop_Height > 480) {
             Display_Changed = 1;
             Cfg_Fullscreen ^= 1;
@@ -537,16 +543,20 @@ void WinGame_Key(unsigned vk, std::int32_t lparam) {
     // The reading row's study key (docs/reading-row.md 3.5; BOF3X_RUBY_KEY,
     // F4 by default): shows and hides the reading rows' glyphs. Ours; a
     // key Capcom left unbound.
-    if (MsgBox_ReadingRowKey(wparam, (lparam & (1 << 30)) != 0)) return;
-    if (wparam == kVkF6) {
-        if ((lparam & (1 << 30)) == 0) bof3::Snapshot_RequestTake();
+    if (Is(FnAction::kRows)) {
+        MsgBox_ReadingRowKey(repeat);
         return;
     }
-    if (wparam == kVkF7) {
-        if ((lparam & (1 << 30)) == 0) bof3::Snapshot_RequestLoad(0x10);
+    if (Is(FnAction::kQuicksave)) {
+        if (!repeat) bof3::Snapshot_RequestTake();
         return;
     }
-    if (wparam == kVkF12) {
+    if (Is(FnAction::kQuickload)) {
+        if (!repeat) bof3::Snapshot_RequestLoad(0x10);
+        return;
+    }
+    // Capcom's F12: a held key's repeats write again, as they always did.
+    if (Is(FnAction::kSaveWrite)) {
         Save_QuickWrite();
         Overlay_Frames = kOverlayFrames;
         Overlay_Text = StrWinMain(::bof3::Img(kStrSaveOk.v));
@@ -555,14 +565,14 @@ void WinGame_Key(unsigned vk, std::int32_t lparam) {
     // F11: the frame to a file (render::SaveFrame). Tooling, not a
     // divergence: DIV-0040 made the key nothing, and nothing of the
     // game's changes.
-    if (wparam == kVkF11) {
-        if ((lparam & (1 << 30)) == 0) SaveFrameBesideDll();
+    if (Is(FnAction::kPicture)) {
+        if (!repeat) SaveFrameBesideDll();
         return;
     }
     // DIV-0048: F1 toggles double speed; a held key's repeats (bit 30 of
     // lparam, the previous state) do not toggle it back.
-    if (wparam == kVkF1) {
-        if ((lparam & (1 << 30)) == 0) {
+    if (Is(FnAction::kSpeed)) {
+        if (!repeat) {
             g_speed = g_speed == 1 ? 2 : 1;
             g_speed_scripted = false;
             Overlay_Frames = kOverlayFrames;
@@ -571,6 +581,27 @@ void WinGame_Key(unsigned vk, std::int32_t lparam) {
         }
         return;
     }
+}
+
+// Once a pass of WinMain's loop, after the message step: each action whose
+// pad input went down (FunctionKeys_PadPressed), as if its key went down -
+// never while the window is not in front (DIV-0033's rule for the pad words,
+// and the original's freeze, App_Active) - in kFnOrder.
+void WinGame_PadActions() {
+    const unsigned fired = bof3::FunctionKeys_PadPressed(App_Active != 0 && win_main::g_foreground);
+    if (fired == 0) return;
+    for (bof3x::input::FnAction a : bof3x::input::kFnOrder)
+        if (fired & (1u << static_cast<int>(a))) WinGame_Action(static_cast<int>(a), false);
+}
+
+}  // namespace
+
+// WM_KEYDOWN's: `vk` its wParam, `lparam` its lParam.
+// DIVERGENCE DIV-0240: the key's action is the
+// function keys' table's (game/function_keys_game.h), not a fixed F key's.
+void WinGame_Key(unsigned vk, std::int32_t lparam) {
+    bof3::InputScript_RecordKey(vk, lparam);   // BOF3X_RECORD only
+    WinGame_Action(bof3::FunctionKeys_ActionOfKey(vk, lparam), (lparam & (1 << 30)) != 0);
 }
 
 extern "C" void __cdecl Cursor_Sync(void) {
@@ -721,6 +752,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                     quit = true;   // WM_QUIT, logged by the step
                     break;
                 }
+                WinGame_PadActions();   // the function keys' pad inputs (none bound: nothing read)
                 if (!App_Active) continue;
                 if (Game_RestartFlag) {
                     Game_RestartFlag = 0;

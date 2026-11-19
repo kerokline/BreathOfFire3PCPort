@@ -53,6 +53,8 @@
 #include "game/win_main.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "input/function_keys.h"
+#include "input/key_sdl.h"
 #include "os/os.h"
 
 namespace game_window {
@@ -214,7 +216,11 @@ bool SDLCALL Watch(void*, SDL_Event* e) {
         break;
     case SDL_EVENT_KEY_DOWN:
         if (e->key.windowID == id && !native::KeysAndFocusFromMessages()) {
-            const std::int32_t lparam = 1 | (e->key.repeat ? (1 << 30) : 0);
+            // The scan code and extended flag as Windows gives them (bits 16..24),
+            // from key_sdl.h's DIK number: the function keys' table looks a key
+            // that is not an F key up by them (input/function_keys.h).
+            const std::int32_t lparam = 1 | (e->key.repeat ? (1 << 30) : 0) |
+                                        bof3x::input::FnMessageBitsOfDik(bof3x::input::DikOfScancode(e->key.scancode));
             Post({Got::Key, static_cast<std::int32_t>(VkOf(e->key.scancode)), lparam});
         }
         break;

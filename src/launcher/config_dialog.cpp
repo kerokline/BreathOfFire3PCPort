@@ -10,6 +10,8 @@
 #include <commctrl.h>
 #include <objbase.h>
 #include <shlobj.h>
+#include <uxtheme.h>
+#include <vssym32.h>
 #include <wincodec.h>
 
 #include <algorithm>
@@ -20,6 +22,7 @@
 #include <vector>
 
 #include "common/home.h"
+#include "input/function_keys.h"
 #include "input/pad_sdl.h"
 #include "launcher/ledger_registry.h"
 #include "launcher/music_player.h"
@@ -65,6 +68,8 @@ constexpr SubPage kSubPages[] = {
     {kPageSettings, IDD_PAGE_PRESET, L"Preset"},
     {kPageControls, IDD_PAGE_CONTROLS, L"Directions and buttons"},
     {kPageControls, IDD_PAGE_CONTROLS2, L"Shoulders, Start and Select"},
+    // The function keys (the owner's call, 2026-11-18; input/function_keys.h).
+    {kPageControls, IDD_PAGE_CONTROLS3, L"Function keys", nullptr},
     {kPageMusic, IDD_PAGE_MUSIC, nullptr},
     {kPageGame, IDD_PAGE_VERSIONS, L"Graphics and audio"},
     {kPageGame, IDD_PAGE_VERSIONS2, L"Data"},
@@ -126,6 +131,10 @@ struct DialogState {
     HWND pages[kSubPageCount] = {};       // kSubPages' order
     Cells cells{};
     bool cells_touched = false, cheats_touched = false;
+    // The Function keys page's table (ConfigFnKeys at the open), written to
+    // cfg only once a cell or its Defaults was used (ConfigFnKeysSet).
+    input::FnBindings fk = input::FnBindings::Defaults();
+    bool fk_touched = false;
     // New Game's two boxes (NewGameRefresh): -1 untouched, else the box as clicked.
     int names_box = -1, options_box = -1;
     // Back applied the pages to cfg: Exit then saves them (kDialogSave).
@@ -1236,6 +1245,10 @@ struct Capture {
     bool held_at_open[static_cast<int>(input::PadInput::kCount)] = {};
     HWND dlg = nullptr;
     HHOOK hook = nullptr;
+    // A Function keys cell asked (FnCaptureInto): F10 and Alt are refused,
+    // since Windows sends them to the game's window as WM_SYSKEYDOWN, which
+    // its procedure never gives to the key handler (game_window_win32.cpp).
+    bool fn = false;
 };
 Capture* g_capture = nullptr;
 
@@ -1249,6 +1262,11 @@ LRESULT CALLBACK CaptureKeyHook(int code, WPARAM wp, LPARAM lp) {
         if (scan == 0x01) {   // Escape cancels
             g_capture->kind = Captured::kCancel;
             EndDialog(g_capture->dlg, 0);
+            return 1;
+        }
+        if (g_capture->fn && ((scan == 0x44 && !extended) || scan == 0x38)) {   // F10, either Alt
+            SetDlgItemTextW(g_capture->dlg, IDC_CP_PROMPT,
+                            L"The game does not get F10 or Alt. Press a different key or a pad button.");
             return 1;
         }
         if (scan != 0) {
@@ -1268,7 +1286,8 @@ INT_PTR CALLBACK CaptureProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         auto* c = reinterpret_cast<Capture*>(lp);
         c->dlg = dlg;
         g_capture = c;
-        std::wstring prompt = std::wstring(L"Press a key or a pad button for ") + c->what + L".";
+        std::wstring prompt = c->fn ? std::wstring(L"Press a key or a pad button for this action: ") + c->what + L"."
+                                    : std::wstring(L"Press a key or a pad button for ") + c->what + L".";
         SetDlgItemTextW(dlg, IDC_CP_PROMPT, prompt.c_str());
         // What is held now is not the answer: a button that opened this dialog
         // through the pad navigation is still down.
@@ -1347,6 +1366,138 @@ void CaptureInto(HWND owner, Cells& c, int row, int slot, bool key_cell) {
         c.kept.erase(std::remove_if(c.kept.begin(), c.kept.end(),
                                     [&](const input::KeyBinding& k) { return k.dik == cap.value; }),
                      c.kept.end());
+}
+
+// ---- The function keys (input/function_keys.h; docs/controls.md 7) ----------
+//
+// The Controls tab's third sub-page: one row an action, a key cell and a pad
+// cell, the same capture as the cells above. Nothing is taken from another
+// cell: a key or pad input that does two or more things - two actions, or an
+// action and a game button on the pages above - is allowed, and every cell
+// that holds it is drawn with red text (FnRedRefresh, PageProc's custom draw),
+// on all three pages.
+
+// The capture over a Function keys cell; the action takes what was pressed,
+// and no other cell changes. As above, the device decides the kind of cell.
+void FnCaptureInto(HWND owner, input::FnBindings& fk, int action, bool key_cell) {
+    const std::wstring what = Wide(input::FnActions()[action].label);
+    Capture cap{what.c_str(), key_cell};
+    cap.fn = true;
+    DialogBoxParamW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(IDD_CAPTURE), owner, CaptureProc,
+                    reinterpret_cast<LPARAM>(&cap));
+    if (cap.kind == Captured::kCancel) return;
+    if (cap.kind == Captured::kClear) {
+        (key_cell ? fk.key : fk.pad)[action] = -1;
+        return;
+    }
+    (cap.kind == Captured::kKey ? fk.key : fk.pad)[action] = cap.value;
+}
+
+// The cells whose text is red, by id (IDC_CT_KEY1 .. IDC_FK_PAD + the last
+// action): read by PageProc's custom draw.
+constexpr int kRedFirst = IDC_CT_KEY1, kRedLast = IDC_FK_PAD + input::kFnActionCount - 1;
+bool g_red[kRedLast - kRedFirst + 1];
+bool Red(int id) { return id >= kRedFirst && id <= kRedLast && g_red[id - kRedFirst]; }
+
+// Every key cell and every pad cell of the three pages, and the kept keys
+// (a key of two buttons at once, the keypad's diagonals: no cell, but a
+// function key on one is a double binding), through input::FnRedCells; each
+// cell that changed colour is drawn again at once.
+void FnRedRefresh(HWND dlg, const DialogState& state) {
+    std::vector<int> keys, key_ids, pads, pad_ids;
+    for (int row = 0; row < input::kActionCount; ++row)
+        for (int slot = 0; slot < 2; ++slot) {
+            keys.push_back(state.cells.key[row][slot]);
+            key_ids.push_back((slot ? IDC_CT_KEY2 : IDC_CT_KEY1) + row);
+            pads.push_back(state.cells.pad[row][slot]);
+            pad_ids.push_back((slot ? IDC_CT_PAD2 : IDC_CT_PAD1) + row);
+        }
+    for (const input::KeyBinding& k : state.cells.kept) {
+        keys.push_back(k.dik);
+        key_ids.push_back(0);   // no cell
+    }
+    const input::FnRed red = input::FnRedCells(keys, pads, state.fk);
+    const auto Mark = [&](int id, bool on) {
+        if (id < kRedFirst || id > kRedLast || g_red[id - kRedFirst] == on) return;
+        g_red[id - kRedFirst] = on;
+        if (HWND h = Item(dlg, id)) InvalidateRect(h, nullptr, TRUE);
+    };
+    for (size_t i = 0; i < keys.size(); ++i) Mark(key_ids[i], red.game_keys[i]);
+    for (size_t i = 0; i < pads.size(); ++i) Mark(pad_ids[i], red.game_pads[i]);
+    for (int a = 0; a < input::kFnActionCount; ++a) {
+        Mark(IDC_FK_KEY + a, red.fn_key[a]);
+        Mark(IDC_FK_PAD + a, red.fn_pad[a]);
+    }
+}
+
+// The cells' text: the key's name or the pad input's label, "(none)" as above.
+void FnRefresh(HWND dlg, const DialogState& state) {
+    for (int a = 0; a < input::kFnActionCount; ++a) {
+        const int key = state.fk.key[a], pad = state.fk.pad[a];
+        SetText(dlg, IDC_FK_KEY + a, key < 0 ? L"(none)" : Wide(input::KeyName(key)).c_str());
+        SetText(dlg, IDC_FK_PAD + a,
+                pad < 0 || pad >= static_cast<int>(input::PadInput::kCount) ? L"(none)"
+                                                                            : Wide(input::PadInputs()[pad].label).c_str());
+    }
+    FnRedRefresh(dlg, state);
+}
+
+// The Settings page's Display box names the key that changes the window
+// (the Function keys page's window action), or no key when it has none.
+void DisplayItems(HWND dlg, const DialogState& state) {
+    const int sel = Selected(dlg, IDC_DISPLAY);
+    const int key = state.fk.key[static_cast<int>(input::FnAction::kWindow)];
+    SendMessageW(Item(dlg, IDC_DISPLAY), CB_RESETCONTENT, 0, 0);
+    if (key < 0) {
+        AddItem(dlg, IDC_DISPLAY, L"Full screen");
+        AddItem(dlg, IDC_DISPLAY, L"Window");
+    } else {
+        const std::wstring name = Wide(input::KeyName(key));
+        AddItem(dlg, IDC_DISPLAY, (L"Full screen (" + name + L" changes to a window)").c_str());
+        AddItem(dlg, IDC_DISPLAY, (L"Window (" + name + L" changes to full screen)").c_str());
+    }
+    if (sel >= 0) Select(dlg, IDC_DISPLAY, sel);
+}
+
+void FnPopulate(HWND dlg, const DialogState& state) {
+    for (int a = 0; a < input::kFnActionCount; ++a) {
+        SetText(dlg, IDC_FK_LABEL + a, Wide(input::FnActions()[a].label).c_str());
+        SetText(dlg, IDC_FK_NOTE + a, Wide(input::FnActions()[a].note).c_str());
+    }
+    FnRefresh(dlg, state);
+}
+
+// A red cell, drawn as the theme draws a push button, its text in red: the
+// default draw cannot take a text colour (comctl32 6 draws the label with the
+// theme's). Called from the page's NM_CUSTOMDRAW at CDDS_PREPAINT; true when
+// it drew (the default draw is then skipped).
+bool DrawRedCell(const NMCUSTOMDRAW& cd) {
+    const HWND button = cd.hdr.hwndFrom;
+    RECT rc = cd.rc;
+    const HDC dc = cd.hdc;
+    const bool pressed = (cd.uItemState & CDIS_SELECTED) != 0, hot = (cd.uItemState & CDIS_HOT) != 0;
+    const bool disabled = (cd.uItemState & CDIS_DISABLED) != 0, focus = (cd.uItemState & CDIS_FOCUS) != 0;
+    RECT content = rc;
+    if (HTHEME theme = OpenThemeData(button, L"BUTTON")) {
+        const int state = disabled ? PBS_DISABLED : pressed ? PBS_PRESSED : hot ? PBS_HOT : focus ? PBS_DEFAULTED : PBS_NORMAL;
+        if (IsThemeBackgroundPartiallyTransparent(theme, BP_PUSHBUTTON, state)) DrawThemeParentBackground(button, dc, &rc);
+        DrawThemeBackground(theme, dc, BP_PUSHBUTTON, state, &rc, nullptr);
+        GetThemeBackgroundContentRect(theme, dc, BP_PUSHBUTTON, state, &rc, &content);
+        CloseThemeData(theme);
+    } else {
+        DrawFrameControl(dc, &rc, DFC_BUTTON, DFCS_BUTTONPUSH | (pressed ? DFCS_PUSHED : 0));
+        InflateRect(&content, -3, -3);
+    }
+    wchar_t text[64] = {};
+    GetWindowTextW(button, text, 64);
+    const HFONT font = reinterpret_cast<HFONT>(SendMessageW(button, WM_GETFONT, 0, 0));
+    const HGDIOBJ old = font ? SelectObject(dc, font) : nullptr;
+    SetBkMode(dc, TRANSPARENT);
+    SetTextColor(dc, disabled ? GetSysColor(COLOR_GRAYTEXT) : RGB(0xC0, 0x00, 0x00));
+    DrawTextW(dc, text, -1, &content, DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS);
+    if (old) SelectObject(dc, old);
+    if (focus && !(SendMessageW(button, WM_QUERYUISTATE, 0, 0) & UISF_HIDEFOCUS)) DrawFocusRect(dc, &content);
+    return true;
 }
 
 // ---- The window (docs/launcher-settings.md section 2a) -----------------------
@@ -1673,6 +1824,14 @@ INT_PTR CALLBACK PageProc(HWND page, UINT msg, WPARAM wp, LPARAM lp) {
     case WM_HSCROLL:
         SendMessageW(GetParent(page), msg, wp, lp);
         return TRUE;
+    case WM_NOTIFY: {
+        // A Controls cell that does two or more things: its text in red (FnRedRefresh).
+        const auto* cd = reinterpret_cast<const NMCUSTOMDRAW*>(lp);
+        if (cd->hdr.code != NM_CUSTOMDRAW || !Red(static_cast<int>(cd->hdr.idFrom))) break;
+        if (cd->dwDrawStage != CDDS_PREPAINT || !DrawRedCell(*cd)) break;
+        SetWindowLongPtrW(page, DWLP_MSGRESULT, CDRF_SKIPDEFAULT);
+        return TRUE;
+    }
     case WM_MEASUREITEM: {
         // the owner-drawn Row above the text box; sent before WM_INITDIALOG
         auto* m = reinterpret_cast<MEASUREITEMSTRUCT*>(lp);
@@ -1714,6 +1873,7 @@ void ApplyPages(HWND dlg, DialogState& state) {
         BindingsFrom(state.cells, state.cfg->bindings);
         padnav::SetMap(state.cfg->bindings.pad);
     }
+    if (state.fk_touched) ConfigFnKeysSet(*state.cfg, state.fk);   // untouched: the fkey lines and ruby_key= as read
 }
 
 // Back to the title page. The pages are applied to cfg, so an Exit from there
@@ -1750,6 +1910,9 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         NewGamePopulate(dlg, *state);
         state->cells = CellsFrom(state->cfg->bindings);
         ControlsPopulate(dlg, state->cells);
+        state->fk = ConfigFnKeys(*state->cfg);
+        FnPopulate(dlg, *state);   // and the red cells of all three pages
+        DisplayItems(dlg, *state);
         Layout(dlg, *state);
         // The title bar's and the taskbar's icon: the launcher's own (launcher.rc IDI_BOF3X).
         for (const auto& [which, metric] : {std::pair{ICON_BIG, SM_CXICON}, std::pair{ICON_SMALL, SM_CXSMICON}}) {
@@ -1908,6 +2071,13 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
             state->cells = CellsFrom(input::Bindings::Defaults());
             ControlsPopulate(dlg, state->cells);
             state->cells_touched = true;
+            FnRedRefresh(dlg, *state);
+            return TRUE;
+        case IDC_FK_DEFAULTS:   // the Function keys page's: its own table only, as each page's Defaults
+            state->fk = input::FnBindings::Defaults();
+            state->fk_touched = true;
+            FnRefresh(dlg, *state);
+            DisplayItems(dlg, *state);
             return TRUE;
         case IDC_MUSICPLAYER: {
             // the cache folder as the box has it now, saved or not
@@ -1955,9 +2125,21 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
                 CaptureInto(dlg, state->cells, row, kind & 1, kind < 2);
                 ControlsRefresh(dlg, state->cells);
                 state->cells_touched = true;
+                FnRedRefresh(dlg, *state);
                 SetFocus(Item(dlg, id));
                 return TRUE;
             }
+        }
+        // A Function keys cell: IDC_FK_KEY + action or IDC_FK_PAD + action.
+        if ((id >= IDC_FK_KEY && id < IDC_FK_KEY + input::kFnActionCount) ||
+            (id >= IDC_FK_PAD && id < IDC_FK_PAD + input::kFnActionCount)) {
+            const bool key_cell = id < IDC_FK_PAD;
+            FnCaptureInto(dlg, state->fk, id - (key_cell ? IDC_FK_KEY : IDC_FK_PAD), key_cell);
+            state->fk_touched = true;
+            FnRefresh(dlg, *state);
+            DisplayItems(dlg, *state);
+            SetFocus(Item(dlg, id));
+            return TRUE;
         }
         if (SuiteRadioClicked(*state, id)) return TRUE;
         break;

@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 239 entries, DIV-0001..0239, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 240 entries, DIV-0001..0240, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -17968,5 +17968,97 @@ designed in rather than bolted on.
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=KeyboardSdl (ini off=); Windows only, off Windows the name stops the game
 - **Toward:** none - the port's keyboard through another library, not a release's behaviour
+- **Languages:** any
+- **State:** active
+
+### The function actions rebindable to any key and to a pad input
+
+- **ID:** DIV-0240
+- **Date:** 2026-11-18
+- **Subsystem:** platform / input (`WinGame_Key`, `WinGame_Action` and
+  `WinGame_PadActions` in `src/game/platform/magic_080.cpp`, the key half
+  of `Game_WndProc` `0x4FC6F0`; the table `src/input/function_keys.*` and
+  `src/game/platform/function_keys_game.cpp`; the launcher's Controls tab,
+  `src/launcher/config_dialog.cpp`, and its `fkey.` / `fpad.` lines and
+  `BOF3X_FKEYS`, `src/launcher/config.cpp`; the pad inputs,
+  `src/input/bindings.h` and `pad_sdl.cpp`; [`controls.md`](controls.md)
+  section 7)
+- **Tier:** Sensible - the actions are the same; which key or pad input
+  starts them is the player's choice
+- **Original behaviour:** the key half of the window procedure compares each
+  `WM_KEYDOWN`'s virtual key with fixed keys, in this order: F5 the quick
+  menu (ours, DIV-0147), F9 pause and, pressed again, back to the title
+  (Capcom's), F8 full screen or window (Capcom's; DIV-0032), the reading
+  row's key (`BOF3X_RUBY_KEY`, F4 by default; ours, DIV-0155), F6 and F7
+  quicksave and quick-load (ours, DIV-0145), F12 the save write to the
+  first slot (Capcom's), F11 the picture to a file (tooling; DIV-0040 made
+  Capcom's F11 nothing), F1 double speed (ours, DIV-0048). No key but
+  `BOF3X_RUBY_KEY`'s can be moved, and no pad input starts any of them. The
+  pad pages offer the inputs of DIV-0050's map and no others (read in the
+  merge base `98ae6e11`, `input/bindings.h`).
+- **New behaviour:** one table of nine actions, each with one key and one
+  pad input, either of them none (`input/function_keys.h`), shared by the
+  launcher and the game. The Controls tab has a third page, **Function
+  keys**: one row an action, a Keyboard cell and a Pad cell, any key and
+  any pad input, as on the other two pages.
+  - **A double binding is allowed and shown in red**, on all three pages
+    (`FnRedCells`); nothing is unbound automatically. Of two actions on one
+    key, or on one pad input, the first in the old order above runs alone
+    (`kFnOrder`, `function_keys.cpp` 43..46; `FnActionOfKey`;
+    `FunctionKeys_PadPressed`), as `BOF3X_RUBY_KEY` on F5, F8 or F9 did
+    before. A key that is also a game button's key does both: the action
+    through `WinGame_Key`, the button through the key bytes; a pad input
+    bound to an action and a game button does both.
+  - **A pad-bound action** fires on the press edge, never while held and
+    never as a repeat, once a pass of WinMain's loop after the message step
+    (`magic_080.cpp` 755), through the same code as its key
+    (`WinGame_Action`). It fires only while the window is in front
+    (`App_Active` and `win_main::g_foreground`); an input held then counts
+    once released. It does not fire during a movie (the movie has its own
+    loop, as keys did not either), nor under Capcom's WinMain. With no pad
+    input bound nothing is polled.
+  - **F10 and Alt are refused** by the page's capture
+    (`config_dialog.cpp` 1248..1269): Windows sends them as
+    `WM_SYSKEYDOWN`, which never reaches the key half.
+  - **Every input SDL's gamepad API reports is offered**, on all three
+    pages: eleven added - the four back paddles, `misc1`..`misc6` and the
+    touchpad button. An old ini's names read as before.
+  - **Storage:** `fkey.ACTION=KEY` and `fpad.ACTION=INPUT` lines in
+    `bof3x.ini`, written only once the ini had one or the page was changed;
+    `BOF3X_FKEYS`, sent only when the table differs from what the game builds
+    without it. **With no `fkey.` or `fpad.` line nothing changes:** the
+    table is the old keys, compared by their virtual-key numbers in the old
+    order.
+  - **`BOF3X_RUBY_KEY`** still moves the reading row's key; the game applies
+    it to the defaults and `BOF3X_FKEYS` over it, so `BOF3X_FKEYS` wins.
+  - **Under `BOF3X_INPUT` or `BOF3X_RECORD` the default layout applies**:
+    `BOF3X_FKEYS` is not read (one log line), since recipes name the default
+    keys and the recorder uses F12; `BOF3X_RUBY_KEY` is read as before.
+  A key other than F1..F12 is found by the lParam's scan code and extended
+  flag (`FnKeyOfMessage`), the number the capture stores; Pause and NumLock
+  read as the capture stores them, swapped against DirectInput's numbers (a
+  defect of the capture that predates this entry, unchanged here).
+- **Rationale:** the owner's ask and calls, 2026-11-18: the function keys
+  on a page of their own, rebindable and not only shown; any keyboard key
+  and any controller input "just like the others"; a double binding allowed
+  and shown in red; nothing unbound automatically; every input SDL reports
+  offered.
+- **Also in the PSX version?** Not applicable: the PlayStation has none of
+  these keys.
+- **Verification:** `tools/fkeys_host` (the table, the text forms, bad
+  items, the key message of every producer, the order, the red cells, the
+  pad inputs) and `tools/launcher_host`'s `TestFnKeys` (the ini lines,
+  `BOF3X_FKEYS`, `ruby_key=`), the group's runs. **The owner, 2026-11-18,
+  the 32-bit build of `f32becb3` from `game\`:** rebinding, clearing and a
+  double binding on the page work, and "the keyboard strokes seem fine" in
+  play. **Not reported on:** a pad-bound action; a rebound key in play.
+- **Reversible?** Off by default: with no `fkey.` or `fpad.` line (the
+  page's Defaults, or the lines removed) the launcher sends no
+  `BOF3X_FKEYS`, and the keys are the old ones. An environment's
+  `BOF3X_FKEYS` wins over the ini.
+- **Switch:** env:BOF3X_FKEYS= - unset; the launcher's per-action fkey. and fpad. lines have no one key that asks for it
+- **Default:** off
+- **Player:** yes
+- **Toward:** none - no release could rebind these keys
 - **Languages:** any
 - **State:** active
