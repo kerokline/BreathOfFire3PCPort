@@ -40,4 +40,12 @@ int ScancodeOfDik(int dik);
 // is down, 0 elsewhere.
 void FillKeyState(const bool* sdl_state, int count, unsigned char* key_state);
 
+// Whether a key going down is one Windows posts as WM_SYSKEYDOWN and not as
+// WM_KEYDOWN: Alt itself, F10, or any key while Alt is held (`alt_held`:
+// SDL_KMOD_ALT in the event's modifiers). The game's key handler and the
+// movie's skip took WM_KEYDOWN alone, so such a key never reached them; where
+// the keys come from SDL's events (game_window.cpp's watch, off Windows) this
+// is the test that keeps it so.
+bool IsSystemKeyDown(int scancode, bool alt_held);
+
 }  // namespace bof3x::input

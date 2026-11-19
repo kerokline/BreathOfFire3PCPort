@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <filesystem>
 #include <string>
 
 #include "audio/mp3.h"
@@ -314,22 +315,28 @@ Callees g = kOriginals;
 }  // namespace shell
 
 // F11: the last frame presented, written beside the DLL as
-// bof3x-frame-<Frame_Counter>.bmp (render::SaveFrame).
+// bof3x-frame-<Frame_Counter>.bmp (render::SaveFrame). The folder is the
+// module path's parent by std::filesystem, so that it is found with either
+// system's separator; a frame that is not written says why in the log.
 void SaveFrameBesideDll() {
-    constexpr std::size_t kPathMax = bof3::os::kMaxPath;   // the port's MAX_PATH
-    wchar_t path[kPathMax];
+    const unsigned long frame = static_cast<unsigned long>(Frame_Counter);
     std::string self;
-    if (!bof3::os::ModulePath(reinterpret_cast<const void*>(&SaveFrameBesideDll), &self)) return;
-    const std::wstring wide = bof3::os::ToWide(self.c_str());
-    if (wide.empty() || wide.size() >= kPathMax) return;
-    std::wmemcpy(path, wide.c_str(), wide.size() + 1);
-    wchar_t* slash = wcsrchr(path, L'\\');
-    if (!slash) return;
-    const size_t room = kPathMax - static_cast<size_t>(slash + 1 - path);
-    if (std::swprintf(slash + 1, room, L"bof3x-frame-%lu.bmp", static_cast<unsigned long>(Frame_Counter)) < 0) return;
-    const bool ok = render::SaveFrame(path);
-    bof3::Log("F11         frame %lu %s %s", static_cast<unsigned long>(Frame_Counter), ok ? "saved to" : "NOT saved:",
-              bof3::Utf8Path(path).text);
+    std::filesystem::path dir;
+    if (bof3::os::ModulePath(reinterpret_cast<const void*>(&SaveFrameBesideDll), &self))
+        dir = bof3::os::PathOfUtf8(self.c_str()).parent_path();
+    wchar_t name[40];
+    std::swprintf(name, sizeof name / sizeof name[0], L"bof3x-frame-%lu.bmp", frame);
+    const std::wstring path = dir.empty() ? std::wstring() : (dir / name).wstring();
+    bool ok = false;
+    if (path.empty()) {
+        bof3::Log("F11         frame %lu NOT saved: the folder of this module is not known", frame);
+    } else if (path.size() >= bof3::os::kMaxPath) {   // the port's MAX_PATH, as before
+        bof3::Log("F11         frame %lu NOT saved: the path is %u characters, the limit is %u", frame,
+                  static_cast<unsigned>(path.size()), static_cast<unsigned>(bof3::os::kMaxPath - 1));
+    } else {
+        ok = render::SaveFrame(path.c_str());
+        bof3::Log("F11         frame %lu %s %s", frame, ok ? "saved to" : "NOT saved:", bof3::Utf8Path(path.c_str()).text);
+    }
     Overlay_Frames = kOverlayFrames;
     Overlay_Text = ok ? kStrFrameSaved : kStrFrameNotSaved;
 }

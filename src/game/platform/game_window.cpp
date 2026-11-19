@@ -27,7 +27,9 @@
 //   PeekMessage                   SDL_PumpEvents, the one pump: SDL's event
 //                                 watch takes what concerns the window as it
 //                                 is queued, whichever caller pumped (the
-//                                 pad's poll drains SDL's queue, pad_sdl.cpp)
+//                                 pad's poll takes its own events out of
+//                                 SDL's queue, pad_sdl.cpp, run from the
+//                                 message step too: FlushSdl)
 //
 // What is taken is kept in a small queue and handed to the game at the loop's
 // message step (Pump), where the port's PeekMessage stood, so that a key
@@ -55,6 +57,7 @@
 #include "hook/log.h"
 #include "input/function_keys.h"
 #include "input/key_sdl.h"
+#include "input/pad_sdl.h"
 #include "os/os.h"
 
 namespace game_window {
@@ -215,7 +218,12 @@ bool SDLCALL Watch(void*, SDL_Event* e) {
             Post({Got::Activate, e->type == SDL_EVENT_WINDOW_FOCUS_GAINED ? 1 : 0, 0});
         break;
     case SDL_EVENT_KEY_DOWN:
-        if (e->key.windowID == id && !native::KeysAndFocusFromMessages()) {
+        // A key Windows would post as WM_SYSKEYDOWN (Alt, F10, a key with Alt
+        // held) is not a key-down to the game or to the movie's skip, as it
+        // never was one there: the one test for both, since Pump and
+        // TakeForMovie read what is posted here.
+        if (e->key.windowID == id && !native::KeysAndFocusFromMessages() &&
+            !bof3x::input::IsSystemKeyDown(e->key.scancode, (e->key.mod & SDL_KMOD_ALT) != 0)) {
             // The scan code and extended flag as Windows gives them (bits 16..24),
             // from key_sdl.h's DIK number: the function keys' table looks a key
             // that is not an F key up by them (input/function_keys.h).
@@ -448,10 +456,18 @@ std::vector<Event> TakeQueue() {
 }
 
 // What the watch took stays in SDL's queue for no one: dropped, so that it
-// never fills. The pad's events are left for its poll (pad_sdl.cpp).
+// never fills. The pad's events (SDL_EVENT_JOYSTICK_AXIS_MOTION up to the
+// touch events) are its poll's, and the poll is run here: Pad_Read does not
+// run while the game is paused (F9, the quick menu) or not in front, the pump
+// above still queues every axis and button change, and SDL's queue stops
+// taking events at 65,535 - a pad plugged in or pulled out after that would
+// never be seen. The poll acts on those two events and drops the rest; it
+// latches no input (the pad word is read from the pad's state, by Pad_Read).
 void FlushSdl() {
     SDL_FlushEvents(SDL_EVENT_FIRST, SDL_EVENT_JOYSTICK_AXIS_MOTION - 1);
     SDL_FlushEvents(SDL_EVENT_FINGER_DOWN, SDL_EVENT_LAST);
+    if (bof3x::input::PadSdl_Started()) bof3x::input::PadSdl_Poll();
+    else SDL_FlushEvents(SDL_EVENT_JOYSTICK_AXIS_MOTION, SDL_EVENT_FINGER_DOWN - 1);
 }
 
 void Moved(const Event& e) { Display_WindowMoved(e.a & 0xFFFF, e.b & 0xFFFF); }
