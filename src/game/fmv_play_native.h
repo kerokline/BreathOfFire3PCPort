@@ -58,6 +58,12 @@ void PumpMessages();
 // The Win32 path's wait: up to `ms` milliseconds, or until a message comes.
 void WaitMessages(unsigned ms);
 
+// The Win32 path's procedure: the body of Fmv_WndProc (0x59E570), whose definition
+// is in its unit's file, battle/battle_menu_win.cpp. Windows only.
+#ifdef _WIN32
+std::int32_t __stdcall WndProc(void* hwnd, unsigned msg, unsigned wparam, std::int32_t lparam);
+#endif
+
 }  // namespace native
 
 }  // namespace fmv_play

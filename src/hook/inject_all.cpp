@@ -712,7 +712,6 @@
 #include "game/platform/d_input.h"
 #include "game/menu/menu_list.h"
 #include "game/battle/battle_menu_win.h"
-#include "game/fmv_play.h"
 #include "game/rest_2f.h"
 #include "game/menu/window.h"
 #include "game/menu/config_menu.h"
@@ -2587,7 +2586,6 @@ void InjectAll() {
     DInput_Inject();
     MenuList_Inject();
     BattleMenuWin_Inject();
-    FmvPlay_Inject();
     if (bof3::WantsShadow("rest_2f")) rest_2f::SelfTest();            // round 14 wave-two group R2F (0x58ED40..0x596F98: the field menu's Tactics and
                                 // Config steps, the Ability screen's helpers, window-record handlers 1 and 2 and
                                 // window kind 1): its clones' calls re-aimed at the scenario harness's recorders, its

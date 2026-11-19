@@ -402,7 +402,7 @@ BOUNDARY_WAITING = {
     'src/hook/crash_win32.cpp': 'W: the fault catcher on Windows (a vectored handler, MiniDumpWriteDump), Windows only by design',
     'src/hook/stackwatch_win32.cpp': "W: the main thread's TEB and guard page, Windows only by design",
     'src/game/platform/game_window_win32.cpp': 'W: the Win32 window path (BOF3X_OFF=WindowSdl) and the SDL path\'s Windows steps, Windows only by design',
-    'src/game/fmv_play_win32.cpp': 'W: the movie\'s GDI picture and the Win32 path\'s Fmv_WndProc, Windows only by design',
+    'src/game/platform/fmv_play_win32.cpp': 'W: the movie\'s GDI picture and the Win32 path\'s Fmv_WndProc, Windows only by design',
 }
 
 

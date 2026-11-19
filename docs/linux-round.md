@@ -1255,6 +1255,22 @@ machine hands-off, no compiler seen during any run; the chain is
 **Not run:** anything at 64 bits beyond the build; a route with
 `BOF3X_OFF=WindowSdl` other than the four key recipes.
 
+**After the proofs, step 0 undone (CI's source-layout gate, 2026-11-18).**
+Step 0 broke a rule the wave's gate line did not run: every function of
+Capcom's is in its unit's file (`tu_census.py --check --strict`,
+`retire_shells.py --check --strict`). `Fmv_Play` and `Fmv_WndProc` are
+`battle_menu_win.cpp`'s. The portable player (R6m left it with no Windows
+header) is back in that file, text unchanged; `fmv_play.cpp` and
+`fmv_play.h` are gone; the Win32 half is
+`src/game/platform/fmv_play_win32.cpp`, and `Fmv_WndProc` in the unit's
+file calls its `fmv_play::native::WndProc` on Windows and stops the game
+elsewhere, as before. Read "fmv_play.cpp" above as that code. On the
+change: both presets build; the 26 steps of CI's "Ledgers and symbols" job
+pass locally; `linux_tree.py` 812 of 812 (one file fewer), 11 Windows-only;
+the hosted shadow suite and the exe host as in the list above. The long
+proofs were not run again, and the movie was not looked at again. **A
+later wave's gate line must hold those two checks.**
+
 ### Stage LC - link and run on Linux
 
 - A CMake preset for the ELF, clang, SDL3 from source as today.

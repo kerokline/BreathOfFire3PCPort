@@ -117,7 +117,7 @@ void WaitMessages(unsigned ms) { MsgWaitForMultipleObjects(0, nullptr, FALSE, ms
 // (Pause) in place of the MCI strings; the video's end is the loop's own,
 // so MM_MCINOTIFY never arrives (the case is kept, harmless); WM_PAINT
 // draws the current frame again, which MCI's window did for itself.
-extern "C" std::int32_t __stdcall Fmv_WndProc(void* hwnd_, unsigned msg, unsigned wparam, std::int32_t lparam) {
+std::int32_t __stdcall fmv_play::native::WndProc(void* hwnd_, unsigned msg, unsigned wparam, std::int32_t lparam) {
     using namespace fmv_play;
     HWND hwnd = static_cast<HWND>(hwnd_);
     switch (msg) {
