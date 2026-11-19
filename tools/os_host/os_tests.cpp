@@ -995,12 +995,61 @@ void TestEventsThreadsFiles() {
     CHECK(count.load() == 1 && os::ThreadEnded(t1) != os::ThreadEnded(t2));
     CHECK(os::EventSet(a));
     CHECK(Within([&] { return count.load() == 2 && os::ThreadEnded(t1) && os::ThreadEnded(t2); }, 2000));
+    // Two waiters blocked, then two sets with nothing between them: each set
+    // releases one waiter at the set itself, so both end and nothing is left
+    // set. (Windows hands a set to a blocked waiter in the kernel; a backend
+    // that only raises a flag and wakes a thread loses the second set when it
+    // comes before the first waiter has run.)
+    int lost = 0, left = 0;
+    for (int round = 0; round < 10; ++round) {
+        std::atomic<int> pair{0};
+        Waiter p1{a, nullptr, &pair}, p2{a, nullptr, &pair};
+        os::Thread u1 = os::StartThread(WaitThenCount, &p1), u2 = os::StartThread(WaitThenCount, &p2);
+        if (!u1 || !u2) {
+            ++lost;
+            break;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        os::EventSet(a);
+        os::EventSet(a);
+        const auto ended = [&] { return pair.load() == 2 && os::ThreadEnded(u1) && os::ThreadEnded(u2); };
+        if (!Within(ended, 1000)) {
+            ++lost;
+            // The waiter left behind is let go: it holds this round's stack.
+            for (int i = 0; i < 50 && !ended(); ++i) {
+                os::EventSet(a);
+                std::this_thread::sleep_for(std::chrono::milliseconds(20));
+            }
+        }
+        if (os::EventWait(a, 0) == WaitResult::Signalled) ++left;
+    }
+    CHECK(lost == 0);
+    CHECK(left == 0);
+    // A waiter that gave up is not handed a later set: the set stays for the next wait.
+    CHECK(os::EventWait(a, 30) == WaitResult::Timeout);
+    CHECK(os::EventSet(a) && os::EventWait(a, 0) == WaitResult::Signalled && os::EventWait(a, 0) == WaitResult::Timeout);
     std::atomic<int> both{0};
     Waiter w3{m, nullptr, &both}, w4{m, nullptr, &both};
     CHECK(os::StartThread(WaitThenCount, &w3) && os::StartThread(WaitThenCount, &w4));
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
     CHECK(os::EventSet(m));
     CHECK(Within([&] { return both.load() == 2; }, 2000));
+#ifndef _WIN32
+    // A manual-reset set releases the waits blocked at the set, whatever comes
+    // after: a reset straight behind it takes nothing back. (Not asked of
+    // Windows, where it is PulseEvent's case: a wait the kernel has borrowed
+    // for a moment is not there to be released.)
+    CHECK(os::EventReset(m));
+    std::atomic<int> pulse{0};
+    Waiter w6{m, nullptr, &pulse}, w7{m, nullptr, &pulse};
+    os::Thread t6 = os::StartThread(WaitThenCount, &w6), t7 = os::StartThread(WaitThenCount, &w7);
+    CHECK(t6 && t7);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    CHECK(os::EventSet(m) && os::EventReset(m));
+    CHECK(Within([&] { return pulse.load() == 2 && os::ThreadEnded(t6) && os::ThreadEnded(t7); }, 2000));
+    CHECK(os::EventWait(m, 0) == WaitResult::Timeout);
+    if (pulse.load() != 2) os::EventSet(m);   // the waiters hold this function's stack
+#endif
     // A wait forever, ended by a set from here; the other side's set seen here.
     os::Event done = os::EventCreate(false, false);
     Waiter w5{s, done, nullptr};
