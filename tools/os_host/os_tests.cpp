@@ -22,7 +22,9 @@
 #include <windows.h>
 #else
 #include <fcntl.h>
+#include <pthread.h>
 #include <semaphore.h>
+#include <signal.h>
 #include <unistd.h>
 #endif
 
@@ -864,9 +866,41 @@ void TestR1Harness() {
         });
         CHECK(os::WaitNamedEvent(e, 5000));
         late.join();
+        std::printf("named event: the wait is %s\n", os::NamedEventWaitWay());
 #ifdef _WIN32
         CloseHandle(other);
 #else
+        // A signal taken during the wait does not end it: the wait goes on to
+        // its own bound (EINTR), and a set after the signal is still seen.
+        struct sigaction act {}, old {};
+        act.sa_handler = [](int) {};   // no SA_RESTART: the wait is interrupted
+        sigemptyset(&act.sa_mask);
+        CHECK(sigaction(SIGUSR1, &act, &old) == 0);
+        const pthread_t self = pthread_self();
+        {
+            std::thread poke([&] {
+                for (int i = 0; i < 5; ++i) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(30));
+                    pthread_kill(self, SIGUSR1);
+                }
+            });
+            const auto s0 = std::chrono::steady_clock::now();
+            CHECK(!os::WaitNamedEvent(e, 300));
+            const auto took = std::chrono::steady_clock::now() - s0;
+            CHECK(took >= std::chrono::milliseconds(290) && took < std::chrono::milliseconds(2000));
+            poke.join();
+        }
+        {
+            std::thread poke([&] {
+                std::this_thread::sleep_for(std::chrono::milliseconds(30));
+                pthread_kill(self, SIGUSR1);
+                std::this_thread::sleep_for(std::chrono::milliseconds(30));
+                set();
+            });
+            CHECK(os::WaitNamedEvent(e, 5000));
+            poke.join();
+        }
+        sigaction(SIGUSR1, &old, nullptr);
         sem_close(other);
         sem_unlink(("/" + name).c_str());
 #endif
