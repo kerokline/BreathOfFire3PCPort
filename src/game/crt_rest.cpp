@@ -276,8 +276,10 @@ extern "C" int __cdecl Crt_findnext(std::int32_t handle, void* found) {
 
 // original 0x5B9B6D: fopen, MSVC 6's over _fsopen with _SH_DENYNO; the
 // toolchain's opens shared alike. Modes "rb", "wb", "rt".
+// os/narrow_open.h: std::fopen itself on Windows, then the case check
+// (BOF3X_CASECHECK=1); on POSIX the game's backslash read as a separator.
 extern "C" void* __cdecl Crt_fopen(const char* path, const char* mode) {
-    return bof3::FileToken(std::fopen(path, mode));   // file_token.h: the FILE* itself but on x86-64 above 4 GB (D412)
+    return bof3::FileToken(bof3::os::OpenNarrow(path, mode));   // file_token.h: the FILE* itself but on x86-64 above 4 GB (D412)
 }
 
 // original 0x5B9993.

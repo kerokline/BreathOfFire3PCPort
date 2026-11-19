@@ -5,6 +5,7 @@
 // catching (units L2 and L3) get their headers here too.
 #pragma once
 
+#include "os/case_check.h"
 #include "os/clock.h"
 #include "os/dialog.h"
 #include "os/env.h"
@@ -18,6 +19,7 @@
 #include "os/memory.h"
 #include "os/module.h"
 #include "os/named_event.h"
+#include "os/narrow_open.h"
 #include "os/own_stack.h"
 #include "os/path_file.h"
 #include "os/sampler.h"

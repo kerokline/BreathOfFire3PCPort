@@ -14,9 +14,16 @@
 #include "os/find.h"
 
 #include <io.h>
+#include <windows.h>
 
+#include <cstring>
+#include <map>
 #include <mutex>
+#include <string>
 #include <vector>
+
+#include "os/case_check.h"
+#include "os/file.h"
 
 namespace bof3::os {
 
@@ -47,10 +54,68 @@ intptr_t Handle(std::int32_t word) {
     return g_handles[static_cast<std::size_t>(word) - 1];
 }
 
+// The case check (os/case_check.h), only when it is on: the pattern of each
+// open search, by the runtime's handle, so that each match FindNext hands is
+// held against it as FindFirst's is.
+struct Asked {
+    std::string pattern;      // as the caller gave it
+    std::wstring leaf;      // its leaf pattern, as the system holds names
+};
+std::mutex g_case_lock;
+std::map<intptr_t, Asked> g_case_asked;
+
+// The runtime hands the leaf in the narrow encoding: widened here as Path
+// widens a name (win32/file.cpp), but without Path's own check, which would
+// ask again of the directory part the pattern's line has named already.
+void CheckMatch(const Asked& a, const char* name) {
+    const UINT cp = AreFileApisANSI() ? CP_ACP : CP_OEMCP;
+    const int len = static_cast<int>(std::strlen(name));
+    const int n = len ? MultiByteToWideChar(cp, 0, name, len, nullptr, 0) : 0;
+    if (n <= 0) return;
+    std::wstring found(static_cast<std::size_t>(n), L'\0');
+    if (MultiByteToWideChar(cp, 0, name, len, found.data(), n) != n) return;
+    CaseCheckMatch(a.pattern.c_str(), a.leaf, found);
+}
+
+void CheckFirst(const char* pattern, intptr_t handle, const char* name) noexcept {
+    try {
+        Asked a;
+        a.pattern = pattern;
+        a.leaf = Path(pattern).filename().native();   // Path checks the directory part
+        CheckMatch(a, name);
+        const std::lock_guard<std::mutex> hold(g_case_lock);
+        g_case_asked[handle] = std::move(a);
+    } catch (...) {
+    }
+}
+
+void CheckNext(intptr_t handle, const char* name) noexcept {
+    try {
+        Asked a;
+        {
+            const std::lock_guard<std::mutex> hold(g_case_lock);
+            const auto it = g_case_asked.find(handle);
+            if (it == g_case_asked.end()) return;
+            a = it->second;
+        }
+        CheckMatch(a, name);
+    } catch (...) {
+    }
+}
+
+void CheckClose(intptr_t handle) noexcept {
+    try {
+        const std::lock_guard<std::mutex> hold(g_case_lock);
+        g_case_asked.erase(handle);
+    } catch (...) {
+    }
+}
+
 }  // namespace
 
 std::int32_t FindFirst(const char* pattern, FindData* found) noexcept {
     const intptr_t handle = _findfirst32(pattern, reinterpret_cast<_finddata32_t*>(found));
+    if (handle != kNoHandle && CaseCheckOn()) CheckFirst(pattern, handle, found->name);
     if (kWordHoldsHandle || handle == kNoHandle) return static_cast<std::int32_t>(handle);
     try {
         const std::lock_guard<std::mutex> hold(g_lock);
@@ -71,11 +136,14 @@ std::int32_t FindFirst(const char* pattern, FindData* found) noexcept {
 int FindNext(std::int32_t handle, FindData* found) noexcept {
     const intptr_t h = Handle(handle);
     if (!kWordHoldsHandle && h == kNoHandle) return -1;
-    return _findnext32(h, reinterpret_cast<_finddata32_t*>(found));
+    const int r = _findnext32(h, reinterpret_cast<_finddata32_t*>(found));
+    if (r == 0 && CaseCheckOn()) CheckNext(h, found->name);
+    return r;
 }
 
 int FindClose(std::int32_t handle) noexcept {
     const intptr_t h = Handle(handle);
+    if (CaseCheckOn()) CheckClose(h);
     if (!kWordHoldsHandle) {
         if (h == kNoHandle) return -1;
         const std::lock_guard<std::mutex> hold(g_lock);

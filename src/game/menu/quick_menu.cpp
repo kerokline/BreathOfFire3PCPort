@@ -154,7 +154,7 @@ unsigned char g_summaries[16 * save_menu::kSummaryBytes];
 // layer or its staging buffer.
 bool ReadSummary(const char* name, unsigned char* into, void* context) {
     const std::string path = std::string(static_cast<const char*>(context)) + name;
-    FILE* f = std::fopen(path.c_str(), "rb");
+    FILE* f = bof3::os::OpenNarrow(path.c_str(), "rb");   // std::fopen on Windows; the backslash a separator on POSIX
     if (!f) {
         bof3::Log("quickmenu   %s: cannot open; shown empty", path.c_str());
         return false;
@@ -274,7 +274,7 @@ void Draw() {
 void WriteFake(const std::string& path, unsigned char mark) {
     // Not a save: 0xCBC bytes of a mark, so each listed file's summary says which file it came from.
     std::string bytes(0xCA0 + save_menu::kSummaryBytes, static_cast<char>(mark));
-    FILE* f = std::fopen(path.c_str(), "wb");
+    FILE* f = bof3::os::OpenNarrow(path.c_str(), "wb");   // the self-test's folders end in a backslash
     if (!f || std::fwrite(bytes.data(), 1, bytes.size(), f) != bytes.size()) Fail("cannot write a test file");
     std::fclose(f);
 }

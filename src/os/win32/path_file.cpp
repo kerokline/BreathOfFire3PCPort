@@ -5,6 +5,8 @@
 #include <cerrno>
 #include <cwchar>
 
+#include "os/case_check.h"
+
 namespace bof3::os {
 
 std::FILE* OpenPath(const std::filesystem::path& path, const char* mode) noexcept {
@@ -18,7 +20,9 @@ std::FILE* OpenPath(const std::filesystem::path& path, const char* mode) noexcep
         wide[n] = static_cast<wchar_t>(static_cast<unsigned char>(mode[n]));
     }
     wide[n] = 0;
-    return _wfopen(path.c_str(), wide);
+    std::FILE* const f = _wfopen(path.c_str(), wide);
+    if (f && CaseCheckOn()) CaseCheck(path);   // os/case_check.h
+    return f;
 }
 
 }  // namespace bof3::os

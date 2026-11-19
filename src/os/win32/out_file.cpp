@@ -13,7 +13,9 @@ HANDLE H(OutFile f) { return reinterpret_cast<HANDLE>(f); }
 
 OutFile OutCreate(const std::filesystem::path& path) noexcept {
     HANDLE h = CreateFileW(path.c_str(), GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
-    return h == INVALID_HANDLE_VALUE ? kNoFile : reinterpret_cast<OutFile>(h);
+    if (h == INVALID_HANDLE_VALUE) return kNoFile;
+    if (CaseCheckOn()) CaseCheck(path);   // os/case_check.h; it keeps the last error CreateFileW left
+    return reinterpret_cast<OutFile>(h);
 }
 
 // One WriteFile: a synchronous write to a disk file takes it all or fails.
