@@ -1335,6 +1335,10 @@ std::string R7Read(const fs::path& p) {
     return std::string((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
 }
 
+const char* R7Way(int way) {
+    return way == 0 ? "renameat2 / MoveFileExW" : way == 1 ? "link and unlink" : way == 2 ? "exclusive create and rename" : "nothing";
+}
+
 void R7Moves(const fs::path& dir, const char* where) {
     std::error_code ec;
     fs::remove_all(dir, ec);
@@ -1362,8 +1366,48 @@ void R7Moves(const fs::path& dir, const char* where) {
     CHECK(!fs::create_directory(dir, ec) && !ec);
     fs::remove_all(dir, ec);
     std::printf("file move in %s (%s): the refusing rename by %s (refused) and %s (moved)\n", where, os::Narrow(dir).c_str(),
-                refused_way == 0 ? "renameat2 / MoveFileExW" : refused_way == 1 ? "link and unlink" : "nothing",
-                moved_way == 0 ? "renameat2 / MoveFileExW" : moved_way == 1 ? "link and unlink" : "nothing");
+                R7Way(refused_way), R7Way(moved_way));
+}
+
+// Each way of the refusing rename, run on a system that has them all: the
+// POSIX backend starts at the way asked for, as if the system had refused the
+// ones before it (os/file_move.h). Windows has one way, and the same answers.
+void R7MoveWays(const fs::path& dir) {
+    std::error_code ec;
+    for (int way = 0; way <= 2; ++way) {
+#ifdef _WIN32
+        const int ran = 0;
+#else
+        const int ran = way;
+#endif
+        fs::remove_all(dir, ec);
+        CHECK(fs::create_directory(dir, ec) && !ec);
+        const fs::path a = dir / "BISLPS1A.DAT", b = dir / "BISLPS1B.DAT", c = dir / "BISLPS1C.DAT", d = dir / "BISLPS1D.DAT";
+        R7Write(a, "a");
+        R7Write(b, "b");
+        os::MoveFileKeepStartAt(way);
+        // A target that is there refuses, and both files are as they were.
+        CHECK(os::MoveFileKeep(a, b) == os::MoveResult::TargetExists && os::MoveFileKeepWay() == ran);
+        CHECK(R7Read(a) == "a" && R7Read(b) == "b");
+        // An empty file at the target is a file: refused too (the last way's own claim looks like one).
+        R7Write(d, "");
+        CHECK(os::MoveFileKeep(a, d) == os::MoveResult::TargetExists && fs::file_size(d, ec) == 0 && R7Read(a) == "a");
+        fs::remove(d, ec);
+        // A free target: the file moved, bytes and all.
+        CHECK(os::MoveFileKeep(a, c) == os::MoveResult::Moved && os::MoveFileKeepWay() == ran);
+        CHECK(!fs::exists(a, ec) && R7Read(c) == "a");
+        // No source: refused as such, the file at the target kept, and no file left at a free target.
+        CHECK(os::MoveFileKeep(a, c) == os::MoveResult::NoSource && R7Read(c) == "a");
+        CHECK(os::MoveFileKeep(a, d) == os::MoveResult::NoSource && !fs::exists(d, ec));
+        // The rotation's own shape: 1B -> 1C refused while 1C is there, then 1C away, then moved.
+        CHECK(os::MoveFileKeep(b, c) == os::MoveResult::TargetExists);
+        CHECK(fs::remove(c, ec) && os::MoveFileKeep(b, c) == os::MoveResult::Moved && R7Read(c) == "b" && !fs::exists(b, ec));
+        int files = 0;
+        for (const auto& entry : fs::directory_iterator(dir, ec)) files += entry.is_regular_file() ? 1 : 0;
+        CHECK(files == 1);
+        os::MoveFileKeepStartAt(0);
+    }
+    fs::remove_all(dir, ec);
 }
 
 void TestFileMove() {
@@ -1371,6 +1415,7 @@ void TestFileMove() {
     const std::string tag = "bof3x_r7_move_" + std::to_string(os::ProcessId());
     R7Moves(fs::temp_directory_path(ec) / tag, "the temporary folder");
     R7Moves(fs::current_path(ec) / tag, "the current folder");
+    R7MoveWays(fs::temp_directory_path(ec) / (tag + "_ways"));
 }
 
 // ---- a key posted to a window (wave 2, I1: os/window_key.h) ----------------------
