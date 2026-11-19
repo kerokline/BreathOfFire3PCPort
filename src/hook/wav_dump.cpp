@@ -56,6 +56,7 @@
 // restart). The dump is the mix the game asked for, frame by frame.
 #include "hook/wav_dump.h"
 
+#include <cerrno>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -266,15 +267,18 @@ void MixBuffer(Buffer& b, std::size_t at, std::size_t n) {
     }
 }
 
+// The C library's calls on the file report in errno, which is not the
+// system's last error on Windows (os::LastError there is GetLastError): the
+// messages below quote errno.
 void WriteAll(const void* p, std::uint32_t n) {
-    if (std::fwrite(p, 1, n, g_file) != n)
-        Fatal("wav: writing %s failed, error %lu", Utf8Path(g_path.c_str()).text, static_cast<unsigned long>(bof3::os::LastError()));
+    errno = 0;
+    if (std::fwrite(p, 1, n, g_file) != n) Fatal("wav: writing %s failed, errno %d", Utf8Path(g_path.c_str()).text, errno);
 }
 
 // What is written so far handed to the system, as WriteFile did each write.
 void Hand() {
-    if (std::fflush(g_file) != 0)
-        Fatal("wav: writing %s failed, error %lu", Utf8Path(g_path.c_str()).text, static_cast<unsigned long>(bof3::os::LastError()));
+    errno = 0;
+    if (std::fflush(g_file) != 0) Fatal("wav: writing %s failed, errno %d", Utf8Path(g_path.c_str()).text, errno);
 }
 
 // A name in the dump's directory: the system's separator between them (a
@@ -363,11 +367,11 @@ void Flush() {
     // Every write is at the end, so the end is where the next one goes: the
     // header rewritten at 0, then back to the end (offset 0 from either:
     // no 32-bit offset however long the file grows).
-    if (std::fseek(g_file, 0, SEEK_SET) != 0)
-        Fatal("wav: seeking in %s failed, error %lu", Utf8Path(g_path.c_str()).text, static_cast<unsigned long>(bof3::os::LastError()));
+    errno = 0;
+    if (std::fseek(g_file, 0, SEEK_SET) != 0) Fatal("wav: seeking in %s failed, errno %d", Utf8Path(g_path.c_str()).text, errno);
     WriteAll(h, sizeof h);
-    if (std::fseek(g_file, 0, SEEK_END) != 0)
-        Fatal("wav: seeking in %s failed, error %lu", Utf8Path(g_path.c_str()).text, static_cast<unsigned long>(bof3::os::LastError()));
+    errno = 0;
+    if (std::fseek(g_file, 0, SEEK_END) != 0) Fatal("wav: seeking in %s failed, errno %d", Utf8Path(g_path.c_str()).text, errno);
     Hand();
 }
 

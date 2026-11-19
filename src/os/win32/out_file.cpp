@@ -17,9 +17,21 @@ OutFile OutCreate(const std::filesystem::path& path) noexcept {
 }
 
 // One WriteFile: a synchronous write to a disk file takes it all or fails.
+// One that succeeds with fewer bytes taken has no error of its own, and the
+// thread's last error is some earlier call's: cleared, so LastError() says 0
+// and no message quotes a number that is not this write's (os/out_file.h).
 bool OutWrite(OutFile f, const void* bytes, std::size_t n) noexcept {
+    if (f == kNoFile) {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return false;
+    }
     DWORD written = 0;
-    return f != kNoFile && WriteFile(H(f), bytes, static_cast<DWORD>(n), &written, nullptr) && written == n;
+    if (!WriteFile(H(f), bytes, static_cast<DWORD>(n), &written, nullptr)) return false;
+    if (written != n) {
+        SetLastError(ERROR_SUCCESS);
+        return false;
+    }
+    return true;
 }
 
 bool OutFlush(OutFile f) noexcept { return f != kNoFile && FlushFileBuffers(H(f)); }

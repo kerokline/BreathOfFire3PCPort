@@ -8,6 +8,7 @@
 // since DIV-0040), its F6 nothing.
 #include "hook/snapshot.h"
 
+#include <cerrno>
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
@@ -605,7 +606,11 @@ bool WriteAll(const fs::path& path, const std::vector<unsigned char>& bytes, std
     if (!ok) {
         std::error_code ec;
         fs::remove(path, ec);
-        why = Printf("writing %s failed, %u bytes (error %lu)", PathText(path).c_str(), (unsigned)bytes.size(), error);
+        // 0: the system took a part of the bytes and reported no error
+        // (os/out_file.h), so there is no number to quote.
+        why = error ? Printf("writing %s failed, %u bytes (error %lu)", PathText(path).c_str(), (unsigned)bytes.size(), error)
+                    : Printf("writing %s failed, %u bytes (a short write, no error number)", PathText(path).c_str(),
+                             (unsigned)bytes.size());
         return false;
     }
     return true;
@@ -643,9 +648,14 @@ bool ReadSlot(const fs::path& dir, unsigned slot, std::vector<unsigned char>& by
         return false;
     }
     bytes.resize(static_cast<std::size_t>(size));
+    // The stream opens through the C library, whose failure is in errno; the
+    // system's last error is not the stream's to set. 0 if it left none.
+    errno = 0;
     std::ifstream f(path, std::ios::binary);
     if (!f) {
-        why = Printf("cannot open %s (error %lu)", SlotName(slot).c_str(), static_cast<unsigned long>(bof3::os::LastError()));
+        const int error = errno;
+        why = error ? Printf("cannot open %s (errno %d)", SlotName(slot).c_str(), error)
+                    : Printf("cannot open %s (no error number)", SlotName(slot).c_str());
         return false;
     }
     std::size_t got = 0;
