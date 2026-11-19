@@ -111,6 +111,7 @@ rule ([`README.md`](README.md)) here too.
 | I67 | Increased mapping to allow xdelta cross-disc conversions: a per-patch, per-disc list of offsets so a romhack's patch of the US disc builds from another disc | mods / tools | measured, not built | open 2026-11-13 (the owner, after disc-patch-round.md 11.6); gated on the rule-1 call and a US 1.0 image |
 | I68 | The music staging buffer against the tick: its refill is by wall time, so its pages differ run to run in the state hash, and more often with an in-between present in the wait loop | audio / tools | built (the tool) | 2026-11-14: `statehash.py` sets the buffer's 17 whole pages aside as timing pages; the WAV A/B and the owner's ear still open |
 | I69 | One launcher for Windows and Linux from one source: the settings model off Windows first (a launcher with no window for the native Linux build), then the windows drawn on SDL3 | platform / launcher | MEDIUM | staged 2026-11-19 ([`launcher-portable.md`](launcher-portable.md)); nothing built; its stage P0 is group C7 of the Linux round's LC staging |
+| I70 | `BOF3.exe` out of the player's run: after an install is made, the launcher, the engine and the save editor open it no more; it stays a source for the importer and the host of the developer's hosted build | platform / install | HIGH | staged 2026-11-19 ([`exe-retire-round.md`](exe-retire-round.md)); nothing built |
 
 ---
 
@@ -2693,6 +2694,18 @@ _(2026-11-13) open; measured, nothing built._
 The estimate is [`launcher-portable.md`](launcher-portable.md). Measured: the launcher is 13,501 lines, of which 6,818 (the settings model, the save editor's format core, the exe image) hold no window call and carry over, and 6,683 with a 672-line dialog resource (21 dialogs, 349 controls) are Win32. Nothing on Linux reads `bof3x.ini` today: the launcher turns it into the environment the engine reads. Proposed: one set of windows drawn by Dear ImGui on SDL3's renderer, which the launcher already links; [`launcher-settings.md`](launcher-settings.md) section 2 turned that library down when the panel had twelve controls and SDL3 was not in the launcher. About 5,700 new lines in seven stages, two waves and three looks by the owner.
 
 **First concrete step:** stage P0 with the Linux round's wave A; then P1, the frame and one page, for the owner's look before any other page is written.
+
+### Outcome
+_(2026-11-19) open; staged, nothing built._
+
+## I70 — `BOF3.exe` out of the player's run
+
+**Ask (2026-11-19, the owner):** "remove the original exe from any post-install player usage."
+**Kind:** platform / install. **Feasibility:** HIGH: a disc-built install already plays without the file, and the cache's image holds `.data` on every install kind (DIV-0212).   **Gated on:** the owner's five calls ([`exe-retire-round.md`](exe-retire-round.md) section 7); the Linux round's wave A on `main`, since it moved the code this changes.
+
+The staging is [`exe-retire-round.md`](exe-retire-round.md): fifteen places read or test the file after install today (the launcher's hash and key table at every start, the engine's copy of `.data` and five checks, four tests of its presence that mean "a PC install", the save editor's tables, the importer's copy into the game folder), in seven groups. Kept: the importer reads it as a source, the hosted build runs inside it, and the engine's reader stays behind `BOF3X_EXEFILE=1` for the developer's runs. It also gives the save editor its entrance list and party table on a disc-built install (I58's next step).
+
+**First concrete step:** the owner's calls, then groups X1 and X5 (the install's kind recorded in the cache; the importer lays no `BOF3.exe`).
 
 ### Outcome
 _(2026-11-19) open; staged, nothing built._
