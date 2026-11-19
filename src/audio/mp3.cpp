@@ -519,7 +519,7 @@ void DumpPcm(const char* file_name, const Run& capcom, const Run& ours) {
     for (int i = 0; i < 2; ++i) {
         char path[bof3::os::kMaxPath];
         std::snprintf(path, sizeof path, "%s\\%s.%s.pcm", dir, file_name, tags[i]);
-        std::FILE* f = std::fopen(path, "wb");
+        std::FILE* f = bof3::os::OpenNarrow(path, "wb");   // std::fopen on Windows; the backslash a separator on POSIX
         if (!f) bof3::Fatal("DIV-0091: cannot write %s", path);
         std::fwrite(runs[i]->pcm.data(), 2, runs[i]->pcm.size(), f);
         std::fclose(f);

@@ -19,7 +19,8 @@
 //
 // Guarantees, on both systems: a backslash in the game's name reads as a
 // separator (on POSIX it is turned into a slash; the case of a name is NOT
-// folded - that is LB8's, at the source of each name); WalkDirectory hands
+// folded - that is LB8's, at the source of each name, and BOF3X_CASECHECK
+// finds the names that differ: os/case_check.h); WalkDirectory hands
 // entries in name order, case-insensitive, like NTFS, so "the first match"
 // means the same thing on both. None of these throws: a name that does not
 // convert, or that the system refuses, is a name that is not there.
@@ -35,6 +36,8 @@
 #include <functional>
 #include <string>
 #include <system_error>
+
+#include "os/case_check.h"
 
 namespace bof3::os {
 
@@ -66,11 +69,27 @@ inline bool IsFile(const char* narrow) noexcept {
     std::error_code ec;
     return std::filesystem::is_regular_file(Path(narrow), ec);
 }
-// The same of a wide name (the launcher's and common/'s paths).
+// A wide name as a path, its backslash read as a separator as Path and
+// PathOfUtf8 read one: on Windows the path of the name itself (a backslash is
+// the separator there), on POSIX with each backslash made a slash.
+inline std::filesystem::path PathOfWide(const wchar_t* wide) {
+    std::wstring w(wide ? wide : L"");
+    if constexpr (std::filesystem::path::preferred_separator == '/') {
+        for (wchar_t& c : w)
+            if (c == L'\\') c = L'/';
+    }
+    return std::filesystem::path(std::move(w));
+}
+
+// The same of a wide name (the launcher's and common/'s paths). A narrow name
+// meets the case check (os/case_check.h) in Path; a wide one here.
 inline bool IsDirectory(const wchar_t* wide) noexcept {
     try {
         std::error_code ec;
-        return std::filesystem::is_directory(std::filesystem::path(wide ? wide : L""), ec);
+        const std::filesystem::path p = PathOfWide(wide);
+        const bool is = std::filesystem::is_directory(p, ec);
+        if (is && CaseCheckOn()) CaseCheck(p);
+        return is;
     } catch (...) {
         return false;
     }
@@ -78,7 +97,10 @@ inline bool IsDirectory(const wchar_t* wide) noexcept {
 inline bool IsFile(const wchar_t* wide) noexcept {
     try {
         std::error_code ec;
-        return std::filesystem::is_regular_file(std::filesystem::path(wide ? wide : L""), ec);
+        const std::filesystem::path p = PathOfWide(wide);
+        const bool is = std::filesystem::is_regular_file(p, ec);
+        if (is && CaseCheckOn()) CaseCheck(p);
+        return is;
     } catch (...) {
         return false;
     }

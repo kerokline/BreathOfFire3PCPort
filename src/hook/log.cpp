@@ -135,6 +135,8 @@ void LogOpen(void* dll_module) {
     path.replace_extension(L".log");
     g_log = os::OutCreate(path);
     if (g_log == os::kNoFile) return;
+    // BOF3X_CASECHECK's lines (os/case_check.h), those made before now first.
+    if (os::CaseCheckOn()) os::CaseCheckSink([](const char* line) { Log("%s", line); });
     // From DllMain the thread starts once the loader lock is let go; until
     // then Write writes itself.
     g_wake = os::EventCreate(false, false);

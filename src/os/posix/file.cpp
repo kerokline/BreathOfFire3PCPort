@@ -5,6 +5,10 @@
 #include "os/file.h"
 
 #include <algorithm>
+#include <cerrno>
+#include <system_error>
+
+#include "os/case_check.h"
 
 namespace bof3::os {
 
@@ -12,10 +16,57 @@ std::filesystem::path Path(const char* narrow) noexcept {
     try {
         std::string s(narrow ? narrow : "");
         std::replace(s.begin(), s.end(), '\\', '/');
-        return std::filesystem::path(std::move(s));
+        std::filesystem::path p(std::move(s));
+        if (CaseCheckOn()) CaseCheck(p);
+        return p;
     } catch (...) {
         return std::filesystem::path();
     }
+}
+
+// The case check's question (os/case_check.h): a walk of the folder - the
+// exact name if the folder holds it, else the first entry equal to it but for
+// ASCII case (what a case-insensitive mount opened). A root is not asked.
+// errno is left as the call before it left it.
+namespace {
+bool StoredSpellingOf(const std::filesystem::path& existing, std::string* stored) noexcept {
+    try {
+        if (!existing.has_relative_path() || !existing.has_filename()) return false;
+        const std::string want = existing.filename().native();
+        std::filesystem::path dir = existing.parent_path();
+        if (dir.empty()) dir = ".";
+        std::error_code ec;
+        std::filesystem::directory_iterator it(dir, ec), end;
+        if (ec) return false;
+        const auto lower = [](char c) { return c >= 'A' && c <= 'Z' ? static_cast<char>(c + 32) : c; };
+        std::string folded;
+        bool any = false;
+        for (; it != end; it.increment(ec)) {
+            if (ec) break;
+            const std::string n = it->path().filename().native();
+            if (n == want) {
+                *stored = n;
+                return true;
+            }
+            if (!any && n.size() == want.size() &&
+                std::equal(n.begin(), n.end(), want.begin(), [&](char a, char b) { return lower(a) == lower(b); })) {
+                folded = n;
+                any = true;
+            }
+        }
+        if (any) *stored = folded;
+        return any;
+    } catch (...) {
+        return false;
+    }
+}
+}  // namespace
+
+bool StoredSpelling(const std::filesystem::path& existing, std::string* stored) noexcept {
+    const int error = errno;
+    const bool there = StoredSpellingOf(existing, stored);
+    errno = error;
+    return there;
 }
 
 namespace {

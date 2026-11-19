@@ -1503,6 +1503,123 @@ void TestWindowKey() {
 #endif
 }
 
+// ---- the case check (LB8: os/case_check.h) ----------------------------------------
+// A folder and a file under mixed case, asked for under another case through
+// each road the check sits on. On Windows (case-insensitive) the names open
+// and the check names the disk's spelling; on a case-sensitive POSIX
+// filesystem they do not open and the parent walk still names it - the Linux
+// failure the check exists to find. Lines come once each, are kept until a
+// sink is set, and the system's last error is left as it was.
+std::vector<std::string> g_case_lines;
+void CaseSinkForTest(const char* line) { g_case_lines.push_back(line); }
+
+std::size_t CaseLinesWith(const std::string& what) {
+    std::size_t n = 0;
+    for (const std::string& l : g_case_lines) n += l.find(what) != std::string::npos;
+    return n;
+}
+
+std::string Utf8(const fs::path& p) {
+    const std::u8string u = p.u8string();
+    return std::string(u.begin(), u.end());
+}
+
+void TestCaseCheck() {
+    const std::string dir = Scratch() + "_case";
+    std::error_code ec;
+    fs::create_directories(os::Path((dir + "/CaseDir").c_str()), ec);
+    Touch(dir + "/CaseDir/File.DAT");
+    const bool folds = fs::exists(os::Path((dir + "/casedir/FILE.dat").c_str()), ec);
+    const std::string disk = Utf8(fs::path(os::Path(dir.c_str())) / "CaseDir" / "File.DAT");
+    os::CaseCheckSink(CaseSinkForTest);
+
+    // Off: nothing, whatever is asked.
+    os::CaseCheckForTest(false);
+    CHECK(!os::CaseCheckOn());
+    (void)os::Path((dir + "/casedir/FILE.dat").c_str());
+    os::WalkDirectory((dir + "/CaseDir/*.dat").c_str(), [](const os::DirEntry&) { return true; });
+    CHECK(g_case_lines.empty());
+
+    os::CaseCheckForTest(true);
+    CHECK(os::CaseCheckOn());
+    // The disk's own spelling: no line.
+    CHECK(os::IsFile((dir + "/CaseDir/File.DAT").c_str()));
+    CHECK(CaseLinesWith("File.DAT") == 0);
+    // Another spelling: one line naming both, through Path (IsFile), and once only.
+    CHECK(os::IsFile((dir + "\\casedir\\FILE.dat").c_str()) == folds);
+    CHECK(CaseLinesWith("FILE.dat") == 1);
+    CHECK(CaseLinesWith(" found " + disk) == 1);
+    (void)os::Path((dir + "\\casedir\\FILE.dat").c_str());
+    CHECK(CaseLinesWith("FILE.dat") == 1);
+    // A part that is not there ends the check: no line.
+    (void)os::Path((dir + "/casedir/NOPE.DAT").c_str());
+    CHECK(CaseLinesWith("NOPE.DAT") == 0);
+    // The game's fopen road.
+    os::CaseCheckNarrow((dir + "/CASEDIR/File.DAT").c_str());
+    CHECK(CaseLinesWith("CASEDIR") == 1);
+    // The game's fopen (os/narrow_open.h): a backslash is a separator on both
+    // systems; a name in another case opens only where the filesystem folds,
+    // and the check names it either way.
+    if (std::FILE* f = os::OpenNarrow((dir + "\\CaseDir\\File.DAT").c_str(), "rb")) {
+        CHECK(std::fgetc(f) == 'x');
+        std::fclose(f);
+    } else {
+        CHECK(!"OpenNarrow of the disk's own spelling");
+    }
+    CHECK(os::OpenNarrow((dir + "\\CaseDir\\NOPE.DAT").c_str(), "rb") == nullptr);
+    std::FILE* folded = os::OpenNarrow((dir + "\\caseDIR\\File.DAT").c_str(), "rb");
+    CHECK((folded != nullptr) == folds);
+    if (folded) std::fclose(folded);
+    CHECK(CaseLinesWith("caseDIR") == 1);
+    // A wide name's backslash, read as the seam reads a narrow one's.
+    CHECK(os::PathOfWide(L"a\\b") == fs::path(L"a") / L"b");
+    // A wide name (common/home.cpp's road): only a name that is there is checked.
+    const fs::path wide = fs::path(os::Path(dir.c_str())) / L"CaseDir" / L"file.dat";
+    CHECK(os::IsFile(wide.wstring().c_str()) == folds);
+    CHECK(CaseLinesWith("file.dat") == (folds ? 1u : 0u));
+    // The walk: a leaf pattern that matches only without case.
+    std::size_t walked = os::WalkDirectory((dir + "/CaseDir/*.DAT").c_str(), [](const os::DirEntry&) { return true; });
+    CHECK(walked == 1 && CaseLinesWith("CASECHECK walk") == 0);
+    walked = os::WalkDirectory((dir + "/CaseDir/*.dat").c_str(), [](const os::DirEntry&) { return true; });
+    CHECK(walked == 1 && CaseLinesWith("CASECHECK walk") == 1 && CaseLinesWith("*.dat found File.DAT") == 1);
+    // The handle search (the save list's road), its directory part and its match.
+    // On a case-sensitive filesystem the folder is not there by that name, so
+    // nothing is found; the line for the directory part comes all the same.
+    os::FindData fd{};
+    const std::int32_t h = os::FindFirst((dir + "/casedir/F*.dat").c_str(), &fd);
+    if (folds) {
+        CHECK(h != -1 && std::strcmp(fd.name, "File.DAT") == 0);
+        CHECK(CaseLinesWith("F*.dat found File.DAT") == 1);
+    } else {
+        CHECK(h == -1);
+    }
+    if (h != -1) CHECK(os::FindClose(h) == 0);
+    CHECK(CaseLinesWith("asked " + dir + "/casedir/F*.dat") == 1);
+    // Lines made before a sink is set are kept and handed when it is.
+    os::CaseCheckSink(nullptr);
+    (void)os::Path((dir + "/CaseDir/FiLe.DaT").c_str());
+    CHECK(CaseLinesWith("FiLe.DaT") == 0);
+    os::CaseCheckSink(CaseSinkForTest);
+    CHECK(CaseLinesWith("FiLe.DaT") == 1);
+    // The system's last error is the one the call before the check left.
+#ifdef _WIN32
+    SetLastError(1234);
+    (void)os::Path((dir + "/CaseDir/fILE.DAT").c_str());
+    CHECK(GetLastError() == 1234);
+#else
+    errno = EDOM;
+    (void)os::Path((dir + "/CaseDir/fILE.DAT").c_str());
+    CHECK(errno == EDOM);
+#endif
+    CHECK(CaseLinesWith("fILE.DAT") == 1);
+
+    os::CaseCheckForTest(false);
+    os::CaseCheckSink(nullptr);
+    std::printf("case check: %u lines on a %s filesystem\n", static_cast<unsigned>(g_case_lines.size()),
+                folds ? "case-insensitive" : "case-sensitive");
+    fs::remove_all(os::Path(dir.c_str()), ec);
+}
+
 }  // namespace
 
 int main() {
@@ -1521,6 +1638,7 @@ int main() {
     TestOwnStack();
     TestFileMove();
     TestWindowKey();
+    TestCaseCheck();
     std::printf("os_tests: %d checks, %d failed\n", g_checks, g_fail);
     return g_fail ? 1 : 0;
 }
