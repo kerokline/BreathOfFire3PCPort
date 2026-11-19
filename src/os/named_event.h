@@ -5,7 +5,10 @@
 // Windows: an auto-reset event (CreateEventW, not signalled at first) named
 // "Local\<name>", ResetEvent, WaitForSingleObject. POSIX: a named semaphore
 // "/<name>" (sem_open, 0 at first), drained to 0 for a reset and waited for
-// with sem_timedwait; a driver sets it with sem_post. A set event a wait has
+// against the monotonic clock, as Windows counts a wait's milliseconds
+// (sem_clockwait; where the C library has none, a poll each millisecond - not
+// sem_timedwait, whose deadline follows the wall clock and its steps); a
+// driver sets it with sem_post. A set event a wait has
 // not taken yet stays set on both (POSIX counts each set, and the reset before
 // each wait drains them). The name lives with the process on Windows; on
 // POSIX it stays in /dev/shm until someone unlinks it (sem_unlink), and a
@@ -30,5 +33,8 @@ void ResetNamedEvent(NamedEvent* e) noexcept;
 // True when the event was set within `ms` milliseconds (and is taken: an
 // auto-reset event), false when the time ran out or the wait failed.
 bool WaitNamedEvent(NamedEvent* e, std::uint32_t ms) noexcept;
+
+// How this build waits, in words. For the tests, which say what was run.
+const char* NamedEventWaitWay() noexcept;
 
 }  // namespace bof3::os

@@ -5,6 +5,7 @@
 //
 // Nothing here calls the GPU, allocates from the game's CRT, or keeps a
 // large local: these methods run on whatever stack the game calls them from.
+#include "common/strto32.h"
 #include "render/render_shim.h"
 
 
@@ -862,7 +863,7 @@ long __stdcall Device_DrawPrimitive(void*, U type, U fvf, const void* vertices, 
         static U want = 0xFFFFFFFF, logged = 0;
         if (want == 0xFFFFFFFF) {
             char text[16];
-            want = bof3::os::GetEnv("BOF3X_DRAWLOG_RGB", text, sizeof text) > 0 ? std::strtoul(text, nullptr, 16) & 0xFFFFFF : 0x1000000;
+            want = bof3::os::GetEnv("BOF3X_DRAWLOG_RGB", text, sizeof text) > 0 ? bof3::StrToUL32(text, nullptr, 16) & 0xFFFFFF : 0x1000000;
         }
         if (want < 0x1000000 && logged < 64) {
             for (U i = 0; i < count; ++i) {

@@ -19,6 +19,7 @@
 #include <initializer_list>
 
 #include "bof3/symbols.gen.h"
+#include "common/strto32.h"
 #include "game/battle_e1_callees.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
@@ -428,7 +429,7 @@ void Disturb(U h) {
 void SelfTest() {
     // BOF3X_BE1_ONLY=<hex address>: that clone alone (the controls' shortcut)
     const char* const only = std::getenv("BOF3X_BE1_ONLY");
-    const U want = only && *only ? static_cast<U>(std::strtoul(only, nullptr, 16)) : 0;
+    const U want = only && *only ? static_cast<U>(bof3::StrToUL32(only, nullptr, 16)) : 0;
     const bh::Clone* clones = kClones;
     unsigned n = BH_COUNT(kClones);
     if (want != 0) {

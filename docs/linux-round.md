@@ -1271,6 +1271,40 @@ the hosted shadow suite and the exe host as in the list above. The long
 proofs were not run again, and the movie was not looked at again. **A
 later wave's gate line must hold those two checks.**
 
+### The review of the round's three PRs (2026-11-18, after the merges; branch `launcher/game-runs-sdl-class`)
+
+PRs #259, #261 and #262 were read after they merged: #259's changes that
+are more than a type's name (104 of them) and the first half of #261 in one
+sitting, the rest of #261 and all of #262 by three readers. Not read line
+by line: the 5,077 `long` sites of #259. Read and found sound: the heap
+arena, the crash catcher's two halves, the log's writer, the 159 key pairs
+against SDL's and DirectInput's headers, `OwnStack` on both systems, and
+each message the port's window procedure handled.
+
+What it found, each fixed on this branch (known-defects D428..D431; the
+ledger's DIV-0238 and DIV-0239 amended):
+
+| Finding | Where | A Windows player today? |
+|---|---|---|
+| The save editor did not see a running game: SDL's window had SDL's class, not `Bof3` | `game_window_win32.cpp`, `save_dialog.cpp` | yes (D428) |
+| The pad's events stayed in SDL's queue while `Pad_Read` did not run (F9, the quick menu, not in front) | `game_window.cpp` `FlushSdl` | yes, after a very long pause |
+| Refusal messages quoted a number that was not the failed call's | `snapshot.cpp`, `wav_dump.cpp`, `os/win32/out_file.cpp` | the text only (D430) |
+| Off Windows, Alt, F10 and Alt+key reached `WinGame_Key` | `game_window.cpp`, `key_sdl.h` | no |
+| F11's frame save split its path on a backslash and said nothing when there was none | `magic_080.cpp` | no |
+| `strtol` / `strtoul` results narrowed before their range checks | 24 files, `common/strto32.h` | no (D429) |
+| The POSIX event, the named event's clock, `MoveFileKeep` with no hard links | `src/os/posix` | no (D431) |
+| `gen_symbols.py` rewrote the second word of `long long` | `tools/gen_symbols.py` | no (no such row today) |
+
+Also written down, not changed: AltGr under SDL's keyboard is the right Alt
+alone (DIV-0239's list; what DirectInput did is not measured - **the
+owner's**, with an AltGr layout and `BOF3X_OFF=KeyboardSdl`, one press and
+a look at the log).
+
+Run on the merged branch: see the PR. Not run by anyone: a physical pad,
+a filesystem without hard links, a wall-clock step, the new message texts'
+failure paths, and anything on Linux beyond compiling and the POSIX
+`os_tests`.
+
 ### Stage LC - link and run on Linux
 
 - A CMake preset for the ELF, clang, SDL3 from source as today.

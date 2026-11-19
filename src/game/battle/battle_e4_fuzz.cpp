@@ -23,6 +23,7 @@
 #include <initializer_list>
 
 #include "bof3/symbols.gen.h"
+#include "common/strto32.h"
 #include "game/battle_e4_callees.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
@@ -478,7 +479,7 @@ void Select() {
     for (const bh::Clone& c : kAll56) {
         for (const char* p = only; *p;) {
             char* end = nullptr;
-            const std::uint32_t v = std::strtoul(p, &end, 16);
+            const std::uint32_t v = bof3::StrToUL32(p, &end, 16);
             if (end == p) break;
             if (v == c.base) {
                 g_only[n++] = c;

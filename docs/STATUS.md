@@ -76,6 +76,12 @@ hosted shadow suite passes over both ([`linux-round.md`](linux-round.md), "LB0 a
 build went with it: the save list kept the C runtime's search handle in a 32-bit word. No ledger entry; the routes were not
 run. Nothing links or runs on Linux yet.
 
+**The review of the Linux round's three PRs, 2026-11-18 (#259, #261, #262; branch `launcher/game-runs-sdl-class`).** One fault a
+Windows player could meet: on SDL's window the save editor did not see a running game and would write a PC slot under it
+(D428; the window's class is `Bof3` again). Also fixed: the pad's events left in SDL's queue during a pause, refusal messages'
+error numbers (D430), and the Linux-only ones (D429, D431, Alt keys and F11 off Windows) - [`linux-round.md`](linux-round.md),
+"The review of the round's three PRs". Owed by the owner: AltGr with `BOF3X_OFF=KeyboardSdl` (DIV-0239's list).
+
 **The Linux native round's groundwork, PR #229 (frost's PR #226 with the Windows review's commits on top;
 merged 2026-11-11 evening, `main` `c14b805c`).** [`linux-round.md`](linux-round.md) is the round's record; this is only where it
 stands. The PR holds stage LA (the OS census, the low-memory and calling-convention probes, the DXVK-native

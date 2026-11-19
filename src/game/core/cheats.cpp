@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <cstdlib>
 
+#include "common/strto32.h"
 #include "hook/code_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -112,7 +113,7 @@ std::uint32_t Multiplier(const char* var) {
     const std::uint32_t n = bof3::os::GetEnv(var, text, sizeof text);
     if (n == 0) return 1;
     char* end = nullptr;
-    const std::int32_t v = n < sizeof text ? std::strtol(text, &end, 10) : -1;
+    const std::int32_t v = n < sizeof text ? bof3::StrToL32(text, &end, 10) : -1;
     if (end == nullptr || end == text || *end != '\0' || v < 0) bof3::Fatal("%s must be 0..%d", var, kMultiplierMax);
     if (v > kMultiplierMax) {
         bof3::Log("DIV-0045    %s=%d is above the cap, %d used", var, v, kMultiplierMax);

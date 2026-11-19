@@ -155,7 +155,13 @@ SCALAR_SIZES = {'char': 1, 'signed char': 1, 'unsigned char': 1, 'short': 2, 'un
                 'std::uint32_t': 4, 'std::int32_t': 4}
 
 
-LONG_RE = re.compile(r'(?<![\w:.])(?:(unsigned|signed)\s+)?long(?:\s+int\b)?\b(?!\s*(?:long|double)\b)')
+# `long long` (with its sign and `int`, if spelled) and `long double` are
+# matched whole, first, and kept: the second word of `long long` is a `long`
+# with nothing but a space before it, which a pattern for `long` alone
+# rewrites (`long std::int32_t`). Python's re has no variable-width
+# lookbehind to refuse it with, so the longer spellings take the text first.
+LONG_RE = re.compile(r'(?<![\w:.])(?:(?P<keep>(?:(?:unsigned|signed)\s+)?long\s+long(?:\s+int)?\b|long\s+double\b)'
+                     r'|(?:(?P<sign>unsigned|signed)\s+)?long(?:\s+int\b)?\b)')
 
 
 def fixed_width(text):
@@ -164,8 +170,37 @@ def fixed_width(text):
     long - as `std::int32_t` / `std::uint32_t`, so an LP64 target (x86-64
     Linux, where `long` is 8 bytes) reads the same widths (docs/linux-round.md,
     unit LB0). symbols.toml keeps the spelling it has: `long` there means the
-    image's 4-byte word, and the tools that read its ctypes are unchanged."""
-    return LONG_RE.sub(lambda m: 'std::uint32_t' if m.group(1) == 'unsigned' else 'std::int32_t', text)
+    image's 4-byte word, and the tools that read its ctypes are unchanged.
+    `long long` and `long double` are 8 bytes on every target and stay."""
+    return LONG_RE.sub(lambda m: m.group(0) if m.group('keep')
+                       else 'std::uint32_t' if m.group('sign') == 'unsigned' else 'std::int32_t', text)
+
+
+# fixed_width's cases, checked at every run (the build's and CI's
+# `symbols.toml generates` step): symbols.toml has no `long long` today, so
+# nothing else would show a pattern that breaks one.
+FIXED_WIDTH_CASES = (
+    ('long', 'std::int32_t'), ('unsigned long', 'std::uint32_t'), ('signed long', 'std::int32_t'),
+    ('long int', 'std::int32_t'), ('unsigned long int', 'std::uint32_t'),
+    ('long *', 'std::int32_t *'), ('const unsigned long *', 'const std::uint32_t *'),
+    ('long a, unsigned long b, long *c', 'std::int32_t a, std::uint32_t b, std::int32_t *c'),
+    ('unsigned  long', 'std::uint32_t'),
+    ('long long', 'long long'), ('unsigned long long', 'unsigned long long'), ('signed long long', 'signed long long'),
+    ('long long int', 'long long int'), ('unsigned long long int', 'unsigned long long int'),
+    ('long long x', 'long long x'), ('unsigned long long *p', 'unsigned long long *p'),
+    ('long  long', 'long  long'), ('long double', 'long double'),
+    ('long a, long long b, unsigned long c, unsigned long long d, long double e',
+     'std::int32_t a, long long b, std::uint32_t c, unsigned long long d, long double e'),
+    ('int', 'int'), ('unsigned int', 'unsigned int'), ('oblong', 'oblong'), ('longer x', 'longer x'),
+    ('std::int32_t', 'std::int32_t'), ('void', 'void'), ('unsigned char *', 'unsigned char *'),
+)
+
+
+def check_fixed_width():
+    for text, want in FIXED_WIDTH_CASES:
+        got = fixed_width(text)
+        if got != want:
+            fail(f'fixed_width({text!r}) is {got!r}, want {want!r}')
 
 
 def slot_type(ct):
@@ -331,6 +366,7 @@ def main():
                     help='also write the bind table (VA -> our function) and every function\'s name, '
                          'for src/hook/bind.cpp')
     a = ap.parse_args()
+    check_fixed_width()
 
     with open(a.toml, 'rb') as f:
         t = tomllib.load(f)

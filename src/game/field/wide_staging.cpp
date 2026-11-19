@@ -9,6 +9,7 @@
 #include <initializer_list>
 
 #include "bof3/symbols.gen.h"
+#include "common/strto32.h"
 #include "game/band_census.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
@@ -710,7 +711,7 @@ unsigned EnvUnsigned(const char* name, unsigned fallback, unsigned lo, unsigned 
     if (n == 0) return fallback;
     if (n >= sizeof text) bof3::Fatal("%s: too long", name);
     char* end = nullptr;
-    const std::uint32_t v = std::strtoul(text, &end, 10);
+    const std::uint32_t v = bof3::StrToUL32(text, &end, 10);
     if (end == text || *end != '\0' || v < lo || v > hi) bof3::Fatal("%s=%s: %u..%u", name, text, lo, hi);
     return static_cast<unsigned>(v);
 }

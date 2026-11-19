@@ -7,6 +7,7 @@
 #include <initializer_list>
 
 #include "bof3/symbols.gen.h"
+#include "common/strto32.h"
 #include "game/draw_pool.h"
 #include "game/event_script.h"   // DIV-0191: g_mountain_passes
 #include "hook/draw_order.h"
@@ -60,7 +61,7 @@ int EnvInt(const char* name, int fallback, int lo, int hi) {
     const std::uint32_t n = bof3::os::GetEnv(name, text, sizeof text);
     if (n == 0 || n >= sizeof text) return fallback;
     char* end = nullptr;
-    const std::int32_t v = std::strtol(text, &end, 10);
+    const std::int32_t v = bof3::StrToL32(text, &end, 10);
     if (end == nullptr || *end != '\0' || v < lo || v > hi) bof3::Fatal("%s must be %d..%d", name, lo, hi);
     return static_cast<int>(v);
 }

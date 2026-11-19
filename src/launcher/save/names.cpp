@@ -1,3 +1,4 @@
+#include "common/strto32.h"
 #include "launcher/save/names.h"
 
 #include <cstdlib>
@@ -87,7 +88,7 @@ void LoadReferenceNames(const std::wstring& tsv, Names& names) {
         }
         if (col.size() < 3 || col[1].empty() || col[2].empty()) continue;
         char* end = nullptr;
-        const auto id = std::strtoul(col[1].c_str(), &end, 0);
+        const auto id = bof3::StrToUL32(col[1].c_str(), &end, 0);
         if (*end) continue;
         const std::string& kind = col[0];
         std::map<unsigned, std::string>* to = kind == "master" ? &names.master
@@ -106,7 +107,7 @@ void LoadReferenceNames(const std::wstring& tsv, Names& names) {
             e.x = std::strtod(col[3].c_str(), &ex);
             e.z = std::strtod(col[4].c_str(), &ez);
             if (*ex || *ez) continue;
-            if (col.size() >= 6 && !col[5].empty()) e.flags = static_cast<int>(std::strtol(col[5].c_str(), nullptr, 0)) & 0xFF;
+            if (col.size() >= 6 && !col[5].empty()) e.flags = static_cast<int>(bof3::StrToL32(col[5].c_str(), nullptr, 0)) & 0xFF;
             names.entrances.push_back(std::move(e));
         }
     }

@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "bof3/symbols.gen.h"
+#include "common/strto32.h"
 #include "game/record_views.h"
 #include "game/wide_staging.h"
 #include "game/widescreen.h"
@@ -639,7 +640,7 @@ unsigned EnvUnsigned(const char* name, unsigned fallback, unsigned lo, unsigned 
     const std::uint32_t n = bof3::os::GetEnv(name, text, sizeof text);
     if (n == 0) return fallback;
     char* end = nullptr;
-    const std::uint32_t v = n < sizeof text ? std::strtoul(text, &end, 10) : 0;
+    const std::uint32_t v = n < sizeof text ? bof3::StrToUL32(text, &end, 10) : 0;
     if (n >= sizeof text || end == text || *end != '\0' || v < lo || v > hi)
         bof3::Fatal("%s must be %u..%u", name, lo, hi);
     return static_cast<unsigned>(v);

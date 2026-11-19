@@ -90,6 +90,10 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      routes were not run. The 38 files left are L2's, L3's, the renderer's headers and `_msize` (`analysis/linux_tree.tsv`).
      Not read: `long` in `src/render` and `src/audio`. On the 64-bit Windows build the save list's search handle is now a
      slot number (it was a narrowed address): open the save list there once.
+   - **The three PRs were reviewed after their merges, 2026-11-18** ([`linux-round.md`](linux-round.md), "The review of the
+     round's three PRs"; D428..D431). Owed by the owner: with an AltGr layout and `BOF3X_OFF=KeyboardSdl`, press AltGr in
+     the game and read the log for `DIK 0x1D ... is down to DirectInput and up to SDL` (DIV-0239's list). Open for stage
+     LC: a crash in `MoveFileKeep`'s third way leaves a zero-byte slot file that the next F6 refuses (D431).
    - **The 38 files are staged as one round** of ten groups in two waves ([`linux-round.md`](linux-round.md), "The 38 files,
      staged as one round"). **Wave 1 ran on 2026-11-17** (the owner: the round runs here) on the branch
      `linux/wave1`: 794 of 806 files compile for x86-64 Linux, 12 wait for wave 2, 9 are Windows files by design

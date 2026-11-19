@@ -6,6 +6,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "common/strto32.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "os/os.h"
@@ -76,7 +77,7 @@ double GameClock_NowMs() {
 void GameClock_Inject() {
     char text[32];
     const std::uint32_t n = bof3::os::GetEnv("BOF3X_TICK_BASE", text, sizeof text);
-    if (n > 0 && n < sizeof text) g_base = static_cast<std::uint32_t>(std::strtoul(text, nullptr, 0));
+    if (n > 0 && n < sizeof text) g_base = static_cast<std::uint32_t>(bof3::StrToUL32(text, nullptr, 0));
     g_start = bof3::os::TickMs64();
     g_qpf = bof3::os::CounterFrequency();
     g_qpc_start = static_cast<std::int64_t>(bof3::os::Counter());

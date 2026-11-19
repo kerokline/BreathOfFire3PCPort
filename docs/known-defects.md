@@ -11443,3 +11443,80 @@ Linux round.
 **Status:** open. Proposed: the capture maps 0x45 to 0xC5 and 0xC5 to 0x45
 before it stores; `tools/key_host`'s `kCaptureDiffers` lists the pair. A
 fix must say what happens to an ini that already holds one of the two.
+
+## D428 — The save editor did not see a running game on SDL's window (ours, the launcher and the window; read 2026-11-18; fixed)
+
+**Seen:** not seen in play. Read on 2026-11-18 in the review of PR #262
+([`linux-round.md`](linux-round.md), "The review of the round's three PRs").
+
+**Cause, as read:** the save editor refuses a save to a PC slot while the
+game runs, and finds the game by its window class, `Bof3`
+(`src/launcher/save_dialog.cpp` `GameRuns`). On SDL's window (DIV-0238, the
+default) the class was SDL's own, `SDL_app`; only the Win32 path registered
+`Bof3`. So the refusal never came, and the editor could write a slot file
+under the running game.
+
+**Status:** fixed (`aa7b3b73`). The window registers its class as `Bof3`
+before SDL's video start (`game_window_win32.cpp` `BeforeVideo`); DIV-0238
+is amended. Run on both window paths: the class is `Bof3` and `FindWindowW`
+finds it while the game is up. Not run: the save editor's refusal box.
+
+## D429 — `strtol` and `strtoul` results kept in 32 bits lose their high half where `long` is 64 bits (ours, the Linux build; read 2026-11-18; fixed)
+
+**Seen:** not seen: nothing runs on Linux yet. Read in the review of PR #259.
+
+**Cause, as read:** the settings are parsed with `strtol` / `strtoul` and
+kept in 32 bits (PR #259 made the variables `std::int32_t`; some casts are
+older). Where `long` is 32 bits the C library saturates a number that does
+not fit and the range check refuses it. On x86-64 Linux the library returns
+the whole number and its low half is kept: `BOF3X_EXP=4294967298` would read
+as 2 and pass.
+
+**Status:** fixed. `src/common/strto32.h` (`bof3::StrToL32`, `StrToUL32`)
+narrows as a 32-bit library does; 30 sites in 24 files use it (`a5c3b785`
+and the merge's own commit for the five in `src/game/platform`).
+`tools/os_host`'s `TestStrTo32` holds it at both Windows widths and on
+x86-64 Linux in the WSL. On Windows `BOF3X_EXP=4294967298` is capped as
+before. Windows was never affected.
+
+## D430 — Refusal messages quoted an error number that was not the failed call's (ours, the quicksave and the WAV dump; read 2026-11-18; fixed)
+
+**Seen:** not seen. Read in the review of PRs #261 and #262.
+
+**Cause, as read:** the quicksave's write and open refusals and the WAV
+dump's write and seek Fatals printed `os::LastError()` after calls that do
+not set it: a `WriteFile` that takes a part of the bytes, a `std::ifstream`
+open, `fwrite`, `fflush` and `fseek` (the C library reports in `errno`). The
+number shown could be 0 or an earlier call's.
+
+**Status:** fixed (`063aa59d`): each message quotes the failed call's own
+number or says there is none; what is refused and what is a Fatal are
+unchanged. The failure paths were not forced, so the new texts are not seen.
+Open: `wav_dump.cpp`'s "cannot create" quotes `os::LastError()` after
+`OpenPath`, which `os/path_file.h` says is set on Windows; whether `_wfopen`
+keeps that was not checked.
+
+## D431 — Three faults in the POSIX backend of the OS seam (ours, the Linux build; read 2026-11-18; fixed)
+
+**Seen:** the first by a new test that failed on the old code (WSL); the
+other two read. Nothing of the game runs on Linux yet.
+
+**Cause, as read:**
+- An auto-reset event kept one flag, so two sets that reached two blocked
+  waits released one of them (`src/os/posix/event.cpp`). Win32 hands each
+  set to a blocked wait at the set itself. Latent: each event has one waiter.
+- The named event's wait used `sem_timedwait`, whose deadline is the wall
+  clock's, so a clock step stretched or cut a `BOF3X_SHOT_WAIT` freeze.
+- `MoveFileKeep`'s fallback after `renameat2` was `link` then `unlink`,
+  which a filesystem with no hard links refuses: every quicksave rotation
+  step would be refused there.
+
+**Status:** fixed (`74de697d`, `3d91f28c`, `815438bb`). The event keeps a
+list of blocked waits; the named event waits on the monotonic clock
+(`sem_clockwait`, or a poll each millisecond where the C library has none);
+`MoveFileKeep` has a third way, an exclusive create and a rename over it.
+`os_tests`: 324 checks on POSIX, 0 failed, in both wait forms. Not run: a
+clock step, a real filesystem without hard links (the third way ran through
+a test hook). **Open, the third way's gap:** a crash between the create and
+the rename leaves a zero-byte file at the target, and the next F6 refuses
+that rotation step until the file is deleted (`snapshot.cpp` is unchanged).

@@ -6,6 +6,8 @@
 #include "game/platform/game_window_native.h"
 
 #include <SDL3/SDL.h>
+#define SDL_MAIN_HANDLED   // SDL_main.h for SDL_RegisterApp alone: no main is renamed
+#include <SDL3/SDL_main.h>
 #include <windows.h>
 
 #include <cstdint>
@@ -283,6 +285,15 @@ void BeforeVideo() {
     // (bof3x.exe's PerMonitorV2): either way the awareness is as before.
     SDL_SetHint("SDL_WINDOWS_DPI_AWARENESS", "unaware");
     SDL_SetHint(SDL_HINT_VIDEO_ALLOW_SCREENSAVER, "1");
+    // The window's class keeps the port's name, "Bof3" (the image's own
+    // string, as win32::Register passes it): SDL's default is "SDL_app", and
+    // the launcher's save editor finds a running game by the class
+    // (save_dialog.cpp GameRuns). Registered here, before SDL's video start,
+    // which then finds the class registered and only counts it; the style is
+    // the one SDL gives its default class, and a null instance is the main
+    // module, SDL's default too.
+    if (!SDL_RegisterApp(StrImage(::bof3::Img(kStrClass.v)), CS_BYTEALIGNCLIENT | CS_OWNDC, nullptr))
+        bof3::Fatal("game_window: SDL_RegisterApp: %s", SDL_GetError());
 }
 
 void* AfterCreate(SDL_Window* window, void* hinstance_) {

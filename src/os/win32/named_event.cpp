@@ -38,4 +38,6 @@ void ResetNamedEvent(NamedEvent* e) noexcept { ResetEvent(e->event); }
 
 bool WaitNamedEvent(NamedEvent* e, std::uint32_t ms) noexcept { return WaitForSingleObject(e->event, ms) == WAIT_OBJECT_0; }
 
+const char* NamedEventWaitWay() noexcept { return "WaitForSingleObject"; }
+
 }  // namespace bof3::os
