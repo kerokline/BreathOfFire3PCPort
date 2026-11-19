@@ -136,7 +136,12 @@ void LogOpen(void* dll_module) {
     g_log = os::OutCreate(path);
     if (g_log == os::kNoFile) return;
     // BOF3X_CASECHECK's lines (os/case_check.h), those made before now first.
-    if (os::CaseCheckOn()) os::CaseCheckSink([](const char* line) { Log("%s", line); });
+    // The first line says the switch is on, so a log with no other CASECHECK
+    // line reads as "every name matched", not as "the switch was not seen".
+    if (os::CaseCheckOn()) {
+        Log("CASECHECK on (BOF3X_CASECHECK=1): a name that opens only by its case folded is logged here");
+        os::CaseCheckSink([](const char* line) { Log("%s", line); });
+    }
     // From DllMain the thread starts once the loader lock is let go; until
     // then Write writes itself.
     g_wake = os::EventCreate(false, false);
