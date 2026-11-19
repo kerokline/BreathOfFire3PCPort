@@ -22,7 +22,9 @@
 #include <windows.h>
 #else
 #include <fcntl.h>
+#include <pthread.h>
 #include <semaphore.h>
+#include <signal.h>
 #include <unistd.h>
 #endif
 
@@ -864,9 +866,41 @@ void TestR1Harness() {
         });
         CHECK(os::WaitNamedEvent(e, 5000));
         late.join();
+        std::printf("named event: the wait is %s\n", os::NamedEventWaitWay());
 #ifdef _WIN32
         CloseHandle(other);
 #else
+        // A signal taken during the wait does not end it: the wait goes on to
+        // its own bound (EINTR), and a set after the signal is still seen.
+        struct sigaction act {}, old {};
+        act.sa_handler = [](int) {};   // no SA_RESTART: the wait is interrupted
+        sigemptyset(&act.sa_mask);
+        CHECK(sigaction(SIGUSR1, &act, &old) == 0);
+        const pthread_t self = pthread_self();
+        {
+            std::thread poke([&] {
+                for (int i = 0; i < 5; ++i) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(30));
+                    pthread_kill(self, SIGUSR1);
+                }
+            });
+            const auto s0 = std::chrono::steady_clock::now();
+            CHECK(!os::WaitNamedEvent(e, 300));
+            const auto took = std::chrono::steady_clock::now() - s0;
+            CHECK(took >= std::chrono::milliseconds(290) && took < std::chrono::milliseconds(2000));
+            poke.join();
+        }
+        {
+            std::thread poke([&] {
+                std::this_thread::sleep_for(std::chrono::milliseconds(30));
+                pthread_kill(self, SIGUSR1);
+                std::this_thread::sleep_for(std::chrono::milliseconds(30));
+                set();
+            });
+            CHECK(os::WaitNamedEvent(e, 5000));
+            poke.join();
+        }
+        sigaction(SIGUSR1, &old, nullptr);
         sem_close(other);
         sem_unlink(("/" + name).c_str());
 #endif
@@ -995,12 +1029,61 @@ void TestEventsThreadsFiles() {
     CHECK(count.load() == 1 && os::ThreadEnded(t1) != os::ThreadEnded(t2));
     CHECK(os::EventSet(a));
     CHECK(Within([&] { return count.load() == 2 && os::ThreadEnded(t1) && os::ThreadEnded(t2); }, 2000));
+    // Two waiters blocked, then two sets with nothing between them: each set
+    // releases one waiter at the set itself, so both end and nothing is left
+    // set. (Windows hands a set to a blocked waiter in the kernel; a backend
+    // that only raises a flag and wakes a thread loses the second set when it
+    // comes before the first waiter has run.)
+    int lost = 0, left = 0;
+    for (int round = 0; round < 10; ++round) {
+        std::atomic<int> pair{0};
+        Waiter p1{a, nullptr, &pair}, p2{a, nullptr, &pair};
+        os::Thread u1 = os::StartThread(WaitThenCount, &p1), u2 = os::StartThread(WaitThenCount, &p2);
+        if (!u1 || !u2) {
+            ++lost;
+            break;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        os::EventSet(a);
+        os::EventSet(a);
+        const auto ended = [&] { return pair.load() == 2 && os::ThreadEnded(u1) && os::ThreadEnded(u2); };
+        if (!Within(ended, 1000)) {
+            ++lost;
+            // The waiter left behind is let go: it holds this round's stack.
+            for (int i = 0; i < 50 && !ended(); ++i) {
+                os::EventSet(a);
+                std::this_thread::sleep_for(std::chrono::milliseconds(20));
+            }
+        }
+        if (os::EventWait(a, 0) == WaitResult::Signalled) ++left;
+    }
+    CHECK(lost == 0);
+    CHECK(left == 0);
+    // A waiter that gave up is not handed a later set: the set stays for the next wait.
+    CHECK(os::EventWait(a, 30) == WaitResult::Timeout);
+    CHECK(os::EventSet(a) && os::EventWait(a, 0) == WaitResult::Signalled && os::EventWait(a, 0) == WaitResult::Timeout);
     std::atomic<int> both{0};
     Waiter w3{m, nullptr, &both}, w4{m, nullptr, &both};
     CHECK(os::StartThread(WaitThenCount, &w3) && os::StartThread(WaitThenCount, &w4));
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
     CHECK(os::EventSet(m));
     CHECK(Within([&] { return both.load() == 2; }, 2000));
+#ifndef _WIN32
+    // A manual-reset set releases the waits blocked at the set, whatever comes
+    // after: a reset straight behind it takes nothing back. (Not asked of
+    // Windows, where it is PulseEvent's case: a wait the kernel has borrowed
+    // for a moment is not there to be released.)
+    CHECK(os::EventReset(m));
+    std::atomic<int> pulse{0};
+    Waiter w6{m, nullptr, &pulse}, w7{m, nullptr, &pulse};
+    os::Thread t6 = os::StartThread(WaitThenCount, &w6), t7 = os::StartThread(WaitThenCount, &w7);
+    CHECK(t6 && t7);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    CHECK(os::EventSet(m) && os::EventReset(m));
+    CHECK(Within([&] { return pulse.load() == 2 && os::ThreadEnded(t6) && os::ThreadEnded(t7); }, 2000));
+    CHECK(os::EventWait(m, 0) == WaitResult::Timeout);
+    if (pulse.load() != 2) os::EventSet(m);   // the waiters hold this function's stack
+#endif
     // A wait forever, ended by a set from here; the other side's set seen here.
     os::Event done = os::EventCreate(false, false);
     Waiter w5{s, done, nullptr};
@@ -1252,6 +1335,10 @@ std::string R7Read(const fs::path& p) {
     return std::string((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
 }
 
+const char* R7Way(int way) {
+    return way == 0 ? "renameat2 / MoveFileExW" : way == 1 ? "link and unlink" : way == 2 ? "exclusive create and rename" : "nothing";
+}
+
 void R7Moves(const fs::path& dir, const char* where) {
     std::error_code ec;
     fs::remove_all(dir, ec);
@@ -1279,8 +1366,48 @@ void R7Moves(const fs::path& dir, const char* where) {
     CHECK(!fs::create_directory(dir, ec) && !ec);
     fs::remove_all(dir, ec);
     std::printf("file move in %s (%s): the refusing rename by %s (refused) and %s (moved)\n", where, os::Narrow(dir).c_str(),
-                refused_way == 0 ? "renameat2 / MoveFileExW" : refused_way == 1 ? "link and unlink" : "nothing",
-                moved_way == 0 ? "renameat2 / MoveFileExW" : moved_way == 1 ? "link and unlink" : "nothing");
+                R7Way(refused_way), R7Way(moved_way));
+}
+
+// Each way of the refusing rename, run on a system that has them all: the
+// POSIX backend starts at the way asked for, as if the system had refused the
+// ones before it (os/file_move.h). Windows has one way, and the same answers.
+void R7MoveWays(const fs::path& dir) {
+    std::error_code ec;
+    for (int way = 0; way <= 2; ++way) {
+#ifdef _WIN32
+        const int ran = 0;
+#else
+        const int ran = way;
+#endif
+        fs::remove_all(dir, ec);
+        CHECK(fs::create_directory(dir, ec) && !ec);
+        const fs::path a = dir / "BISLPS1A.DAT", b = dir / "BISLPS1B.DAT", c = dir / "BISLPS1C.DAT", d = dir / "BISLPS1D.DAT";
+        R7Write(a, "a");
+        R7Write(b, "b");
+        os::MoveFileKeepStartAt(way);
+        // A target that is there refuses, and both files are as they were.
+        CHECK(os::MoveFileKeep(a, b) == os::MoveResult::TargetExists && os::MoveFileKeepWay() == ran);
+        CHECK(R7Read(a) == "a" && R7Read(b) == "b");
+        // An empty file at the target is a file: refused too (the last way's own claim looks like one).
+        R7Write(d, "");
+        CHECK(os::MoveFileKeep(a, d) == os::MoveResult::TargetExists && fs::file_size(d, ec) == 0 && R7Read(a) == "a");
+        fs::remove(d, ec);
+        // A free target: the file moved, bytes and all.
+        CHECK(os::MoveFileKeep(a, c) == os::MoveResult::Moved && os::MoveFileKeepWay() == ran);
+        CHECK(!fs::exists(a, ec) && R7Read(c) == "a");
+        // No source: refused as such, the file at the target kept, and no file left at a free target.
+        CHECK(os::MoveFileKeep(a, c) == os::MoveResult::NoSource && R7Read(c) == "a");
+        CHECK(os::MoveFileKeep(a, d) == os::MoveResult::NoSource && !fs::exists(d, ec));
+        // The rotation's own shape: 1B -> 1C refused while 1C is there, then 1C away, then moved.
+        CHECK(os::MoveFileKeep(b, c) == os::MoveResult::TargetExists);
+        CHECK(fs::remove(c, ec) && os::MoveFileKeep(b, c) == os::MoveResult::Moved && R7Read(c) == "b" && !fs::exists(b, ec));
+        int files = 0;
+        for (const auto& entry : fs::directory_iterator(dir, ec)) files += entry.is_regular_file() ? 1 : 0;
+        CHECK(files == 1);
+        os::MoveFileKeepStartAt(0);
+    }
+    fs::remove_all(dir, ec);
 }
 
 void TestFileMove() {
@@ -1288,6 +1415,7 @@ void TestFileMove() {
     const std::string tag = "bof3x_r7_move_" + std::to_string(os::ProcessId());
     R7Moves(fs::temp_directory_path(ec) / tag, "the temporary folder");
     R7Moves(fs::current_path(ec) / tag, "the current folder");
+    R7MoveWays(fs::temp_directory_path(ec) / (tag + "_ways"));
 }
 
 // ---- a key posted to a window (wave 2, I1: os/window_key.h) ----------------------

@@ -30,5 +30,6 @@ MoveResult MoveFileReplace(const std::filesystem::path& from, const std::filesys
 }
 
 int MoveFileKeepWay() noexcept { return 0; }
+void MoveFileKeepStartAt(int) noexcept {}
 
 }  // namespace bof3::os
