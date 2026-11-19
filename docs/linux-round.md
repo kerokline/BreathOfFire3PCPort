@@ -8,7 +8,10 @@ loads a save and plays a battle, and three defects were found, D411..D413.
 widths then play the same route under Proton with nothing added by hand.
 The launcher's pages, a real GPU, the pad, the sound by ear and a Steam Deck
 are not tested. Tier 2 is staged and waits for the owner's word and the calls
-in section 6.)
+in section 6. **2026-11-19:** stage LB is done and on `main` (PRs #259, #261,
+#262, #264): every source file compiles for x86-64 Linux and nothing links.
+Stages LC and LD are staged as one round of fourteen groups in three waves,
+not launched: section 4, "Stages LC and LD, staged as one round".)
 
 Issue #215 asks for the game on Linux and the Steam Deck. This file stages
 two answers, the cheap one first:
@@ -1332,6 +1335,164 @@ loads on Linux.
   native build, and the owner's eye on the second backend on Windows.
 - Rewrites of [`STATUS.md`](STATUS.md) and [`HANDOFF.md`](HANDOFF.md).
 
+### Stages LC and LD, staged as one round (2026-11-19; not launched)
+
+**Staged, not started.** It launches at the owner's word and after the calls
+under "For the owner, before a launch" below. Stage LB is done: 813 of 813
+source files compile for `x86_64-linux-gnu` and 11 are Windows files by
+design ("Wave 2 as run"). Nothing links. This section cuts what is left into
+groups, as the 38 files were cut. Measured at `main` `8cd45199` by the
+command beside each figure; what was not measured is at the section's end.
+
+**Goal:** a `bof3x` ELF that starts from a player's settings file, plays an
+install, and passes stage LC's gate; then a CI job that keeps it building and
+a tarball a Linux player can use.
+
+**What was found for this staging, beyond the two stage lists above:**
+
+- **Nothing on Linux reads `bof3x.ini`.** The engine reads `BOF3X_`
+  environment switches and never the file: `grep -rn "bof3x.ini" src/hook
+  src/game src/common` finds comments and message texts alone. The launcher
+  turns the file into the environment (`ConfigApplyEnvironment`,
+  `src/launcher/config.h:302`; 32 `SetEnv` sites in `config.cpp`) and writes
+  the game's own configuration (`ConfigApplyGameCfg`, `:327`). `linux_tree.py`
+  skips `src/launcher/` (`SKIP`), so that code has not been compiled for
+  Linux. Section 5's stand-in 2 ("the `.ini` is already the contract") needs
+  a reader on Linux: group C7.
+- **The seam has no call that starts a process** (`ls src/os/*.h`: 23
+  headers, none for it; `grep -niE "spawn|CreateProcess" src/os/*.h` finds
+  nothing). The launcher's five `CreateProcessW` sites start the game, the
+  developer launcher and the importer.
+- **The movie's picture is a `Fatal` off Windows**
+  (`battle_menu_win.cpp:1053`, the `#ifndef _WIN32` half), and the decision
+  between the two ways is open ([`replacing-mci.md`](replacing-mci.md) 9). A
+  start plays the logo movie before the title when the install has one.
+  Group C5, and call 2.
+- **Unit LB8 did not run.** No case rule is in the POSIX backend (`grep -rniE
+  "casefold|strcasecmp|tolower" src/os/posix` finds nothing), and LA5 is not
+  in "Stage LA as run". The home folder is the executable's folder or
+  `BOF3X_HOME` (`src/common/home.cpp:20`), built with backslashes
+  (`home + L"\\game"`). Group C4, and call 3.
+- **No Windows 64-bit state-hash reference is recorded.** LC's gate compares
+  Linux with "the Windows 64-bit references"; "Wave 2 as run" says "Not run:
+  anything at 64 bits beyond the build", and PR #229's record says the same
+  of the 64-bit routes. Group C0 makes them first.
+- **No build list makes a Linux target.** `CMakePresets.json` has `i686` and
+  `x86_64`, both llvm-mingw; `CMakeLists.txt:193` says so in a comment.
+  `cmake/dxvk_headers.cmake` fetches DXVK's headers and builds no library.
+- **The shaders need no compiler on Linux:** `src/render/shaders_compiled.h`
+  is tracked (`git ls-files`), and `tools/compile_shaders.py`, which makes
+  it, is one of the nine tools that use `ctypes` (the list is under C8).
+- **This machine's WSL can run a first Linux start.** Ubuntu 26.04.1,
+  kernel 6.18.58.1, `mmap_min_addr` 65,536, `g++-15`, `meson` and `ninja`;
+  `mesa-vulkan-drivers` 26.0.8 with `libvulkan_lvp.so` (a software Vulkan)
+  and `/dev/dxg`; no `clang++` and no `cmake` on its path (`wsl -e bash -lc`,
+  2026-11-19). Section 2a ran tier 1 there on a software renderer. The state
+  hash does not depend on the picture, so the routes can be proven here; a
+  GPU, the sound by ear and a pad are frost's machine or a tester's.
+
+| Group | What it does | Files | Proof |
+|---|---|---|---|
+| C0, the 64-bit oracle | The ten routes, `music_heard.py` and the exe-host self-test on the Windows 64-bit build of `main`, kept as the references LC compares with. A difference from the 32-bit references is read and named before anything else starts | no source; `analysis/statehash` | `statehash.py diff` against `orig5`'s pairs with the 64-bit round's allowance |
+| C1, the Linux target | A `linux-x86_64` preset: clang, C++20, non-PIE, linked high (`-Wl,-Ttext-segment`, LA2), `__cdecl` as `ms_abi` (LA3); the source list without `linux_tree.py`'s `WINDOWS_ONLY`, `src/launcher/` and `src/os/win32/`; SDL3 as today; DXVK-native's two libraries built pinned at the commit `cmake/dxvk_headers.cmake` names (`meson -Dnative_sdl3=enabled`). First aim: every object, then the list of undefined names at the link, which is the measure of C2 to C6 | `CMakePresets.json`, `CMakeLists.txt`, `cmake/` | The link's undefined names written to `analysis/linux_link.tsv`; both Windows presets still build with the same objects (`codegen_same.py`) |
+| C2, the start-up | A `main` that does `Engine_Main`'s steps in its order without a PE loader ("R3: what a Linux start-up needs from the PE host"): reserve the span, map the image at `0x400000` or the moved base, `.stub` no-access, `.data` from `ExeImage_Source` or the player's `BOF3.exe`, the pointer words, the import slots, the x87 word, `Crash_Start`, `InjectAll`, `Game_WinMain`. `host.cpp` split into its portable part and a per-host part; `ImageBase()` given a source that is not the process environment block; `ExeFile_Present` / `ExeFile_Read` as portable code over the PE file's section table | new `src/hook/exe_host_posix.cpp`, `host.cpp`, `src/common/image_base.h`, `exe_host.cpp` | On Windows: the hosted suite, the exe host and the moved base as before. On Linux: `BOF3X_SELFTEST_ONLY=1` to `self-test only: done` |
+| C3, memory below 4 GB | The reservations made before anything else allocates, in one written order: the image, the task stacks at their Windows place, the arena (R10, the default on Linux, no switch), the draw pool. A refusal that names the range when a reservation fails. The task switch under `ms_abi` run for the first time | `src/os/posix`, `sound_ours.cpp`'s arena, `task.cpp` | `lowmem_probe`'s cases as tests in `tools/os_host`; the self-test's task cases on Linux |
+| C4, paths | LA5 and LB8: the case of every name the engine builds against what an install holds, fixed at its source or folded in one place in the POSIX backend (call 3); backslashes in the names `home.cpp` and the save code build; where the home, the saves, the log and the crash report go (call 3); D431's open item, the zero-byte slot file after a crash in `MoveFileKeep`'s third way | `src/os/posix`, `src/common/home.cpp`, the path builders LA5 lists | A Windows run with a case-checking open in the seam (LB8's proof); `os_tests` for each new call; a quicksave made and loaded on Linux |
+| C5, the picture | The renderer's window from SDL's (`SwapChainWindow`, `WindowClientSize`, `src/render/render_window.h`) with DXVK-native taking SDL's window as its `HWND`; the window icon by `SDL_SetWindowIcon` from `exe_icon.cpp`'s portable picture code; the movie's picture off Windows by the way call 2 chooses | `src/render`, `game_window_other.cpp`, `battle_menu_win.cpp`, a portable part of `exe_icon.cpp` | A frame saved by the game's own readback (`BOF3X_SHOT_DIR`) on Linux against the Windows 64-bit frame of the same tick, point filter, pixel for pixel; the logo movie's frames against the decoder's dump |
+| C6, faults and the watch | `crash_posix.cpp` in a real run: a crash on purpose (`BOF3X_CRASH_TEST`) read by `tools/crash_report.py`; `stackwatch_posix.cpp` refuses today, so either a guard page for the main stack or the refusal kept and said | `src/hook/crash_posix.cpp`, `stackwatch_posix.cpp` | `tools/linux_probe/crash_catch_test.sh`; a `CRASH n:` report from the ELF |
+| C7, the settings without a window | `config.cpp`, `suites.cpp` and `exe_image.cpp` off `<windows.h>` (164, 1 and 30 census sites: `python tools/os_census.py --files src/launcher`), a process-start call in the seam, and a `bof3x-launcher` for Linux with no window: it reads `bof3x.ini`, applies the environment and the game's configuration as the Windows launcher does, and starts `bof3x`. It is stage P0 of [`launcher-portable.md`](launcher-portable.md), and it is needed here whatever that document's answer is | `src/launcher/config.cpp`, `suites.cpp`, `exe_image.cpp`, a new `src/os/process.h`, `launcher.cpp`'s start half | `config_tests` (`tools/launcher_host`) on Windows and in the WSL; the environment the two launchers set from one `bof3x.ini`, compared line by line |
+| C8, the harness | A runner for Linux that needs no window control: a recipe by the `BOF3X_` switches, the state hash to a file, the exit code. `input_run.py` and `abc_run.py` take a `--host linux` that starts the ELF (in the WSL from Windows, or directly on Linux). The nine tools that use `ctypes` (`grep -rlE "import (ctypes\|winreg\|win32\|msvcrt)\|ctypes\.windll\|from ctypes" tools`: `close_probe.py`, `compile_shaders.py`, `ini_probe.py`, `key_probe.py`, `proc_image.py`, `revisit_diff.py` and three under `launcher_host/`) stay Windows tools, each saying so when run elsewhere | `tools/` | One route run twice on Linux, identical but for the pages two Windows runs also differ on |
+| C9, the install | The importer under Linux's Python with a requirements file (call 3 of section 6; no `requirements*` file is tracked today); the case of the names it writes checked against C4's rule; an install made on Windows and copied, checked by `verify` | `tools/importer.py`, a new requirements file | `setup` on Linux from the US disc, then `verify`; the cache's manifest equal to a Windows-made one |
+| D1, CI | A native job on `ubuntu-24.04`: the Linux preset builds and links, `os_tests`, `config_tests`, the self-test with no game data if one exists (as `os-host` runs today); the header ratchet of section 3 (no game folder includes an operating-system header) | `.github/workflows/build.yml`, `checks.yml` | The job green on the round's PR |
+| D2, the release | `tools/make_release.py` makes the tarball of call 5: the ELF, C7's launcher, DXVK-native's two libraries, the importer, a start script. DXVK's notice in [`THIRD_PARTY.md`](THIRD_PARTY.md) (owed since wave 2). The README's Linux section and the release notes | `tools/make_release.py`, `release.yml`, `docs/THIRD_PARTY.md`, `README.md` | The tarball unpacked on a clean machine or container: `setup`, then the title screen |
+| D3, the people's checks | Tier 1's rows 5, 7 and 9 to 12 under Proton (2c); the tier-1 checklist's rows 4 to 10 on the native build by a Linux tester; the owner's looks still owed from waves 1 and 2 (below) | none | The checklist's table filled in section 2c's form |
+| D4, the records | [`STATUS.md`](STATUS.md) and [`HANDOFF.md`](HANDOFF.md) rewritten for the round: HANDOFF's Linux lines still say wave 2 is not launched and name a second backend as the gate (`HANDOFF.md`, "The Linux round's next units"), which call 1's answer retired | docs | `ledger_check.py`; the docs' own checks in CI |
+
+**Three waves. One round runs at a time; the first two need no eye.**
+
+- **Wave A, on Windows alone, nothing a player can tell:** C0 first and by
+  itself (it is game runs on a quiet machine). Then, side by side: C1's
+  preset and list, C2's split of `host.cpp` and the portable `ExeFile_Read`,
+  C4's Windows half (the case-checking open and the fixes it finds), C7's
+  Windows half (`config.cpp` on the seam, `os/process.h`), C8's runner, C9's
+  requirements file. Each is proven by the Windows gate line.
+- **Wave B, the first link and the first run, in the WSL:** C1's link to
+  zero undefined names, then C2, C3, C5 and C6 in that order on one branch,
+  since each is found by the run stopping at the next thing; C4's and C7's
+  Linux halves beside them. It ends at LC's gate: the ten routes against
+  C0's references, `music_heard.py`, a quicksave made and loaded on Linux.
+  One agent at a time owns the run; the others hand it patches.
+- **Wave C, what a person must see:** D1 and D2 by agents; D3 by frost, a
+  tester and the owner; D4 last.
+
+**The gate line, each group, before its hand-back.** The Windows line of
+"The 38 files, staged as one round", and with it the two checks that wave 2
+missed (`tu_census.py --check --strict`, `retire_shells.py --check
+--strict`). From wave B on, also:
+
+- the Linux preset builds and links with no undefined name;
+- `os_tests` and `config_tests` in the WSL;
+- `BOF3X_SELFTEST_ONLY=1` on the ELF to `self-test only: done`, 0 FATAL;
+- for C3 to C6, which change what runs: the route the group names, against
+  C0's reference.
+
+**What two groups share, and how it merges.** `CMakeLists.txt`'s source
+lists and `src/os/os.h`, as before: keep both sides. The censuses are
+regenerated by the coordinator after each merge. Agents number nothing in
+the ledger or the defect list. C2 and C3 both touch the start-up's order:
+C3 writes the order as a table in this file first, and C2 codes to it.
+
+**For the owner, before a launch:**
+
+1. **Who runs it.** Wave A needs no Linux machine. Wave B can run in this
+   machine's WSL on a software Vulkan, or on frost's machine. The owner's
+   answer of 2026-11-18 was "wave 2 runs here; frost takes the round over
+   when he is ready". Proposed: waves A and B here, wave C's GPU, sound and
+   pad rows his; ask him before wave B starts, so that two people do not
+   write the same start-up.
+   **Decided (the owner, 2026-11-19): what can be done here is done here**,
+   and frost takes it up when he has time. Waves A and B run here; wave C's
+   GPU, sound and pad rows stay his or a tester's.
+2. **The movie's picture off Windows** ([`replacing-mci.md`](replacing-mci.md)
+   9). Proposed: the renderer brought up before the movies, since SDL3 will
+   not combine its window surface with a 3D API on one window and the
+   renderer is needed a moment later anyway. It changes the Windows order
+   too if both systems are to share one path; then it is a ledger entry and
+   an owner's look at the three movies.
+3. **Where a Linux install keeps its files, and the case rule.** Proposed:
+   the tarball stays a portable folder as on Windows (the home is the
+   executable's folder, `BOF3X_HOME` overrides), so one rule serves both
+   systems and the Deck; XDG folders are a later call. For case: fix each
+   name at its source where the engine builds it, and fold case in the
+   POSIX backend only for names the player's own files bring (a disc's
+   folder, a mod's zip).
+4. **The first native release's front end.** Proposed: C7's launcher with
+   no window plus a text file, as call 5 decided; the window is
+   [`launcher-portable.md`](launcher-portable.md)'s question and does not
+   gate this round.
+5. **Whether C0's references need a hands-off machine now.** Ten routes on
+   the 64-bit build is about the length of one proof chain; nothing else in
+   wave A waits for it but wave B's gate.
+
+**Still owed from waves 1 and 2, the owner's (D3 collects them):** AltGr
+under SDL's keyboard with `BOF3X_OFF=KeyboardSdl` and a look at the log; a
+physical pad after the review's `FlushSdl` fix, unplugged and plugged in;
+the save list opened once on the 64-bit Windows build; the movie and the
+long proofs after step 0 was undone; a close of the window during a movie;
+MP3 music on the own stack; satpixie; `BOF3X_OFF=WindowSdl` outside the four
+key recipes.
+
+**Not measured for this staging:** the size of the linked ELF and so
+whether a high link is needed or merely safe; the number of undefined names
+at the first link (C1 measures it); whether DXVK-native builds in this
+machine's WSL (frost built v3.1.1 on CachyOS) and whether `lvp` or the
+`/dev/dxg` driver is what Vulkan picks there; whether the software Vulkan
+is fast enough for a route to end in the time its recipe expects; the
+launcher's `config.cpp` under a 4-byte `wchar_t`; a whole-tree link under
+`ms_abi` and a call across the SDL or DXVK boundary (section 7); SteamOS's
+`mmap_min_addr`; whether the Windows 64-bit build's routes equal the 32-bit
+ones today (C0).
+
 ## 5. What stands in for the launcher in tier 2
 
 The launcher is Win32 dialogs: `config_dialog.cpp` 1,861 lines, `config.cpp`
@@ -1346,7 +1507,8 @@ does not rewrite it. Three stand-ins, cheapest first:
    launcher writes is already the contract; the importer's `identify`,
    `sources` and `setup` calls are already a command line
    ([`install-sources.md`](install-sources.md) section 4).
-3. **Tier 3:** the three pages in a portable toolkit. IDEAS I40 (the
+3. **Tier 3:** the pages in a portable toolkit, estimated and staged in
+   [`launcher-portable.md`](launcher-portable.md) (2026-11-19). IDEAS I40 (the
    importer in C++) shrinks it, since the Sources page is then no longer a
    front end to a Python process.
 
@@ -1437,7 +1599,9 @@ owner's to confirm or change at the merge of the unit that depends on it.
 
 ## 8. Not in these tiers
 
-- A native launcher (tier 3) and the importer in C++ (I40).
+- A native launcher (tier 3; [`launcher-portable.md`](launcher-portable.md)
+  stages it, and its stage P0 is this round's group C7) and the importer in
+  C++ (I40).
 - ARM64 and macOS.
 - The 32-bit build on Linux. The native build is the 64-bit host; the 32-bit
   build reaches Linux through tier 1.

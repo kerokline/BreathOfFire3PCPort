@@ -110,6 +110,7 @@ rule ([`README.md`](README.md)) here too.
 | I66 | Solo character: a champion whose record is at 0 HP when a battle starts (the owner thinks this is the Mikba fight, with Rei) | gameplay / mode | not assessed | open 2026-11-12 (the owner); today the game's own party fights and the champion starts dead as the original has it |
 | I67 | Increased mapping to allow xdelta cross-disc conversions: a per-patch, per-disc list of offsets so a romhack's patch of the US disc builds from another disc | mods / tools | measured, not built | open 2026-11-13 (the owner, after disc-patch-round.md 11.6); gated on the rule-1 call and a US 1.0 image |
 | I68 | The music staging buffer against the tick: its refill is by wall time, so its pages differ run to run in the state hash, and more often with an in-between present in the wait loop | audio / tools | built (the tool) | 2026-11-14: `statehash.py` sets the buffer's 17 whole pages aside as timing pages; the WAV A/B and the owner's ear still open |
+| I69 | One launcher for Windows and Linux from one source: the settings model off Windows first (a launcher with no window for the native Linux build), then the windows drawn on SDL3 | platform / launcher | MEDIUM | staged 2026-11-19 ([`launcher-portable.md`](launcher-portable.md)); nothing built; its stage P0 is group C7 of the Linux round's LC staging |
 
 ---
 
@@ -2683,3 +2684,15 @@ _(2026-11-14) Question 2 answered in the tool; 1 and 3 open._ `tools/statehash.p
 Question 1 (audible?) by arithmetic only, **not heard**: half the ring is `0x12000` bytes, 418 ms at 44,100 Hz 16-bit stereo, and an in-between's present holds one `Sound_Tick` back by milliseconds; the higher count with the switch on is a refill crossing a tick boundary more often, not a late one. The WAV A/B and the owner's ear are still owed. Question 3 (does the game read the fill state) not traced.
 
 _(2026-11-13) open; measured, nothing built._
+
+## I69 — One launcher for Windows and Linux
+
+**Ask (2026-11-19, the owner):** estimate and write up a launcher that works on either Windows or Linux.
+**Kind:** platform / launcher. **Feasibility:** HIGH for stage P0 (the model on the OS seam, a launcher with no window), MEDIUM for the windows.   **Gated on:** P0 on nothing, and the Linux round needs it ([`linux-round.md`](linux-round.md), "Stages LC and LD, staged as one round", group C7); the windows on the owner's four calls ([`launcher-portable.md`](launcher-portable.md) section 7), the first of which is the toolkit.
+
+The estimate is [`launcher-portable.md`](launcher-portable.md). Measured: the launcher is 13,501 lines, of which 6,818 (the settings model, the save editor's format core, the exe image) hold no window call and carry over, and 6,683 with a 672-line dialog resource (21 dialogs, 349 controls) are Win32. Nothing on Linux reads `bof3x.ini` today: the launcher turns it into the environment the engine reads. Proposed: one set of windows drawn by Dear ImGui on SDL3's renderer, which the launcher already links; [`launcher-settings.md`](launcher-settings.md) section 2 turned that library down when the panel had twelve controls and SDL3 was not in the launcher. About 5,700 new lines in seven stages, two waves and three looks by the owner.
+
+**First concrete step:** stage P0 with the Linux round's wave A; then P1, the frame and one page, for the owner's look before any other page is written.
+
+### Outcome
+_(2026-11-19) open; staged, nothing built._
