@@ -30,7 +30,9 @@ TOOLS = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, TOOLS)
 import bof3x_home   # noqa: E402
 
-FFMPEG_LINK = "https://ffmpeg.org/download.html#build-windows"
+# ffmpeg's download page, at the part for this system (Windows: the builds for Windows).
+FFMPEG_LINK = "https://ffmpeg.org/download.html#build-" + (
+    "windows" if os.name == "nt" else "mac" if sys.platform == "darwin" else "linux")
 
 # The short text the launcher shows beside a source.
 LABELS = {
@@ -948,7 +950,7 @@ def run_setup(a, h, log, progress, total):
         elif line.startswith("  base/exe  from"):
             progress("Building the data cache: the executable's tables done", step=False)
 
-    if len(os.path.join(game, "CAPCOM.AVI")) > MCI_PATH_LIMIT:
+    if os.name == "nt" and len(os.path.join(game, "CAPCOM.AVI")) > MCI_PATH_LIMIT:    # MCI is Windows's
         progress("Warning: the install folder's path is long (%d characters to the movie); Windows may not play "
                  "the logo movie from it. A shorter folder avoids that." % len(os.path.join(game, "CAPCOM.AVI")),
                  step=False)
