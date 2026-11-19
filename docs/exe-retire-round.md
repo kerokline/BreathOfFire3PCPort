@@ -1,6 +1,7 @@
 # `BOF3.exe` out of the player's run: staging
 
-**Status:** STAGED (2026-11-19; not launched; nothing built). Asked by the owner
+**Status:** STAGED (2026-11-19; not launched; nothing built; the five calls of
+section 7 answered the same day, all as proposed). Asked by the owner
 on 2026-11-19: "remove the original exe from any post-install player usage".
 Measured on the Linux round's wave A merge (`linux/lcA` `33de9f1b`, which holds
 `start.cpp`, `exe_file.cpp` and `host_win32.cpp`); each figure has its command
@@ -134,6 +135,9 @@ files, staged as one round", with `tu_census.py --check --strict` and
   it.
 
 ## 7. For the owner
+
+**Decided (the owner, 2026-11-19): all five as proposed.** The round launches
+after the Linux round's wave A is on `main` (call 5), at the owner's word.
 
 1. **A PC folder with no image.** Proposed: set it up before the first
    start (X3). The other answer keeps the file as a source for that one
