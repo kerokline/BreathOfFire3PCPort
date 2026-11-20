@@ -1074,6 +1074,15 @@ bool CapturePad(int* input) {
 // ---- The system's own windows -------------------------------------------------
 
 void Message(const char* title, const char* text, bool error) {
+    if (g.hidden) {
+        // A check: not shown (stage P5, the save editor's messages). Said on stdout, one line.
+        std::string line = text ? text : "";
+        for (char& c : line)
+            if (c == '\n') c = ' ';
+        std::printf("bof3x-launcher-ui: check: message: %s: %s\n", title, line.c_str());
+        std::fflush(stdout);
+        return;
+    }
     // SDL shows its message box before SDL_Init too: a refusal before the window opens is still read.
     if (!SDL_ShowSimpleMessageBox(error ? SDL_MESSAGEBOX_ERROR : SDL_MESSAGEBOX_INFORMATION, title, text, g.window))
         std::fprintf(stderr, "%s: %s\n", title, text);
@@ -1175,6 +1184,226 @@ bool Picked(int ask, std::string* path) {
     if (path) *path = it->second;
     g.pick_done.erase(it);
     return true;
+}
+
+// ---- The save editor (stage P5) -----------------------------------------------
+
+namespace {
+
+// PickFileIn's filters, kept until SDL answers (it reads them until then), by the page's question.
+struct PickMany {
+    std::vector<std::string> kinds, patterns;
+    std::vector<SDL_DialogFileFilter> filters;
+};
+std::map<int, PickMany> g_pick_many;
+
+// The popup of a box opened under it, as wide as `width` at least and about 14 lines high at most.
+void ListUnder(ImVec2 at, float width) {
+    ImGui::SetNextWindowPos(at);
+    ImGui::SetNextWindowSizeConstraints(ImVec2(width, 0),
+                                        ImVec2(FLT_MAX, ImGui::GetTextLineHeightWithSpacing() * 14 + S(8)));
+}
+
+}  // namespace
+
+bool ComboWide(const char* label, int* index, const std::vector<std::string>& items, float list_width) {
+    Placed p;
+    p.Width();
+    const int count = static_cast<int>(items.size());
+    bool changed = false;
+    std::string test;
+    if (TestTake(label, p.grey, &test)) {
+        int want = TestNumber(test);
+        if (test.compare(0, 4, "has ") == 0) {   // the first entry that holds the text
+            want = -1;
+            for (int i = 0; i < count && want < 0; ++i)
+                if (items[static_cast<std::size_t>(i)].find(test.substr(4)) != std::string::npos) want = i;
+        }
+        if (want >= 0 && want < count && want != *index) {
+            *index = want;
+            changed = true;
+        }
+    }
+    const char* shown = *index >= 0 && *index < count ? items[static_cast<std::size_t>(*index)].c_str() : "";
+    ImGui::PushID(label);
+    ImGui::SetNextWindowSizeConstraints(ImVec2(S(list_width), 0), ImVec2(FLT_MAX, FLT_MAX));
+    if (ImGui::BeginCombo("##combo", shown, ImGuiComboFlags_HeightLarge)) {
+        for (int i = 0; i < count; ++i) {
+            ImGui::PushID(i);
+            const bool chosen = i == *index;
+            if (ImGui::Selectable(items[static_cast<std::size_t>(i)].c_str(), chosen) && !chosen) {
+                *index = i;
+                changed = true;
+            }
+            if (chosen) ImGui::SetItemDefaultFocus();
+            ImGui::PopID();
+        }
+        ImGui::EndCombo();
+    }
+    ImGui::PopID();
+    return changed;
+}
+
+bool EditCombo(const char* label, std::string* text, const std::vector<std::string>& items, int* picked, bool focus) {
+    Placed p;
+    *picked = -1;
+    const int count = static_cast<int>(items.size());
+    std::string test;
+    if (TestTake(label, p.grey, &test)) {
+        if (test.compare(0, 6, "entry ") == 0) {
+            const int want = TestNumber(test.substr(6));
+            if (want >= 0 && want < count) {
+                *picked = want;
+                *text = items[static_cast<std::size_t>(want)];
+            }
+        } else {
+            *text = test;
+        }
+    }
+    ImGui::PushID(label);
+    const float arrow = ImGui::GetFrameHeight();
+    const float width = p.w > 0 ? S(p.w) : ImGui::CalcItemWidth();
+    ImGui::BeginGroup();
+    ImGui::SetNextItemWidth(std::max(width - arrow, 1.0f));
+    if (focus) ImGui::SetKeyboardFocusHere();
+    const bool enter = ImGui::InputText("##text", text, ImGuiInputTextFlags_EnterReturnsTrue);
+    const ImVec2 under(ImGui::GetItemRectMin().x, ImGui::GetItemRectMax().y);
+    ImGui::SameLine(0, 0);
+    if (ImGui::ArrowButton("##open", ImGuiDir_Down)) ImGui::OpenPopup("##list");
+    ImGui::EndGroup();
+    ListUnder(under, width);
+    if (ImGui::BeginPopup("##list")) {
+        for (int i = 0; i < count; ++i) {
+            ImGui::PushID(i);
+            const std::string& item = items[static_cast<std::size_t>(i)];
+            const bool chosen = item == *text;
+            if (ImGui::Selectable(item.c_str(), chosen)) {
+                *picked = i;
+                *text = item;
+                ImGui::CloseCurrentPopup();
+            }
+            if (chosen) ImGui::SetItemDefaultFocus();
+            ImGui::PopID();
+        }
+        ImGui::EndPopup();
+    }
+    ImGui::PopID();
+    return enter;
+}
+
+bool ColumnList(const char* label, int* index, const std::vector<std::string>& titles, const std::vector<float>& weights,
+                const std::vector<std::vector<std::string>>& rows, int* used) {
+    Placed p;
+    *used = -1;
+    bool changed = false;
+    const int count = static_cast<int>(rows.size());
+    std::string test;
+    if (TestTake(label, p.grey, &test)) {
+        const bool use = test.compare(0, 4, "use ") == 0;
+        const int want = TestNumber(use ? test.substr(4) : test);
+        if (want >= 0 && want < count) {
+            if (want != *index) changed = true;
+            *index = want;
+            if (use) *used = want;
+        }
+    }
+    const int columns = static_cast<int>(titles.size());
+    ImGui::PushID(label);
+    if (columns > 0 &&
+        ImGui::BeginTable("##columns", columns,
+                          ImGuiTableFlags_ScrollY | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersInnerV |
+                              ImGuiTableFlags_SizingStretchProp,
+                          p.Box())) {
+        ImGui::TableSetupScrollFreeze(0, 1);
+        for (int c = 0; c < columns; ++c)
+            ImGui::TableSetupColumn(titles[static_cast<std::size_t>(c)].c_str(), ImGuiTableColumnFlags_WidthStretch,
+                                    static_cast<std::size_t>(c) < weights.size() ? weights[static_cast<std::size_t>(c)] : 1.0f);
+        ImGui::TableHeadersRow();
+        ImGuiListClipper clipper;
+        clipper.Begin(count);
+        while (clipper.Step()) {
+            for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; ++i) {
+                const std::vector<std::string>& row = rows[static_cast<std::size_t>(i)];
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::PushID(i);
+                const bool chosen = i == *index;
+                const bool pressed = ImGui::Selectable(row.empty() ? "" : row[0].c_str(), chosen,
+                                                       ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowDoubleClick);
+                const bool double_click = ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
+                if (pressed && !chosen) {
+                    *index = i;
+                    changed = true;
+                } else if (pressed && chosen && !ImGui::IsMouseReleased(ImGuiMouseButton_Left) && !double_click) {
+                    *used = i;   // the chosen row used again by the keyboard or the pad
+                }
+                if (double_click) {
+                    *index = i;
+                    *used = i;
+                }
+                for (int c = 1; c < columns && static_cast<std::size_t>(c) < row.size(); ++c) {
+                    ImGui::TableSetColumnIndex(c);
+                    ImGui::TextUnformatted(row[static_cast<std::size_t>(c)].c_str());
+                }
+                ImGui::PopID();
+            }
+        }
+        ImGui::EndTable();
+    }
+    ImGui::PopID();
+    return changed;
+}
+
+int AskNo(const char* title, const char* text) {
+    if (g.hidden) return Ask(title, text);   // a check: the same wait for TestAnswer
+    const SDL_MessageBoxButtonData buttons[] = {
+        {0, 1, "Yes"},
+        {SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT | SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT, 0, "No"},
+    };
+    SDL_MessageBoxData box{};
+    box.flags = SDL_MESSAGEBOX_WARNING;
+    box.window = g.window;
+    box.title = title;
+    box.message = text;
+    box.numbuttons = 2;
+    box.buttons = buttons;
+    int answer = 0;
+    if (!SDL_ShowMessageBox(&box, &answer)) {
+        std::fprintf(stderr, "%s: %s\n(no answer: %s)\n", title, text, SDL_GetError());
+        return 0;   // a question that cannot be shown is answered No: nothing is discarded or replaced
+    }
+    g.wake = 4;
+    return answer == 1 ? 1 : 0;
+}
+
+void PickFileIn(int ask, const std::vector<PickFilter>& filters, const char* folder, bool may_be_new, const char* title) {
+    {
+        std::lock_guard<std::mutex> lock(g.pick_lock);
+        g.pick_done.erase(ask);
+        if (g.hidden) {
+            g.test_pick_ask = ask;   // a check: TestPick answers it
+            return;
+        }
+    }
+    PickMany& held = g_pick_many[ask];   // a map's elements stay where they are: SDL reads them until it answers
+    held = PickMany{};
+    for (const PickFilter& f : filters) {
+        held.kinds.push_back(f.kind);
+        held.patterns.push_back(f.pattern);
+    }
+    for (std::size_t i = 0; i < filters.size(); ++i)
+        held.filters.push_back(SDL_DialogFileFilter{held.kinds[i].c_str(), held.patterns[i].c_str()});
+    const SDL_PropertiesID props = SDL_CreateProperties();
+    if (!held.filters.empty()) {
+        SDL_SetPointerProperty(props, SDL_PROP_FILE_DIALOG_FILTERS_POINTER, held.filters.data());
+        SDL_SetNumberProperty(props, SDL_PROP_FILE_DIALOG_NFILTERS_NUMBER, static_cast<Sint64>(held.filters.size()));
+    }
+    SDL_SetPointerProperty(props, SDL_PROP_FILE_DIALOG_WINDOW_POINTER, g.window);
+    if (folder && *folder) SDL_SetStringProperty(props, SDL_PROP_FILE_DIALOG_LOCATION_STRING, folder);
+    if (title) SDL_SetStringProperty(props, SDL_PROP_FILE_DIALOG_TITLE_STRING, title);
+    SDL_ShowFileDialogWithProperties(may_be_new ? SDL_FILEDIALOG_SAVEFILE : SDL_FILEDIALOG_OPENFILE, PickDone,
+                                     reinterpret_cast<void*>(static_cast<std::intptr_t>(ask)), props);
+    SDL_DestroyProperties(props);   // SDL copies what it keeps before it returns
 }
 
 }  // namespace bof3x::ui

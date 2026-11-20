@@ -242,7 +242,8 @@ bool CapturePad(int* input);
 // ---- The system's own windows -------------------------------------------------
 
 // A message with an OK button; returns when the player has read it, before
-// Open too. With no window system the text goes to stderr.
+// Open too. With no window system the text goes to stderr. In a check
+// (OpenOptions::hidden) it is not shown: it is said on stdout (stage P5).
 void Message(const char* title, const char* text, bool error);
 
 // A question with Yes and No: the system's message box, and the answer, 1
@@ -263,5 +264,44 @@ bool Picked(int ask, std::string* path);
 
 // A web page in the system's browser (the Sources page's link to ffmpeg).
 void OpenLink(const char* url);
+
+// ---- The save editor (stage P5) -----------------------------------------------
+
+// A combo box whose open list is `list_width` wide, wider than the box when
+// its lines are long (the Win32 CB_SETDROPPEDWIDTH). A check sets it as Combo
+// ("3"), or chooses the first entry that holds a text with "has <text>".
+bool ComboWide(const char* label, int* index, const std::vector<std::string>& items, float list_width);
+
+// An edit field with its list beside it (the Win32 CBS_DROPDOWN): the player
+// types a text, or opens the list and chooses an entry. Returns true in the
+// frame Enter was pressed in the field; `*picked` is the entry chosen from the
+// list in this frame, its text then in `*text`, else -1. `focus`: the field
+// takes the keys in this frame. A check sets the text ("12 x 3"), or chooses
+// entry n from the list with "entry n".
+bool EditCombo(const char* label, std::string* text, const std::vector<std::string>& items, int* picked, bool focus);
+
+// A list of rows in columns under their titles, one row chosen (the Win32
+// report list view: LVS_REPORT, LVS_SINGLESEL, a whole row selected).
+// `weights`: each column's part of the width. Returns true in the frame the
+// chosen row changed. `*used` is the row double-clicked in this frame, or the
+// chosen row used again with Enter, Space or the pad's cross (a keyboard and a
+// pad have no double-click), else -1. A check chooses a row as a List ("2"),
+// and uses one with "use 2".
+bool ColumnList(const char* label, int* index, const std::vector<std::string>& titles, const std::vector<float>& weights,
+                const std::vector<std::vector<std::string>>& rows, int* used);
+
+// A question as Ask, whose default answer, for Enter and Escape, is No (the
+// Win32 MB_DEFBUTTON2): a question that discards or replaces.
+int AskNo(const char* title, const char* text);
+
+// The file picker with the Win32 picker's arguments: its filters (`pattern`
+// as PickFile's, "*" for any file), the folder it opens in, and `may_be_new`,
+// which lets the player name a file that is not there yet (the system's
+// picker for a new file: it asks before it names a file that is there). It
+// answers through Picked, as PickFile; a check answers it with TestPick.
+struct PickFilter {
+    std::string kind, pattern;
+};
+void PickFileIn(int ask, const std::vector<PickFilter>& filters, const char* folder, bool may_be_new, const char* title);
 
 }  // namespace bof3x::ui
