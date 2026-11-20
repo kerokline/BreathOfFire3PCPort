@@ -266,6 +266,9 @@ set(BOF3X_LAUNCHER_UI_SOURCES
   src/launcher/ui/page_data.cpp
   src/launcher/ui/page_satpixie.cpp
   src/launcher/ui/page_controls.cpp
+  src/launcher/ui/page_sources.cpp
+  src/launcher/ui/page_mods.cpp
+  src/launcher/ui/tool_run.cpp
   src/launcher/ui/capture_key.cpp
   src/launcher/ui/ui_imgui.cpp
   "${_ui_assets}"

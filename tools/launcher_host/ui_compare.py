@@ -1,5 +1,5 @@
 r"""The drawn launcher's proof against the Win32 one (docs/launcher-portable.md, stages P2 and
-P3): the settings file written from the same choices by both launchers is the same, byte for byte.
+P3, P4): the settings file written from the same choices by both launchers is the same, byte for byte.
 
     python tools/launcher_host/ui_compare.py --ui <bof3x-launcher-ui.exe> --win32 <launcher copy>
         --home <BOF3X_HOME> --game <game folder> --ini <starting bof3x.ini> --out <dir>
@@ -111,9 +111,18 @@ PAGES = {
     "controls1": dict(drawn="open controls 0", win32=[("IDC_CONFIGURE", None), (ID["IDC_TAB0"] + 1, None), ("IDC_SUB0", None)]),
     "controls2": dict(drawn="open controls 1", win32=[("IDC_CONFIGURE", None), (ID["IDC_TAB0"] + 1, None), (ID["IDC_SUB0"] + 1, None)]),
     "controls3": dict(drawn="open controls 2", win32=[("IDC_CONFIGURE", None), (ID["IDC_TAB0"] + 1, None), (ID["IDC_SUB0"] + 2, None)]),
+    # Mods, Data (stage P4): the list of mods, which tools/mods.py reads; the drawn side waits for it.
+    "mods": dict(drawn="open mods 0; wait 60", win32=[("IDC_CONFIGURE", None), (ID["IDC_TAB0"] + 4, None), ("IDC_SUB0", None)]),
+    # The Sources page from Data's Sources... (stage P4): its list, which the importer reads; a case
+    # ends with its Close. Never a choice that writes the install: this tool reads it only.
+    "sources": dict(drawn="open data; press Sources...; wait 60",
+                    win32=[("IDC_CONFIGURE", None), (ID["IDC_TAB0"] + 5, None), ("IDC_SOURCES", None)]),
 }
 # The Win32 buttons that open a window of their own, and that window's title (launcher.rc).
-OPENS = {ID["IDC_LOOKOPTIONS"]: "CRT options (SatPixie)"}
+OPENS = {ID["IDC_LOOKOPTIONS"]: "CRT options (SatPixie)", ID["IDC_SOURCES"]: "Sources - bof3x"}
+# A window that runs a tool when it opens is left this long before a choice: the Sources page's
+# Close asks "Stop the importer?" while its list is read.
+SETTLE = {ID["IDC_SOURCES"]: 3.0}
 # Every Controls cell opens the bind capture (IDD_CAPTURE, "Bind"): the binding pages' four columns
 # 20 ids apart from IDC_CT_KEY1, a row each of the fourteen; the Function keys page's two columns,
 # a row each of the nine actions. A case presses only the capture's Clear or Cancel there, never a
@@ -273,6 +282,9 @@ CASES = [
     ("controls-and-fkeys", "controls2", [C("layout", "2", "IDC_CT_LAYOUT", 2), P("controls3"),
                                          FNCELL("fkey", "pause"), C("Clear", None, "IDC_CP_CLEAR", None),
                                          P("settings"), C("display", "0", "IDC_DISPLAY", 0)]),
+    # Mods and Sources (stage P4), on the install read and not written: each page opened and left.
+    ("mods-untouched", "mods", []),
+    ("sources-untouched", "sources", [C("close", None, "IDCANCEL", None)]),
     # Every page's boxes in one window: what one page writes must not move another's lines.
     ("across-pages", "settings", [C("wide", "1", "IDC_WIDE", 1), P("preset"), C("preset", "3", "IDC_PRESET", 3),
                                   P("cheats1"), C("exp", "2", "IDC_CH_EXP", 2), P("solo"), C("champion", "3", "IDC_SOLO_CHAMPION", 3),
@@ -379,7 +391,7 @@ class Win32Run:
             w = wait_for(lambda: own_window(self.proc.pid, title))
             if not w:
                 raise RuntimeError("the window %r did not open" % title)
-            time.sleep(0.2)
+            time.sleep(SETTLE.get(i, 0.2))
             self.target, self.target_title = w, title
         elif self.target != self.dlg and i in CLOSES:
             # The options window's OK or Cancel, or the capture's Clear or Cancel: it closes, and

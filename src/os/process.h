@@ -6,8 +6,10 @@
 //
 // Windows: SetEnvironmentVariableA / W, and CreateProcessW as the launcher
 // called it before the seam - the program's full name, a command line of the
-// program and each argument in double quotes with one space between them (no
-// escaping: an argument holds no double quote), no security attributes, the
+// program and each argument in double quotes with one space between them (an
+// argument by the C runtime's rules: backslashes before its closing quote, a
+// folder "D:\", are doubled, so the child reads the argument back as given -
+// the importer's paths, stage P4), no security attributes, the
 // handles inherited only when the output goes to a pipe, no flags but those a
 // ChildSpec asks for, no environment block of its own unless `env` adds to
 // it, the working folder given. POSIX: setenv / unsetenv, and fork and
@@ -37,7 +39,7 @@ bool SetEnvW(const wchar_t* name, const wchar_t* value) noexcept;
 
 struct ChildSpec {
     std::wstring program;                 // the file to run, its full name
-    std::vector<std::wstring> args;       // after the program's own name; none holds a double quote
+    std::vector<std::wstring> args;       // after the program's own name, each as the child reads it back
     std::wstring directory;               // the working folder; empty: this process's
     // Set for the child only, over a copy of this process's environment; an
     // empty value removes the variable. Empty: the child gets the environment

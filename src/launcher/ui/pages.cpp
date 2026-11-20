@@ -96,6 +96,8 @@ void PagesOpen(Pages& p, const std::wstring& game_dir, Config& cfg) {
     // the red cells of all three), as the Win32 window's WM_INITDIALOG.
     ControlsOpen(p);
     SatpixieOpen(p);
+    // The Mods page's mods_off=, sent once the window is filled (kMsgModsOff).
+    ModsOpen(p);
 }
 
 void PagesApply(Pages& p) {

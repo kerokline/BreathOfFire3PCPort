@@ -18,6 +18,7 @@
 #include "misc/cpp/imgui_stdlib.h"
 
 #include <algorithm>
+#include <atomic>
 #include <cfloat>
 #include <cmath>
 #include <cstdint>
@@ -93,8 +94,15 @@ struct State {
     // The widgets drawn in a check's frame, with their text red or not (TestDrawn).
     bool cur_red = false;
     std::map<std::string, bool> drawn_now, drawn_last;
+    // A check's question and pickers (TestAnswer, TestPick): never shown.
+    int test_answer = -1;      // the answer given and not yet taken: 1 yes, 0 no
+    std::string test_asked;    // the question waiting for it
+    int test_pick_ask = -1;    // the picker asked last and not answered
+    // A log's length in the frame before, by its name, and the frames still to scroll it to its end (LogText).
+    std::map<std::string, std::pair<std::size_t, int>> logs;
 };
 State g;
+std::atomic<bool> g_events{false};   // SDL's events are up: WakeFrame may push one
 
 std::uint32_t Be32(const unsigned char* p) {
     return static_cast<std::uint32_t>(p[0]) << 24 | static_cast<std::uint32_t>(p[1]) << 16 |
@@ -296,6 +304,7 @@ bool Moving() {
 }
 
 void Wake() {
+    if (!g_events) return;   // before Open or after Close: no queue to push to
     SDL_Event e{};
     e.type = SDL_EVENT_USER;
     SDL_PushEvent(&e);   // SDL lets any thread push an event
@@ -321,6 +330,7 @@ bool Open(const OpenOptions& options, std::string* why) {
         return false;
     };
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD)) return fail("SDL_Init");
+    g_events = true;
     g.hidden = options.hidden;
     double scale = options.scale;
     if (scale <= 0) scale = SDL_GetDisplayContentScale(SDL_GetPrimaryDisplay());
@@ -389,6 +399,7 @@ void Close() {
     if (g.window) SDL_DestroyWindow(g.window);
     g.renderer = nullptr;
     g.window = nullptr;
+    g_events = false;
     SDL_Quit();
 }
 
@@ -540,6 +551,34 @@ bool TestDrawn(const char* widget, bool* red) {
 }
 
 bool TestGrey() { return g.test_grey; }
+
+void TestAnswer(bool yes) {
+    g.test_answer = yes ? 1 : 0;
+    g.wake = 8;
+}
+
+std::string TestAsked() { return g.test_asked; }
+
+void TestPick(const std::string& path) {
+    if (g.test_pick_ask < 0) return;
+    {
+        std::lock_guard<std::mutex> lock(g.pick_lock);
+        g.pick_done[g.test_pick_ask] = path;
+    }
+    g.test_pick_ask = -1;
+    g.wake = 8;
+}
+
+bool TestPicking() { return g.test_pick_ask >= 0; }
+
+// ---- The tools ------------------------------------------------------------------
+
+void WakeFrame() { Wake(); }
+
+void Rest(int ms) {
+    if (!g_events) return;
+    if (SDL_WaitEventTimeout(nullptr, ms)) g.wake = 4;   // an event waits: it is read by the next FrameBegin
+}
 
 // ---- Drawing under the widgets ------------------------------------------------
 
@@ -789,9 +828,146 @@ void ReadText(const char* label, const std::string& text) {
     ImGui::PopID();
 }
 
+void LabelCut(const char* text, bool middle) {
+    Placed p;
+    const std::string whole = text ? text : "";
+    const float room = p.w > 0 ? S(p.w) : FLT_MAX;
+    std::string shown = whole;
+    if (ImGui::CalcTextSize(whole.c_str()).x > room) {
+        // The longest cut that fits, with "..." where the text was taken out. A
+        // UTF-8 letter is never split: a cut moves past its continuation bytes.
+        auto letter_start = [&](std::size_t i) { return i >= whole.size() || (static_cast<unsigned char>(whole[i]) & 0xC0) != 0x80; };
+        if (!middle) {
+            std::size_t keep = whole.size();
+            while (keep > 0) {
+                do --keep;
+                while (keep > 0 && !letter_start(keep));
+                shown = whole.substr(0, keep) + "...";
+                if (ImGui::CalcTextSize(shown.c_str()).x <= room) break;
+            }
+        } else {
+            // A path: its last part kept whole where it can be (SS_PATHELLIPSIS), the start shortened.
+            const std::size_t sep = whole.find_last_of("\\/");
+            const std::size_t tail_at = sep == std::string::npos ? whole.size() / 2 : sep;
+            std::size_t head = tail_at;
+            std::string tail = whole.substr(tail_at);
+            for (;;) {
+                shown = whole.substr(0, head) + "..." + tail;
+                if (ImGui::CalcTextSize(shown.c_str()).x <= room) break;
+                if (head == 0) {
+                    // the last part alone is too long: cut it at its end
+                    if (tail.empty()) break;
+                    std::size_t keep = tail.size();
+                    do --keep;
+                    while (keep > 0 && (static_cast<unsigned char>(tail[keep]) & 0xC0) == 0x80);
+                    tail = tail.substr(0, keep);
+                    continue;
+                }
+                do --head;
+                while (head > 0 && !letter_start(head));
+            }
+        }
+    }
+    ImGui::TextUnformatted(shown.c_str());
+    if (shown != whole && ImGui::IsItemHovered()) ImGui::SetTooltip("%s", whole.c_str());
+}
+
+void LogText(const char* label, const std::string& text) {
+    Placed p;
+    auto& seen = g.logs[label];
+    if (seen.first != text.size()) {
+        seen.first = text.size();
+        seen.second = 3;   // its new height is known a frame later: scrolled for a few
+    }
+    // A box of its own, not InputTextMultiline: that widget keeps its own scroll
+    // and was seen not to follow the text's end (a capture of the Mods page).
+    ImGui::PushID(label);
+    if (ImGui::BeginChild("##log", p.Box(), ImGuiChildFlags_FrameStyle, ImGuiWindowFlags_None)) {
+        ImGui::PushTextWrapPos(0.0f);   // wrapped at the box's width
+        ImGui::TextUnformatted(text.c_str(), text.c_str() + text.size());
+        ImGui::PopTextWrapPos();
+        if (seen.second > 0) {
+            --seen.second;
+            ImGui::SetScrollHereY(1.0f);   // the last line at the box's bottom
+        }
+    }
+    ImGui::EndChild();
+    ImGui::PopID();
+}
+
 void Progress(float fraction) {
     Placed p;
     ImGui::ProgressBar(fraction, ImVec2(p.w > 0 ? S(p.w) : -FLT_MIN, S(p.h)), "");
+}
+
+bool CheckList(const char* label, int* index, const std::vector<ListRow>& rows, const std::vector<float>& stops,
+               int* toggled) {
+    Placed p;
+    *toggled = -1;
+    bool changed = false;
+    const int count = static_cast<int>(rows.size());
+    std::string test;
+    if (TestTake(label, p.grey, &test)) {
+        const bool box = test.compare(0, 4, "box ") == 0;
+        const int want = TestNumber(box ? test.substr(4) : test);
+        if (want >= 0 && want < count) {
+            if (want != *index) changed = true;
+            *index = want;
+            if (box) *toggled = want;
+        }
+    }
+    ImGui::PushID(label);
+    if (ImGui::BeginListBox("##checklist", p.Box())) {
+        const float line = ImGui::GetTextLineHeight();
+        const float side = line + S(2);   // the box column: as wide as a row is high
+        for (int i = 0; i < count; ++i) {
+            const ListRow& r = rows[static_cast<std::size_t>(i)];
+            ImGui::PushID(i);
+            const bool chosen = i == *index;
+            const ImVec2 at = ImGui::GetCursorScreenPos();
+            const float width = ImGui::GetContentRegionAvail().x;
+            if (ImGui::Selectable("##row", chosen, 0, ImVec2(width, line))) {
+                if (!chosen) {
+                    *index = i;
+                    changed = true;
+                }
+                if (r.box && ImGui::IsItemClicked() && ImGui::GetIO().MousePos.x - at.x < side) *toggled = i;
+            }
+            // Space on the row the focus is on: it is chosen (Dear ImGui's own use of the row) and its box used
+            if (r.box && ImGui::IsItemFocused() && ImGui::IsKeyPressed(ImGuiKey_Space, false)) *toggled = i;
+            ImDrawList* dl = ImGui::GetWindowDrawList();
+            const ImU32 ink = ImGui::GetColorU32(r.grey ? ImGuiCol_TextDisabled : ImGuiCol_Text);
+            if (r.box) {
+                const ImVec2 a(at.x + S(2), at.y + S(1)), b(at.x + side - S(2), at.y + line - S(1));
+                dl->AddRect(a, b, ink, S(2));
+                if (r.ticked) {
+                    const float w = b.x - a.x, h = b.y - a.y;
+                    const ImVec2 tick[3] = {ImVec2(a.x + w * 0.2f, a.y + h * 0.5f), ImVec2(a.x + w * 0.42f, a.y + h * 0.75f),
+                                            ImVec2(a.x + w * 0.8f, a.y + h * 0.25f)};
+                    dl->AddPolyline(tick, 3, r.grey ? ink : ImGui::GetColorU32(ImGuiCol_CheckMark), S(1.6f));
+                }
+            }
+            // the columns, each clipped at the next one's start
+            const float x0 = at.x + side + S(4), w = width - side - S(4);
+            std::size_t from = 0;
+            for (std::size_t col = 0; from <= r.text.size(); ++col) {
+                std::size_t end = r.text.find('\t', from);
+                if (end == std::string::npos) end = r.text.size();
+                const float left = x0 + (col == 0 ? 0.0f : col - 1 < stops.size() ? w * stops[col - 1] : w);
+                const float right = col < stops.size() ? x0 + w * stops[col] - S(4) : at.x + width;
+                if (right > left) {
+                    dl->PushClipRect(ImVec2(left, at.y), ImVec2(right, at.y + line), true);
+                    dl->AddText(ImVec2(left, at.y), ink, r.text.c_str() + from, r.text.c_str() + end);
+                    dl->PopClipRect();
+                }
+                from = end + 1;
+            }
+            ImGui::PopID();
+        }
+        ImGui::EndListBox();
+    }
+    ImGui::PopID();
+    return changed;
 }
 
 void GroupBegin(const char* title, float x, float y, float w, float h) {
@@ -903,7 +1079,55 @@ void Message(const char* title, const char* text, bool error) {
         std::fprintf(stderr, "%s: %s\n", title, text);
 }
 
-void PickFile(int ask, const char* kind, const char* pattern) {
+int Ask(const char* title, const char* text) {
+    if (g.hidden) {
+        // A check: not shown. The question waits for TestAnswer.
+        if (g.test_answer >= 0) {
+            const int answer = g.test_answer;
+            g.test_answer = -1;
+            g.test_asked.clear();
+            return answer;
+        }
+        g.test_asked = std::string(title) + ": " + text;
+        return -1;
+    }
+    const SDL_MessageBoxButtonData buttons[] = {
+        {SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, 1, "Yes"},
+        {SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT, 0, "No"},
+    };
+    SDL_MessageBoxData box{};
+    box.flags = SDL_MESSAGEBOX_INFORMATION;
+    box.window = g.window;
+    box.title = title;
+    box.message = text;
+    box.numbuttons = 2;
+    box.buttons = buttons;
+    int answer = 0;
+    if (!SDL_ShowMessageBox(&box, &answer)) {
+        std::fprintf(stderr, "%s: %s\n(no answer: %s)\n", title, text, SDL_GetError());
+        return 0;   // a question that cannot be shown is answered No: nothing is started
+    }
+    g.wake = 4;
+    return answer == 1 ? 1 : 0;
+}
+
+void OpenLink(const char* url) {
+    if (g.hidden) {
+        std::printf("bof3x-launcher-ui: check: the page asked to open %s\n", url);
+        std::fflush(stdout);
+        return;
+    }
+    if (!SDL_OpenURL(url)) std::fprintf(stderr, "bof3x-launcher-ui: cannot open %s: %s\n", url, SDL_GetError());
+}
+
+void PickFile(int ask, const char* kind, const char* pattern, const char* title) {
+    if (g.hidden) {
+        // A check: no picker on the screen. TestPick answers it.
+        std::lock_guard<std::mutex> lock(g.pick_lock);
+        g.pick_done.erase(ask);
+        g.test_pick_ask = ask;
+        return;
+    }
     PickAsk* held = nullptr;
     {
         std::lock_guard<std::mutex> lock(g.pick_lock);
@@ -915,17 +1139,33 @@ void PickFile(int ask, const char* kind, const char* pattern) {
         a.filter.pattern = a.pattern.c_str();
         held = &a;
     }
-    SDL_ShowOpenFileDialog(PickDone, reinterpret_cast<void*>(static_cast<std::intptr_t>(ask)), g.window,
-                           pattern ? &held->filter : nullptr, pattern ? 1 : 0, nullptr, false);
+    const SDL_PropertiesID props = SDL_CreateProperties();
+    if (pattern) {
+        SDL_SetPointerProperty(props, SDL_PROP_FILE_DIALOG_FILTERS_POINTER, &held->filter);
+        SDL_SetNumberProperty(props, SDL_PROP_FILE_DIALOG_NFILTERS_NUMBER, 1);
+    }
+    SDL_SetPointerProperty(props, SDL_PROP_FILE_DIALOG_WINDOW_POINTER, g.window);
+    if (title) SDL_SetStringProperty(props, SDL_PROP_FILE_DIALOG_TITLE_STRING, title);
+    SDL_ShowFileDialogWithProperties(SDL_FILEDIALOG_OPENFILE, PickDone,
+                                     reinterpret_cast<void*>(static_cast<std::intptr_t>(ask)), props);
+    SDL_DestroyProperties(props);   // SDL copies what it keeps before it returns
 }
 
-void PickFolder(int ask) {
+void PickFolder(int ask, const char* title) {
     {
         std::lock_guard<std::mutex> lock(g.pick_lock);
         g.pick_done.erase(ask);
+        if (g.hidden) {
+            g.test_pick_ask = ask;   // a check: TestPick answers it
+            return;
+        }
     }
-    SDL_ShowOpenFolderDialog(PickDone, reinterpret_cast<void*>(static_cast<std::intptr_t>(ask)), g.window, nullptr,
-                             false);
+    const SDL_PropertiesID props = SDL_CreateProperties();
+    SDL_SetPointerProperty(props, SDL_PROP_FILE_DIALOG_WINDOW_POINTER, g.window);
+    if (title) SDL_SetStringProperty(props, SDL_PROP_FILE_DIALOG_TITLE_STRING, title);
+    SDL_ShowFileDialogWithProperties(SDL_FILEDIALOG_OPENFOLDER, PickDone,
+                                     reinterpret_cast<void*>(static_cast<std::intptr_t>(ask)), props);
+    SDL_DestroyProperties(props);
 }
 
 bool Picked(int ask, std::string* path) {

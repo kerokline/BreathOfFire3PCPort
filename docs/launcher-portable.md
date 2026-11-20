@@ -3,7 +3,9 @@
 **Status:** IN PROGRESS (2026-11-20: stage P0 is in `main`, the Linux
 round's group C7; stage P1, the frame, stage P2, the settings pages, and
 stage P3, Controls, are built on the local branch `launcher/p1-frame`,
-sections 9 to 11; stages P4 to P6 are not started. Sections 1 to 8 are the staging of 2026-11-19, measured
+sections 9 to 11; stage P4, Sources and Mods, on the local branch
+`launcher/p4-sources` cut from it, section 12; stages P5 and P6 are not
+started. Sections 1 to 8 are the staging of 2026-11-19, measured
 at `main` `8cd45199`.)
 An estimate and a staging for the owner's question "a launcher that works on
 either Windows or Linux". It is tier 3 of [`linux-round.md`](linux-round.md)
@@ -627,3 +629,175 @@ that this stage touches (`os_census.py --check` and `--boundary`,
 - `padnav::SetMap`, the Win32 window's pad navigation map from the
   bindings, has no counterpart: the drawn window's navigation is Dear
   ImGui's.
+
+## 12. Stage P4 as run (2026-11-20, branch `launcher/p4-sources`)
+
+**What is built.** The Sources page and the Mods tab's Data page, each a
+port of `sources_dialog.cpp` less the windows, with the texts word for
+word, and the start's flows that need the Sources page:
+
+| File (`src/launcher/ui/`) | What |
+|---|---|
+| `tool_run.h`, `tool_run.cpp` | The tools as children through the seam (`os/process.h`): one child to a runner, stdout and stderr on one pipe, read on a thread (`os/thread.h`) and handed to the frame loop a line at a time; the window is woken for each line (`ui::WakeFrame`, an SDL event pushed from the reader). `FindRuntime` and the JSON readers ported as they are; `ToolCapture` is `RunCapture`, its time limit on an event (`os/event.h`); `ToolsEnd` ends every child still running when the window closes |
+| `page_sources.cpp` | The Sources page (`IDD_SOURCES`): its list, File... and Folder..., Add, Remove, Locate ffmpeg.exe..., Get ffmpeg, the build's progress bar, status and log, Close and Stop with its question; the first-run, set-up-in-place and rebuild modes; `SourcesCheckStale` and the rebuild's question |
+| `page_mods.cpp` | Mods, Data (`IDD_PAGE_MODS`): `mods.py`'s list with each row's check box and grey rows with their reason, Add, Browse..., Remove, the credit and report lines, the log, and the window's side of the six messages |
+| `main.cpp` | `launcher.cpp`'s start (lines 418-500) as phases between frames, for the window and for `--check --start` |
+
+**How the window's messages are carried.** `kMsgModsOff`: `ModsOpen`
+reads `mods_off=`. `kMsgModsOffChanged`: a box writes `mods_off=` into
+the settings at once and marks them to be saved on any way out, as the
+Win32 window does. `kMsgModsReadingRowAdded`: Extras' toggle and
+`ruby_ui=` on at once. `kMsgModsChanged`: `Pages::mods_stamp` moves and
+Settings' row box is made again. `kMsgModsLanguage`: the Mods page reads
+Settings' language as the box stands, each frame. `kMsgModsToggle`: the
+list's box (`ui::CheckList`'s `toggled`). Both pages take their tool's
+lines every frame, shown or not (`SourcesPoll`, `ModsPoll`), as the
+Win32 pages take their messages while hidden.
+
+**The start** (`main.cpp`'s header). A first run or a game folder with
+no image opens the Sources page before the window; closed with no build,
+nothing starts; built, the game folder and the cache are found again and
+the settings read again. Then the stale check and its question
+(`ui::Ask`): No starts nothing, Yes opens the page with the rebuild.
+Data's Sources...: after a build the pages are applied and saved, the
+game folder and the settings found and read again, and the window shown
+on Data (the Win32 window's `kDialogSourcesChanged`). Locate ffmpeg's
+choice is saved whatever the page did. The window on the screen opens
+only when a frame is owed, so the stale check runs with no empty window,
+as the Win32 launcher runs it before any window.
+
+**Additions to the widgets** (`ui.h`): `Ask`, `OpenLink`, `LabelCut`
+(the Win32 end and path ellipsis), `LogText`, `CheckList`, `WakeFrame`,
+`Rest`; a check's `TestAnswer`, `TestAsked`, `TestPick`, `TestPicking`.
+**Changed:** `PickFile` and `PickFolder` take a title (a default
+argument, so P2's callers are unchanged), since the Win32 pickers'
+titles are player texts; in a check no picker, question or link is
+shown. **`pages.h`:** `Pages::sources_open`, `sources_closed`,
+`sources_built`, `mods_stamp`, and the two pages' calls. **`frame.cpp`:**
+Mods' Data row has its body; the Sources page is drawn in place of the
+title page or the tabs. **`page_data.cpp`:** Sources... opens the page.
+**`page_settings.cpp`:** the row box is made again when `mods_stamp`
+moves. **`main.cpp`:** `--start`, and the steps `pick`, `answer`, `wait`
+and `report`.
+
+**The seam.** One change: a Windows child's argument is now quoted by
+the C runtime's rules (`src/os/win32/process.cpp`), because the Win32
+page quoted that way and a folder `D:\` given as `"D:\"` reaches the
+child as `D:"`. An argument with no backslash before its end and no
+double quote is the same text as before, so the game's start does not
+change. `tools/os_host` checks `D:\`, doubled backslashes and a double
+quote: 606 checks on Windows, 521 in the WSL, 0 failed. Nothing else
+was missing: `capture`, `no_window` and `ChildEnd` cover the Win32
+code's pipe, `CREATE_NO_WINDOW` and `TerminateProcess`; the time limit
+of `RunCapture` is an event's wait in `tool_run.cpp`.
+
+**What was moved to fit the Sources page.** The Win32 window is 400 x
+276 dialog units; the page area is about 350 x 214. Every control and
+text is kept: the intro is 346 units wide (from 386); the list is 292 x
+40 (from 330 x 62), Remove beside it; the path box is 184 wide (from
+224), with File..., Folder... and Add at 188, 242 and 296; the ffmpeg
+note has two lines (from one line cut with an ellipsis), and Locate and
+Get ffmpeg are under it at its right; the progress bar, the status and
+the log follow, the log 35 units high (from 46); the install folder line
+(230 wide, cut in its middle), Build the install and Close are the last
+row. The Mods page fits as `launcher.rc` places it.
+
+**Measured** (each with `--check`; the homes under `D:\bof3x-runs\p4src`,
+`BOF3X_HOME` naming each, the working folder an empty one):
+
+- **`setup` from a disc through the new page, Windows.** `--check --start
+  --save saved.ini --script "wait 60; press File...; pick <CDImage>\Breath
+  of Fire III (USA) (1.1).zip; press Add; wait 1800; report sources"` on
+  an empty home: the first run's page opened, the add, the setup and the
+  stale check were started (each child's arguments on stdout), the page
+  closed when the build was done, the settings were saved, the home's
+  game folder was found and the window shown (124 s). The same zip by the
+  importer itself into a second home (`importer.py sources --home H add
+  ZIP --json`, then `setup --home H --json-progress`, as section 4 of
+  [`install-sources.md`](install-sources.md) gives them). **The two
+  caches' `manifest.toml` (4,161 lines each) differ in one line,
+  `built =`, the build's time.** No line holds a path of either home.
+  The files of `cache\` and `game\`: 4,071 and 4,070, every common file
+  the same size; the one more is `cache\stale-checked.txt`, which the
+  launcher's stale check writes after the build.
+- **The same in the WSL.** The same script under SDL's `offscreen`
+  driver, the home in the WSL's filesystem, the zip read from `/mnt/c`
+  (71 s; this WSL has no ffmpeg; Python 3.14.4). **Its `manifest.toml`
+  against the Windows importer's: the `built =` line alone differs.** Its
+  files: the same 4,070 and `stale-checked.txt`, every `game\` file and
+  every cache file the same size but nine of `cache\build-keys\` (46 bytes
+  each), which record the Python that ran (3.14.4 against Anaconda's
+  3.13.9) and the hashes of the importer's functions as that Python
+  compiles them. Nothing was installed in the WSL.
+- **A PC folder set up in place** (`--start --game <main>\bof3`, an empty
+  home): the page opened in its set-up mode, listed, added the folder,
+  then ran `setup --home H --json-progress --game-in-place <main>\bof3`;
+  the build finished (11 s), the settings were saved and the window shown
+  with that folder as the game folder.
+- **The window's flows.** A first run: above. The stale prompt, on a
+  home of this session with one record of `cache\build-keys\snd.json`
+  changed: the question named "the sound effects (tools/psx_disc.py
+  changed (Disc.__init__))"; `answer no` started nothing and saved
+  nothing (the last line says the start ended); `answer yes` opened the
+  page in its rebuild mode, ran `setup`, closed the page when done,
+  saved, found the install again, ran the stale check again (not stale)
+  and showed the window. Data's Sources...: a second disc added (Japan,
+  173 s), and Build the install pressed on a later run; each time, after
+  Close, the pages were applied and saved, the stale check ran on the new
+  cache and the window was shown again, on Data (page 5). Remove: a
+  source removed and the list read again. Stop: a folder of images being
+  searched, Close (then Stop) pressed, `answer yes`: the child was ended
+  and the page closed; no Python process was left.
+- **The Mods page** (the US and Japanese home above): no mods ("No mods
+  are installed."); *Better Descriptions* added by Browse... and a picked
+  path, checked, built (83 s) and shown `[x] ... built: on` with its
+  credit line and its report's two sentences in the log; its box used
+  (`set mods=box 0`): `built: off`, and `mods_off=descriptions` in the
+  saved ini; the language set to Japanese: the row grey, "built; only
+  with en-US text". The reading-row case, with the project's own
+  `furigana-0.1.1.zip`: added by the path box and Add, built, Extras'
+  toggle turned on and Settings' Row above the text box shown at once
+  (`ruby_ui=1` saved), the mod chosen there, then removed with Remove.
+  In the WSL the page lists an install with no mods.
+- **An untouched window writes the owner's `bof3x.ini` byte for byte**
+  with every page opened, Mods' Data page listed and the Sources page
+  opened, listed and closed (`fc /b`: no differences); the owner's
+  install was read (`mods.py list`, `importer.py sources list`) and no
+  file of it changed.
+- **Against the Win32 window** (`ui_compare.py`): two new cases, the
+  Mods page opened and left and the Sources page opened and closed, on
+  the owner's install read only (adding or building writes the home, so
+  no such case is run there). The Win32 side waits 3 s after its Sources
+  window opens, since its Close asks "Stop the importer?" while the list
+  is read. With them the whole table: **66 cases, 66 equal**; no game
+  started, the install unchanged.
+- **The gates.** `os_census.py --check` and `--boundary`,
+  `width_census.py --check`, `data_census.py --check`, `reloc_bare.py
+  --check`: ok. `data_census` was one site over at first: a helper named
+  `W(...)` was read as a raw access, and was renamed. The WSL build of
+  `bof3x_launcher_ui` links.
+
+**Not run, and for the owner's eye.**
+
+- **The look of the two pages**, and the Sources page's new arrangement:
+  the captures under `D:\bof3x-runs\p4src\logs\` (a build's end, the Mods
+  list grey and ticked, Settings' row box) and `first\sources.png` (a
+  first run).
+- **A hand on either page.** The pickers, the question and the browser
+  link were never shown: a check gives their answers. SDL's file dialog
+  takes the title on Windows (read in SDL's source); on Linux not seen.
+- **The close box during a set-up** ends the child with no question; the
+  Win32 page's close box is its Stop and asks. The child ended is Python
+  alone, as in the Win32 page: a tool it started (ffmpeg) is not ended.
+- **The log box** (`LogText`) is wrapped and follows its end, but the
+  keyboard and the pad do not reach it and its text cannot be selected;
+  `InputTextMultiline` did not follow its end (a capture showed it).
+- **The Mods list's box** is used with the mouse and Space, as the Win32
+  list; the pad has no input for it.
+- **Programs found on PATH** (`FindProgram`): the launcher's folder, the
+  working folder, then `PATH`; `SearchPathW` also looks in Windows' own
+  folders before `PATH`. On Linux the runtime is
+  `runtime/python/bin/python3` in a release and `python3` on PATH; no
+  Linux release carries one yet.
+- The window on the screen, and in the WSL the set-up in place and the
+  stale prompt, were not run.

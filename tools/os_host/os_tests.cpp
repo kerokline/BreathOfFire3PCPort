@@ -1684,7 +1684,8 @@ void TestProcess() {
     CHECK(os::SetEnv("BOF3X_C7_REMOVED", "there"));
     os::ChildSpec spec;
     spec.program = self;
-    spec.args = {L"one", L"two words"};
+    // a folder's trailing separator and a double quote come back as given (stage P4's paths)
+    spec.args = {L"one", L"two words", L"D:\\", L"a \\\\ b\\\\", L"say \"hi\""};
     spec.directory = dir.wstring();
     spec.env = {{L"BOF3X_C7_CHILD", L"1"}, {L"BOF3X_C7_PASSED", L"c7-value"}, {L"BOF3X_C7_REMOVED", L""}};
     spec.capture = true;
@@ -1709,6 +1710,9 @@ void TestProcess() {
     CHECK(has("removed=(none)"));
     CHECK(has("arg=one"));
     CHECK(has("arg=two words"));
+    CHECK(has("arg=D:\\"));
+    CHECK(has("arg=a \\\\ b\\\\"));
+    CHECK(has("arg=say \"hi\""));
     CHECK(has("folder=bof3x_c7_\xC3\xA9\xE4\xB8\xAD\xD0\x96"));
     CHECK(has("on stderr"));
     char v[8];

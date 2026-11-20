@@ -54,13 +54,35 @@ bool EnvBlock(const std::vector<std::pair<std::wstring, std::wstring>>& add, std
     return true;
 }
 
+// One argument of the command line, in double quotes, by the C runtime's
+// rules (the way CommandLineToArgvW and the CRT read it back): a run of
+// backslashes is literal unless a double quote follows it, so a run before
+// the closing quote - a folder "D:\" - is doubled, and a double quote inside
+// is escaped. An argument with neither is the same text it always was.
+std::wstring Quoted(const std::wstring& arg) {
+    std::wstring out = L"\"";
+    std::size_t slashes = 0;
+    for (const wchar_t c : arg) {
+        if (c == L'\\') {
+            ++slashes;
+            continue;
+        }
+        out.append(c == L'"' ? slashes * 2 + 1 : slashes, L'\\');
+        out += c;
+        slashes = 0;
+    }
+    out.append(slashes * 2, L'\\');
+    out += L'"';
+    return out;
+}
+
 }  // namespace
 
 bool ChildStart(const ChildSpec& spec, Child* child, std::uint32_t* error) noexcept {
     try {
         *child = Child{};
         std::wstring line = L"\"" + spec.program + L"\"";
-        for (const std::wstring& a : spec.args) line += L" \"" + a + L"\"";
+        for (const std::wstring& a : spec.args) line += L" " + Quoted(a);
         std::vector<wchar_t> block;
         if (!spec.env.empty() && !EnvBlock(spec.env, block)) {
             if (error) *error = GetLastError();
