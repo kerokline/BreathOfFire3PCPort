@@ -114,6 +114,11 @@ def C(drawn, drawn_value, win32, win32_value):
     return (drawn, drawn_value, win32, win32_value)
 
 
+def SUITE(suite, side):
+    """The Win32 radio button of a suite's side: suite 0 graphics, 1 audio, 2 data (resource.h)."""
+    return ID["IDC_SUITE0"] + 10 * suite + (1 if side == "psx" else 2)
+
+
 def P(page):
     """In a case's choices: go to another page, in both launchers, before the next choice."""
     return page
@@ -122,9 +127,8 @@ def P(page):
 # ---- The cases ---------------------------------------------------------------------------------
 #
 # (name, page, choices). A choice is C(...) or P(page). The values are each launcher's own: a
-# combo box's entry number, a check box's 0 or 1, an edit field's text, a slider's step. The other
-# pages' rows (the suites, the music source, the cheats, the solo character, New Game) are added
-# here as their pages are written.
+# combo box's entry number, a check box's 0 or 1, an edit field's text, a slider's step; a radio
+# button is pressed in the drawn launcher (None) and set in the Win32 one (1).
 CASES = [
     ("untouched", "settings", []),
     # Settings (launcher.rc IDD_PAGE_SETTINGS).
@@ -174,6 +178,45 @@ CASES = [
                                        C("blurx", "1", "IDC_SP_BLURX", 1), C("OK", None, "IDOK", None)]),
     ("satpixie-cancel", "satpixie", [C("modulate", "10", "IDC_SP_MODULATE", 10), C("Ghosting", "1", "IDC_SP_GHOSTING", 1),
                                      C("Cancel", None, "IDCANCEL", None)]),
+    # Music (IDD_PAGE_MUSIC; DIV-0150): the source box.
+    ("music-psp", "music", [C("music", "1", "IDC_MUSIC", 1)]),
+    ("music-pc", "music", [C("music", "2", "IDC_MUSIC", 2)]),
+    ("music-pc-back", "music", [C("music", "2", "IDC_MUSIC", 2), C("music", "0", "IDC_MUSIC", 0)]),
+    # Game Options: the three suites (IDD_PAGE_VERSIONS, IDD_PAGE_VERSIONS2). A suite's radio
+    # buttons are IDC_SUITE0 + kSuiteStride * suite + kSuitePsx or kSuitePsp (resource.h).
+    ("suite-graphics-psp", "graphics", [C("graphics-psp", None, SUITE(0, "psp"), 1)]),
+    ("suite-audio-psp", "graphics", [C("audio-psp", None, SUITE(1, "psp"), 1)]),
+    ("suite-graphics-there-and-back", "graphics", [C("graphics-psp", None, SUITE(0, "psp"), 1),
+                                                   C("graphics-psx", None, SUITE(0, "psx"), 1)]),
+    ("suite-data-psp", "versions-data", [C("data-psp", None, SUITE(2, "psp"), 1)]),
+    ("suite-all-psp-music-pc", "graphics", [C("graphics-psp", None, SUITE(0, "psp"), 1), C("audio-psp", None, SUITE(1, "psp"), 1),
+                                            P("versions-data"), C("data-psp", None, SUITE(2, "psp"), 1),
+                                            P("music"), C("music", "2", "IDC_MUSIC", 2)]),
+    # Game Options, Cheats (IDD_PAGE_GAME, IDD_PAGE_GAME2): a slider's step is its multiplier.
+    ("cheat-exp-3", "cheats1", [C("exp", "3", "IDC_CH_EXP", 3)]),
+    ("cheat-zenny-0", "cheats1", [C("zenny", "0", "IDC_CH_ZENNY", 0)]),
+    ("cheat-steal-off", "cheats1", [C("steal", "0", "IDC_CH_STEAL", 0)]),
+    ("cheat-page2-off", "cheats2", [C("info", "0", "IDC_CH_INFO", 0), C("nofail", "0", "IDC_CH_NOFAIL", 0),
+                                    C("learn", "0", "IDC_CH_LEARN", 0)]),
+    ("cheat-defaults", "cheats1", [C("exp", "5", "IDC_CH_EXP", 5), C("Defaults", None, "IDC_CH_DEFAULTS", None)]),
+    ("cheat-defaults-page2-then-zenny", "cheats2", [C("Defaults", None, "IDC_CH_DEFAULTS2", None),
+                                                    P("cheats1"), C("zenny", "2", "IDC_CH_ZENNY", 2)]),
+    # Game Options, Solo character (IDD_PAGE_SOLO).
+    ("solo-mode-off", "solo", [C("mode", "0", "IDC_SOLO_MODE", 0)]),
+    ("solo-if-present", "solo", [C("ifpresent", "1", "IDC_SOLO_IFPRESENT", 1)]),
+    ("solo-champion-2", "solo", [C("champion", "2", "IDC_SOLO_CHAMPION", 2)]),
+    ("solo-champion-none", "solo", [C("champion", "0", "IDC_SOLO_CHAMPION", 0)]),
+    # Mods, Extras, Page 2: New Game's two screens (IDD_PAGE_EXTRA2).
+    ("newgame-names-off", "newgame", [C("names", "0", "IDC_EXTRA_NAMES", 0)]),
+    ("newgame-options-off", "newgame", [C("options", "0", "IDC_EXTRA_OPTIONS", 0)]),
+    ("newgame-both-off", "newgame", [C("names", "0", "IDC_EXTRA_NAMES", 0), C("options", "0", "IDC_EXTRA_OPTIONS", 0)]),
+    # Every page's boxes in one window: what one page writes must not move another's lines.
+    ("across-pages", "settings", [C("wide", "1", "IDC_WIDE", 1), P("preset"), C("preset", "3", "IDC_PRESET", 3),
+                                  P("cheats1"), C("exp", "2", "IDC_CH_EXP", 2), P("solo"), C("champion", "3", "IDC_SOLO_CHAMPION", 3),
+                                  P("newgame"), C("options", "0", "IDC_EXTRA_OPTIONS", 0),
+                                  P("graphics"), C("audio-psp", None, SUITE(1, "psp"), 1),
+                                  P("extras"), C("Faster text: Msg Speed Med. runs at Fast speed, and Fast shows each page at once", "1", "IDC_EXTRA_TEXTSPEED", 1),
+                                  P("data"), C("cache", r"C:\bof3x-no-such-cache", "IDC_CACHE", r"C:\bof3x-no-such-cache")]),
 ]
 
 
