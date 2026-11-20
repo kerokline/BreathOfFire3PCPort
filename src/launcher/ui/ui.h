@@ -32,6 +32,7 @@ struct OpenOptions {
     int width = 640, height = 480;   // the picture's pixels
     double scale = 0;                // 0: the display's scale
     bool hidden = false;             // not shown on the screen: a frame is drawn to be saved (SaveFrame)
+    const char* banner_font = nullptr;   // a font file for the banner's lettering, to try one; null: the stand-in
 };
 // The window, the renderer, the fonts and the look. False with `why` when the system gives no window.
 bool Open(const OpenOptions& options, std::string* why);

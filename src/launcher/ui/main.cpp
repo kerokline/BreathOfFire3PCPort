@@ -78,9 +78,11 @@ const char kUsage[] =
     "  --page <name>         With --check: the page to show first: title, settings, controls, music, game, mods or data.\n"
     "  --sub <n>, --sheet <n>  The sub-tab of that page and its page, counted from 0.\n"
     "  --keys <list>         With --check: keys to press, with , between them (the same as key steps).\n"
-    "  --capture <file.png>  Writes the last frame as a picture. It also means --check.\n";
+    "  --capture <file.png>  Writes the last frame as a picture. It also means --check.\n"
+    "  --banner-font <file>  A font file for the letters of the banner, to try one.\n";
 
 bool g_window_open = false;
+std::string g_banner_font;   // --banner-font
 
 [[noreturn]] void Refuse(const std::string& sentence) {
     if (g_window_open) ui::Close();
@@ -193,6 +195,7 @@ int Check(const std::wstring& game_dir, const std::string& ini, const std::strin
     options.title = kTitle;
     options.scale = scale > 0 ? scale : 1;   // a check does not depend on the display it was made on
     options.hidden = true;
+    if (!g_banner_font.empty()) options.banner_font = g_banner_font.c_str();
     std::string why;
     if (!ui::Open(options, &why)) Fail("The window did not open. " + why);
     g_window_open = true;
@@ -263,6 +266,8 @@ int main(int argc, char* argv[]) {
         } else if (arg == "--capture" && more) {
             capture = argv[++i];
             check = true;
+        } else if (arg == "--banner-font" && more) {
+            g_banner_font = argv[++i];
         } else if (arg == "--ini" && more) {
             ini = argv[++i];
         } else if (arg == "--save" && more) {
@@ -322,6 +327,7 @@ int main(int argc, char* argv[]) {
     ui::OpenOptions options;
     options.title = kTitle;
     options.scale = scale;
+    if (!g_banner_font.empty()) options.banner_font = g_banner_font.c_str();
     std::string why;
     if (!ui::Open(options, &why))
         bof3x::StartDie(L"The window did not open. " + bof3::os::ToWide(why.c_str()));

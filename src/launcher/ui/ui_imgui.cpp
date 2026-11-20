@@ -126,12 +126,17 @@ ImFont* AddFont(const unsigned char* bytes, std::size_t size, FaceMetrics* metri
 // choose (docs/launcher-portable.md section 7, call 2). Until then the banner
 // is in the system's Palatino Linotype where the system has it, by the
 // WINDIR variable and so with no system named here, and in the text font
-// where it has not.
-bool ReadBannerFile() {
+// where it has not. OpenOptions::banner_font names another file, to try one.
+bool ReadBannerFile(const char* named) {
+    std::string path;
+    if (named) {
+        path = named;
+    } else {
     wchar_t dir[512];
     const unsigned n = bof3::os::GetEnvW(L"WINDIR", dir, 512);
     if (n == 0 || n >= 512) return false;
-    const std::string path = bof3::os::ToUtf8((std::wstring(dir) + L"/Fonts/pala.ttf").c_str());
+    path = bof3::os::ToUtf8((std::wstring(dir) + L"/Fonts/pala.ttf").c_str());
+    }
     std::size_t size = 0;
     void* data = SDL_LoadFile(path.c_str(), &size);
     if (!data) return false;
@@ -330,7 +335,7 @@ bool Open(const OpenOptions& options, std::string* why) {
         return false;
     }
     FaceFont& banner = g.faces[static_cast<int>(Face::kBanner)];
-    if (ReadBannerFile()) banner.font = AddFont(g.banner_file.data(), g.banner_file.size(), &banner.metrics);
+    if (ReadBannerFile(options.banner_font)) banner.font = AddFont(g.banner_file.data(), g.banner_file.size(), &banner.metrics);
     if (!banner.font) banner = text;
     io.FontDefault = text.font;
 
