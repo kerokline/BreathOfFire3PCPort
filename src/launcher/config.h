@@ -453,7 +453,9 @@ bool ConfigLanguageKnown(const std::string& code);
 // its DAT\ is the port's; `importer.py install --base` refuses such a
 // directory) or `cache` (ConfigCacheDataRoot) holds loc\zh-CN, built from the
 // PC's DAT\. The DLL's rule too (dat_load.cpp RefuseOriginalWithoutChinese).
-bool ConfigOriginalAvailable(const std::wstring& game_dir, const std::wstring& cache);
+// `hosted`: the hosted build's start, which runs inside BOF3.exe and asks the
+// file as BOF3X_EXEFILE=1 does (common/cache_manifest.h InstallAsk).
+bool ConfigOriginalAvailable(const std::wstring& game_dir, const std::wstring& cache, bool hosted = false);
 
 // DIV-0102: the language on an install without the Chinese text, before
 // and after the dialog. A PC install (ConfigOriginalAvailable): true, nothing
@@ -462,7 +464,7 @@ bool ConfigOriginalAvailable(const std::wstring& game_dir, const std::wstring& c
 // (or the dialog) names "original" or a tag not held, or when none is held;
 // with neither the environment nor the ini naming one, the language becomes
 // the first held in kLanguages' order (said on stderr).
-bool ConfigResolveLanguage(const std::wstring& game_dir, Config& cfg, std::string& error);
+bool ConfigResolveLanguage(const std::wstring& game_dir, Config& cfg, std::string& error, bool hosted = false);
 
 // False, with `error` naming the tag to use, when the environment's
 // BOF3X_LANG is a retired bare code (en, fr, de, ja; DIV-0005): the launcher

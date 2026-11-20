@@ -34,17 +34,54 @@ std::string Sha256HexOf(const std::wstring& path) {
     return hex;
 }
 
-// Whether <cache>\base\exe\data.toml is an image tools/exe_tables.py built from
-// BOF3.exe (`build = "pc-zh"`): the PC's own bytes, which a PC install may read
-// in place of the file's (DIV-0212). A disc-built image is not.
-bool CacheImageIsPcBuilt(const std::wstring& cache) {
-    std::FILE* f = bof3::os::OpenPath(bof3::os::PathW(cache + StartSep(L"\\base\\exe\\data.toml")), "rb");
-    if (!f) return false;
-    char line[1024];
-    bool pc = false;
-    while (!pc && std::fgets(line, sizeof line, f)) pc = std::strncmp(line, "build = \"pc-zh\"", 15) == 0;
-    std::fclose(f);
-    return pc;
+// BOF3X_EXEFILE, the developer's switch (docs/exe-retire-round.md, X2): 1, the
+// engine opens BOF3.exe in the game folder and reads .data from it; 0 or
+// unset, a player's start, which reads no BOF3.exe. Any other value stops the
+// launcher, as it did before (then only beside a BOF3.exe).
+bool ExeFileSwitch() {
+    wchar_t set[4];
+    const std::uint32_t from_file = bof3::os::GetEnvW(L"BOF3X_EXEFILE", set, 4);
+    if (from_file != 0 && !(from_file == 1 && (set[0] == L'0' || set[0] == L'1')))
+        StartDie(L"BOF3X_EXEFILE takes 1 (read .data from BOF3.exe, not from the cache's image: a developer's run) "
+                 L"or 0.");
+    return from_file == 1 && set[0] == L'1';
+}
+
+// Rows 2 and 3 of docs/exe-retire-round.md: BOF3.exe hashed whole, and its
+// default key table against the engine's rule. Only on a start that reads the
+// file (the hosted build, BOF3X_EXEFILE=1).
+void CheckExe(const std::wstring& exe) {
+    const std::string sha = Sha256HexOf(exe);
+    if (sha != kExpectedSha256)
+        StartDie(exe + L" is not the build this project targets.\n\nsha256   " + StartWide(sha) + L"\nexpected " +
+                 StartWide(kExpectedSha256) +
+                 L"\n\nEvery address bof3x patches is specific to that one file; refusing to start. "
+                 L"If this is an uncatalogued release, see fixtures.toml.");
+
+    // The default key table is the engine's rule (input::DefaultKeys, the
+    // owner's call of 2026-10-11); where the file is read, it must be
+    // Key_TableDefault's 24 entries exactly.
+    std::vector<input::KeyBinding> keys;
+    std::string why;
+    if (!ExeDefaultKeys(exe, keys, why))
+        StartDie(L"cannot read the default key table from " + exe + L": " + StartWide(why));
+    const std::vector<input::KeyBinding>& rule = input::DefaultKeys();
+    bool same = keys.size() == rule.size();
+    for (size_t i = 0; same && i < keys.size(); ++i) same = keys[i].dik == rule[i].dik && keys[i].bits == rule[i].bits;
+    if (!same)
+        StartDie(L"the default key table in " + exe + L" (" + Num(keys.size()) + L" keys) is not the engine's rule (" +
+                 Num(rule.size()) + L" keys):\n" + StartWide(input::FormatKeys(keys, "", " ")) + L"\nbut\n" +
+                 StartWide(input::FormatKeys(rule, "", " ")));
+    if (StartSelfTestOnly())
+        StartSay(L"the default key table, " + Num(rule.size()) + L" keys by the engine's rule, equal to BOF3.exe's: " +
+                 StartWide(input::FormatKeys(rule, "", " ")) + L"\n");
+}
+
+// Whether `cache` holds an image of .data (base\exe\data.toml, which
+// tools/exe_tables.py writes beside data.bin and its table files): from the
+// PC's executable or from a disc, the one source of .data for a player.
+bool CacheHasImage(const std::wstring& cache) {
+    return !cache.empty() && StartFileExists(cache + StartSep(L"\\base\\exe\\data.toml"));
 }
 
 }  // namespace
@@ -78,9 +115,17 @@ std::wstring StartOwnDirectory() {
 }
 
 bool StartFindGame(const std::wstring& named, bool hosted, std::wstring* game_dir_out, std::wstring* exe_out) {
+    // Only the developer's start reads BOF3.exe: the hosted build, which runs
+    // inside it, and BOF3X_EXEFILE=1 (docs/exe-retire-round.md, X2). A
+    // player's start never opens, hashes or tests for the file.
+    const bool developer = hosted || ExeFileSwitch();
     std::wstring game_dir = named;
     if (game_dir.empty()) {
-        if (StartFileExists(L"BOF3.exe")) game_dir = L".";
+        // The working folder when it is a game folder: a player's start asks
+        // InstallGameFolder (DAT\FIRST.DAT, a PC folder and a disc-built game
+        // folder alike); the developer's asks for BOF3.exe, as before.
+        const bool here = developer ? StartFileExists(L"BOF3.exe") : InstallGameFolder(L".");
+        if (here) game_dir = L".";
         else if (const std::wstring home_game = HomeGameDefault(); !home_game.empty()) game_dir = home_game;
         else game_dir = L"bof3";
     }
@@ -89,46 +134,21 @@ bool StartFindGame(const std::wstring& named, bool hosted, std::wstring* game_di
     const std::wstring exe = game_dir + StartSep(L"\\BOF3.exe");
     *game_dir_out = game_dir;
     *exe_out = exe;
-    // Optional for our own executable when a cache is the .data source (a
-    // disc-built install, docs/disc-only-round.md): decided once the settings
-    // are read, below. The hosted build runs inside the file.
+    if (!developer) return false;
+    // The hosted build runs inside the file; under BOF3X_EXEFILE=1 the engine
+    // reads .data from it when it is there, else from the cache's image.
     const bool exe_present = StartFileExists(exe);
     if (hosted && !exe_present)
         StartDie(L"no BOF3.exe in " + game_dir +
                  L".\nThe hosted build (--host bof3, or a hosted-only switch: BOF3X_ORIGINAL, "
-                 L"BOF3X_SHADOW, BOF3X_CALLTRACE, BOF3X_MP3_COMPARE, BOF3X_MP3=original) runs inside the player's own BOF3.exe; a "
-                 L"disc-built install has none. Point --game or BOF3_GAME_DIR at an install that has it.");
-    if (exe_present) {
-        const std::string sha = Sha256HexOf(exe);
-        if (sha != kExpectedSha256)
-            StartDie(exe + L" is not the build this project targets.\n\nsha256   " + StartWide(sha) + L"\nexpected " +
-                     StartWide(kExpectedSha256) +
-                     L"\n\nEvery address bof3x patches is specific to that one file; refusing to start. "
-                     L"If this is an uncatalogued release, see fixtures.toml.");
-
-        // The default key table is the engine's rule (input::DefaultKeys, the
-        // owner's call of 2026-10-11); where the file is there, it must be
-        // Key_TableDefault's 24 entries exactly.
-        std::vector<input::KeyBinding> keys;
-        std::string why;
-        if (!ExeDefaultKeys(exe, keys, why))
-            StartDie(L"cannot read the default key table from " + exe + L": " + StartWide(why));
-        const std::vector<input::KeyBinding>& rule = input::DefaultKeys();
-        bool same = keys.size() == rule.size();
-        for (size_t i = 0; same && i < keys.size(); ++i) same = keys[i].dik == rule[i].dik && keys[i].bits == rule[i].bits;
-        if (!same)
-            StartDie(L"the default key table in " + exe + L" (" + Num(keys.size()) + L" keys) is not the engine's rule (" +
-                     Num(rule.size()) + L" keys):\n" + StartWide(input::FormatKeys(keys, "", " ")) + L"\nbut\n" +
-                     StartWide(input::FormatKeys(rule, "", " ")));
-        if (StartSelfTestOnly())
-            StartSay(L"the default key table, " + Num(rule.size()) + L" keys by the engine's rule, equal to BOF3.exe's: " +
-                     StartWide(input::FormatKeys(rule, "", " ")) + L"\n");
-    }
+                 L"BOF3X_SHADOW, BOF3X_CALLTRACE, BOF3X_MP3_COMPARE, BOF3X_MP3=original) runs inside the player's own BOF3.exe; the "
+                 L"game folder that the importer makes holds none. Point --game or BOF3_GAME_DIR at the PC game's own folder.");
+    if (exe_present) CheckExe(exe);
     return exe_present;
 }
 
 bool StartReadSettings(const std::wstring& ini, const std::wstring& game_dir, const std::wstring& named, bool hosted,
-                       bool exe_present, int want_dialog, Config& cfg) {
+                       bool exe_read, int want_dialog, Config& cfg) {
     // DIV-0005: a retired bare language code (en, fr, de, ja) in the ini
     // or the environment stops here, before the dialog, naming its tag.
     std::string why;
@@ -139,17 +159,19 @@ bool StartReadSettings(const std::wstring& ini, const std::wstring& game_dir, co
     // reading-row mod is installed (docs/launcher-settings.md 2a, Extra).
     ConfigRubyUiDefault(cfg, HomeDir());
     if (!ConfigCheckEnvironmentLanguage(why)) StartDie(StartWide(why));
-    // No install at all - no BOF3.exe, no cache, no BOF3X_EXEIMAGE, and a
-    // game folder the player did not name: the Sources page makes one (its
-    // first run). Never under a self-test or --no-config, which keep the
-    // refusals.
-    const bool no_install = !hosted && !exe_present && named.empty() && ConfigCacheDataRoot(cfg).empty() &&
-                            bof3::os::GetEnvW(L"BOF3X_EXEIMAGE", nullptr, 0) == 0 && !StartSelfTestOnly() &&
-                            want_dialog != 0;
+    // No install at all - no game folder (InstallGameFolder; the developer's
+    // start: no BOF3.exe read either), no cache, no BOF3X_EXEIMAGE, and a game
+    // folder the player did not name: the Sources page makes one (its first
+    // run). Never under a self-test or --no-config, which keep the refusals.
+    // A game folder with no cache is not "no install": StartApply refuses it
+    // (StartRefuseNoImage) until the set-up runs there first.
+    const bool no_install = !hosted && !exe_read && !InstallGameFolder(game_dir) && named.empty() &&
+                            ConfigCacheDataRoot(cfg).empty() && bof3::os::GetEnvW(L"BOF3X_EXEIMAGE", nullptr, 0) == 0 &&
+                            !StartSelfTestOnly() && want_dialog != 0;
     // DIV-0102: "original" on an install without the Chinese text is
     // refused here, before the dialog; the default becomes a language
     // held. Not asked of no install: there is no language to hold yet.
-    if (!no_install && !ConfigResolveLanguage(game_dir, cfg, why)) StartDie(StartWide(why));
+    if (!no_install && !ConfigResolveLanguage(game_dir, cfg, why, hosted)) StartDie(StartWide(why));
     // DIV-0086 / DIV-0080: a bad opt= is refused, not dropped - dropped, it
     // would read as empty and play the default layers the player may have
     // meant to turn off.
@@ -168,7 +190,16 @@ bool StartReadSettings(const std::wstring& ini, const std::wstring& game_dir, co
     return no_install;
 }
 
-void StartApply(const std::wstring& game_dir, Config& cfg, bool hosted, bool exe_present) {
+[[noreturn]] void StartRefuseNoImage(const std::wstring& game_dir, const std::wstring& cache) {
+    StartDie(L"This install has no image of the game data, so the game cannot start (" +
+             (cache.empty() ? std::wstring(L"no cache") : L"no base" + StartSep(L"\\exe") + L" in " + cache) +
+             L"; the game folder is " + game_dir +
+             L").\nSet up the install: open the launcher, go to the Sources page and add the game.\n"
+             L"A developer can run tools/importer.py setup --home <install folder>, or set BOF3X_EXEFILE=1 to read "
+             L"BOF3.exe.");
+}
+
+void StartApply(const std::wstring& game_dir, Config& cfg, bool hosted, bool exe_read) {
     {
         // The cache's manifest through the one reader the DLL shares
         // (common/cache_manifest.h): a base_policy or exe_tables_from it cannot
@@ -181,20 +212,36 @@ void StartApply(const std::wstring& game_dir, Config& cfg, bool hosted, bool exe
             StartDie(ConfigFromUtf8(ManifestRefusal(manifest, ConfigToUtf8(root + StartSep(L"\\manifest.toml")))));
     }
 
-    if (!exe_present) {
-        // A disc-built install: the cache is the .data source (BOF3X_EXEIMAGE,
-        // docs/exe-import-engine.md section 4.4), nothing is read from a file.
-        // BOF3X_EXEIMAGE already set names it; else the settings' cache does.
-        // Without either the refusal is the one there always was.
+    // .data's source (docs/exe-retire-round.md, X2 and call 2). The hosted
+    // build runs inside BOF3.exe; a start that reads the file (BOF3X_EXEFILE=1
+    // with the file there) has it from the file, as before. Every other start
+    // - a player's - has it from the cache's image, whatever built it: a PC
+    // source or a disc. BOF3X_EXEIMAGE already set names it; else the settings'
+    // cache does. Here, before the preset and BOF3.CFG, so that a start with
+    // no image is refused before the game folder is written. The engine hashes
+    // the image as it maps it against the manifest's [exe] sha256.
+    if (!hosted && !exe_read) {
         const std::wstring cache = ConfigCacheDataRoot(cfg);
         wchar_t set[4];
         const bool image_set = bof3::os::GetEnvW(L"BOF3X_EXEIMAGE", set, 4) > 0;
-        if (cache.empty() && !image_set)
-            StartDie(L"no BOF3.exe in " + game_dir + L".\nPoint --game or BOF3_GAME_DIR at your own install.");
+        // A game folder with no image: docs/exe-retire-round.md X3 sets it up
+        // here, before this refusal, at a player's start with the launcher's
+        // windows. Under --no-config and a self-test the refusal stays.
+        if (!image_set && !CacheHasImage(cache)) StartRefuseNoImage(game_dir, cache);
         if (!image_set) bof3::os::SetEnvW(L"BOF3X_EXEIMAGE", cache.c_str());
-        StartSay(L"no BOF3.exe in " + game_dir +
-                 L": a disc-built install - no hash check, the default keys by the engine's rule, .data from " +
-                 (image_set ? std::wstring(L"BOF3X_EXEIMAGE's cache (the environment's)") : cache) + L"\n");
+        // What the install is, from the cache's record (common/cache_manifest.h
+        // ManifestInstallKind), never from a file beside the game.
+        std::wstring kind = L"the cache's image";
+        if (!image_set) {
+            const CacheManifest m = ManifestRead(cache);
+            if (const std::string note = ManifestKindNoteOnce(m); !note.empty()) StartSay(StartWide(note) + L"\n");
+            if (ManifestInstallKind(m) == InstallKind::kPc) kind = L"a PC install: the image built from the PC game";
+            else if (ManifestInstallKind(m) == InstallKind::kDisc) kind = L"a disc-built install: the image built from a disc";
+        }
+        StartSay(L".data from " + (image_set ? std::wstring(L"BOF3X_EXEIMAGE's cache (the environment's)") : cache) +
+                 L" (" + kind + L", its table files laid in); BOF3.exe is not read (BOF3X_EXEFILE=1 reads it)\n");
+    } else if (exe_read && !hosted) {
+        StartSay(L".data from " + game_dir + StartSep(L"\\BOF3.exe") + L" (BOF3X_EXEFILE=1, a developer's run)\n");
     }
 
     // The preset (launcher/config.h, docs/launcher-settings.md "preset="), at
@@ -215,30 +262,6 @@ void StartApply(const std::wstring& game_dir, Config& cfg, bool hosted, bool exe
                              L"own input. Check that the game directory is writable.");
     ConfigPresetEnvironment(plan);   // before the ini's, which then keep them
     ConfigApplyEnvironment(game_dir, played, hosted);   // hosted: no layer that build refuses
-
-    if (exe_present && !hosted) {
-        // DIVERGENCE DIV-0212: a PC install whose cache holds the image built
-        // from BOF3.exe reads .data from the cache too - the image and its
-        // table files (docs/image-layer-round.md 5b) - so that every install
-        // kind has one source. The bytes are the file's: the engine compares
-        // them with BOF3.exe's .data before it goes on (exe_image.cpp). The
-        // file stays the source with no cache, with a cache whose image a
-        // disc built (those are not the PC's bytes), under BOF3X_EXEFILE=1,
-        // and in the hosted build, which runs inside the file. After the
-        // preset and the ini, which may set the switch or the cache.
-        const std::wstring cache = ConfigCacheDataRoot(played);
-        wchar_t set[4];
-        const bool image_set = bof3::os::GetEnvW(L"BOF3X_EXEIMAGE", set, 4) > 0;
-        const std::uint32_t from_file = bof3::os::GetEnvW(L"BOF3X_EXEFILE", set, 4);
-        if (from_file != 0 && !(from_file == 1 && (set[0] == L'0' || set[0] == L'1')))
-            StartDie(L"BOF3X_EXEFILE takes 1 (read .data from BOF3.exe though the cache holds its image) or 0.");
-        const bool want_file = from_file == 1 && set[0] == L'1';
-        if (!image_set && !want_file && !cache.empty() && CacheImageIsPcBuilt(cache)) {
-            bof3::os::SetEnvW(L"BOF3X_EXEIMAGE", cache.c_str());
-            StartSay(L".data from " + cache + L" (the image built from BOF3.exe and its table files; "
-                                              L"BOF3X_EXEFILE=1 for the file)\n");
-        }
-    }
 }
 
 std::uint32_t StartGame(const std::wstring& program, const std::vector<std::wstring>& args,
