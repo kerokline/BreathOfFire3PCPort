@@ -6,7 +6,6 @@
 
 #include "common/home.h"
 #include "input/bindings.h"
-#include "input/function_keys.h"
 #include "launcher/ledger_registry.h"
 #include "launcher/ui/ui.h"
 
@@ -263,10 +262,11 @@ void SettingsPage(Pages& p) {
     if (Button("Options...")) p.satpixie_open = true;
 
     // The Display box names the key that changes the window (the Function
-    // keys page's window action), or no key when it has none.
+    // keys page's window action, as that page shows it now), or no key when
+    // it has none (config_dialog.cpp DisplayItems).
     Place(Dx(9), Dy(74 - up));
     Label("Display:");
-    const int key = ConfigFnKeys(*p.cfg).key[static_cast<int>(input::FnAction::kWindow)];
+    const int key = PagesWindowKey(p);
     std::vector<std::string> displays = {"Full screen", "Window"};
     if (key >= 0) {
         const std::string name = input::KeyName(key);

@@ -53,6 +53,8 @@ struct Pages {
     bool applied = false;
     // Settings' Options...: SatPixie's options are shown in place of the tabs' page.
     bool satpixie_open = false;
+    // A Controls cell was used: the bind capture is shown in place of the tabs' page.
+    bool capture_open = false;
 };
 
 // The Win32 pages are laid out in dialog units of Segoe UI 9: 1.75 of the
@@ -124,6 +126,18 @@ void DataPage(Pages& p);
 // SatPixie's options, shown from Settings' Options... (page_satpixie.cpp).
 void SatpixieOpen(Pages& p);
 void SatpixiePage(Pages& p);
+// Controls: Directions and buttons, Shoulders, Start and Select, Function
+// keys, and the bind capture over a cell of any of them (page_controls.cpp).
+void ControlsOpen(Pages& p);
+void ControlsApply(Pages& p);
+void ControlsPage1(Pages& p);
+void ControlsPage2(Pages& p);
+void FnKeysPage(Pages& p);
+void CapturePage(Pages& p);
+// The key the Function keys page gives the window action, as the page shows
+// it now (a key number, -1 for none): the Settings page's Display box names it
+// (config_dialog.cpp DisplayItems).
+int PagesWindowKey(const Pages& p);
 
 // A page that is not in this launcher yet: its sentence.
 void PageNotYet();
