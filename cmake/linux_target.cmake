@@ -1,9 +1,10 @@
 # The Linux build (--preset linux-x86_64, cmake/x86_64-linux.cmake;
 # docs/linux-round.md, stage LC, group C1). CMakeLists.txt includes this file
 # when the target is not Windows, in place of everything from the DLL's
-# target down, and stops there: no PE, no make_exe.py, no launcher (the
-# launcher without a window is stage P0's, docs/launcher-portable.md; it is
-# linked in wave B).
+# target down, and stops there: no PE, no make_exe.py, and of the launchers
+# the drawn one alone (bof3x_launcher_ui below, stage P1 of
+# docs/launcher-portable.md; the launcher without a window is stage P0's and
+# is linked in wave B).
 #
 # One target, `bof3x`: an ELF executable made of the exe host's sources -
 # the 64-bit DLL's list (_dll_sources in CMakeLists.txt, fuzz files already
@@ -88,6 +89,18 @@ if(BOF3X_LINK_ERROR_LIMIT)
   target_link_options(bof3x PRIVATE -Wl,--error-limit=0)
 endif()
 target_link_libraries(bof3x PRIVATE bof3x_media bof3x_dxvk_headers SDL3::SDL3-static bof3x_os ${BOF3X_DXVK_LIBRARIES})
+
+# --- the drawn launcher (docs/launcher-portable.md, stage P1) -------------------
+# The same sources as on Windows (BOF3X_LAUNCHER_UI_SOURCES, CMakeLists.txt),
+# compiled as the ELF's are: the seam's library is built with these options,
+# and a caller of it must agree on __cdecl.
+add_executable(bof3x_launcher_ui ${BOF3X_LAUNCHER_UI_SOURCES})
+add_dependencies(bof3x_launcher_ui bof3x_symbols bof3x_suites)
+target_include_directories(bof3x_launcher_ui PRIVATE src third_party "${_gen_dir}")
+target_compile_options(bof3x_launcher_ui PRIVATE ${BOF3X_LINUX_COMPILE_OPTIONS})
+set_target_properties(bof3x_launcher_ui PROPERTIES POSITION_INDEPENDENT_CODE OFF OUTPUT_NAME "bof3x-launcher-ui")
+target_link_options(bof3x_launcher_ui PRIVATE -no-pie)
+target_link_libraries(bof3x_launcher_ui PRIVATE bof3x_imgui SDL3::SDL3-static bof3x_os)
 
 # --- every object, no link (as CMakeLists.txt's bof3x_compile on Windows) --------
 add_custom_target(bof3x_compile

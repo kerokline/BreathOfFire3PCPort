@@ -142,12 +142,35 @@ set(SDL_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(SDL_INSTALL OFF CACHE BOOL "" FORCE)
 set(SDL_AUDIO ON CACHE BOOL "" FORCE)
 # The video subsystem since the Linux round's R6: the game's window is SDL's
-# (src/game/platform/game_window.h). Its renderers stay out: the picture is
-# Direct3D 11's.
+# (src/game/platform/game_window.h). The game's picture is Direct3D 11's and
+# the game creates no SDL renderer.
 set(SDL_VIDEO ON CACHE BOOL "" FORCE)
-foreach(_sub RENDER GPU CAMERA HAPTIC SENSOR POWER DIALOG OPENGL OPENGLES VULKAN DIRECTX)
+# SDL's 2D renderer and its file dialog since stage P1 of
+# docs/launcher-portable.md: the drawn launcher (src/launcher/ui) is drawn by
+# the renderer and picks a file with the dialog. On Windows the renderer is
+# SDL's Direct3D 11 one, with its software one behind it (measured 2026-11-20:
+# the software one alone costs 12 to 15 ms a frame at 640 x 480 and 30 to 44 ms
+# at 1280 x 960); off Windows its Vulkan one, with the software one behind it.
+set(SDL_RENDER ON CACHE BOOL "" FORCE)
+set(SDL_DIALOG ON CACHE BOOL "" FORCE)
+foreach(_sub GPU CAMERA HAPTIC SENSOR POWER OPENGL OPENGLES VULKAN DIRECTX)
   set(SDL_${_sub} OFF CACHE BOOL "" FORCE)
 endforeach()
+if(WIN32)
+  # The Direct3D 11 renderer needs SDL_DIRECTX, which would also add SDL's
+  # DirectSound output and DirectInput pad driver to the game's sound and pad
+  # (DIV-0201, DIV-0050) and its Direct3D 9 and 12 renderers. SDL adds each
+  # only when its header is found, and takes a HAVE_ answer that is in the
+  # cache already: answered here, the four are not looked for. The check after
+  # FetchContent_MakeAvailable reads SDL's own configuration and stops the
+  # build when a later SDL takes one in by another road.
+  set(SDL_DIRECTX ON CACHE BOOL "" FORCE)
+  set(SDL_RENDER_D3D OFF CACHE BOOL "" FORCE)
+  set(SDL_RENDER_D3D12 OFF CACHE BOOL "" FORCE)
+  foreach(_header DSOUND DINPUT DDRAW D3D9)
+    set(HAVE_${_header}_H 0 CACHE INTERNAL "answered by CMakeLists.txt: not looked for")
+  endforeach()
+endif()
 # Off Windows the picture is DXVK-native's, which makes its Vulkan surface
 # from SDL's window (SDL_Vulkan_CreateSurface): SDL's Vulkan support stays in.
 if(NOT WIN32)
@@ -168,6 +191,79 @@ FetchContent_Declare(SDL3
   GIT_TAG release-3.4.16
   GIT_SHALLOW TRUE)
 FetchContent_MakeAvailable(SDL3)
+if(WIN32)
+  # SDL's own answer to the block above: the names its build file set for its
+  # configuration header (the header itself is written when the build files
+  # are, after this line).
+  foreach(_sdl_out SDL_AUDIO_DRIVER_DSOUND SDL_JOYSTICK_DINPUT SDL_VIDEO_RENDER_D3D SDL_VIDEO_RENDER_D3D12)
+    get_directory_property(_sdl_value DIRECTORY "${SDL3_SOURCE_DIR}" DEFINITION ${_sdl_out})
+    if(_sdl_value)
+      message(FATAL_ERROR "SDL was configured with ${_sdl_out}, which this build keeps out: "
+        "see the SDL_DIRECTX block above")
+    endif()
+  endforeach()
+  get_directory_property(_sdl_value DIRECTORY "${SDL3_SOURCE_DIR}" DEFINITION SDL_VIDEO_RENDER_D3D11)
+  if(NOT _sdl_value)
+    message(FATAL_ERROR "SDL was configured without its Direct3D 11 renderer: see the SDL_DIRECTX block above")
+  endif()
+endif()
+
+# --- Dear ImGui, for the drawn launcher (docs/launcher-portable.md, stage P1;
+# the owner's call 1, 2026-11-19) -------------------------------------------------
+# Fetched at configure time as SDL3 is, pinned to a release tag, MIT
+# (docs/THIRD_PARTY.md section 6). It has no build file of its own: the four
+# core files and its two SDL3 backends are compiled here into a static library
+# that only the drawn launcher links (and its std::string helper). Only src/launcher/ui/ui_imgui.cpp
+# includes its headers; the pages name the widgets of src/launcher/ui/ui.h.
+FetchContent_Declare(imgui
+  GIT_REPOSITORY https://github.com/ocornut/imgui.git
+  GIT_TAG v1.92.9b
+  GIT_SHALLOW TRUE)
+FetchContent_MakeAvailable(imgui)
+add_library(bof3x_imgui STATIC
+  "${imgui_SOURCE_DIR}/imgui.cpp"
+  "${imgui_SOURCE_DIR}/imgui_draw.cpp"
+  "${imgui_SOURCE_DIR}/imgui_tables.cpp"
+  "${imgui_SOURCE_DIR}/imgui_widgets.cpp"
+  "${imgui_SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp"
+  "${imgui_SOURCE_DIR}/backends/imgui_impl_sdl3.cpp"
+  "${imgui_SOURCE_DIR}/backends/imgui_impl_sdlrenderer3.cpp")
+target_include_directories(bof3x_imgui PUBLIC "${imgui_SOURCE_DIR}" "${imgui_SOURCE_DIR}/backends")
+target_compile_definitions(bof3x_imgui PUBLIC IMGUI_DISABLE_DEMO_WINDOWS IMGUI_DISABLE_DEBUG_TOOLS IMGUI_DISABLE_OBSOLETE_FUNCTIONS)
+target_link_libraries(bof3x_imgui PUBLIC SDL3::SDL3-static)
+
+# The drawn launcher's two built-in files, each as a byte array
+# (tools/embed_file.py): the title page's picture, which the Win32 launcher
+# holds as a resource, and the text font, from Dear ImGui's own tree (Droid
+# Sans, Apache 2.0; docs/THIRD_PARTY.md section 6).
+set(_ui_assets "${_gen_dir}/launcher/ui_assets.gen.cpp")
+add_custom_command(OUTPUT "${_ui_assets}"
+  COMMAND "${BOF3X_PYTHON}" "${CMAKE_SOURCE_DIR}/tools/embed_file.py" "${_ui_assets}"
+          kUiBackgroundPng "${CMAKE_SOURCE_DIR}/docs/images/launcherBackground.png"
+          kUiTextFont "${imgui_SOURCE_DIR}/misc/fonts/DroidSans.ttf"
+  DEPENDS "${CMAKE_SOURCE_DIR}/tools/embed_file.py" "${CMAKE_SOURCE_DIR}/docs/images/launcherBackground.png"
+          "${imgui_SOURCE_DIR}/misc/fonts/DroidSans.ttf"
+  COMMENT "Generating launcher/ui_assets.gen.cpp"
+  VERBATIM)
+# The drawn launcher's sources, for this file's target on Windows and
+# cmake/linux_target.cmake's on Linux: its own files, and the launcher's parts
+# with no window (the settings model and the start of the game).
+set(BOF3X_LAUNCHER_UI_SOURCES
+  src/launcher/ui/main.cpp
+  src/launcher/ui/frame.cpp
+  src/launcher/ui/sample_page.cpp
+  src/launcher/ui/ui_imgui.cpp
+  "${_ui_assets}"
+  src/launcher/config.cpp
+  src/launcher/exe_image.cpp
+  src/launcher/save/finds.cpp
+  src/launcher/start.cpp
+  src/launcher/suites.cpp
+  src/common/sha256.cpp
+  src/common/cache_manifest.cpp
+  src/common/home.cpp
+  src/input/bindings.cpp
+  src/input/function_keys.cpp)
 
 # --- DXVK-native's Direct3D 11 headers, for a target that is not Windows ----
 # (docs/linux-round.md section 6, call 1). Read only when the target is not
@@ -377,6 +473,17 @@ function(bof3x_add_launcher target output hosted)
   set_target_properties(${target} PROPERTIES OUTPUT_NAME "${output}")
 endfunction()
 bof3x_add_launcher(bof3x_launcher bof3x-launcher 0)
+# The drawn launcher (docs/launcher-portable.md, stage P1): one set of windows
+# for Windows and Linux, drawn by Dear ImGui on SDL3's renderer. A second
+# executable beside the player's launcher until the cutover (stage P6); no
+# release ships it (tools/make_release.py names its files). It links the
+# launcher's parts as the player's launcher does, and none of its windows.
+add_executable(bof3x_launcher_ui ${BOF3X_LAUNCHER_UI_SOURCES})
+target_include_directories(bof3x_launcher_ui PRIVATE src third_party "${_gen_dir}")
+add_dependencies(bof3x_launcher_ui bof3x_symbols bof3x_suites)
+target_link_libraries(bof3x_launcher_ui PRIVATE bof3x_imgui SDL3::SDL3-static bof3x_os)
+target_link_options(bof3x_launcher_ui PRIVATE -mwindows)
+set_target_properties(bof3x_launcher_ui PROPERTIES OUTPUT_NAME "bof3x-launcher-ui")
 # bof3x-fmvdump: the FMV decoders (src/video, DIV-0205) as a console tool
 # that writes an AVI's frames raw, for tools/fmv_compare.py to hold against
 # ffmpeg's decode of the same file. Not a player file.

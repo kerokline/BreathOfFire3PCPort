@@ -40,8 +40,12 @@ LIST = 'analysis/linux_tree.tsv'
 # The launcher's windows (the Win32 dialogs, and launcher.cpp, the window half of its start): its settings model,
 # the start of the game with no window (start.cpp) and the windowless main (headless.cpp) are compiled
 # (docs/launcher-portable.md, stage P0; the Linux round's C7).
+# The drawn launcher (src/launcher/ui/, docs/launcher-portable.md stage P1) is not Windows': it is left out
+# here because it needs Dear ImGui's headers, which the build fetches; its own target compiles and links it
+# (bof3x_launcher_ui, cmake/linux_target.cmake).
 SKIP = ('src/os/win32/', 'src/launcher/config_dialog.cpp', 'src/launcher/sources_dialog.cpp',
-        'src/launcher/save_dialog.cpp', 'src/launcher/music_player.cpp', 'src/launcher/launcher.cpp')
+        'src/launcher/save_dialog.cpp', 'src/launcher/music_player.cpp', 'src/launcher/launcher.cpp',
+        'src/launcher/ui/')
 # Files that are Windows files by design and leave the Linux source list (docs/linux-round.md, "The 38 files, staged
 # as one round"): exact names, one reason each. Not compiled; --check and --write do not list them.
 WINDOWS_ONLY = (
