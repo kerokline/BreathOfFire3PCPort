@@ -16,10 +16,12 @@
 #include "imgui_impl_sdlrenderer3.h"
 #include "misc/cpp/imgui_stdlib.h"
 
+#include <algorithm>
 #include <cfloat>
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <map>
 #include <mutex>
@@ -70,6 +72,9 @@ struct State {
     std::vector<Picture*> pictures;
     Next next;
     int wake = 0;             // frames still to draw without waiting
+    // A check's widget (TestSet): the name, the value, and whether a grey widget of that name was drawn.
+    bool test_set = false, test_grey = false;
+    std::string test_widget, test_value;
     bool test_pad = false;    // a check pressed a pad's key (TestKey)
     bool busy_before = false; // an open list or an edit field held the keys in the frame before
     std::string save_path, save_why;
@@ -221,6 +226,30 @@ struct Placed {
         if (w > 0) ImGui::SetNextItemWidth(S(w));
     }
     ImVec2 Box() const { return ImVec2(S(w), S(h)); }
+};
+
+// TestSet's value for the widget `label`, once, when the widget can be used.
+bool TestTake(const char* label, bool grey, std::string* value) {
+    if (!g.test_set) return false;
+    const char* cut = std::strstr(label, "##");
+    const std::string whole = label, shown = cut ? std::string(label, cut) : whole, name = cut ? cut + 2 : "";
+    if (g.test_widget != whole && g.test_widget != shown && (name.empty() || g.test_widget != name)) return false;
+    if (grey) {
+        g.test_grey = true;
+        return false;
+    }
+    *value = g.test_value;
+    g.test_set = false;
+    return true;
+}
+
+int TestNumber(const std::string& value) { return std::atoi(value.c_str()); }
+
+// A check box and a radio button are lower than a button: the Win32 pages
+// set their rows 11 dialog units apart (20 of the picture's pixels).
+struct SmallBox {
+    SmallBox() { ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(S(8), S(2))); }
+    ~SmallBox() { ImGui::PopStyleVar(); }
 };
 
 void Handle(const SDL_Event& e) {
@@ -439,11 +468,23 @@ bool TestKey(const char* name, bool down) {
         if (std::strcmp(n.name, name)) continue;
         ImGuiIO& io = ImGui::GetIO();
         if (n.key >= ImGuiKey_GamepadStart) g.test_pad = true;
+        g.wake = 8;
         io.AddKeyEvent(n.key, down);
         return true;
     }
     return false;
 }
+
+void TestSet(const char* widget, const char* value) {
+    g.test_set = true;
+    g.test_grey = false;
+    g.test_widget = widget;
+    g.test_value = value;
+    g.wake = 8;   // the frames that draw the widget come without a wait
+}
+
+bool TestPending() { return g.test_set; }
+bool TestGrey() { return g.test_grey; }
 
 // ---- Drawing under the widgets ------------------------------------------------
 
@@ -509,7 +550,9 @@ void DefaultFocus() {
 
 bool Button(const char* label) {
     Placed p;
-    return ImGui::Button(label, p.Box());
+    std::string test;
+    const bool taken = TestTake(label, p.grey, &test);
+    return ImGui::Button(label, p.Box()) || taken;
 }
 
 bool Tab(const char* label, bool on) {
@@ -520,33 +563,64 @@ bool Tab(const char* label, bool on) {
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, Rgb(kSandHot));
         ImGui::PushStyleColor(ImGuiCol_Text, Rgb(kPaper));
     }
-    const bool pressed = ImGui::Button(label, p.Box());
+    std::string test;
+    const bool pressed = ImGui::Button(label, p.Box()) | TestTake(label, p.grey, &test);
     if (on) ImGui::PopStyleColor(4);
     return pressed && !on;
 }
 
 bool Check(const char* label, bool* on) {
     Placed p;
+    std::string test;
+    if (TestTake(label, p.grey, &test)) {
+        const bool want = test != "0", changed = want != *on;
+        *on = want;
+        SmallBox small;
+        ImGui::Checkbox(label, on);
+        return changed;
+    }
+    SmallBox small;
     return ImGui::Checkbox(label, on);
 }
 
 bool Radio(const char* label, int* value, int mine) {
     Placed p;
+    std::string test;
+    if (TestTake(label, p.grey, &test)) {
+        const bool changed = *value != mine;
+        *value = mine;
+        SmallBox small;
+        ImGui::RadioButton(label, value, mine);
+        return changed;
+    }
+    SmallBox small;
     return ImGui::RadioButton(label, value, mine);
 }
 
-bool Combo(const char* label, int* index, const std::vector<std::string>& items) {
+bool ComboGreyed(const char* label, int* index, const std::vector<std::string>& items,
+                 const std::vector<bool>& usable) {
     Placed p;
     p.Width();
     const int count = static_cast<int>(items.size());
-    const char* shown = *index >= 0 && *index < count ? items[static_cast<std::size_t>(*index)].c_str() : "";
+    const auto can = [&](int i) { return static_cast<std::size_t>(i) >= usable.size() || usable[static_cast<std::size_t>(i)]; };
     bool changed = false;
+    std::string test;
+    if (TestTake(label, p.grey, &test)) {
+        const int want = TestNumber(test);
+        if (want >= 0 && want < count && can(want) && want != *index) {
+            *index = want;
+            changed = true;
+        }
+    }
+    const char* shown = *index >= 0 && *index < count ? items[static_cast<std::size_t>(*index)].c_str() : "";
     ImGui::PushID(label);
     if (ImGui::BeginCombo("##combo", shown)) {
         for (int i = 0; i < count; ++i) {
             ImGui::PushID(i);
             const bool chosen = i == *index;
-            if (ImGui::Selectable(items[static_cast<std::size_t>(i)].c_str(), chosen) && !chosen) {
+            if (ImGui::Selectable(items[static_cast<std::size_t>(i)].c_str(), chosen,
+                                  can(i) ? 0 : ImGuiSelectableFlags_Disabled) &&
+                !chosen) {
                 *index = i;
                 changed = true;
             }
@@ -559,11 +633,22 @@ bool Combo(const char* label, int* index, const std::vector<std::string>& items)
     return changed;
 }
 
+bool Combo(const char* label, int* index, const std::vector<std::string>& items) {
+    return ComboGreyed(label, index, items, std::vector<bool>());
+}
+
 bool Slider(const char* label, int* value, int low, int high) {
     Placed p;
     p.Width();
+    bool changed = false;
+    std::string test;
+    if (TestTake(label, p.grey, &test)) {
+        const int want = std::min(std::max(TestNumber(test), low), high);
+        changed = want != *value;
+        *value = want;
+    }
     ImGui::PushID(label);
-    const bool changed = ImGui::SliderInt("##slider", value, low, high, "%d", ImGuiSliderFlags_AlwaysClamp);
+    changed |= ImGui::SliderInt("##slider", value, low, high, "%d", ImGuiSliderFlags_AlwaysClamp);
     ImGui::PopID();
     return changed;
 }
@@ -571,8 +656,14 @@ bool Slider(const char* label, int* value, int low, int high) {
 bool Edit(const char* label, std::string* text) {
     Placed p;
     p.Width();
+    bool changed = false;
+    std::string test;
+    if (TestTake(label, p.grey, &test)) {
+        changed = test != *text;
+        *text = test;
+    }
     ImGui::PushID(label);
-    const bool changed = ImGui::InputText("##edit", text);
+    changed |= ImGui::InputText("##edit", text);
     ImGui::PopID();
     return changed;
 }
@@ -580,6 +671,14 @@ bool Edit(const char* label, std::string* text) {
 bool List(const char* label, int* index, const std::vector<std::string>& items) {
     Placed p;
     bool changed = false;
+    std::string test;
+    if (TestTake(label, p.grey, &test)) {
+        const int want = TestNumber(test);
+        if (want >= 0 && want < static_cast<int>(items.size()) && want != *index) {
+            *index = want;
+            changed = true;
+        }
+    }
     ImGui::PushID(label);
     if (ImGui::BeginListBox("##list", p.Box())) {
         for (int i = 0; i < static_cast<int>(items.size()); ++i) {
@@ -602,6 +701,15 @@ void Label(const char* text) {
     if (p.w > 0) ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + S(p.w));
     ImGui::TextUnformatted(text);
     if (p.w > 0) ImGui::PopTextWrapPos();
+}
+
+void ReadText(const char* label, const std::string& text) {
+    Placed p;
+    ImGui::PushID(label);
+    // Read only: Dear ImGui writes nothing through the pointer.
+    ImGui::InputTextMultiline("##read", const_cast<char*>(text.c_str()), text.size() + 1, p.Box(),
+                              ImGuiInputTextFlags_ReadOnly);
+    ImGui::PopID();
 }
 
 void Progress(float fraction) {

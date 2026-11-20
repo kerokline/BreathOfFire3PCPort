@@ -1,33 +1,48 @@
-// bof3x-launcher-ui: the drawn launcher (docs/launcher-portable.md, stage P1).
-// One set of windows for Windows and Linux, drawn through launcher/ui/ui.h. A
-// second program beside the player's launcher until the cutover (stage P6).
+// bof3x-launcher-ui: the drawn launcher (docs/launcher-portable.md, stages P1
+// and P2). One set of windows for Windows and Linux, drawn through
+// launcher/ui/ui.h. A second program beside the player's launcher until the
+// cutover (stage P6).
 //
-//   bof3x-launcher-ui [--game <folder>] [--scale <number>] [--keys <list>] [-- <arguments for the game>]
-//   bof3x-launcher-ui --capture <file.png> [--page <name>] [--sub <n>] [--sheet <n>] [--keys <list>] [--scale <number>]
+//   bof3x-launcher-ui [--game <folder>] [--scale <number>] [--script <steps>] [-- <arguments for the game>]
+//   bof3x-launcher-ui --check [--ini <file>] [--game <folder>] [--save <file>] [--script <steps>]
+//                     [--page <name>] [--sub <n>] [--sheet <n>] [--keys <list>] [--capture <file.png>]
+//                     [--scale <number>]
 //
-// What stage P1 holds: the title page and Configure's tabs, with Play. Play
-// starts the game as the launcher with no window does (launcher/start.h): the
-// settings in bof3x.ini as they are, since no page changes one yet. It does
-// not make an install (the Sources page is stage P4's) and does not look for
-// an install made by an older release (the Win32 launcher's check, in its
-// Sources page's file).
+// The window: the title page and Configure. Play applies the pages, saves
+// bof3x.ini and starts the game by the steps of the launcher with no window
+// (launcher/start.h). Back applies the pages; an Exit after a Back saves them
+// and starts nothing; an Exit or the close box with no Back saves nothing
+// (docs/launcher-settings.md 2a, "What is saved"). It does not make an
+// install (the Sources page is stage P4's) and does not look for an install
+// made by an older release (the Win32 launcher's check, in its Sources
+// page's file).
 //
-// --capture draws one face with no window on the screen and writes it as a
-// PNG, so a check of a page needs no screen and no game folder: `--page` is
-// "title" or a tab ("settings", "controls", "music", "game", "mods", "data"),
-// `--sub` and `--sheet` the tab's sub-tab and its page, counted from 0.
-// `--keys` presses keys and pad buttons before the picture, one after the
-// other ("down,right,enter"; the names are ui.h TestKey's), and the line on
-// stdout says the face the window is on then and what it asked, so a check
-// of the keyboard and the pad needs no hands. Without --capture, `--keys`
-// presses them in the window on the screen ("enter" is Play), so a script
-// starts the game through the window.
+// --check is the same window with no window on the screen and no game: a
+// check of a page needs no screen, no hands and, without --game, no game
+// folder. The settings are read from --ini (none: the defaults) and are
+// written to --save where the window would save bof3x.ini - on Play, and on
+// an Exit after a Back. --capture writes the last frame as a PNG (and means
+// --check). The line on stdout says the face the window is on, what it asked
+// and whether it saved.
+//
+// --script is a list of steps with ; between them, done one after the other:
+//   open <page> [<sub> [<sheet>]]  the face: title, or a tab (settings, controls, music, game, mods, data)
+//                                  with its sub-tab and that sub-tab's page, counted from 0
+//   set <widget>=<value>           a widget of the page shown, by its name (ui.h TestSet)
+//   press <widget>                 a button, a tab or a radio button, by its name
+//   key <name>                     a key or a pad button (ui.h TestKey)
+//   shot <file.png>                the frame as it is now
+// A step that names a widget the page does not draw, or a grey one, stops the
+// program with exit code 1: a grey control is a thing a check can ask for.
+// Without --check the steps run in the window on the screen ("press Play"
+// starts the game), so a script starts the game through the window.
 //
 // Its arguments are UTF-8 on both systems (SDL's main). The texts are the
 // player's (CLAUDE.md, ASD-STE100).
 #include "launcher/config.h"
 #include "launcher/start.h"
 #include "launcher/ui/frame.h"
+#include "launcher/ui/pages.h"
 #include "launcher/ui/ui.h"
 
 #include "os/env.h"
@@ -44,92 +59,174 @@
 
 namespace {
 
+namespace ui = bof3x::ui;
+
 const char kTitle[] = "Breath of Fire III - bof3x";
 
 const char kUsage[] =
-    "usage: bof3x-launcher-ui [--game <folder>] [--scale <number>] [--keys <list>] [-- <arguments for the game>]\n"
-    "       bof3x-launcher-ui --capture <file.png> [--page <name>] [--sub <n>] [--sheet <n>] [--keys <list>]\n"
+    "usage: bof3x-launcher-ui [--game <folder>] [--scale <number>] [--script <steps>] [-- <arguments for the game>]\n"
+    "       bof3x-launcher-ui --check [--ini <file>] [--game <folder>] [--save <file>] [--script <steps>]\n"
+    "                         [--page <name>] [--sub <n>] [--sheet <n>] [--keys <list>] [--capture <file.png>]\n"
     "                         [--scale <number>]\n"
     "  --game <folder>       The folder of the game. Without it, the launcher finds the folder as bof3x-launcher does.\n"
     "  --scale <number>      The size of the window: 1 is 640 x 480. Without it, the launcher uses the scale of the display.\n"
-    "  --capture <file.png>  Draws one page with no window and writes it as a picture, then stops.\n"
-    "  --page <name>         The page to capture: title, settings, controls, music, game, mods or data.\n"
-    "  --sub <n>, --sheet <n>  The sub-tab of the page and its page, counted from 0.\n"
-    "  --keys <list>         Keys to press before the picture: up, down, left, right, enter, space, escape, tab,\n"
-    "                        pad-up, pad-down, pad-left, pad-right, pad-cross, pad-circle, pad-start.\n";
+    "  --check               Shows no window and starts no game. Use it to check a page.\n"
+    "  --ini <file>          With --check: the settings file to read. Without it, the settings are the defaults.\n"
+    "  --save <file>         With --check: the file that gets the settings when the window saves them.\n"
+    "  --script <steps>      Steps to do in the window, with ; between them: open <page> [<sub> [<sheet>]],\n"
+    "                        set <widget>=<value>, press <widget>, key <name>, shot <file.png>.\n"
+    "  --page <name>         With --check: the page to show first: title, settings, controls, music, game, mods or data.\n"
+    "  --sub <n>, --sheet <n>  The sub-tab of that page and its page, counted from 0.\n"
+    "  --keys <list>         With --check: keys to press, with , between them (the same as key steps).\n"
+    "  --capture <file.png>  Writes the last frame as a picture. It also means --check.\n";
 
 bool g_window_open = false;
 
 [[noreturn]] void Refuse(const std::string& sentence) {
+    if (g_window_open) ui::Close();
     std::fprintf(stderr, "bof3x-launcher-ui: %s\n%s", sentence.c_str(), kUsage);
     std::exit(1);
 }
 
-// --keys' list, one name each.
-std::vector<std::string> Keys(const std::string& keys) {
-    std::vector<std::string> presses;
-    for (std::size_t at = 0; at < keys.size();) {
-        std::size_t end = keys.find(',', at);
-        if (end == std::string::npos) end = keys.size();
-        if (end > at) presses.push_back(keys.substr(at, end - at));
-        at = end + 1;
-    }
-    return presses;
+[[noreturn]] void Fail(const std::string& sentence) {
+    if (g_window_open) ui::Close();
+    std::fprintf(stderr, "bof3x-launcher-ui: %s\n", sentence.c_str());
+    std::exit(1);
 }
 
-int Capture(const std::string& file, const std::string& page, int sub, int sheet, const std::string& keys,
-            double scale) {
-    bof3x::ui::FrameState state;
-    if (!bof3x::ui::FrameOpen(state, page.c_str())) Refuse("The page " + page + " is not known.");
-    if (state.page >= 0) {
-        state.sub[state.page] = sub;
-        state.sheet[state.page] = sheet;
+std::vector<std::string> Split(const std::string& text, char at) {
+    std::vector<std::string> parts;
+    for (std::size_t from = 0; from <= text.size();) {
+        std::size_t end = text.find(at, from);
+        if (end == std::string::npos) end = text.size();
+        const std::size_t b = text.find_first_not_of(' ', from);
+        if (b != std::string::npos && b < end) {
+            const std::size_t e = text.find_last_not_of(' ', end - 1);
+            parts.push_back(text.substr(b, e - b + 1));
+        }
+        from = end + 1;
     }
-    const std::vector<std::string> presses = Keys(keys);
-    bof3x::ui::OpenOptions options;
+    return parts;
+}
+
+// The window's loop, for the window on the screen and for --check alike.
+struct Session {
+    ui::FrameState state;
+    ui::Pages pages;
+    ui::FrameAsk ask = ui::FrameAsk::kNone;
+    bool closed = false;   // the close box
+
+    bool Over() const { return closed || ask != ui::FrameAsk::kNone; }
+
+    void Frames(int count) {
+        for (int i = 0; i < count && !Over(); ++i) {
+            if (!ui::FrameBegin()) {
+                closed = true;
+                return;
+            }
+            ask = ui::FrameDraw(state, pages);
+            ui::FrameEnd();
+        }
+    }
+
+    // One step of --script. A page settles over a few frames (sizes measured
+    // in one frame are used in the next), so each step ends with some.
+    void Step(const std::string& step) {
+        const std::size_t space = step.find(' ');
+        const std::string verb = step.substr(0, space);
+        const std::string rest = space == std::string::npos ? "" : step.substr(step.find_first_not_of(' ', space));
+        if (verb == "open") {
+            const std::vector<std::string> words = Split(rest, ' ');
+            if (words.empty() || !ui::FrameOpen(state, words[0].c_str())) Refuse("The page in the step \"" + step + "\" is not known.");
+            if (state.page >= 0) {
+                state.sub[state.page] = words.size() > 1 ? std::atoi(words[1].c_str()) : 0;
+                state.sheet[state.page] = words.size() > 2 ? std::atoi(words[2].c_str()) : 0;
+            }
+            Frames(3);
+        } else if (verb == "set" || verb == "press") {
+            const std::size_t eq = verb == "set" ? rest.find('=') : std::string::npos;
+            if (verb == "set" && eq == std::string::npos) Refuse("The step \"" + step + "\" needs a widget and a value: set <widget>=<value>.");
+            const std::string widget = verb == "set" ? rest.substr(0, eq) : rest;
+            ui::TestSet(widget.c_str(), verb == "set" ? rest.substr(eq + 1).c_str() : "1");
+            for (int i = 0; i < 8 && ui::TestPending() && !Over(); ++i) Frames(1);
+            if (ui::TestPending())
+                Fail(ui::TestGrey() ? "The widget \"" + widget + "\" is grey. The step \"" + step + "\" did nothing."
+                                    : "The page does not show a widget \"" + widget + "\". The step \"" + step +
+                                          "\" did nothing.");
+            Frames(3);
+        } else if (verb == "key") {
+            if (!ui::TestKey(rest.c_str(), true)) Refuse("The key " + rest + " is not known.");
+            Frames(2);
+            ui::TestKey(rest.c_str(), false);
+            Frames(3);
+        } else if (verb == "shot") {
+            ui::SaveFrame(rest);
+            Frames(1);
+            std::string why;
+            if (!Over() && !ui::FrameSaved(&why)) Fail("Cannot write " + rest + ". " + why);
+        } else {
+            Refuse("The step \"" + step + "\" is not known.");
+        }
+    }
+};
+
+const char* AskName(const Session& s) {
+    return s.closed ? "close" : s.ask == ui::FrameAsk::kPlay ? "play" : s.ask == ui::FrameAsk::kExit ? "exit" : "nothing";
+}
+
+// --check: the window with no window on the screen and no game.
+int Check(const std::wstring& game_dir, const std::string& ini, const std::string& save, const std::string& page,
+          int sub, int sheet, const std::vector<std::string>& steps, const std::string& capture, double scale) {
+    bof3x::Config cfg;
+    if (!ini.empty()) {
+        std::string why;
+        if (!bof3x::ConfigLoad(bof3::os::ToWide(ini.c_str()), cfg, why)) Fail("Cannot read " + ini + ".");
+        if (!why.empty()) Fail(why);
+    }
+    Session s;
+    if (!ui::FrameOpen(s.state, page.c_str())) Refuse("The page " + page + " is not known.");
+    if (s.state.page >= 0) {
+        s.state.sub[s.state.page] = sub;
+        s.state.sheet[s.state.page] = sheet;
+    }
+    ui::OpenOptions options;
     options.title = kTitle;
-    options.scale = scale > 0 ? scale : 1;   // a capture does not depend on the display it was made on
+    options.scale = scale > 0 ? scale : 1;   // a check does not depend on the display it was made on
     options.hidden = true;
     std::string why;
-    if (!bof3x::ui::Open(options, &why)) {
-        std::fprintf(stderr, "bof3x-launcher-ui: The window did not open. %s\n", why.c_str());
-        return 1;
+    if (!ui::Open(options, &why)) Fail("The window did not open. " + why);
+    g_window_open = true;
+    ui::PagesOpen(s.pages, game_dir, cfg);
+
+    s.Frames(4);
+    for (const std::string& step : steps) {
+        if (s.Over()) break;
+        s.Step(step);
     }
-    // What the window asked, the first time it asked: a check reads it from the line below.
-    bof3x::ui::FrameAsk asked = bof3x::ui::FrameAsk::kNone;
-    // A page settles over its first frames (sizes measured in one frame are used in the next).
-    auto frames = [&](int count, bool save) {
-        for (int i = 0; i < count; ++i) {
-            if (!bof3x::ui::FrameBegin()) return;
-            const bof3x::ui::FrameAsk ask = bof3x::ui::FrameDraw(state);
-            if (asked == bof3x::ui::FrameAsk::kNone) asked = ask;
-            if (save && i == count - 1) bof3x::ui::SaveFrame(file);
-            bof3x::ui::FrameEnd();
-        }
-    };
-    frames(4, false);
-    for (const std::string& key : presses) {
-        if (!bof3x::ui::TestKey(key.c_str(), true)) {
-            bof3x::ui::Close();
-            Refuse("The key " + key + " is not known.");
-        }
-        frames(2, false);
-        bof3x::ui::TestKey(key.c_str(), false);
-        frames(3, false);
+    if (!capture.empty() && !s.Over()) {
+        s.Frames(1);
+        ui::SaveFrame(capture);
+        s.Frames(1);
+        if (!ui::FrameSaved(&why)) Fail("Cannot write " + capture + ". " + why);
     }
-    frames(2, true);
-    const bool saved = bof3x::ui::FrameSaved(&why);
-    if (saved) {
-        const int tab = state.page;
-        std::printf("bof3x-launcher-ui: wrote %s (scale %g, renderer %s); page %d sub %d sheet %d, asked %s\n",
-                    file.c_str(), bof3x::ui::Scale(), bof3x::ui::RendererName(), tab, tab >= 0 ? state.sub[tab] : 0,
-                    tab >= 0 ? state.sheet[tab] : 0,
-                    asked == bof3x::ui::FrameAsk::kPlay ? "play" : asked == bof3x::ui::FrameAsk::kExit ? "exit" : "nothing");
-    } else {
-        std::fprintf(stderr, "bof3x-launcher-ui: Cannot write %s. %s\n", file.c_str(), why.c_str());
+
+    // What the window on the screen does with the settings (main, below).
+    bool saved = false;
+    if (s.ask == ui::FrameAsk::kPlay) {
+        ui::PagesApply(s.pages);
+        if (!game_dir.empty() && !bof3x::ConfigResolveLanguage(game_dir, cfg, why)) Fail(why);
+        saved = true;
+    } else if (s.Over() && s.pages.applied) {
+        saved = true;
     }
-    bof3x::ui::Close();
-    return saved ? 0 : 1;
+    if (saved && !save.empty() && !bof3x::ConfigSave(bof3::os::ToWide(save.c_str()), cfg)) Fail("Cannot write " + save + ".");
+    const int tab = s.state.page;
+    std::printf("bof3x-launcher-ui: check (scale %g, renderer %s); page %d sub %d sheet %d, asked %s, %s\n",
+                ui::Scale(), ui::RendererName(), tab, tab >= 0 ? s.state.sub[tab] : 0,
+                tab >= 0 ? s.state.sheet[tab] : 0, AskName(s), saved ? "saved the settings" : "saved nothing");
+    ui::Close();
+    g_window_open = false;
+    return 0;
 }
 
 }  // namespace
@@ -137,15 +234,17 @@ int Capture(const std::string& file, const std::string& page, int sub, int sheet
 // The start's refusals (launcher/start.h): on stderr and in a message box.
 [[noreturn]] void bof3x::StartDie(const std::wstring& message) {
     bof3::os::PrintW(stderr, L"bof3x-launcher-ui: " + message + L"\n");
-    bof3x::ui::Message(kTitle, bof3::os::ToUtf8(message.c_str()).c_str(), true);
-    if (g_window_open) bof3x::ui::Close();
+    ui::Message(kTitle, bof3::os::ToUtf8(message.c_str()).c_str(), true);
+    if (g_window_open) ui::Close();
     std::exit(1);
 }
 
 int main(int argc, char* argv[]) {
     std::wstring named;
     std::vector<std::wstring> game_args;
-    std::string capture, page = "title", keys;
+    std::string capture, page = "title", ini, save;
+    std::vector<std::string> steps;
+    bool check = false;
     int sub = 0, sheet = 0;
     double scale = 0;
     auto number = [](const char* text, const char* what) {
@@ -156,19 +255,29 @@ int main(int argc, char* argv[]) {
     };
     for (int i = 1; i < argc; ++i) {
         const std::string arg = argv[i];
-        if (arg == "--game" && i + 1 < argc) {
+        const bool more = i + 1 < argc;
+        if (arg == "--game" && more) {
             named = bof3::os::ToWide(argv[++i]);
-        } else if (arg == "--capture" && i + 1 < argc) {
+        } else if (arg == "--check") {
+            check = true;
+        } else if (arg == "--capture" && more) {
             capture = argv[++i];
-        } else if (arg == "--page" && i + 1 < argc) {
+            check = true;
+        } else if (arg == "--ini" && more) {
+            ini = argv[++i];
+        } else if (arg == "--save" && more) {
+            save = argv[++i];
+        } else if (arg == "--page" && more) {
             page = argv[++i];
-        } else if (arg == "--keys" && i + 1 < argc) {
-            keys = argv[++i];
-        } else if (arg == "--sub" && i + 1 < argc) {
+        } else if (arg == "--script" && more) {
+            for (const std::string& step : Split(argv[++i], ';')) steps.push_back(step);
+        } else if (arg == "--keys" && more) {
+            for (const std::string& key : Split(argv[++i], ',')) steps.push_back("key " + key);
+        } else if (arg == "--sub" && more) {
             sub = static_cast<int>(number(argv[++i], "--sub"));
-        } else if (arg == "--sheet" && i + 1 < argc) {
+        } else if (arg == "--sheet" && more) {
             sheet = static_cast<int>(number(argv[++i], "--sheet"));
-        } else if (arg == "--scale" && i + 1 < argc) {
+        } else if (arg == "--scale" && more) {
             scale = number(argv[++i], "--scale");
             if (scale < 0.5 || scale > 8) Refuse("--scale needs a number from 0.5 to 8.");
         } else if (arg == "--") {
@@ -177,7 +286,8 @@ int main(int argc, char* argv[]) {
             Refuse("The argument " + arg + " is not known.");
         }
     }
-    if (!capture.empty()) return Capture(capture, page, sub, sheet, keys, scale);
+    if (check) return Check(named, ini, save, page, sub, sheet, steps, capture, scale);
+    if (!ini.empty() || !save.empty()) Refuse("--ini and --save are for --check. The window uses bof3x.ini.");
 
     if (named.empty()) {
         wchar_t env[1024];
@@ -185,7 +295,7 @@ int main(int argc, char* argv[]) {
         if (n > 0 && n < 1024) named = env;
     }
     const std::wstring own = bof3x::StartOwnDirectory();
-    const std::wstring ini = own + bof3x::StartSep(L"\\bof3x.ini");
+    const std::wstring ini_path = own + bof3x::StartSep(L"\\bof3x.ini");
 
     // The game: the program beside this one, with this one's ending (headless.cpp).
     std::string self;
@@ -204,42 +314,45 @@ int main(int argc, char* argv[]) {
     std::wstring game_dir, exe;
     bof3x::Config cfg;
     const bool exe_read = bof3x::StartFindGame(named, false, &game_dir, &exe);
-    const bof3x::StartSetUp set_up = bof3x::StartReadSettings(ini, game_dir, named, false, exe_read, 1, cfg);
+    const bof3x::StartSetUp set_up = bof3x::StartReadSettings(ini_path, game_dir, named, false, exe_read, 1, cfg);
     if (set_up != bof3x::StartSetUp::kNone)
         bof3x::StartDie(L"This launcher cannot make an install yet. Start bof3x-launcher and make the install on "
                         L"its Sources page. Then start this launcher again.");
 
-    bof3x::ui::OpenOptions options;
+    ui::OpenOptions options;
     options.title = kTitle;
     options.scale = scale;
     std::string why;
-    if (!bof3x::ui::Open(options, &why))
+    if (!ui::Open(options, &why))
         bof3x::StartDie(L"The window did not open. " + bof3::os::ToWide(why.c_str()));
     g_window_open = true;
-    std::fprintf(stderr, "bof3x-launcher-ui: scale %g, renderer %s\n", bof3x::ui::Scale(), bof3x::ui::RendererName());
+    std::fprintf(stderr, "bof3x-launcher-ui: scale %g, renderer %s\n", ui::Scale(), ui::RendererName());
 
-    bof3x::ui::FrameState state;
-    bof3x::ui::FrameAsk ask = bof3x::ui::FrameAsk::kNone;
-    // --keys: after six frames, each key held for two frames and let go for four.
-    const std::vector<std::string> presses = Keys(keys);
-    for (int frame = 0; ask == bof3x::ui::FrameAsk::kNone; ++frame) {
-        if (const int at = frame / 6 - 1; at >= 0 && at < static_cast<int>(presses.size())) {
-            const std::string& key = presses[static_cast<std::size_t>(at)];
-            if (frame % 6 == 0 && !bof3x::ui::TestKey(key.c_str(), true)) Refuse("The key " + key + " is not known.");
-            if (frame % 6 == 2) bof3x::ui::TestKey(key.c_str(), false);
-        }
-        if (frame > 1 << 20) frame = 1 << 10;   // a window left open for days: past every key, and no overflow
-        if (!bof3x::ui::FrameBegin()) {   // the close box: start nothing
-            ask = bof3x::ui::FrameAsk::kExit;
-            break;
-        }
-        ask = bof3x::ui::FrameDraw(state);
-        bof3x::ui::FrameEnd();
+    Session s;
+    ui::PagesOpen(s.pages, game_dir, cfg);
+    s.Frames(4);
+    for (const std::string& step : steps) {
+        if (s.Over()) break;
+        s.Step(step);
     }
+    while (!s.Over()) s.Frames(1);
     // Closed before the game starts, which opens the pad and its own window for itself (DIV-0050).
-    bof3x::ui::Close();
+    ui::Close();
     g_window_open = false;
-    if (ask != bof3x::ui::FrameAsk::kPlay) return 0;
+
+    auto save_settings = [&] {
+        if (!bof3x::ConfigSave(ini_path, cfg))
+            bof3::os::PrintW(stderr, L"bof3x-launcher-ui: cannot write " + ini_path + L"; settings not saved\n");
+    };
+    if (s.ask != ui::FrameAsk::kPlay) {
+        // Exit, or the close box: after a Back, what the pages said is saved; nothing starts.
+        if (s.pages.applied) save_settings();
+        return 0;
+    }
+    ui::PagesApply(s.pages);
+    // DIV-0102: the window's choice of language, under the cache it may have changed.
+    if (!bof3x::ConfigResolveLanguage(game_dir, cfg, why)) bof3x::StartDie(bof3x::StartWide(why));
+    save_settings();
 
     bof3x::StartApply(game_dir, cfg, false, exe_read);
     bool waited = false;

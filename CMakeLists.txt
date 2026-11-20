@@ -251,7 +251,16 @@ add_custom_command(OUTPUT "${_ui_assets}"
 set(BOF3X_LAUNCHER_UI_SOURCES
   src/launcher/ui/main.cpp
   src/launcher/ui/frame.cpp
-  src/launcher/ui/sample_page.cpp
+  src/launcher/ui/pages.cpp
+  src/launcher/ui/page_settings.cpp
+  src/launcher/ui/page_extras.cpp
+  src/launcher/ui/page_newgame.cpp
+  src/launcher/ui/page_music.cpp
+  src/launcher/ui/page_versions.cpp
+  src/launcher/ui/page_cheats.cpp
+  src/launcher/ui/page_solo.cpp
+  src/launcher/ui/page_data.cpp
+  src/launcher/ui/page_satpixie.cpp
   src/launcher/ui/ui_imgui.cpp
   "${_ui_assets}"
   src/launcher/config.cpp

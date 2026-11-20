@@ -1,0 +1,131 @@
+// The drawn launcher's pages (docs/launcher-portable.md, stage P2): the state
+// the pages share and each page's three calls. It is the Win32 window's
+// DialogState, Populate and ReadBack (config_dialog.cpp) less the windows, so
+// that a page writes the settings file the Win32 page writes:
+//
+//   Open   fills a page's boxes from the settings (Populate).
+//   Page   draws it, each frame, and changes the boxes only.
+//   Apply  writes the boxes back to the settings (ReadBack). An untouched
+//          page writes its settings back as they were read.
+//
+// The settings change only in PagesApply: on Play and on Back, as in the
+// Win32 window (docs/launcher-settings.md 2a "What is saved").
+//
+// One file for each page (page_*.cpp), which holds the boxes no other page
+// reads. The boxes more than one page reads are here.
+#pragma once
+
+#include <string>
+#include <vector>
+
+#include "launcher/config.h"
+#include "launcher/suites.h"
+
+namespace bof3x::ui {
+
+struct Pages {
+    Config* cfg = nullptr;
+    std::wstring game_dir;
+    // The overlay languages found (ConfigLanguagesAvailable), and whether
+    // "Chinese (PC script)" is offered (ConfigOriginalAvailable, DIV-0102):
+    // the Language box holds it, when offered, and then the languages.
+    std::vector<std::string> languages;
+    bool original = true;
+
+    // ---- Boxes more than one page reads ----
+    int language = 0;      // Settings: the Language box's entry
+    std::string cache;     // Data: the cache folder box's text, UTF-8, as typed
+    int preset = 0;        // Settings, Preset: the Preset box's entry (kPresets' order)
+    bool ruby_ui = false;  // Mods, Extras: "Show the Row above the text box on Settings"
+    // Game Options: the three suites as the page last showed them, and the
+    // player's choice for each: -1 untouched, 0 the PlayStation's, 1 the PSP's.
+    std::vector<SuiteState> suites;
+    std::vector<int> choice;
+    // The Jukebox's battle-chord box: -1 untouched, 0 off, 1 on (stage P5).
+    int chord = -1;
+    // Raised when the language, the cache folder or the preset changes: a
+    // page that shows what follows them (the row above the text, the preset's
+    // list, the suites, the music sources) makes it again when this differs
+    // from the number it made it at.
+    unsigned stamp = 1;
+
+    // Back applied the pages to the settings: Exit then saves them.
+    bool applied = false;
+    // Settings' Options...: SatPixie's options are shown in place of the tabs' page.
+    bool satpixie_open = false;
+};
+
+// The Win32 pages are laid out in dialog units of Segoe UI 9: 1.75 of the
+// picture's pixels across and 1.875 down. A page keeps launcher.rc's numbers.
+constexpr float Dx(float dialog_units) { return dialog_units * 1.75f; }
+constexpr float Dy(float dialog_units) { return dialog_units * 1.875f; }
+
+// A wide text of the settings model as the widgets' UTF-8.
+std::string PagesText(const std::wstring& wide);
+
+// Every page's Open, in Populate's order.
+void PagesOpen(Pages& p, const std::wstring& game_dir, Config& cfg);
+// Every page's Apply, in ApplyPages' order.
+void PagesApply(Pages& p);
+
+// The language the Language box names; empty for "Chinese (PC script)".
+std::string PagesLanguageChosen(const Pages& p);
+// The cache the game will be given: BOF3X_CACHE when the environment has it,
+// else the cache box as it stands, trimmed, else the home's own; and where
+// the game finds layers in it (none under BOF3X_CACHE_DATA=0).
+std::wstring PagesCacheRoot(const Pages& p);
+std::wstring PagesDataRoot(const Pages& p);
+// Whether the preset in the Preset box sets this ini key when the game
+// starts ("display", "background", "music"): its control is then grey.
+bool PagesPresetSets(Pages& p, const char* key);
+// That preset's plan for the Language box's language on this install, as the
+// start will make it (ConfigPresetPlan); made again when Pages::stamp moves.
+const PresetPlan& PagesPresetPlan(Pages& p);
+// The sentence a control greyed by the preset shows.
+extern const char kPresetGreyReason[];
+
+// ---- The pages -----------------------------------------------------------------
+
+// Settings and its Preset sub-page (page_settings.cpp).
+void SettingsOpen(Pages& p);
+void SettingsApply(Pages& p);
+void SettingsPage(Pages& p);
+void PresetPage(Pages& p);
+// Mods, Extras, Page 1: the launcher's extras (page_extras.cpp).
+void ExtrasOpen(Pages& p);
+void ExtrasApply(Pages& p);
+void ExtrasPage(Pages& p);
+// Mods, Extras, Page 2: New Game's two screens (page_newgame.cpp).
+void NewGameOpen(Pages& p);
+void NewGameApply(Pages& p);
+void NewGamePage(Pages& p);
+// Music (page_music.cpp).
+void MusicOpen(Pages& p);
+void MusicApply(Pages& p);
+void MusicPage(Pages& p);
+// Game Options: Graphics and audio, and Data - the three suites (page_versions.cpp).
+void VersionsOpen(Pages& p);
+void VersionsApply(Pages& p);
+void VersionsGraphicsPage(Pages& p);
+void VersionsDataPage(Pages& p);
+// Game Options, Cheats, two pages (page_cheats.cpp).
+void CheatsOpen(Pages& p);
+void CheatsApply(Pages& p);
+void CheatsPage1(Pages& p);
+void CheatsPage2(Pages& p);
+// Game Options, Solo character (page_solo.cpp).
+void SoloOpen(Pages& p);
+void SoloApply(Pages& p);
+void SoloPage(Pages& p);
+// Data: the cache folder (page_data.cpp).
+void DataOpen(Pages& p);
+void DataApply(Pages& p);
+void DataPage(Pages& p);
+// SatPixie's options, shown from Settings' Options... (page_satpixie.cpp).
+void SatpixieOpen(Pages& p);
+void SatpixiePage(Pages& p);
+
+// A page that is not in this launcher yet: its sentence.
+void PageNotYet();
+
+}  // namespace bof3x::ui

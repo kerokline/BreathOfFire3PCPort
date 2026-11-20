@@ -70,6 +70,16 @@ bool Pressed(Press press);
 // pad-start. False: no such name.
 bool TestKey(const char* name, bool down);
 
+// A widget used by its name, as if the player did it, in the next frame that
+// draws it: a button or a tab pressed (any value), a check box set ("0" or
+// "1"), a radio button chosen (any value), a combo box, a list or a slider
+// set to a number, an edit field set to a text. The name is the widget's
+// label as the page wrote it, or its part before or after ##. TestPending:
+// the widget was not drawn yet, or it is grey (TestGrey) and took nothing.
+void TestSet(const char* widget, const char* value);
+bool TestPending();
+bool TestGrey();
+
 // ---- Drawing under the widgets ------------------------------------------------
 
 struct Picture;
@@ -112,12 +122,19 @@ bool Tab(const char* label, bool on);
 bool Check(const char* label, bool* on);
 bool Radio(const char* label, int* value, int mine);
 bool Combo(const char* label, int* index, const std::vector<std::string>& items);
+// A combo box with entries the player cannot choose: `usable[i]` false shows
+// entry i grey. Every entry stays listed (the owner's standing call).
+bool ComboGreyed(const char* label, int* index, const std::vector<std::string>& items,
+                 const std::vector<bool>& usable);
 bool Slider(const char* label, int* value, int low, int high);
 bool Edit(const char* label, std::string* text);
 // A list with one line chosen; Size gives its box.
 bool List(const char* label, int* index, const std::vector<std::string>& items);
 // A text. With a width from Size it wraps at that width.
 void Label(const char* text);
+// A text of many lines in a box that scrolls, read and not changed; the
+// keyboard and the pad reach it and scroll it. Size gives its box.
+void ReadText(const char* label, const std::string& text);
 void Progress(float fraction);
 
 // A box with a title; the widgets up to GroupEnd are placed in its pixels.

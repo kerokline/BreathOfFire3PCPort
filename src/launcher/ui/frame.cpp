@@ -2,6 +2,7 @@
 #include "launcher/ui/frame.h"
 
 #include "launcher/ui/assets.h"
+#include "launcher/ui/pages.h"
 #include "launcher/ui/ui.h"
 
 #include <algorithm>
@@ -29,30 +30,31 @@ const char* const kTabNames[kFrameTabs] = {"settings", "controls", "music", "gam
 
 // A tab's pages, as config_dialog.cpp's kSubPages: a tab with more than one
 // shows a sub-tab button for each `label`; a sub-tab with more than one page
-// shows a third row of buttons, one for each `sheet`. `body` draws the page;
-// null: the page is not in this launcher yet (stages P2 to P5).
+// shows a third row of buttons, one for each `sheet`. `body` draws the page
+// (launcher/ui/pages.h); null: the page is not in this launcher yet (the
+// Controls pages are stage P3's, the Mods page stage P4's).
 struct SubPage {
     int tab;
     const char* label;
     const char* sheet;
-    void (*body)();
+    void (*body)(Pages&);
 };
 constexpr SubPage kSubPages[] = {
-    {0, "Settings", nullptr, SamplePage},
-    {0, "Preset", nullptr, nullptr},
+    {0, "Settings", nullptr, SettingsPage},
+    {0, "Preset", nullptr, PresetPage},
     {1, "Directions and buttons", nullptr, nullptr},
     {1, "Shoulders, Start and Select", nullptr, nullptr},
     {1, "Function keys", nullptr, nullptr},
-    {2, nullptr, nullptr, nullptr},
-    {3, "Graphics and audio", nullptr, nullptr},
-    {3, "Data", nullptr, nullptr},
-    {3, "Cheats", "Page 1", nullptr},
-    {3, "Cheats", "Page 2", nullptr},
-    {3, "Solo character", nullptr, nullptr},
+    {2, nullptr, nullptr, MusicPage},
+    {3, "Graphics and audio", nullptr, VersionsGraphicsPage},
+    {3, "Data", nullptr, VersionsDataPage},
+    {3, "Cheats", "Page 1", CheatsPage1},
+    {3, "Cheats", "Page 2", CheatsPage2},
+    {3, "Solo character", nullptr, SoloPage},
     {4, "Data", nullptr, nullptr},
-    {4, "Extras", "Page 1", nullptr},
-    {4, "Extras", "Page 2", nullptr},
-    {5, nullptr, nullptr, nullptr},
+    {4, "Extras", "Page 1", ExtrasPage},
+    {4, "Extras", "Page 2", NewGamePage},
+    {5, nullptr, nullptr, DataPage},
 };
 
 bool SameSubTab(const SubPage& a, const SubPage& b) {
@@ -117,10 +119,21 @@ FrameAsk Title(FrameState& state) {
     return ask;
 }
 
-FrameAsk Configure(FrameState& state) {
+FrameAsk Configure(FrameState& state, Pages& pages) {
     Fill(0, 0, kPictureW, kBandH, kBlack);
     Fill(0, kBandH, kPictureW, kPictureH - kBandH, Paper());
     Banner(0);
+
+    // SatPixie's options, from Settings' Options...: in place of the tabs and
+    // their page until its own buttons close it (the Win32 launcher shows a
+    // window of its own). Escape and the pad's circle close it as its Cancel.
+    if (pages.satpixie_open) {
+        AreaBegin("##satpixie", kMargin, kTabsY, kPictureW - 2 * kMargin, kPictureH - kTabsY - kBottom);
+        SatpixiePage(pages);
+        AreaEnd();
+        if (Pressed(Press::kBack)) pages.satpixie_open = false;
+        return FrameAsk::kNone;
+    }
 
     // The tabs from the left, each as wide as its label; Back at the right.
     const int tab = state.page;
@@ -143,6 +156,7 @@ FrameAsk Configure(FrameState& state) {
     const bool back = Button("Back");
     state.opened = false;
     if (back || Pressed(Press::kBack)) {
+        PagesApply(pages);   // an Exit from the title page then saves them; Play would have anyway
         state.page = -1;
         state.opened = true;
         return FrameAsk::kNone;
@@ -208,13 +222,8 @@ FrameAsk Configure(FrameState& state) {
     if (shown) {
         const float top = shown->sheet ? kSheetPageY : shown->label ? kSubPageY : kPageY;
         AreaBegin("##page", kMargin, top, kPictureW - 2 * kMargin, kPictureH - top - kBottom);
-        if (shown->body) {
-            shown->body();
-        } else {
-            Place(0, 4);
-            Size(kPictureW - 2 * kMargin);
-            Label("This page is not in this launcher yet. To change these settings, use bof3x-launcher.");
-        }
+        if (shown->body) shown->body(pages);
+        else PageNotYet();
         AreaEnd();
     }
     return Pressed(Press::kStart) ? FrameAsk::kPlay : FrameAsk::kNone;
@@ -237,6 +246,8 @@ bool FrameOpen(FrameState& state, const char* name) {
     return false;
 }
 
-FrameAsk FrameDraw(FrameState& state) { return state.page < 0 ? Title(state) : Configure(state); }
+FrameAsk FrameDraw(FrameState& state, Pages& pages) {
+    return state.page < 0 ? Title(state) : Configure(state, pages);
+}
 
 }  // namespace bof3x::ui

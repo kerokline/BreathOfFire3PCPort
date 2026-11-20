@@ -6,6 +6,8 @@
 
 namespace bof3x::ui {
 
+struct Pages;
+
 // What the player asked of the window in this frame.
 enum class FrameAsk {
     kNone,
@@ -26,11 +28,10 @@ struct FrameState {
 // ("settings", "controls", "music", "game", "mods", "data"). False: no such face.
 bool FrameOpen(FrameState& state, const char* name);
 
-// One frame of the window, between ui::FrameBegin and ui::FrameEnd.
-FrameAsk FrameDraw(FrameState& state);
-
-// A sample of every widget, in the Settings page's arrangement, for the look
-// (sample_page.cpp). It changes no setting; stage P2's Settings page replaces it.
-void SamplePage();
+// One frame of the window, between ui::FrameBegin and ui::FrameEnd. Back
+// applies the pages to the settings (PagesApply), so an Exit from the title
+// page then saves them; Play is the caller's to apply and save
+// (docs/launcher-settings.md 2a, "What is saved").
+FrameAsk FrameDraw(FrameState& state, Pages& pages);
 
 }  // namespace bof3x::ui
