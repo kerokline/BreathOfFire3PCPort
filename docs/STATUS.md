@@ -8,6 +8,15 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
+**The drawn launcher's Jukebox and save editor, 2026-11-20 (stage P5 of [`launcher-portable.md`](launcher-portable.md),
+its section 13; the same local branch as the paragraphs below).** With them every window of the Win32 launcher is in the
+drawn one. The Jukebox plays through SDL's audio stream: its samples equal the Win32 player's byte for byte for seven
+songs of different kinds (`tools/jukebox_host`), and one song's on Linux. The save editor is over the unchanged format
+core: `save_editor_check.py` says the Win32 driver's 33 checks again and 64 more with no window (97, 0 failures), and
+the files both editors write from one input are the same byte for byte. "A game is running" is asked of the seam
+(`os/running.h`), the game unchanged. `ui_compare.py` is 66 cases, 66 equal. **Owed before stage P6, the cutover:** a
+hand on the window, sound heard, the pickers and questions seen on a screen - none of it done by anybody yet.
+
 **The drawn launcher's Sources and Mods pages, 2026-11-20 (stage P4 of [`launcher-portable.md`](launcher-portable.md),
 its section 12; the same local branch as the paragraphs below).** The Sources page, the Mods tab's Data page and the
 start's flows that need them: a first run opens the Sources page, an install of an older release asks for the rebuild,

@@ -1,9 +1,10 @@
 # One launcher for Windows and Linux: what it would take
 
 **Status:** IN PROGRESS (2026-11-20: stage P0 is in `main`, the Linux
-round's group C7; stage P1, the frame, stage P2, the settings pages, stage
-P3, Controls, and stage P4, Sources and Mods, are built on the local branch
-`launcher/p1-frame`, sections 9 to 12; stages P5 and P6 are not started. Sections 1 to 8 are the staging of 2026-11-19, measured
+round's group C7; stages P1 to P5 - the frame, the settings pages,
+Controls, Sources and Mods, the Jukebox and the save editor - are built on
+the local branch `launcher/p1-frame`, sections 9 to 13; stage P6, the
+cutover, is not started and waits for the owner's hand on the window. Sections 1 to 8 are the staging of 2026-11-19, measured
 at `main` `8cd45199`.)
 An estimate and a staging for the owner's question "a launcher that works on
 either Windows or Linux". It is tier 3 of [`linux-round.md`](linux-round.md)
@@ -809,3 +810,135 @@ the install's own files keep their times; `ui_compare.py` 66 cases, 66
 equal, with both launchers rebuilt; in the WSL the Mods and Sources pages
 list the home this stage built there; the gates of section 9 and
 `linux_tree.py --check` pass.
+
+## 13. Stage P5 as run (2026-11-20, branches `launcher/p5-jukebox` and `launcher/p5-saves`, merged into `launcher/p1-frame`)
+
+### The Jukebox
+
+**What is built.** The Jukebox (`IDD_MUSIC`, 14 controls) in
+`src/launcher/ui/page_jukebox.cpp`: a port of `music_player.cpp`'s lists,
+names and dialog procedure less the windows, with the texts word for word.
+It is shown in place of the title page from its Jukebox button, as the
+Sources page is; its Close, Escape and the pad's circle stop the sound and
+go back. The sound is `jukebox_play.cpp`'s: the Win32 player's `Mp3Stream`
+and `SeqStream`, and one SDL device stream in place of `waveOut`, refilled
+on SDL's audio thread in the Win32 player's blocks of 2048 frames under the
+stream's lock. It is the Jukebox's own file that calls SDL's audio, and it
+names no operating system. A song that plays once wakes the window when it
+ends, so a playing Jukebox draws no frames. The window fits as
+`launcher.rc` lays it out (320 x 186 units); nothing is moved. The note and
+the status scroll where the Win32 labels cut a long text. The battle-chord
+box sets `Pages::chord`, which the Game Options page's Apply writes with
+the suites, as the Win32 window's `DialogState::chord`.
+
+**Additions.** `ui.h`: `ComboGreyText`, a combo whose grey entries can
+still be chosen. `pages.h`: `jukebox_open` and the page's four calls.
+`frame.cpp`: the button, `JukeboxFace`. `main.cpp`: `--samples`, `report
+jukebox`, `rest`. A check's Jukebox plays to SDL's dummy driver whatever
+the environment says. Build: the page, the player and the decoders in the
+source list; `music-names.tsv` copied beside the Linux build too.
+
+**The proof: the samples equal the old path's.**
+`tools/jukebox_host/old_pcm.cpp` compiles `music_player.cpp` unchanged and
+writes what its streams render in its Output's blocks, with no window and
+no `waveOut`. Against the drawn launcher's `--samples` file of the same
+song, over 21 to 25 s, seven songs, all byte for byte: a PlayStation song
+and a PSP layer's song from the cache, a PC MP3 across its measured loop
+and crossfade, a PC MP3 that rewinds, a song that plays once, a disc jingle
+(an XA clip) and a PC stream. In the WSL, song 001 from the US disc's
+install equals the Windows dump of the same song over 1,083,392 frames.
+
+**Measured with `--check`.** The list (141 rows: 130 songs and 11 streams),
+songs started, chosen while playing, the source changed while playing,
+stopped; the chord box on writes `opt=area4-walls,psp-chord-one-tone`, and
+on then off writes the ini byte for byte; grey streams and Play's sentence
+for them; an install with no songs; keys and pad. Captures at scales 1 and
+2. `ui_compare.py` has no Jukebox case: the Win32 Jukebox opens `waveOut`
+as it opens, so it was not run on the owner's machine, and the chord box is
+compared with the Win32 window by no run.
+
+**Not run, and for the owner's ear and eye.** Real sound on any device; a
+hand on the page. Play decodes a PC MP3 on the frame's thread, as the Win32
+window did under its wait cursor: about 100 ms for the largest. The Win32
+window has no Next button, no position display and no pad navigation; the
+drawn page has none of the first two, and Dear ImGui's navigation. Carried
+from the Win32 code: the chord note says "Off: two tones..." when the box
+is ticked too; whether Play and Stop are grey is decided once, when the
+page opens.
+
+### The save editor
+
+**What is built.** The save editor (`IDD_SAVEEDIT`, 17 controls) in
+`src/launcher/ui/page_saves.cpp`: a port of `save_dialog.cpp` less the
+windows, over `launcher/save/` unchanged, with the texts word for word.
+Mods' Save Editor... opens it in place of the tabs, and its Close or Escape
+goes back. A Win32 message box that waited is a question asked in the next
+frames, and the rest of the action runs on its answer; the page is grey
+while a question or a picker waits. The window is 430 x 292 dialog units
+and is laid out again in the page area, every control kept: the file boxes
+are 246 and 194 wide, the sections list 86 x 120, the record box and the
+field list 256 wide, the field list 105 high, the value box 170, the
+buttons 54.
+
+**"A game is running" is asked of the seam** (`os/running.h`:
+`ProgramsRunning`, `WindowClassOpen`): a process of the game's program,
+`bof3x.exe` or `bof3x`, and on Windows a window of the class `Bof3`, which
+is what `FindWindowW` was asked before (D428). An answer of "cannot tell"
+counts as not running, as a failed `FindWindowW` did. No change to the
+game.
+
+**Additions.** `ui.h`: `ComboWide`, `EditCombo`, `ColumnList`, `AskNo`,
+`PickFileIn`, and `Message` silent in a check (it showed SDL's box in a
+hidden window before). `pages.h`: `saves_open`, `SavesBegin`, `SavesPage`,
+`SavesText`, `SavesGameMarks`. `main.cpp`: `report saves`, `game-program`,
+`game-window`. The Linux build copies `save-names.tsv` beside the launcher.
+
+**Measured.** `save_tests` 1,522 checks, 0 failures.
+`tools/launcher_host/save_editor_check.py` says `save_editor_drive.py`'s 33
+checks again against the drawn editor with no window, and 64 more (an
+edit, the checksum question, refusals, the running game by a stand-in, the
+discard and replace questions, the kinds of field, a PC file elsewhere): 97
+checks, 0 failures on Windows; 56 of them pass in the WSL. **The same file
+from both editors:** the Win32 window on copies of the same input
+(`save_editor_drive.py` with a Japanese card and with a US card, and a
+field edit, a replace and a damaged save) wrote the same slot and card
+files byte for byte. `os_host` 624 checks on Windows and 540 in the WSL, 0
+failed. Every save worked on was a copy; the owner's saves keep their
+dates.
+
+**Differences from the Win32 editor, for the owner.** The launcher's close
+box ends the program even with an unsaved change in the editor (the Win32
+editor is a modal window, so its owner cannot be closed). Enter runs Set
+only in the value box (the Win32 window: anywhere); in the field list,
+Enter chooses a row and Enter again uses it, as a double-click. A warning
+shows the information icon, and there is no beep on a refused value. The
+new-card picker is SDL's save dialog, which on Windows asks before it names
+a card that exists. New sentences, which the Win32 window had no place for:
+the picker's title "Select a memory card file, or type the name of a new
+one", and four grey reasons ("This section has one record.", "Select a
+field.", "Answer the question first.", "Close the file window first."). A
+long cell in the field list ends at its column's edge with no "...".
+
+### After both merges (the coordinator's own runs)
+
+Four files conflicted between the two branches (each appended at the same
+places); both sides are kept. Then: the 32-bit build whole and the drawn
+launcher at 64 bits; the Linux build with both pages and both names files
+beside it, where the Jukebox plays song 000 to the dummy driver and the
+save editor opens; `save_editor_check.py` again on the merged build, 97
+checks, 0 failures; an untouched window with the Jukebox, every page, the
+save editor and the Sources page opened writes the owner's `bof3x.ini` byte
+for byte, and the owner's saves keep their dates; the game's self-tests
+through the drawn launcher's Play end 0; `ui_compare.py` 66 cases, 66
+equal, run alone (the two branches' own runs disturbed each other: both
+wrote the one launcher copy's `bof3x.ini`, and each saw cases unequal once
+and equal when run again); the gates of section 9 and `linux_tree.py
+--check`. `src/launcher/ui/` is 8,698 lines.
+
+**What stage P6 finds ready.** Every window of the Win32 launcher is in the
+drawn one: the title page, Configure's pages, Controls and the capture,
+Sources, Mods, the Jukebox, the save editor. Not yet done anywhere: a hand
+on the window (the mouse, a keyboard, a pad), sound heard, a picker, a
+question or a message box seen on a screen, a display scaled other than
+100 %, a Deck, Windows Defender's verdict, and the release's files beside
+the program (the two names files, the fonts' and libraries' notices).

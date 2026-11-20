@@ -113,18 +113,20 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      stale, and so is the second backend as tier 2's gate in the line below (call 1 chose DXVK-native). Found for the staging:
      nothing on Linux reads `bof3x.ini`, the seam starts no process, the movie's picture is a `Fatal` off Windows, LB8 did
      not run, and no Windows 64-bit state-hash reference is recorded. **A launcher for both systems** is estimated in
-     [`launcher-portable.md`](launcher-portable.md) (IDEAS I69); its stage P0 is the round's group C7. **Its stages P1 to P4 are built
+     [`launcher-portable.md`](launcher-portable.md) (IDEAS I69); its stage P0 is the round's group C7. **Its stages P1 to P5 are built
      (2026-11-20, branch `launcher/p1-frame`, local, not pushed): `bof3x-launcher-ui`, Dear ImGui on SDL3, the title
-     page, Configure, every settings page, the Controls pages and the bind capture, the Sources and Mods pages, its
-     sections 9 to 12.** The proof: `python
+     page, Configure, every settings page, the Controls pages and the bind capture, the Sources and Mods pages, the Jukebox
+     and the save editor, its sections 9 to 13: every window of the Win32 launcher.** The proof: `python
      tools/launcher_host/ui_compare.py --ui build/bof3x-launcher-ui.exe --win32 <ini-less launcher copy> --home <home>
      --game <game folder> --ini <a copy of a bof3x.ini> --out <dir>`, 66 cases equal (it shows the Win32 window for a
      moment in each case and never sends Play). A page is checked with no screen by `build/bof3x-launcher-ui.exe --check
      --ini IN --save OUT --script "open settings; set wide=1; press Back; press Exit"`. Next there: the owner's eye on
      the pages, a hand on the window, a real key and pad on the capture (Pause and NumLock after D427's fix); the owner's
-     one install made through the Sources page, and the pickers and the rebuild question seen on a screen; then P5
-     (the Jukebox and the save editor), each page one `page_*.cpp` over `src/launcher/ui/pages.h`, with its rows added
-     to `ui_compare.py`. Two rules the gates taught: no widget call named as an engine accessor is (`At`), and a colour
+     one install made through the Sources page, the pickers and the questions seen on a screen, and the Jukebox heard; then P6, the cutover
+     (`launcher-portable.md` sections 5 and 13's last paragraph; the owner's call 3, what becomes of the Win32 dialogs,
+     is open). The checks with no window: `ui_compare.py` (above; run it alone, two runs on one launcher copy disturb
+     each other), `tools/launcher_host/save_editor_check.py` (97 checks; copies of saves only), `tools/jukebox_host`
+     (the samples; `SDL_AUDIODRIVER=dummy`, and a check's Jukebox is silent whatever it says), `tools/key_host`. Two rules the gates taught: no widget call named as an engine accessor is (`At`), and a colour
      as red, green and blue, never one hexadecimal number. An unattended run of it without `--check` that the start can
      refuse shows a modal message box.
    - **`BOF3.exe` out of the player's run: groups X1 to X6 built on the local branch `exe-retire/round` (2026-11-19), not
