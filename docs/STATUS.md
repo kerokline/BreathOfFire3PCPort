@@ -8,6 +8,14 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
+**The drawn launcher's settings pages, 2026-11-20 (stage P2 of [`launcher-portable.md`](launcher-portable.md), its
+section 10; the same local branch as the paragraph below).** Every settings page is written from the Win32 page's fill
+and read-back code: Settings, Preset, the three suites, the cheats, the solo character, Extras, New Game, Music, the
+cache folder, SatPixie's options. The window saves as the Win32 one does. `tools/launcher_host/ui_compare.py` makes the
+same choices in both launchers and compares the settings files: 48 cases, 48 equal byte for byte, on the owner's
+install read and not written. The banner is TeX Gyre Pagella, built in ([`THIRD_PARTY.md`](THIRD_PARTY.md) section 7; the
+owner's choice), the same on both systems. **Owed:** the owner's eye on the pages, a hand on the window; stages P3 to P6.
+
 **The drawn launcher's frame, 2026-11-20 (stage P1 of [`launcher-portable.md`](launcher-portable.md), IDEAS I69; on the local
 branch `launcher/p1-frame`, not merged to `main`, not pushed).** Asked by the owner that morning. A second executable,
 `bof3x-launcher-ui`, drawn by Dear ImGui `v1.92.9b` on SDL3's renderer ([`THIRD_PARTY.md`](THIRD_PARTY.md) section 6): the

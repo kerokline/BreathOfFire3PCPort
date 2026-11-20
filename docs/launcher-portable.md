@@ -1,16 +1,16 @@
 # One launcher for Windows and Linux: what it would take
 
 **Status:** IN PROGRESS (2026-11-20: stage P0 is in `main`, the Linux
-round's group C7; stage P1, the frame, is built on the branch
-`launcher/p1-frame` and waits for the owner's look, section 9; stages P2 to
-P6 are not started. Sections 1 to 8 are the staging of 2026-11-19, measured
+round's group C7; stage P1, the frame, and stage P2, the settings pages,
+are built on the local branch `launcher/p1-frame`, sections 9 and 10; stages
+P3 to P6 are not started. Sections 1 to 8 are the staging of 2026-11-19, measured
 at `main` `8cd45199`.)
 An estimate and a staging for the owner's question "a launcher that works on
 either Windows or Linux". It is tier 3 of [`linux-round.md`](linux-round.md)
 (section 5, stand-in 3; section 8) and IDEAS I69. Stage P0 below is also
 group C7 of that round's staging and is needed for any native Linux build.
 Of the owner's four calls in section 7, calls 1 and 4 are answered; calls 2
-and 3 are open.
+and 2 are answered; call 3 is open.
 
 Every count was made by the command beside it. What was not measured is in
 section 8. The licence remarks in section 4 are a reading, not advice, and
@@ -404,3 +404,105 @@ library; not tried.
 and `--sheet N` for a tab's sub-tab and its page; `--scale 2`; `--keys
 right,enter`). With no `--capture` it opens the window; it wants
 `bof3x.exe` beside it and finds the game as `bof3x-launcher` does.
+
+## 10. Stage P2 as run (2026-11-20, branch `launcher/p1-frame`)
+
+**What is built.** Every settings page of the staging's P2 row, each a port
+of the Win32 page's fill and read-back code (`config_dialog.cpp` Populate,
+ReadBack and their helpers) less the windows, with the texts word for word:
+
+| Page | File (`src/launcher/ui/`) |
+|---|---|
+| Settings, with the row above the text and the preset's greying; Preset, with its list | `page_settings.cpp` |
+| Game Options: Graphics and audio, Data (the three suites) | `page_versions.cpp` |
+| Game Options: Cheats, two pages | `page_cheats.cpp` |
+| Game Options: Solo character | `page_solo.cpp` |
+| Mods, Extras: Page 1 | `page_extras.cpp` |
+| Mods, Extras: Page 2 (New Game's two screens) | `page_newgame.cpp` |
+| Music | `page_music.cpp` |
+| Data: the cache folder | `page_data.cpp` |
+| SatPixie's options, from Settings' Options... | `page_satpixie.cpp` |
+
+`pages.h` is the contract: a page has an Open (fills its boxes from the
+settings), a Page (draws, and changes boxes only) and an Apply (writes the
+boxes back). The settings change only in `PagesApply`, on Play and on Back,
+in `ApplyPages`' order. **The window now saves as the Win32 one does**
+([`launcher-settings.md`](launcher-settings.md) 2a): Play applies, saves
+`bof3x.ini` and starts the game; Back applies; an Exit after a Back saves and
+starts nothing; an Exit or the close box with no Back saves nothing. The
+sample page of P1 is gone. 3,162 lines in `src/launcher/ui/` (P1 and P2).
+
+**Not in it, by the staging:** the Controls pages (P3), Mods' Data page and
+the Sources page (P4; Data's Sources... button is grey with that sentence),
+the Jukebox and the save editor (P5).
+
+**The proof of the staging: the same settings file, byte for byte.**
+`tools/launcher_host/ui_compare.py` makes the same choices in both
+launchers from one starting `bof3x.ini`, then Back and Exit, and compares
+the two files. The drawn side runs with no window (`--check`, below). The
+Win32 side is the Win32 launcher's own window, driven by control id as
+`dialog_test.py` drives it; it never sends Play, and it looks for a game
+started by mistake after each case (none was).
+**48 cases, 48 equal**, on the owner's install read and not written (a copy
+of its `bof3x.ini`; `BOF3X_HOME` and `--game` name it): an untouched window;
+every control of Settings, Preset, Extras, Data, Music, the three suites,
+the cheats on both pages with their Defaults, the solo character, New
+Game's two boxes; SatPixie's sliders, toggles, mask, Defaults, OK and
+Cancel; a choice under a preset that greys Display; a suite chosen and
+chosen back; and one case with a choice on eight pages at once.
+`python tools/launcher_host/ui_compare.py --list` prints each case's steps.
+
+**Also measured.**
+
+- **An untouched window writes the owner's `bof3x.ini` byte for byte**, with
+  every page opened first (`cmp`).
+- **Grey controls.** A script step on a grey widget ends the program with
+  exit code 1 and "is grey", so greying is a thing a check asks for. Shown
+  so: Display, "Keep the game running" and the Music box under the presets
+  that set them; a suite's side the cache cannot play (four caches of
+  hand-written manifests: none, PlayStation only, a PSP base, a wrong
+  policy); the solo character's boxes with the rule off; New Game's boxes
+  under Chinese (PC script) and under "As shipped"; Options... without the
+  CRT look. Every option stays listed.
+- **A multiplier over the cap** (`cheat.exp=37`) is shown as 10 and written
+  back as 37 by an untouched page, as the Win32 page.
+- **Linux.** The pages build in the WSL and a script over six pages writes
+  the expected lines there (no install: the language box holds the PC
+  script alone, as the model says for a folder with no language files).
+- **Both Windows widths** build. The gates of section 9 pass.
+
+**How a page is checked** (`main.cpp`'s header has it all): `--check` is the
+window with no window on the screen and no game; `--ini FILE` and `--game
+DIR` are what it reads, `--save FILE` gets the settings where the window
+would save them, and `--script` is steps with `;` between them: `open <page>
+[<sub> [<sheet>]]`, `set <widget>=<value>`, `press <widget>`, `key <name>`,
+`shot <file.png>`. A widget's name is its label, or the name the page gave
+it (`wide`, `look`, `graphics-psp`, `exp`, `champion`, `names`...).
+
+**What changed in the look's widgets.** A check box and a radio button are
+lower than a button, so rows 11 dialog units apart do not touch.
+`ComboGreyed` (entries the player cannot choose), `ReadText` (the preset's
+list) and `SliderShowing` (a slider that shows a text for its step) are new.
+
+**Not run, not built, and for the owner's eye.**
+
+- **A hand on any page**: the mouse, a pad, a keyboard. Every check went
+  through `--script`.
+- The folder picker behind Data's Browse... (SDL's): never shown.
+- **SatPixie's options do not fit as the Win32 window lays them out** (252
+  dialog units high against 214): the rows are closer, each value shows
+  inside its slider, and OK, Cancel and Defaults are a column at the right.
+  Every control and text is kept. The owner's look is owed.
+- **The Cheats sliders show their number twice**: inside the bar, and in
+  the Win32 page's value label beside it.
+- A `solo.champion=` that names no champion is cut off in its closed box,
+  as the Win32 box cuts it.
+- The comparison's entry numbers are this install's (which languages it
+  holds, which row above the text is grey): on another install the table's
+  values want a look.
+- The Jukebox's battle-chord box (`Pages::chord`) is passed to the suites'
+  edit as the Win32 code passes it, and nothing sets it before P5.
+- Carried from the Win32 code as it is, each seen in the port: the Music
+  box is read back even when a preset greys it; the Data sub-page's member
+  note says "see the note above" where that page has no note line; a
+  manifest error's sentence runs into the member list with no full stop.
