@@ -5,6 +5,8 @@
 
 #include <windows.h>
 
+#include "os/case_check.h"
+
 namespace bof3::os {
 
 namespace {
@@ -22,7 +24,9 @@ std::filesystem::path Path(const char* narrow) noexcept {
         if (n <= 0) return std::filesystem::path();
         std::wstring w(static_cast<std::size_t>(n), L'\0');
         if (MultiByteToWideChar(cp, 0, narrow, len, w.data(), n) != n) return std::filesystem::path();
-        return std::filesystem::path(std::move(w));
+        std::filesystem::path p(std::move(w));
+        if (CaseCheckOn()) CaseCheck(p);
+        return p;
     } catch (...) {
         return std::filesystem::path();
     }
@@ -38,7 +42,9 @@ std::filesystem::path PathOfUtf8(const char* utf8) noexcept {
         if (n <= 0) return std::filesystem::path();
         std::wstring w(static_cast<std::size_t>(n), L'\0');
         if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, utf8, len, w.data(), n) != n) return std::filesystem::path();
-        return std::filesystem::path(std::move(w));
+        std::filesystem::path p(std::move(w));
+        if (CaseCheckOn()) CaseCheck(p);
+        return p;
     } catch (...) {
         return std::filesystem::path();
     }
@@ -59,6 +65,32 @@ std::string Narrow(const std::filesystem::path& path) noexcept {
     } catch (...) {
         return std::string();
     }
+}
+
+// The case check's question (os/case_check.h): FindFirstFileExW on the exact
+// name hands back the entry as its folder stores it, without opening it. A
+// root, and a name with a wildcard, are not asked. The thread's last error is
+// left as the call before it left it, so a check after an open changes
+// nothing its caller reads.
+bool StoredSpelling(const std::filesystem::path& existing, std::wstring* stored) noexcept {
+    const DWORD error = GetLastError();
+    bool there = false;
+    try {
+        const std::wstring& w = existing.native();
+        if (existing.has_relative_path() && existing.has_filename() && w.find_first_of(L"*?") == std::wstring::npos) {
+            WIN32_FIND_DATAW found;
+            const HANDLE h = FindFirstFileExW(w.c_str(), FindExInfoBasic, &found, FindExSearchNameMatch, nullptr, 0);
+            if (h != INVALID_HANDLE_VALUE) {
+                ::FindClose(h);   // the system's, not os/find.h's
+                stored->assign(found.cFileName);
+                there = true;
+            }
+        }
+    } catch (...) {
+        there = false;
+    }
+    SetLastError(error);
+    return there;
 }
 
 }  // namespace bof3::os

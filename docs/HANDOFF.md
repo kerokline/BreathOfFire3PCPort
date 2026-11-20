@@ -107,6 +107,15 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      no release with both paths. The read passes ran ([`linux-round.md`](linux-round.md), "Wave 2's read passes") and
      the wave's brief is drafted, not launched: `analysis/linux_wave2_brief.md` in the main checkout (not tracked). The pad is on SDL3 already (DIV-0050), so R5 is the keyboard alone, and it goes
      to SDL3 with no launcher option.
+   - **Stages LC and LD are staged as one round, not launched (2026-11-19, branch `docs/linux-lc-staging`):** fourteen groups in
+     three waves ([`linux-round.md`](linux-round.md), "Stages LC and LD, staged as one round"), five calls for the owner before a
+     launch. Wave 2 ran and is on `main` (PR #262; the review, PR #264), so the lines above that say it is not launched are
+     stale, and so is the second backend as tier 2's gate in the line below (call 1 chose DXVK-native). Found for the staging:
+     nothing on Linux reads `bof3x.ini`, the seam starts no process, the movie's picture is a `Fatal` off Windows, LB8 did
+     not run, and no Windows 64-bit state-hash reference is recorded. **A launcher for both systems** is estimated in
+     [`launcher-portable.md`](launcher-portable.md) (IDEAS I69); its stage P0 is the round's group C7.
+   - **`BOF3.exe` out of the player's run is staged, not launched (2026-11-19):** [`exe-retire-round.md`](exe-retire-round.md), IDEAS
+     I70; seven groups, five calls for the owner; proposed between the Linux round's wave A and wave B.
    - **The Linux round's next units** are frost's, on his fork ([`linux-round.md`](linux-round.md) 4 and 6; "Waiting on
      someone else"). Here: the renderer's remainder ([`platform-layers-plan.md`](platform-layers-plan.md) 2.2) and the
      second backend (IDEAS I63) gate tier 2, and the API is the owner's call 1 of `linux-round.md` 6. Tier 1's rows 5, 7

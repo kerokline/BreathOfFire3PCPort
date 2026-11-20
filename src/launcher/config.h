@@ -286,6 +286,18 @@ bool ConfigLoad(const std::wstring& path, Config& cfg, std::string& error);
 // Rewrites `path` whole, comments included. Returns false on a write error,
 // which the caller reports without refusing to start the game.
 bool ConfigSave(const std::wstring& path, const Config& cfg);
+// The text ConfigSave writes.
+std::string ConfigText(const Config& cfg);
+
+// One setting changed as a line of bof3x.ini would change it - the windowless
+// launcher's --set (launcher/headless.cpp): `cfg` written out as ConfigText,
+// the line `key=value` put in place of the line of that key (or added), and
+// the text read again. False, with `why` set to a sentence for the player and
+// `cfg` unchanged, when the key is no setting of bof3x.ini, when the file
+// refuses the line (a retired language: DIV-0005), or when the value is not
+// one the key takes (the text written out again does not hold the line).
+// `value` is trimmed as a line's value is.
+bool ConfigSetLine(Config& cfg, const std::string& key, const std::string& value, std::string& why);
 
 // Sets the BOF3X_* variables for every non-default setting in THIS process,
 // which the game inherits; a default leaves its variable unset.
@@ -551,8 +563,8 @@ std::vector<std::string> ConfigCodeNamesKnown();
 // Whether the language layer the game reads for `language` holds the name
 // entry's grid: a kind-22 chunk of tag 0 in its FIRST.DAT
 // (docs/new-game-round.md 5a), read by the chunk headers alone. The file is
-// the one the game walks (dat_load WalkOverlay, DIV-0089): <cache>\loc\<tag>\
-// dat\FIRST.DAT when `cache` (ConfigCacheDataRoot) has the layer, else the
+// the one the game walks (dat_load WalkOverlay, DIV-0089):
+// <cache>\loc\<tag>\dat\FIRST.DAT when `cache` (ConfigCacheDataRoot) has the layer, else the
 // install's DAT\<tag>.FIRST.DAT. False for the original Chinese ("original"
 // or empty: no layer, and no disc has a grid for it), for a layer built
 // without the chunk (tools/loc_build.py writes none for a build it cannot

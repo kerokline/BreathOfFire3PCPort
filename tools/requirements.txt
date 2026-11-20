@@ -1,0 +1,16 @@
+# The importer's third-party packages for a system Python: Linux's, or a
+# developer's on any system. These are what tools/importer.py and
+# tools/player_sources.py (identify, sources, setup, build, install, verify)
+# and tools/mods.py's setup step import. docs/install-sources.md section 9
+# says how to use the file and how the list was measured.
+#
+# The pins are the versions the owner's tools run with and the Windows release
+# bundles (tools/make_release.py WHEELS). Change a pin here and there together.
+#
+#   python3 -m venv .venv && .venv/bin/pip install -r tools/requirements.txt
+#   uv venv .venv && uv pip install --python .venv -r tools/requirements.txt
+#
+# numpy is not here: its one use is at3.py's `recipe` command, a recipe
+# generator that a setup never runs. tools/requirements-extra.txt has it.
+pillow==12.0.0      # loc_build.py, font_pc.py: the language layers' fonts
+capstone==5.0.9     # exe_tables.py, exe_imm.py: base/exe/, the executable's tables

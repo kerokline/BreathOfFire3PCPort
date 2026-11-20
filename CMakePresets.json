@@ -16,10 +16,19 @@
       "binaryDir": "${sourceDir}/build-x86_64",
       "toolchainFile": "${sourceDir}/cmake/x86_64-llvm-mingw.cmake",
       "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo" }
+    },
+    {
+      "name": "linux-x86_64",
+      "displayName": "64-bit Linux, clang (the exe host as an ELF; on Windows set BOF3X_LINUX_SYSROOT, cmake/x86_64-linux.cmake)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-linux-x86_64",
+      "toolchainFile": "${sourceDir}/cmake/x86_64-linux.cmake",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo" }
     }
   ],
   "buildPresets": [
     { "name": "i686", "configurePreset": "i686" },
-    { "name": "x86_64", "configurePreset": "x86_64" }
+    { "name": "x86_64", "configurePreset": "x86_64" },
+    { "name": "linux-x86_64", "configurePreset": "linux-x86_64" }
   ]
 }

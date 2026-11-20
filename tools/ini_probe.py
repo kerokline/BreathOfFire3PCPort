@@ -7,6 +7,9 @@ window and reads Input_Held; the log's `pad:` lines show what the DLL took.
 Backs up and restores build/bof3x.ini. Pulls the game to the front; leave the
 machine alone for a minute. Exit 0 on ALL OK.
 """
+import sys
+if sys.platform != 'win32':
+    sys.exit('ini_probe.py is a Windows tool: it presses keys at the game window through user32, so it does not run here.')
 import ctypes, ctypes.wintypes as w, os, shutil, struct, sys, threading, time
 root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(root, 'tools'))

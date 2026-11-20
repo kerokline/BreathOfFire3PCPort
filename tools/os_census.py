@@ -398,7 +398,7 @@ BOUNDARY_WAITING = {
     'src/hook/exe_host.cpp': 'W: the PE exe host loader, Windows only by design',
     'src/hook/exe_icon.cpp': 'W: the PE exe host, Windows only by design',
     'src/hook/dllmain.cpp': 'W: the DLL entry, Windows only by design',
-    'src/hook/host.cpp': 'W: reads the PE headers of the host process',
+    'src/hook/host_win32.cpp': 'W: reads the PE headers of the host process',
     'src/hook/crash_win32.cpp': 'W: the fault catcher on Windows (a vectored handler, MiniDumpWriteDump), Windows only by design',
     'src/hook/stackwatch_win32.cpp': "W: the main thread's TEB and guard page, Windows only by design",
     'src/game/platform/game_window_win32.cpp': 'W: the Win32 window path (BOF3X_OFF=WindowSdl) and the SDL path\'s Windows steps, Windows only by design',

@@ -1,0 +1,18 @@
+# Third-party packages that the importer's modules import only on paths a
+# player's setup does not take by default. Install after tools/requirements.txt:
+#
+#   pip install -r tools/requirements-extra.txt
+#
+# SudachiPy and its dictionary: ruby_build.py's reader, which mods.py's setup
+# step runs for a reading-row mod. mods.py refuses loudly without it.
+# tools/make_release.py NOT_BUNDLED lists it and why the release leaves it out.
+sudachipy==0.6.11
+sudachidict-core==20260723
+# pyahocorasick: exe_twins.py runs() and places(), the recipe generators
+# (exe_tables.py map and places).
+pyahocorasick==2.3.1
+# numpy: at3.py `recipe` (the PSP sound recipe's alignment). numpy 2.2.6 has
+# wheels for CPython 3.10 to 3.13 only: on 3.14 pip builds it from source,
+# which needs the Python headers (python3-dev). The Windows release bundles it
+# (tools/make_release.py WHEELS, the owner's call of 2026-10-15).
+numpy==2.2.6

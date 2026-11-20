@@ -1,12 +1,16 @@
+// The host's state, portable (docs/linux-round.md, "R3: what a Linux start-up
+// needs from the PE host", proposed for LC): which host this is, where its
+// image lies, and the checks of that place - the 16 MB window, the linked
+// span, BOF3X_IMAGEBASE - with Bof3_ImageMove, the asm's word. What answers
+// the identity and the base is per host: on Windows DetectHost reads the main
+// module's PE header (host_win32.cpp); a Linux start-up knows where it mapped
+// the image itself. Each hands its answer to SetHost once.
 #include "hook/host.h"
-
-#include <windows.h>
 
 #include <cstdlib>
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
-#include "hook/detour.h"
 #include "hook/exe_layout.h"
 #include "hook/log.h"
 #include "os/os.h"
@@ -21,9 +25,9 @@ HostKind g_host = HostKind::Bof3;
 
 // ImageBase() - 0x400000, for the hand-written asm that addresses the image
 // (task_sched.cpp, field_e2.cpp, field_modes.cpp): a VA as the displacement
-// and this in a register. Set by DetectHost, before any of the game's code
+// and this in a register. Set by SetHost, before any of the game's code
 // runs; 0 at the player's base. A 32-bit difference on both widths: the image
-// lies below 16 MB on every host (DetectHost's window check), so the move is
+// lies below 16 MB on every host (SetHost's window check), so the move is
 // a small non-negative number, which the x86-64 asm loads RIP-relative
 // (`movl Bof3_ImageMove(%rip), %ebx`, zero-extended into a 64-bit base
 // register; docs/x64-asm-policy.md 4.4, docs/x64-build-design.md 7.2).
@@ -31,51 +35,32 @@ extern "C" __attribute__((used)) std::uint32_t Bof3_ImageMove = 0;
 
 namespace bof3 {
 
-void DetectHost() {
-    // The main module's base as the 32-bit word every place is built on
-    // (image_base.h): Low32 is a Fatal above 4 GB, where the 64-bit loader
-    // never puts a fixed-base PE32+ (docs/x64-build-design.md 1.2).
-    const auto* base = reinterpret_cast<const std::uint8_t*>(GetModuleHandleW(nullptr));
-    const auto at = Low32(base);
-    const auto* dos = reinterpret_cast<const IMAGE_DOS_HEADER*>(base);
-    // The width's header: IMAGE_NT_HEADERS32 in the 32-bit DLL, whose main
-    // module is a PE32 (BOF3.exe, or the PE32 bof3x.exe); IMAGE_NT_HEADERS64
-    // in the 64-bit one, whose bof3x.exe make_exe.py writes as a PE32+
-    // (docs/x64-build-design.md 1.4). The fields read below lie at the same
-    // offsets in both.
-    const auto* nt = reinterpret_cast<const IMAGE_NT_HEADERS*>(base + dos->e_lfanew);
-    const bool pe = dos->e_magic == IMAGE_DOS_SIGNATURE && nt->Signature == IMAGE_NT_SIGNATURE;
-    const std::uint32_t stamp = pe ? nt->FileHeader.TimeDateStamp : 0;
-#if defined(__x86_64__)
-    // A 64-bit DLL's main module is a PE32+ or nothing: a PE32 bof3x.exe
-    // could not have loaded it.
-    if (pe && nt->OptionalHeader.Magic != IMAGE_NT_OPTIONAL_HDR64_MAGIC)
-        Fatal("host: the main module at %p has optional-header magic 0x%X, not a PE32+'s 0x%X: a 64-bit bof3x.dll "
-              "runs in the x86-64 bof3x.exe alone (docs/x64-build-design.md 1)",
-              static_cast<const void*>(base), (unsigned)nt->OptionalHeader.Magic, (unsigned)IMAGE_NT_OPTIONAL_HDR64_MAGIC);
+#if !defined(_WIN32)
+// ImageBase()'s source off Windows (image_base.h): no process environment
+// block holds the image's base, so the start-up that mapped the image says
+// where, once, before anything places an address.
+namespace image {
+std::uint32_t g_runBase = 0;
+
+void ImageBaseUnset() {
+    Fatal("ImageBase() read before the start-up set it (SetImageBase): every place would be wrong; refusing to go on");
+}
+}  // namespace image
+
+void SetImageBase(std::uint32_t base) {
+    if (base == 0) Fatal("SetImageBase(0): the image cannot lie at address 0");
+    if (image::g_runBase != 0 && image::g_runBase != base)
+        Fatal("SetImageBase(0x%X): the image's base was already set to 0x%X, and it never changes in a process's life",
+              (unsigned)base, (unsigned)image::g_runBase);
+    image::g_runBase = base;
+}
 #endif
-    // The exe host by its identity alone (docs/relocatable-image-design.md
-    // 1.3): our timestamp and .stub at its RVA, wherever the header based it.
-    if (pe && at == image::kBase && stamp == image::kTimestamp && nt->OptionalHeader.SizeOfImage == image::kSizeOfImage) {
-#if defined(__x86_64__)
-        // The hosted build is 32-bit for ever (docs/x64-build-round.md 2): a
-        // 64-bit DLL cannot be inside BOF3.exe's process, and nothing of the
-        // hosted mode is built to run at this width (detour.cpp).
-        Fatal("host: the main module is BOF3.exe, which a 64-bit bof3x.dll cannot be hosted in; the hosted build is the "
-              "32-bit one (bof3x-launcher --host bof3)");
-#else
-        g_host = HostKind::Bof3;
-#endif
-    } else if (pe && stamp == exe_layout::kTimestamp && nt->FileHeader.NumberOfSections > 0 &&
-               std::memcmp(IMAGE_FIRST_SECTION(nt)->Name, ".stub\0\0\0", 8) == 0 &&
-               IMAGE_FIRST_SECTION(nt)->VirtualAddress == exe_layout::kStubVa - exe_layout::kImageBase) {
-        g_host = HostKind::Exe;
-    } else {
-        Fatal("the main module at %p (timestamp 0x%lX) is neither BOF3.exe (0x%X) nor bof3x.exe (0x%X): every "
-              "address would be wrong; refusing to start",
-              static_cast<const void*>(base), static_cast<unsigned long>(stamp), (unsigned)image::kTimestamp,
-              (unsigned)exe_layout::kTimestamp);
-    }
+
+void SetHost(const HostFound& found) {
+    if (g_known) Fatal("host: SetHost called twice");
+    g_host = found.kind;
+    const std::uint32_t at = found.module;
+    const std::uint32_t stamp = found.stamp;
     // The image's base, as ImageBase() read it, against what may hold it.
     const std::uint32_t image = ImageBase();
     if (image != at) Fatal("host: ImageBase() reads 0x%X, the main module is at 0x%X", (unsigned)image, (unsigned)at);
@@ -91,7 +76,7 @@ void DetectHost() {
         // SizeOfImage: a value in that span is read as a VA where a word may
         // be either a VA or a place (CodePlace, image_base.h; PatchBytes,
         // detour.cpp), and the fence reserves it (exe_host.cpp).
-        const std::uint32_t span = nt->OptionalHeader.SizeOfImage;
+        const std::uint32_t span = found.span;
         if (image != exe_layout::kImageBase && image < exe_layout::kImageBase + span && image + span > exe_layout::kImageBase)
             Fatal("host: bof3x.exe at 0x%X..0x%X overlaps the linked span 0x%X..0x%X, where a word is read as a VA; "
                   "a moved image lies wholly off it (0x%X..0x%X fits the 16 MB window)",
@@ -102,7 +87,7 @@ void DetectHost() {
     // BOF3X_IMAGEBASE, the launcher's developer switch: the executable it
     // started must be the one at that base.
     char asked[32];
-    if (const DWORD n = bof3::os::GetEnv("BOF3X_IMAGEBASE", asked, sizeof asked); n > 0 && n < sizeof asked) {
+    if (const std::uint32_t n = bof3::os::GetEnv("BOF3X_IMAGEBASE", asked, sizeof asked); n > 0 && n < sizeof asked) {
         char* tail = nullptr;
         const unsigned long want = std::strtoul(asked, &tail, 0);
         if (!tail || *tail || want != image)
@@ -121,34 +106,6 @@ HostKind Host() {
     return g_host;
 }
 
-// detour.h's VerifyImage: the hosted build's check of BOF3.exe's header. It
-// lived in detour.cpp until the Linux round's R3 moved it here, beside the
-// other reader of the main module's PE header, so that detour.cpp compiles
-// for a system without one (docs/linux-round.md). Unchanged.
-void VerifyImage() {
-#if defined(__x86_64__)
-    Fatal("VerifyImage in the 64-bit DLL: BOF3.exe is a 32-bit process, which never hosts this DLL "
-          "(docs/x64-build-round.md 2; the hosted build is bof3x-launcher --host bof3, 32-bit)");
-#else
-    auto* base = reinterpret_cast<const std::uint8_t*>(GetModuleHandleW(nullptr));
-    if (reinterpret_cast<std::uintptr_t>(base) != image::kBase)
-        Fatal("main module is at %p, not 0x%X: this is not BOF3.exe, or it was rebased",
-              (void*)base, (unsigned)image::kBase);
-    auto* dos = reinterpret_cast<const IMAGE_DOS_HEADER*>(base);
-    auto* nt = reinterpret_cast<const IMAGE_NT_HEADERS32*>(base + dos->e_lfanew);
-    if (nt->Signature != IMAGE_NT_SIGNATURE ||
-        nt->FileHeader.TimeDateStamp != image::kTimestamp ||
-        nt->OptionalHeader.SizeOfImage != image::kSizeOfImage)
-        Fatal("main module is not the BOF3.exe that symbols.toml describes "
-              "(timestamp 0x%lX size 0x%lX, expected 0x%X / 0x%X). Every address "
-              "would be wrong; refusing to patch.",
-              nt->FileHeader.TimeDateStamp, nt->OptionalHeader.SizeOfImage,
-              (unsigned)image::kTimestamp, (unsigned)image::kSizeOfImage);
-    Log("image verified: base 0x%X timestamp 0x%X", (unsigned)image::kBase,
-        (unsigned)image::kTimestamp);
-#endif
-}
-
 std::uint32_t CodeLo() { return IsExeHost() ? exe_layout::kStubVa : image::kTextVa; }
 
 std::uint32_t CodeHi() {
@@ -156,10 +113,3 @@ std::uint32_t CodeHi() {
 }
 
 }  // namespace bof3
-
-// This file is Windows-only by design (tools/linux_probe/linux_tree.py's
-// WINDOWS_ONLY): the hosts are told apart by the main module's PE header.
-// What a Linux start-up must supply in its place: docs/linux-round.md, "R3:
-// what a Linux start-up needs from the PE host". (Said here at the end, and
-// the line count above DetectHost kept: Low32's message there carries
-// __LINE__ in the 64-bit build.)

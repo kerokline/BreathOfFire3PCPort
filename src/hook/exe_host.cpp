@@ -51,6 +51,7 @@
 #include "hook/draw_order.h"
 #include "hook/write_watch.h"
 #include "hook/stp_census.h"
+#include "hook/exe_file.h"
 #include "hook/exe_icon.h"
 #include "hook/exe_image.h"
 #include "hook/exe_layout.h"
@@ -234,41 +235,9 @@ void Fence() {
 
 // --- 3. The data -----------------------------------------------------------
 
-struct FileSection {
-    std::uint32_t va = 0, vsize = 0, raw = 0, raw_size = 0;
-};
-
-HANDLE g_exe = INVALID_HANDLE_VALUE;   // the player's BOF3.exe, read-only, for the process's life; none: no file
-FileSection g_text, g_rdata, g_data;   // its sections, when it is there
-
-void ReadAt(std::uint32_t offset, void* to, std::uint32_t n, const char* what) {
-    LARGE_INTEGER at;
-    at.QuadPart = offset;
-    DWORD got = 0;
-    if (!SetFilePointerEx(g_exe, at, nullptr, FILE_BEGIN) || !ReadFile(g_exe, to, n, &got, nullptr) || got != n)
-        Fatal("data: cannot read %s (0x%X bytes at file offset 0x%X) from BOF3.exe, error %lu", what, (unsigned)n,
-              (unsigned)offset, GetLastError());
-}
-
-FileSection Section(const char* want) {
-    IMAGE_DOS_HEADER dos;
-    IMAGE_NT_HEADERS32 nt;
-    ReadAt(0, &dos, sizeof dos, "the DOS header");
-    ReadAt(static_cast<std::uint32_t>(dos.e_lfanew), &nt, sizeof nt, "the PE header");
-    if (dos.e_magic != IMAGE_DOS_SIGNATURE || nt.Signature != IMAGE_NT_SIGNATURE || nt.OptionalHeader.ImageBase != image::kBase)
-        Fatal("data: BOF3.exe is not a 32-bit PE based at 0x%X", (unsigned)image::kBase);
-    const std::uint32_t first = static_cast<std::uint32_t>(dos.e_lfanew) + offsetof(IMAGE_NT_HEADERS32, OptionalHeader) +
-                                nt.FileHeader.SizeOfOptionalHeader;
-    for (unsigned i = 0; i < nt.FileHeader.NumberOfSections; ++i) {
-        IMAGE_SECTION_HEADER s;
-        ReadAt(first + i * sizeof s, &s, sizeof s, "the section table");
-        char name[9] = {};
-        std::memcpy(name, s.Name, 8);
-        if (std::strcmp(name, want) != 0) continue;
-        return {image::kBase + s.VirtualAddress, s.Misc.VirtualSize, s.PointerToRawData, s.SizeOfRawData};
-    }
-    Fatal("data: BOF3.exe has no %s section", want);
-}
+// The file itself - its handle, its section table, a read at an offset - is
+// exe_file.cpp's, portable (exe_file.h); ExeFile_Present and ExeFile_Read are
+// defined there.
 
 // The player's BOF3.exe: hashed, opened and its sections checked when the
 // game directory holds it. Without it, BOF3X_EXEIMAGE must name the .data
@@ -295,13 +264,13 @@ void OpenExe() {
     if (sha != image::kSha256)
         Fatal("data: %s is not the build this project targets (sha256 %s, expected %s). Every address is specific to "
               "that one file; refusing to start.", Utf8Path(path.c_str()).text, sha.c_str(), image::kSha256);
-    g_exe = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-    if (g_exe == INVALID_HANDLE_VALUE) Fatal("data: cannot open %s, error %lu", Utf8Path(path.c_str()).text, GetLastError());
+    if (!exe_file::Open(path)) Fatal("data: cannot open %s, error %lu", Utf8Path(path.c_str()).text, GetLastError());
     Log("data: %s, sha256 %s (the build symbols.toml describes)", Utf8Path(path.c_str()).text, sha.c_str());
 
-    g_text = Section(".text");
-    g_rdata = Section(".rdata");
-    g_data = Section(".data");
+    exe_file::ReadSections();
+    const exe_file::Section& g_text = exe_file::Text();
+    const exe_file::Section& g_rdata = exe_file::Rdata();
+    const exe_file::Section& g_data = exe_file::Data();
     if (g_text.va != kStubVa || g_text.raw_size > kStubSize || g_rdata.va != kRdataVa || g_rdata.raw_size != kRdataBytes ||
         g_data.va != kDataVa || g_data.raw_size != kDataBytes || g_data.va + g_data.vsize != kBssEnd)
         Fatal("data: BOF3.exe's sections (.text 0x%X +0x%X, .rdata 0x%X +0x%X, .data 0x%X +0x%X to 0x%X) are not the "
@@ -321,7 +290,7 @@ void CopyData() {
     // the import slots are bound in step 4.
     rdata::Map();
     const bool from_cache = ExeImage_Source(Place(kDataVa), kDataVa, kDataBytes, kBssEnd);
-    if (!from_cache) ReadAt(g_data.raw, Place(kDataVa), kDataBytes, ".data");
+    if (!from_cache) exe_file::ReadAt(exe_file::Data().raw, Place(kDataVa), kDataBytes, ".data");
     Shell_MapDefaultKeys();   // Key_TableDefault from the engine's rule, against the file's when it is there
     ExeImage_LayOptTables(Place(kDataVa), kDataVa, kDataBytes);   // DIV-0111: a BOF3X_OPT layer's part
     ExeImage_LogMapped(Place(kDataVa), kDataBytes);
@@ -670,20 +639,4 @@ extern "C" __declspec(dllexport) int __cdecl Engine_Main(void* hinstance, const 
     return code;
 }
 
-namespace bof3 {
-
-bool ExeFile_Present() { return !IsExeHost() || g_exe != INVALID_HANDLE_VALUE; }
-
-void ExeFile_Read(std::uint32_t va, void* to, std::uint32_t n) {
-    if (!IsExeHost()) Fatal("ExeFile_Read(0x%08X) in the hosted build: Capcom's image is mapped, read it there", (unsigned)va);
-    if (g_exe == INVALID_HANDLE_VALUE) Fatal("ExeFile_Read(0x%08X): there is no BOF3.exe (ask ExeFile_Present first)", (unsigned)va);
-    for (const FileSection* s : {&g_text, &g_rdata, &g_data})
-        if (va >= s->va && va + n <= s->va + s->raw_size && va + n >= va) {
-            ReadAt(s->raw + (va - s->va), to, n, "a verification's bytes");
-            return;
-        }
-    Fatal("ExeFile_Read(0x%08X + %u): not inside the initialised bytes of BOF3.exe's .text, .rdata or .data", (unsigned)va,
-          (unsigned)n);
-}
-
-}  // namespace bof3
+// ExeFile_Present and ExeFile_Read: exe_file.cpp, portable.

@@ -993,8 +993,11 @@ int LayLayerTables(const LayerTables& t, const std::vector<std::vector<unsigned 
     return changed;
 }
 
+// A narrow name (BOF3X_CACHE's, read by GetEnv) built with backslashes:
+// os::OpenNarrow is std::fopen on Windows and reads the backslash as a
+// separator on POSIX.
 bool ReadText(const std::string& path, std::string* out) {
-    FILE* f = std::fopen(path.c_str(), "rb");
+    FILE* f = bof3::os::OpenNarrow(path.c_str(), "rb");
     if (!f) return false;
     out->clear();
     char buf[4096];

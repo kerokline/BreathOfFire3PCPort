@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 3.25)
-project(bof3x VERSION 0.1.0 LANGUAGES CXX RC)
+project(bof3x VERSION 0.1.0 LANGUAGES CXX)
+# The resource compiler is Windows' alone: the version resources, the icon and
+# the launcher's dialogs. The Linux build (--preset linux-x86_64,
+# cmake/linux_target.cmake) has no .rc file to compile.
+if(WIN32)
+  enable_language(RC)
+endif()
 
 # The version every binary carries (src/version.rc, tools/make_exe.py):
 # project(VERSION) above is the number; the tag is the release's name, which
@@ -54,11 +60,18 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # (docs/source-layout-round.md, the `refptr` class, 1,400 gate exceptions; IDEAS I60). The linker
 # is told the same (--disable-auto-import), so a data import that is ever needed fails the link
 # instead of being patched at load, where on x86-64 a 32-bit reach may not hold.
-add_compile_options(-Wall -Wextra -Werror=return-type -falign-functions=16 -fno-strict-aliasing -fno-auto-import)
-add_link_options(-Wl,--disable-auto-import)
-# The DLL is injected by path into a process whose DLL search order we do not
-# control, so it may not depend on libc++.dll / libunwind.dll sitting nearby.
-add_link_options(-static)
+add_compile_options(-Wall -Wextra -Werror=return-type -falign-functions=16 -fno-strict-aliasing)
+# Auto-import is a PE linker's: clang refuses -fno-auto-import for an ELF
+# target, and an ELF has no `.refptr` stubs to avoid.
+if(WIN32)
+  add_compile_options(-fno-auto-import)
+  add_link_options(-Wl,--disable-auto-import)
+  # The DLL is injected by path into a process whose DLL search order we do not
+  # control, so it may not depend on libc++.dll / libunwind.dll sitting nearby.
+  # (The Linux ELF links glibc and libstdc++ as shared libraries: a static
+  # glibc cannot load DXVK-native's libraries or Vulkan's.)
+  add_link_options(-static)
+endif()
 
 # --- symbols.toml -> bof3/symbols.gen.h -------------------------------------
 # Anaconda's `python` on this machine; any 3.11+ works (tomllib).
@@ -135,6 +148,21 @@ set(SDL_VIDEO ON CACHE BOOL "" FORCE)
 foreach(_sub RENDER GPU CAMERA HAPTIC SENSOR POWER DIALOG OPENGL OPENGLES VULKAN DIRECTX)
   set(SDL_${_sub} OFF CACHE BOOL "" FORCE)
 endforeach()
+# Off Windows the picture is DXVK-native's, which makes its Vulkan surface
+# from SDL's window (SDL_Vulkan_CreateSurface): SDL's Vulkan support stays in.
+if(NOT WIN32)
+  set(SDL_VULKAN ON CACHE BOOL "" FORCE)
+  # SDL refuses to configure for Linux without the X11 or Wayland headers (it
+  # loads both at run time, but compiles against their headers). A sysroot
+  # without them - this machine's WSL has none, and no sudo to add them - can
+  # still build every object and measure the link with this switch, which is
+  # SDL's own way past the check. An ELF built so opens no window: the
+  # switch is for the measure, never for a player's build.
+  option(BOF3X_SDL_NO_DESKTOP "Build SDL3 without X11 and Wayland (SDL_UNIX_CONSOLE_BUILD): a link measure only" OFF)
+  if(BOF3X_SDL_NO_DESKTOP)
+    set(SDL_UNIX_CONSOLE_BUILD ON CACHE BOOL "" FORCE)
+  endif()
+endif()
 FetchContent_Declare(SDL3
   GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
   GIT_TAG release-3.4.16
@@ -166,7 +194,9 @@ add_subdirectory(src/os)
 set(_dll_sources
   src/hook/dllmain.cpp
   src/hook/host.cpp
+  src/hook/host_win32.cpp
   src/hook/exe_host.cpp
+  src/hook/exe_file.cpp
   src/hook/exe_icon.cpp
   src/hook/code_bytes.cpp
   src/common/sha256.cpp
@@ -189,8 +219,8 @@ set(_dll_sources
   src/hook/stp_census.cpp
   src/hook/crash.cpp
   # The fault catcher and the stack watch per system (docs/linux-round.md
-  # LB7): these two on Windows; crash_posix.cpp and stackwatch_posix.cpp are
-  # a Linux build's, which no list here makes yet.
+  # LB7): these two on Windows; crash_posix.cpp and stackwatch_posix.cpp take
+  # their places in the Linux build's list (cmake/linux_target.cmake).
   src/hook/crash_win32.cpp
   src/hook/stackwatch_win32.cpp
   src/hook/log.cpp
@@ -199,6 +229,13 @@ set(_dll_sources
   src/hook/bof3x.rc)
 if(NOT BOF3X_HOSTED_BUILD)
   list(FILTER _dll_sources EXCLUDE REGEX "_fuzz\.cpp$")
+endif()
+# The Linux build (--preset linux-x86_64): one ELF from this list, by
+# tools/linux_probe/linux_tree.py's rule, and nothing below this line - no
+# DLL, no make_exe.py, no launcher yet (cmake/linux_target.cmake).
+if(NOT WIN32)
+  include(cmake/linux_target.cmake)
+  return()
 endif()
 add_library(bof3x SHARED ${_dll_sources})
 add_dependencies(bof3x bof3x_symbols bof3x_rebase)
@@ -306,6 +343,7 @@ add_library(bof3x_launcher_parts OBJECT
   src/launcher/save/namemap.cpp
   src/launcher/save/names.cpp
   src/launcher/sources_dialog.cpp
+  src/launcher/start.cpp
   src/launcher/suites.cpp
   src/audio/spu.cpp
   src/audio/seq.cpp

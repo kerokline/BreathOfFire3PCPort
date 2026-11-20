@@ -1,6 +1,6 @@
 #include "launcher/exe_image.h"
 
-#include <windows.h>
+#include "os/wide_file.h"
 
 #include <cstring>
 
@@ -10,45 +10,89 @@
 
 namespace bof3x {
 
+namespace {
+
+// The PE headers by their offsets (the PE format's own, as winnt.h lays its
+// structures out), so that this reader needs no system header: the DOS
+// header's 64 bytes, IMAGE_NT_HEADERS32's 248 and a section header's 40 are
+// what is read, as the structures were before.
+constexpr std::uint32_t kDosSize = 64, kNtSize = 248, kSecSize = 40;
+constexpr std::uint32_t kNtOptional = 24;   // offsetof(IMAGE_NT_HEADERS32, OptionalHeader)
+
+std::uint16_t U16(const unsigned char* p) { return static_cast<std::uint16_t>(p[0] | (p[1] << 8)); }
+std::uint32_t U32(const unsigned char* p) {
+    return static_cast<std::uint32_t>(p[0]) | (static_cast<std::uint32_t>(p[1]) << 8) |
+           (static_cast<std::uint32_t>(p[2]) << 16) | (static_cast<std::uint32_t>(p[3]) << 24);
+}
+
+struct Dos {
+    std::uint16_t magic;   // e_magic: "MZ"
+    std::int32_t lfanew;   // e_lfanew
+};
+Dos DosOf(const unsigned char* d) { return {U16(d), static_cast<std::int32_t>(U32(d + 0x3C))}; }
+constexpr std::uint16_t kDosMagic = 0x5A4D;      // IMAGE_DOS_SIGNATURE
+
+struct Nt {
+    std::uint32_t signature;      // "PE\0\0"
+    std::uint16_t sections;       // FileHeader.NumberOfSections
+    std::uint16_t optional_size;  // FileHeader.SizeOfOptionalHeader
+    std::uint16_t magic;          // OptionalHeader.Magic
+    std::uint32_t image_base;     // OptionalHeader.ImageBase
+};
+Nt NtOf(const unsigned char* n) { return {U32(n), U16(n + 6), U16(n + 20), U16(n + 24), U32(n + 52)}; }
+constexpr std::uint32_t kNtSignature = 0x00004550;   // IMAGE_NT_SIGNATURE
+constexpr std::uint16_t kPe32Magic = 0x10B;          // IMAGE_NT_OPTIONAL_HDR32_MAGIC
+
+struct Section {
+    std::uint32_t virtual_address, raw_size, raw_pointer;   // VirtualAddress, SizeOfRawData, PointerToRawData
+};
+Section SectionOf(const unsigned char* s) { return {U32(s + 12), U32(s + 16), U32(s + 20)}; }
+
+}  // namespace
+
 bool ExeImageRead(const std::wstring& exe, std::uint32_t va, std::uint32_t size, std::vector<unsigned char>& out,
                   std::string& why) {
-    HANDLE file = CreateFileW(exe.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,
-                              nullptr);
-    if (file == INVALID_HANDLE_VALUE) {
+    const bof3::os::InFile file = bof3::os::InOpenW(exe, false);
+    if (file == bof3::os::kNoInFile) {
         why = "cannot open the file";
         return false;
     }
-    auto read_at = [&](DWORD offset, void* to, DWORD n) {
-        DWORD got = 0;
-        return SetFilePointer(file, static_cast<LONG>(offset), nullptr, FILE_BEGIN) != INVALID_SET_FILE_POINTER &&
-               ReadFile(file, to, n, &got, nullptr) && got == n;
+    auto read_at = [&](std::uint32_t offset, void* to, std::uint32_t n) {
+        std::uint32_t got = 0;
+        // SetFilePointer's LONG distance, as this read made it before the seam:
+        // an offset of 2 GB or more is refused
+        return offset < 0x80000000u && bof3::os::InSeek(file, offset) && bof3::os::InRead(file, to, n, &got) &&
+               got == n;
     };
     bool ok = false;
-    IMAGE_DOS_HEADER dos;
-    IMAGE_NT_HEADERS32 nt;
-    if (!read_at(0, &dos, sizeof dos) || dos.e_magic != IMAGE_DOS_SIGNATURE || !read_at(dos.e_lfanew, &nt, sizeof nt) ||
-        nt.Signature != IMAGE_NT_SIGNATURE || nt.OptionalHeader.Magic != IMAGE_NT_OPTIONAL_HDR32_MAGIC) {
+    unsigned char dos_bytes[kDosSize], nt_bytes[kNtSize];
+    Dos dos{};
+    Nt nt{};
+    if (!read_at(0, dos_bytes, sizeof dos_bytes) || (dos = DosOf(dos_bytes)).magic != kDosMagic ||
+        !read_at(static_cast<std::uint32_t>(dos.lfanew), nt_bytes, sizeof nt_bytes) ||
+        (nt = NtOf(nt_bytes)).signature != kNtSignature || nt.magic != kPe32Magic) {
         why = "not a 32-bit PE";
-    } else if (va < nt.OptionalHeader.ImageBase) {
+    } else if (va < nt.image_base) {
         why = "address below the image";
     } else {
-        const std::uint32_t rva = va - nt.OptionalHeader.ImageBase;
-        const DWORD first = dos.e_lfanew + offsetof(IMAGE_NT_HEADERS32, OptionalHeader) + nt.FileHeader.SizeOfOptionalHeader;
+        const std::uint32_t rva = va - nt.image_base;
+        const std::uint32_t first = static_cast<std::uint32_t>(dos.lfanew) + kNtOptional + nt.optional_size;
         why = "address in no section's initialised data";
-        for (unsigned i = 0; i < nt.FileHeader.NumberOfSections; ++i) {
-            IMAGE_SECTION_HEADER sec;
-            if (!read_at(first + i * sizeof sec, &sec, sizeof sec)) {
+        for (unsigned i = 0; i < nt.sections; ++i) {
+            unsigned char sec_bytes[kSecSize];
+            if (!read_at(first + i * kSecSize, sec_bytes, sizeof sec_bytes)) {
                 why = "section table cut short";
                 break;
             }
-            if (rva < sec.VirtualAddress || rva + size > sec.VirtualAddress + sec.SizeOfRawData) continue;
+            const Section sec = SectionOf(sec_bytes);
+            if (rva < sec.virtual_address || rva + size > sec.virtual_address + sec.raw_size) continue;
             out.resize(size);
-            ok = read_at(sec.PointerToRawData + (rva - sec.VirtualAddress), out.data(), size);
+            ok = read_at(sec.raw_pointer + (rva - sec.virtual_address), out.data(), size);
             if (!ok) why = "read error";
             break;
         }
     }
-    CloseHandle(file);
+    bof3::os::InClose(file);
     return ok;
 }
 
@@ -72,18 +116,17 @@ namespace {
 // initialised part, or null.
 struct WholeImage {
     std::vector<unsigned char> b;
-    IMAGE_NT_HEADERS32 nt;
+    Nt nt{};
     std::size_t first = 0;   // the section table
 
     const unsigned char* At(std::uint32_t va, std::uint32_t size) const {
-        if (va < nt.OptionalHeader.ImageBase) return nullptr;
-        const std::uint32_t rva = va - nt.OptionalHeader.ImageBase;
-        for (unsigned i = 0; i < nt.FileHeader.NumberOfSections; ++i) {
-            IMAGE_SECTION_HEADER sec;
-            if (first + (i + 1) * sizeof sec > b.size()) return nullptr;
-            std::memcpy(&sec, b.data() + first + i * sizeof sec, sizeof sec);
-            if (rva < sec.VirtualAddress || rva + size > sec.VirtualAddress + sec.SizeOfRawData) continue;
-            const std::size_t off = sec.PointerToRawData + (rva - sec.VirtualAddress);
+        if (va < nt.image_base) return nullptr;
+        const std::uint32_t rva = va - nt.image_base;
+        for (unsigned i = 0; i < nt.sections; ++i) {
+            if (first + (i + 1) * kSecSize > b.size()) return nullptr;
+            const Section sec = SectionOf(b.data() + first + i * kSecSize);
+            if (rva < sec.virtual_address || rva + size > sec.virtual_address + sec.raw_size) continue;
+            const std::size_t off = sec.raw_pointer + (rva - sec.virtual_address);
             return off + size <= b.size() ? b.data() + off : nullptr;
         }
         return nullptr;
@@ -91,27 +134,28 @@ struct WholeImage {
 };
 
 bool LoadWholeImage(const std::wstring& exe, WholeImage& img, std::string& why) {
-    HANDLE file = CreateFileW(exe.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,
-                              nullptr);
-    if (file == INVALID_HANDLE_VALUE) {
+    const bof3::os::InFile file = bof3::os::InOpenW(exe, false);
+    if (file == bof3::os::kNoInFile) {
         why = "cannot open the file";
         return false;
     }
     std::vector<unsigned char>& b = img.b;
-    b.assign(GetFileSize(file, nullptr), 0);
-    DWORD got = 0;
-    const bool read = !b.empty() && ReadFile(file, b.data(), static_cast<DWORD>(b.size()), &got, nullptr) && got == b.size();
-    CloseHandle(file);
-    IMAGE_DOS_HEADER dos;
-    IMAGE_NT_HEADERS32& nt = img.nt;
-    if (!read || b.size() < sizeof dos || (std::memcpy(&dos, b.data(), sizeof dos), dos.e_magic != IMAGE_DOS_SIGNATURE) ||
-        static_cast<std::size_t>(dos.e_lfanew) + sizeof nt > b.size() ||
-        (std::memcpy(&nt, b.data() + dos.e_lfanew, sizeof nt), nt.Signature != IMAGE_NT_SIGNATURE) ||
-        nt.OptionalHeader.Magic != IMAGE_NT_OPTIONAL_HDR32_MAGIC) {
+    std::uint64_t size = 0;
+    // GetFileSize's low half, as before the seam (no exe is 4 GB)
+    b.assign(bof3::os::InSize(file, &size) ? static_cast<std::uint32_t>(size) : 0u, 0);
+    std::uint32_t got = 0;
+    const bool read = !b.empty() && bof3::os::InRead(file, b.data(), static_cast<std::uint32_t>(b.size()), &got) &&
+                      got == b.size();
+    bof3::os::InClose(file);
+    Dos dos{};
+    Nt& nt = img.nt;
+    if (!read || b.size() < kDosSize || (dos = DosOf(b.data())).magic != kDosMagic ||
+        static_cast<std::size_t>(dos.lfanew) + kNtSize > b.size() ||
+        (nt = NtOf(b.data() + dos.lfanew)).signature != kNtSignature || nt.magic != kPe32Magic) {
         why = "not a 32-bit PE";
         return false;
     }
-    img.first = dos.e_lfanew + offsetof(IMAGE_NT_HEADERS32, OptionalHeader) + nt.FileHeader.SizeOfOptionalHeader;
+    img.first = static_cast<std::uint32_t>(dos.lfanew + kNtOptional + nt.optional_size);
     return true;
 }
 

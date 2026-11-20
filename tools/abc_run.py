@@ -26,6 +26,11 @@ Runs are sequential, never two games at once, each through tools/input_run.py
 gets BOF3X_OPT=none and BOF3X_LAYERING=0 unless its install says otherwise,
 and the same BOF3.CFG. Kill only what we start (input_run ends its own game
 by pid).
+
+--host linux --elf PATH runs every side on the Linux build instead
+(input_run.py --host linux, tools/linux_run.py): through wsl -e from Windows,
+the installs and caches as prepare made them on the Windows side, no launcher
+copied or run. Compare needs numpy and PIL wherever it runs.
 """
 import argparse, glob, hashlib, json, os, re, shutil, subprocess, sys, time, tomllib
 
@@ -296,7 +301,8 @@ def prepare_launcher(folder, build):
 def prepare(cfg, installs, a):
     logs = os.path.join(cfg.root, 'logs')
     os.makedirs(logs, exist_ok=True)
-    launchers = sorted({i['launcher'] for i in installs})
+    # the Linux build's runs start the ELF with no launcher: no launcher copy to prepare
+    launchers = sorted({i['launcher'] for i in installs}) if a.host != 'linux' else []
     for l in launchers:
         if os.path.normcase(l).startswith(os.path.normcase(cfg.root)):
             prepare_launcher(l, a.build)
@@ -378,8 +384,13 @@ def run_one(cfg, i, recipe, out, a):
         if a.statehash_skip:
             env['BOF3X_STATEHASH_SKIP'] = os.path.abspath(a.statehash_skip)
     launcher = os.path.join(i['launcher'], 'bof3x-launcher.exe')
+    linux = a.host == 'linux'
     cmd = [sys.executable, os.path.join(ROOT, 'tools', 'input_run.py'), recipe, '--out', out, '--no-front',
            '--launcher', launcher, '--game', i['game'], '--minutes', str(a.minutes), '--slot0-hold'] + a.save_args
+    if a.host:
+        cmd += ['--host', a.host]   # unset, input_run decides (bof3 for a hosted-only switch, else exe)
+    if linux:
+        cmd += ['--elf', a.elf]     # the Linux build: no launcher in the run (tools/linux_run.py)
     if i.get('lang'):
         cmd += ['--lang', i['lang']]
     if a.speed != 1:
@@ -398,8 +409,10 @@ def run_one(cfg, i, recipe, out, a):
         # creation fails (2026-10-12, two harnesses' games at once: the
         # runner itself exited 0xC0000142) it reads "exited" and leaves the
         # game up. Whatever the runner said, no game of this launcher folder
-        # outlives its run - ended by pid (attract_run.kill_stale).
-        stale = end_stale(launcher)
+        # outlives its run - ended by pid (attract_run.kill_stale). The Linux
+        # build's run holds its game's process and ends it itself, and the
+        # next run ends a leftover of the ELF (linux_run.LinuxGame.end_stale).
+        stale = False if linux else end_stale(launcher)
         text = open(runlog, encoding='utf-8', errors='replace').read()
         if (r.returncode & 0xFFFFFFFF) == 0xC0000142 or (stale and 'end: game exited' in text):
             print(f'  attempt {attempt}: the runner could not start or follow the game '
@@ -412,7 +425,11 @@ def run_one(cfg, i, recipe, out, a):
                 time.sleep(10)
                 continue
         break
-    log = os.path.join(i['launcher'], 'bof3x.log')
+    if linux:
+        import linux_run
+        log = linux_run.log_of(a.elf)
+    else:
+        log = os.path.join(i['launcher'], 'bof3x.log')
     if os.path.exists(log):
         shutil.copy2(log, os.path.join(out, 'bof3x.log'))
     text = open(runlog, encoding='utf-8', errors='replace').read()
@@ -519,7 +536,8 @@ def run(cfg, installs, a):
         a.save_args = save_args(cfg, recipe, a)
     metas = []
     for i in installs:
-        if not os.path.exists(os.path.join(i['launcher'], 'bof3x-launcher.exe')):
+        # the Linux build's run has no launcher in it (input_run checks --elf)
+        if a.host != 'linux' and not os.path.exists(os.path.join(i['launcher'], 'bof3x-launcher.exe')):
             sys.exit(f'{i["launcher"]}: no launcher (Defender may have quarantined it: rebuild, run prepare)')
         metas.append(run_one(cfg, i, recipe, os.path.join(rdir, i['name']), a))
     return metas
@@ -784,10 +802,17 @@ def main():
     ap.add_argument('--statehash', action='store_true', help='also record the state hash and diff it per pair (context)')
     ap.add_argument('--statehash-skip', help='BOF3X_STATEHASH_SKIP for every run (e.g. a union of exe_tables.py gate-skip lists)')
     ap.add_argument('--build', default=bof3x_home.launcher_dir(), help='where prepare takes the launcher, DLL and exe from')
+    ap.add_argument('--host', choices=('exe', 'bof3', 'linux'), default=None,
+                    help="input_run.py's --host for every run; unset, input_run decides as before. linux: the Linux "
+                         "build named by --elf, through wsl -e from Windows (tools/linux_run.py); prepare then "
+                         "copies no launcher")
+    ap.add_argument('--elf', default=None, metavar='PATH', help='--host linux: the Linux build every run starts')
     ap.add_argument('--tol', type=int, default=abc_compare.TOL)
     ap.add_argument('--min-pixels', type=int, default=abc_compare.MIN_PIXELS)
     ap.add_argument('--sheet-rows', type=int, default=16)
     a = ap.parse_args()
+    if a.host == 'linux' and not a.elf and a.cmd in ('run', 'all'):
+        sys.exit('--host linux needs --elf, the Linux build to start')
     cfg = Config(a.installs, a.root)
     installs = cfg.members(a.set, a.only)
     os.makedirs(cfg.root, exist_ok=True)

@@ -181,8 +181,8 @@ def base_rows(cache):
     """{key: [key, pc, end, count, stride, sha256, was]} of the install's table files."""
     p = os.path.join(cache, "base", "exe", "tables", "tables.toml")
     if not os.path.isfile(p):
-        raise Bad("this install's game data has no table files (base\\exe\\tables): it was built by an older "
-                  "release. Build the install again on the Sources page")
+        raise Bad("this install's game data has no table files (%s): it was built by an older "
+                  "release. Build the install again on the Sources page" % os.path.join("base", "exe", "tables"))
     with open(p, "rb") as f:
         return {r[0]: r for r in tomllib.load(f)["tables"]}
 

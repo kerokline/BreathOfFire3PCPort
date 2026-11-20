@@ -134,19 +134,19 @@ site	src/common/file_token.cpp	30	uintptr	-	live	std::uintptr_t	-	if (reinterpre
 site	src/common/file_token.cpp	36	fmt_place	pointer	live	static_cast<void*>(stream)	%p	Log("file: the C runtime's FILE %p lies above 4 GB (Wine's ucrtbase); the game's words hold slots of a "
 site	src/common/file_token.cpp	37	fmt_place	pointer	live	static_cast<void*>(stream)	%p	"table of ours at %p (known-defects D412)", static_cast<void*>(stream), static_cast<void*>(&g_streams[0]));
 site	src/common/file_token.cpp	48	fmt_place	pointer	live	token	%p	if (!stream) Fatal("file: the stream token %p names an empty slot (used after its close?)", token);
-site	src/common/image_base.h	67	width_if	logic	live	-	#if defined(__i386__)	#if defined(__i386__)
-site	src/common/image_base.h	69	asm	fs	live	movl %%fs:0x30, %0	movl	asm("movl %%fs:0x30, %0\n\t"
-site	src/common/image_base.h	69	fs_read	asm	live	movl %%fs:0x30, %0	-	asm("movl %%fs:0x30, %0\n\t"
-site	src/common/image_base.h	74	uintptr	-	live	std::uintptr_t	-	std::uintptr_t peb;
-site	src/common/image_base.h	75	asm	other	live	movq %%gs:0x60, %0	movq	asm("movq %%gs:0x60, %0" : "=r"(peb));
-site	src/common/image_base.h	76	uintptr	-	live	std::uintptr_t	-	std::uintptr_t base;
-site	src/common/image_base.h	77	asm	other	live	movq 0x10(%1), %0	movq	asm("movq 0x10(%1), %0" : "=r"(base) : "r"(peb));
-site	src/common/image_base.h	130	uintptr	-	live	std::uintptr_t	-	const auto v = reinterpret_cast<std::uintptr_t>(p);
-site	src/common/image_base.h	132	fmt_place	pointer	live	reinterpret_cast<const void*>(v)	%p	Fatal("%s:%u %s: %p lies above 4 GB, where no word of the game can hold it (docs/x64-build-design.md 2)", file,
-site	src/common/image_base.h	137	narrow	unread	live	p	-	#define Low32(p) (static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)))
-site	src/common/image_base.h	137	uintptr	-	live	std::uintptr_t	-	#define Low32(p) (static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)))
-site	src/common/image_base.h	158	uintptr	-	live	std::uintptr_t	-	if (reinterpret_cast<std::uintptr_t>(p) > 0xFFFFFFFFu)
-site	src/common/image_base.h	159	fmt_place	pointer	live	p	%p	Fatal("%s: a heap block of %u bytes at %p lies above 4 GB, where no word of the game can hold it "
+site	src/common/image_base.h	76	width_if	logic	live	-	#if defined(__i386__)	#if defined(__i386__)
+site	src/common/image_base.h	78	asm	fs	live	movl %%fs:0x30, %0	movl	asm("movl %%fs:0x30, %0\n\t"
+site	src/common/image_base.h	78	fs_read	asm	live	movl %%fs:0x30, %0	-	asm("movl %%fs:0x30, %0\n\t"
+site	src/common/image_base.h	83	uintptr	-	live	std::uintptr_t	-	std::uintptr_t peb;
+site	src/common/image_base.h	84	asm	other	live	movq %%gs:0x60, %0	movq	asm("movq %%gs:0x60, %0" : "=r"(peb));
+site	src/common/image_base.h	85	uintptr	-	live	std::uintptr_t	-	std::uintptr_t base;
+site	src/common/image_base.h	86	asm	other	live	movq 0x10(%1), %0	movq	asm("movq 0x10(%1), %0" : "=r"(base) : "r"(peb));
+site	src/common/image_base.h	157	uintptr	-	live	std::uintptr_t	-	const auto v = reinterpret_cast<std::uintptr_t>(p);
+site	src/common/image_base.h	159	fmt_place	pointer	live	reinterpret_cast<const void*>(v)	%p	Fatal("%s:%u %s: %p lies above 4 GB, where no word of the game can hold it (docs/x64-build-design.md 2)", file,
+site	src/common/image_base.h	164	narrow	unread	live	p	-	#define Low32(p) (static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)))
+site	src/common/image_base.h	164	uintptr	-	live	std::uintptr_t	-	#define Low32(p) (static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)))
+site	src/common/image_base.h	185	uintptr	-	live	std::uintptr_t	-	if (reinterpret_cast<std::uintptr_t>(p) > 0xFFFFFFFFu)
+site	src/common/image_base.h	186	fmt_place	pointer	live	p	%p	Fatal("%s: a heap block of %u bytes at %p lies above 4 GB, where no word of the game can hold it "
 site	src/common/slot32.h	64	uintptr	-	live	std::uintptr_t	-	BOF3_SLOT_INLINE T* Native() const { return reinterpret_cast<T*>(static_cast<std::uintptr_t>(v)); }
 site	src/common/slot32.h	64	widen	param	live	v	T*	BOF3_SLOT_INLINE T* Native() const { return reinterpret_cast<T*>(static_cast<std::uintptr_t>(v)); }
 site	src/common/slot32.h	89	low32	unread	live	p	Low32	v = Low32(p);
@@ -2259,17 +2259,17 @@ site	src/game/crt_rest.cpp	76	low32	object_ours	live	&__ImageBase	Low32	const au
 site	src/game/crt_rest.cpp	78	fmt_place	pointer	live	static_cast<unsigned>(::bof3::VaOf(at))	%08X	std::snprintf(out, cap, "VA 0x%08X", static_cast<unsigned>(::bof3::VaOf(at)));
 site	src/game/crt_rest.cpp	86	fmt_place	word	live	Low32(fmt)	%08X	bof3::Fatal("Crt_sprintf: \"%s\" (at 0x%08X) has the conversion \"%.*s\", which no format of the game uses and "
 site	src/game/crt_rest.cpp	88	low32	image_local	live	fmt	Low32	fmt, Low32(fmt), static_cast<int>(len), spec,
-site	src/game/crt_rest.cpp	380	long	l	live	long	-	static_cast<unsigned>(kArenaBytes >> 20), static_cast<unsigned long long>(arena->Base()),
-site	src/game/crt_rest.cpp	381	long	l	live	long	-	static_cast<unsigned long long>(arena->Base() + arena->Reserved()));
-site	src/game/crt_rest.cpp	391	long	l	live	long	-	[[noreturn]] void ArenaFull(const char* call, unsigned long long bytes) {
-site	src/game/crt_rest.cpp	395	long	l	live	long	-	static_cast<unsigned long long>(a->InUse()), static_cast<unsigned long long>(a->End()));
-site	src/game/crt_rest.cpp	395	long	l	live	long	-	static_cast<unsigned long long>(a->InUse()), static_cast<unsigned long long>(a->End()));
-site	src/game/crt_rest.cpp	411	long	l	live	long	-	const unsigned long long bytes = static_cast<unsigned long long>(count) * size;
-site	src/game/crt_rest.cpp	411	long	l	live	long	-	const unsigned long long bytes = static_cast<unsigned long long>(count) * size;
-site	src/game/crt_rest.cpp	423	fmt_place	pointer	live	ptr	%p	if (!a->Free(ptr)) bof3::Fatal("Crt_free(%p): inside the heap arena (BOF3X_ARENA) but not a live block (freed twice?)", ptr);
-site	src/game/crt_rest.cpp	430	fmt_place	pointer	live	block	%p	if (!a->SizeOf(block, &bytes)) bof3::Fatal("crt_rest::BlockBytes(%p): inside the heap arena but not a live block", block);
-site	src/game/crt_rest.cpp	434	fmt_place	pointer	live	block	%p	bof3::Fatal("crt_rest::BlockBytes(%p): a block outside the heap arena, and this system's C runtime has no exact "
-site	src/game/crt_rest.cpp	541	low32	crt	live	Crt_GetPtd	Low32	const auto get_ptd = Low32(Crt_GetPtd);
+site	src/game/crt_rest.cpp	382	long	l	live	long	-	static_cast<unsigned>(kArenaBytes >> 20), static_cast<unsigned long long>(arena->Base()),
+site	src/game/crt_rest.cpp	383	long	l	live	long	-	static_cast<unsigned long long>(arena->Base() + arena->Reserved()));
+site	src/game/crt_rest.cpp	393	long	l	live	long	-	[[noreturn]] void ArenaFull(const char* call, unsigned long long bytes) {
+site	src/game/crt_rest.cpp	397	long	l	live	long	-	static_cast<unsigned long long>(a->InUse()), static_cast<unsigned long long>(a->End()));
+site	src/game/crt_rest.cpp	397	long	l	live	long	-	static_cast<unsigned long long>(a->InUse()), static_cast<unsigned long long>(a->End()));
+site	src/game/crt_rest.cpp	413	long	l	live	long	-	const unsigned long long bytes = static_cast<unsigned long long>(count) * size;
+site	src/game/crt_rest.cpp	413	long	l	live	long	-	const unsigned long long bytes = static_cast<unsigned long long>(count) * size;
+site	src/game/crt_rest.cpp	425	fmt_place	pointer	live	ptr	%p	if (!a->Free(ptr)) bof3::Fatal("Crt_free(%p): inside the heap arena (BOF3X_ARENA) but not a live block (freed twice?)", ptr);
+site	src/game/crt_rest.cpp	432	fmt_place	pointer	live	block	%p	if (!a->SizeOf(block, &bytes)) bof3::Fatal("crt_rest::BlockBytes(%p): inside the heap arena but not a live block", block);
+site	src/game/crt_rest.cpp	436	fmt_place	pointer	live	block	%p	bof3::Fatal("crt_rest::BlockBytes(%p): a block outside the heap arena, and this system's C runtime has no exact "
+site	src/game/crt_rest.cpp	543	low32	crt	live	Crt_GetPtd	Low32	const auto get_ptd = Low32(Crt_GetPtd);
 site	src/game/crt_rest_fuzz.cpp	54	fmt_place	word	fuzz	(unsigned)ours	%08X	bof3::Log("shadow crt_rest self-test MISMATCH: %s, round %u: original %08X, ours %08X", what, round,
 site	src/game/crt_rest_fuzz.cpp	54	fmt_place	word	fuzz	(unsigned)theirs	%08X	bof3::Log("shadow crt_rest self-test MISMATCH: %s, round %u: original %08X, ours %08X", what, round,
 site	src/game/crt_rest_fuzz.cpp	123	narrow	crt	fuzz	Crt_GetPtd	-	const auto get_ptd = static_cast<U>(reinterpret_cast<std::uintptr_t>(Crt_GetPtd));
@@ -8464,105 +8464,106 @@ site	src/hook/draw_order.cpp	270	low32	pool	live	Gfx_PacketNext.Native()	Low32	c
 site	src/hook/draw_order.cpp	278	low32	pool	live	ot	Low32	const std::uint32_t env = Low32(ot) - 7u * 4u;
 site	src/hook/draw_order.cpp	283	low32	pool	live	ot	Low32	std::uint32_t node = Low32(ot);
 site	src/hook/draw_order.cpp	313	fmt_place	word	live	b.x0	%08X	bof3::Log("draworder #%u slot %d code %02X box (%.1f, %.1f)-(%.1f, %.1f) at %08X: %s", index, slot,
-site	src/hook/exe_host.cpp	76	uintptr	-	live	std::uintptr_t	-	void* At(std::uint32_t place) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(place)); }
-site	src/hook/exe_host.cpp	76	widen	param	live	place	void*	void* At(std::uint32_t place) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(place)); }
-site	src/hook/exe_host.cpp	78	low32	helper_def	live	p	Low32	std::uint32_t AsU32(const void* p) { return Low32(p); }
-site	src/hook/exe_host.cpp	112	fmt_place	word	live	(unsigned)a	%08X	if (!VirtualQuery(At(a), &m, sizeof m)) Fatal("layout: VirtualQuery(0x%08X) failed, error %lu", (unsigned)a, GetLastError());
-site	src/hook/exe_host.cpp	119	fmt_place	word	live	(unsigned)(a - Img(va) + va)	%08X	Fatal("layout: %s at 0x%08X (VA 0x%08X) is not our image's %s section (state 0x%lX type 0x%lX protect "
-site	src/hook/exe_host.cpp	119	fmt_place	word	live	(unsigned)a	%08X	Fatal("layout: %s at 0x%08X (VA 0x%08X) is not our image's %s section (state 0x%lX type 0x%lX protect "
-site	src/hook/exe_host.cpp	120	fmt_place	pointer	live	(unsigned)a	%p	"0x%lX base %p): a rewritten bof3x.exe",
-site	src/hook/exe_host.cpp	123	narrow_call	windows	live	m.BaseAddress	AsU32	a = AsU32(m.BaseAddress) + static_cast<std::uint32_t>(m.RegionSize);
-site	src/hook/exe_host.cpp	131	fmt_place	word	live	(unsigned)kGameVa	%08X	Log("layout: .stub 0x%08X +0x%X RWX, .game 0x%08X +0x%X RW, .pool 0x%08X +0x%X RW, as exe_layout.h (VAs; the "
-site	src/hook/exe_host.cpp	131	fmt_place	word	live	(unsigned)kPoolVa	%08X	Log("layout: .stub 0x%08X +0x%X RWX, .game 0x%08X +0x%X RW, .pool 0x%08X +0x%X RW, as exe_layout.h (VAs; the "
-site	src/hook/exe_host.cpp	131	fmt_place	word	live	(unsigned)kStubVa	%08X	Log("layout: .stub 0x%08X +0x%X RWX, .game 0x%08X +0x%X RW, .pool 0x%08X +0x%X RW, as exe_layout.h (VAs; the "
-site	src/hook/exe_host.cpp	132	fmt_place	word	live	(unsigned)kStubVa	%08X	"image at 0x%08X)",
-site	src/hook/exe_host.cpp	170	narrow_call	windows	live	m.BaseAddress	AsU32	const std::uint32_t r_lo = AsU32(m.BaseAddress);
-site	src/hook/exe_host.cpp	176	fmt_place	word	live	(unsigned)best_at	%08X	Log("fence: the largest free run below 16 MB at Engine_Main is 0x%X bytes at 0x%08X (the image takes 0x%X)",
-site	src/hook/exe_host.cpp	184	fmt_place	word	live	(unsigned)lo	%08X	Log("fence: the image at its linked base 0x%08X; nothing to fence", (unsigned)lo);
-site	src/hook/exe_host.cpp	190	fmt_place	word	live	(unsigned)a	%08X	if (!VirtualQuery(At(a), &m, sizeof m)) Fatal("fence: VirtualQuery(0x%08X) failed, error %lu", (unsigned)a, GetLastError());
-site	src/hook/exe_host.cpp	191	narrow_call	windows	live	m.BaseAddress	AsU32	const std::uint32_t r_lo = AsU32(m.BaseAddress);
-site	src/hook/exe_host.cpp	197	fmt_place	word	live	(unsigned)(from < r_hi ? from : r_hi)	%08X	if (from > a) Log("fence: 0x%08X..0x%08X free, not taken (below a 64 KB boundary)", (unsigned)a, (unsigned)(from < r_hi ? from : r_hi));
-site	src/hook/exe_host.cpp	197	fmt_place	word	live	(unsigned)a	%08X	if (from > a) Log("fence: 0x%08X..0x%08X free, not taken (below a 64 KB boundary)", (unsigned)a, (unsigned)(from < r_hi ? from : r_hi));
-site	src/hook/exe_host.cpp	199	valloc_addr	-	live	At(from)	-	if (!VirtualAlloc(At(from), r_hi - from, MEM_RESERVE, PAGE_NOACCESS))
-site	src/hook/exe_host.cpp	200	fmt_place	word	live	(unsigned)from	%08X	Fatal("fence: cannot reserve 0x%08X..0x%08X, error %lu", (unsigned)from, (unsigned)r_hi, GetLastError());
-site	src/hook/exe_host.cpp	200	fmt_place	word	live	(unsigned)r_hi	%08X	Fatal("fence: cannot reserve 0x%08X..0x%08X, error %lu", (unsigned)from, (unsigned)r_hi, GetLastError());
-site	src/hook/exe_host.cpp	212	fmt_place	pointer	live	m.AllocationBase	%p	Log("fence: 0x%08X..0x%08X not free, left: state 0x%lX type 0x%lX protect 0x%lX allocation %p%s%s",
-site	src/hook/exe_host.cpp	212	fmt_place	word	live	(unsigned)a	%08X	Log("fence: 0x%08X..0x%08X not free, left: state 0x%lX type 0x%lX protect 0x%lX allocation %p%s%s",
-site	src/hook/exe_host.cpp	212	fmt_place	word	live	(unsigned)r_hi	%08X	Log("fence: 0x%08X..0x%08X not free, left: state 0x%lX type 0x%lX protect 0x%lX allocation %p%s%s",
-site	src/hook/exe_host.cpp	223	fmt_place	word	live	(unsigned)a	%08X	Fatal("fence: the module %s lies at 0x%08X..0x%08X, in the linked span 0x%X..0x%X, where a word is "
-site	src/hook/exe_host.cpp	223	fmt_place	word	live	(unsigned)r_hi	%08X	Fatal("fence: the module %s lies at 0x%08X..0x%08X, in the linked span 0x%X..0x%X, where a word is "
-site	src/hook/exe_host.cpp	229	fmt_place	word	live	(unsigned)ImageBase()	%08X	Log("fence: the image at 0x%08X, moved from 0x%08X: 0x%X bytes of the linked span 0x%08X..0x%08X reserved "
-site	src/hook/exe_host.cpp	229	fmt_place	word	live	(unsigned)hi	%08X	Log("fence: the image at 0x%08X, moved from 0x%08X: 0x%X bytes of the linked span 0x%08X..0x%08X reserved "
-site	src/hook/exe_host.cpp	229	fmt_place	word	live	(unsigned)lo	%08X	Log("fence: the image at 0x%08X, moved from 0x%08X: 0x%X bytes of the linked span 0x%08X..0x%08X reserved "
-site	src/hook/exe_host.cpp	229	fmt_place	word	live	(unsigned)lo	%08X	Log("fence: the image at 0x%08X, moved from 0x%08X: 0x%X bytes of the linked span 0x%08X..0x%08X reserved "
-site	src/hook/exe_host.cpp	318	fmt_place	word	live	(unsigned)(kGameVa + i)	%08X	if (game[i]) Fatal("data: .game is not zero at VA 0x%08X before the copy", (unsigned)(kGameVa + i));
-site	src/hook/exe_host.cpp	333	fmt_place	word	live	(unsigned)a	%08X	if (*static_cast<const std::uint8_t*>(Place(a))) Fatal("data: .bss is not zero at VA 0x%08X after the copy", (unsigned)a);
-site	src/hook/exe_host.cpp	334	fmt_place	word	live	(unsigned)kDataVa	%08X	Log("data: .rdata 0x%08X + 0x%X bytes the engine's (none from the file), .data 0x%08X + 0x%X bytes from %s; .bss "
-site	src/hook/exe_host.cpp	334	fmt_place	word	live	(unsigned)kRdataVa	%08X	Log("data: .rdata 0x%08X + 0x%X bytes the engine's (none from the file), .data 0x%08X + 0x%X bytes from %s; .bss "
-site	src/hook/exe_host.cpp	335	fmt_place	word	live	(unsigned)kDataVa	%08X	"zero 0x%08X..0x%08X (virtual end 0x%08X)",
-site	src/hook/exe_host.cpp	335	fmt_place	word	live	(unsigned)kRdataBytes	%08X	"zero 0x%08X..0x%08X (virtual end 0x%08X)",
-site	src/hook/exe_host.cpp	335	fmt_place	word	live	(unsigned)kRdataVa	%08X	"zero 0x%08X..0x%08X (virtual end 0x%08X)",
-site	src/hook/exe_host.cpp	373	fmt_place	word	live	(unsigned)r.pc	%08X	Fatal("rebase: the run 0x%08X x%u lies outside .data's file bytes", (unsigned)r.pc, (unsigned)r.words);
-site	src/hook/exe_host.cpp	379	fmt_place	word	live	(unsigned)v	%08X	Fatal("rebase: the %s pointer word at VA 0x%08X holds 0x%08X, outside 0x%08X..0x%08X: not the pointer "
-site	src/hook/exe_host.cpp	379	fmt_place	word	live	(unsigned)va	%08X	Fatal("rebase: the %s pointer word at VA 0x%08X holds 0x%08X, outside 0x%08X..0x%08X: not the pointer "
-site	src/hook/exe_host.cpp	379	fmt_place	word	live	(unsigned)want.hi	%08X	Fatal("rebase: the %s pointer word at VA 0x%08X holds 0x%08X, outside 0x%08X..0x%08X: not the pointer "
-site	src/hook/exe_host.cpp	379	fmt_place	word	live	(unsigned)want.lo	%08X	Fatal("rebase: the %s pointer word at VA 0x%08X holds 0x%08X, outside 0x%08X..0x%08X: not the pointer "
-site	src/hook/exe_host.cpp	397	fmt_place	word	live	words[rebase::kData]	%08X	"their linked ranges; the data words moved by 0x%X (the image at 0x%08X); the code words bound, %u to their places "
-site	src/hook/exe_host.cpp	415	import_slot	windows_function	live	DSOUND.dll!#1	FARPROC	0x5C4014 kSlots
-site	src/hook/exe_host.cpp	416	import_slot	windows_function	live	GDI32.dll!SetTextColor	FARPROC	0x5C4020 kSlots
-site	src/hook/exe_host.cpp	417	import_slot	windows_function	live	GDI32.dll!SetBkMode	FARPROC	0x5C4024 kSlots
-site	src/hook/exe_host.cpp	418	import_slot	windows_function	live	GDI32.dll!TextOutA	FARPROC	0x5C4028 kSlots
-site	src/hook/exe_host.cpp	419	import_slot	windows_function	live	KERNEL32.dll!GetTickCount	FARPROC	0x5C407C kSlots
-site	src/hook/exe_host.cpp	420	import_slot	windows_function	live	KERNEL32.dll!CreateEventA	FARPROC	0x5C4080 kSlots
-site	src/hook/exe_host.cpp	421	import_slot	windows_function	live	KERNEL32.dll!CloseHandle	FARPROC	0x5C4084 kSlots
-site	src/hook/exe_host.cpp	422	import_slot	windows_function	live	KERNEL32.dll!GetDriveTypeA	FARPROC	0x5C4088 kSlots
-site	src/hook/exe_host.cpp	423	import_slot	windows_function	live	KERNEL32.dll!ExitProcess	FARPROC	0x5C40B8 kSlots
-site	src/hook/exe_host.cpp	424	import_slot	windows_function	live	KERNEL32.dll!TerminateProcess	FARPROC	0x5C4114 kSlots
-site	src/hook/exe_host.cpp	425	import_slot	windows_function	live	USER32.dll!PostQuitMessage	FARPROC	0x5C4158 kSlots
-site	src/hook/exe_host.cpp	426	import_slot	windows_function	live	USER32.dll!MsgWaitForMultipleObjects	FARPROC	0x5C4164 kSlots
-site	src/hook/exe_host.cpp	427	import_slot	windows_function	live	USER32.dll!IntersectRect	FARPROC	0x5C4168 kSlots
-site	src/hook/exe_host.cpp	428	import_slot	windows_function	live	USER32.dll!MessageBoxA	FARPROC	0x5C4174 kSlots
-site	src/hook/exe_host.cpp	434	fmt_place	pointer	live	(unsigned)s.at	%08X	if (!dll) Fatal("slots: cannot load %s for the slot 0x%08X, error %lu", s.dll, (unsigned)s.at, GetLastError());
-site	src/hook/exe_host.cpp	436	uintptr	-	live	std::uintptr_t	-	: GetProcAddress(dll, reinterpret_cast<LPCSTR>(static_cast<std::uintptr_t>(s.ordinal)));
-site	src/hook/exe_host.cpp	436	widen	param	live	s.ordinal	LPCSTR	: GetProcAddress(dll, reinterpret_cast<LPCSTR>(static_cast<std::uintptr_t>(s.ordinal)));
-site	src/hook/exe_host.cpp	437	fmt_place	pointer	live	(unsigned)s.at	%08X	if (!fn) Fatal("slots: %s has no %s%s (#%u) for the slot 0x%08X", s.dll, s.name ? s.name : "ordinal", s.name ? "" : "",
-site	src/hook/exe_host.cpp	444	width_if	logic	live	Resolve	#if defined(__x86_64__)	#if defined(__x86_64__)
-site	src/hook/exe_host.cpp	466	uintptr	-	live	std::uintptr_t	-	if (now != thunk[i] || target != reinterpret_cast<std::uintptr_t>(Resolve(s)))
-site	src/hook/exe_host.cpp	467	fmt_place	pointer	live	(unsigned)s.at	%08X	Fatal("slots: 0x%08X does not read back as the thunk 0x%08X of %s!%s", (unsigned)s.at, (unsigned)thunk[i], s.dll,
-site	src/hook/exe_host.cpp	467	fmt_place	word	live	(unsigned)thunk[i]	%08X	Fatal("slots: 0x%08X does not read back as the thunk 0x%08X of %s!%s", (unsigned)s.at, (unsigned)thunk[i], s.dll,
-site	src/hook/exe_host.cpp	473	uintptr	-	live	std::uintptr_t	-	const DWORD through = reinterpret_cast<DWORD(WINAPI*)()>(static_cast<std::uintptr_t>(tick_word))();
-site	src/hook/exe_host.cpp	477	fmt_place	word	live	(unsigned)thunk[0]	%08X	Log("slots: %u import slots bound to 14-byte thunks at 0x%08X.. (16 apart, below 4 GB; docs/x64-build-design.md 4) "
-site	src/hook/exe_host.cpp	491	fmt_place	pointer	live	(unsigned)s.at	%08X	if (now != Resolve(s)) Fatal("slots: 0x%08X does not read back as %s!%s", (unsigned)s.at, s.dll, s.name ? s.name : "#1");
-site	src/hook/exe_host.cpp	508	asm	cw	live	fnstcw %0	fnstcw	asm volatile("fnstcw %0" : "=m"(before));
-site	src/hook/exe_host.cpp	509	asm	cw	live	fldcw %0	fldcw	asm volatile("fldcw %0" : : "m"(cw));
-site	src/hook/exe_host.cpp	510	asm	cw	live	fnstcw %0	fnstcw	asm volatile("fnstcw %0" : "=m"(after));
-site	src/hook/exe_host.cpp	511	asm	cw	live	stmxcsr %0	stmxcsr	asm volatile("stmxcsr %0" : "=m"(mxcsr));
-site	src/hook/exe_host.cpp	514	fmt_place	word	live	before	%08X	"Capcom's start-up left it); MXCSR 0x%08X, not set", before, after, mxcsr);
-site	src/hook/exe_host.cpp	534	fmt_place	word	live	(unsigned)a	%08X	if (!VirtualQuery(At(a), &m, sizeof m)) Fatal("stub: VirtualQuery(0x%08X) failed, error %lu", (unsigned)a, GetLastError());
-site	src/hook/exe_host.cpp	535	fmt_place	word	live	(unsigned)a	%08X	if (m.Protect != PAGE_NOACCESS) Fatal("stub: 0x%08X is protect 0x%lX after the change", (unsigned)a, m.Protect);
-site	src/hook/exe_host.cpp	536	narrow_call	windows	live	m.BaseAddress	AsU32	a = AsU32(m.BaseAddress) + static_cast<std::uint32_t>(m.RegionSize);
-site	src/hook/exe_host.cpp	538	fmt_place	word	live	(unsigned)(kStubVa + kStubSize)	%08X	Log("stub: .stub 0x%08X..0x%08X (VA 0x%08X..0x%08X) is no-access: the trap for a code value that is not bound",
-site	src/hook/exe_host.cpp	538	fmt_place	word	live	(unsigned)Img(kStubVa + kStubSize)	%08X	Log("stub: .stub 0x%08X..0x%08X (VA 0x%08X..0x%08X) is no-access: the trap for a code value that is not bound",
-site	src/hook/exe_host.cpp	538	fmt_place	word	live	(unsigned)Img(kStubVa)	%08X	Log("stub: .stub 0x%08X..0x%08X (VA 0x%08X..0x%08X) is no-access: the trap for a code value that is not bound",
-site	src/hook/exe_host.cpp	538	fmt_place	word	live	(unsigned)kStubVa	%08X	Log("stub: .stub 0x%08X..0x%08X (VA 0x%08X..0x%08X) is no-access: the trap for a code value that is not bound",
-site	src/hook/exe_host.cpp	549	width_if	logic	live	Unhandled	#if defined(__x86_64__)	#if defined(__x86_64__)
-site	src/hook/exe_host.cpp	553	long	l	live	long	-	static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(info->ExceptionRecord->ExceptionAddress)));
-site	src/hook/exe_host.cpp	553	uintptr	-	live	std::uintptr_t	-	static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(info->ExceptionRecord->ExceptionAddress)));
-site	src/hook/exe_host.cpp	557	long	ul	live	unsigned long	-	static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(info->ExceptionRecord->ExceptionAddress)));
-site	src/hook/exe_host.cpp	557	narrow	windows	live	info->ExceptionRecord->ExceptionAddress	-	static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(info->ExceptionRecord->ExceptionAddress)));
-site	src/hook/exe_host.cpp	557	uintptr	-	live	std::uintptr_t	-	static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(info->ExceptionRecord->ExceptionAddress)));
-site	src/hook/exe_host.cpp	623	fmt_place	pointer	live	hinstance	%p	Log("Engine_Main: hinstance %p, show %d, on thread %lu", hinstance, show, GetCurrentThreadId());
-site	src/hook/exe_host.cpp	666	fmt_place	pointer	live	hinstance	%p	Log("Engine_Main: Game_WinMain(0x%p, null, \"%s\", %d) on the main thread", hinstance, line, show);
-site	src/hook/exe_host.cpp	678	fmt_place	word	live	(unsigned)va	%08X	if (!IsExeHost()) Fatal("ExeFile_Read(0x%08X) in the hosted build: Capcom's image is mapped, read it there", (unsigned)va);
-site	src/hook/exe_host.cpp	679	fmt_place	word	live	(unsigned)va	%08X	if (g_exe == INVALID_HANDLE_VALUE) Fatal("ExeFile_Read(0x%08X): there is no BOF3.exe (ask ExeFile_Present first)", (unsigned)va);
-site	src/hook/exe_host.cpp	685	fmt_place	word	live	(unsigned)va	%08X	Fatal("ExeFile_Read(0x%08X + %u): not inside the initialised bytes of BOF3.exe's .text, .rdata or .data", (unsigned)va,
+site	src/hook/exe_file.cpp	91	long	l	live	long	-	if (!g_exe || offset > 0x7FFFFFFFu || std::fseek(g_exe, static_cast<long>(offset), SEEK_SET) != 0 ||
+site	src/hook/exe_file.cpp	104	fmt_place	word	live	(unsigned)va	%08X	if (!IsExeHost()) Fatal("ExeFile_Read(0x%08X) in the hosted build: Capcom's image is mapped, read it there", (unsigned)va);
+site	src/hook/exe_file.cpp	105	fmt_place	word	live	(unsigned)va	%08X	if (!exe_file::IsOpen()) Fatal("ExeFile_Read(0x%08X): there is no BOF3.exe (ask ExeFile_Present first)", (unsigned)va);
+site	src/hook/exe_file.cpp	111	fmt_place	word	live	(unsigned)va	%08X	Fatal("ExeFile_Read(0x%08X + %u): not inside the initialised bytes of BOF3.exe's .text, .rdata or .data", (unsigned)va,
+site	src/hook/exe_host.cpp	77	uintptr	-	live	std::uintptr_t	-	void* At(std::uint32_t place) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(place)); }
+site	src/hook/exe_host.cpp	77	widen	param	live	place	void*	void* At(std::uint32_t place) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(place)); }
+site	src/hook/exe_host.cpp	79	low32	helper_def	live	p	Low32	std::uint32_t AsU32(const void* p) { return Low32(p); }
+site	src/hook/exe_host.cpp	113	fmt_place	word	live	(unsigned)a	%08X	if (!VirtualQuery(At(a), &m, sizeof m)) Fatal("layout: VirtualQuery(0x%08X) failed, error %lu", (unsigned)a, GetLastError());
+site	src/hook/exe_host.cpp	120	fmt_place	word	live	(unsigned)(a - Img(va) + va)	%08X	Fatal("layout: %s at 0x%08X (VA 0x%08X) is not our image's %s section (state 0x%lX type 0x%lX protect "
+site	src/hook/exe_host.cpp	120	fmt_place	word	live	(unsigned)a	%08X	Fatal("layout: %s at 0x%08X (VA 0x%08X) is not our image's %s section (state 0x%lX type 0x%lX protect "
+site	src/hook/exe_host.cpp	121	fmt_place	pointer	live	(unsigned)a	%p	"0x%lX base %p): a rewritten bof3x.exe",
+site	src/hook/exe_host.cpp	124	narrow_call	windows	live	m.BaseAddress	AsU32	a = AsU32(m.BaseAddress) + static_cast<std::uint32_t>(m.RegionSize);
+site	src/hook/exe_host.cpp	132	fmt_place	word	live	(unsigned)kGameVa	%08X	Log("layout: .stub 0x%08X +0x%X RWX, .game 0x%08X +0x%X RW, .pool 0x%08X +0x%X RW, as exe_layout.h (VAs; the "
+site	src/hook/exe_host.cpp	132	fmt_place	word	live	(unsigned)kPoolVa	%08X	Log("layout: .stub 0x%08X +0x%X RWX, .game 0x%08X +0x%X RW, .pool 0x%08X +0x%X RW, as exe_layout.h (VAs; the "
+site	src/hook/exe_host.cpp	132	fmt_place	word	live	(unsigned)kStubVa	%08X	Log("layout: .stub 0x%08X +0x%X RWX, .game 0x%08X +0x%X RW, .pool 0x%08X +0x%X RW, as exe_layout.h (VAs; the "
+site	src/hook/exe_host.cpp	133	fmt_place	word	live	(unsigned)kStubVa	%08X	"image at 0x%08X)",
+site	src/hook/exe_host.cpp	171	narrow_call	windows	live	m.BaseAddress	AsU32	const std::uint32_t r_lo = AsU32(m.BaseAddress);
+site	src/hook/exe_host.cpp	177	fmt_place	word	live	(unsigned)best_at	%08X	Log("fence: the largest free run below 16 MB at Engine_Main is 0x%X bytes at 0x%08X (the image takes 0x%X)",
+site	src/hook/exe_host.cpp	185	fmt_place	word	live	(unsigned)lo	%08X	Log("fence: the image at its linked base 0x%08X; nothing to fence", (unsigned)lo);
+site	src/hook/exe_host.cpp	191	fmt_place	word	live	(unsigned)a	%08X	if (!VirtualQuery(At(a), &m, sizeof m)) Fatal("fence: VirtualQuery(0x%08X) failed, error %lu", (unsigned)a, GetLastError());
+site	src/hook/exe_host.cpp	192	narrow_call	windows	live	m.BaseAddress	AsU32	const std::uint32_t r_lo = AsU32(m.BaseAddress);
+site	src/hook/exe_host.cpp	198	fmt_place	word	live	(unsigned)(from < r_hi ? from : r_hi)	%08X	if (from > a) Log("fence: 0x%08X..0x%08X free, not taken (below a 64 KB boundary)", (unsigned)a, (unsigned)(from < r_hi ? from : r_hi));
+site	src/hook/exe_host.cpp	198	fmt_place	word	live	(unsigned)a	%08X	if (from > a) Log("fence: 0x%08X..0x%08X free, not taken (below a 64 KB boundary)", (unsigned)a, (unsigned)(from < r_hi ? from : r_hi));
+site	src/hook/exe_host.cpp	200	valloc_addr	-	live	At(from)	-	if (!VirtualAlloc(At(from), r_hi - from, MEM_RESERVE, PAGE_NOACCESS))
+site	src/hook/exe_host.cpp	201	fmt_place	word	live	(unsigned)from	%08X	Fatal("fence: cannot reserve 0x%08X..0x%08X, error %lu", (unsigned)from, (unsigned)r_hi, GetLastError());
+site	src/hook/exe_host.cpp	201	fmt_place	word	live	(unsigned)r_hi	%08X	Fatal("fence: cannot reserve 0x%08X..0x%08X, error %lu", (unsigned)from, (unsigned)r_hi, GetLastError());
+site	src/hook/exe_host.cpp	213	fmt_place	pointer	live	m.AllocationBase	%p	Log("fence: 0x%08X..0x%08X not free, left: state 0x%lX type 0x%lX protect 0x%lX allocation %p%s%s",
+site	src/hook/exe_host.cpp	213	fmt_place	word	live	(unsigned)a	%08X	Log("fence: 0x%08X..0x%08X not free, left: state 0x%lX type 0x%lX protect 0x%lX allocation %p%s%s",
+site	src/hook/exe_host.cpp	213	fmt_place	word	live	(unsigned)r_hi	%08X	Log("fence: 0x%08X..0x%08X not free, left: state 0x%lX type 0x%lX protect 0x%lX allocation %p%s%s",
+site	src/hook/exe_host.cpp	224	fmt_place	word	live	(unsigned)a	%08X	Fatal("fence: the module %s lies at 0x%08X..0x%08X, in the linked span 0x%X..0x%X, where a word is "
+site	src/hook/exe_host.cpp	224	fmt_place	word	live	(unsigned)r_hi	%08X	Fatal("fence: the module %s lies at 0x%08X..0x%08X, in the linked span 0x%X..0x%X, where a word is "
+site	src/hook/exe_host.cpp	230	fmt_place	word	live	(unsigned)ImageBase()	%08X	Log("fence: the image at 0x%08X, moved from 0x%08X: 0x%X bytes of the linked span 0x%08X..0x%08X reserved "
+site	src/hook/exe_host.cpp	230	fmt_place	word	live	(unsigned)hi	%08X	Log("fence: the image at 0x%08X, moved from 0x%08X: 0x%X bytes of the linked span 0x%08X..0x%08X reserved "
+site	src/hook/exe_host.cpp	230	fmt_place	word	live	(unsigned)lo	%08X	Log("fence: the image at 0x%08X, moved from 0x%08X: 0x%X bytes of the linked span 0x%08X..0x%08X reserved "
+site	src/hook/exe_host.cpp	230	fmt_place	word	live	(unsigned)lo	%08X	Log("fence: the image at 0x%08X, moved from 0x%08X: 0x%X bytes of the linked span 0x%08X..0x%08X reserved "
+site	src/hook/exe_host.cpp	287	fmt_place	word	live	(unsigned)(kGameVa + i)	%08X	if (game[i]) Fatal("data: .game is not zero at VA 0x%08X before the copy", (unsigned)(kGameVa + i));
+site	src/hook/exe_host.cpp	302	fmt_place	word	live	(unsigned)a	%08X	if (*static_cast<const std::uint8_t*>(Place(a))) Fatal("data: .bss is not zero at VA 0x%08X after the copy", (unsigned)a);
+site	src/hook/exe_host.cpp	303	fmt_place	word	live	(unsigned)kDataVa	%08X	Log("data: .rdata 0x%08X + 0x%X bytes the engine's (none from the file), .data 0x%08X + 0x%X bytes from %s; .bss "
+site	src/hook/exe_host.cpp	303	fmt_place	word	live	(unsigned)kRdataVa	%08X	Log("data: .rdata 0x%08X + 0x%X bytes the engine's (none from the file), .data 0x%08X + 0x%X bytes from %s; .bss "
+site	src/hook/exe_host.cpp	304	fmt_place	word	live	(unsigned)kDataVa	%08X	"zero 0x%08X..0x%08X (virtual end 0x%08X)",
+site	src/hook/exe_host.cpp	304	fmt_place	word	live	(unsigned)kRdataBytes	%08X	"zero 0x%08X..0x%08X (virtual end 0x%08X)",
+site	src/hook/exe_host.cpp	304	fmt_place	word	live	(unsigned)kRdataVa	%08X	"zero 0x%08X..0x%08X (virtual end 0x%08X)",
+site	src/hook/exe_host.cpp	342	fmt_place	word	live	(unsigned)r.pc	%08X	Fatal("rebase: the run 0x%08X x%u lies outside .data's file bytes", (unsigned)r.pc, (unsigned)r.words);
+site	src/hook/exe_host.cpp	348	fmt_place	word	live	(unsigned)v	%08X	Fatal("rebase: the %s pointer word at VA 0x%08X holds 0x%08X, outside 0x%08X..0x%08X: not the pointer "
+site	src/hook/exe_host.cpp	348	fmt_place	word	live	(unsigned)va	%08X	Fatal("rebase: the %s pointer word at VA 0x%08X holds 0x%08X, outside 0x%08X..0x%08X: not the pointer "
+site	src/hook/exe_host.cpp	348	fmt_place	word	live	(unsigned)want.hi	%08X	Fatal("rebase: the %s pointer word at VA 0x%08X holds 0x%08X, outside 0x%08X..0x%08X: not the pointer "
+site	src/hook/exe_host.cpp	348	fmt_place	word	live	(unsigned)want.lo	%08X	Fatal("rebase: the %s pointer word at VA 0x%08X holds 0x%08X, outside 0x%08X..0x%08X: not the pointer "
+site	src/hook/exe_host.cpp	366	fmt_place	word	live	words[rebase::kData]	%08X	"their linked ranges; the data words moved by 0x%X (the image at 0x%08X); the code words bound, %u to their places "
+site	src/hook/exe_host.cpp	384	import_slot	windows_function	live	DSOUND.dll!#1	FARPROC	0x5C4014 kSlots
+site	src/hook/exe_host.cpp	385	import_slot	windows_function	live	GDI32.dll!SetTextColor	FARPROC	0x5C4020 kSlots
+site	src/hook/exe_host.cpp	386	import_slot	windows_function	live	GDI32.dll!SetBkMode	FARPROC	0x5C4024 kSlots
+site	src/hook/exe_host.cpp	387	import_slot	windows_function	live	GDI32.dll!TextOutA	FARPROC	0x5C4028 kSlots
+site	src/hook/exe_host.cpp	388	import_slot	windows_function	live	KERNEL32.dll!GetTickCount	FARPROC	0x5C407C kSlots
+site	src/hook/exe_host.cpp	389	import_slot	windows_function	live	KERNEL32.dll!CreateEventA	FARPROC	0x5C4080 kSlots
+site	src/hook/exe_host.cpp	390	import_slot	windows_function	live	KERNEL32.dll!CloseHandle	FARPROC	0x5C4084 kSlots
+site	src/hook/exe_host.cpp	391	import_slot	windows_function	live	KERNEL32.dll!GetDriveTypeA	FARPROC	0x5C4088 kSlots
+site	src/hook/exe_host.cpp	392	import_slot	windows_function	live	KERNEL32.dll!ExitProcess	FARPROC	0x5C40B8 kSlots
+site	src/hook/exe_host.cpp	393	import_slot	windows_function	live	KERNEL32.dll!TerminateProcess	FARPROC	0x5C4114 kSlots
+site	src/hook/exe_host.cpp	394	import_slot	windows_function	live	USER32.dll!PostQuitMessage	FARPROC	0x5C4158 kSlots
+site	src/hook/exe_host.cpp	395	import_slot	windows_function	live	USER32.dll!MsgWaitForMultipleObjects	FARPROC	0x5C4164 kSlots
+site	src/hook/exe_host.cpp	396	import_slot	windows_function	live	USER32.dll!IntersectRect	FARPROC	0x5C4168 kSlots
+site	src/hook/exe_host.cpp	397	import_slot	windows_function	live	USER32.dll!MessageBoxA	FARPROC	0x5C4174 kSlots
+site	src/hook/exe_host.cpp	403	fmt_place	pointer	live	(unsigned)s.at	%08X	if (!dll) Fatal("slots: cannot load %s for the slot 0x%08X, error %lu", s.dll, (unsigned)s.at, GetLastError());
+site	src/hook/exe_host.cpp	405	uintptr	-	live	std::uintptr_t	-	: GetProcAddress(dll, reinterpret_cast<LPCSTR>(static_cast<std::uintptr_t>(s.ordinal)));
+site	src/hook/exe_host.cpp	405	widen	param	live	s.ordinal	LPCSTR	: GetProcAddress(dll, reinterpret_cast<LPCSTR>(static_cast<std::uintptr_t>(s.ordinal)));
+site	src/hook/exe_host.cpp	406	fmt_place	pointer	live	(unsigned)s.at	%08X	if (!fn) Fatal("slots: %s has no %s%s (#%u) for the slot 0x%08X", s.dll, s.name ? s.name : "ordinal", s.name ? "" : "",
+site	src/hook/exe_host.cpp	413	width_if	logic	live	Resolve	#if defined(__x86_64__)	#if defined(__x86_64__)
+site	src/hook/exe_host.cpp	435	uintptr	-	live	std::uintptr_t	-	if (now != thunk[i] || target != reinterpret_cast<std::uintptr_t>(Resolve(s)))
+site	src/hook/exe_host.cpp	436	fmt_place	pointer	live	(unsigned)s.at	%08X	Fatal("slots: 0x%08X does not read back as the thunk 0x%08X of %s!%s", (unsigned)s.at, (unsigned)thunk[i], s.dll,
+site	src/hook/exe_host.cpp	436	fmt_place	word	live	(unsigned)thunk[i]	%08X	Fatal("slots: 0x%08X does not read back as the thunk 0x%08X of %s!%s", (unsigned)s.at, (unsigned)thunk[i], s.dll,
+site	src/hook/exe_host.cpp	442	uintptr	-	live	std::uintptr_t	-	const DWORD through = reinterpret_cast<DWORD(WINAPI*)()>(static_cast<std::uintptr_t>(tick_word))();
+site	src/hook/exe_host.cpp	446	fmt_place	word	live	(unsigned)thunk[0]	%08X	Log("slots: %u import slots bound to 14-byte thunks at 0x%08X.. (16 apart, below 4 GB; docs/x64-build-design.md 4) "
+site	src/hook/exe_host.cpp	460	fmt_place	pointer	live	(unsigned)s.at	%08X	if (now != Resolve(s)) Fatal("slots: 0x%08X does not read back as %s!%s", (unsigned)s.at, s.dll, s.name ? s.name : "#1");
+site	src/hook/exe_host.cpp	477	asm	cw	live	fnstcw %0	fnstcw	asm volatile("fnstcw %0" : "=m"(before));
+site	src/hook/exe_host.cpp	478	asm	cw	live	fldcw %0	fldcw	asm volatile("fldcw %0" : : "m"(cw));
+site	src/hook/exe_host.cpp	479	asm	cw	live	fnstcw %0	fnstcw	asm volatile("fnstcw %0" : "=m"(after));
+site	src/hook/exe_host.cpp	480	asm	cw	live	stmxcsr %0	stmxcsr	asm volatile("stmxcsr %0" : "=m"(mxcsr));
+site	src/hook/exe_host.cpp	483	fmt_place	word	live	before	%08X	"Capcom's start-up left it); MXCSR 0x%08X, not set", before, after, mxcsr);
+site	src/hook/exe_host.cpp	503	fmt_place	word	live	(unsigned)a	%08X	if (!VirtualQuery(At(a), &m, sizeof m)) Fatal("stub: VirtualQuery(0x%08X) failed, error %lu", (unsigned)a, GetLastError());
+site	src/hook/exe_host.cpp	504	fmt_place	word	live	(unsigned)a	%08X	if (m.Protect != PAGE_NOACCESS) Fatal("stub: 0x%08X is protect 0x%lX after the change", (unsigned)a, m.Protect);
+site	src/hook/exe_host.cpp	505	narrow_call	windows	live	m.BaseAddress	AsU32	a = AsU32(m.BaseAddress) + static_cast<std::uint32_t>(m.RegionSize);
+site	src/hook/exe_host.cpp	507	fmt_place	word	live	(unsigned)(kStubVa + kStubSize)	%08X	Log("stub: .stub 0x%08X..0x%08X (VA 0x%08X..0x%08X) is no-access: the trap for a code value that is not bound",
+site	src/hook/exe_host.cpp	507	fmt_place	word	live	(unsigned)Img(kStubVa + kStubSize)	%08X	Log("stub: .stub 0x%08X..0x%08X (VA 0x%08X..0x%08X) is no-access: the trap for a code value that is not bound",
+site	src/hook/exe_host.cpp	507	fmt_place	word	live	(unsigned)Img(kStubVa)	%08X	Log("stub: .stub 0x%08X..0x%08X (VA 0x%08X..0x%08X) is no-access: the trap for a code value that is not bound",
+site	src/hook/exe_host.cpp	507	fmt_place	word	live	(unsigned)kStubVa	%08X	Log("stub: .stub 0x%08X..0x%08X (VA 0x%08X..0x%08X) is no-access: the trap for a code value that is not bound",
+site	src/hook/exe_host.cpp	518	width_if	logic	live	Unhandled	#if defined(__x86_64__)	#if defined(__x86_64__)
+site	src/hook/exe_host.cpp	522	long	l	live	long	-	static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(info->ExceptionRecord->ExceptionAddress)));
+site	src/hook/exe_host.cpp	522	uintptr	-	live	std::uintptr_t	-	static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(info->ExceptionRecord->ExceptionAddress)));
+site	src/hook/exe_host.cpp	526	long	ul	live	unsigned long	-	static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(info->ExceptionRecord->ExceptionAddress)));
+site	src/hook/exe_host.cpp	526	narrow	windows	live	info->ExceptionRecord->ExceptionAddress	-	static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(info->ExceptionRecord->ExceptionAddress)));
+site	src/hook/exe_host.cpp	526	uintptr	-	live	std::uintptr_t	-	static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(info->ExceptionRecord->ExceptionAddress)));
+site	src/hook/exe_host.cpp	592	fmt_place	pointer	live	hinstance	%p	Log("Engine_Main: hinstance %p, show %d, on thread %lu", hinstance, show, GetCurrentThreadId());
+site	src/hook/exe_host.cpp	635	fmt_place	pointer	live	hinstance	%p	Log("Engine_Main: Game_WinMain(0x%p, null, \"%s\", %d) on the main thread", hinstance, line, show);
 site	src/hook/exe_icon.cpp	61	widen	img_place	live	::bof3::Img(menu_windows::at::kIconRects) + kIcon * 4	const std::uint8_t*	const auto* p = reinterpret_cast<const std::uint8_t*>(
 site	src/hook/exe_icon.cpp	62	uintptr	-	live	std::uintptr_t	-	static_cast<std::uintptr_t>(::bof3::Img(menu_windows::at::kIconRects) + kIcon * 4));
 site	src/hook/exe_icon.cpp	380	long	ul	live	unsigned long	-	wsprintfA(t, " ", static_cast<unsigned long>(hr));
 site	src/hook/exe_image.cpp	539	uintptr	-	live	std::uintptr_t	-	auto* live = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(Img(va)));
 site	src/hook/exe_image.cpp	539	widen	other	live	Img(va)	unsigned char*	auto* live = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(Img(va)));
-site	src/hook/exe_image.cpp	1315	uintptr	-	live	std::uintptr_t	-	const auto* live = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(Img(im.va)));
-site	src/hook/exe_image.cpp	1315	widen	other	live	Img(im.va)	const unsigned char*	const auto* live = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(Img(im.va)));
+site	src/hook/exe_image.cpp	1318	uintptr	-	live	std::uintptr_t	-	const auto* live = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(Img(im.va)));
+site	src/hook/exe_image.cpp	1318	widen	other	live	Img(im.va)	const unsigned char*	const auto* live = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(Img(im.va)));
 site	src/hook/exe_own.cpp	345	uintptr	-	live	std::uintptr_t	-	const auto* live = reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(Img(kDataVa)));
 site	src/hook/exe_own.cpp	345	widen	other	live	Img(kDataVa)	const std::uint8_t*	const auto* live = reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(Img(kDataVa)));
 site	src/hook/gapwatch.cpp	61	uintptr	-	live	std::uintptr_t	-	std::uintptr_t eip;
@@ -8636,16 +8637,16 @@ site	src/hook/gapwatch.cpp	848	narrow_call	image	live	&Frame_Counter	Va	for (std
 site	src/hook/gapwatch.cpp	848	narrow_call	image	live	&Game_AreaNumber	Va	for (std::uint32_t at : {Va(&Frame_Counter), Va(&Game_AreaNumber)})
 site	src/hook/gapwatch.cpp	849	fmt_place	pointer	live	(unsigned)ToVa(at)	%08X	if (FindPage(at & ~(kPage - 1)) >= 0) Fatal("gapwatch: 0x%08X, which the handler reads, is on a watched page", (unsigned)ToVa(at));
 site	src/hook/gapwatch.cpp	870	long	l	live	long	-	g_classes, g_build, g_pages, (long)g_budget, g_route, Utf8Path(out.c_str()).text,
-site	src/hook/host.cpp	39	low32	unread	live	base	Low32	const auto at = Low32(base);
-site	src/hook/host.cpp	49	width_if	logic	live	DetectHost	#if defined(__x86_64__)	#if defined(__x86_64__)
-site	src/hook/host.cpp	53	fmt_place	pointer	live	static_cast<const void*>(base)	%p	Fatal("host: the main module at %p has optional-header magic 0x%X, not a PE32+'s 0x%X: a 64-bit bof3x.dll "
-site	src/hook/host.cpp	60	width_if	logic	live	DetectHost	#if defined(__x86_64__)	#if defined(__x86_64__)
-site	src/hook/host.cpp	74	fmt_place	pointer	live	static_cast<const void*>(base)	%p	Fatal("the main module at %p (timestamp 0x%lX) is neither BOF3.exe (0x%X) nor bof3x.exe (0x%X): every "
-site	src/hook/host.cpp	76	long	ul	live	unsigned long	-	static_cast<const void*>(base), static_cast<unsigned long>(stamp), (unsigned)image::kTimestamp,
-site	src/hook/host.cpp	107	long	ul	live	unsigned long	-	const unsigned long want = std::strtoul(asked, &tail, 0);
-site	src/hook/host.cpp	129	width_if	logic	live	VerifyImage	#if defined(__x86_64__)	#if defined(__x86_64__)
-site	src/hook/host.cpp	134	uintptr	-	live	std::uintptr_t	-	if (reinterpret_cast<std::uintptr_t>(base) != image::kBase)
-site	src/hook/host.cpp	135	fmt_place	pointer	live	(void*)base	%p	Fatal("main module is at %p, not 0x%X: this is not BOF3.exe, or it was rebased",
+site	src/hook/host.cpp	92	long	ul	live	unsigned long	-	const unsigned long want = std::strtoul(asked, &tail, 0);
+site	src/hook/host_win32.cpp	24	low32	unread	live	base	Low32	const auto at = Low32(base);
+site	src/hook/host_win32.cpp	34	width_if	logic	live	DetectHost	#if defined(__x86_64__)	#if defined(__x86_64__)
+site	src/hook/host_win32.cpp	38	fmt_place	pointer	live	static_cast<const void*>(base)	%p	Fatal("host: the main module at %p has optional-header magic 0x%X, not a PE32+'s 0x%X: a 64-bit bof3x.dll "
+site	src/hook/host_win32.cpp	46	width_if	logic	live	DetectHost	#if defined(__x86_64__)	#if defined(__x86_64__)
+site	src/hook/host_win32.cpp	60	fmt_place	pointer	live	static_cast<const void*>(base)	%p	Fatal("the main module at %p (timestamp 0x%lX) is neither BOF3.exe (0x%X) nor bof3x.exe (0x%X): every "
+site	src/hook/host_win32.cpp	62	long	ul	live	unsigned long	-	static_cast<const void*>(base), static_cast<unsigned long>(stamp), (unsigned)image::kTimestamp,
+site	src/hook/host_win32.cpp	76	width_if	logic	live	VerifyImage	#if defined(__x86_64__)	#if defined(__x86_64__)
+site	src/hook/host_win32.cpp	81	uintptr	-	live	std::uintptr_t	-	if (reinterpret_cast<std::uintptr_t>(base) != image::kBase)
+site	src/hook/host_win32.cpp	82	fmt_place	pointer	live	(void*)base	%p	Fatal("main module is at %p, not 0x%X: this is not BOF3.exe, or it was rebased",
 site	src/hook/input_script.cpp	280	uintptr	-	live	std::uintptr_t	-	const void* p = reinterpret_cast<const void*>(static_cast<std::uintptr_t>(::bof3::Img(a)));
 site	src/hook/input_script.cpp	280	widen	img_place	live	::bof3::Img(a)	const void*	const void* p = reinterpret_cast<const void*>(static_cast<std::uintptr_t>(::bof3::Img(a)));
 site	src/hook/input_script.cpp	289	uintptr	-	live	std::uintptr_t	-	const void* p = reinterpret_cast<const void*>(static_cast<std::uintptr_t>(addr));
@@ -9102,33 +9103,33 @@ site	src/input/sigma.cpp	195	uintptr	-	live	std::uintptr_t	-	Check(std::memcmp(j
 site	src/input/sigma.cpp	195	widen	img_place	live	::bof3::Img(kBootDefaults.v)	const void*	Check(std::memcmp(jp, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(::bof3::Img(kBootDefaults.v))), sizeof jp) == 0,
 site	src/input/sigma.cpp	526	low32	object_ours	live	&g_sigma_on	Low32	bof3::PatchBytes(" ", Low32(&g_sigma_on), &was, &is, 1);
 site	src/input/sigma.cpp	527	low32	object_ours	live	&g_by_source	Low32	bof3::PatchBytes(" ", Low32(&g_by_source), &was,
-site	src/launcher/config.cpp	298	long	l	live	long	-	const long v = std::strtol(value.c_str(), &end, 10);
-site	src/launcher/config.cpp	1338	long	l	live	long	-	long long off = 0;
-site	src/launcher/config.cpp	1353	long	l	live	long	-	off += 16 + static_cast<long long>(len);
+site	src/launcher/config.cpp	300	long	l	live	long	-	const long v = std::strtol(value.c_str(), &end, 10);
+site	src/launcher/config.cpp	1372	long	l	live	long	-	long long off = 0;
+site	src/launcher/config.cpp	1385	long	l	live	long	-	off += 16 + static_cast<long long>(len);
 site	src/launcher/config_dialog.cpp	1286	ptr_overlay	unread	live	lp	Capture	auto* c = reinterpret_cast<Capture*>(lp);
 site	src/launcher/config_dialog.cpp	1889	ptr_overlay	unread	live	GetWindowLongPtrW(dlg, GWLP_USERDATA)	DialogState	auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
 site	src/launcher/config_dialog.cpp	1893	ptr_overlay	unread	live	lp	DialogState	state = reinterpret_cast<DialogState*>(lp);
-site	src/launcher/launcher.cpp	160	uintptr	-	live	std::uintptr_t	-	if (!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base)), &dos, sizeof dos, nullptr) ||
-site	src/launcher/launcher.cpp	160	widen	param	live	base	LPCVOID	if (!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base)), &dos, sizeof dos, nullptr) ||
-site	src/launcher/launcher.cpp	162	uintptr	-	live	std::uintptr_t	-	!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base + dos.e_lfanew)), &nt, sizeof nt,
-site	src/launcher/launcher.cpp	162	widen	other	live	base + dos.e_lfanew	LPCVOID	!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base + dos.e_lfanew)), &nt, sizeof nt,
-site	src/launcher/launcher.cpp	165	fmt_place	pointer	live	base	%08X	Die(L"BOF3X_IMAGEBASE: no PE header at 0x%08X in the game process (%lu)", base, GetLastError());
-site	src/launcher/launcher.cpp	170	uintptr	-	live	std::uintptr_t	-	if (!VirtualQueryEx(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(a)), &m, sizeof m))
-site	src/launcher/launcher.cpp	170	widen	param	live	a	LPCVOID	if (!VirtualQueryEx(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(a)), &m, sizeof m))
-site	src/launcher/launcher.cpp	171	fmt_place	word	live	a	%08X	Die(L"BOF3X_IMAGEBASE: VirtualQueryEx(0x%08X) failed (%lu)", a, GetLastError());
-site	src/launcher/launcher.cpp	172	narrow	windows	live	m.BaseAddress	-	const auto lo = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(m.BaseAddress));
-site	src/launcher/launcher.cpp	172	uintptr	-	live	std::uintptr_t	-	const auto lo = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(m.BaseAddress));
-site	src/launcher/launcher.cpp	177	uintptr	-	live	std::uintptr_t	-	if (!VirtualAllocEx(process, reinterpret_cast<LPVOID>(static_cast<std::uintptr_t>(from)), hi - from, MEM_RESERVE,
-site	src/launcher/launcher.cpp	177	valloc_addr	-	live	reinterpret_cast<LPVOID>(static_cast<std::uintptr_t>(from))	-	if (!VirtualAllocEx(process, reinterpret_cast<LPVOID>(static_cast<std::uintptr_t>(from)), hi - from, MEM_RESERVE,
-site	src/launcher/launcher.cpp	177	widen	param	live	from	LPVOID	if (!VirtualAllocEx(process, reinterpret_cast<LPVOID>(static_cast<std::uintptr_t>(from)), hi - from, MEM_RESERVE,
-site	src/launcher/launcher.cpp	179	fmt_place	word	live	from	%08X	Die(L"BOF3X_IMAGEBASE: cannot reserve 0x%08X..0x%08X in the game process (%lu)", from, hi, GetLastError());
-site	src/launcher/launcher.cpp	179	fmt_place	word	live	hi	%08X	Die(L"BOF3X_IMAGEBASE: cannot reserve 0x%08X..0x%08X in the game process (%lu)", from, hi, GetLastError());
-site	src/launcher/launcher.cpp	186	fmt_place	word	live	kHi	%08X	std::fwprintf(stderr, L"bof3x-launcher: BOF3X_IMAGEBASE: 0x%X bytes of 0x%08X..0x%08X reserved no-access in the "
-site	src/launcher/launcher.cpp	186	fmt_place	word	live	kLo	%08X	std::fwprintf(stderr, L"bof3x-launcher: BOF3X_IMAGEBASE: 0x%X bytes of 0x%08X..0x%08X reserved no-access in the "
-site	src/launcher/launcher.cpp	203	uintptr	-	live	std::uintptr_t	-	void* block = VirtualAllocEx(process, reinterpret_cast<void*>(static_cast<std::uintptr_t>(at)), kBytes,
-site	src/launcher/launcher.cpp	203	valloc_addr	-	live	reinterpret_cast<void*>(static_cast<std::uintptr_t>(at))	-	void* block = VirtualAllocEx(process, reinterpret_cast<void*>(static_cast<std::uintptr_t>(at)), kBytes,
-site	src/launcher/launcher.cpp	203	widen	param	live	at	void*	void* block = VirtualAllocEx(process, reinterpret_cast<void*>(static_cast<std::uintptr_t>(at)), kBytes,
-site	src/launcher/launcher.cpp	399	long	ul	live	unsigned long	-	const unsigned long base = std::wcstoul(base_text, &end, 0);
+site	src/launcher/launcher.cpp	132	uintptr	-	live	std::uintptr_t	-	if (!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base)), &dos, sizeof dos, nullptr) ||
+site	src/launcher/launcher.cpp	132	widen	param	live	base	LPCVOID	if (!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base)), &dos, sizeof dos, nullptr) ||
+site	src/launcher/launcher.cpp	134	uintptr	-	live	std::uintptr_t	-	!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base + dos.e_lfanew)), &nt, sizeof nt,
+site	src/launcher/launcher.cpp	134	widen	other	live	base + dos.e_lfanew	LPCVOID	!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base + dos.e_lfanew)), &nt, sizeof nt,
+site	src/launcher/launcher.cpp	137	fmt_place	pointer	live	base	%08X	Die(L"BOF3X_IMAGEBASE: no PE header at 0x%08X in the game process (%lu)", base, GetLastError());
+site	src/launcher/launcher.cpp	142	uintptr	-	live	std::uintptr_t	-	if (!VirtualQueryEx(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(a)), &m, sizeof m))
+site	src/launcher/launcher.cpp	142	widen	param	live	a	LPCVOID	if (!VirtualQueryEx(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(a)), &m, sizeof m))
+site	src/launcher/launcher.cpp	143	fmt_place	word	live	a	%08X	Die(L"BOF3X_IMAGEBASE: VirtualQueryEx(0x%08X) failed (%lu)", a, GetLastError());
+site	src/launcher/launcher.cpp	144	narrow	windows	live	m.BaseAddress	-	const auto lo = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(m.BaseAddress));
+site	src/launcher/launcher.cpp	144	uintptr	-	live	std::uintptr_t	-	const auto lo = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(m.BaseAddress));
+site	src/launcher/launcher.cpp	149	uintptr	-	live	std::uintptr_t	-	if (!VirtualAllocEx(process, reinterpret_cast<LPVOID>(static_cast<std::uintptr_t>(from)), hi - from, MEM_RESERVE,
+site	src/launcher/launcher.cpp	149	valloc_addr	-	live	reinterpret_cast<LPVOID>(static_cast<std::uintptr_t>(from))	-	if (!VirtualAllocEx(process, reinterpret_cast<LPVOID>(static_cast<std::uintptr_t>(from)), hi - from, MEM_RESERVE,
+site	src/launcher/launcher.cpp	149	widen	param	live	from	LPVOID	if (!VirtualAllocEx(process, reinterpret_cast<LPVOID>(static_cast<std::uintptr_t>(from)), hi - from, MEM_RESERVE,
+site	src/launcher/launcher.cpp	151	fmt_place	word	live	from	%08X	Die(L"BOF3X_IMAGEBASE: cannot reserve 0x%08X..0x%08X in the game process (%lu)", from, hi, GetLastError());
+site	src/launcher/launcher.cpp	151	fmt_place	word	live	hi	%08X	Die(L"BOF3X_IMAGEBASE: cannot reserve 0x%08X..0x%08X in the game process (%lu)", from, hi, GetLastError());
+site	src/launcher/launcher.cpp	158	fmt_place	word	live	kHi	%08X	std::fwprintf(stderr, L"bof3x-launcher: BOF3X_IMAGEBASE: 0x%X bytes of 0x%08X..0x%08X reserved no-access in the "
+site	src/launcher/launcher.cpp	158	fmt_place	word	live	kLo	%08X	std::fwprintf(stderr, L"bof3x-launcher: BOF3X_IMAGEBASE: 0x%X bytes of 0x%08X..0x%08X reserved no-access in the "
+site	src/launcher/launcher.cpp	175	uintptr	-	live	std::uintptr_t	-	void* block = VirtualAllocEx(process, reinterpret_cast<void*>(static_cast<std::uintptr_t>(at)), kBytes,
+site	src/launcher/launcher.cpp	175	valloc_addr	-	live	reinterpret_cast<void*>(static_cast<std::uintptr_t>(at))	-	void* block = VirtualAllocEx(process, reinterpret_cast<void*>(static_cast<std::uintptr_t>(at)), kBytes,
+site	src/launcher/launcher.cpp	175	widen	param	live	at	void*	void* block = VirtualAllocEx(process, reinterpret_cast<void*>(static_cast<std::uintptr_t>(at)), kBytes,
+site	src/launcher/launcher.cpp	382	long	ul	live	unsigned long	-	const unsigned long base = std::wcstoul(base_text, &end, 0);
 site	src/launcher/music_player.cpp	800	ptr_overlay	unread	live	lp	State	auto* s = reinterpret_cast<State*>(lp);
 site	src/launcher/music_player.cpp	859	ptr_overlay	unread	live	GetWindowLongPtrW(dlg, GWLP_USERDATA)	State	auto* s = reinterpret_cast<State*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
 site	src/launcher/music_player.cpp	868	ptr_overlay	unread	live	GetWindowLongPtrW(dlg, GWLP_USERDATA)	State	auto* s = reinterpret_cast<State*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
@@ -15101,9 +15102,11 @@ file	src/hook/draw_order.cpp	live	low32	image	2
 file	src/hook/draw_order.cpp	live	low32	pool	4
 file	src/hook/draw_order.cpp	live	uintptr	-	1
 file	src/hook/draw_order.cpp	live	widen	param	1
+file	src/hook/exe_file.cpp	live	fmt_place	word	3
+file	src/hook/exe_file.cpp	live	long	l	1
 file	src/hook/exe_host.cpp	live	asm	cw	4
 file	src/hook/exe_host.cpp	live	fmt_place	pointer	8
-file	src/hook/exe_host.cpp	live	fmt_place	word	47
+file	src/hook/exe_host.cpp	live	fmt_place	word	44
 file	src/hook/exe_host.cpp	live	import_slot	windows_function	14
 file	src/hook/exe_host.cpp	live	long	l	1
 file	src/hook/exe_host.cpp	live	long	ul	1
@@ -15133,11 +15136,12 @@ file	src/hook/gapwatch.cpp	live	narrow_call	unread	2
 file	src/hook/gapwatch.cpp	live	uintptr	-	24
 file	src/hook/gapwatch.cpp	live	widen	param	1
 file	src/hook/gapwatch.cpp	live	width_if	logic	1
-file	src/hook/host.cpp	live	fmt_place	pointer	3
-file	src/hook/host.cpp	live	long	ul	2
-file	src/hook/host.cpp	live	low32	unread	1
-file	src/hook/host.cpp	live	uintptr	-	1
-file	src/hook/host.cpp	live	width_if	logic	3
+file	src/hook/host.cpp	live	long	ul	1
+file	src/hook/host_win32.cpp	live	fmt_place	pointer	3
+file	src/hook/host_win32.cpp	live	long	ul	1
+file	src/hook/host_win32.cpp	live	low32	unread	1
+file	src/hook/host_win32.cpp	live	uintptr	-	1
+file	src/hook/host_win32.cpp	live	width_if	logic	3
 file	src/hook/input_script.cpp	live	fmt_place	word	10
 file	src/hook/input_script.cpp	live	long	l	3
 file	src/hook/input_script.cpp	live	long	ul	6
@@ -15284,8 +15288,8 @@ file	symbols.toml	live	ptr_member	ours_render	11
 file	symbols.toml	live	ptr_member	windows_function	14
 file	symbols.toml	live	ptr_member	windows_handle	3
 file	symbols.toml	live	ptr_member	windows_object	10
-#count sites	11269
-#count sites_live	7798
+#count sites	11270
+#count sites_live	7799
 #count sites_fuzz	3471
 #count fuzz_files	250
 #count narrow	357
@@ -15372,9 +15376,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count widen_word_read	373
 #count widen_word_read_live	364
 #count widen_word_read_live_files	295
-#count long	2360
-#count long_live	2359
-#count long_live_files	49
+#count long	2361
+#count long_live	2360
+#count long_live_files	51
 #count long_fuzz	1
 #count long_fuzz_files	1
 #count long_ctype:long	42
@@ -15386,12 +15390,12 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count long_ctype:unsigned long *	1
 #count long_ctype:unsigned long *_live	1
 #count long_ctype:unsigned long *_live_files	1
-#count long_l	353
-#count long_l_live	352
-#count long_l_live_files	37
+#count long_l	354
+#count long_l_live	353
+#count long_l_live_files	38
 #count long_ul	218
 #count long_ul_live	218
-#count long_ul_live_files	28
+#count long_ul_live_files	29
 #count asm	324
 #count asm_live	203
 #count asm_live_files	81
@@ -15470,7 +15474,7 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count uintptr_-_live_files	519
 #count fmt_place	493
 #count fmt_place_live	423
-#count fmt_place_live_files	70
+#count fmt_place_live_files	71
 #count fmt_place_fuzz	70
 #count fmt_place_fuzz_files	35
 #count fmt_place_narrowed	24
@@ -15481,7 +15485,7 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count fmt_place_pointer_live_files	32
 #count fmt_place_word	354
 #count fmt_place_word_live	306
-#count fmt_place_word_live_files	56
+#count fmt_place_word_live_files	57
 #count import_slot	14
 #count import_slot_live	14
 #count import_slot_live_files	1
@@ -15604,7 +15608,7 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count width_if_logic_live_files	15
 #count asm_live_x87_only_files	42
 #count widen_live_fnptr	472
-#count long_src	571
+#count long_src	572
 #count long_src_game	46
 #count long_src_game_ul	1
 #count long_ctype	1789

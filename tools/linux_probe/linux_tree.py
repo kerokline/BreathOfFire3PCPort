@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Which source files compile for x86-64 Linux today (docs/linux-round.md, unit LB0).
 
-Every `.cpp` under src/ but the launcher's, the Win32 backend's and the fuzz files (`*_fuzz.cpp`: the 64-bit host
+Every `.cpp` under src/ but the launcher's window files (SKIP), the Win32 backend's and the fuzz files (`*_fuzz.cpp`: the 64-bit host
 drops them, CMakeLists.txt, and a Linux build is the 64-bit host) and the Windows-only files by design
 (WINDOWS_ONLY below, each with its reason) is compiled `-fsyntax-only` for
 `x86_64-linux-gnu` with clang, with no stub for any Windows header: a file that needs one fails on the include,
@@ -13,6 +13,8 @@ nothing into the repository but the list, and only when asked.
     python tools/linux_probe/linux_tree.py --check         # fail when a file not in analysis/linux_tree.tsv fails
                                                            # (the list may only shrink: a listed file that now
                                                            # compiles fails the check too, until --write)
+    python tools/linux_probe/linux_tree.py --cmake-list IN OUT   # the Linux build's source list (cmake_list below;
+                                                                 # cmake/linux_target.cmake runs it)
     options: --sysroot DIR   a Linux root with libstdc++'s headers (on Windows: //wsl.localhost/<distribution>)
              --sdl DIR       SDL3's include folder (default: the first build*/_deps/sdl3-src/include)
              --dxvk DIR      DXVK-native's headers (docs/linux-round.md section 6, call 1): a DXVK source tree's
@@ -35,7 +37,11 @@ import argparse, collections, concurrent.futures, glob, os, re, subprocess, sys,
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 LIST = 'analysis/linux_tree.tsv'
-SKIP = ('src/launcher/', 'src/os/win32/')
+# The launcher's windows (the Win32 dialogs, and launcher.cpp, the window half of its start): its settings model,
+# the start of the game with no window (start.cpp) and the windowless main (headless.cpp) are compiled
+# (docs/launcher-portable.md, stage P0; the Linux round's C7).
+SKIP = ('src/os/win32/', 'src/launcher/config_dialog.cpp', 'src/launcher/sources_dialog.cpp',
+        'src/launcher/save_dialog.cpp', 'src/launcher/music_player.cpp', 'src/launcher/launcher.cpp')
 # Files that are Windows files by design and leave the Linux source list (docs/linux-round.md, "The 38 files, staged
 # as one round"): exact names, one reason each. Not compiled; --check and --write do not list them.
 WINDOWS_ONLY = (
@@ -45,7 +51,7 @@ WINDOWS_ONLY = (
     ('src/hook/exe_host.cpp', 'R3: the PE exe host - maps, rebases and binds bof3x.exe in the process (Engine_Main)'),
     ('src/hook/exe_icon.cpp', 'R3: the window icon through HICON, WIC and COM'),
     ('src/hook/dllmain.cpp', 'R3: the DLL entry point'),
-    ('src/hook/host.cpp', "R3: tells the hosts apart by the main module's PE headers (DetectHost, VerifyImage)"),
+    ('src/hook/host_win32.cpp', "R3: tells the hosts apart by the main module's PE headers (DetectHost, VerifyImage; host.cpp is the portable part)"),
     ('src/hook/crash_win32.cpp', 'R8: the fault catcher - a vectored handler, MiniDumpWriteDump (crash_posix.cpp is its counterpart)'),
     ('src/hook/stackwatch_win32.cpp', "R8: the main thread's TEB and guard page (stackwatch_posix.cpp refuses)"),
     ('src/game/platform/game_window_win32.cpp', 'R6: the Win32 window path and the SDL window\'s HWND steps (game_window_other.cpp is its counterpart)'),
@@ -68,6 +74,9 @@ def gen_headers(work):
     run('tools/gen_symbols.py', '--toml', 'symbols.toml', '--out', os.path.join(gen, 'bof3', 'symbols.gen.h'),
         '--bind-out', os.path.join(gen, 'bof3', 'bind.gen.h'))
     run('tools/gen_rebase.py', '--pointers', 'recipes/exe-pointers.tsv', '--out', os.path.join(gen, 'bof3', 'rebase.gen.h'))
+    # the launcher's suites (CMakeLists.txt bof3x_suites): its settings model and the start compile here since C7
+    os.makedirs(os.path.join(gen, 'launcher'), exist_ok=True)
+    run('tools/suites.py', 'gen', '--out', os.path.join(gen, 'launcher', 'suites.gen.h'))
     # CMake's configure_file of src/version.h.in (snapshot.cpp reads the tag): the numbers do not matter to a compile.
     with open(os.path.join(ROOT, 'src', 'version.h.in'), encoding='utf-8') as f:
         text = re.sub(r'@PROJECT_VERSION_(MAJOR|MINOR|PATCH)@', '0', f.read())
@@ -164,7 +173,46 @@ def read_list():
     return {r[0]: r[1] for r in rows}
 
 
+def cmake_list(src, out):
+    """The Linux build's source list from a Windows one (cmake/linux_target.cmake runs this at configure time, so
+    the build and this probe read one table: WINDOWS_ONLY and SKIP above). `src` holds the 64-bit Windows list, one
+    path per line, in link order; `out` gets a CMake file that sets BOF3X_LINUX_SOURCES. A resource script, a fuzz
+    file, a file under SKIP and a WINDOWS_ONLY file leave the list; a `<x>_win32.cpp` that leaves is replaced, in its
+    place, by `<x>_posix.cpp` or `<x>_other.cpp` when one exists and the list does not hold it already (a file with
+    neither has its Linux half in `<x>.cpp`, under #ifndef _WIN32). Every file of the result is one this probe
+    compiles (sources()): the build cannot take a file the probe does not check."""
+    windows_only = {f for f, _ in WINDOWS_ONLY}
+    paths = [l.strip().replace('\\', '/') for l in open(src, encoding='utf-8') if l.strip()]
+    paths = [os.path.relpath(os.path.join(ROOT, p), ROOT).replace('\\', '/') if os.path.isabs(p) else p for p in paths]
+    have, out_list, dropped = set(paths), [], []
+    for p in paths:
+        if (p.endswith('.rc') or p.endswith('_fuzz.cpp') or p.startswith(SKIP) or p in windows_only):
+            dropped.append(p)
+            m = re.match(r'^(.*)_win32\.cpp$', p)
+            if m:
+                for alt in (m.group(1) + '_posix.cpp', m.group(1) + '_other.cpp'):
+                    if os.path.isfile(os.path.join(ROOT, alt)) and alt not in have:
+                        out_list.append(alt)
+                        have.add(alt)
+                        break
+            continue
+        out_list.append(p)
+    probed = set(sources())
+    unprobed = [p for p in out_list if p not in probed]
+    if unprobed:
+        sys.exit('linux_tree --cmake-list: the Linux list would hold files this probe does not compile: '
+                 + ', '.join(unprobed))
+    with open(out, 'w', encoding='utf-8', newline='\n') as o:
+        o.write('# Written by tools/linux_probe/linux_tree.py --cmake-list at configure time: do not edit.\n')
+        o.write('# Left out: ' + ' '.join(dropped) + '\n')
+        o.write('set(BOF3X_LINUX_SOURCES\n' + ''.join(f'  {p}\n' for p in out_list) + ')\n')
+    print(f'linux_tree --cmake-list: {len(out_list)} files for Linux, {len(dropped)} of the Windows list left out')
+    return 0
+
+
 def main():
+    if len(sys.argv) == 4 and sys.argv[1] == '--cmake-list':
+        return cmake_list(sys.argv[2], sys.argv[3])
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('--sysroot')
     ap.add_argument('--sdl')
