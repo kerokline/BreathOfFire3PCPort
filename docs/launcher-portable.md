@@ -2,8 +2,9 @@
 
 **Status:** IN PROGRESS (2026-11-20: stage P0 is in `main`, the Linux
 round's group C7; stage P1, the frame, and stage P2, the settings pages,
-are built on the local branch `launcher/p1-frame`, sections 9 and 10; stages
-P3 to P6 are not started. Sections 1 to 8 are the staging of 2026-11-19, measured
+are built on the local branch `launcher/p1-frame`, sections 9 and 10; stage
+P3, Controls, on the local branch `launcher/p3-controls`, section 11, with
+D427 for the owner; stages P4 to P6 are not started. Sections 1 to 8 are the staging of 2026-11-19, measured
 at `main` `8cd45199`.)
 An estimate and a staging for the owner's question "a launcher that works on
 either Windows or Linux". It is tier 3 of [`linux-round.md`](linux-round.md)
@@ -510,3 +511,114 @@ list) and `SliderShowing` (a slider that shows a text for its step) are new.
   box is read back even when a preset greys it; the Data sub-page's member
   note says "see the note above" where that page has no note line; a
   manifest error's sentence runs into the member list with no full stop.
+
+## 11. Stage P3 as run (2026-11-20, branch `launcher/p3-controls`)
+
+**What is built.** The Controls tab's three pages - Directions and
+buttons, Shoulders, Start and Select, Function keys: 45, 39 and 42
+controls, launcher.rc's 126 - and the bind capture over a cell of any of
+them, in `src/launcher/ui/page_controls.cpp`: a port of
+`config_dialog.cpp`'s cells, capture, red cells, Defaults and the Controls
+part of `ApplyPages`, the texts word for word. The capture is shown in
+place of the tabs' page, as SatPixie's options are. The bindings are
+written only once a cell, the face-button box or the binding pages'
+Defaults was used, and the function keys only once their page was, as in
+the Win32 window - where a cancelled capture counts as a use too. The
+Settings page's Display box names the window key as the Function keys page
+shows it.
+
+**The two inputs** (`ui.h`, "The bind capture"). A key: SDL's key event,
+taken in `ui_imgui.cpp` before Dear ImGui's navigation sees it, so Escape,
+Enter, Tab and the arrows are keys a player binds; its scancode is made a
+cell's number by `capture_key.cpp`, which is `CaptureKeyHook` over
+`key_sdl.h`'s table. The pad: `input/pad_sdl.cpp`, as the Win32 capture
+reads it, with its layout and its "held when it opened" rule. **Both Dear
+ImGui's SDL3 backend and `pad_sdl.cpp` can hold the pad at once**:
+`SDL_OpenGamepad` of an open pad returns the same object and counts the
+open (`SDL_gamepad.c`, `ref_count`), and each close takes one count, so
+neither closes the other's. Two things of `pad_sdl.cpp` do not fit a
+window that pumps SDL's events itself, and the drawn launcher calls
+neither: `PadSdl_Stop` ends SDL (`SDL_Quit`) and the window with it, and
+`PadSdl_Poll` takes the pad's events out of the window's queue, so the pad
+would not be seen plugged in. `PadSdl_Find` (new) looks for the pad with
+no event; the pad's state comes up to date with the window's own pump.
+While the capture runs the pad's navigation is off, so cross and circle are
+pad inputs; Dear ImGui still reads the pad (its backend fills the inputs
+either way).
+
+**The proof: the stored numbers for every key.** No key was pressed: the
+Win32 capture reads the keyboard through a hook and the machine was in use.
+`tools/key_host/capture_tests.cpp` walks every key a `WM_KEYDOWN` names
+(scan code 1 to 0x7F, extended or not: 254 codes), on a binding cell and on
+a Function keys cell, through both captures: the Win32 one as
+`CaptureKeyHook`'s code, the drawn one through SDL's own Windows table
+(`scancodes_windows.h`, with `WindowsScanCodeToSDLScanCode`'s Pause rule)
+and `capture_key.cpp`. **159 codes are answered alike** - each of
+`key_sdl.h`'s 159 pairs, and each key's name reads back as its number, so a
+check names every key - **94 codes have no SDL scancode** (no key SDL
+knows: the Win32 capture would store the code; the drawn one never sees a
+key), **and one key differs: Ctrl+Pause (Break, E0 46)**, which SDL reports
+as Pause, so the drawn capture stores Pause's number 0x45 where the Win32
+one stores 0xC6. 329 checks, 0 failed.
+
+**D427, for the owner.** Both captures store Pause as 0x45 and NumLock as
+0xC5: the drawn one keeps the Win32 numbers, since D427 is open and only
+proposes the swap. What the game then reads, from the code: a game button
+reads the key bytes in DirectInput's numbering (`key_sdl.h`
+`FillKeyState`), where Pause is 0xC5 and NumLock 0x45, so a game button
+bound to Pause in either launcher is worked by NumLock, and the reverse; a
+function key reads the key message (`FnKeyOfMessage`, and
+`FnMessageBitsOfDik` off Windows), which gives Pause 0x45 and NumLock 0xC5,
+so a function key bound to Pause works with Pause. The choices: keep both
+as they are (the function keys right, the game buttons crossed); swap at
+the capture as D427 proposes (the game buttons right, and the function keys
+then crossed unless `FnKeyOfMessage` swaps too); or store per page. Each
+says what an ini that holds one of the two already means.
+
+**Through the drawn launcher with no window** (`--check`, the owner's
+`bof3x.ini` copied; the script steps `bind-key`, `bind-pad` and `red` are
+new): a key and a pad input bound (`key.Up=up` became `key.Z=up`; `pad.lb`
+moved from L1 to cross); a Clear; a Cancel, which writes the file back as
+read; a double binding - a function key on S and a function pad input on
+South: the cells on both pages red, and both lines written - and an ini
+whose S does two game buttons, red, which on save keeps the first and
+drops the second (and moves a third key of that row to the end), as the
+Win32 `BindingsFrom` does; each page's Defaults; the face-button box; the
+window key on F3, and the Display box then names F3; F10 and both Alts
+refused on a function key and taken on a binding cell; Pause and NumLock
+(the cells read "NumLock" and "Pause", D427); an untouched window, all three
+pages opened, writing the owner's `bof3x.ini` byte for byte.
+
+**Against the Win32 window** (`ui_compare.py`): 16 new cases - the three
+pages untouched, the face-button box three ways, both Defaults, the
+capture's Clear on five cells and its Cancel on two (the Win32 capture's
+buttons pressed by id; no key and no pad input is sent), and one case
+across the Controls pages and Settings: 16 equal. With them the whole
+table: **64 cases, 64 equal**; no game started, the install unchanged.
+
+**Linux.** In the WSL (`cmake --preset linux-x86_64 -DSDL_X11_XTEST=OFF`,
+the target `bof3x_launcher_ui`) the pages, `capture_key.cpp`,
+`key_sdl.cpp` and `pad_sdl.cpp` build and link; under SDL's `offscreen`
+driver a script that binds a key, a pad input and the window key writes
+`key.Z=up`, `pad.lb=cross` and `fkey.window=F3`. The gates of section 9
+that this stage touches (`os_census.py --check` and `--boundary`,
+`width_census.py`, `data_census.py`, `reloc_bare.py`): ok.
+
+**Not run, and for the owner's eye.**
+
+- A hand on the capture: a real key, a real pad, the mouse. Every input
+  went through the check steps, which hand the capture SDL's scancode or the
+  pad input's number; SDL's own key event and `pad_sdl.cpp`'s read of a
+  pad were not seen.
+- Two keys taken differently from the Win32 hook, read from SDL's source
+  and not tried: AltGr, which sends a left Ctrl before the right Alt
+  (the Win32 hook takes the left Ctrl; SDL drops it, so the drawn capture
+  takes the right Alt), and Print Screen, whose key-down Windows may keep
+  (SDL makes a key-down at its key-up; the Win32 hook takes key-downs
+  only). A key held down repeats; the Win32 hook would take a repeat of the
+  key that opened it, the drawn capture takes none.
+- The red is lighter than the Win32 page's 192, 0, 0, which is dim on
+  this look's dark buttons.
+- `padnav::SetMap`, the Win32 window's pad navigation map from the
+  bindings, has no counterpart: the drawn window's navigation is Dear
+  ImGui's.
