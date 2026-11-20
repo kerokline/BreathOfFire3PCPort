@@ -103,8 +103,10 @@ dedicated to the public domain under CC0 1.0 - the choice is in
 [`mp3-decoder-choice.md`](mp3-decoder-choice.md), its use in
 [`mp3-decoder.md`](mp3-decoder.md). It is included once, from
 `src/audio/mp3.cpp` in the DLL, and once more from
-`src/launcher/music_player.cpp` in the launcher (the Jukebox,
-[`music-player.md`](music-player.md)). CC0 asks for nothing; the dedication is reproduced
+`src/launcher/ui/jukebox_play.cpp` in the launcher (the Jukebox,
+[`music-player.md`](music-player.md); `src/launcher/music_player.cpp`
+until the Win32 dialogs went at stage P6 of
+[`launcher-portable.md`](launcher-portable.md), 2026-11-20). CC0 asks for nothing; the dedication is reproduced
 here all the same, from the repository's `LICENSE` file as fetched
 2026-10-10 (also at `third_party/minimp3/LICENSE`):
 
@@ -275,7 +277,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-## 6. Dear ImGui and Droid Sans (the drawn launcher, `bof3x-launcher-ui`)
+## 6. Dear ImGui and Droid Sans (the drawn launcher, `bof3x-launcher` since stage P6)
 
 `CMakeLists.txt` fetches [ocornut/imgui](https://github.com/ocornut/imgui) at
 the tag `v1.92.9b` (commit `f1cc2ae1`) at configure time, as it fetches SDL3,
@@ -283,9 +285,11 @@ and compiles its four core files, its `std::string` helper and its two SDL3
 backends into a static library that only the drawn launcher links
 ([`launcher-portable.md`](launcher-portable.md), stage P1; the owner's call
 of 2026-11-19). `src/launcher/ui/ui_imgui.cpp` is the one file that includes
-it. Nothing of Dear ImGui is copied into this repository, and no release
-ships the drawn launcher yet (stage P6 is the cutover). Dear ImGui is MIT; its
-notice, from the tag's `LICENSE.txt`:
+it. Nothing of Dear ImGui is copied into this repository. Since the cutover
+(stage P6, 2026-11-20) the drawn launcher is the player's `bof3x-launcher`,
+and the release ships it: `tools/make_release.py` copies the fetched tree's
+own `LICENSE.txt` into the zip as `licenses\dear-imgui\LICENSE.txt`. Dear
+ImGui is MIT; its notice, from the tag's `LICENSE.txt`:
 
 ```
 The MIT License (MIT)
@@ -315,10 +319,21 @@ SOFTWARE.
 from the same fetched tree, built into the executable as a byte array at
 build time (`tools/embed_file.py`); the file is not copied into this
 repository. Dear ImGui's `docs/FONTS.md` gives it as "DroidSans.ttf, by Steve
-Matteson, Apache License 2.0". **Owed before a release ships the drawn
-launcher:** the Apache License 2.0's text beside the executable (its section
-4 asks for a copy of the licence with a redistribution), and the font's own
-notice read from the font file. Which font ships, for the text and for the
+Matteson, Apache License 2.0". **Paid at stage P6 (2026-11-20):** the
+Apache License 2.0's text (its section 4(a) asks for a copy of the licence
+with a redistribution) is in
+[`third_party/droid-sans/`](../third_party/droid-sans), taken from the
+licence's own text as a Debian system holds it
+(`/usr/share/common-licenses/Apache-2.0`, sha256 `cfc7749b...bc523d30`, in
+full in the folder's `README-bof3x.txt`), and the release carries it with
+that README as `licenses\droid-sans\`. The font's own notices, read from
+the name table of the file the build embeds (sha256 `4e2371bc...401f581072ecd3`):
+copyright "Digitized data copyright (c) 2007, Google Corporation."; trademark
+"Droid is a trademark of Google and may be registered in certain
+jurisdictions."; maker Ascender Corporation; licence "Licensed under the
+Apache License, Version 2.0" with the licence's URL; version "Version 1.00
+build 113". The README repeats them. The fetched tree holds no NOTICE file
+for the font, so section 4(d) asks nothing more. Which font ships, for the text and for the
 banner, was the owner's call ([`launcher-portable.md`](launcher-portable.md)
 section 7, call 2): Droid Sans stays the text font (the owner, 2026-11-20),
 and the banner's font is section 7's. It holds no Japanese or
@@ -336,8 +351,8 @@ family's manifest, the GUST Font License and the LPPL 1.3c text beside it.
 The drawn launcher draws its banner with it, in place of the Win32 launcher's
 Palatino Linotype, which is Windows' font and cannot ship (the owner's
 choice, 2026-11-20; [`launcher-portable.md`](launcher-portable.md) section
-9). The build writes the file into `bof3x-launcher-ui` as a byte array
-(`tools/embed_file.py`).
+9). The build writes the file into `bof3x-launcher` (until stage P6,
+`bof3x-launcher-ui`) as a byte array (`tools/embed_file.py`).
 
 The font is offered under the GUST Font License, whose text is:
 
@@ -393,6 +408,7 @@ the LPPL 1.3c's text is in the folder):
   copyleft over the program, and what it asks travels with the font file
   as a notice does.
 
-**Owed before a release ships the drawn launcher:** the folder's four text
-files beside the executable (the licence, the LPPL text, the manifest, the
-README), since the release then distributes the font inside the program.
+**Paid at stage P6 (2026-11-20):** the folder's four text files (the
+licence, the LPPL text, the manifest, the README) go into every release zip
+as `licenses\tex-gyre-pagella\` (`tools/make_release.py`), since the
+release distributes the font inside the program.
