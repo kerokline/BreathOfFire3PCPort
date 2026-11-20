@@ -647,6 +647,26 @@ bool Slider(const char* label, int* value, int low, int high) {
     return changed;
 }
 
+bool SliderShowing(const char* label, int* value, int low, int high, const char* shown) {
+    Placed p;
+    p.Width();
+    bool changed = false;
+    std::string test;
+    if (TestTake(label, p.grey, &test)) {
+        const int want = std::min(std::max(TestNumber(test), low), high);
+        changed = want != *value;
+        *value = want;
+    }
+    // The text as Dear ImGui's format: a % in it is doubled, so it is shown as written.
+    std::string format;
+    for (const char* c = shown; c && *c; ++c) format += *c == '%' ? "%%" : std::string(1, *c);
+    ImGui::PushID(label);
+    changed |= ImGui::SliderInt("##slider", value, low, high, format.c_str(),
+                                ImGuiSliderFlags_AlwaysClamp | ImGuiSliderFlags_NoInput);
+    ImGui::PopID();
+    return changed;
+}
+
 bool Edit(const char* label, std::string* text) {
     Placed p;
     p.Width();

@@ -128,6 +128,10 @@ bool Combo(const char* label, int* index, const std::vector<std::string>& items)
 bool ComboGreyed(const char* label, int* index, const std::vector<std::string>& items,
                  const std::vector<bool>& usable);
 bool Slider(const char* label, int* value, int low, int high);
+// A slider over the steps low..high that shows `shown` in place of the step's
+// number: the value the page makes of the step ("0.65" for step 65 of 0.01).
+// A check sets it to a step, as Slider.
+bool SliderShowing(const char* label, int* value, int low, int high, const char* shown);
 bool Edit(const char* label, std::string* text);
 // A list with one line chosen; Size gives its box.
 bool List(const char* label, int* index, const std::vector<std::string>& items);
