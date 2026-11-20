@@ -2143,15 +2143,25 @@ def install_base(cache, game):
     language layer installed over it carries the text; a container with no
     chunk the cache has - AFLDKWA, wholly Chinese - written empty for the layer
     to fill); SND/ the cache's
-    base/snd; BGM/ empty (the music is the cache's base/bgm, DIV-0087). Refuses
-    a directory holding BOF3.exe: a PC install keeps its own files."""
+    base/snd; BGM/ empty (the music is the cache's base/bgm, DIV-0087).
+
+    Refuses a cache whose kind is the PC's (docs/exe-retire-round.md X1:
+    [build] install_kind, for an older manifest its loc/zh-CN rows -
+    language_tags.cache_kind, common/cache_manifest.cpp's rule): a PC install
+    keeps the PC game's own DAT/, which setup copies (player_sources.py copy_pc).
+    BOF3.exe is not asked. And refuses a directory that is a game folder already
+    (DAT/FIRST.DAT): --base lays a new one, and never writes over the DAT/ of
+    a folder it did not make - the PC game's own folder among them."""
     import shutil
-    if os.path.isfile(os.path.join(game, "BOF3.exe")):
-        raise SystemExit("--base: %s holds BOF3.exe - a PC install keeps its own DAT/; --base lays a disc-only one"
-                         % game)
     man = os.path.join(cache, "manifest.toml")
     if not os.path.isfile(man):
         raise SystemExit("--base: %s has no manifest.toml (importer.py build writes it)" % cache)
+    if language_tags.cache_kind(cache) == "pc":
+        raise SystemExit("--base: %s is a PC install's cache (the PC game's DAT/ is its base) - a PC install keeps "
+                         "its own DAT/; --base lays a disc-built one" % cache)
+    if os.path.isfile(os.path.join(game, "DAT", "FIRST.DAT")):
+        raise SystemExit("--base: %s is a game folder already (DAT/FIRST.DAT) - --base lays a new one; give an empty "
+                         "or new folder" % game)
     with open(man, "rb") as fh:
         assets = tomllib.load(fh)["cache"]["assets"]
     order = collections.OrderedDict()
@@ -2880,6 +2890,53 @@ def cmd_check(a):
     return exe_tables.cmd_check(a) | (1 if errs else 0)
 
 
+# Functions the exe-retire round changed in how a piece is made and not in
+# what a player plays with it (docs/exe-retire-round.md X3, step 5): measured
+# 2026-11-19 on an install the base's importer (5d6bcbd9) made from the PC
+# folder, `stale` named game-pc (copy_pc: BOF3.exe no longer copied, X5) and
+# manifest (write_manifest: [build] install_kind, X1, which an older manifest
+# answers from its loc/zh-CN rows); game-install also reads original_available
+# and, on a disc-built install, install_base (X3: the cache's kind in place of
+# BOF3.exe beside the game). A re-setup for these alone would swap the game
+# folder whole to drop a file nothing reads. Each is pinned by its build_reuse
+# digest before and after the round (CPython 3.13's bytecode, the release's
+# Python): a record whose only difference is one of these holds; any other
+# change to the function - before or after - is stale as ever.
+STALE_SAME = (
+    ("tools/player_sources.py", "copy_pc",
+     "44f15e1d1fcab5acd4639efdb5e9890a00c60946740256511bf92fd4a2711ba3",
+     "6702f0f232006099b84eca62974a61bf8598ee13a6cc8932754db2030457c579"),
+    ("tools/importer.py", "write_manifest",
+     "3cb06b824955e0a63c56b005c710ddf2612c00874d01962d257e9ddb84339008",
+     "8e58b610c87bf2ba76a0210ed5154a84c240962cd2106835bdf1eb28a2a4156e"),
+    ("tools/language_tags.py", "original_available",
+     "2a918dc4ef45ef3f4520ba489f908c916c340713abd6cd2881201a996016592d",
+     "7f04c57949cea71581883a4078df99916ade1dea80a2b91f03df045f2e1c552d"),
+    ("tools/importer.py", "install_base",
+     "73d17d83e1c3ce738989b7fa69428d85d34d8e5b3635cf0b1cd2887ab61e0310",
+     "7ad6af21b4b3bc58db4ad687c45dd6098f09321052ee3336351bf31e1b7f723b"),
+)
+
+
+def stale_same(cache, step):
+    """True when `step`'s record holds once each STALE_SAME function recorded at
+    its digest before the round is read at its digest after it, and the file
+    holds exactly that after-digest now."""
+    import copy
+    import build_reuse
+    rec = build_reuse.read_record(cache, step)
+    if not isinstance(rec, dict):
+        return False
+    patched, changed = copy.deepcopy(rec), False
+    for rel, q, before, after in STALE_SAME:
+        row = patched.get("code", {}).get(rel, {})
+        now = build_reuse._file_code(rel)
+        if row.get(q) == [before] and now is not None and {d for d, _ in now.get(q, [])} == {after}:
+            row[q] = [after]
+            changed = True
+    return changed and build_reuse.why_stale(patched) is None
+
+
 def cmd_stale(a):
     """Which pieces of an install's cache this release's tools would make
     differently (HANDOFF item 11, docs/install-staleness.md): each step's
@@ -2887,7 +2944,9 @@ def cmd_stale(a):
     values and the data files as they are now. For the launcher: one line
     `stale <step>\t<reason>` a piece, then `stale N` and exit 1; or `fresh`
     and exit 0; or `none` and exit 2 when there is no cache to judge. A
-    setup then rebuilds the stale pieces and takes the rest from the cache."""
+    setup then rebuilds the stale pieces and takes the rest from the cache.
+    A piece whose only change is one of STALE_SAME's is not stale: it is said
+    on a `same <step>\t<reason>` line, which the launcher does not read."""
     import build_reuse
     cache = a.cache or os.path.join(a.home, "cache")
     if not os.path.isfile(os.path.join(cache, "manifest.toml")):
@@ -2895,8 +2954,12 @@ def cmd_stale(a):
         return 2
     try:
         rows = build_reuse.stale(cache)
+        same = [(step, why) for step, why in rows if stale_same(cache, step)]
     except Exception as e:      # judged stale, never fresh, when the check itself fails
-        rows = [("cache", "the check failed: %s: %s" % (type(e).__name__, e))]
+        rows, same = [("cache", "the check failed: %s: %s" % (type(e).__name__, e))], []
+    for step, why in same:
+        print("same %s\t%s, a change of the exe-retire round that plays the same" % (step, why))
+    rows = [r for r in rows if r not in same]
     for step, why in rows:
         print("stale %s\t%s" % (step, why))
     print("stale %d" % len(rows) if rows else "fresh", flush=True)
@@ -2934,6 +2997,10 @@ def main():
     p.add_argument("--json-progress", action="store_true",
                    help="stdout carries only progress / done / error lines; the build's own lines go to HOME/setup.log")
     p.add_argument("--ffmpeg", help="the player's ffmpeg.exe (else BOF3X_FFMPEG, else the PATH's)")
+    p.add_argument("--game-in-place", metavar="DIR",
+                   help="DIR, the PC game folder in the source list, stays the game folder: setup builds HOME/cache "
+                        "alone, lays out no HOME/game and does not change DIR; kept in sources.toml for every later "
+                        "setup (the launcher's set-up of a game folder that has no image, docs/exe-retire-round.md X3)")
     p = s.add_parser("build")
     p.add_argument("--source", action="append", required=True, help="a PC DAT/, BOF3.exe or a disc; order is preference")
     p.add_argument("--out", required=True)

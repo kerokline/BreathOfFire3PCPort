@@ -84,6 +84,16 @@ bool CacheHasImage(const std::wstring& cache) {
     return !cache.empty() && StartFileExists(cache + StartSep(L"\\base\\exe\\data.toml"));
 }
 
+// Whether the game folder's BGM\ holds a file: the PC game's music, which a PC
+// folder has and a setup from it copies (player_sources.py copy_pc), and which
+// a game folder laid from a disc does not (importer.py install_base leaves BGM\
+// empty). The test call 3's line asks in place of BOF3.exe.
+bool GameFolderHoldsPcMusic(const std::wstring& game_dir) {
+    for (const bof3::os::MatchW& m : bof3::os::MatchesW(game_dir + StartSep(L"\\BGM\\*")))
+        if (!m.directory) return true;
+    return false;
+}
+
 }  // namespace
 
 std::wstring StartWide(const std::string& narrow) { return bof3::os::WideOfMessage(narrow); }
@@ -147,8 +157,8 @@ bool StartFindGame(const std::wstring& named, bool hosted, std::wstring* game_di
     return exe_present;
 }
 
-bool StartReadSettings(const std::wstring& ini, const std::wstring& game_dir, const std::wstring& named, bool hosted,
-                       bool exe_read, int want_dialog, Config& cfg) {
+StartSetUp StartReadSettings(const std::wstring& ini, const std::wstring& game_dir, const std::wstring& named,
+                             bool hosted, bool exe_read, int want_dialog, Config& cfg) {
     // DIV-0005: a retired bare language code (en, fr, de, ja) in the ini
     // or the environment stops here, before the dialog, naming its tag.
     std::string why;
@@ -159,19 +169,39 @@ bool StartReadSettings(const std::wstring& ini, const std::wstring& game_dir, co
     // reading-row mod is installed (docs/launcher-settings.md 2a, Extra).
     ConfigRubyUiDefault(cfg, HomeDir());
     if (!ConfigCheckEnvironmentLanguage(why)) StartDie(StartWide(why));
-    // No install at all - no game folder (InstallGameFolder; the developer's
-    // start: no BOF3.exe read either), no cache, no BOF3X_EXEIMAGE, and a game
-    // folder the player did not name: the Sources page makes one (its first
-    // run). Never under a self-test or --no-config, which keep the refusals.
-    // A game folder with no cache is not "no install": StartApply refuses it
-    // (StartRefuseNoImage) until the set-up runs there first.
-    const bool no_install = !hosted && !exe_read && !InstallGameFolder(game_dir) && named.empty() &&
-                            ConfigCacheDataRoot(cfg).empty() && bof3::os::GetEnvW(L"BOF3X_EXEIMAGE", nullptr, 0) == 0 &&
-                            !StartSelfTestOnly() && want_dialog != 0;
+    // What the Sources page sets up first (StartSetUpFor, docs/exe-retire-round.md
+    // X3): no install at all - no game folder (InstallGameFolder), no cache, no
+    // BOF3X_EXEIMAGE, a game folder the player did not name - gets its first
+    // run; a game folder with no image of .data, where the home's cache is the
+    // one to build, gets the first run (the home's own game\) or is set up in
+    // place (any other folder). Never under a self-test or --no-config, which
+    // keep StartApply's refusal (StartRefuseNoImage). Nothing here opens or
+    // tests for BOF3.exe: the importer says what the folder is.
+    StartSetUpAsk ask;
+    ask.hosted = hosted;
+    ask.exe_read = exe_read;
+    ask.self_test = StartSelfTestOnly();
+    ask.want_dialog = want_dialog;
+    ask.named = !named.empty();
+    ask.game_folder = InstallGameFolder(game_dir);
+    const std::wstring home_game = HomeGameDefault();
+    ask.home_game = !home_game.empty() && StartFullPath(home_game) == game_dir;
+    const std::wstring data_cache = ConfigCacheDataRoot(cfg);
+    ask.cache = !data_cache.empty();
+    ask.cache_image = CacheHasImage(data_cache);
+    {
+        wchar_t data[4];
+        const std::uint32_t n = bof3::os::GetEnvW(L"BOF3X_CACHE_DATA", data, 4);
+        ask.cache_chosen = bof3::os::GetEnvW(L"BOF3X_CACHE", nullptr, 0) > 0 || !cfg.cache.empty() ||
+                           (n == 1 && data[0] == L'0');
+    }
+    ask.exe_image_set = bof3::os::GetEnvW(L"BOF3X_EXEIMAGE", nullptr, 0) > 0;
+    const StartSetUp set_up = StartSetUpFor(ask);
     // DIV-0102: "original" on an install without the Chinese text is
     // refused here, before the dialog; the default becomes a language
-    // held. Not asked of no install: there is no language to hold yet.
-    if (!no_install && !ConfigResolveLanguage(game_dir, cfg, why, hosted)) StartDie(StartWide(why));
+    // held. Not asked before a set-up: there is no language to hold yet, and
+    // the next pass, after the page, asks it of the install the page made.
+    if (set_up == StartSetUp::kNone && !ConfigResolveLanguage(game_dir, cfg, why, hosted)) StartDie(StartWide(why));
     // DIV-0086 / DIV-0080: a bad opt= is refused, not dropped - dropped, it
     // would read as empty and play the default layers the player may have
     // meant to turn off.
@@ -187,7 +217,7 @@ bool StartReadSettings(const std::wstring& ini, const std::wstring& game_dir, co
                  L".\n\npsp= is empty (the default: on when the cache's base is the PSP's), "
                  L"none, or a comma-separated list of the PSP's battle changes, duel-loss and myria-item "
                  L"(docs/psp-battle-changes.md).");
-    return no_install;
+    return set_up;
 }
 
 [[noreturn]] void StartRefuseNoImage(const std::wstring& game_dir, const std::wstring& cache) {
@@ -224,22 +254,33 @@ void StartApply(const std::wstring& game_dir, Config& cfg, bool hosted, bool exe
         const std::wstring cache = ConfigCacheDataRoot(cfg);
         wchar_t set[4];
         const bool image_set = bof3::os::GetEnvW(L"BOF3X_EXEIMAGE", set, 4) > 0;
-        // A game folder with no image: docs/exe-retire-round.md X3 sets it up
-        // here, before this refusal, at a player's start with the launcher's
-        // windows. Under --no-config and a self-test the refusal stays.
+        // A game folder with no image: at a player's start with the launcher's
+        // windows the Sources page has set it up before this (StartSetUpFor,
+        // docs/exe-retire-round.md X3). Under --no-config, a self-test, the
+        // windowless launcher and a cache the player chose, the refusal.
         if (!image_set && !CacheHasImage(cache)) StartRefuseNoImage(game_dir, cache);
         if (!image_set) bof3::os::SetEnvW(L"BOF3X_EXEIMAGE", cache.c_str());
         // What the install is, from the cache's record (common/cache_manifest.h
         // ManifestInstallKind), never from a file beside the game.
         std::wstring kind = L"the cache's image";
+        bool kind_disc = false;
         if (!image_set) {
             const CacheManifest m = ManifestRead(cache);
             if (const std::string note = ManifestKindNoteOnce(m); !note.empty()) StartSay(StartWide(note) + L"\n");
+            kind_disc = ManifestInstallKind(m) == InstallKind::kDisc;
             if (ManifestInstallKind(m) == InstallKind::kPc) kind = L"a PC install: the image built from the PC game";
-            else if (ManifestInstallKind(m) == InstallKind::kDisc) kind = L"a disc-built install: the image built from a disc";
+            else if (kind_disc) kind = L"a disc-built install: the image built from a disc";
         }
         StartSay(L".data from " + (image_set ? std::wstring(L"BOF3X_EXEIMAGE's cache (the environment's)") : cache) +
                  L" (" + kind + L", its table files laid in); BOF3.exe is not read (BOF3X_EXEFILE=1 reads it)\n");
+        // Call 3 (docs/exe-retire-round.md section 7): a PC folder beside a
+        // disc-built cache plays the disc-built image, as the cache's record
+        // says. The folder is the PC's when its BGM\ holds the PC's music: a game
+        // folder the importer lays from a disc has an empty BGM\ (importer.py
+        // install_base; the music is the cache's base\bgm). No BOF3.exe is asked.
+        if (!image_set && kind_disc && GameFolderHoldsPcMusic(game_dir))
+            StartSay(L"the game folder " + game_dir + L" holds the PC game's music, but the game data is from a disc. "
+                     L"To play the data of the PC game, add this folder on the Sources page.\n");
     } else if (exe_read && !hosted) {
         StartSay(L".data from " + game_dir + StartSep(L"\\BOF3.exe") + L" (BOF3X_EXEFILE=1, a developer's run)\n");
     }

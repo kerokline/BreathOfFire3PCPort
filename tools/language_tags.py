@@ -75,18 +75,112 @@ def note_retired_overlays(dat_dir):
     return old
 
 
+def cache_kind(cache):
+    """The install's kind as the cache records it (docs/exe-retire-round.md X1),
+    common/cache_manifest.cpp ManifestInstallKind's answer: "pc" or "disc" from
+    the manifest's [build] install_kind; for a manifest from before the key (or
+    with a value the reader refuses, which the launcher then refuses to start
+    on), "pc" when a [cache] assets row is of the loc/zh-CN layer - only the
+    PC's DAT/ carries it - else "disc"; None with no manifest (no cache)."""
+    import tomllib
+    man = os.path.join(cache, "manifest.toml") if cache else None
+    if not man or not os.path.isfile(man):
+        return None
+    with open(man, "rb") as fh:
+        m = tomllib.load(fh)
+    kind = m.get("build", {}).get("install_kind")
+    if kind in ("pc", "disc"):
+        return kind
+    rows = m.get("cache", {}).get("assets", [])
+    return "pc" if any(isinstance(r, list) and len(r) > 2 and r[2] == "loc/zh-CN" for r in rows) else "disc"
+
+
 def original_available(game, cache=None):
     """DIV-0102 (docs/disc-only-install.md): whether `original`, the port's
-    Chinese text, can be played from `game` with `cache` as the data cache:
-    BOF3.exe in the game directory (a PC install - its DAT/ is the port's;
-    `importer.py install --base` refuses such a directory) or the cache's
-    loc/zh-CN/dat/ holding a .DAT (built from the PC's DAT/). The launcher's
-    rule (config.cpp ConfigOriginalAvailable) and the DLL's (dat_load.cpp
-    RefuseOriginalWithoutChinese)."""
-    if os.path.isfile(os.path.join(game, "BOF3.exe")):
-        return True
+    Chinese text, can be played with `cache` as the data cache: the cache's
+    loc/zh-CN/dat/ holding a .DAT (built from the PC's DAT/), or the cache's
+    kind the PC's (cache_kind: its DAT/ is the port's); with no manifest, True -
+    with no cache only a PC folder starts. The launcher's rule at a player's
+    start (config.cpp ConfigOriginalAvailable, cache_manifest.cpp
+    InstallChineseText with the launcher's ask, no_cache true) and the DLL's
+    (dat_load.cpp RefuseOriginalWithoutChinese). `game` is not asked: BOF3.exe
+    beside the game says nothing of the install since the exe-retire round (X1);
+    only the developer's BOF3X_EXEFILE=1 and the hosted build ask the file."""
     d = os.path.join(cache, "loc", "zh-CN", "dat") if cache else None
-    return bool(d and os.path.isdir(d) and any(f.upper().endswith(".DAT") for f in os.listdir(d)))
+    if d and os.path.isdir(d) and any(f.upper().endswith(".DAT") for f in os.listdir(d)):
+        return True
+    return cache_kind(cache) != "disc"
+
+
+# common/cache_manifest.cpp's answers on every install kind, as
+# tools/launcher_host/config_tests.cpp TestInstallKind states them (its `kinds`
+# table: the manifest, new and old, and whether a loc/zh-CN layer is on disk,
+# to the Chinese text's answer at a player's start). `selftest` checks this
+# mirror against them on manifests written as text: builds, layer names and
+# made-up hashes only.
+KIND_ROWS = (
+    # what, install_kind written (None: an old manifest), source build, a loc/zh-CN asset row, the layer on disk,
+    # cache_kind, original_available
+    ("a PC folder used in place, no cache", "none", None, False, False, None, True),
+    ("an install made from a PC source", "pc", "pc-zh", True, True, "pc", True),
+    ("the same, old manifest", None, "pc-zh", True, True, "pc", True),
+    ("the same, its loc/zh-CN layer gone", "pc", "pc-zh", True, False, "pc", True),
+    ("the same, old manifest, layer gone", None, "pc-zh", True, False, "pc", True),
+    ("a disc-built install", "disc", "psx-us", False, False, "disc", False),
+    ("the same, old manifest", None, "psx-us", False, False, "disc", False),
+    ("a PSP-only install", "disc", "psp-jp", False, False, "disc", False),
+    ("the same, old manifest", None, "psp-jp", False, False, "disc", False),
+    ("the recorded kind wins over the rows", "disc", "psx-us", True, False, "disc", False),
+    ("a disc-built cache with a loc/zh-CN layer on disk", "disc", "psx-us", False, True, "disc", True),
+)
+
+
+def selftest():
+    """The mirror against KIND_ROWS; a PC folder beside a disc-built cache is
+    the disc-built row with a BOF3.exe in the game folder, which is not asked."""
+    import tempfile
+    bad = []
+    with tempfile.TemporaryDirectory() as tmp:
+        for i, (what, kind, build, zh_row, zh_dir, want_kind, want_zh) in enumerate(KIND_ROWS):
+            for exe in (False, True):
+                game, cache = os.path.join(tmp, "g%d%d" % (i, exe)), os.path.join(tmp, "c%d%d" % (i, exe))
+                os.makedirs(os.path.join(game, "DAT"))
+                open(os.path.join(game, "DAT", "FIRST.DAT"), "wb").close()
+                if exe:
+                    open(os.path.join(game, "BOF3.exe"), "wb").close()
+                if kind != "none":
+                    os.makedirs(cache)
+                    text = '[meta]\ntarget = "pc-zh"\n\n[build]\nbase_policy = "psx"\n'
+                    if kind:
+                        text += 'install_kind = "%s"\n' % kind
+                    text += '\n[[source]]\nbuild = "%s"\npath = "x"\n\n[cache]\nassets = [\n' % build
+                    text += '  ["A.DAT", 0, "base", "%s:chunk", "h"],\n' % build
+                    if zh_row:
+                        text += '  ["A.DAT", 1, "loc/zh-CN", "pc-zh:chunk", "h"],\n'
+                    text += "]\n"
+                    with open(os.path.join(cache, "manifest.toml"), "w", encoding="utf-8", newline="\n") as fh:
+                        fh.write(text)
+                    if zh_dir:
+                        os.makedirs(os.path.join(cache, "loc", "zh-CN", "dat"))
+                        open(os.path.join(cache, "loc", "zh-CN", "dat", "A.DAT"), "wb").close()
+                c = cache if kind != "none" else None
+                got = (cache_kind(c), original_available(game, c))
+                if got != (want_kind, want_zh):
+                    bad.append("%s%s: %r, want %r" % (what, ", BOF3.exe beside it" if exe else "", got,
+                                                       (want_kind, want_zh)))
+    for b in bad:
+        print("ERROR", b)
+    print("language_tags selftest: %d install kinds, with and without a BOF3.exe beside the game, %d error(s)"
+          % (len(KIND_ROWS), len(bad)))
+    return 1 if bad else 0
+
+
+if __name__ == "__main__":
+    import sys
+    if sys.argv[1:] != ["selftest"]:
+        sys.exit("usage: python tools/language_tags.py selftest - the install's kind and DIV-0102's test against "
+                 "common/cache_manifest.cpp's answers (docs/exe-retire-round.md X3)")
+    sys.exit(selftest())
 
 
 def languages_held(game, cache=None):

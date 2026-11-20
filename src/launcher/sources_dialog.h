@@ -20,10 +20,17 @@ namespace bof3x {
 // Shows the page, modally, over `owner` (may be null). `first_run`: no install
 // was found, so the page says so and offers to make one. `rebuild`: the
 // player agreed to rebuild a stale install (SourcesAskRebuild), so the build
-// starts at once. Returns true when a build finished, so the game folder and
-// the cache may have changed and the caller re-reads them. cfg.ffmpeg is
-// updated by Locate...; the caller saves.
-bool SourcesDialogRun(HWND owner, Config& cfg, bool first_run, bool rebuild = false);
+// starts at once. `folder` (with `first_run`; docs/exe-retire-round.md X3): a
+// game folder with no image of .data, to set up in place - the page adds it as
+// a source at once (the importer's `identify` says whether it is the PC game;
+// a folder already listed is not added again), then builds with
+// `setup --game-in-place`, which makes the home's cache and leaves the folder
+// as it is, the game folder still. A folder the importer refuses leaves the
+// page as a first run, with the reason in its log. Returns true when a build
+// finished, so the game folder and the cache may have changed and the caller
+// re-reads them. cfg.ffmpeg is updated by Locate...; the caller saves.
+bool SourcesDialogRun(HWND owner, Config& cfg, bool first_run, bool rebuild = false,
+                      const std::wstring& folder = std::wstring());
 
 // The home's install against this release (HANDOFF item 11,
 // docs/install-staleness.md): `importer.py stale --home H`, which judges each

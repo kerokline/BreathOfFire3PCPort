@@ -64,6 +64,13 @@ CD_EXT = (".cue", ".bin", ".iso")
 # MCI fails to open a movie whose full path is around 160 characters
 # (docs/disc-only-install.md section 1, docs/fmv-import.md).
 MCI_PATH_LIMIT = 150
+# A PC folder source's row key (docs/exe-retire-round.md X3): the player plays
+# from that folder as it is. setup then builds HOME/cache alone and lays out no
+# HOME/game - the folder stays the game folder, with its saves and BOF3.CFG -
+# and every later setup does the same. `setup --game-in-place DIR` sets it (the
+# launcher's set-up of a game folder that has no image); removing the source
+# drops it.
+IN_PLACE_KEY = "play_in_place"
 
 
 def _imp():
@@ -563,7 +570,10 @@ def save_sources(h, rows):
              "# tools/importer.py sources (docs/install-sources.md); change it with that command.", ""]
     for r in rows:
         lines += ["[[source]]"] + ["%s = %s" % (k, json.dumps(r[k], ensure_ascii=False))
-                                   for k in ("path", "build", "kind", "label", "added")] + [""]
+                                   for k in ("path", "build", "kind", "label", "added")]
+        if r.get(IN_PLACE_KEY):     # the PC folder played in place (setup --game-in-place)
+            lines.append("%s = true" % IN_PLACE_KEY)
+        lines.append("")
     p = bof3x_home.sources_file(h)
     with open(p + ".tmp", "w", encoding="utf-8", newline="\n") as f:
         f.write("\n".join(lines))
@@ -970,12 +980,23 @@ def run_setup(a, h, log, progress, total):
     except SystemExit:
         raise SetupError("The ffmpeg given (%s) is not there." % os.environ.get("BOF3X_FFMPEG"))
     pc = next((r for r in rows if r["kind"] in PC_KINDS), None)
+    asked = getattr(a, "game_in_place", None)
+    if asked:
+        # The launcher's set-up of a game folder that has no image (X3): that
+        # folder must be the listed PC game folder, and stays the game folder.
+        if not pc or pc["kind"] != "pc-folder" or _norm(pc["path"]) != _norm(asked):
+            raise SetupError("The game folder %s is not the PC game folder in the source list. Add it as a source "
+                             "first." % asked)
+        pc[IN_PLACE_KEY] = True
+    in_place = pc["path"] if pc and pc["kind"] == "pc-folder" and pc.get(IN_PLACE_KEY) else None
     zips = [r for r in rows if r["path"].lower().endswith(".zip")]
     langs = languages_for(rows, pc)
     import mods        # the player's mods (docs/mods.md): built after the language layers
     mod_rows = mods.load_rows(h)
     seconds = len(langs) > 1     # every ordered pair of held text layers gets its reading-row layer
-    total[0] = len(zips) + 1 + (1 if pc else 0) + 1 + 1 + (1 if mod_rows else 0) + (1 if seconds else 0)
+    # in place: no copy of the PC game's files and no game folder laid out
+    total[0] = len(zips) + 1 + (0 if in_place else (1 if pc else 0) + 1) + 1 + (1 if mod_rows else 0) + \
+        (1 if seconds else 0)
     game, cache = os.path.join(h, "game"), os.path.join(h, "cache")
     new_game, new_cache = game + ".new", cache + ".new"
     tmp = os.path.join(cache, "tmp")
@@ -990,7 +1011,10 @@ def run_setup(a, h, log, progress, total):
         elif line.startswith("  base/exe  from"):
             progress("Building the data cache: the executable's tables done", step=False)
 
-    if os.name == "nt" and len(os.path.join(game, "CAPCOM.AVI")) > MCI_PATH_LIMIT:    # MCI is Windows's
+    if in_place:
+        log.write("game folder: %s, played in place (%s): no game folder laid out, the folder not changed\n"
+                  % (in_place, IN_PLACE_KEY))
+    elif os.name == "nt" and len(os.path.join(game, "CAPCOM.AVI")) > MCI_PATH_LIMIT:    # MCI is Windows's
         progress("Warning: the install folder's path is long (%d characters to the movie); Windows may not play "
                  "the logo movie from it. A shorter folder avoids that." % len(os.path.join(game, "CAPCOM.AVI")),
                  step=False)
@@ -1072,18 +1096,23 @@ def run_setup(a, h, log, progress, total):
                     progress(text, step=False)
             with times.step("second-language rows (ruby_build.py)"):
                 build_second_layers(new_cache, say2, pairs, reuse)
-        os.makedirs(new_game)
-        if pc:
-            progress("Copying the PC game's files (the original folder is not changed)")
-            with contextlib.redirect_stdout(_Log(log, echo, lambda line: None)), times.step("copy the PC game"), \
-                    Step(new_cache, None, "game-pc", pc["build"]):     # measured: `stale` (HANDOFF item 11)
-                copy_pc(paths.get(pc["path"], pc["path"]), new_game, ffmpeg, log, progress)
-        progress("Laying out the game folder" + (" with %s" % ", ".join(langs) if langs else ""))
-        ns = argparse.Namespace(cache=new_cache, game=new_game, base=not pc, lang=list(langs), opt=[], no_opt=[])
-        with contextlib.redirect_stdout(_Log(log, echo, lambda line: None)), times.step("install (lay out game)"), \
-                Step(new_cache, None, "game-install", *langs):
-            imp.cmd_install(ns)
-        carry_saves(h, game, new_game, lambda t: (log.write(t + "\n"), progress(t, step=False)))
+        # A PC folder played in place (X3) is the game folder as it is: its DAT/
+        # is the PC's, the engine reads the cache's chunks and layers in place of
+        # it (DIV-0089), and its saves and BOF3.CFG stay where they are. Nothing
+        # is copied or laid out, no save is moved, and the folder is not written.
+        if not in_place:
+            os.makedirs(new_game)
+            if pc:
+                progress("Copying the PC game's files (the original folder is not changed)")
+                with contextlib.redirect_stdout(_Log(log, echo, lambda line: None)), times.step("copy the PC game"), \
+                        Step(new_cache, None, "game-pc", pc["build"]):     # measured: `stale` (HANDOFF item 11)
+                    copy_pc(paths.get(pc["path"], pc["path"]), new_game, ffmpeg, log, progress)
+            progress("Laying out the game folder" + (" with %s" % ", ".join(langs) if langs else ""))
+            ns = argparse.Namespace(cache=new_cache, game=new_game, base=not pc, lang=list(langs), opt=[], no_opt=[])
+            with contextlib.redirect_stdout(_Log(log, echo, lambda line: None)), times.step("install (lay out game)"), \
+                    Step(new_cache, None, "game-install", *langs):
+                imp.cmd_install(ns)
+            carry_saves(h, game, new_game, lambda t: (log.write(t + "\n"), progress(t, step=False)))
     except BaseException:
         for p in unpacked:
             shutil.rmtree(p, ignore_errors=True)
@@ -1095,9 +1124,12 @@ def run_setup(a, h, log, progress, total):
     shutil.rmtree(tmp, ignore_errors=True)
     progress("Replacing the previous install")
     with times.step("swap into place"):
-        swap(h, (("game", new_game), ("cache", new_cache)))
+        # in place: the cache alone; a HOME/game an earlier setup laid is left as it is
+        swap(h, (("cache", new_cache),) if in_place else (("game", new_game), ("cache", new_cache)))
+    if asked:
+        save_sources(h, rows)       # the PC row's play_in_place, kept for every later setup
     times.summary()
-    return game, cache
+    return (in_place or game), cache
 
 
 # The player's saves across a setup. `setup` lays the game out afresh in
