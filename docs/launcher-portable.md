@@ -4,10 +4,11 @@
 round's group C7; stages P1 to P5 - the frame, the settings pages,
 Controls, Sources and Mods, the Jukebox and the save editor - are on the
 branch `launcher/drawn` (pull request 267, a draft), sections 9 to 13;
-stage P6, the cutover, is built on the local branch `launcher/p6-cutover`,
-section 14: the drawn launcher is `bof3x-launcher` on both systems and the
-Win32 dialogs are gone. What is left is the owner's: a hand on the window,
-and the release started on clean machines. Sections 1 to 8 are the staging
+stage P6, the cutover, is built, section 14: the drawn launcher is
+`bof3x-launcher` on both systems and the Win32 dialogs are gone; pull
+request 267. The owner used it by hand on 2026-11-20, from `game\`, and
+found it in place. What is left: the release started on clean machines, and
+the list at the end of section 14. Sections 1 to 8 are the staging
 of 2026-11-19, measured at `main` `8cd45199`.)
 An estimate and a staging for the owner's question "a launcher that works on
 either Windows or Linux". It is tier 3 of [`linux-round.md`](linux-round.md)
@@ -1189,3 +1190,18 @@ other pages:** every check of stages P2 to P5 used `set` and `press`, which
 also go past the mouse, so a widget of ours that reads the mouse by itself
 is checked by hand alone. `CheckList` was the one such widget that read a
 click's place; the others are Dear ImGui's own buttons, boxes and lists.
+
+**The owner's hand, 2026-11-20** (the launcher and this branch's game files
+in the owner's `game\`, the build of `9daa1373`): "I walked through all the
+toggles I could think of and it all seems to be in place. I can also confirm
+the jukebox mode is working." Before that, the same day, off the drawn
+launcher as a second program: "This all looks good", and the one fault of
+the mods' boxes above, found and seen fixed. So done now, by the owner: a
+hand on the window with the mouse through the pages, and the Jukebox's sound
+heard on a device. **Not reported on, and still not done by anybody:** a pad
+and the keyboard alone through the pages; a key and a pad input bound on
+Controls, Pause and NumLock among them (D427); a file picker, the rebuild
+question and a message box seen; an install made through the Sources page;
+the save editor used on a save; a display scaled other than 100 %; Linux
+with a hand, a Deck; the release on a clean machine and Windows Defender's
+verdict.

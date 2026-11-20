@@ -19,8 +19,11 @@ pipe). A refusal shows no message box under `--check`, `--no-config`, a self-tes
 from one ini and a stand-in game, the old Win32 launcher and the new one give the game the same environment, command
 line, folder, `BOF3.CFG` and ini, byte for byte, and print the same lines but the pid (eight cases); the harness's
 self-test, its hosted hand-over and a two-minute attract run go through a launcher copy; an untouched window writes the
-owner's ini byte for byte; the release zip carries `licenses\` (Dear ImGui, Droid Sans, TeX Gyre Pagella). **Owed:**
-a hand on the window; the release started on a clean machine and Windows Defender's verdict on the new executable.
+owner's ini byte for byte; the release zip carries `licenses\` (Dear ImGui, Droid Sans, TeX Gyre Pagella). **The owner's
+hand, 2026-11-20**, from `game\` with this branch's game files: every toggle the owner could think of is in place, and
+the Jukebox works (heard). **Owed:** what the owner did not report on (the document's section 14, last paragraph: a pad,
+bindings with Pause and NumLock, the pickers and questions, an install through the Sources page, the save editor on a
+save); the release started on a clean machine and Windows Defender's verdict on the new executable.
 
 **The drawn launcher's Jukebox and save editor, 2026-11-20 (stage P5 of [`launcher-portable.md`](launcher-portable.md),
 its section 13; the same local branch as the paragraphs below).** With them every window of the Win32 launcher is in the
