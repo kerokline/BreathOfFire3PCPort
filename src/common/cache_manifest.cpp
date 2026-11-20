@@ -91,10 +91,14 @@ CacheManifest ManifestParse(const std::string& text) {
             if (line == "]") {
                 in_array = false;
             } else if (table == "cache" && array_key == "assets") {
-                // ["AREA000.DAT", 1, "loc/zh-CN", "pc-zh:chunk", "<sha256>"]: the slot is no string
+                // ["AREA000.DAT", 1, "loc/zh-CN", "pc-zh:chunk", "<sha256>"]: the slot is no string.
+                // Only a row that names a source counts: a disc-built cache lists the
+                // layer's slots too, each with an empty source (275 such rows in a
+                // manifest of 2026-10-29, none with a source; a PC's has 475, every
+                // one with a source).
                 if (!m.zh_rows) {
                     const std::vector<std::string> s = Strings(line);
-                    m.zh_rows = s.size() >= 2 && s[1] == "loc/zh-CN";
+                    m.zh_rows = s.size() >= 3 && s[1] == "loc/zh-CN" && !s[2].empty();
                 }
             } else if (table == "cache" && array_key == "bgm") {
                 // ["base/bgm/000.DAT", "psx-us:seq:BGM000.EMI#1", "<sha256>"]

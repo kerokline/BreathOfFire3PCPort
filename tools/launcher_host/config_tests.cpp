@@ -1453,6 +1453,12 @@ void TestInstallKind() {
                   !bof3x::ManifestRefusal(m, "x").empty(),
               (std::string("install_kind = ") + bad + " refused, named").c_str(), m.error);
     }
+    // A disc-built cache lists the layer's slots too, each with an empty source.
+    const bof3x::CacheManifest slots =
+        bof3x::ManifestParse("[cache]\nassets = [\n  [\"A.DAT\", 1, \"loc/zh-CN\", \"\", \"h\"],\n]\n");
+    Check(!slots.zh_rows, "a loc/zh-CN slot with no source does not count");
+    Check(bof3x::ManifestInstallKind(slots) == bof3x::InstallKind::kDisc,
+          "no install_kind, only source-less loc/zh-CN slots: a disc-built install");
     Check(!bof3x::ManifestParse("[cache]\noverlays = [\n  [\"A.DAT\", \"loc/zh-CN\", \"x\", \"h\"],\n]\n").zh_rows,
           "a loc/zh-CN text only in [cache] assets counts");
     // Said once: the first ask of an older manifest, never again, never for a recorded one.
