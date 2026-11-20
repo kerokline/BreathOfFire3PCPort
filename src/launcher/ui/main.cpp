@@ -59,6 +59,13 @@
 //   wait [<seconds>]               frames until no tool runs (the importer, tools/mods.py); the limit,
 //                                  1800 s if not given, ends the tools and the program with exit code 1
 //   report sources|mods            the page as text on stdout: its list, status and log
+//   report jukebox                 the Jukebox as text: its sources, note, songs (grey ones with why),
+//                                  status and battle-chord box (stage P5)
+//   rest <seconds>                 frames for that long, as the window idles: a song plays on (stage P5)
+// The Jukebox in a check plays to SDL's dummy sound driver whatever the
+// environment says, so a check never sounds; --samples <file> also writes the
+// samples it hands to the sound into that file (16-bit stereo, 44,100 Hz, no
+// header) for the proof against the Win32 player (stage P5).
 // A step that names a widget the page does not draw, or a grey one, stops the
 // program with exit code 1: a grey control is a thing a check can ask for. So
 // do a bind step with no capture open, a red step the widget does not meet, a
@@ -117,12 +124,15 @@ const char kUsage[] =
     "  --sub <n>, --sheet <n>  The sub-tab of that page and its page, counted from 0.\n"
     "  --keys <list>         With --check: keys to press, with , between them (the same as key steps).\n"
     "  --capture <file.png>  Writes the last frame as a picture. It also means --check.\n"
-    "  --banner-font <file>  A font file for the letters of the banner, to try one.\n";
+    "  --banner-font <file>  A font file for the letters of the banner, to try one.\n"
+    "  --samples <file>      With --check: writes the samples that the Jukebox plays into the file.\n"
+    "                        Steps for the Jukebox: report jukebox, rest <seconds>.\n";
 
 bool g_window_open = false;
 bool g_check = false;        // --check: no window, message, question or picker on the screen
 std::string g_banner_font;   // --banner-font
 double g_scale = 0;          // --scale
+std::string g_samples;       // --samples (stage P5)
 
 [[noreturn]] void Leave(int code) {
     // No tool is left running behind the launcher (the Win32 Mods page's WM_DESTROY).
@@ -457,7 +467,8 @@ struct Session {
             std::string text;
             if (rest == "sources") text = ui::SourcesText();
             else if (rest == "mods") text = ui::ModsText();
-            else Refuse("The step \"" + step + "\" needs sources or mods.");
+            else if (rest == "jukebox") text = ui::JukeboxText();   // stage P5
+            else Refuse("The step \"" + step + "\" needs sources, mods or jukebox.");
             for (const std::string& line : Split(text, '\n')) std::printf("bof3x-launcher-ui: report: %s\n", line.c_str());
             std::fflush(stdout);
         } else if (verb == "shot") {
@@ -465,6 +476,16 @@ struct Session {
             Frames(1);
             std::string why;
             if (!Over() && !ui::FrameSaved(&why)) Fail("Cannot write " + rest + ". " + why);
+        } else if (verb == "rest") {
+            // Stage P5: frames for that long, as the window idles (the Jukebox's sound plays on)
+            const double seconds = std::atof(rest.c_str());
+            if (seconds <= 0) Refuse("The step \"" + step + "\" needs a number of seconds.");
+            const std::uint64_t t0 = bof3::os::TickMs64();
+            while (static_cast<double>(bof3::os::TickMs64() - t0) < seconds * 1000 && !Over()) {
+                ui::Rest(100);
+                Frames(1);
+            }
+            Frames(3);
         } else {
             Refuse("The step \"" + step + "\" is not known.");
         }
@@ -483,6 +504,7 @@ const char* AskName(const Session& s) {
 int Check(const std::wstring& game_dir, const std::string& ini, const std::string& save, const std::string& page,
           int sub, int sheet, const std::vector<std::string>& steps, const std::string& capture, bool start) {
     ui::ToolsSayStarts(true);
+    ui::JukeboxCheck(g_samples);   // stage P5: a check's Jukebox never sounds
     Session s;
     if (!ui::FrameOpen(s.state, page.c_str())) Refuse("The page " + page + " is not known.");
     if (s.state.page >= 0) {
@@ -585,6 +607,8 @@ int main(int argc, char* argv[]) {
         } else if (arg == "--scale" && more) {
             g_scale = number(argv[++i], "--scale");
             if (g_scale < 0.5 || g_scale > 8) Refuse("--scale needs a number from 0.5 to 8.");
+        } else if (arg == "--samples" && more) {   // stage P5
+            g_samples = argv[++i];
         } else if (arg == "--") {
             for (++i; i < argc; ++i) game_args.push_back(bof3::os::ToWide(argv[i]));
         } else {
@@ -593,6 +617,7 @@ int main(int argc, char* argv[]) {
     }
     g_check = check;
     if (check) return Check(named, ini, save, page, sub, sheet, steps, capture, start);
+    if (!g_samples.empty()) Refuse("--samples is for --check.");
     if (!ini.empty() || !save.empty() || start) Refuse("--ini, --save and --start are for --check. The window uses bof3x.ini.");
 
     if (named.empty()) {

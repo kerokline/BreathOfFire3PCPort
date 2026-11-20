@@ -64,6 +64,10 @@ struct Pages {
     // Raised when the Mods page added, built or removed a mod
     // (kMsgModsChanged): Settings' Row above the text box is made again.
     unsigned mods_stamp = 0;
+
+    // ---- The Jukebox (stage P5) ----
+    // Shown in place of the title page, from its Jukebox button, until its Close.
+    bool jukebox_open = false;
 };
 
 // The Win32 pages are laid out in dialog units of Segoe UI 9: 1.75 of the
@@ -186,6 +190,20 @@ void ModsPage(Pages& p);
 void ModsPoll(Pages& p);
 // The page as text, for a check's `report mods`.
 std::string ModsText();
+
+// The Jukebox (page_jukebox.cpp; music_player.cpp's IDD_MUSIC): the songs and
+// recorded streams of each source, played through jukebox_play.h. Begin lists
+// them, opens the sound device and shows the page (MusicPlayerRun); its Close
+// stops the sound. Its battle-chord box sets Pages::chord, which the Game
+// Options page's Apply writes into opt= with the suites (DIV-0113).
+void JukeboxBegin(Pages& p);
+void JukeboxPage(Pages& p);
+// The page as text, for a check's `report jukebox`: the sources, the note,
+// the song box's entries (grey ones with why), the status and the chord box.
+std::string JukeboxText();
+// A check (main.cpp --check): no sound out whatever the environment, and with
+// `samples` the samples handed to the sound written to that file (--samples).
+void JukeboxCheck(const std::string& samples);
 
 // A page that is not in this launcher yet: its sentence.
 void PageNotYet();
