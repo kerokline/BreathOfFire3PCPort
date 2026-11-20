@@ -113,15 +113,17 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      stale, and so is the second backend as tier 2's gate in the line below (call 1 chose DXVK-native). Found for the staging:
      nothing on Linux reads `bof3x.ini`, the seam starts no process, the movie's picture is a `Fatal` off Windows, LB8 did
      not run, and no Windows 64-bit state-hash reference is recorded. **A launcher for both systems** is estimated in
-     [`launcher-portable.md`](launcher-portable.md) (IDEAS I69); its stage P0 is the round's group C7. **Its stages P1, P2 and P3 are built
+     [`launcher-portable.md`](launcher-portable.md) (IDEAS I69); its stage P0 is the round's group C7. **Its stages P1 to P4 are built
      (2026-11-20, branch `launcher/p1-frame`, local, not pushed): `bof3x-launcher-ui`, Dear ImGui on SDL3, the title
-     page, Configure, every settings page, the Controls pages and the bind capture, its sections 9 to 11.** The proof: `python
+     page, Configure, every settings page, the Controls pages and the bind capture, the Sources and Mods pages, its
+     sections 9 to 12.** The proof: `python
      tools/launcher_host/ui_compare.py --ui build/bof3x-launcher-ui.exe --win32 <ini-less launcher copy> --home <home>
-     --game <game folder> --ini <a copy of a bof3x.ini> --out <dir>`, 64 cases equal (it shows the Win32 window for a
+     --game <game folder> --ini <a copy of a bof3x.ini> --out <dir>`, 66 cases equal (it shows the Win32 window for a
      moment in each case and never sends Play). A page is checked with no screen by `build/bof3x-launcher-ui.exe --check
      --ini IN --save OUT --script "open settings; set wide=1; press Back; press Exit"`. Next there: the owner's eye on
-     the pages, a hand on the window, a real key and pad on the capture (Pause and NumLock after D427's fix); then P4
-     (Sources and Mods) and P5 (the Jukebox and the save editor) as groups side by side, each page one `page_*.cpp` over `src/launcher/ui/pages.h`, with its rows added
+     the pages, a hand on the window, a real key and pad on the capture (Pause and NumLock after D427's fix); the owner's
+     one install made through the Sources page, and the pickers and the rebuild question seen on a screen; then P5
+     (the Jukebox and the save editor), each page one `page_*.cpp` over `src/launcher/ui/pages.h`, with its rows added
      to `ui_compare.py`. Two rules the gates taught: no widget call named as an engine accessor is (`At`), and a colour
      as red, green and blue, never one hexadecimal number. An unattended run of it without `--check` that the start can
      refuse shows a modal message box.

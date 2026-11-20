@@ -1,11 +1,9 @@
 # One launcher for Windows and Linux: what it would take
 
 **Status:** IN PROGRESS (2026-11-20: stage P0 is in `main`, the Linux
-round's group C7; stage P1, the frame, stage P2, the settings pages, and
-stage P3, Controls, are built on the local branch `launcher/p1-frame`,
-sections 9 to 11; stage P4, Sources and Mods, on the local branch
-`launcher/p4-sources` cut from it, section 12; stages P5 and P6 are not
-started. Sections 1 to 8 are the staging of 2026-11-19, measured
+round's group C7; stage P1, the frame, stage P2, the settings pages, stage
+P3, Controls, and stage P4, Sources and Mods, are built on the local branch
+`launcher/p1-frame`, sections 9 to 12; stages P5 and P6 are not started. Sections 1 to 8 are the staging of 2026-11-19, measured
 at `main` `8cd45199`.)
 An estimate and a staging for the owner's question "a launcher that works on
 either Windows or Linux". It is tier 3 of [`linux-round.md`](linux-round.md)
@@ -630,7 +628,7 @@ that this stage touches (`os_census.py --check` and `--boundary`,
   bindings, has no counterpart: the drawn window's navigation is Dear
   ImGui's.
 
-## 12. Stage P4 as run (2026-11-20, branch `launcher/p4-sources`)
+## 12. Stage P4 as run (2026-11-20, branch `launcher/p4-sources`, merged into `launcher/p1-frame`)
 
 **What is built.** The Sources page and the Mods tab's Data page, each a
 port of `sources_dialog.cpp` less the windows, with the texts word for
@@ -801,3 +799,13 @@ row. The Mods page fits as `launcher.rc` places it.
   Linux release carries one yet.
 - The window on the screen, and in the WSL the set-up in place and the
   stale prompt, were not run.
+
+**After the merge into `launcher/p1-frame`** (the coordinator's own runs,
+2026-11-20): both Windows widths and the Linux build; the game's self-tests
+through the drawn launcher's Play end 0 with the seam's new quoting; an
+untouched window with every page opened, the Mods list read and the Sources
+page opened and closed writes the owner's `bof3x.ini` byte for byte, and
+the install's own files keep their times; `ui_compare.py` 66 cases, 66
+equal, with both launchers rebuilt; in the WSL the Mods and Sources pages
+list the home this stage built there; the gates of section 9 and
+`linux_tree.py --check` pass.

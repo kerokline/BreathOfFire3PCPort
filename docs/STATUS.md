@@ -8,6 +8,17 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
+**The drawn launcher's Sources and Mods pages, 2026-11-20 (stage P4 of [`launcher-portable.md`](launcher-portable.md),
+its section 12; the same local branch as the paragraphs below).** The Sources page, the Mods tab's Data page and the
+start's flows that need them: a first run opens the Sources page, an install of an older release asks for the rebuild,
+Data's Sources... button, and the settings read again after a build. The importer and `tools/mods.py` run through the
+seam's process call, their lines read on a thread. **The proof:** an install built from the US disc through the page by
+script, on Windows and in the WSL, has a cache manifest that differs from the importer's own build in the build time
+alone. `ui_compare.py` is 66 cases, 66 equal. A drawn launcher on Linux can now make an install and start the game with
+no text file. One change in the seam: a child's arguments are quoted by the C runtime's rules (a folder `D:\` arrived
+as `D:"` before); the game's self-tests end 0 after it. **Owed:** a hand on the pages, the pickers and the question
+seen on a screen (none was shown), one install made through it by the owner; stages P5 and P6.
+
 **The drawn launcher's Controls pages, 2026-11-20 (stage P3 of [`launcher-portable.md`](launcher-portable.md), its
 section 11; the same local branch as the two paragraphs below).** The three Controls pages and the bind capture: a key
 from SDL's key event through `input/key_sdl.h`, the pad shared with Dear ImGui's navigation. A host test
