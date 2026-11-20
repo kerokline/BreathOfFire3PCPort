@@ -14,7 +14,8 @@
 // variable, the current directory, the home's game\ (common/home.h), then
 // ./bof3. With none of them an install and no cache, the Sources page offers
 // to make one from the player's own copy of the game
-// (docs/install-sources.md).
+// (docs/install-sources.md); a game folder with no image of .data is set up
+// by the same page before its first start.
 //
 // --host exe (the default, docs/state3-design.md section 8): bof3x.exe, beside
 // this launcher, started with the game directory as its current directory -
@@ -22,8 +23,10 @@
 // bof3x.dll and maps the player's data itself (src/hook/exe_host.cpp).
 // No BOF3.exe is read there (docs/exe-retire-round.md, X2): .data is the
 // cache's image, whatever built it - the launcher sets BOF3X_EXEIMAGE to the
-// settings' cache unless the environment already does, and refuses a game
-// folder with no image (start.cpp StartRefuseNoImage). Only the developer's
+// settings' cache unless the environment already does. A game folder with no
+// image is set up first through the Sources page (start.h StartSetUpFor,
+// docs/exe-retire-round.md X3); under --no-config or a self-test it is
+// refused (start.cpp StartRefuseNoImage). Only the developer's
 // BOF3X_EXEFILE=1 has the engine read the file.
 //
 // --host bof3: the hosted build, kept for the shadow fuzz, the A/B switch and
@@ -419,11 +422,17 @@ int wmain(int argc, wchar_t** argv) {
     for (bool again = true; again;) {
         again = false;
         exe_read = bof3x::StartFindGame(named_game, hosted, &game_dir, &exe);
-        const bool no_install =
+        const bof3x::StartSetUp set_up =
             bof3x::StartReadSettings(ini, game_dir, named_game, hosted, exe_read, want_dialog, cfg);
 
-        if (no_install) {   // the Sources page's first run (above)
-            const bool built = bof3x::SourcesDialogRun(nullptr, cfg, true);
+        if (set_up != bof3x::StartSetUp::kNone) {
+            // The Sources page first (start.h StartSetUpFor): its first run, or
+            // this game folder set up in place - the page adds it as a source,
+            // and the importer, not the launcher, says whether it is the PC
+            // game; then the cache's image is built from it and the game
+            // starts from the same folder.
+            const bool built = bof3x::SourcesDialogRun(
+                nullptr, cfg, true, false, set_up == bof3x::StartSetUp::kThisFolder ? game_dir : std::wstring());
             if (!bof3x::ConfigSave(ini, cfg))   // Locate ffmpeg's choice, kept whatever happened
                 std::fwprintf(stderr, L"bof3x-launcher: cannot write %ls; settings not saved\n", ini.c_str());
             if (!built) return 0;   // closed without an install: start nothing

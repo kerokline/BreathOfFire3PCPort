@@ -16,6 +16,7 @@
 //       src/os/posix/*.cpp src/os/file.cpp src/os/heap_arena.cpp -o /tmp/config_tests -lpthread -ldl
 #include "common/home.h"
 #include "launcher/config.h"
+#include "launcher/start.h"   // StartSetUpFor alone: inline, nothing of start.cpp linked
 #include "launcher/suites.h"
 
 #include "os/env.h"
@@ -1588,6 +1589,68 @@ void TestInstallKind() {
     std::filesystem::remove_all(bof3::os::PathW(cache), ec);
 }
 
+// docs/exe-retire-round.md X3: what the Sources page sets up before a player's
+// start (start.h StartSetUpFor). Facts only: the rule asks no file, so no
+// folder is made. Each install kind with no image of .data, and each case the
+// refusal (StartRefuseNoImage) keeps.
+void TestStartSetUp() {
+    using bof3x::StartSetUp;
+    using bof3x::StartSetUpFor;
+    bof3x::StartSetUpAsk none;            // a player's start with the dialog, nothing there
+    Check(StartSetUpFor(none) == StartSetUp::kFirstRun, "no game folder, no cache, not named: the first run, as before");
+    bof3x::StartSetUpAsk pc = none;       // a PC folder used in place, no cache (the working folder)
+    pc.game_folder = true;
+    Check(StartSetUpFor(pc) == StartSetUp::kThisFolder, "a game folder elsewhere, no cache: set up in place");
+    bof3x::StartSetUpAsk a = pc;
+    a.named = true;
+    Check(StartSetUpFor(a) == StartSetUp::kThisFolder, "  the same named by --game or BOF3_GAME_DIR: set up in place");
+    a = pc;
+    a.cache = true;                       // the home's cache, built before the image existed (no base\exe)
+    Check(StartSetUpFor(a) == StartSetUp::kThisFolder, "  the same beside the home's cache with no image: set up in place");
+    a.cache_image = true;
+    Check(StartSetUpFor(a) == StartSetUp::kNone, "  the same beside a cache with an image: nothing, the game starts");
+    a = pc;
+    a.home_game = true;                   // a disc-built game\ whose cache was deleted
+    Check(StartSetUpFor(a) == StartSetUp::kFirstRun, "the home's own game folder, no cache: the first run again");
+    a.cache = true;
+    Check(StartSetUpFor(a) == StartSetUp::kFirstRun, "  its cache with no image: the first run");
+    a = pc;
+    a.home_game = true;
+    a.named = true;
+    Check(StartSetUpFor(a) == StartSetUp::kThisFolder, "  the home's game folder named: set up in place");
+    a = pc;
+    a.cache = true;
+    a.cache_chosen = true;                // cache= or BOF3X_CACHE names a cache with no image
+    Check(StartSetUpFor(a) == StartSetUp::kNone, "a cache the player chose has no image: nothing, the refusal");
+    a = none;
+    a.named = true;
+    Check(StartSetUpFor(a) == StartSetUp::kNone, "no game folder, named: nothing, as before");
+    a = none;
+    a.cache = true;
+    Check(StartSetUpFor(a) == StartSetUp::kNone, "no game folder, a cache: nothing, as before");
+    // Never: the refusal stays under each of these, for every case above.
+    for (const bof3x::StartSetUpAsk& base : {none, pc}) {
+        a = base;
+        a.want_dialog = 0;
+        Check(StartSetUpFor(a) == StartSetUp::kNone, "--no-config (and the windowless launcher): nothing, the refusal");
+        a = base;
+        a.self_test = true;
+        Check(StartSetUpFor(a) == StartSetUp::kNone, "BOF3X_SELFTEST_ONLY: nothing, the refusal");
+        a = base;
+        a.hosted = true;
+        Check(StartSetUpFor(a) == StartSetUp::kNone, "the hosted build: nothing");
+        a = base;
+        a.exe_read = true;
+        Check(StartSetUpFor(a) == StartSetUp::kNone, "BOF3X_EXEFILE=1 with the file: nothing, the file is read");
+        a = base;
+        a.exe_image_set = true;
+        Check(StartSetUpFor(a) == StartSetUp::kNone, "BOF3X_EXEIMAGE set: nothing, it names the image");
+        a = base;
+        a.want_dialog = 1;
+        Check(StartSetUpFor(a) == StartSetUpFor(base), "--config: as the settings' default");
+    }
+}
+
 // docs/exe-retire-round.md X2: BOF3X_EXEFILE=1 is the developer's switch. A
 // preset never sets it, also on a PC folder with BOF3.exe there (it did: As
 // shipped and Repaired turned DIV-0212 off through it); the environment's is
@@ -2398,6 +2461,8 @@ int main() {
     TestInstallKind();
     std::printf("BOF3X_EXEFILE=1, the developer's switch (docs/exe-retire-round.md X2)\n");
     TestExeFileDeveloper();
+    std::printf("a game folder with no image: the set-up first (docs/exe-retire-round.md X3)\n");
+    TestStartSetUp();
     std::printf("review fixes: hosted opt=, listed layers, music only, one reader, chord round trip, psp=\n");
     TestHostedOpt();
     TestListedLayers();
