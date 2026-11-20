@@ -1466,6 +1466,20 @@ def build_languages_disc_only(asked, sources, out, reuse=None):
     return assets
 
 
+# The install's kind as a recorded fact (docs/exe-retire-round.md, X1): the
+# launcher and the engine read it (common/cache_manifest.h ManifestInstallKind)
+# where they once looked for BOF3.exe beside the game. "pc": the PC game's DAT/
+# is a source - base/ and loc/zh-CN/ are its chunks, and setup lays the game
+# folder from that PC folder; "disc": it is not - a disc (PlayStation or PSP) is
+# the base and setup lays the game folder from the cache (install --base).
+# BOF3.exe alone among discs is "disc": its .data makes base/exe/, not DAT/.
+INSTALL_KIND_KEY = "install_kind"
+
+
+def install_kind(sources):
+    return "pc" if any(isinstance(s, PcSource) for s in sources) else "disc"
+
+
 def write_manifest(out, recipe_path, rec, sources, assets, loc_assets=(), opt_assets=(), opt_recipe=None, exe=None,
                    bgm=None, psp_snd=None, prefer_path=None, psx_jingles=None):
     with open(recipe_path, "rb") as f:
@@ -1484,6 +1498,7 @@ def write_manifest(out, recipe_path, rec, sources, assets, loc_assets=(), opt_as
              ""]
     lines += psp_standins.manifest_lines(sources)     # [build] base_policy: the launcher's key (LT)
     lines[-1:-1] = psp_exe.manifest_build(exe)        # [build] exe_tables_from, in the same table (docs/psp-image.md)
+    lines[-1:-1] = ["%s = %s" % (INSTALL_KIND_KEY, toml_str(install_kind(sources)))]   # the same table (X1)
     for s in sources:
         lines += ["[[source]]", "build = %s" % toml_str(s.id), "path = %s" % toml_str(os.path.basename(os.path.normpath(s.path))), ""]
     lines += ["[cache]", "assets = ["]          # a table of its own, not the last [[source]]'s
@@ -2128,15 +2143,25 @@ def install_base(cache, game):
     language layer installed over it carries the text; a container with no
     chunk the cache has - AFLDKWA, wholly Chinese - written empty for the layer
     to fill); SND/ the cache's
-    base/snd; BGM/ empty (the music is the cache's base/bgm, DIV-0087). Refuses
-    a directory holding BOF3.exe: a PC install keeps its own files."""
+    base/snd; BGM/ empty (the music is the cache's base/bgm, DIV-0087).
+
+    Refuses a cache whose kind is the PC's (docs/exe-retire-round.md X1:
+    [build] install_kind, for an older manifest its loc/zh-CN rows -
+    language_tags.cache_kind, common/cache_manifest.cpp's rule): a PC install
+    keeps the PC game's own DAT/, which setup copies (player_sources.py copy_pc).
+    BOF3.exe is not asked. And refuses a directory that is a game folder already
+    (DAT/FIRST.DAT): --base lays a new one, and never writes over the DAT/ of
+    a folder it did not make - the PC game's own folder among them."""
     import shutil
-    if os.path.isfile(os.path.join(game, "BOF3.exe")):
-        raise SystemExit("--base: %s holds BOF3.exe - a PC install keeps its own DAT/; --base lays a disc-only one"
-                         % game)
     man = os.path.join(cache, "manifest.toml")
     if not os.path.isfile(man):
         raise SystemExit("--base: %s has no manifest.toml (importer.py build writes it)" % cache)
+    if language_tags.cache_kind(cache) == "pc":
+        raise SystemExit("--base: %s is a PC install's cache (the PC game's DAT/ is its base) - a PC install keeps "
+                         "its own DAT/; --base lays a disc-built one" % cache)
+    if os.path.isfile(os.path.join(game, "DAT", "FIRST.DAT")):
+        raise SystemExit("--base: %s is a game folder already (DAT/FIRST.DAT) - --base lays a new one; give an empty "
+                         "or new folder" % game)
     with open(man, "rb") as fh:
         assets = tomllib.load(fh)["cache"]["assets"]
     order = collections.OrderedDict()
@@ -2406,11 +2431,12 @@ def cmd_verify(a):
         exe = tomllib.load(fh).get("exe")
     if exe:
         errs = exe_tables.verify_cache(a.cache)
-        if sha(exe_tables.read_image(os.path.join(a.cache, "base", "exe"), errs)[1]) != exe["sha256"]:
+        if sha(exe_tables.read_image(os.path.join(a.cache, "base", "exe"), [])[1]) != exe["sha256"]:   # its lines: verify_cache's
             errs.append("%s: not the image the manifest recorded" % exe["file"])
         print("  base/exe/ (%s): %s" % (exe["build"], "; ".join(errs) if errs else
                                          "the image recipes/exe.toml records for it"))
         bad += errs
+        bad += verify_exe_source(a.cache, getattr(a, "pc", None), exe)
     rc = 1 if bad else 0
     rc |= verify_bgm(a.cache)
     rc |= verify_opt(a.cache, a.opt_recipe)
@@ -2418,6 +2444,38 @@ def cmd_verify(a):
     if a.overlays:
         rc |= verify_overlays(a.cache, a.overlays)
     return rc
+
+
+def verify_exe_source(cache, pc_path, exe):
+    """The image against the PC source's BOF3.exe (exe_tables.verify_against_pc):
+    the checks the engine made at every start against a BOF3.exe beside the
+    game, made once here (docs/exe-retire-round.md, X5). The source is `pc_path`
+    (--pc: a PC game folder, its CD's .iso or a .zip of either), else the first
+    PC source of the source list beside the cache (<home>/sources.toml, the
+    cache being <home>/cache). With none, or one that cannot be read, one line
+    says so and the image is checked against the manifest's hash alone (above).
+    Returns the problems."""
+    import player_sources
+    if pc_path:
+        row = {"path": os.path.abspath(pc_path), "kind": "pc-folder"}
+    else:
+        home = os.path.dirname(os.path.abspath(cache))
+        row = next((r for r in player_sources.load_sources(home) if r.get("kind") in player_sources.PC_KINDS), None)
+    if row is None:
+        if exe["build"] == "pc-zh":
+            print("  base/exe/ against the PC source: no PC source is listed beside this cache (give --pc); the "
+                  "image is checked against the manifest's hash alone")
+        return []
+    data, why = player_sources.pc_source_exe(row)
+    if data is None:
+        print("  base/exe/ against the PC source: %s The image is checked against the manifest's hash alone." % why)
+        return []
+    errs, info = exe_tables.verify_against_pc(cache, data)
+    for line in info:
+        print("  base/exe/ against the PC source (%s): %s" % (row["path"], line))
+    for e in errs:
+        print("  base/exe/ against the PC source (%s): %s" % (row["path"], e))
+    return errs
 
 
 def verify_bgm(cache):
@@ -2832,6 +2890,73 @@ def cmd_check(a):
     return exe_tables.cmd_check(a) | (1 if errs else 0)
 
 
+# Functions the exe-retire round changed in how a piece is made and not in
+# what a player plays with it (docs/exe-retire-round.md X3, step 5): measured
+# 2026-11-19 on an install the base's importer (5d6bcbd9) made from the PC
+# folder, `stale` named game-pc (copy_pc: BOF3.exe no longer copied, X5) and
+# manifest (write_manifest: [build] install_kind, X1, which an older manifest
+# answers from its loc/zh-CN rows); game-install also reads original_available
+# and, on a disc-built install, install_base (X3: the cache's kind in place of
+# BOF3.exe beside the game). A re-setup for these alone would swap the game
+# folder whole to drop a file nothing reads. Each is pinned by its build_reuse
+# digest before and after the round (CPython 3.13's bytecode, the release's
+# Python): a record whose only difference is one of these holds; any other
+# change to the function - before or after - is stale as ever.
+STALE_SAME = (
+    ("tools/player_sources.py", "copy_pc",
+     "44f15e1d1fcab5acd4639efdb5e9890a00c60946740256511bf92fd4a2711ba3",
+     "6702f0f232006099b84eca62974a61bf8598ee13a6cc8932754db2030457c579"),
+    ("tools/importer.py", "write_manifest",
+     "3cb06b824955e0a63c56b005c710ddf2612c00874d01962d257e9ddb84339008",
+     "8e58b610c87bf2ba76a0210ed5154a84c240962cd2106835bdf1eb28a2a4156e"),
+    ("tools/language_tags.py", "original_available",
+     "2a918dc4ef45ef3f4520ba489f908c916c340713abd6cd2881201a996016592d",
+     "7f04c57949cea71581883a4078df99916ade1dea80a2b91f03df045f2e1c552d"),
+    ("tools/importer.py", "install_base",
+     "73d17d83e1c3ce738989b7fa69428d85d34d8e5b3635cf0b1cd2887ab61e0310",
+     "7ad6af21b4b3bc58db4ad687c45dd6098f09321052ee3336351bf31e1b7f723b"),
+)
+# The same for a data file a step reads whole (build_reuse.SHIPPED_DATA), by
+# its sha256 before and after: on a disc-built install made by the base's
+# importer, `stale` named exe (src/hook/exe_own.cpp changed): X2 changed one
+# log line's text there, and X6 (D432) one more, not a region exe_tables.py
+# reads. The after-digest is of the file as checked out on Windows (CRLF).
+STALE_SAME_DATA = (
+    ("src/hook/exe_own.cpp",
+     "1e6f881f4c7864d12aa3de4d8b41ee3ca94d8e81152d6c28282a44e26c286120",
+     "640dd46df1450865ac1fdf7e193bcf8d20d2229ed5396d7b49afc9b3a42ce441"),
+)
+
+
+def stale_same(cache, step):
+    """True when `step`'s record holds once each STALE_SAME function recorded at
+    its digest before the round is read at its digest after it, and the file
+    holds exactly that after-digest now; each STALE_SAME_DATA file likewise
+    by its sha256."""
+    import copy
+    import build_reuse
+    rec = build_reuse.read_record(cache, step)
+    if not isinstance(rec, dict):
+        return False
+    patched, changed = copy.deepcopy(rec), False
+    for rel, q, before, after in STALE_SAME:
+        row = patched.get("code", {}).get(rel, {})
+        now = build_reuse._file_code(rel)
+        if row.get(q) == [before] and now is not None and {d for d, _ in now.get(q, [])} == {after}:
+            row[q] = [after]
+            changed = True
+    data = patched.get("data", {})
+    for rel, before, after in STALE_SAME_DATA:
+        p = os.path.join(ROOT, rel)
+        if data.get(rel) != before or not os.path.isfile(p):
+            continue
+        with open(p, "rb") as fh:
+            if sha(fh.read()) == after:
+                data[rel] = after
+                changed = True
+    return changed and build_reuse.why_stale(patched) is None
+
+
 def cmd_stale(a):
     """Which pieces of an install's cache this release's tools would make
     differently (HANDOFF item 11, docs/install-staleness.md): each step's
@@ -2839,7 +2964,9 @@ def cmd_stale(a):
     values and the data files as they are now. For the launcher: one line
     `stale <step>\t<reason>` a piece, then `stale N` and exit 1; or `fresh`
     and exit 0; or `none` and exit 2 when there is no cache to judge. A
-    setup then rebuilds the stale pieces and takes the rest from the cache."""
+    setup then rebuilds the stale pieces and takes the rest from the cache.
+    A piece whose only change is one of STALE_SAME's is not stale: it is said
+    on a `same <step>\t<reason>` line, which the launcher does not read."""
     import build_reuse
     cache = a.cache or os.path.join(a.home, "cache")
     if not os.path.isfile(os.path.join(cache, "manifest.toml")):
@@ -2847,8 +2974,12 @@ def cmd_stale(a):
         return 2
     try:
         rows = build_reuse.stale(cache)
+        same = [(step, why) for step, why in rows if stale_same(cache, step)]
     except Exception as e:      # judged stale, never fresh, when the check itself fails
-        rows = [("cache", "the check failed: %s: %s" % (type(e).__name__, e))]
+        rows, same = [("cache", "the check failed: %s: %s" % (type(e).__name__, e))], []
+    for step, why in same:
+        print("same %s\t%s, a change of the exe-retire round that plays the same" % (step, why))
+    rows = [r for r in rows if r not in same]
     for step, why in rows:
         print("stale %s\t%s" % (step, why))
     print("stale %d" % len(rows) if rows else "fresh", flush=True)
@@ -2886,6 +3017,10 @@ def main():
     p.add_argument("--json-progress", action="store_true",
                    help="stdout carries only progress / done / error lines; the build's own lines go to HOME/setup.log")
     p.add_argument("--ffmpeg", help="the player's ffmpeg.exe (else BOF3X_FFMPEG, else the PATH's)")
+    p.add_argument("--game-in-place", metavar="DIR",
+                   help="DIR, the PC game folder in the source list, stays the game folder: setup builds HOME/cache "
+                        "alone, lays out no HOME/game and does not change DIR; kept in sources.toml for every later "
+                        "setup (the launcher's set-up of a game folder that has no image, docs/exe-retire-round.md X3)")
     p = s.add_parser("build")
     p.add_argument("--source", action="append", required=True, help="a PC DAT/, BOF3.exe or a disc; order is preference")
     p.add_argument("--out", required=True)
@@ -2931,6 +3066,8 @@ def main():
     p = s.add_parser("verify")
     p.add_argument("--cache", required=True)
     p.add_argument("--overlays", help="an install's DAT/ whose <lang>.*.DAT overlays the cache's loc/ layers must equal")
+    p.add_argument("--pc", help="the PC source to check base/exe/ against (a PC game folder, its CD's .iso or a .zip "
+                                "of either); default the first PC source of <cache>/../sources.toml")
     p.add_argument("--recipe")
     p.add_argument("--opt-recipe")
     p.add_argument("--prefer")

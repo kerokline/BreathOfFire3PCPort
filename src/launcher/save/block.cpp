@@ -721,8 +721,8 @@ void AllIssues(const Block& b, const PartyTable& table, const Block* before, std
         }
         if (before && !SameMembers(*before, b)) {
             if (table.empty())
-                error("The party members changed, but this install has no BOF3.exe from which the editor reads the "
-                      "party table. Keep the same members. You can change their order.");
+                error("The party members changed, but the editor cannot read the party table of this install. Keep "
+                      "the same members. You can change their order.");
             else if (PartyRow(table, p, b[kPartySet]) < 0)
                 error("The game has no party with these members.");
         }

@@ -15,6 +15,9 @@
 //   setup --home H --json-progress    "progress <done> <total> <text>" lines,
 //                                     then "done game=... cache=..." or
 //                                     "error <text>" and a non-zero exit
+//     [--game-in-place DIR]           DIR, a listed PC game folder, stays the
+//                                     game folder: the cache alone is built
+//                                     (docs/exe-retire-round.md X3)
 //
 // An identify-shaped object is flat: path, ok, build, kind, label, problem.
 // Only one child runs at a time; the page is greyed while it does.
@@ -417,7 +420,29 @@ struct State {
     bool built = false;     // a build finished: the caller re-reads the install
     bool added = false;     // the last add succeeded: build next
     std::vector<std::wstring> paths;   // the list box's, in order
+    // A game folder with no image, to set up in place (SourcesDialogRun's
+    // `folder`, docs/exe-retire-round.md X3): added once the list is read,
+    // unless listed already; `in_place` is it once it is a listed source, and
+    // the build then makes the home's cache alone (setup --game-in-place).
+    std::wstring folder;
+    bool folder_asked = false;
+    std::wstring in_place;
 };
+
+// Whether two paths name the same folder: made absolute, the trailing
+// separator dropped, case not counted (as Windows names files).
+bool SamePath(const std::wstring& a, const std::wstring& b) {
+    auto full = [](const std::wstring& p) {
+        wchar_t buf[MAX_PATH];
+        const DWORD n = GetFullPathNameW(p.c_str(), MAX_PATH, buf, nullptr);
+        std::wstring out = n > 0 && n < MAX_PATH ? std::wstring(buf, n) : p;
+        while (out.size() > 3 && (out.back() == L'\\' || out.back() == L'/')) out.pop_back();
+        return out;
+    };
+    const std::wstring x = full(a), y = full(b);
+    return !x.empty() && CompareStringOrdinal(x.c_str(), static_cast<int>(x.size()), y.c_str(), static_cast<int>(y.size()),
+                                              TRUE) == CSTR_EQUAL;
+}
 
 State* Get(HWND dlg) { return reinterpret_cast<State*>(GetWindowLongPtrW(dlg, GWLP_USERDATA)); }
 
@@ -533,7 +558,11 @@ void StartSetup(HWND dlg, State& s) {
     SendDlgItemMessageW(dlg, IDC_SO_PROGRESS, PBM_SETPOS, 0, 0);
     Status(dlg, L"Building the install...");
     Log(dlg, L"Building the install in " + s.home + L"...");
-    Start(dlg, s, kSetup, L"setup " + HomeArg(s) + L" --json-progress");
+    // A PC folder set up in place: the importer builds the home's cache from the
+    // sources and lays out no game folder; the folder is the game folder still.
+    Start(dlg, s, kSetup,
+          L"setup " + HomeArg(s) + L" --json-progress" +
+              (s.in_place.empty() ? std::wstring() : L" --game-in-place " + Quote(s.in_place)));
 }
 
 void OnLine(HWND dlg, State& s, Job job, const std::wstring& wline) {
@@ -552,6 +581,7 @@ void OnLine(HWND dlg, State& s, Job job, const std::wstring& wline) {
         const std::wstring path = Widen(JsonString(line, "path"));
         const bool ok = JsonTrue(line, "ok");
         s.added = s.added || ok;
+        if (ok && !s.folder.empty() && SamePath(path, s.folder)) s.in_place = s.folder;
         if (ok) Log(dlg, L"Recognised: " + label + L" (" + path + L").");
         else Log(dlg, L"Not added: " + path + L": " +
                       (problem.empty() ? std::wstring(L"this release is not known.") : problem));
@@ -576,6 +606,8 @@ void OnLine(HWND dlg, State& s, Job job, const std::wstring& wline) {
     if (!wline.empty()) Log(dlg, wline);
 }
 
+void Add(HWND dlg, State& s);
+
 void OnDone(HWND dlg, State& s, Job job, DWORD code) {
     CloseHandle(s.process);
     s.process = nullptr;
@@ -589,6 +621,20 @@ void OnDone(HWND dlg, State& s, Job job, DWORD code) {
     case kList:
         if (code != 0) Log(dlg, L"The importer could not read the source list (exit " + std::to_wstring(code) + L").");
         else if (s.paths.empty()) Status(dlg, L"No sources yet.");
+        if (code == 0 && !s.folder.empty() && !s.folder_asked) {
+            // The game folder to set up in place: built from at once when it is
+            // a listed source, else added first (the importer identifies it).
+            s.folder_asked = true;
+            for (const std::wstring& p : s.paths)
+                if (SamePath(p, s.folder)) s.in_place = s.folder;
+            if (!s.in_place.empty()) {
+                StartSetup(dlg, s);
+            } else {
+                SetDlgItemTextW(dlg, IDC_SO_PATH, s.folder.c_str());
+                Add(dlg, s);
+            }
+            return;
+        }
         break;
     case kAdd:
         if (code == 0 && s.added) {
@@ -596,7 +642,9 @@ void OnDone(HWND dlg, State& s, Job job, DWORD code) {
             StartSetup(dlg, s);   // added: the install is rebuilt with it at once
             return;
         }
-        Status(dlg, L"Nothing was added. See the log below.");
+        Status(dlg, !s.folder.empty() && s.in_place.empty()
+                        ? L"The importer cannot use this game folder. See the log below. You can add another copy of the game."
+                        : L"Nothing was added. See the log below.");
         break;
     case kRemove:
         Status(dlg, code == 0 ? L"Removed. Build the install again to apply the change." : L"Not removed. See the log below.");
@@ -704,6 +752,9 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
                         s->rebuild
                             ? L"An older release built this install. The importer will build it again from the copies of the "
                               L"game below. It keeps the parts that do not change."
+                        : !s->folder.empty()
+                            ? L"This game folder is not set up yet. The importer checks the folder and makes the game data "
+                              L"from it, one time only. The game then starts from this folder, and your saves stay in it."
                         : s->first_run
                             ? L"No install was found. To make one, add your copy of the game: the PC game folder, "
                               L"a PlayStation disc image (.cue/.bin or .zip) or a PSP .iso. The importer checks "
@@ -712,6 +763,8 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
                               L"checks it and builds the install again.");
         SetDlgItemTextW(dlg, IDC_SO_HOME, (L"Install folder: " + s->home).c_str());
         FfmpegNote(dlg, *s->cfg);
+        if (!s->folder.empty())
+            Log(dlg, L"Game folder: " + s->folder + L". The importer reads it and does not change or remove its files.");
         if (!s->rt.error.empty()) {
             Status(dlg, L"The importer cannot run.");
             Log(dlg, s->rt.error);
@@ -1312,13 +1365,14 @@ INT_PTR CALLBACK ModsProc(HWND page, UINT msg, WPARAM wp, LPARAM lp) {
 
 }  // namespace
 
-bool SourcesDialogRun(HWND owner, Config& cfg, bool first_run, bool rebuild) {
+bool SourcesDialogRun(HWND owner, Config& cfg, bool first_run, bool rebuild, const std::wstring& folder) {
     INITCOMMONCONTROLSEX icc{sizeof icc, ICC_STANDARD_CLASSES | ICC_PROGRESS_CLASS};
     InitCommonControlsEx(&icc);
     State s;
     s.cfg = &cfg;
     s.first_run = first_run;
     s.rebuild = rebuild;
+    s.folder = first_run && !rebuild ? folder : std::wstring();
     s.rt = FindRuntime();
     s.home = HomeDir();
     const INT_PTR r = DialogBoxParamW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(IDD_SOURCES), owner, Proc,

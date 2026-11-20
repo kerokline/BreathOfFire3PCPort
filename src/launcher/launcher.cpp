@@ -14,16 +14,20 @@
 // variable, the current directory, the home's game\ (common/home.h), then
 // ./bof3. With none of them an install and no cache, the Sources page offers
 // to make one from the player's own copy of the game
-// (docs/install-sources.md).
+// (docs/install-sources.md); a game folder with no image of .data is set up
+// by the same page before its first start.
 //
 // --host exe (the default, docs/state3-design.md section 8): bof3x.exe, beside
 // this launcher, started with the game directory as its current directory -
 // no suspension, no reservation, no remote thread; the executable imports
 // bof3x.dll and maps the player's data itself (src/hook/exe_host.cpp).
-// BOF3.exe is optional there when the settings name a cache (cache= or
-// BOF3X_CACHE) or the environment sets BOF3X_EXEIMAGE: a disc-built install,
-// whose .data the cache holds (the launcher sets BOF3X_EXEIMAGE to the
-// settings' cache unless the environment already does).
+// No BOF3.exe is read there (docs/exe-retire-round.md, X2): .data is the
+// cache's image, whatever built it - the launcher sets BOF3X_EXEIMAGE to the
+// settings' cache unless the environment already does. A game folder with no
+// image is set up first through the Sources page (start.h StartSetUpFor,
+// docs/exe-retire-round.md X3); under --no-config or a self-test it is
+// refused (start.cpp StartRefuseNoImage). Only the developer's
+// BOF3X_EXEFILE=1 has the engine read the file.
 //
 // --host bof3: the hosted build, kept for the shadow fuzz, the A/B switch and
 // the reference pairs - and chosen without --host when the environment sets
@@ -334,9 +338,11 @@ int wmain(int argc, wchar_t** argv) {
         }
     }
 
-    // The game directory: --game, BOF3_GAME_DIR, the current directory when it
-    // holds BOF3.exe, the home's game\ when the Sources page laid one out
-    // (common/home.h, docs/install-sources.md), else ./bof3.
+    // The game directory: --game, BOF3_GAME_DIR, then StartFindGame: the
+    // current directory when it is a game folder (the developer's start: when
+    // it holds BOF3.exe), the home's game\ when the Sources page laid one out
+    // (common/home.h, docs/install-sources.md), the PC folder the home plays
+    // in place, else ./bof3.
     if (game_dir.empty()) {
         wchar_t env[MAX_PATH];
         DWORD n = GetEnvironmentVariableW(L"BOF3_GAME_DIR", env, MAX_PATH);
@@ -413,16 +419,22 @@ int wmain(int argc, wchar_t** argv) {
     // (docs/install-sources.md) can lay out a new game folder and cache, so
     // both are found again, and the settings read again, after it builds.
     std::wstring exe;
-    bool exe_present = false;
+    bool exe_read = false;
     bof3x::Config cfg;
     for (bool again = true; again;) {
         again = false;
-        exe_present = bof3x::StartFindGame(named_game, hosted, &game_dir, &exe);
-        const bool no_install =
-            bof3x::StartReadSettings(ini, game_dir, named_game, hosted, exe_present, want_dialog, cfg);
+        exe_read = bof3x::StartFindGame(named_game, hosted, &game_dir, &exe);
+        const bof3x::StartSetUp set_up =
+            bof3x::StartReadSettings(ini, game_dir, named_game, hosted, exe_read, want_dialog, cfg);
 
-        if (no_install) {   // the Sources page's first run (above)
-            const bool built = bof3x::SourcesDialogRun(nullptr, cfg, true);
+        if (set_up != bof3x::StartSetUp::kNone) {
+            // The Sources page first (start.h StartSetUpFor): its first run, or
+            // this game folder set up in place - the page adds it as a source,
+            // and the importer, not the launcher, says whether it is the PC
+            // game; then the cache's image is built from it and the game
+            // starts from the same folder.
+            const bool built = bof3x::SourcesDialogRun(
+                nullptr, cfg, true, false, set_up == bof3x::StartSetUp::kThisFolder ? game_dir : std::wstring());
             if (!bof3x::ConfigSave(ini, cfg))   // Locate ffmpeg's choice, kept whatever happened
                 std::fwprintf(stderr, L"bof3x-launcher: cannot write %ls; settings not saved\n", ini.c_str());
             if (!built) return 0;   // closed without an install: start nothing
@@ -480,14 +492,14 @@ int wmain(int argc, wchar_t** argv) {
                 continue;
             }
             std::string why;   // DIV-0102: the dialog's choice, under the cache it may have changed
-            if (!bof3x::ConfigResolveLanguage(game_dir, cfg, why)) Die(L"%hs", why.c_str());
+            if (!bof3x::ConfigResolveLanguage(game_dir, cfg, why, hosted)) Die(L"%hs", why.c_str());
             if (!bof3x::ConfigSave(ini, cfg))
                 std::fwprintf(stderr, L"bof3x-launcher: cannot write %ls; settings not saved\n",
                               ini.c_str());
         }
     }
 
-    bof3x::StartApply(game_dir, cfg, hosted, exe_present);
+    bof3x::StartApply(game_dir, cfg, hosted, exe_read);
 
     if (!hosted) {
         bool waited = false;

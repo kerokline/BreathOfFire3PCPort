@@ -385,6 +385,13 @@ def run_one(cfg, i, recipe, out, a):
             env['BOF3X_STATEHASH_SKIP'] = os.path.abspath(a.statehash_skip)
     launcher = os.path.join(i['launcher'], 'bof3x-launcher.exe')
     linux = a.host == 'linux'
+    if not linux:
+        # docs/exe-retire-round.md X2: a PC folder with no cache reads BOF3.exe only
+        # under BOF3X_EXEFILE=1 (input_run's launch would set it too; here so that
+        # the run's meta records it). Every install of the file names a cache, so
+        # this is for an install added without one.
+        import attract_run
+        attract_run.developer_exefile(env, i['game'], launcher, attract_run.host_for(env, a.host))
     cmd = [sys.executable, os.path.join(ROOT, 'tools', 'input_run.py'), recipe, '--out', out, '--no-front',
            '--launcher', launcher, '--game', i['game'], '--minutes', str(a.minutes), '--slot0-hold'] + a.save_args
     if a.host:

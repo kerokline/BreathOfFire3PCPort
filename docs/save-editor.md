@@ -83,7 +83,9 @@ they discard a change.
      from the field order;
    - the battle order, when its members are no longer the field order's;
    - the party row `+0x74C`, by `PartySet_Find`'s rule, from the 19-row table
-     read out of the install's `BOF3.exe` (`ExePartyTable`, `exe_image.cpp`);
+     read out of the install's image of `.data` (the cache's `base\exe` with
+     its table files laid in, as the engine maps it; `ExePartyTable`,
+     `exe_image.cpp`);
    - every faerie stamp in use, moved by the amount the battle count changed;
    - the checksum, last.
 3. Checks the result (the spec's section 13). An error refuses the save; a
@@ -98,8 +100,9 @@ they discard a change.
 **Refused:** a chapter that is not 0..19 or is 16; message speed, window colour
 and background outside their range; an all-zero play time; a field order that
 is not 1 to 3 different members packed from the start, or names a member no
-record holds; new members with no party row (or with no `BOF3.exe` to read the
-table from: the order can change then, the members cannot); a formation that is
+record holds; new members with no party row (or with no party table in the
+install's image - an install with no image, which the Sources page sets up: the
+order can change then, the members cannot); a formation that is
 locked or too large for the party; a gene row that is not packed or half empty;
 a non-zero byte after the gene bits; the last bit of either find bank; a stamp
 above the battle count; an item count outside 1..99.
@@ -156,22 +159,26 @@ words: Magus's Grove (61), Eygnock Road (69), Mt. Levett (70), Boumou Mountain
 
 A save's area, position and entry flags are exactly what a door hands
 `Field_ChangeArea`: the load passes them to it unchanged. The doors are the
-link lists of `Area_Descriptors` in `BOF3.exe` (a descriptor's `+0x20`, 12
+link lists of `Area_Descriptors` in `.data` (a descriptor's `+0x20`, 12
 bytes a link, `Area_LinkAt`; [`area-entry.md`](area-entry.md) section 1), so
 **an entrance into an area is every link of any area that leads to it**.
 
-`ExeAreaLinks` (`exe_image.cpp`) reads them from the player's file with
+`ExeAreaLinks` (`exe_image.cpp`) reads them from the install's image with
 `Area_LinkAt`'s arithmetic (`(w & 0xFF80) << 8` is the save's 16.16 position,
 in half cells; flags `& 0x8F`), indirect links' alternatives included. It
 leaves out a link to cell 0, 0 and the one list that eleven areas share as a
 placeholder. The editor groups the links of one position and names the group
 by the areas it comes from. The values are an exe table's, so they are read
 at run time and are not in the repository (the owner's call of 2026-11-09 for
-exe tables). An install with no `BOF3.exe` has no entrance list. **The lists
-are on the discs too**: each area's is in its own `AREAnnn.EMI`, in the section
-that loads at `0x801F2C00`, byte for byte the exe's for 191 of 192 areas on
-the JP disc (measured 2026-11-10). Reading them there for a disc-built install
-is a task under [`IDEAS.md`](IDEAS.md) I58.
+exe tables). **The lists are on the discs too**: each area's is in its own
+`AREAnnn.EMI`, in the section that loads at `0x801F2C00`, byte for byte the
+exe's for 191 of 192 areas on the JP disc (measured 2026-11-10), and a
+disc-built image holds them: the exe-retire round's X4 made the readers' 2,003
+reads of the link tables on the US disc-built cache of 2026-10-29, 0 refused,
+and its 1,555 links equal those read from `BOF3.exe`, so a disc-built install
+has the entrance list as a PC install does ([`exe-retire-round.md`](exe-retire-round.md)
+"As run"). An install with no image (no `base\exe` in its cache) has none, and
+the editor says so.
 
 Measured by the research pass (2026-11-10): the static read gives 1,542 links
 in 192 areas, with no difference from the running game's own dump of the door
@@ -192,8 +199,8 @@ what the bit records, as the gene rows do:
 |---|---|---|---|
 | Enemies defeated, Enemies identified (`+0x688`, `+0x6C8`) | `Enemies defeated 12 - <enemy>` | the enemy kind | each `AREAnnn.DAT`'s enemy table, the language layer's names over it |
 | Skills learned (`+0x6A8`) | `Skills learned 8 - <ability>` | the ability id's low byte | the ability names of section 4 |
-| Chests and field objects (`+0x6EC`) | `Chests and field objects 0 - area024 (100, 21): <find>` | the content object's `+5` | each area's placement script in `BOF3.exe` (op `9x`) |
-| Passage finds (`+0x72C`) | `Passage finds 4 - area003, area008 (79, 49): <find>` | the passage entry's `+4` | each area descriptor's passage list in `BOF3.exe` |
+| Chests and field objects (`+0x6EC`) | `Chests and field objects 0 - area024 (100, 21): <find>` | the content object's `+5` | each area's placement script in `.data`, the install's image (op `9x`) |
+| Passage finds (`+0x72C`) | `Passage finds 4 - area003, area008 (79, 49): <find>` | the passage entry's `+4` | each area descriptor's passage list in `.data`, the install's image |
 
 A find's place is the area and the cell (x, z); after it, what the find
 gives: the item's name, or `weapon 12` (its category and number) where the
@@ -294,8 +301,10 @@ record that holds nobody yet), so the level field takes 0..99.
 - **The named Records and finds rows (section 4.3) are not seen in the
   window.** The readers are checked by the host tests and against
   `tools/bank_names.py` on the owner's install; nobody has opened the page with
-  them yet. A disc-built install with no `BOF3.exe` has no chest or passage
-  names (the scripts and lists are on the discs too, as the entrances are: I58).
+  them yet. A disc-built install reads the chests and passages from its image
+  as a PC install does (the exe-retire round's X4: 11,292 reads on the US
+  disc-built cache of 2026-10-29, 0 refused); the window has not shown them
+  on one.
 - **The page is its own dialog**, not a page of the launcher's window (the
   spec's section 13 "Layout"): the owner's call, 2026-11-10.
 - **Equipment does not move the inventory.** The spec's section 13 takes an
@@ -508,7 +517,7 @@ The editor makes these sets (`SaveEditorRun`):
 | A disc's own, by language tag, with its card file name | The kind-20 chunk of each installed language's `FIRST.DAT` (`<game>\DAT\<tag>.FIRST.DAT`, else the cache's `loc\<tag>\dat\FIRST.DAT`) |
 | `pc`: the install as it plays now | The played language's layer: its default names chunk (kind 10, DIV-0020) and faerie names (kind 15, group 16; an empty entry is the exe's). With no language played, the exe's |
 | `pc-<tag>`: each other installed language as the PC plays it | The same two chunks of that layer |
-| `pc-original`: the port's own | The exe's two tables, read from the install's `BOF3.exe` |
+| `pc-original`: the port's own | The exe's two tables, read from the install's image; a disc-built image does not hold them (a gap and a language layer's names), so the set is not offered there and the editor says so |
 
 **The releases offered for a new card save are the disc sets**: one for each
 installed language whose layer has the chunk, in the Language box's order.

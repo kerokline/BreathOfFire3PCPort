@@ -114,8 +114,13 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      nothing on Linux reads `bof3x.ini`, the seam starts no process, the movie's picture is a `Fatal` off Windows, LB8 did
      not run, and no Windows 64-bit state-hash reference is recorded. **A launcher for both systems** is estimated in
      [`launcher-portable.md`](launcher-portable.md) (IDEAS I69); its stage P0 is the round's group C7.
-   - **`BOF3.exe` out of the player's run is staged, not launched (2026-11-19):** [`exe-retire-round.md`](exe-retire-round.md), IDEAS
-     I70; seven groups, five calls for the owner; proposed between the Linux round's wave A and wave B.
+   - **`BOF3.exe` out of the player's run: groups X1 to X6 built on the local branch `exe-retire/round` (2026-11-19), not
+     merged to `main`, not pushed:** [`exe-retire-round.md`](exe-retire-round.md) "As run", IDEAS I70, DIV-0241, DIV-0242,
+     DIV-0212 amended, D432. A player's start reads no `BOF3.exe`; a PC folder with no image is set up in place first.
+     **Owed before a PR:** the ten state-hash routes on `<main checkout>\bof3` under `BOF3X_EXEFILE=1`, then X7 (a harness
+     install with no `BOF3.exe`, the routes, `music_heard.py`, the Jukebox's and the save editor's drivers, the same with a
+     wrong `BOF3.exe` beside the game); the Sources page's window driven through a set-up in place; the save editor's
+     window on a disc-built install. None has run.
    - **The Linux round's next units** are frost's, on his fork ([`linux-round.md`](linux-round.md) 4 and 6; "Waiting on
      someone else"). Here: the renderer's remainder ([`platform-layers-plan.md`](platform-layers-plan.md) 2.2) and the
      second backend (IDEAS I63) gate tier 2, and the API is the owner's call 1 of `linux-round.md` 6. Tier 1's rows 5, 7
@@ -152,7 +157,8 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      that (IDEAS I67 measured the alternative, nothing built).
    - **The save editor's newer parts:** the records and finds rows named from the install (PR #243, DIV-0211
      amended) - nobody has opened the window with the named rows, chest positions are not checked beside a chest in
-     play, and an install with no `BOF3.exe` gets no chest or passage places; `tools/story_watch.py` beside the game
+     play, and on a disc-built install the chests and passages now come from its image (the exe-retire round's X4,
+     not seen in the window); `tools/story_watch.py` beside the game
      logs each story change ([`story-flags.md`](story-flags.md)).
    - **The smaller merges of 2026-11-12:** the learn cheat (PR #234, DIV-0226) was seen right by the owner; owed is
      the eye on the Cheats sub-tab's Page 2 (the third group has no sentence under its box, "Minigames" moved up 2
@@ -163,8 +169,8 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      2026-11-12); the owner saw the disc-patch mod's changed names and descriptions in play on 2026-11-12; a
      `table-edit` mod added by hand on the Mods tab is what is left. **Trap paid:** a state-hash chain run while build
      agents compiled gave five false differences; a proof run wants the machine quiet as well as hands-off.
-   - **IDEAS I58's next step:** the save editor's entrance list and party table on an install with no `BOF3.exe`
-     ("In flight", the save editor's list), then EMI patch mods.
+   - **IDEAS I58's next step:** EMI patch mods. The save editor's entrance list and party table on a disc-built install
+     came with the exe-retire round's X4 (the editor reads the cache's image; the window not opened on one).
    - **Merged on 2026-11-11:** the PSX media round (PR #228) and the Linux groundwork (PR #229); the owner says the
      state-hash runs ran for both. The jingles and the PSX logo movie, picture and sound, were heard and
      seen right by the owner on 2026-11-12 ([`owner-review.md`](owner-review.md)).
@@ -709,14 +715,18 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
 - **Build:** `cmake --preset i686 && cmake --build build` - llvm-mingw's `i686-w64-mingw32-clang++` (the `retcomm`
   toolchain under `~/.local/share`), **not** MSYS2's. The first configure fetches SDL3 (network). The 64-bit
   developer build: `cmake --preset x86_64 && cmake --build build-x86_64` (exe host only; item 14a).
-- **Run:** `build/bof3x-launcher.exe --game bof3 --no-config` from a script (`--no-config` skips the settings dialog,
-  [`launcher-settings.md`](launcher-settings.md) §4); log in `build/bof3x.log`. `BOF3X_ORIGINAL=NAME` / `=*` /
+- **Run:** `BOF3X_EXEFILE=1 build/bof3x-launcher.exe --game bof3 --no-config` from a script (`--no-config` skips the
+  settings dialog, [`launcher-settings.md`](launcher-settings.md) §4); log in `build/bof3x.log`. `<main checkout>\bof3` is
+  a PC folder with no cache, and since the exe-retire round a player's start refuses a game folder with no image: the
+  developer's switch `BOF3X_EXEFILE=1` reads its `BOF3.exe` as before. `input_run.py`, `attract_run.py` and `abc_run.py`
+  set it themselves when the game folder holds `BOF3.exe` and no cache is named, and say so in one line; the hosted
+  build (`--host bof3`) needs no switch; an install with a cache image needs none. `BOF3X_ORIGINAL=NAME` / `=*` /
   `*,-NAME` for original behaviour. Nothing mode-sets (DIV-0032); the game runs unfocused (DIV-0033), so
   `attract_run.py --no-front` leaves the desktop alone for all-ours runs; `--launcher DIR/bof3x-launcher.exe` runs a
   copy with its own `bof3x.ini` (or none: self-tests and references want an ini-less copy, Traps). End a run with
   `taskkill //F //IM BOF3.exe` only for a game you started (the runners do exactly that now,
   [`world-map.md`](world-map.md) §6); batches run detached.
-- **Self-tests, headless:** `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*' build/bof3x-launcher.exe --game <dir> --no-config` (a hosted run: the player's launcher hands it to `bof3x-launcher-dev.exe` beside it since 2026-10-15, [`launcher-settings.md`](launcher-settings.md) 2). **Keep the `BOF3X_SHADOW='*'`:** without it only the start-up self-tests run, not the shadow fuzz suite - the relocatable-image round's gate dropped it and shipped a fault the suite finds in its first module (2026-10-29, [`relocatable-image-round.md`](relocatable-image-round.md) 5 "Before the PR"). A fault inside a self-test is silent (the crash reporter's thread cannot run under the loader lock; the process exits 0xC0000005 after 20 s): the log's last line names the module, and a `Log` in `crash.cpp`'s handler itself names the fault. Beside it the exe host's: `... --host exe`, and moved: `BOF3X_IMAGEBASE=0xA00000 ... --host exe`.
+- **Self-tests, headless:** `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*' build/bof3x-launcher.exe --game <dir> --no-config` (a hosted run: the player's launcher hands it to `bof3x-launcher-dev.exe` beside it since 2026-10-15, [`launcher-settings.md`](launcher-settings.md) 2). **Keep the `BOF3X_SHADOW='*'`:** without it only the start-up self-tests run, not the shadow fuzz suite - the relocatable-image round's gate dropped it and shipped a fault the suite finds in its first module (2026-10-29, [`relocatable-image-round.md`](relocatable-image-round.md) 5 "Before the PR"). A fault inside a self-test is silent (the crash reporter's thread cannot run under the loader lock; the process exits 0xC0000005 after 20 s): the log's last line names the module, and a `Log` in `crash.cpp`'s handler itself names the fault. Beside it the exe host's: `BOF3X_EXEFILE=1 ... --host exe`, and moved: `BOF3X_EXEFILE=1 BOF3X_IMAGEBASE=0xA00000 ... --host exe` (the switch on `<main checkout>\bof3`, which has no cache; none on an install with a cache image).
   **A launcher copy holds four files** - `bof3x-launcher.exe`, `bof3x-launcher-dev.exe`, `bof3x.dll` and `bof3x.exe`
   (the exe host) - and no `bof3x.ini`; without `bof3x.exe` the launcher stops on a modal "bof3x.exe is missing"
   dialog (Traps). `abc_run.py prepare` copies all four; a hand-made copy must too. Unattended runs that pass a
@@ -840,10 +850,10 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
   - The pad does not move through the editor's dialog (`padnav` is private to `config_dialog.cpp`).
 
   **Next, in the order talked about (2026-11-10):**
-  1. **The entrance list on installs with no `BOF3.exe`**, and the knowledge map for the link lists: the
-     task under [`IDEAS.md`](IDEAS.md) I58. The lists are in each area's own `AREAnnn.EMI` (the section at
-     `0x801F2C00`), 191 of 192 byte for byte on the JP disc. The party table (`ExePartyTable`) has the
-     same gap on a disc-built install and goes with it.
+  1. **The knowledge map for the link lists** (IDEAS I58). The entrance list and the party table on a
+     disc-built install came with the exe-retire round's X4: the editor reads the cache's image, which holds
+     both there, and the chests and passages; the default names it does not hold
+     ([`save-editor.md`](save-editor.md) 4.2). Not seen in the window on a disc-built install.
   2. **Names still missing or doubtful.** 72 of 200 areas have no name and show as a number; six cited
      names may not be the US words (areas 61, 67, 69, 70, 71, 99); several chapter labels still say "ends
      in area N". All of it is rows of `data/save-names.tsv`, editable by hand; the list of unnamed areas

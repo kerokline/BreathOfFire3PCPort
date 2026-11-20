@@ -27,9 +27,10 @@ bof3x-launcher.exe --game C:\bof3-game
 ```
 
 with `bof3x.ini` beside the launcher holding `cache=C:\bof3-cache` and
-`language=en-US` (the settings dialog writes both). With no `BOF3.exe` in the
-game directory the launcher takes `.data` from the cache
-(`BOF3X_EXEIMAGE` = the `cache=` folder) and starts `bof3x.exe`; the hosted
+`language=en-US` (the settings dialog writes both). The launcher takes
+`.data` from the cache (`BOF3X_EXEIMAGE` = the `cache=` folder) and starts
+`bof3x.exe`, as it does on every install since the exe-retire round
+(2026-11-19, DIV-0242): a player's start reads no `BOF3.exe`. The hosted
 build (`--host bof3`) needs the PC's `BOF3.exe` and is refused.
 
 **The language is never `original` here.** The port's Chinese text exists
@@ -42,8 +43,9 @@ a language not installed; `install` says the same in its last lines. Before
 2026-10-12 such a start played with every Chinese chunk missing: no text,
 and the attract sequence stalled in area 4's message box (DIV-0102).
 
-`install --base` refuses a directory holding `BOF3.exe`: a PC install keeps
-its own files. Keep the paths short: MCI fails to open a movie whose full
+`install --base` refuses a directory that is a game folder already (it holds
+`DAT\FIRST.DAT`), and a cache that is a PC install's: a PC install keeps its
+own files (the exe-retire round's X3). Keep the paths short: MCI fails to open a movie whose full
 path is around 160 characters (error 304; the FM group's finding,
 [`fmv-import.md`](fmv-import.md)), so a deep folder can lose the movie for
 the path alone.
@@ -65,16 +67,20 @@ rule, the same in the launcher (`ConfigOriginalAvailable`,
 `src/launcher/config.cpp`), the engine (`RefuseOriginalWithoutChinese`,
 `src/game/dat_load.cpp`) and the tools (`original_available`,
 `tools/language_tags.py`, which `importer.py install` reports by): the port's
-Chinese text is there when the game directory holds `BOF3.exe` (a PC
-install, whose `DAT\` is the port's - `install --base` refuses such a
-directory, so the two cannot be mixed by the importer) or when the data cache
-(`BOF3X_CACHE`, unless `BOF3X_CACHE_DATA=0`) has `loc\zh-CN\dat\*.DAT`,
-which `importer.py build` writes only from the PC's `DAT\` (a disc-only
-build lists those manifest rows with an empty source and writes no such
-directory). The other languages are the existing test, `DAT\<tag>.*.DAT` or
-the cache's `loc\<tag>\dat\` (DIV-0089). No new file records it: both facts
-already exist and are read the same way by all three, rather than inferring
-the Chinese from `DAT\`'s contents. The engine is the last line: with
+Chinese text is there when the cache's record says the install is the PC's
+(`[build] install_kind = "pc"` in its `manifest.toml`; for a manifest from
+before that key, its `loc/zh-CN` rows with a source - the exe-retire round's
+X1, 2026-11-19, `src/common/cache_manifest.h` `InstallChineseText`) or when
+the data cache (`BOF3X_CACHE`, unless `BOF3X_CACHE_DATA=0`) has
+`loc\zh-CN\dat\*.DAT`, which `importer.py build` writes only from the PC's
+`DAT\` (a disc-only build lists those manifest rows with an empty source and
+writes no such directory). Before that round the first fact was `BOF3.exe`
+in the game directory; a player's start no longer asks the file (the hosted
+build and `BOF3X_EXEFILE=1` still do). A PC folder beside a disc-built cache
+therefore has `original` refused unless the cache holds the `loc\zh-CN` layer
+(the owner's decision of 2026-11-19, DIV-0102 as amended). The other
+languages are the existing test, `DAT\<tag>.*.DAT` or the cache's
+`loc\<tag>\dat\` (DIV-0089). The engine is the last line: with
 `BOF3X_LANG` unset or `original` and neither fact true, `DatLoad_Inject`
 stops with a Fatal naming the languages held, so an environment that reaches
 it past the launcher (a harness: `tools/attract_run.py` defaults `--lang` to
@@ -103,7 +109,8 @@ The field button map's defaults (`0x656AEC..0x656B00`, which `Boot_Task`
 copies to `0x903580`: zero there meant a New Game with every action
 unbound) left this list on 2026-10-12: they are a rule of the engine now,
 the default button of each action by name ([`controls.md`](controls.md)
-2.1), held in `exe_own.cpp` and verified against `BOF3.exe` when it is there.
+2.1), held in `exe_own.cpp` and verified against `BOF3.exe` when the file is
+opened (`BOF3X_EXEFILE=1`, the hosted build).
 
 So did the 16 bytes `Scenario_SubInit` copies into the story flags when a
 scenario starts (`0x662CD8`, zero there: flags 3, 0x19 and 0x1B clear at
@@ -179,10 +186,12 @@ probe looks for.**
   of a CD drive C..L; neither, the insert-the-disc box (DIV-0039's text) and
   exit code 1.
 - New: the same probe; when it fails under `bof3x.exe` with a disc-built
-  image of `.data` mapped (`BOF3X_EXEIMAGE`, no `BOF3.exe`), the game starts
-  as a local install (the CD root empty, as the probe's local branch leaves
-  it), logged once. Every other case unchanged: the hosted build, and the
-  exe host over the PC's `.data`, still refuse.
+  image of `.data` mapped (`BOF3X_EXEIMAGE`) on an install the cache records
+  as disc-built (`[build] install_kind`, since 2026-11-19; before then: no
+  `BOF3.exe` beside the game), the game starts as a local install (the CD
+  root empty, as the probe's local branch leaves it), logged once. Every
+  other case unchanged: the hosted build, and the exe host on a PC install,
+  still refuse.
 - Why: a disc-only install has `CAPCOM.AVI` only when the player's ffmpeg
   converted the disc's movie; the movie is not what makes it an install.
 - Also in the PSX version? No probe: the PlayStation boots its disc.
@@ -194,7 +203,9 @@ instead of playing without text.**
 - Original: the port has one language, its Chinese, in `DAT\`; every
   install had it.
 - New: `original` (`BOF3X_LANG` unset or `original`, `language=original`)
-  needs `BOF3.exe` in the game directory or the cache's `loc\zh-CN` layer.
+  needs a PC install by the cache's record (`[build] install_kind`; before
+  2026-11-19, `BOF3.exe` in the game directory) or the cache's `loc\zh-CN`
+  layer.
   Without either - a disc-only install - the launcher refuses `original` and
   any language not held before the dialog with a message naming the
   languages held, the dialog does not offer "Chinese (PC script)", the

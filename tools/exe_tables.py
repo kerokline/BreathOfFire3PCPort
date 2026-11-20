@@ -2089,6 +2089,101 @@ def verify_cache(cache, info=None):
     return errs
 
 
+# The classes of a disc-built image that must equal the PC's .data as the
+# image holds them, before the engine's fills (src/hook/exe_image.cpp
+# kClasses, must_equal; `own` and `keys` are left out: the engine writes them
+# from its own tables, which Python does not hold).
+MUST_EQUAL_UNFILLED = ("exe", "rebuilt", "layout", "none", "pointer")
+
+
+def verify_against_pc(cache, exe):
+    """The checks the engine made at a start against the BOF3.exe beside the
+    game, made here once against the PC source's BOF3.exe (`exe`, its bytes):
+    the exe-retire round, docs/exe-retire-round.md section 2 rows 6 to 10.
+
+    - The file whole against fixtures.toml's pc-zh hash. The engine's copies of
+      .rdata's constants (rdata_consts.cpp), its default key rule (shell.cpp)
+      and its own .data bytes (exe_own.cpp) are C++ tables that Python does not
+      hold; they are compared with the release's bytes in the developer's runs
+      (BOF3X_EXEFILE=1, the hosted build). A source that is the release is what
+      those comparisons were made against.
+    - A pc-zh image (DIV-0212, exe_image.cpp): the image with its table files
+      laid in against the file's .data, byte for byte; a difference names the
+      address, data.bin or the table file, and both bytes. The default key
+      table and the engine's own regions lie inside .data and are in it.
+    - A disc-built image (exe_image.cpp ExeImage_CompareWithFile): each range
+      of a class that must equal before the fills, against the file's .data;
+      the other classes counted, as the engine logs them.
+
+    Returns (problems, info lines)."""
+    errs, info = [], []
+    want = tables.load()[2][PC]["artifacts"]["exe"]["sha256"]
+    if sha(exe) != want:            # the source changed, not the cache: said, not a problem of the image
+        return errs, ["the PC source's BOF3.exe is not the 2001 release's (fixtures.toml pc-zh): it changed after "
+                      "it was added; the image is checked against the manifest's hash alone"]
+    va, vsz, raw, rsz = pe_sections(exe)[".data"]
+    pc = exe[raw:raw + rsz]
+    d = os.path.join(cache, "base", "exe")
+    # The bytes as they are, a changed one included: a hash that does not hold
+    # is verify_cache's line; here every table file of its table's size is
+    # laid in, so that the byte that differs is named.
+    if not os.path.exists(os.path.join(d, "data.toml")):
+        return ["base/exe/: absent, nothing to compare with the PC source"], info
+    meta, img = read_image(d, [])
+    img = bytearray(img)
+    toml = os.path.join(d, TABLES_DIR, TABLES_TOML)
+    rows = {}
+    if os.path.exists(toml):
+        with open(toml, "rb") as f:
+            rows = {r[0]: r for r in tomllib.load(f)["tables"]}
+    for lo, hi, how, key in meta["ranges"]:
+        r, p = rows.get(key), os.path.join(d, TABLES_DIR, "%s.bin" % key)
+        if how != "file" or r is None or not os.path.exists(p):
+            continue
+        with open(p, "rb") as f:
+            body = f.read()
+        if len(body) == r[2] - r[1] and r[1] <= lo < hi <= r[2]:
+            img[lo - DATA_LO:hi - DATA_LO] = body[lo - r[1]:hi - r[1]]
+    if len(img) != len(pc) or va != DATA_LO:
+        return ["base/exe/%s holds 0x%X bytes at 0x%X, the PC source's .data 0x%X bytes at 0x%X"
+                % (meta["file"], len(img), DATA_LO, len(pc), va)], info
+    info.append("the PC source's BOF3.exe is the 2001 release's (fixtures.toml pc-zh): the engine's .rdata constants, "
+                "default key rule and own .data bytes are checked against that release in the developer's runs "
+                "(BOF3X_EXEFILE=1, the hosted build)")
+    files = [(lo, hi, src) for lo, hi, how, src in meta["ranges"] if how == "file"]
+
+    def where(a):
+        key = next((src for lo, hi, src in files if lo <= a < hi), None)
+        return "tables/%s.bin" % key if key else meta["file"]
+
+    if meta["build"] == PC:
+        diff = [o for o in range(len(img)) if img[o] != pc[o]]
+        if diff:
+            o = diff[0]
+            errs.append("base/exe/%s differs from the PC source's .data at 0x%06X (the image 0x%02X, the file 0x%02X); "
+                        "%d of %d bytes differ" % (where(DATA_LO + o), DATA_LO + o, img[o], pc[o], len(diff), len(img)))
+        else:
+            info.append("the image with its table files is the PC source's .data, byte for byte: %d bytes compared "
+                        "(DIV-0212; the default key table and the engine's own regions among them)" % len(img))
+        return errs, info
+    by = collections.Counter()
+    differ_by = collections.Counter()
+    for lo, hi, how, src in meta["ranges"]:
+        diff = [a for a in range(lo, hi) if img[a - DATA_LO] != pc[a - DATA_LO]]
+        by[how] += hi - lo
+        differ_by[how] += len(diff)
+        if diff and how in MUST_EQUAL_UNFILLED:
+            a = diff[0]
+            errs.append("base/exe/%s 0x%06X..0x%06X (%s%s) must equal the PC source's .data, but %d of its %d bytes "
+                        "differ, the first at 0x%06X (the image 0x%02X, the file 0x%02X)"
+                        % (where(a), lo, hi, how, " " + src if src else "", len(diff), hi - lo, a,
+                           img[a - DATA_LO], pc[a - DATA_LO]))
+    info.append("the %s image against the PC source's .data: %s; `own` and `keys` are the engine's fills, not "
+                "compared here" % (meta["build"], ", ".join("%s %d of %d bytes differ" % (h, differ_by[h], by[h])
+                                                         for h in sorted(by))))
+    return errs, info
+
+
 # ------------------------------------------------------------------ the gate's skip list
 
 SKIP_FILE = os.path.join(ROOT, "tools", "statehash_skip.txt")

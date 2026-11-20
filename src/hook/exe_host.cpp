@@ -41,6 +41,7 @@
 
 #include "bof3/rebase.gen.h"
 #include "bof3/symbols.gen.h"
+#include "common/cache_manifest.h"
 #include "common/sha256.h"
 #include "game/rdata_consts.h"
 #include "game/shell.h"
@@ -239,21 +240,33 @@ void Fence() {
 // exe_file.cpp's, portable (exe_file.h); ExeFile_Present and ExeFile_Read are
 // defined there.
 
-// The player's BOF3.exe: hashed, opened and its sections checked when the
-// game directory holds it. Without it, BOF3X_EXEIMAGE must name the .data
-// source (a disc-built install, docs/disc-only-round.md): nothing is read
-// from a file, and every verification against it says so.
+// The player's BOF3.exe is the developer's source alone (docs/exe-retire-round.md,
+// X2): opened only under BOF3X_EXEFILE=1 - then hashed, opened and its
+// sections checked when the game directory holds it, as before. At a
+// player's start nothing opens or tests for the file, even one beside the
+// game: BOF3X_EXEIMAGE names the .data source, the cache's image, which
+// ExeImage_Source hashes against the manifest; ExeFile_Present() is then
+// false and every verification against the file says it did not compare.
 void OpenExe() {
+    if (!bof3x::InstallExeFileSwitch()) {
+        if (!EnvSet("BOF3X_EXEIMAGE"))
+            Fatal("data: BOF3X_EXEIMAGE unset. .data comes from the cache's image that BOF3X_EXEIMAGE names "
+                  "(bof3x-launcher sets it); BOF3X_EXEFILE=1 reads the player's own BOF3.exe in the game's directory "
+                  "instead, a developer's run.");
+        Log("data: .data from BOF3X_EXEIMAGE's cache; BOF3.exe is not opened (BOF3X_EXEFILE=1 opens it), and the "
+            "checks against it are not made");
+        return;
+    }
     wchar_t dir[MAX_PATH];
     const DWORD n = GetCurrentDirectoryW(MAX_PATH - 10, dir);
     if (n == 0 || n >= MAX_PATH - 10) Fatal("data: the current directory is unusable");
     const std::wstring path = std::wstring(dir) + L"\\BOF3.exe";
     if (GetFileAttributesW(path.c_str()) == INVALID_FILE_ATTRIBUTES) {
         if (!EnvSet("BOF3X_EXEIMAGE"))
-            Fatal("data: no BOF3.exe in %s and BOF3X_EXEIMAGE unset. bof3x.exe runs with the game's directory as its "
-                  "current directory (bof3x-launcher starts it so); .data comes from the player's own BOF3.exe there, "
-                  "or from the cache BOF3X_EXEIMAGE names.", Utf8Path(dir).text);
-        Log("data: no BOF3.exe in %s: a disc-built install - .data from BOF3X_EXEIMAGE's cache, nothing read from "
+            Fatal("data: BOF3X_EXEFILE=1, no BOF3.exe in %s and BOF3X_EXEIMAGE unset. bof3x.exe runs with the game's "
+                  "directory as its current directory (bof3x-launcher starts it so); .data comes from the player's own "
+                  "BOF3.exe there, or from the cache BOF3X_EXEIMAGE names.", Utf8Path(dir).text);
+        Log("data: BOF3X_EXEFILE=1 but no BOF3.exe in %s: .data from BOF3X_EXEIMAGE's cache, nothing read from "
             "the file, and the checks against it skipped", Utf8Path(dir).text);
         return;
     }
@@ -290,7 +303,10 @@ void CopyData() {
     // the import slots are bound in step 4.
     rdata::Map();
     const bool from_cache = ExeImage_Source(Place(kDataVa), kDataVa, kDataBytes, kBssEnd);
-    if (!from_cache) exe_file::ReadAt(exe_file::Data().raw, Place(kDataVa), kDataBytes, ".data");
+    if (!from_cache) {   // only under BOF3X_EXEFILE=1 with the file opened (OpenExe)
+        if (!exe_file::IsOpen()) Fatal("data: no .data source: neither BOF3X_EXEIMAGE's image nor an opened BOF3.exe");
+        exe_file::ReadAt(exe_file::Data().raw, Place(kDataVa), kDataBytes, ".data");
+    }
     Shell_MapDefaultKeys();   // Key_TableDefault from the engine's rule, against the file's when it is there
     ExeImage_LayOptTables(Place(kDataVa), kDataVa, kDataBytes);   // DIV-0111: a BOF3X_OPT layer's part
     ExeImage_LogMapped(Place(kDataVa), kDataBytes);

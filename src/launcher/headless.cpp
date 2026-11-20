@@ -33,8 +33,9 @@ namespace {
 
 const char kUsage[] =
     "usage: bof3x-launcher [--game <folder>] [--set <key>=<value>]... [--list] [-- <arguments for the game>]\n"
-    "  --game <folder>      The folder of the game. Without it, the launcher uses BOF3_GAME_DIR, then the\n"
-    "                       current folder if it has BOF3.exe, then the game folder of the home.\n"
+    "  --game <folder>      The folder of the game. Without it, the launcher uses the current folder if it\n"
+    "                       is a game folder, then the game folder of the home, then the PC game folder\n"
+    "                       that the home plays in place.\n"
     "  --set <key>=<value>  Changes one setting in bof3x.ini, then stops. You can use --set more than one time.\n"
     "  --list               Shows the settings in bof3x.ini, then stops.\n"
     "Without --set and --list, the launcher starts the game with the settings in bof3x.ini.\n"
@@ -132,9 +133,9 @@ int main(int argc, char** argv) {
 
     std::wstring game_dir, exe;
     bof3x::Config cfg;
-    const bool exe_present = bof3x::StartFindGame(named, false, &game_dir, &exe);
-    bof3x::StartReadSettings(ini, game_dir, named, false, exe_present, 0, cfg);   // --no-config: no Sources page
-    bof3x::StartApply(game_dir, cfg, false, exe_present);
+    const bool exe_read = bof3x::StartFindGame(named, false, &game_dir, &exe);
+    bof3x::StartReadSettings(ini, game_dir, named, false, exe_read, 0, cfg);   // --no-config: no Sources page
+    bof3x::StartApply(game_dir, cfg, false, exe_read);
     bool waited = false;
     const std::uint32_t code = bof3x::StartGame(ours, game_args, game_dir, nullptr, &waited);
     return waited ? static_cast<int>(code) : 0;

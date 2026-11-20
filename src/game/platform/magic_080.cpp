@@ -10,6 +10,7 @@
 #include "audio/mp3.h"
 #include "bof3/symbols.gen.h"
 #include "common/asm_name.h"
+#include "common/cache_manifest.h"   // the install's kind (docs/exe-retire-round.md X1)
 #include "common/strto32.h"
 #include "game/area_backdrop_callees.h"
 #include "game/display_setup.h"
@@ -662,10 +663,17 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
         // disc's CAPCOM30.STR, which Fmv_Play falls back to (DIV-0214) and
         // this probe does not look for, so the probe fails for it. Such an
         // install is local whatever the probe says: the root left empty, as
-        // the probe's local branch leaves it. With a
-        // BOF3.exe beside the game the install is the PC's and the original
-        // probe decides (DIV-0100's "Reversible?"; review item 2).
-        if (!bof3::ExeImage_DiscMapped() || bof3::ExeFile_Present()) {
+        // the probe's local branch leaves it. On a PC install the original
+        // probe decides (DIV-0100's "Reversible?"; review item 2): the
+        // cache's [build] install_kind says so (common/cache_manifest.h
+        // InstallPcDat; docs/exe-retire-round.md X1), not BOF3.exe beside the
+        // game - the hosted build and BOF3X_EXEFILE=1 still ask the file.
+        std::string where;
+        const bof3x::CacheManifest kind = bof3x::ManifestReadEnvironment(&where);
+        if (!kind.error.empty()) bof3::Fatal("DIV-0100: %s", bof3x::ManifestRefusal(kind, where).c_str());
+        if (const std::string note = bof3x::ManifestKindNoteOnce(kind); !note.empty()) bof3::Log("DIV-0100    %s", note.c_str());
+        if (!bof3::ExeImage_DiscMapped() ||
+            bof3x::InstallPcDat(kind, bof3x::InstallAskEngine(!bof3::IsExeHost(), bof3::ExeFile_Present()))) {
             bof3::os::ShowMessage(kError, kInsertDisc, true, false);   // DIV-0039
             return 1;
         }

@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 240 entries, DIV-0001..0240, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 242 entries, DIV-0001..0242, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -7986,11 +7986,25 @@ designed in rather than bolted on.
 - **Verification:** built; the self-tests do not reach `Game_WinMain`; the
   attract run from the scratch install (no AVI) starts the game and plays
   the same scenes as the PC-plus-US run (`disc-only-install.md` section 5).
-- **Reversible?** Put a `BOF3.exe` or a `CAPCOM.AVI` in the game directory
-  and the original probe decides.
+- **Amended 2026-11-19 (the exe-retire round,
+  [`exe-retire-round.md`](exe-retire-round.md) X1): the test is the cache's
+  record, not the file beside the game.** When the probe fails, "this is a PC
+  install, so the original probe decides" was `BOF3.exe` in the game
+  directory; it is now the cache's `[build] install_kind` (`pc` or `disc`;
+  for a manifest from before that key, its `loc/zh-CN` rows with a source),
+  through `src/common/cache_manifest.h` `InstallPcDat`
+  (`src/game/platform/magic_080.cpp`). A `BOF3.exe` put beside a disc-built
+  install no longer makes the probe refuse it at a player's start; the hosted
+  build and `BOF3X_EXEFILE=1` still ask the file. Verification: X1's
+  `config_tests` rows for each install kind, old and new manifest (4,327
+  checks, 0 failures); not played.
+- **Reversible?** Put a `CAPCOM.AVI` in the game directory and the original
+  probe decides. Before 2026-11-19 a
+  `BOF3.exe` in the game directory did too; at a player's start it no longer
+  does (the amendment above).
 - **Switch:** none
 - **Default:** on
-- **Player:** never - a file: a `BOF3.exe` or `CAPCOM.AVI` in the game directory lets the original probe decide
+- **Player:** never - a file: a `CAPCOM.AVI` in the game directory lets the original probe decide
 - **Toward:** none - the PlayStation has no probe ("Also in the PSX version?" above)
 - **Languages:** any
 - **State:** active
@@ -8664,6 +8678,28 @@ designed in rather than bolted on.
   the real install unchanged under all three (exit 0), hosted `shell` 0
   mismatches. Harnesses: `tools/attract_run.py` defaults `--lang` to
   `original`, so a run against a disc-only install must pass `--lang`.
+- **Amended 2026-11-19 (the exe-retire round,
+  [`exe-retire-round.md`](exe-retire-round.md) X1 and X3; the owner's
+  decision 3 of that day): the test is the cache's record, not the file
+  beside the game.** "The port's text is there" is now the cache's `loc\zh-CN`
+  layer or a PC install by the cache's `[build] install_kind` (for a manifest
+  from before that key, its `loc/zh-CN` rows with a source), through
+  `src/common/cache_manifest.h` `InstallChineseText` - in the launcher
+  (`ConfigOriginalAvailable`), the engine (`RefuseOriginalWithoutChinese`)
+  and the importer's mirror (`tools/language_tags.py` `original_available`)
+  alike - not `BOF3.exe` in the game directory. The hosted build and
+  `BOF3X_EXEFILE=1` still ask the file. One case changes: **a PC folder
+  beside a disc-built cache** has `original` refused where the file beside it
+  allowed it; the owner, 2026-11-19: refused "for now", and offered where the
+  cache holds the `loc\zh-CN` layer, as every other language is - a language
+  pack or mod that brings that layer is offered by the same rule. The
+  refusal's words changed from "no BOF3.exe in the game directory and no
+  loc\zh-CN layer in the cache" to "its cache is not built from the PC game
+  and has no loc\zh-CN layer". Verification: X1's `config_tests` rows for
+  each install kind, old and new manifest; X3's `language_tags.py selftest`
+  (13 install kinds, with and without a `BOF3.exe` beside the game, 0
+  errors), the same answers as `cache_manifest.cpp`; the hosted suite (X1's
+  run). Not played.
 - **Reversible?** A PC install, or a cache built with the PC's `DAT\` among
   its sources, holds the Chinese layer and `original` plays as before.
 - **Switch:** none
@@ -15893,6 +15929,35 @@ designed in rather than bolted on.
   `verify` for the seven discs and `BOF3.exe`, each image hash the one
   recorded before; the exe host's self-test on a US disc-only install (30
   table files) and on a PC game folder.
+- **Amended 2026-11-19 (the exe-retire round,
+  [`exe-retire-round.md`](exe-retire-round.md) X2, X5 and call 2; the
+  owner's decision 2 of that day): the start no longer compares with
+  `BOF3.exe`.** A player's start - any start but the hosted build's and one
+  under `BOF3X_EXEFILE=1` - opens no `BOF3.exe`: `.data` is the cache's image
+  on every install kind, built from the PC's files or from a disc
+  (`src/launcher/start.cpp` `StartApply`, `src/hook/exe_host.cpp`
+  `OpenExe`). The comparison of this entry - the image with its table files
+  against the file's `.data`, one byte of difference a Fatal - moved: to the
+  importer's `verify` (`tools/exe_tables.py` `verify_against_pc`: the image
+  against the PC source's `.data`, byte for byte, where a PC source is in the
+  source list and can be read), and to the developer's runs (the hosted
+  build, `BOF3X_EXEFILE=1`), where it gives every line it gave. In its place a
+  player's start hashes the image as it maps it against the manifest's
+  `[exe] sha256` (DIV-0242). The presets "As shipped" and "Repaired" no longer
+  turn this entry off: they did, through `BOF3X_EXEFILE=1` (`Player: yes`),
+  and the launcher now refuses that switch from a preset
+  (`src/launcher/config.cpp` `EnvNotHere`); the switch is the developer's
+  alone, so the entry is `Player: never` and a preset leaves it. The bytes
+  the game starts with are the same either way on a PC install.
+  Verification: X2's runs of the exe host's self-test and the moved base on
+  `<main checkout>\bof3` under `BOF3X_EXEFILE=1`, against a build of the
+  round's base `bb7fe3a3`: 10,392 lines each, 0 different (moved base the
+  same; with `BOF3X_EXEIMAGE` also set 10,396 each, 0 different); without the
+  switch on an install with no `BOF3.exe` (`install_kind = "pc"`): self-test,
+  moved base and 64-bit to `self-test only: done`, 0 FATAL; X5's `verify` of
+  that kind of install, rc 0, and one bit flipped in a copy of `data.bin` or
+  of a table file named with its file and address, rc 1. **Not played. Not
+  run:** the ten state-hash routes and the round's final proof (X7).
 - **Also in the PSX version?** No: the PlayStation loads its tables from the
   disc's files, which is the shape this moves toward.
 - **Verification:** the exe host's self-test on a PC game folder with a cache
@@ -15902,10 +15967,12 @@ designed in rather than bolted on.
   byte of a table file flipped: exit 3 with the rebuild sentence; a cache
   whose image a disc built, beside `BOF3.exe`: the file is read, as before
   (the round doc, 5b). **Not played. Not run:** the state-hash routes.
-- **Reversible?** `BOF3X_EXEFILE=1`: the file is the source, as before.
-- **Switch:** env:BOF3X_EXEFILE=1 - read by `src/launcher/launcher.cpp`, which then does not name the cache as the image's source
+- **Reversible?** `BOF3X_EXEFILE=1`, the developer's switch since
+  2026-11-19: the file is the source, as before, and the image is compared
+  with it. A preset does not set it (the amendment above).
+- **Switch:** env:BOF3X_EXEFILE=1 - read by `src/launcher/start.cpp` and `src/common/cache_manifest.cpp`; the developer's switch, which no preset sets
 - **Default:** on
-- **Player:** yes - `BOF3X_EXEFILE=1` (no ini key); the bytes are the same either way
+- **Player:** never - one-way for a player: `BOF3X_EXEFILE=1` is the developer's switch, refused from a preset (the owner's decision 2, 2026-11-19); the bytes are the same either way
 - **Toward:** psx - the tables read from data files, as the disc's are
 - **Languages:** any
 - **State:** active
@@ -18096,5 +18163,182 @@ designed in rather than bolted on.
 - **Default:** off
 - **Player:** yes
 - **Toward:** none - no release could rebind these keys
+- **Languages:** any
+- **State:** active
+
+### A PC game folder with no image is set up in place before its first start
+
+- **ID:** DIV-0241
+- **Date:** 2026-11-19
+- **Subsystem:** platform / install (`src/launcher/start.h` `StartSetUpFor`,
+  `src/launcher/start.cpp` `StartReadSettings` and `StartRefuseNoImage`,
+  `src/launcher/launcher.cpp`, `src/launcher/sources_dialog.cpp`;
+  `tools/player_sources.py` `setup --game-in-place`;
+  [`exe-retire-round.md`](exe-retire-round.md) X3 and call 1)
+- **Tier:** Sensible - the game is the same; what changes is that the install
+  is made once before the first start, so that no start reads `BOF3.exe`
+- **Original behaviour:** the shipped port runs from its own folder. Before
+  this entry our launcher did the same with a PC game folder that had no cache
+  (the folder `--game` or `BOF3_GAME_DIR` named, or the working folder): it
+  found `BOF3.exe` there, hashed it, read `.data` from it, and the game
+  started at once.
+- **New behaviour:** a player's start never reads `BOF3.exe`, so `.data`
+  needs the cache's image (DIV-0212 as amended, DIV-0242). A game folder with
+  no image - no cache, or a cache with no `base\exe` - at a start with the
+  launcher's window:
+  - **any folder but the home's own `game\`** is set up in place: the
+    Sources page opens on it ("This game folder is not set up yet. ..."),
+    adds it as a source, and the importer runs `setup --game-in-place DIR`:
+    it checks the folder (its `identify` says whether it is the PC game; the
+    launcher tests no `BOF3.exe`), builds the home's cache from it, lays no
+    `game\`, writes nothing into the folder, and records `play_in_place =
+    true` on the folder's row of the home's `sources.toml`. The game then
+    starts from the same folder, so its saves and `BOF3.CFG` stay where the
+    game finds them. A later start that names no folder and is not run from
+    it finds it through that row (`StartFindGame`, after the working folder
+    and the home's `game\`).
+  - **the home's own `game\`** (a disc-built `game\` whose cache was
+    deleted) gets the Sources page's first run, as a home with no install
+    does.
+  Under `--no-config`, a self-test, the windowless launcher, a cache the
+  player chose (`BOF3X_CACHE`, `cache=`, `BOF3X_CACHE_DATA=0`) and
+  `BOF3X_EXEIMAGE` set, the launcher stops with one sentence that names the
+  set-up ("This install has no game data, so the game cannot start (...).
+  Set up the install: open the launcher, go to the Sources page and add the
+  game."). The hosted build and `BOF3X_EXEFILE=1` read the file as before and
+  set nothing up.
+- **Rationale:** the owner's ask of 2026-11-19, "remove the original exe from
+  any post-install player usage", and call 1 of the round as proposed: the
+  other answer kept the file as a source for this one case. In place, not
+  into a new `game\`, because the player's saves are in that folder: with
+  `<home>\game` elsewhere a start from the PC folder would still pick the PC
+  folder, and carrying the saves would move them away (X3's hand-back).
+- **Also in the PSX version?** Not applicable: the PlayStation has no install.
+- **Verification:** X3's `config_tests` rows for the mode (the set-up's
+  rule, `StartSetUpFor`); its proof from the command line: `sources add` and
+  `setup --game-in-place` of a copy of the PC's files in 8 s, all 1,805
+  files of the folder with the same sha256 after the set-ups and the runs, a
+  save-named file of its own bytes among them; the exe host's self-test from
+  that folder (10,397 lines, 0 FATAL, both bases); the same folder under
+  `--no-config` before the set-up: the refusal. X6's `config_tests` rows for
+  the folder a home plays in place (`HomeInPlaceFolder`), and its run: a
+  set-up in place of a copy of the PC's files (7 s, the folder's 3,040 files
+  the same sha256 afterwards), then the exe host's self-test started with no
+  `--game` from a folder that is not a game folder, the same run as with
+  `--game` (10,399 lines, 0 FATAL). **Not run:** the
+  Sources page's window (not shown or driven: the same importer commands
+  were run from the command line), the round's final proof (X7), the ten
+  state-hash routes. Not played.
+- **Reversible?** `BOF3X_EXEFILE=1`, the developer's switch: the launcher
+  reads the folder's `BOF3.exe` and starts at once, as before. A player has
+  no switch for it (DIV-0212 as amended).
+- **Switch:** env:BOF3X_EXEFILE=1 - the developer's switch: the start reads BOF3.exe and sets nothing up
+- **Default:** on
+- **Player:** never - one-way for a player: the switch that starts a PC folder from its BOF3.exe is the developer's, refused from a preset (the owner's decision 2, 2026-11-19)
+- **Toward:** none - no release has an install step
+- **Languages:** any
+- **State:** active
+
+### BOF3.exe is not read after an install is made
+
+- **ID:** DIV-0242
+- **Date:** 2026-11-19
+- **Subsystem:** platform / install (`src/launcher/start.cpp`,
+  `src/hook/exe_host.cpp` `OpenExe`, `src/hook/exe_image.cpp`
+  `CheckRecordedHash`, `src/common/cache_manifest.h` "The install's kind",
+  `src/launcher/save_dialog.cpp`, `src/launcher/exe_image.cpp`,
+  `tools/player_sources.py` `copy_pc`, `tools/importer.py` `write_manifest`,
+  `install_base`, `stale`, `tools/exe_tables.py` `verify_against_pc`;
+  [`exe-retire-round.md`](exe-retire-round.md) X1, X2, X4, X5)
+- **Tier:** Sensible - what the game plays is the same; where the launcher
+  and the engine learn it is the install, not the PC release's executable
+- **Original behaviour:** the shipped port is `BOF3.exe`. Before this entry
+  our launcher, on a PC install, hashed `BOF3.exe` in the game folder at every
+  start and refused another build, read its default key table, and found the
+  game folder by the file's presence; the engine opened it, compared the
+  cache's image with its `.data` (DIV-0212), and compared its `.rdata`
+  constants, its key table and its own `.data` bytes with it; "a PC install"
+  - the Chinese text offered (DIV-0102), the disc probe's answer (DIV-0100),
+  three settings allowed - meant the file was there; the save editor read the
+  party table, the default names and the area tables from the file, and on an
+  install without it offered no party members, entrances, chests or
+  passages; the importer copied `BOF3.exe` into the install's game folder.
+- **New behaviour:** after an install is made, nothing a player runs opens
+  `BOF3.exe`. What a player can tell:
+  - **The start reads no file.** `.data` is the cache's image on every
+    install kind, and the engine hashes it as it maps it (with its table
+    files laid in) against the manifest's `[exe] sha256`: measured 1.8 to
+    2.1 ms, the image 638,976 bytes (`.data`'s size). A difference stops the
+    game: "This install's game data is damaged or was changed: it is not the
+    data that the set-up made. Set up the install again ...". A manifest with
+    no recorded hash stops it too.
+  - **A wrong `BOF3.exe` beside the game no longer stops a start**, and is
+    not read.
+  - **The install's kind is the cache's record**, `[build] install_kind`
+    (`pc` or `disc`), written by the importer; for a manifest from before
+    that key, its `loc/zh-CN` rows with a source (one log line says so).
+    DIV-0100 and DIV-0102 ask it (both amended this day). The owner's
+    decision 3 (2026-11-19): a PC folder beside a disc-built cache plays the
+    cache's image, and the port's Chinese text is refused there "for now";
+    it is offered where the cache holds the `loc\zh-CN` layer, as every other
+    language is, and a language pack or mod that brings that layer is
+    offered by the same rule. There `BOF3X_CACHE_DATA=0` and
+    `BOF3X_EXEIMAGE_STRICT=1` are refused too; the launcher says in one line
+    that the Sources page can build the PC's data, when the folder's `BGM\`
+    holds a file.
+  - **The game folder:** the launcher started inside a disc-built game folder
+    picks it (a folder with `DAT\FIRST.DAT`), and a folder with `BOF3.exe`
+    and no `DAT\FIRST.DAT` is not picked.
+  - **New installs hold no `BOF3.exe` in `game\`**, and a re-run of the
+    set-up drops an older copy (the game folder is swapped whole). An older
+    install keeps its copy until then; nothing reads it.
+  - **The save editor reads the cache's image**, on every install kind: on a
+    disc-built install it gains the party table, the entrances, the chests
+    and the passages; the default names, which a disc-built image does not
+    hold, it says it does not know.
+  - **`importer.py install --base`** refuses a folder that is a game folder
+    already, and a cache that is a PC install's.
+  - **`stale`** does not offer a re-setup for the records whose only change
+    is this round's (the pins `STALE_SAME`, `STALE_SAME_DATA`).
+  The importer still reads `BOF3.exe` as a source (a set-up, a language or
+  mod build reads the source list's PC folder again: call 4), the hosted
+  build runs inside it, and the engine keeps its reader behind the
+  developer's switch `BOF3X_EXEFILE=1`, under which every check against the
+  file runs as before.
+- **Rationale:** the owner's ask of 2026-11-19, "remove the original exe from
+  any post-install player usage", and the round's five calls as proposed:
+  the file becomes what a disc image is, a source the importer reads. The
+  checks against the file run where it is still read: the importer's
+  `verify` (the image against the PC source's `.data`, byte for byte) and
+  the developer's runs.
+- **Also in the PSX version?** Not applicable: the PlayStation has no
+  `BOF3.exe`.
+- **Verification:** each group's own runs (the round doc's "As run"). X2:
+  the exe host's self-test, moved base and 64-bit without the switch on an
+  install with no `BOF3.exe` (`install_kind = "pc"`) to `self-test only:
+  done`, 0 FATAL; with an 860,000-byte file of its own text as
+  `game\BOF3.exe` the run the same line for line; one byte changed in a copy
+  of the image, exit 3 with the "damaged or was changed" sentence; under
+  `BOF3X_EXEFILE=1` on `<main checkout>\bof3` 10,392 lines, 0 different from
+  the base build's. X5: `setup` from the developer's PC folder, 0
+  `BOF3.exe` in `game\`; `verify` rc 0, one bit flipped named, rc 1. X1 and
+  X3: `config_tests` rows for each install kind, old and new manifest; the
+  hosted suite (922 `MISMATCHES` lines, all 0: X3's run, and X6's on the round's tip). X4: the save
+  editor's readers on the PC-built image against the file, 121 checks, 0
+  failures, at both Windows widths and in the WSL. X3: `stale` on installs
+  made by the round's base importer says `fresh`. **Not run:** the ten
+  state-hash routes, the round's final proof (X7: a harness install with no
+  `BOF3.exe`, the routes, `music_heard.py`, the Jukebox's and the save
+  editor's drivers, the same with a wrong `BOF3.exe` put beside the game),
+  the Sources page's window, the save editor's window, the windowless
+  launcher's program. Not played.
+- **Reversible?** `BOF3X_EXEFILE=1`, the developer's switch: the start reads
+  `BOF3.exe` and every check against it runs as before. A player has no
+  switch for it; the importer's layout (no `BOF3.exe` in `game\`) is a
+  build-time fact, not a switch.
+- **Switch:** env:BOF3X_EXEFILE=1 - the developer's switch: the start reads and checks BOF3.exe as before; the importer's layout is not switched
+- **Default:** on
+- **Player:** never - one-way for a player: the switch that reads BOF3.exe is the developer's, refused from a preset (the owner's decision 2, 2026-11-19)
+- **Toward:** none - no release had an install separate from its executable
 - **Languages:** any
 - **State:** active

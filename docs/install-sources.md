@@ -218,9 +218,15 @@ only when everything succeeded:
    than greying it "not in the cache". Built is not played: each stays off
    until chosen there (`install` installs only the default layers). Until
    2026-10-15 setup built none of them. Its own lines go to `H\setup.log`.
-3. With a PC folder: copy `BOF3.exe`, the 742 shipped `DAT\` containers,
+3. With a PC folder: copy the 742 shipped `DAT\` containers,
    `BGM\`, `SND\` and `capcom.avi` into the new game folder (not `logos.avi`,
-   the porting house's logos, since 2026-11-02: DIV-0202); the
+   the porting house's logos, since 2026-11-02: DIV-0202; not `BOF3.exe`,
+   since the exe-retire round, [`exe-retire-round.md`](exe-retire-round.md):
+   step 2 reads it once, as a source, into the cache's `base\exe\`, and a
+   setup's temporary layout of a PC CD holds it only until setup ends). An
+   install's older copy of `BOF3.exe` goes with the rest of the previous game
+   folder at the swap (step 5); the source list keeps the PC folder's path,
+   which a later language or mod build reads again. The
    player's folder is only read (saves `BISLPS*.DAT` and `BOF3.CFG` are not
    copied). **The install's own saves are carried** (2026-10-22, D331):
    before the swap, `BISLPS??.DAT` (the saves and the quicksaves) are
@@ -241,6 +247,33 @@ only when everything succeeded:
    moved folders are put back and `error` says so; a failure at any earlier
    step deletes the new folders. Either way the previous install is left
    working.
+
+**A PC folder played in place (the exe-retire round, 2026-11-19, DIV-0241).**
+`setup --game-in-place DIR`, where `DIR` is the PC folder of the source list,
+marks that row `play_in_place = true` in `sources.toml` and builds `H\cache`
+alone: steps 3 and 4 lay out no `H\game`, nothing is written into `DIR`, and
+every later setup does the same; removing the source drops the mark. The
+launcher runs it from the Sources page when a player starts a game folder
+that has no image of `.data` (no cache, or a cache with no `base\exe`) and
+that is not the home's own `game\`: the folder stays the game folder, with its
+saves and `BOF3.CFG`. A later start that names no folder and is not run from
+it finds it through that row (`src/common/home.h` `HomeInPlaceFolder`, asked
+by `StartFindGame` after the working folder and the home's `game\`). The
+stale check and its re-setup, which swap `H\game` whole, are only for the
+home's own `game\` and never reach that folder.
+
+**The checks against `BOF3.exe` (the exe-retire round).** The engine compared
+the cache's image with the `BOF3.exe` beside the game at every start
+(DIV-0212). `importer.py verify --cache H\cache` makes that comparison once
+instead, against the source list's PC source (or `--pc PATH`): the file whole
+against `fixtures.toml`'s hash, then the image with its table files laid in
+against the file's `.data`, byte for byte; a difference names the address,
+`data.bin` or the table file, and both bytes. The engine's own C++ tables
+(the `.rdata` constants, the default key rule, its own `.data` bytes) are not
+held in Python: a source that hashes as the release is what they are
+compared against in the developer's runs (`BOF3X_EXEFILE=1`, the hosted
+build). With no PC source listed, or one moved away, `verify` says so in one
+line and checks the image against the manifest's hash alone.
 
 **Timings and reuse (2026-10-15, IDEAS I42).** `setup.log` gives each step
 its wall time - a `time` line after the build's own lines for each step, and

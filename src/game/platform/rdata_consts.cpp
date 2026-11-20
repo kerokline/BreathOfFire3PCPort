@@ -126,8 +126,8 @@ constexpr const char* kKeyboardFormatHere = "";
 
 void Verify() {
     if (!bof3::ExeFile_Present()) {
-        bof3::Log("rdata: %u constants (%s .. %s)%s held by the engine; no BOF3.exe to compare "
-                  "them with", (unsigned)(sizeof kEntries / sizeof kEntries[0]), kEntries[0].what,
+        bof3::Log("rdata: %u constants (%s .. %s)%s held by the engine; BOF3.exe not opened (BOF3X_EXEFILE=1 "
+                  "opens it), so not compared", (unsigned)(sizeof kEntries / sizeof kEntries[0]), kEntries[0].what,
                   kEntries[sizeof kEntries / sizeof kEntries[0] - 1].what, kKeyboardFormatHere);
         return;
     }

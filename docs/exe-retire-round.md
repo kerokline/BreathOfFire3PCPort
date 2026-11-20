@@ -1,11 +1,14 @@
 # `BOF3.exe` out of the player's run: staging
 
-**Status:** STAGED (2026-11-19; not launched; nothing built; the five calls of
-section 7 answered the same day, all as proposed). Asked by the owner
-on 2026-11-19: "remove the original exe from any post-install player usage".
-Measured on the Linux round's wave A merge (`linux/lcA` `33de9f1b`, which holds
-`start.cpp`, `exe_file.cpp` and `host_win32.cpp`); each figure has its command
-beside it. What was not measured is in section 8. IDEAS I70.
+**Status:** BUILT (2026-11-19, the local branch `exe-retire/round`, not merged
+to `main`, not pushed): groups X1 to X6 ran the same day, section 9. **Not run
+yet** (section 10): the ten state-hash routes, X7 (the proof that nothing
+opens the file), the Sources page's window, the save editor's window. Not
+played. Asked by the owner on 2026-11-19: "remove the original exe from any
+post-install player usage"; the five calls of section 7 answered the same day,
+all as proposed. Staged on the Linux round's wave A merge (`linux/lcA`
+`33de9f1b`); sections 1 to 8 are the staging, with section 8's items answered
+where they were. IDEAS I70; DIV-0241, DIV-0242, DIV-0212 amended.
 
 ## 1. What is asked, and what is not
 
@@ -143,10 +146,12 @@ after the Linux round's wave A is on `main` (call 5), at the owner's word.
    start (X3). The other answer keeps the file as a source for that one
    case, and then the request is not met for it.
 2. **What a start checks in place of DIV-0212's comparison.** Proposed: the
-   image's SHA-256 against the manifest's, at every start (the image is
-   0x58F000 bytes; the cost is in section 8). It catches a damaged or
-   hand-edited image, which is what the comparison caught; it no longer
-   catches a wrong `BOF3.exe`, which no longer matters.
+   image's SHA-256 against the manifest's, at every start. The image is
+   638,976 bytes (0x9C000, `.data`'s size; this staging said 0x58F000, which
+   is not the image's size: X2's measure), and the hash costs 1.8 to 2.1 ms
+   on this machine (section 8). It catches a damaged or hand-edited image,
+   which is what the comparison caught; it no longer catches a wrong
+   `BOF3.exe`, which no longer matters.
 3. **A PC folder beside a disc-built cache.** Proposed: the cache's image
    is used and the launcher says in one line that the Sources page can
    build the PC's. Or: X3's set-up builds the PC's image there too.
@@ -164,22 +169,184 @@ after the Linux round's wave A is on `main` (call 5), at the owner's word.
 
 ## 8. Not measured
 
-- **Whether a disc-built image holds the save editor's rows.** HANDOFF says
-  an install with no `BOF3.exe` "gets no chest or passage places"; whether
-  that is the reader (it asks for a file) or the data (a gap of
-  `recipes/exe-gaps.tsv` at `0x64B390`, `0x64B80C`, `0x653200` or the link
-  and find tables) was not read. X4 measures it first.
+- **Whether a disc-built image holds the save editor's rows. Answered by
+  X4: the reader, not the data.** The readers measured themselves
+  (`BOF3X_ORACLE_TRACE=1`) on a PC-built image and a US disc-built one (the
+  i130 cache of 2026-10-29): the party table, the area links (2,003 reads)
+  and the chests and passages (11,292 reads) are held on both, 0 refused; the
+  seven default records' names (`0x64B390` + `0xA4*k`), the whelp's
+  (`0x64B80C`) and the 60 trait names (`0x653200` + `20*r`) are held on the
+  PC-built image and not on the disc-built one (a gap and `map` or
+  `language` ranges). No read falls outside `.data`. A disc-built image
+  built today was not measured.
 - **How many installs in use are a PC folder with no cache.** The released
   launcher starts one directly today; X3 changes that.
-- **The manifest's present fields.** That `data.toml`'s `build` and the
-  layer list are enough for X1's fallback on an old install was read from
-  `CacheImageIsPcBuilt` (`start.cpp:40`) and `config.cpp:1139`, not tried.
-- **The cost of the start's hash** on a slow disk; and whether the engine
-  or the launcher should make it.
+- **The manifest's present fields. Answered by X1, corrected after X3:**
+  an older manifest answers from its `loc/zh-CN` rows. X1 counted any such
+  row; X3 found that a disc-built manifest lists that layer's slots with an
+  empty source (275 rows on the i130 cache and on X3's `olddisc`, none with
+  a source; a PC's has 475, each with one), so every older disc-built
+  install read as a PC install. The coordinator's fix (`f5cd4721`): a row
+  counts only with a source; `config_tests` has the rows.
+- **The cost of the start's hash. Answered by X2 on this machine:** 1.8 ms
+  (32-bit, twice), 1.8 and 2.1 ms (64-bit), on a quiet machine; 2.9 to 3.5
+  ms with builds beside it. The engine makes it, not the launcher: it hashes
+  what it maps, needs no second composer, and covers both launchers and a
+  start with `BOF3X_EXEIMAGE` set by hand. **Not measured:** a slow disk.
 - **Which of the engine's `Fatal` texts a player can still reach** once the
-  file is not opened; X6 lists them.
+  file is not opened. **Answered by X6 (by reading):** of the texts that
+  name `BOF3.exe`, a player's start reaches only the image's: the data
+  toml's size against the engine's `.data` (now said without the file's
+  name) and the missing recorded hash (its pointer to `BOF3X_EXEFILE=1`
+  removed). Every other `Fatal` that names the file needs it opened (the
+  hosted build, `BOF3X_EXEFILE=1`) and is the developer's. The "As run"
+  section's X6 part lists them.
 - **The tools that read `BOF3.exe`** (`grep -rl "BOF3.exe" tools`): they are
   developer tools and stay; none was read for a use that a player's launcher
   starts, beyond `player_sources.py`, `importer.py` and the mod builders.
-- **The Linux side.** Nothing here was compiled for Linux; the reads this
-  round removes are steps wave B would otherwise give a Linux start.
+- **The Linux side.** The round's files compile for x86-64 Linux as before
+  (`linux_tree.py`, each group's run: 831 compile, 0 do not, 11
+  Windows-only); nothing links or runs there yet, so no Linux start was
+  tried. The reads this round removed are steps wave B would otherwise have
+  given a Linux start.
+
+## 9. As run (2026-11-19, the local branch `exe-retire/round`)
+
+Five groups in worktrees, one at a time or two side by side, each merged
+`--no-ff` by the coordinator when it handed back: X5 (`40d82a9e`) and X1
+(`bb7fe3a3`), then X2 (`fa151c33`), then X4 (`b266355a`) and X3
+(`a6da0935`, after the coordinator's fix `f5cd4721`), then X6 alone. Each
+group's figures are its own report (the coordinator's condensed hand-backs);
+the code is the record of what changed.
+
+**X5, the importer's layout and `verify`** (`bc80bf46`). `setup` from the
+developer's PC folder into a home of its own in 9 s: `game\` holds `BGM`,
+`DAT` (742 files), `SND`, `capcom.avi`, 0 `BOF3.exe`; the cache has
+`loc\zh-CN`. `verify`: rc 0, the PC source's `.data` byte for byte (638,976
+bytes compared); one bit flipped in a copy of `data.bin` and of a table file,
+each named with file and address, rc 1; the source moved or no
+`sources.toml`: one sentence, rc 0. What `verify` cannot check: the `.rdata`
+constants, the default key rule and the engine's own `.data` bytes are C++
+tables with no Python copy; none was made, and the developer's runs compare
+them. Not run: the builds, any game.
+
+**X1, `[build] install_kind`** (`71a524e9`). `"pc"` (the PC game's `DAT\` is a
+source) or `"disc"`; calls in `src/common/cache_manifest.h` ("The install's
+kind"). Every install kind keeps its answer, but a PC folder beside a
+disc-built cache: the Chinese text, `BOF3X_CACHE_DATA=0` and
+`BOF3X_EXEIMAGE_STRICT=1` refused there (the owner's decision 3); `BOF3.exe`
+with discs and no PC `DAT\` now allows `STRICT=1`. Gate: both presets;
+`config_tests` 4,327 (Windows), 4,325 (WSL), 0 failures; `linux_tree` 831 / 0
+/ 11; the hosted suite done, 922 `MISMATCHES` lines all 0. **A defect, found
+later by X3 and fixed by the coordinator (`f5cd4721`):** an older manifest's
+fallback counted any `loc/zh-CN` row, and a disc-built manifest lists that
+layer's slots with an empty source (275 rows on the i130 cache and X3's
+`olddisc`, none with a source; a PC's has 475, each with one), so every older
+disc-built install read as a PC install. A row now counts only with a source.
+
+**X2, the start without the file** (`44d8a831`). A player's start opens,
+hashes and tests for no `BOF3.exe`; `.data` is always the cache's image; the
+engine hashes it as mapped against the manifest's `[exe] sha256`
+(`CheckRecordedHash`): 1.8 ms (32-bit, twice), 1.8 and 2.1 ms (64-bit) on a
+quiet machine. The image is 638,976 bytes, not the 0x58F000 of the staging
+(that is the span the moved base reserves). A game folder with no image:
+`StartRefuseNoImage`. Row 1: the working folder is picked when it holds
+`DAT\FIRST.DAT`. Runners: `attract_run.developer_exefile()` sets
+`BOF3X_EXEFILE=1` with one line when the game folder holds `BOF3.exe` and no
+cache is named; `input_run.py` and `abc_run.py` use it. Gate line 8 on
+`<main checkout>\bof3` under the switch against a build of `bb7fe3a3`: the
+self-test and the moved base 10,392 lines each, 0 different. Without the
+switch on its own install: self-test, moved base and 64-bit done, 0 FATAL;
+an 860,000-byte file of its own text as `game\BOF3.exe` gave the same run
+line for line; one byte changed in a copy of the image: exit 3 with the
+"damaged or was changed" sentence. Not run: the windowless launcher's
+program, a live runner, the routes.
+
+**X4, the save editor on the image** (`b70c1863`). The readers measured
+themselves (section 8's first item): every row is held on a PC-built image;
+on a disc-built one all but the default names. One reader for every install
+kind (`ExeImageFromCache`); no `BOF3.exe` opened but under the switch. The
+oracle (`BOF3X_ORACLE_EXE`, `BOF3X_ORACLE_CACHE`): the file against the PC
+cache, 121 checks, 0 failures at both Windows widths and in the WSL (the party
+table, the default names, 1,555 links, 187 chests, 120 passages equal); the
+disc cache the same but the default names. `save_tests` 115, 0 failures at
+the three. Not run: the fixture and `--layers` runs, `save_editor_drive.py`;
+the editor's window is compiled only.
+
+**X3, a game folder with no image** (`a64e5513`, `7b1bc6cb`, `c63f1c9f`).
+With the launcher's window, the home's own `game\` gets the first run and any
+other folder is set up in place (`setup --game-in-place DIR`, DIV-0241);
+never hosted, under the switch, a self-test, `--no-config`, the windowless
+launcher, `BOF3X_EXEIMAGE` set or a cache the player chose. Call 3's line is
+said when the folder's `BGM\` holds a file and the kind is disc. `stale`:
+pins for the records whose only change is the round's (`STALE_SAME`,
+`STALE_SAME_DATA`); after them X3's copies of installs made by the base's
+importer say `fresh`. The Python mirrors (`language_tags.cache_kind`,
+`original_available`, `install_base`) follow X1's rule. Gate: both presets;
+`config_tests` 4,357 / 4,355; `linux_tree` 831 / 0 / 11; the hosted suite
+done, all `MISMATCHES` lines 0 (reported as 927; its log holds 922); line 8 with the switch 10,392 lines, without it on the in-place
+install 10,397, 0 FATAL. Proof from the command line: the set-up in 8 s, all
+1,805 files of the folder with the same sha256 afterwards. **The Sources
+page's window was not shown or driven.** Found: i130's old cache stops at
+the exe host's start ("47 gap ranges and no accepted list"), from before the
+round.
+
+**X6, the words, the ledger and the records** (the branch `exe-retire/x6`).
+- **The ledger:** DIV-0241 (X3's set-up in place) and DIV-0242 (the file not
+  read after install). The coordinator's brief named DIV-0240 and DIV-0241,
+  but DIV-0240 is the function keys' entry of 2026-11-18: the two IDs are
+  the next free. DIV-0212 amended and brought to the owner's decision 2
+  (`Player: never`: no preset sets `BOF3X_EXEFILE=1`; "As shipped" turns off
+  93 entries, was 94); DIV-0100 and DIV-0102 amended (the cache's record).
+  `ledger_registry.h` and the presets' tables regenerated.
+- **D432 fixed:** the engine's log no longer says "the running .data is
+  BOF3.exe's" over the cache's PC-built image, nor "no BOF3.exe" where the
+  file was not opened. `exe_own.cpp`'s pin moved with it; `stale` on X3's
+  `oldcopy` and `olddisc_copy` and on X5's home still says `fresh`.
+- **The words:** every message that names `BOF3.exe` read again; three
+  player-facing sentences brought to one voice ("game data", "set up"); the
+  missing-hash Fatal no longer points a player at the developer's switch;
+  the windowless launcher's usage text says how it finds the game folder.
+- **X3's limit 4:** a start that names no folder and is not run from the PC
+  folder played in place finds it through `sources.toml`'s `play_in_place`
+  row (`HomeInPlaceFolder`, asked by `StartFindGame` after the working
+  folder and the home's `game\`; `HomeGameDefault` unchanged, so the stale
+  check never reaches the folder).
+- **Measured:** both presets build, no new warning in a touched file;
+  `config_tests` 4,402 checks at both Windows widths and 4,400 in the WSL,
+  `save_tests` 115 at the three (no fixtures), 0 failures; `os_census.py
+  --check --boundary` ok; `linux_tree.py` 831 / 0 / 11, `--check` ok; gate
+  line 5 all ok; `importer.py check` 0 errors; `mods.py selftest` 0
+  failures; `language_tags.py selftest` 13 kinds, 0 errors. A set-up in place
+  of a copy of the PC's files (7 s; the folder's 3,040 files the same sha256
+  after the set-up and the runs). The exe host's self-test and the moved
+  base on `<main checkout>\bof3` under `BOF3X_EXEFILE=1`: 10,392 lines each,
+  0 different from X3's runs of the same. Without the switch on the in-place
+  install: 10,399 lines, 0 FATAL, both bases; against X3's in-place runs only
+  the D432 lines, the paths and the folder's own `area4-walls` overlay
+  differ. Started with no `--game` from a folder that is not a game folder
+  and the home naming the folder in place: the same run as with `--game`
+  (only pids and timings differ). The hosted suite (`--host bof3`, `BOF3X_SHADOW='*'`) on `<main checkout>\bof3`: `self-test only: done` in 993 s, 922 `MISMATCHES` lines, all 0, 0 FATAL (X3's run's log holds 922 such lines too; the 927 of the briefs was not found in it).
+- **Not run by X6:** the 64-bit self-test, the ten routes, X7, any window.
+
+## 10. Not run yet
+
+- The ten state-hash routes on `<main checkout>\bof3` under
+  `BOF3X_EXEFILE=1` (the references' conditions), then on an install with no
+  `BOF3.exe`.
+- X7: a harness install made from the PC source by the new importer, the
+  routes, `music_heard.py`, the Jukebox's and the save editor's drivers on
+  it; then the same with a `BOF3.exe` of wrong bytes put into `game\`.
+- The Sources page's window driven through a set-up in place (X3 ran the same
+  importer commands from the command line).
+- The save editor's window on a disc-built install and on a PC install with
+  no `BOF3.exe` (`save_editor_drive.py`), and `save_tests` with the owner's
+  fixtures and `--layers` (the coordinator's).
+- The windowless launcher's program end to end; a live runner
+  (`input_run.py`, `attract_run.py`, `abc_run.py`) on `<main checkout>\bof3`
+  with its new switch line.
+- `tools/launcher_host/dialog_test.py`: its fake caches hold no `base\exe`, so
+  by reading `StartSetUpFor` and `StartApply` a start from them meets the
+  set-up or the refusal; not run since the round.
+- A slow disk's cost of the start's hash.
+- The owner's play.

@@ -1,6 +1,7 @@
 // BOF3X_EXEIMAGE (exe_image.h; docs/exe-import-engine.md section 4.4).
 #include "hook/exe_image.h"
 
+#include <chrono>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
@@ -512,6 +513,62 @@ std::vector<TableRow> ComposeBase(const std::string& exe_dir, const Image& im, s
     return rows;
 }
 
+// <dir>\manifest.toml's [exe] sha256 (tools/importer.py write_manifest: the
+// image's hash with its table files laid in, exe_tables.py read_image), or ""
+// when the file, the table or the key is not there.
+std::string RecordedImageSha(const std::string& where) {
+    if (!OpenUtf8(where)) return std::string();
+    const std::string text = ReadWhole(where);
+    bool in_exe = false;
+    std::size_t at = 0;
+    while (at < text.size()) {
+        std::size_t end = text.find('\n', at);
+        if (end == std::string::npos) end = text.size();
+        std::string line = text.substr(at, end - at);
+        at = end + 1;
+        if (!line.empty() && line.back() == '\r') line.pop_back();
+        if (!line.empty() && line[0] == '[') {
+            in_exe = line == "[exe]";
+            continue;
+        }
+        char h[80] = {};
+        if (in_exe && std::sscanf(line.c_str(), "sha256 = \"%79[^\"]\"", h) == 1) return h;
+    }
+    return std::string();
+}
+
+// docs/exe-retire-round.md call 2, in place of DIV-0212's comparison with
+// BOF3.exe at a start that did not open the file (a player's): the image as
+// the engine maps it - data.bin with its table files laid in, `bin` - hashed
+// (SHA-256) against the manifest's [exe] sha256, which the importer wrote of
+// the same bytes and `importer.py verify` checks against the PC source. A
+// difference is a damaged cache or a file of base\exe changed by hand:
+// refused, never run (a change belongs in a layer). The engine makes it, not
+// the launcher: it is the engine that reads and composes these bytes, so the
+// hash is of what is mapped, whichever launcher (or none) started it.
+void CheckRecordedHash(const std::string& dir, const std::vector<unsigned char>& bin) {
+    const std::string where = dir + "\\manifest.toml";
+    const std::string want = RecordedImageSha(where);
+    if (want.size() != 64)
+        Fatal("This install's game data has no recorded hash, so it cannot be checked. Set up the install again: "
+              "in the launcher's Sources page add the game again, or run tools/importer.py setup.\n\n"
+              "BOF3X_EXEIMAGE: %s is not there or has no [exe] sha256",
+              where.c_str());
+    const auto t0 = std::chrono::steady_clock::now();
+    std::string got;
+    if (!bof3x::Sha256HexBytes(bin.data(), bin.size(), got)) Fatal("BOF3X_EXEIMAGE: no SHA-256 of the image");
+    const double ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
+    if (got != want)
+        Fatal("This install's game data is damaged or was changed: it is not the data that the set-up made. Set up "
+              "the install again: in the launcher's Sources page add the game again, or run tools/importer.py "
+              "setup. To change a table, use a mod.\n\n"
+              "BOF3X_EXEIMAGE: %s\\base\\exe with its table files hashes %s; %s's [exe] sha256 is %s",
+              dir.c_str(), got.c_str(), where.c_str(), want.c_str());
+    Log("BOF3X_EXEIMAGE: base/exe with its table files, %u bytes, is the image the manifest records (sha256 %s, "
+        "hashed in %.1f ms); BOF3.exe not opened, so this is the start's check (docs/exe-retire-round.md call 2)",
+        (unsigned)bin.size(), got.c_str(), ms);
+}
+
 // BOF3.exe's .data: (address, initialised size, virtual size) - its section
 // table's values (exe_layout.h), where this read the running image's header
 // before the exe host existed; the exe host checks them against the
@@ -595,7 +652,7 @@ bool ExeImage_Source(void* to, std::uint32_t va, std::uint32_t size, std::uint32
     const std::string toml_text = ReadWhole(exe_dir + "data.toml");
     const Image im = ParseToml(toml_text, exe_dir + "data.toml");
     if (im.va != va || im.size != size || im.bss_end != bss_end)
-        Fatal("BOF3X_EXEIMAGE: data.toml's image is 0x%X + 0x%X (zero to 0x%X), BOF3.exe's .data 0x%X + 0x%X (to 0x%X)",
+        Fatal("BOF3X_EXEIMAGE: data.toml's image is 0x%X + 0x%X (zero to 0x%X), the engine's .data 0x%X + 0x%X (to 0x%X)",
               (unsigned)im.va, (unsigned)im.size, (unsigned)im.bss_end, (unsigned)va, (unsigned)size, (unsigned)bss_end);
     std::uint32_t covered = va;
     for (const Range& r : im.ranges) {
@@ -608,10 +665,15 @@ bool ExeImage_Source(void* to, std::uint32_t va, std::uint32_t size, std::uint32
         Fatal("BOF3X_EXEIMAGE: data.toml's ranges end at 0x%X, not 0x%X", (unsigned)covered, (unsigned)(va + size));
     std::vector<unsigned char> bin = ReadBin(exe_dir + im.file, im.size);
     g_base_tables = ComposeBase(exe_dir, im, bin);   // the table files, laid where data.bin leaves them out
+    // The file not opened (a player's start, docs/exe-retire-round.md): the
+    // image against its recorded hash, whatever built it. Opened
+    // (BOF3X_EXEFILE=1): against the file, below and in CompareWithFile.
+    if (!ExeFile_Present()) CheckRecordedHash(dir, bin);
 
     if (im.build == "pc-zh") {
         // DIV-0212: a PC install reads this image in place of the file's
-        // .data. With the file there, the two must be the same bytes: an image
+        // .data. With the file opened (BOF3X_EXEFILE=1 and BOF3X_EXEIMAGE both
+        // set; else CheckRecordedHash above), the two must be the same bytes: an image
         // that is not this BOF3.exe's (a damaged cache, a table file changed
         // by hand) is refused, never run. A change belongs in a layer.
         if (ExeFile_Present()) {
@@ -1309,8 +1371,8 @@ void ExeImage_CompareWithFile() {
     if (!g_disc_mapped) return;
     const Image& im = g_mapped;
     if (!ExeFile_Present()) {
-        Log("BOF3X_EXEIMAGE: no BOF3.exe to compare the disc-built image with; recipes/exe-gaps.tsv is what says "
-            "where it may differ from the PC's");
+        Log("BOF3X_EXEIMAGE: the disc-built image not compared with BOF3.exe, which is not opened (BOF3X_EXEFILE=1 "
+            "opens it); recipes/exe-gaps.tsv is what says where it may differ from the PC's");
         return;
     }
     std::vector<unsigned char> pc(im.size);

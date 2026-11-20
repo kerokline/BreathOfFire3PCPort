@@ -554,6 +554,17 @@ there is no cache and for the developer's A/B reference.
 `config_tests.exe` after the presets' rows were regenerated: 3,621 checks, the
 same 2 failures as `main`.
 
+**Changed by the exe-retire round (2026-11-19, DIV-0212 as amended,
+[`exe-retire-round.md`](exe-retire-round.md)).** The table above is the record
+of 2026-11-11. Since then a player's start opens no `BOF3.exe`: the cache's
+image is `.data`'s source on every install kind, a disc-built one included,
+and the engine hashes it as mapped against the manifest's `[exe] sha256`
+instead of comparing it with the file. The comparison with the file is made
+by the importer's `verify` and in the developer's runs (`BOF3X_EXEFILE=1`,
+the hosted build), where the rows above still hold. The presets no longer
+send `BOF3X_EXEFILE=1`: it is the developer's switch, and DIV-0212 is
+`Player: never`.
+
 ## 5c. Group C as run (2026-11-11, DIV-0213)
 
 **What was built.**

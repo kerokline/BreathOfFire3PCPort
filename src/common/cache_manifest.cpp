@@ -90,6 +90,16 @@ CacheManifest ManifestParse(const std::string& text) {
         if (in_array) {
             if (line == "]") {
                 in_array = false;
+            } else if (table == "cache" && array_key == "assets") {
+                // ["AREA000.DAT", 1, "loc/zh-CN", "pc-zh:chunk", "<sha256>"]: the slot is no string.
+                // Only a row that names a source counts: a disc-built cache lists the
+                // layer's slots too, each with an empty source (275 such rows in a
+                // manifest of 2026-10-29, none with a source; a PC's has 475, every
+                // one with a source).
+                if (!m.zh_rows) {
+                    const std::vector<std::string> s = Strings(line);
+                    m.zh_rows = s.size() >= 3 && s[1] == "loc/zh-CN" && !s[2].empty();
+                }
             } else if (table == "cache" && array_key == "bgm") {
                 // ["base/bgm/000.DAT", "psx-us:seq:BGM000.EMI#1", "<sha256>"]
                 const std::vector<std::string> s = Strings(line);
@@ -138,6 +148,13 @@ CacheManifest ManifestParse(const std::string& text) {
                 m.error = "manifest.toml's [build] exe_tables_from is " + value + ", neither a build id nor a list of them";
             m.exe_tables_from = list;
             tables_given = true;
+        } else if (table == "build" && key == "install_kind") {
+            if (!OneString(value, s) || (s != "pc" && s != "disc")) {
+                if (m.error.empty())
+                    m.error = "manifest.toml's [build] install_kind is " + value + ", neither \"pc\" nor \"disc\"";
+            } else {
+                m.install_kind = s;
+            }
         } else if (table == "exe" && key == "build") {
             if (OneString(value, s)) exe_build = s;
         } else if (table == "snd" && key == "build") {
@@ -170,6 +187,63 @@ std::string ManifestRefusal(const CacheManifest& m, const std::string& where) {
     if (m.error.empty()) return std::string();
     return m.error + " (" + where + "): not guessed - rebuild the cache with tools/importer.py build, or correct "
            "the line";
+}
+
+InstallKind ManifestInstallKind(const CacheManifest& m) {
+    if (!m.present) return InstallKind::kNone;
+    if (m.install_kind == "pc") return InstallKind::kPc;
+    if (m.install_kind == "disc") return InstallKind::kDisc;
+    return m.zh_rows ? InstallKind::kPc : InstallKind::kDisc;   // a manifest from before the key
+}
+
+std::string ManifestKindNoteOnce(const CacheManifest& m) {
+    static bool s_said = false;
+    if (s_said || !ManifestKindFromRows(m)) return std::string();
+    s_said = true;
+    return std::string("the cache's manifest.toml has no [build] install_kind (a cache built before it): read as ") +
+           (ManifestInstallKind(m) == InstallKind::kPc ? "a PC install, from its loc/zh-CN rows"
+                                                        : "a disc-built install, as it has no loc/zh-CN row");
+}
+
+bool InstallExeFileSwitch() {
+    char v[4];
+    return bof3::os::GetEnv("BOF3X_EXEFILE", v, sizeof v) == 1 && v[0] == '1';
+}
+
+bool InstallPcDat(const CacheManifest& m, const InstallAsk& ask) {
+    if (ask.developer) return ask.exe_present;
+    switch (ManifestInstallKind(m)) {
+        case InstallKind::kPc: return true;
+        case InstallKind::kDisc: return false;
+        case InstallKind::kNone: break;
+    }
+    return ask.no_cache;
+}
+
+bool InstallChineseText(const CacheManifest& m, bool zh_layer, const InstallAsk& ask) {
+    return zh_layer || InstallPcDat(m, ask);
+}
+
+bool InstallImageWhole(const CacheManifest& m, const InstallAsk& ask) {
+    if (ask.developer || !m.present || m.exe_tables_from.empty()) return InstallPcDat(m, ask);
+    return m.exe_tables_from == std::vector<std::string>{"pc-zh"};
+}
+
+bool InstallGameFolder(const std::wstring& dir) {
+    return !dir.empty() && bof3::os::IsFileW(dir + L"\\DAT\\FIRST.DAT");   // PathW: a backslash is a separator on POSIX too
+}
+
+CacheManifest ManifestReadEnvironment(std::string* where) {
+    for (const wchar_t* name : {L"BOF3X_CACHE", L"BOF3X_EXEIMAGE"}) {
+        wchar_t root[1024];
+        const std::uint32_t n = bof3::os::GetEnvW(name, root, 1024);
+        if (n == 0 || n >= 1024) continue;
+        std::wstring path(root, n);
+        while (!path.empty() && (path.back() == L'\\' || path.back() == L'/')) path.pop_back();
+        if (where) *where = bof3::os::Utf8OfWide(path + L"\\manifest.toml");
+        return ManifestRead(path);
+    }
+    return CacheManifest();
 }
 
 }  // namespace bof3x

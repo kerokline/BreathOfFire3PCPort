@@ -2944,7 +2944,7 @@ switch	Cell_Unpack4Flip	detour	costly		src/game/platform/cell.cpp:127	BOF3_INJEC
 switch	Cell_Unpack8	detour	costly		src/game/platform/cell.cpp:126	BOF3_INJECT
 switch	Cell_Unpack8Flip	detour	costly		src/game/platform/cell.cpp:128	BOF3_INJECT
 switch	CellTextureVram	code	yes		src/game/platform/d3d_draw.cpp:145	PatchBytes
-switch	Cfg_Load	detour	costly		src/game/platform/magic_080.cpp:1158	BOF3_INJECT
+switch	Cfg_Load	detour	costly		src/game/platform/magic_080.cpp:1174	BOF3_INJECT
 switch	Cfg_SetDefaultKeys	detour	costly		src/game/platform/cfg.cpp:70	BOF3_INJECT
 switch	Cfg_SetKeyTable	detour	costly		src/game/platform/cfg.cpp:69	BOF3_INJECT
 switch	CfgOwnKeyTable	code	yes		src/game/platform/shell.cpp:159	PatchBytes
@@ -2985,7 +2985,7 @@ switch	CharmMote_PushMatrix	detour	costly		src/game/magic/charm_mote.cpp:436	BOF
 switch	CharmMote_Run	detour	costly		src/game/magic/charm_mote.cpp:432	BOF3_INJECT
 switch	CharmMote_Task	detour	costly		src/game/magic/charm_mote.cpp:431	BOF3_INJECT
 switch	CharmMote_ToOwner	detour	costly		src/game/magic/charm_mote.cpp:434	BOF3_INJECT
-switch	Cheat_StealAlways	code	yes		src/game/core/cheats.cpp:161 src/game/core/cheats.cpp:162	PatchBytes
+switch	Cheat_StealAlways	code	yes		src/game/core/cheats.cpp:162 src/game/core/cheats.cpp:163	PatchBytes
 switch	Chill_SpawnMarks	detour	costly		src/game/magic/chill_ray.cpp:617	BOF3_INJECT
 switch	Chill_Start	detour	costly		src/game/magic/chill_ray.cpp:615	BOF3_INJECT
 switch	Chill_Task	detour	costly		src/game/magic/chill_ray.cpp:614	BOF3_INJECT
@@ -3362,24 +3362,24 @@ switch	CounterMark_Place	detour	costly		src/game/battle/counter_mark.cpp:399	BOF
 switch	CounterMark_Run	detour	costly		src/game/battle/counter_mark.cpp:393	BOF3_INJECT
 switch	CounterMark_Start	detour	costly		src/game/battle/counter_mark.cpp:394	BOF3_INJECT
 switch	CounterMark_Swell	detour	costly		src/game/battle/counter_mark.cpp:397	BOF3_INJECT
-switch	Crt_atoi	detour	costly		src/game/crt_rest.cpp:549	BOF3_INJECT
-switch	Crt_calloc	detour	costly		src/game/crt_rest.cpp:552	BOF3_INJECT
-switch	Crt_fclose	detour	costly		src/game/crt_rest.cpp:558	BOF3_INJECT
-switch	Crt_fgets	detour	costly		src/game/crt_rest.cpp:564	BOF3_INJECT
-switch	Crt_filelength	detour	costly		src/game/crt_rest.cpp:563	BOF3_INJECT
-switch	Crt_fileno	detour	costly		src/game/crt_rest.cpp:562	BOF3_INJECT
-switch	Crt_findfirst	detour	costly		src/game/crt_rest.cpp:555	BOF3_INJECT
-switch	Crt_findnext	detour	costly		src/game/crt_rest.cpp:556	BOF3_INJECT
-switch	Crt_fopen	detour	costly		src/game/crt_rest.cpp:557	BOF3_INJECT
-switch	Crt_fread	detour	costly		src/game/crt_rest.cpp:559	BOF3_INJECT
-switch	Crt_free	detour	costly		src/game/crt_rest.cpp:553	BOF3_INJECT
-switch	Crt_fseek	detour	costly		src/game/crt_rest.cpp:561	BOF3_INJECT
-switch	Crt_fwrite	detour	costly		src/game/crt_rest.cpp:560	BOF3_INJECT
-switch	Crt_malloc	detour	costly		src/game/crt_rest.cpp:551	BOF3_INJECT
-switch	Crt_sprintf	detour	costly		src/game/crt_rest.cpp:547	BOF3_INJECT
-switch	Crt_sscanf	detour	costly		src/game/crt_rest.cpp:550	BOF3_INJECT
-switch	Crt_stricmp	detour	costly		src/game/crt_rest.cpp:554	BOF3_INJECT
-switch	Crt_strncpy	detour	costly		src/game/crt_rest.cpp:548	BOF3_INJECT
+switch	Crt_atoi	detour	costly		src/game/crt_rest.cpp:551	BOF3_INJECT
+switch	Crt_calloc	detour	costly		src/game/crt_rest.cpp:554	BOF3_INJECT
+switch	Crt_fclose	detour	costly		src/game/crt_rest.cpp:560	BOF3_INJECT
+switch	Crt_fgets	detour	costly		src/game/crt_rest.cpp:566	BOF3_INJECT
+switch	Crt_filelength	detour	costly		src/game/crt_rest.cpp:565	BOF3_INJECT
+switch	Crt_fileno	detour	costly		src/game/crt_rest.cpp:564	BOF3_INJECT
+switch	Crt_findfirst	detour	costly		src/game/crt_rest.cpp:557	BOF3_INJECT
+switch	Crt_findnext	detour	costly		src/game/crt_rest.cpp:558	BOF3_INJECT
+switch	Crt_fopen	detour	costly		src/game/crt_rest.cpp:559	BOF3_INJECT
+switch	Crt_fread	detour	costly		src/game/crt_rest.cpp:561	BOF3_INJECT
+switch	Crt_free	detour	costly		src/game/crt_rest.cpp:555	BOF3_INJECT
+switch	Crt_fseek	detour	costly		src/game/crt_rest.cpp:563	BOF3_INJECT
+switch	Crt_fwrite	detour	costly		src/game/crt_rest.cpp:562	BOF3_INJECT
+switch	Crt_malloc	detour	costly		src/game/crt_rest.cpp:553	BOF3_INJECT
+switch	Crt_sprintf	detour	costly		src/game/crt_rest.cpp:549	BOF3_INJECT
+switch	Crt_sscanf	detour	costly		src/game/crt_rest.cpp:552	BOF3_INJECT
+switch	Crt_stricmp	detour	costly		src/game/crt_rest.cpp:556	BOF3_INJECT
+switch	Crt_strncpy	detour	costly		src/game/crt_rest.cpp:550	BOF3_INJECT
 switch	Cure_Start	detour	costly		src/game/magic/cure_mote.cpp:484	BOF3_INJECT
 switch	Cure_Task	detour	costly		src/game/magic/cure_mote.cpp:483	BOF3_INJECT
 switch	CureMote_Alloc	detour	costly		src/game/magic/cure_mote.cpp:493	BOF3_INJECT
@@ -3392,7 +3392,7 @@ switch	CureMote_Rise	detour	costly		src/game/magic/cure_mote.cpp:488	BOF3_INJECT
 switch	CureMote_Run	detour	costly		src/game/magic/cure_mote.cpp:486	BOF3_INJECT
 switch	CureMote_Task	detour	costly		src/game/magic/cure_mote.cpp:485	BOF3_INJECT
 switch	CureMote_Wait	detour	costly		src/game/magic/cure_mote.cpp:487	BOF3_INJECT
-switch	Cursor_Sync	detour	costly		src/game/platform/magic_080.cpp:1156	BOF3_INJECT
+switch	Cursor_Sync	detour	costly		src/game/platform/magic_080.cpp:1172	BOF3_INJECT
 switch	Cyclone_Start	detour	costly		src/game/magic/fx_funnel.cpp:500	BOF3_INJECT
 switch	Cyclone_Task	detour	costly		src/game/magic/fx_funnel.cpp:499	BOF3_INJECT
 switch	Cyclone_Wait	detour	costly		src/game/magic/fx_funnel.cpp:501	BOF3_INJECT
@@ -3440,7 +3440,7 @@ switch	Dd_CreatePlainSurface	detour	costly		src/game/platform/d3d.cpp:3936	BOF3_
 switch	Dd_CreateTextureSurface	detour	costly		src/game/platform/d3d.cpp:3937	BOF3_INJECT
 switch	Dd_InitSurfaceDesc	detour	costly		src/game/platform/d3d.cpp:3935	BOF3_INJECT
 switch	DemoSkipButtons	behaviour	yes		src/game/core/title.cpp:1869	BehaviourOn
-switch	DesertDirections	code	yes		src/game/battle/dat_load.cpp:920	PatchBytes
+switch	DesertDirections	code	yes		src/game/battle/dat_load.cpp:927	PatchBytes
 switch	DiagonalIdentity	code	yes		src/game/effect/effect_gte.cpp:222	PatchBytes
 switch	DialTranslucent	code	yes		src/game/area/world_map_ours.cpp:432	PatchBytes
 switch	DInput_EnumJoystick	detour	costly		src/game/platform/d_input.cpp:454	BOF3_INJECT
@@ -3476,7 +3476,7 @@ switch	DivineMote_Fly	detour	costly		src/game/magic/breath_mote.cpp:1642	BOF3_IN
 switch	DivineMote_Launch	detour	costly		src/game/magic/breath_mote.cpp:1641	BOF3_INJECT
 switch	DivineMote_Run	detour	costly		src/game/magic/breath_mote.cpp:1640	BOF3_INJECT
 switch	DivineMote_Task	detour	costly		src/game/magic/breath_mote.cpp:1639	BOF3_INJECT
-switch	DockLegend	code	yes		src/game/effect/effect_kind_5d.cpp:727	PatchBytes
+switch	DockLegend	code	yes		src/game/effect/effect_kind_5d.cpp:734	PatchBytes
 switch	DoomBreath_Brighten	detour	costly		src/game/magic/doom_breath_orb.cpp:513	BOF3_INJECT
 switch	DoomBreath_End	detour	costly		src/game/magic/doom_breath_orb.cpp:515	BOF3_INJECT
 switch	DoomBreath_Fade	detour	costly		src/game/magic/doom_breath_orb.cpp:514	BOF3_INJECT
@@ -3924,7 +3924,7 @@ switch	EffectKind17_Settle	detour	costly		src/game/effect/effect_kind_17.cpp:775
 switch	EffectKind17_Slide	detour	costly		src/game/effect/effect_kind_17.cpp:774	BOF3_INJECT
 switch	EffectKind17_Start	detour	costly		src/game/effect/effect_kind_17.cpp:772	BOF3_INJECT
 switch	EffectKind17_TakeCell	detour	costly		src/game/effect/effect_kind_17.cpp:778	BOF3_INJECT
-switch	EffectKind18_01_Sunset	detour	costly		src/game/platform/magic_080.cpp:1163	BOF3_INJECT
+switch	EffectKind18_01_Sunset	detour	costly		src/game/platform/magic_080.cpp:1179	BOF3_INJECT
 switch	EffectKind18_04_DrawPanel	detour	costly		src/game/effect/effect_kind_18.cpp:859	BOF3_INJECT
 switch	EffectKind18_04_Open	detour	costly		src/game/effect/effect_kind_18.cpp:858	BOF3_INJECT
 switch	EffectKind18_04_Run	detour	costly		src/game/effect/effect_kind_18.cpp:854	BOF3_INJECT
@@ -4985,20 +4985,20 @@ switch	EffectKind5B_Glow	detour	costly		src/game/effect/effect_kind_54.cpp:768	B
 switch	EffectKind5B_Run	detour	costly		src/game/effect/effect_kind_54.cpp:766	BOF3_INJECT
 switch	EffectKind5B_Start	detour	costly		src/game/effect/effect_kind_54.cpp:767	BOF3_INJECT
 switch	EffectKind5C_Run	detour	costly		src/game/effect/world_map.cpp:156	BOF3_INJECT
-switch	EffectKind5D_Close	detour	costly		src/game/effect/effect_kind_5d.cpp:715	BOF3_INJECT
-switch	EffectKind5D_DrawBoard	detour	costly		src/game/effect/effect_kind_5d.cpp:719	BOF3_INJECT
-switch	EffectKind5D_DrawMark	detour	costly		src/game/effect/effect_kind_5d.cpp:720	BOF3_INJECT
-switch	EffectKind5D_Open	detour	costly		src/game/effect/effect_kind_5d.cpp:713	BOF3_INJECT
-switch	EffectKind5D_Run	detour	costly		src/game/effect/effect_kind_5d.cpp:707	BOF3_INJECT
-switch	EffectKind5D_Show	detour	costly		src/game/effect/effect_kind_5d.cpp:714	BOF3_INJECT
-switch	EffectKind5D_Start	detour	costly		src/game/effect/effect_kind_5d.cpp:712	BOF3_INJECT
-switch	EffectKind5E_DrawList	detour	costly		src/game/effect/effect_kind_5d.cpp:722	BOF3_INJECT
-switch	EffectKind5E_DrawMenu	detour	costly		src/game/effect/effect_kind_5d.cpp:721	BOF3_INJECT
-switch	EffectKind5E_DrawPanel	detour	costly		src/game/effect/effect_kind_5d.cpp:723	BOF3_INJECT
-switch	EffectKind5E_Pick	detour	costly		src/game/effect/effect_kind_5d.cpp:717	BOF3_INJECT
-switch	EffectKind5E_Run	detour	costly		src/game/effect/effect_kind_5d.cpp:708	BOF3_INJECT
-switch	EffectKind5E_Start	detour	costly		src/game/effect/effect_kind_5d.cpp:716	BOF3_INJECT
-switch	EffectKind5E_Wait	detour	costly		src/game/effect/effect_kind_5d.cpp:718	BOF3_INJECT
+switch	EffectKind5D_Close	detour	costly		src/game/effect/effect_kind_5d.cpp:722	BOF3_INJECT
+switch	EffectKind5D_DrawBoard	detour	costly		src/game/effect/effect_kind_5d.cpp:726	BOF3_INJECT
+switch	EffectKind5D_DrawMark	detour	costly		src/game/effect/effect_kind_5d.cpp:727	BOF3_INJECT
+switch	EffectKind5D_Open	detour	costly		src/game/effect/effect_kind_5d.cpp:720	BOF3_INJECT
+switch	EffectKind5D_Run	detour	costly		src/game/effect/effect_kind_5d.cpp:714	BOF3_INJECT
+switch	EffectKind5D_Show	detour	costly		src/game/effect/effect_kind_5d.cpp:721	BOF3_INJECT
+switch	EffectKind5D_Start	detour	costly		src/game/effect/effect_kind_5d.cpp:719	BOF3_INJECT
+switch	EffectKind5E_DrawList	detour	costly		src/game/effect/effect_kind_5d.cpp:729	BOF3_INJECT
+switch	EffectKind5E_DrawMenu	detour	costly		src/game/effect/effect_kind_5d.cpp:728	BOF3_INJECT
+switch	EffectKind5E_DrawPanel	detour	costly		src/game/effect/effect_kind_5d.cpp:730	BOF3_INJECT
+switch	EffectKind5E_Pick	detour	costly		src/game/effect/effect_kind_5d.cpp:724	BOF3_INJECT
+switch	EffectKind5E_Run	detour	costly		src/game/effect/effect_kind_5d.cpp:715	BOF3_INJECT
+switch	EffectKind5E_Start	detour	costly		src/game/effect/effect_kind_5d.cpp:723	BOF3_INJECT
+switch	EffectKind5E_Wait	detour	costly		src/game/effect/effect_kind_5d.cpp:725	BOF3_INJECT
 switch	EffectKind5F_Bounce	detour	costly		src/game/effect/effect_kind_5f.cpp:445	BOF3_INJECT
 switch	EffectKind5F_DrawLineDisc	detour	costly		src/game/effect/effect_kind_5f.cpp:457	BOF3_INJECT
 switch	EffectKind5F_Fly	detour	costly		src/game/effect/effect_kind_5f.cpp:444	BOF3_INJECT
@@ -6318,7 +6318,7 @@ switch	Fish_Step	detour	costly		src/game/field/leader_panel.cpp:3496	BOF3_INJECT
 switch	Fish_Swim	detour	costly		src/game/field/leader_panel.cpp:3483	BOF3_INJECT
 switch	FishCountWord	code	yes		src/game/field/leader_panel.cpp:3541	PatchBytes
 switch	FishingEmptyLine	code	yes		src/game/effect/effect_1a.cpp:242	PatchBytes
-switch	FishingLabelSigma	code	yes		src/game/text/fishing_text.cpp:494	PatchBytes
+switch	FishingLabelSigma	code	yes		src/game/text/fishing_text.cpp:499	PatchBytes
 switch	FishingLowGlyph	code	yes		src/game/effect/effect_1a.cpp:244	PatchBytes
 switch	FishPanelDuck	code	yes		src/game/field/leader_panel.cpp:3534	PatchBytes
 switch	Fixed_HighRoundUp	detour	costly		src/game/boss/boss_myria_fx.cpp:384	BOF3_INJECT
@@ -6484,11 +6484,11 @@ switch	FxSpiral_PushMatrix	detour	costly		src/game/magic/fx_spiral.cpp:473	BOF3_
 switch	FxSpiral_Spread	detour	costly		src/game/magic/fx_spiral.cpp:471	BOF3_INJECT
 switch	FxSpiral_Task	detour	costly		src/game/magic/fx_spiral.cpp:467	BOF3_INJECT
 switch	FxSpiral_Wait	detour	costly		src/game/magic/fx_spiral.cpp:468	BOF3_INJECT
-switch	Game_Clock	code	yes		src/game/platform/game_clock.cpp:103	PatchBytes
+switch	Game_Clock	code	yes		src/game/platform/game_clock.cpp:104	PatchBytes
 switch	Game_ClockTick	detour	costly		src/game/core/transition.cpp:1581	BOF3_INJECT
-switch	Game_Init	detour	costly		src/game/platform/magic_080.cpp:1159	BOF3_INJECT
-switch	Game_WinMain	detour	costly		src/game/platform/magic_080.cpp:1157	BOF3_INJECT
-switch	Game_WndProc	detour	costly		src/game/platform/magic_080.cpp:1155	BOF3_INJECT
+switch	Game_Init	detour	costly		src/game/platform/magic_080.cpp:1175	BOF3_INJECT
+switch	Game_WinMain	detour	costly		src/game/platform/magic_080.cpp:1173	BOF3_INJECT
+switch	Game_WndProc	detour	costly		src/game/platform/magic_080.cpp:1171	BOF3_INJECT
 switch	GameMode10_Enter	detour	costly		src/game/core/transition.cpp:1640	BOF3_INJECT
 switch	GameMode10_Run	detour	costly		src/game/core/transition.cpp:1639	BOF3_INJECT
 switch	GameMode11_Frame	detour	costly		src/game/core/transition.cpp:1642	BOF3_INJECT
@@ -6573,7 +6573,7 @@ switch	GeoBreathRecord_Fly	detour	costly		src/game/magic/geo_breath_child.cpp:70
 switch	GeoBreathRecord_Run	detour	costly		src/game/magic/geo_breath_child.cpp:705	BOF3_INJECT
 switch	GeoBreathRecord_Start	detour	costly		src/game/magic/geo_breath_child.cpp:706	BOF3_INJECT
 switch	GeoBreathRecord_Task	detour	costly		src/game/magic/geo_breath_child.cpp:704	BOF3_INJECT
-switch	Gfx_BeginFrame	detour	costly		src/game/platform/magic_080.cpp:1161	BOF3_INJECT
+switch	Gfx_BeginFrame	detour	costly		src/game/platform/magic_080.cpp:1177	BOF3_INJECT
 switch	Gfx_ClearImage	detour	costly		src/game/platform/d3d.cpp:3924	BOF3_INJECT
 switch	Gfx_ClearPresent	detour	costly		src/game/platform/d3d.cpp:3931	BOF3_INJECT
 switch	Gfx_ClearRect	detour	costly		src/game/core/title.cpp:2232	BOF3_INJECT
@@ -6585,15 +6585,15 @@ switch	Gfx_ClutStripRestore	detour	costly		src/game/field/field_2.cpp:592	BOF3_I
 switch	Gfx_CommitPrim	detour	costly		src/game/core/title.cpp:2211	BOF3_INJECT
 switch	Gfx_ConvertRow	detour	costly		src/game/platform/d3d.cpp:3930	BOF3_INJECT
 switch	Gfx_DrawOTag	detour	costly		src/game/platform/d3d_draw.cpp:157	BOF3_INJECT
-switch	Gfx_DrawSkyGradient	detour	costly		src/game/platform/magic_080.cpp:1164	BOF3_INJECT
-switch	Gfx_DrawSunsetGlow	detour	costly		src/game/platform/magic_080.cpp:1165	BOF3_INJECT
+switch	Gfx_DrawSkyGradient	detour	costly		src/game/platform/magic_080.cpp:1180	BOF3_INJECT
+switch	Gfx_DrawSunsetGlow	detour	costly		src/game/platform/magic_080.cpp:1181	BOF3_INJECT
 switch	Gfx_FilterPoint	code	yes		src/game/platform/d3d.cpp:4054 src/game/platform/d3d.cpp:4055	PatchBytes
 switch	Gfx_FlushDirtyStrip	detour	costly		src/game/field/field_2.cpp:591	BOF3_INJECT
 switch	Gfx_FlushUploadQueue	detour	costly		src/game/core/title.cpp:2219	BOF3_INJECT
 switch	Gfx_FreeClutRows	detour	costly		src/game/platform/d3d.cpp:3981	BOF3_INJECT
-switch	Gfx_InitBufferBlock	detour	costly		src/game/platform/magic_080.cpp:1160	BOF3_INJECT
+switch	Gfx_InitBufferBlock	detour	costly		src/game/platform/magic_080.cpp:1176	BOF3_INJECT
 switch	Gfx_InvalidateTextures	detour	costly		src/game/platform/d3d.cpp:3925	BOF3_INJECT
-switch	Gfx_LinkOTags	detour	costly		src/game/platform/magic_080.cpp:1162	BOF3_INJECT
+switch	Gfx_LinkOTags	detour	costly		src/game/platform/magic_080.cpp:1178	BOF3_INJECT
 switch	Gfx_LoadImage	detour	costly		src/game/platform/d3d.cpp:3928	BOF3_INJECT
 switch	Gfx_LoadImageIfChanged	detour	costly		src/game/platform/d3d.cpp:3929	BOF3_INJECT
 switch	Gfx_MoveCells	detour	costly		src/game/platform/gfx.cpp:42	BOF3_INJECT
@@ -6837,9 +6837,9 @@ switch	InnPrompt_Greeting	detour	costly		src/game/shop/field_save.cpp:1052	BOF3_
 switch	InnPrompt_NotEnough	detour	costly		src/game/shop/field_save.cpp:1055	BOF3_INJECT
 switch	InnPrompt_TitleIn	detour	costly		src/game/shop/field_save.cpp:1051	BOF3_INJECT
 switch	Input_AutoRepeat	detour	costly		src/game/core/title.cpp:2228	BOF3_INJECT
-switch	Input_Latch	detour	costly		src/game/platform/magic_080.cpp:1154	BOF3_INJECT
-switch	InputRecord	instrument			src/hook/input_script.cpp:1235	RetargetCall
-switch	InputScript	instrument			src/hook/input_script.cpp:1410	RetargetCall
+switch	Input_Latch	detour	costly		src/game/platform/magic_080.cpp:1170	BOF3_INJECT
+switch	InputRecord	instrument			src/hook/input_script.cpp:1236	RetargetCall
+switch	InputScript	instrument			src/hook/input_script.cpp:1411	RetargetCall
 switch	Intimidate_Start	detour	costly		src/game/magic/intimidate_trail.cpp:643	BOF3_INJECT
 switch	Intimidate_Task	detour	costly		src/game/magic/intimidate_trail.cpp:642	BOF3_INJECT
 switch	IntimidateBurst_DrawDisc	detour	costly		src/game/magic/intimidate_trail.cpp:659	BOF3_INJECT
@@ -7351,11 +7351,11 @@ switch	Magic074_SparkleRise	detour	costly		src/game/magic/sparkle.cpp:1397	BOF3_
 switch	Magic074_SparkleUpdate	detour	costly		src/game/magic/sparkle.cpp:1395	BOF3_INJECT
 switch	Magic074_Spawn	detour	costly		src/game/magic/sparkle.cpp:1387	BOF3_INJECT
 switch	Magic074_Task	detour	costly		src/game/magic/sparkle.cpp:1386	BOF3_INJECT
-switch	Magic080_DrawGlyphs	detour	costly		src/game/platform/magic_080.cpp:1153	BOF3_INJECT
-switch	Magic080_DrawText	detour	costly		src/game/platform/magic_080.cpp:1152	BOF3_INJECT
-switch	Magic080_Run	detour	costly		src/game/platform/magic_080.cpp:1151	BOF3_INJECT
-switch	Magic080_Start	detour	costly		src/game/platform/magic_080.cpp:1150	BOF3_INJECT
-switch	Magic080_Task	detour	costly		src/game/platform/magic_080.cpp:1149	BOF3_INJECT
+switch	Magic080_DrawGlyphs	detour	costly		src/game/platform/magic_080.cpp:1169	BOF3_INJECT
+switch	Magic080_DrawText	detour	costly		src/game/platform/magic_080.cpp:1168	BOF3_INJECT
+switch	Magic080_Run	detour	costly		src/game/platform/magic_080.cpp:1167	BOF3_INJECT
+switch	Magic080_Start	detour	costly		src/game/platform/magic_080.cpp:1166	BOF3_INJECT
+switch	Magic080_Task	detour	costly		src/game/platform/magic_080.cpp:1165	BOF3_INJECT
 switch	Magic087_Child	detour	costly		src/game/magic/magic_087.cpp:631	BOF3_INJECT
 switch	Magic087_ChildEnd	detour	costly		src/game/magic/magic_087.cpp:637	BOF3_INJECT
 switch	Magic087_ChildGrow	detour	costly		src/game/magic/magic_087.cpp:636	BOF3_INJECT
@@ -8463,7 +8463,7 @@ switch	Quake_Rumble	detour	costly		src/game/field/quake.cpp:664	BOF3_INJECT
 switch	Quake_Start	detour	costly		src/game/field/quake.cpp:663	BOF3_INJECT
 switch	Quake_Task	detour	costly		src/game/field/quake.cpp:662	BOF3_INJECT
 switch	Quake_VertexLift	detour	costly		src/game/field/quake.cpp:671	BOF3_INJECT
-switch	Rand	detour	costly		src/game/crt_rest.cpp:129 src/game/crt_rest.cpp:546	BOF3_INJECT, Inject
+switch	Rand	detour	costly		src/game/crt_rest.cpp:129 src/game/crt_rest.cpp:548	BOF3_INJECT, Inject
 switch	Records_CountUnpaired	detour	costly		src/game/field/field_6.cpp:3312	BOF3_INJECT
 switch	Records_CountUnpairedOfKind	detour	costly		src/game/field/field_6.cpp:3313	BOF3_INJECT
 switch	Rest_Begin	detour	costly		src/game/shop/field_save.cpp:1077	BOF3_INJECT
@@ -9707,7 +9707,7 @@ switch	Stat_AddResist	detour	costly		src/game/menu/char.cpp:1109	BOF3_INJECT
 switch	Stat_PercentCap100	detour	costly		src/game/battle/battle_3.cpp:2505	BOF3_INJECT
 switch	Stat_PercentCap999	detour	costly		src/game/battle/battle_3.cpp:2503	BOF3_INJECT
 switch	Stat_PercentCap9999	detour	costly		src/game/battle/battle_3.cpp:2504	BOF3_INJECT
-switch	StateHash	instrument			src/hook/input_script.cpp:1375	RetargetCall
+switch	StateHash	instrument			src/hook/input_script.cpp:1376	RetargetCall
 switch	Steal_Report	detour	costly		src/game/magic/steal.cpp:291	BOF3_INJECT
 switch	Steal_Start	detour	costly		src/game/magic/steal.cpp:289	BOF3_INJECT
 switch	Steal_Task	detour	costly		src/game/magic/steal.cpp:288	BOF3_INJECT
@@ -10064,7 +10064,7 @@ switch	WarShoutMote_Circle	detour	costly		src/game/magic/war_shout_mote.cpp:334	
 switch	WarShoutMote_Fade	detour	costly		src/game/magic/war_shout_mote.cpp:335	BOF3_INJECT
 switch	WarShoutMote_Rise	detour	costly		src/game/magic/war_shout_mote.cpp:333	BOF3_INJECT
 switch	WarShoutMote_Run	detour	costly		src/game/magic/war_shout_mote.cpp:331	BOF3_INJECT
-switch	WavDump	instrument			src/hook/input_script.cpp:1376	RetargetCall
+switch	WavDump	instrument			src/hook/input_script.cpp:1377	RetargetCall
 switch	Wave_FindData	detour	costly		src/game/platform/music.cpp:811	BOF3_INJECT
 switch	Weretiger_Burst	detour	costly		src/game/magic/weretiger.cpp:859	BOF3_INJECT
 switch	Weretiger_Copy	detour	costly		src/game/magic/weretiger.cpp:860	BOF3_INJECT
@@ -10129,7 +10129,7 @@ switch	WhelpBreathSprite_Start	detour	costly		src/game/magic/whelp_breath_flames
 switch	WhiteFlag_Task	detour	costly		src/game/magic/white_flag.cpp:86	BOF3_INJECT
 switch	WhiteFlag_TintSource	detour	costly		src/game/magic/white_flag.cpp:87	BOF3_INJECT
 switch	WhiteFlag_Untint	detour	costly		src/game/magic/white_flag.cpp:88	BOF3_INJECT
-switch	Widescreen	code	yes		src/game/platform/widescreen.cpp:414 src/game/platform/widescreen.cpp:421	PatchBytes
+switch	Widescreen	code	yes		src/game/platform/widescreen.cpp:415 src/game/platform/widescreen.cpp:422	PatchBytes
 switch	Win1_ButtonRow	detour	costly		src/game/menu/window.cpp:1273	BOF3_INJECT
 switch	Win1_DrawShisuPanel	detour	costly		src/game/menu/window.cpp:1275	BOF3_INJECT
 switch	Win1_ShisuPanel	detour	costly		src/game/menu/window.cpp:1274	BOF3_INJECT
@@ -10218,18 +10218,18 @@ switch	env:BOF3X_AR3A_AREA	env	yes		src/game/area/area_w3a_fuzz.cpp:73	read in s
 switch	env:BOF3X_AR3B_GROUP	env	yes		src/game/area/area_w3b_fuzz.cpp:859	read in src/
 switch	env:BOF3X_AR3G_GROUP	env	yes		src/game/area/area_w3g_fuzz.cpp:82	read in src/
 switch	env:BOF3X_AR4A_AREA	env	yes		src/game/area/area_w4a_fuzz.cpp:688	read in src/
-switch	env:BOF3X_AREA4_WALLS	env	yes		src/game/battle/dat_load.cpp:683	read in src/
-switch	env:BOF3X_ARENA	env	yes		src/game/crt_rest.cpp:359	read in src/
-switch	env:BOF3X_BACKGROUND	launcher	yes		src/launcher/config.cpp:664 src/game/platform/magic_080.cpp:625 src/launcher/config.cpp:663 src/launcher/config.cpp:1775	read in src/, set by the launcher
-switch	env:BOF3X_BANDLOG	env	yes		src/game/field/band_census.cpp:661	read in src/
-switch	env:BOF3X_BANDLOG_PARK	env	yes		src/game/field/band_census.cpp:664	read in src/
-switch	env:BOF3X_BANDLOG_SPAN	env	yes		src/game/field/band_census.cpp:665	read in src/
-switch	env:BOF3X_BANDLOG_VOID	env	yes		src/game/field/band_census.cpp:666	read in src/
-switch	env:BOF3X_BE1_ONLY	env	yes		src/game/battle/battle_e1_fuzz.cpp:430	read in src/
+switch	env:BOF3X_AREA4_WALLS	env	yes		src/game/battle/dat_load.cpp:684	read in src/
+switch	env:BOF3X_ARENA	env	yes		src/game/crt_rest.cpp:361	read in src/
+switch	env:BOF3X_BACKGROUND	launcher	yes		src/launcher/config.cpp:710 src/game/platform/magic_080.cpp:634 src/launcher/config.cpp:709 src/launcher/config.cpp:1840	read in src/, set by the launcher
+switch	env:BOF3X_BANDLOG	env	yes		src/game/field/band_census.cpp:662	read in src/
+switch	env:BOF3X_BANDLOG_PARK	env	yes		src/game/field/band_census.cpp:665	read in src/
+switch	env:BOF3X_BANDLOG_SPAN	env	yes		src/game/field/band_census.cpp:666	read in src/
+switch	env:BOF3X_BANDLOG_VOID	env	yes		src/game/field/band_census.cpp:667	read in src/
+switch	env:BOF3X_BE1_ONLY	env	yes		src/game/battle/battle_e1_fuzz.cpp:431	read in src/
 switch	env:BOF3X_BE2_ONLY	env	yes		src/game/battle/battle_e2_fuzz.cpp:578	read in src/
 switch	env:BOF3X_BE2_RUN	env	yes		src/game/battle/battle_e2_fuzz.cpp:569	read in src/
 switch	env:BOF3X_BE3_RUN	env	yes		src/game/battle/battle_e3_fuzz.cpp:156	read in src/
-switch	env:BOF3X_BE4_RUN	env	yes		src/game/battle/battle_e4_fuzz.cpp:475	read in src/
+switch	env:BOF3X_BE4_RUN	env	yes		src/game/battle/battle_e4_fuzz.cpp:476	read in src/
 switch	env:BOF3X_BE5_ONLY	env	yes		src/game/battle/battle_e5_fuzz.cpp:483	read in src/
 switch	env:BOF3X_BE6_RUN	env	yes		src/game/battle/battle_e6_fuzz.cpp:550	read in src/
 switch	env:BOF3X_BH_RUN	env	yes		src/game/boss/boss_h_fuzz.cpp:291	read in src/
@@ -10246,27 +10246,28 @@ switch	env:BOF3X_BSI_RUN	env	yes		src/game/boss/boss_si_fuzz.cpp:152	read in src
 switch	env:BOF3X_BSJ_RUN	env	yes		src/game/boss/boss_sj_fuzz.cpp:323	read in src/
 switch	env:BOF3X_BW_TRACE	env	yes		src/game/battle/battle_windows_fuzz.cpp:746	read in src/
 switch	env:BOF3X_BWS_TRACE	env	yes		src/game/menu/battle_win_states_fuzz.cpp:534	read in src/
-switch	env:BOF3X_CACHE	launcher	yes		src/launcher/config.cpp:646 src/game/core/psp_code.cpp:38 src/game/platform/dat_cache.cpp:384 src/game/platform/music_seq.cpp:443 src/game/text/shoulder_glyphs.cpp:417 src/hook/exe_image.cpp:1024 src/input/sigma.cpp:140 src/launcher/config.cpp:644 src/launcher/config.cpp:648 src/launcher/config.cpp:826 src/launcher/config.cpp:1774 src/launcher/config_dialog.cpp:265 src/launcher/launcher.cpp:539 src/launcher/music_player.cpp:417	read in src/, set by the launcher
-switch	env:BOF3X_CACHE_DATA	env	yes		src/game/platform/dat_cache.cpp:380 src/hook/exe_image.cpp:1021 src/launcher/config.cpp:819 src/launcher/config.cpp:1759 src/launcher/config_dialog.cpp:283	read in src/
-switch	env:BOF3X_CALLTRACE	hosted-only	costly		src/hook/exe_host.cpp:102 src/launcher/launcher.cpp:68 src/game/crt_rest.cpp:539 src/hook/calltrace.cpp:318 src/hook/input_script.cpp:1259 src/hook/windows_only.cpp:48	read in src/, refused by bof3x.exe
+switch	env:BOF3X_CACHE	launcher	yes		src/launcher/config.cpp:692 src/common/cache_manifest.cpp:237 src/game/core/psp_code.cpp:38 src/game/platform/dat_cache.cpp:385 src/game/platform/music_seq.cpp:443 src/game/text/shoulder_glyphs.cpp:417 src/hook/exe_image.cpp:1089 src/input/sigma.cpp:140 src/launcher/config.cpp:690 src/launcher/config.cpp:694 src/launcher/config.cpp:873 src/launcher/config.cpp:1156 src/launcher/config.cpp:1839 src/launcher/config_dialog.cpp:265 src/launcher/launcher.cpp:452 src/launcher/music_player.cpp:417 src/launcher/start.cpp:202	read in src/, set by the launcher
+switch	env:BOF3X_CACHE_DATA	env	yes		src/game/platform/dat_cache.cpp:381 src/hook/exe_image.cpp:1086 src/launcher/config.cpp:865 src/launcher/config.cpp:1823 src/launcher/config_dialog.cpp:283 src/launcher/start.cpp:201	read in src/
+switch	env:BOF3X_CALLTRACE	hosted-only	costly		src/hook/exe_host.cpp:104 src/launcher/launcher.cpp:79 src/game/crt_rest.cpp:541 src/hook/calltrace.cpp:318 src/hook/input_script.cpp:1260 src/hook/windows_only.cpp:48	read in src/, refused by bof3x.exe
 switch	env:BOF3X_CALLTRACE_DETAIL	env	yes		src/hook/calltrace.cpp:390	read in src/
 switch	env:BOF3X_CALLTRACE_MODE	env	yes		src/hook/calltrace.cpp:382	read in src/
 switch	env:BOF3X_CALLTRACE_REACH	env	yes		src/hook/calltrace.cpp:330	read in src/
 switch	env:BOF3X_CALLTRACE_SPIN	env	yes		src/hook/calltrace.cpp:402	read in src/
 switch	env:BOF3X_CALLTRACE_STOP	env	yes		src/hook/calltrace.cpp:387	read in src/
+switch	env:BOF3X_CASECHECK	env	yes		src/os/file.cpp:189	read in src/
 switch	env:BOF3X_CRASH_TEST	env	yes		src/hook/crash_posix.cpp:304 src/hook/crash_win32.cpp:260	read in src/
 switch	env:BOF3X_D3D_DEBUG	env	yes		src/render/render_d3d11.cpp:924	read in src/
-switch	env:BOF3X_DATLOG	env	yes		src/game/battle/dat_load.cpp:915	read in src/
-switch	env:BOF3X_DESERT_FAERIE	launcher	yes		src/launcher/config.cpp:682 src/game/field/event_script_ours.cpp:153 src/launcher/config.cpp:681 src/launcher/config.cpp:1781	read in src/, set by the launcher
-switch	env:BOF3X_DRAWLOG_RGB	env	yes		src/render/render_shim.cpp:865	read in src/
+switch	env:BOF3X_DATLOG	env	yes		src/game/battle/dat_load.cpp:922	read in src/
+switch	env:BOF3X_DESERT_FAERIE	launcher	yes		src/launcher/config.cpp:728 src/game/field/event_script_ours.cpp:153 src/launcher/config.cpp:727 src/launcher/config.cpp:1846	read in src/, set by the launcher
+switch	env:BOF3X_DRAWLOG_RGB	env	yes		src/render/render_shim.cpp:866	read in src/
 switch	env:BOF3X_DRAWORDER	env	yes		src/hook/draw_order.cpp:205	read in src/
 switch	env:BOF3X_E1A_ONLY	env	yes		src/game/effect/effect_1a_fuzz.cpp:504	read in src/
 switch	env:BOF3X_E1B_ONLY	env	yes		src/game/effect/effect_1b_fuzz.cpp:395	read in src/
 switch	env:BOF3X_E1C_ONLY	env	yes		src/game/effect/effect_1c_fuzz.cpp:425	read in src/
 switch	env:BOF3X_E1D_ONLY	env	yes		src/game/effect/effect_1d_fuzz.cpp:287	read in src/
 switch	env:BOF3X_E1F_ONLY	env	yes		src/game/field/effect_1f_fuzz.cpp:382	read in src/
-switch	env:BOF3X_E1G_ONLY	env	yes		src/game/menu/effect_1g_fuzz.cpp:313	read in src/
-switch	env:BOF3X_E1G_ROUNDS	env	yes		src/game/menu/effect_1g_fuzz.cpp:320	read in src/
+switch	env:BOF3X_E1G_ONLY	env	yes		src/game/menu/effect_1g_fuzz.cpp:314	read in src/
+switch	env:BOF3X_E1G_ROUNDS	env	yes		src/game/menu/effect_1g_fuzz.cpp:321	read in src/
 switch	env:BOF3X_E2A_ONLY	env	yes		src/game/effect/effect_2a_fuzz.cpp:566	read in src/
 switch	env:BOF3X_E2B_ONLY	env	yes		src/game/effect/effect_2b_fuzz.cpp:422	read in src/
 switch	env:BOF3X_E2C_ONLY	env	yes		src/game/effect/effect_2c_fuzz.cpp:621	read in src/
@@ -10278,10 +10279,10 @@ switch	env:BOF3X_E3A_ONLY	env	yes		src/game/effect/effect_3a_fuzz.cpp:515	read i
 switch	env:BOF3X_E3A_ROUNDS	env	yes		src/game/effect/effect_3a_fuzz.cpp:527	read in src/
 switch	env:BOF3X_E3B_ONLY	env	yes		src/game/effect/effect_3b_fuzz.cpp:462	read in src/
 switch	env:BOF3X_E3C_ONLY	env	yes		src/game/effect/effect_3c_fuzz.cpp:461	read in src/
-switch	env:BOF3X_E3D_ONLY	env	yes		src/game/effect/effect_3d_fuzz.cpp:463	read in src/
-switch	env:BOF3X_E3D_ROUNDS	env	yes		src/game/effect/effect_3d_fuzz.cpp:471	read in src/
-switch	env:BOF3X_E4A_ONLY	env	yes		src/game/effect/effect_4a_fuzz.cpp:249	read in src/
-switch	env:BOF3X_E4A_ROUNDS	env	yes		src/game/effect/effect_4a_fuzz.cpp:254	read in src/
+switch	env:BOF3X_E3D_ONLY	env	yes		src/game/effect/effect_3d_fuzz.cpp:464	read in src/
+switch	env:BOF3X_E3D_ROUNDS	env	yes		src/game/effect/effect_3d_fuzz.cpp:472	read in src/
+switch	env:BOF3X_E4A_ONLY	env	yes		src/game/effect/effect_4a_fuzz.cpp:250	read in src/
+switch	env:BOF3X_E4A_ROUNDS	env	yes		src/game/effect/effect_4a_fuzz.cpp:255	read in src/
 switch	env:BOF3X_E4B_ONLY	env	yes		src/game/effect/effect_4b_fuzz.cpp:505	read in src/
 switch	env:BOF3X_E4C_ONLY	env	yes		src/game/effect/effect_4c_fuzz.cpp:486	read in src/
 switch	env:BOF3X_E4D_ONLY	env	yes		src/game/effect/effect_4d_fuzz.cpp:389	read in src/
@@ -10289,13 +10290,13 @@ switch	env:BOF3X_E4E_ONLY	env	yes		src/game/effect/effect_4e_fuzz.cpp:451	read i
 switch	env:BOF3X_E4E_ROUNDS	env	yes		src/game/effect/effect_4e_fuzz.cpp:463	read in src/
 switch	env:BOF3X_E4F_ONLY	env	yes		src/game/effect/effect_4f_fuzz.cpp:406	read in src/
 switch	env:BOF3X_E4F_ROUNDS	env	yes		src/game/effect/effect_4f_fuzz.cpp:418	read in src/
-switch	env:BOF3X_E5A_ONLY	env	yes		src/game/effect/effect_5a_fuzz.cpp:344	read in src/
-switch	env:BOF3X_E5A_ROUNDS	env	yes		src/game/effect/effect_5a_fuzz.cpp:350	read in src/
-switch	env:BOF3X_E5B_ONLY	env	yes		src/game/effect/effect_5b_fuzz.cpp:433	read in src/
-switch	env:BOF3X_E5B_ROUNDS	env	yes		src/game/effect/effect_5b_fuzz.cpp:442	read in src/
+switch	env:BOF3X_E5A_ONLY	env	yes		src/game/effect/effect_5a_fuzz.cpp:345	read in src/
+switch	env:BOF3X_E5A_ROUNDS	env	yes		src/game/effect/effect_5a_fuzz.cpp:351	read in src/
+switch	env:BOF3X_E5B_ONLY	env	yes		src/game/effect/effect_5b_fuzz.cpp:434	read in src/
+switch	env:BOF3X_E5B_ROUNDS	env	yes		src/game/effect/effect_5b_fuzz.cpp:443	read in src/
 switch	env:BOF3X_E5C_ONLY	env	yes		src/game/effect/effect_5c_fuzz.cpp:456	read in src/
-switch	env:BOF3X_E5D_ONLY	env	yes		src/game/effect/effect_5d_fuzz.cpp:504	read in src/
-switch	env:BOF3X_E5D_ROUNDS	env	yes		src/game/effect/effect_5d_fuzz.cpp:513	read in src/
+switch	env:BOF3X_E5D_ONLY	env	yes		src/game/effect/effect_5d_fuzz.cpp:505	read in src/
+switch	env:BOF3X_E5D_ROUNDS	env	yes		src/game/effect/effect_5d_fuzz.cpp:514	read in src/
 switch	env:BOF3X_E5E_ONLY	env	yes		src/game/effect/effect_5e_fuzz.cpp:350	read in src/
 switch	env:BOF3X_E5F_ONLY	env	yes		src/game/effect/effect_5f_fuzz.cpp:474	read in src/
 switch	env:BOF3X_E5G_ONLY	env	yes		src/game/effect/effect_5g_fuzz.cpp:254	read in src/
@@ -10307,79 +10308,79 @@ switch	env:BOF3X_EFFECTLOG	env	yes		src/game/effect/effect_gte.cpp:96 src/game/f
 switch	env:BOF3X_EGT_ONLY	env	yes		src/game/effect/effect_gte_fuzz.cpp:346	read in src/
 switch	env:BOF3X_EH_CONTROL	env	yes		src/game/boss_harness_eh.cpp:178	read in src/
 switch	env:BOF3X_EKH_CONTROL	env	yes		src/game/scenario_harness_ekh.cpp:171	read in src/
-switch	env:BOF3X_ENEMY_INFO	launcher	yes		src/launcher/config.cpp:706 src/game/core/cheats.cpp:147 src/launcher/config.cpp:705 src/launcher/config.cpp:1779	read in src/, set by the launcher
+switch	env:BOF3X_ENEMY_INFO	launcher	yes		src/launcher/config.cpp:752 src/game/core/cheats.cpp:148 src/launcher/config.cpp:751 src/launcher/config.cpp:1844	read in src/, set by the launcher
 switch	env:BOF3X_EVENT_OPS_ONLY	env	yes		src/game/field/event_ops_fuzz.cpp:1237	read in src/
-switch	env:BOF3X_EXEFILE	env	yes		src/launcher/config.cpp:1764 src/launcher/launcher.cpp:651	read in src/
-switch	env:BOF3X_EXEIMAGE	env	yes		src/hook/exe_host.cpp:283 src/hook/exe_image.cpp:119 src/launcher/launcher.cpp:500 src/launcher/launcher.cpp:540 src/launcher/launcher.cpp:609 src/launcher/launcher.cpp:612 src/launcher/launcher.cpp:650 src/launcher/launcher.cpp:656	read in src/
-switch	env:BOF3X_EXEIMAGE_STRICT	env	yes		src/hook/exe_image.cpp:213 src/launcher/config.cpp:1761	read in src/
+switch	env:BOF3X_EXEFILE	env	yes		src/common/cache_manifest.cpp:210 src/launcher/config.cpp:1828 src/launcher/start.cpp:43	read in src/
+switch	env:BOF3X_EXEIMAGE	env	yes		src/common/cache_manifest.cpp:237 src/hook/exe_host.cpp:252 src/hook/exe_host.cpp:265 src/hook/exe_image.cpp:120 src/launcher/config.cpp:1156 src/launcher/launcher.cpp:453 src/launcher/start.cpp:205 src/launcher/start.cpp:263 src/launcher/start.cpp:269	read in src/
+switch	env:BOF3X_EXEIMAGE_STRICT	env	yes		src/hook/exe_image.cpp:214 src/launcher/config.cpp:1825	read in src/
 switch	env:BOF3X_EXITTRACE	env	yes		src/game/platform/win_main.cpp:207	read in src/
-switch	env:BOF3X_EXP	launcher	yes		src/launcher/config.cpp:700 src/game/core/cheats.cpp:143 src/launcher/config.cpp:699 src/launcher/config.cpp:1778	read in src/, set by the launcher
+switch	env:BOF3X_EXP	launcher	yes		src/launcher/config.cpp:746 src/game/core/cheats.cpp:144 src/launcher/config.cpp:745 src/launcher/config.cpp:1843	read in src/, set by the launcher
 switch	env:BOF3X_FBGRAB	env	yes		src/render/fb_grab.cpp:17	read in src/
 switch	env:BOF3X_FC2_ONLY	env	yes		src/game/effect/field_c2_fuzz.cpp:424	read in src/
-switch	env:BOF3X_FE2_ONLY	env	yes		src/game/field/field_e2_fuzz.cpp:876	read in src/
-switch	env:BOF3X_FE2_ROUNDS	env	yes		src/game/field/field_e2_fuzz.cpp:883	read in src/
-switch	env:BOF3X_FFMPEG	env	yes		src/launcher/sources_dialog.cpp:454 src/launcher/sources_dialog.cpp:493	read in src/
-switch	env:BOF3X_FILTER	launcher	yes		src/launcher/config.cpp:661 src/game/platform/d3d.cpp:955 src/game/platform/d3d.cpp:4045 src/hook/input_script.cpp:1224 src/launcher/config.cpp:659 src/launcher/config.cpp:1774	read in src/, set by the launcher
-switch	env:BOF3X_FKEYS	launcher	yes		src/launcher/config.cpp:720 src/game/platform/function_keys_game.cpp:60 src/launcher/config.cpp:715	read in src/, set by the launcher
-switch	env:BOF3X_FO_ONLY	env	yes		src/game/field/field_o_fuzz.cpp:530	read in src/
-switch	env:BOF3X_FO_ROUNDS	env	yes		src/game/field/field_o_fuzz.cpp:547	read in src/
-switch	env:BOF3X_FPS_LOG	env	yes		src/game/platform/magic_080.cpp:633	read in src/
-switch	env:BOF3X_FRAME_MS	env	yes		src/game/platform/magic_080.cpp:626 src/hook/wav_dump.cpp:708	read in src/
-switch	env:BOF3X_FRAMEHASH	env	yes		src/render/render_shim.cpp:319	read in src/
+switch	env:BOF3X_FE2_ONLY	env	yes		src/game/field/field_e2_fuzz.cpp:877	read in src/
+switch	env:BOF3X_FE2_ROUNDS	env	yes		src/game/field/field_e2_fuzz.cpp:884	read in src/
+switch	env:BOF3X_FFMPEG	env	yes		src/launcher/sources_dialog.cpp:479 src/launcher/sources_dialog.cpp:518	read in src/
+switch	env:BOF3X_FILTER	launcher	yes		src/launcher/config.cpp:707 src/game/platform/d3d.cpp:955 src/game/platform/d3d.cpp:4045 src/hook/input_script.cpp:1225 src/launcher/config.cpp:705 src/launcher/config.cpp:1839	read in src/, set by the launcher
+switch	env:BOF3X_FKEYS	launcher	yes		src/launcher/config.cpp:766 src/game/platform/function_keys_game.cpp:60 src/launcher/config.cpp:761	read in src/, set by the launcher
+switch	env:BOF3X_FO_ONLY	env	yes		src/game/field/field_o_fuzz.cpp:531	read in src/
+switch	env:BOF3X_FO_ROUNDS	env	yes		src/game/field/field_o_fuzz.cpp:548	read in src/
+switch	env:BOF3X_FPS_LOG	env	yes		src/game/platform/magic_080.cpp:642	read in src/
+switch	env:BOF3X_FRAME_MS	env	yes		src/game/platform/magic_080.cpp:635 src/hook/wav_dump.cpp:712	read in src/
+switch	env:BOF3X_FRAMEHASH	env	yes		src/render/render_shim.cpp:320	read in src/
 switch	env:BOF3X_FS_RUN	env	yes		src/game/shop/field_s_fuzz.cpp:563	read in src/
-switch	env:BOF3X_GAPWATCH	env	yes		src/hook/gapwatch.cpp:621 src/hook/gapwatch.cpp:771 src/hook/snapshot.cpp:1168 src/hook/windows_only.cpp:52 src/hook/write_watch.cpp:193	read in src/
+switch	env:BOF3X_GAPWATCH	env	yes		src/hook/gapwatch.cpp:621 src/hook/gapwatch.cpp:771 src/hook/snapshot.cpp:1178 src/hook/windows_only.cpp:52 src/hook/write_watch.cpp:193	read in src/
 switch	env:BOF3X_GAPWATCH_BUDGET	env	yes		src/hook/gapwatch.cpp:796	read in src/
 switch	env:BOF3X_GAPWATCH_CLASSES	env	yes		src/hook/gapwatch.cpp:783	read in src/
 switch	env:BOF3X_GAPWATCH_DR	env	yes		src/hook/gapwatch.cpp:830	read in src/
 switch	env:BOF3X_GAPWATCH_PIN	env	yes		src/hook/gapwatch.cpp:835	read in src/
-switch	env:BOF3X_HANDOFF	env	yes		src/hook/exe_host.cpp:587 src/hook/exe_host.cpp:595	read in src/
-switch	env:BOF3X_HOME	env	yes		src/common/home.cpp:23	read in src/
+switch	env:BOF3X_HANDOFF	env	yes		src/hook/exe_host.cpp:572 src/hook/exe_host.cpp:580	read in src/
+switch	env:BOF3X_HOME	env	yes		src/common/home.cpp:30	read in src/
 switch	env:BOF3X_ICON_REF	env	yes		src/hook/exe_icon.cpp:640	read in src/
-switch	env:BOF3X_ICON_VRAM	env	yes		src/hook/exe_host.cpp:656 src/hook/exe_icon.cpp:638	read in src/
-switch	env:BOF3X_IMAGEBASE	env	yes		src/hook/host.cpp:105 src/launcher/launcher.cpp:397	read in src/
-switch	env:BOF3X_INPUT	env	yes		src/game/crt_rest.cpp:537 src/game/platform/function_keys_game.cpp:62 src/hook/dllmain.cpp:50 src/hook/draw_order.cpp:216 src/hook/exe_host.cpp:639 src/hook/gapwatch.cpp:803 src/hook/input_script.cpp:1358 src/hook/wav_dump.cpp:690	read in src/
-switch	env:BOF3X_INTERP	launcher	yes		src/launcher/config.cpp:688 src/launcher/config.cpp:687 src/launcher/config.cpp:1777 src/render/interp.cpp:160	read in src/, set by the launcher
-switch	env:BOF3X_INTERP_DEBUG	env	yes		src/render/render_shim.cpp:1261	read in src/
-switch	env:BOF3X_INTERP_DUMP	env	yes		src/game/platform/magic_080.cpp:191	read in src/
-switch	env:BOF3X_INTERP_DUMP_EVERY	env	yes		src/game/platform/magic_080.cpp:194	read in src/
-switch	env:BOF3X_INTERP_MAX	env	yes		src/render/render_shim.cpp:1247	read in src/
-switch	env:BOF3X_INTERP_STATS	env	yes		src/render/render_shim.cpp:444	read in src/
-switch	env:BOF3X_KEYS	launcher	yes		src/launcher/config.cpp:732 src/game/platform/d_input.cpp:228 src/launcher/config.cpp:729	read in src/, set by the launcher
-switch	env:BOF3X_LANG	launcher	yes		src/launcher/config.cpp:516 src/game/battle/dat_load.cpp:874 src/game/text/lang_layout.cpp:10 src/game/text/lang_layout.cpp:21 src/game/text/lang_layout.cpp:28 src/hook/input_script.cpp:1223 src/launcher/config.cpp:512 src/launcher/config.cpp:534 src/launcher/config.cpp:1122 src/launcher/config.cpp:1657 src/launcher/config.cpp:1772 src/launcher/config.cpp:1920	read in src/, set by the launcher
-switch	env:BOF3X_LATE_EVERY	env	yes		src/game/platform/magic_080.cpp:634	read in src/
-switch	env:BOF3X_LAUNCHER	env	yes		src/hook/exe_host.cpp:587 src/launcher/launcher.cpp:672	read in src/
-switch	env:BOF3X_LAYERING	env	yes		src/game/field/layering.cpp:612	read in src/
-switch	env:BOF3X_LAYERING_AHEAD	env	yes		src/game/field/layering.cpp:614	read in src/
-switch	env:BOF3X_LAYERING_LOG	env	yes		src/game/field/layering.cpp:616	read in src/
-switch	env:BOF3X_LAYERING_RECORDS	env	yes		src/game/field/layering.cpp:617	read in src/
-switch	env:BOF3X_LAYERING_RISE	env	yes		src/game/field/layering.cpp:615	read in src/
-switch	env:BOF3X_LAYERING_SPRITEBOX	env	yes		src/game/field/layering.cpp:618	read in src/
-switch	env:BOF3X_LEARN	launcher	yes		src/launcher/config.cpp:710 src/game/core/cheats.cpp:153 src/launcher/config.cpp:709 src/launcher/config.cpp:1780	read in src/, set by the launcher
+switch	env:BOF3X_ICON_VRAM	env	yes		src/hook/exe_host.cpp:641 src/hook/exe_icon.cpp:638	read in src/
+switch	env:BOF3X_IMAGEBASE	env	yes		src/hook/host.cpp:90 src/launcher/headless.cpp:125 src/launcher/launcher.cpp:386	read in src/
+switch	env:BOF3X_INPUT	env	yes		src/game/crt_rest.cpp:539 src/game/platform/function_keys_game.cpp:62 src/hook/dllmain.cpp:50 src/hook/draw_order.cpp:216 src/hook/exe_host.cpp:624 src/hook/gapwatch.cpp:803 src/hook/input_script.cpp:1359 src/hook/wav_dump.cpp:694	read in src/
+switch	env:BOF3X_INTERP	launcher	yes		src/launcher/config.cpp:734 src/launcher/config.cpp:733 src/launcher/config.cpp:1842 src/render/interp.cpp:160	read in src/, set by the launcher
+switch	env:BOF3X_INTERP_DEBUG	env	yes		src/render/render_shim.cpp:1262	read in src/
+switch	env:BOF3X_INTERP_DUMP	env	yes		src/game/platform/magic_080.cpp:194	read in src/
+switch	env:BOF3X_INTERP_DUMP_EVERY	env	yes		src/game/platform/magic_080.cpp:197	read in src/
+switch	env:BOF3X_INTERP_MAX	env	yes		src/render/render_shim.cpp:1248	read in src/
+switch	env:BOF3X_INTERP_STATS	env	yes		src/render/render_shim.cpp:445	read in src/
+switch	env:BOF3X_KEYS	launcher	yes		src/launcher/config.cpp:778 src/game/platform/d_input.cpp:228 src/launcher/config.cpp:775	read in src/, set by the launcher
+switch	env:BOF3X_LANG	launcher	yes		src/launcher/config.cpp:562 src/game/battle/dat_load.cpp:881 src/game/text/lang_layout.cpp:10 src/game/text/lang_layout.cpp:21 src/game/text/lang_layout.cpp:28 src/hook/input_script.cpp:1224 src/launcher/config.cpp:558 src/launcher/config.cpp:580 src/launcher/config.cpp:1188 src/launcher/config.cpp:1717 src/launcher/config.cpp:1837 src/launcher/config.cpp:1985	read in src/, set by the launcher
+switch	env:BOF3X_LATE_EVERY	env	yes		src/game/platform/magic_080.cpp:643	read in src/
+switch	env:BOF3X_LAUNCHER	env	yes		src/hook/exe_host.cpp:572 src/launcher/start.cpp:323	read in src/
+switch	env:BOF3X_LAYERING	env	yes		src/game/field/layering.cpp:613	read in src/
+switch	env:BOF3X_LAYERING_AHEAD	env	yes		src/game/field/layering.cpp:615	read in src/
+switch	env:BOF3X_LAYERING_LOG	env	yes		src/game/field/layering.cpp:617	read in src/
+switch	env:BOF3X_LAYERING_RECORDS	env	yes		src/game/field/layering.cpp:618	read in src/
+switch	env:BOF3X_LAYERING_RISE	env	yes		src/game/field/layering.cpp:616	read in src/
+switch	env:BOF3X_LAYERING_SPRITEBOX	env	yes		src/game/field/layering.cpp:619	read in src/
+switch	env:BOF3X_LEARN	launcher	yes		src/launcher/config.cpp:756 src/game/core/cheats.cpp:154 src/launcher/config.cpp:755 src/launcher/config.cpp:1845	read in src/, set by the launcher
 switch	env:BOF3X_LINES	env	yes		src/game/platform/d3d_lines.cpp:117	read in src/
-switch	env:BOF3X_MP3	env	yes		src/audio/mp3.cpp:602 src/hook/exe_host.cpp:92 src/launcher/launcher.cpp:71	read in src/
-switch	env:BOF3X_MP3=original	hosted-only	costly		src/hook/exe_host.cpp:92 src/launcher/launcher.cpp:71	refused by bof3x.exe
-switch	env:BOF3X_MP3_COMPARE	hosted-only	costly		src/hook/exe_host.cpp:99 src/launcher/launcher.cpp:68 src/audio/mp3.cpp:627	read in src/, refused by bof3x.exe
+switch	env:BOF3X_MP3	env	yes		src/audio/mp3.cpp:602 src/hook/exe_host.cpp:94 src/launcher/launcher.cpp:82	read in src/
+switch	env:BOF3X_MP3=original	hosted-only	costly		src/hook/exe_host.cpp:94 src/launcher/launcher.cpp:82	refused by bof3x.exe
+switch	env:BOF3X_MP3_COMPARE	hosted-only	costly		src/hook/exe_host.cpp:101 src/launcher/launcher.cpp:79 src/audio/mp3.cpp:627	read in src/, refused by bof3x.exe
 switch	env:BOF3X_MP3_DUMP	env	yes		src/audio/mp3.cpp:505	read in src/
 switch	env:BOF3X_MP3_DUMP_FILES	env	yes		src/audio/mp3.cpp:506	read in src/
-switch	env:BOF3X_MUSIC	launcher	yes		src/launcher/config.cpp:655 src/game/platform/music_seq.cpp:433 src/launcher/config.cpp:652 src/launcher/config.cpp:1774	read in src/, set by the launcher
+switch	env:BOF3X_MUSIC	launcher	yes		src/launcher/config.cpp:701 src/game/platform/music_seq.cpp:433 src/launcher/config.cpp:698 src/launcher/config.cpp:1839	read in src/, set by the launcher
 switch	env:BOF3X_MUSIC_LOG	env	yes		src/audio/sound_sdl.cpp:230 src/game/platform/sound_ours.cpp:76	read in src/
 switch	env:BOF3X_MUSIC_LOOPS	env	yes		src/game/platform/music_loops.cpp:36	read in src/
 switch	env:BOF3X_MW_TRACE	env	yes		src/game/menu/menu_windows_fuzz.cpp:985	read in src/
-switch	env:BOF3X_NO_FAIL	launcher	yes		src/launcher/config.cpp:708 src/game/core/cheats.cpp:150 src/launcher/config.cpp:707 src/launcher/config.cpp:1780	read in src/, set by the launcher
-switch	env:BOF3X_OFF	launcher	yes		src/launcher/config.cpp:605 src/hook/behaviour.cpp:102 src/hook/detour.cpp:65 src/hook/detour.cpp:121 src/launcher/config.cpp:604 src/launcher/config.cpp:614 src/launcher/config.cpp:616 src/launcher/config.cpp:633 src/launcher/config.cpp:1773	read in src/, set by the launcher
-switch	env:BOF3X_ON	launcher	yes		src/launcher/config.cpp:621 src/hook/behaviour.cpp:99 src/launcher/config.cpp:612 src/launcher/config.cpp:633 src/launcher/config.cpp:1773	read in src/, set by the launcher
-switch	env:BOF3X_OPT	launcher	yes		src/launcher/config.cpp:581 src/game/battle/dat_load.cpp:625 src/hook/exe_image.cpp:1018 src/launcher/config.cpp:532 src/launcher/config.cpp:654 src/launcher/config.cpp:1772	read in src/, set by the launcher
-switch	env:BOF3X_ORIGINAL	hosted-only	costly		src/hook/exe_host.cpp:85 src/launcher/launcher.cpp:68 src/hook/detour.cpp:50 src/hook/detour.cpp:121 src/hook/detour.cpp:414	read in src/, refused by bof3x.exe
-switch	env:BOF3X_PAD	launcher	yes		src/launcher/config.cpp:741 src/game/platform/d_input.cpp:202 src/game/platform/pad_read.cpp:100 src/launcher/config.cpp:738	read in src/, set by the launcher
+switch	env:BOF3X_NO_FAIL	launcher	yes		src/launcher/config.cpp:754 src/game/core/cheats.cpp:151 src/launcher/config.cpp:753 src/launcher/config.cpp:1845	read in src/, set by the launcher
+switch	env:BOF3X_OFF	launcher	yes		src/launcher/config.cpp:651 src/hook/behaviour.cpp:102 src/hook/detour.cpp:65 src/hook/detour.cpp:121 src/launcher/config.cpp:650 src/launcher/config.cpp:660 src/launcher/config.cpp:662 src/launcher/config.cpp:679 src/launcher/config.cpp:1838	read in src/, set by the launcher
+switch	env:BOF3X_ON	launcher	yes		src/launcher/config.cpp:667 src/hook/behaviour.cpp:99 src/launcher/config.cpp:658 src/launcher/config.cpp:679 src/launcher/config.cpp:1838	read in src/, set by the launcher
+switch	env:BOF3X_OPT	launcher	yes		src/launcher/config.cpp:627 src/game/battle/dat_load.cpp:626 src/hook/exe_image.cpp:1083 src/launcher/config.cpp:578 src/launcher/config.cpp:700 src/launcher/config.cpp:1837	read in src/, set by the launcher
+switch	env:BOF3X_ORIGINAL	hosted-only	costly		src/hook/exe_host.cpp:87 src/launcher/launcher.cpp:79 src/hook/detour.cpp:50 src/hook/detour.cpp:121 src/hook/detour.cpp:414	read in src/, refused by bof3x.exe
+switch	env:BOF3X_PAD	launcher	yes		src/launcher/config.cpp:787 src/game/platform/d_input.cpp:202 src/game/platform/pad_read.cpp:100 src/launcher/config.cpp:784	read in src/, set by the launcher
 switch	env:BOF3X_PAD_LAYOUT	env	yes		src/game/platform/d_input.cpp:185 src/game/platform/pad_read.cpp:83	read in src/
 switch	env:BOF3X_PILLARBOX	env	yes		src/game/platform/pillarbox.cpp:275	read in src/
 switch	env:BOF3X_PIXEL_OFFSET	env	yes		src/render/render_d3d11.cpp:333	read in src/
 switch	env:BOF3X_PM_ONLY	env	yes		src/game/core/mode_rest_fuzz.cpp:272	read in src/
 switch	env:BOF3X_POSELOG	env	yes		src/game/core/title.cpp:1627 src/game/field/sprite.cpp:249 src/game/platform/d3d_draw.cpp:115	read in src/
-switch	env:BOF3X_PRESENT	launcher	yes		src/launcher/config.cpp:667 src/launcher/config.cpp:666 src/launcher/config.cpp:1775 src/render/render_d3d11.cpp:154	read in src/, set by the launcher
-switch	env:BOF3X_PRESET	env	yes		src/game/battle/dat_load.cpp:885 src/launcher/config.cpp:1880 src/launcher/config.cpp:1931	read in src/
-switch	env:BOF3X_PSP	launcher	yes		src/launcher/config.cpp:599 src/game/core/psp_code.cpp:52 src/game/core/psp_code.cpp:148 src/launcher/config.cpp:598 src/launcher/config.cpp:1773	read in src/, set by the launcher
-switch	env:BOF3X_PYTHON	env	yes		src/launcher/sources_dialog.cpp:82	read in src/
+switch	env:BOF3X_PRESENT	launcher	yes		src/launcher/config.cpp:713 src/launcher/config.cpp:712 src/launcher/config.cpp:1840 src/render/render_d3d11.cpp:154	read in src/, set by the launcher
+switch	env:BOF3X_PRESET	env	yes		src/game/battle/dat_load.cpp:892 src/launcher/config.cpp:1945 src/launcher/config.cpp:1996	read in src/
+switch	env:BOF3X_PSP	launcher	yes		src/launcher/config.cpp:645 src/game/core/psp_code.cpp:52 src/game/core/psp_code.cpp:148 src/launcher/config.cpp:644 src/launcher/config.cpp:1838	read in src/, set by the launcher
+switch	env:BOF3X_PYTHON	env	yes		src/launcher/sources_dialog.cpp:85	read in src/
 switch	env:BOF3X_R0A_ONLY	env	yes		src/game/field/rest_0a_fuzz.cpp:325	read in src/
 switch	env:BOF3X_R1A_ONLY	env	yes		src/game/field/rest_1a_fuzz.cpp:534	read in src/
 switch	env:BOF3X_R1B_ONLY	env	yes		src/game/field/rest_1b_fuzz.cpp:423	read in src/
@@ -10387,8 +10388,8 @@ switch	env:BOF3X_R1C_ONLY	env	yes		src/game/field/rest_1c_fuzz.cpp:425	read in s
 switch	env:BOF3X_R1D_ONLY	env	yes		src/game/field/rest_1d_fuzz.cpp:405	read in src/
 switch	env:BOF3X_R1E_ONLY	env	yes		src/game/field/rest_1e_fuzz.cpp:385	read in src/
 switch	env:BOF3X_R1F_ONLY	env	yes		src/game/field/rest_1f_fuzz.cpp:487	read in src/
-switch	env:BOF3X_R1G_ONLY	env	yes		src/game/field/rest_1g_fuzz.cpp:603	read in src/
-switch	env:BOF3X_R1G_ROUNDS	env	yes		src/game/field/rest_1g_fuzz.cpp:615	read in src/
+switch	env:BOF3X_R1G_ONLY	env	yes		src/game/field/rest_1g_fuzz.cpp:604	read in src/
+switch	env:BOF3X_R1G_ROUNDS	env	yes		src/game/field/rest_1g_fuzz.cpp:616	read in src/
 switch	env:BOF3X_R2A_ONLY	env	yes		src/game/scenario/rest_2a_fuzz.cpp:332	read in src/
 switch	env:BOF3X_R2B_ONLY	env	yes		src/game/minigame/rest_2b_fuzz.cpp:454	read in src/
 switch	env:BOF3X_R2C_ONLY	env	yes		src/game/shop/rest_2c_fuzz.cpp:492	read in src/
@@ -10397,7 +10398,7 @@ switch	env:BOF3X_R2E_ONLY	env	yes		src/game/field/rest_2e_fuzz.cpp:387	read in s
 switch	env:BOF3X_R2F_ONLY	env	yes		src/game/field/rest_2f_fuzz.cpp:531	read in src/
 switch	env:BOF3X_R2G_ONLY	env	yes		src/game/menu/rest_2g_fuzz.cpp:408	read in src/
 switch	env:BOF3X_R2H_ONLY	env	yes		src/game/shop/rest_2h_fuzz.cpp:596	read in src/
-switch	env:BOF3X_R3A_ONLY	env	yes		src/game/battle/rest_3a_fuzz.cpp:433	read in src/
+switch	env:BOF3X_R3A_ONLY	env	yes		src/game/battle/rest_3a_fuzz.cpp:434	read in src/
 switch	env:BOF3X_R3B_ONLY	env	yes		src/game/effect/rest_3b_fuzz.cpp:457	read in src/
 switch	env:BOF3X_R3C_ONLY	env	yes		src/game/effect/rest_3c_fuzz.cpp:372	read in src/
 switch	env:BOF3X_R3D_ONLY	env	yes		src/game/effect/rest_3d_fuzz.cpp:391	read in src/
@@ -10412,89 +10413,89 @@ switch	env:BOF3X_R4D_ONLY	env	yes		src/game/community/rest_4d_fuzz.cpp:969 src/g
 switch	env:BOF3X_R4E_ONLY	env	yes		src/game/community/rest_4e_fuzz.cpp:480	read in src/
 switch	env:BOF3X_R4F_ONLY	env	yes		src/game/effect/rest_4f_fuzz.cpp:632	read in src/
 switch	env:BOF3X_R4F_ROUNDS	env	yes		src/game/effect/rest_4f_fuzz.cpp:644	read in src/
-switch	env:BOF3X_RECORD	env	yes		src/game/crt_rest.cpp:538 src/game/platform/function_keys_game.cpp:62 src/hook/input_script.cpp:1357	read in src/
-switch	env:BOF3X_RUBY_KEY	launcher	yes		src/launcher/config.cpp:594 src/game/platform/function_keys_game.cpp:51 src/launcher/config.cpp:593 src/launcher/config.cpp:1773	read in src/, set by the launcher
-switch	env:BOF3X_SATPIXIE	launcher	yes		src/launcher/config.cpp:672 src/launcher/config.cpp:669 src/render/satpixie.cpp:269	read in src/, set by the launcher
-switch	env:BOF3X_SCALE	launcher	yes		src/launcher/config.cpp:696 src/game/platform/display_setup.cpp:88 src/launcher/config.cpp:694 src/launcher/config.cpp:1778	read in src/, set by the launcher
-switch	env:BOF3X_SELFTEST_ONLY	env	yes		src/audio/sound_sdl.cpp:1239 src/game/menu/quick_menu.cpp:534 src/game/platform/sound_ours.cpp:1289 src/game/solo/solo_rows.h:61 src/hook/behaviour.cpp:127 src/hook/bind.cpp:415 src/hook/dllmain.cpp:51 src/hook/dllmain.cpp:64 src/hook/exe_host.cpp:639 src/hook/exe_host.cpp:650 src/hook/exe_image.cpp:587 src/hook/log.cpp:231 src/hook/snapshot.cpp:1203 src/hook/statehash.cpp:695 src/launcher/launcher.cpp:63 src/render/gfx_snapshot.cpp:447	read in src/
-switch	env:BOF3X_SHADOW	hosted-only	costly		src/hook/exe_host.cpp:88 src/launcher/launcher.cpp:68 src/hook/detour.cpp:357	read in src/, refused by bof3x.exe
-switch	env:BOF3X_SHOT_DIR	env	yes		src/hook/input_script.cpp:1383	read in src/
-switch	env:BOF3X_SHOT_EVERY	env	yes		src/hook/input_script.cpp:1389	read in src/
-switch	env:BOF3X_SHOT_WAIT	env	yes		src/hook/input_script.cpp:1399	read in src/
+switch	env:BOF3X_RECORD	env	yes		src/game/crt_rest.cpp:540 src/game/platform/function_keys_game.cpp:62 src/hook/input_script.cpp:1358	read in src/
+switch	env:BOF3X_RUBY_KEY	launcher	yes		src/launcher/config.cpp:640 src/game/platform/function_keys_game.cpp:51 src/launcher/config.cpp:639 src/launcher/config.cpp:1838	read in src/, set by the launcher
+switch	env:BOF3X_SATPIXIE	launcher	yes		src/launcher/config.cpp:718 src/launcher/config.cpp:715 src/render/satpixie.cpp:269	read in src/, set by the launcher
+switch	env:BOF3X_SCALE	launcher	yes		src/launcher/config.cpp:742 src/game/platform/display_setup.cpp:88 src/launcher/config.cpp:740 src/launcher/config.cpp:1843	read in src/, set by the launcher
+switch	env:BOF3X_SELFTEST_ONLY	env	yes		src/audio/sound_sdl.cpp:1239 src/game/menu/quick_menu.cpp:534 src/game/platform/sound_ours.cpp:1289 src/game/solo/solo_rows.h:61 src/hook/behaviour.cpp:127 src/hook/bind.cpp:415 src/hook/dllmain.cpp:51 src/hook/dllmain.cpp:64 src/hook/exe_host.cpp:624 src/hook/exe_host.cpp:635 src/hook/exe_image.cpp:644 src/hook/log.cpp:238 src/hook/snapshot.cpp:1213 src/hook/statehash.cpp:696 src/launcher/start.cpp:103 src/render/gfx_snapshot.cpp:447	read in src/
+switch	env:BOF3X_SHADOW	hosted-only	costly		src/hook/exe_host.cpp:90 src/launcher/launcher.cpp:79 src/hook/detour.cpp:357	read in src/, refused by bof3x.exe
+switch	env:BOF3X_SHOT_DIR	env	yes		src/hook/input_script.cpp:1384	read in src/
+switch	env:BOF3X_SHOT_EVERY	env	yes		src/hook/input_script.cpp:1390	read in src/
+switch	env:BOF3X_SHOT_WAIT	env	yes		src/hook/input_script.cpp:1400	read in src/
 switch	env:BOF3X_SIDE_DUP	env	yes		src/game/field/map_layers.cpp:128	read in src/
 switch	env:BOF3X_SIDE_ZERO	env	yes		src/game/field/map_layers.cpp:74	read in src/
-switch	env:BOF3X_SL_CONTROL	env	yes		src/game/platform/widescreen.cpp:233	read in src/
-switch	env:BOF3X_SNAP	launcher	yes		src/launcher/config.cpp:685 src/game/platform/display_setup.cpp:103 src/launcher/config.cpp:684 src/launcher/config.cpp:1776	read in src/, set by the launcher
-switch	env:BOF3X_SOLO	launcher	yes		src/launcher/config.cpp:634 src/game/solo/solo.cpp:192 src/launcher/config.cpp:632 src/launcher/config.cpp:1781	read in src/, set by the launcher
-switch	env:BOF3X_SPEED	env	yes		src/game/platform/magic_080.cpp:639 src/hook/wav_dump.cpp:716	read in src/
+switch	env:BOF3X_SL_CONTROL	env	yes		src/game/platform/widescreen.cpp:234	read in src/
+switch	env:BOF3X_SNAP	launcher	yes		src/launcher/config.cpp:731 src/game/platform/display_setup.cpp:103 src/launcher/config.cpp:730 src/launcher/config.cpp:1841	read in src/, set by the launcher
+switch	env:BOF3X_SOLO	launcher	yes		src/launcher/config.cpp:680 src/game/solo/solo.cpp:192 src/launcher/config.cpp:678 src/launcher/config.cpp:1846	read in src/, set by the launcher
+switch	env:BOF3X_SPEED	env	yes		src/game/platform/magic_080.cpp:648 src/hook/wav_dump.cpp:720	read in src/
 switch	env:BOF3X_STACKWATCH	env	yes		src/hook/stackwatch_posix.cpp:31 src/hook/stackwatch_win32.cpp:283 src/hook/stackwatch_win32.cpp:285	read in src/
 switch	env:BOF3X_STALLWATCH	env	yes		src/hook/stallwatch.cpp:200	read in src/
-switch	env:BOF3X_STATEHASH	env	yes		src/hook/gapwatch.cpp:861 src/hook/statehash.cpp:696 src/hook/statehash.cpp:794	read in src/
-switch	env:BOF3X_STATEHASH_DUMP	env	yes		src/hook/statehash.cpp:805	read in src/
-switch	env:BOF3X_STATEHASH_FOLD	env	yes		src/hook/statehash.cpp:707 src/hook/statehash.cpp:713	read in src/
-switch	env:BOF3X_STATEHASH_RAW	env	yes		src/hook/statehash.cpp:698	read in src/
-switch	env:BOF3X_STATEHASH_SKIP	env	yes		src/hook/statehash.cpp:800	read in src/
-switch	env:BOF3X_STEAL	launcher	yes		src/launcher/config.cpp:704 src/game/core/cheats.cpp:158 src/launcher/config.cpp:703 src/launcher/config.cpp:1779	read in src/, set by the launcher
+switch	env:BOF3X_STATEHASH	env	yes		src/hook/gapwatch.cpp:861 src/hook/statehash.cpp:697 src/hook/statehash.cpp:795	read in src/
+switch	env:BOF3X_STATEHASH_DUMP	env	yes		src/hook/statehash.cpp:806	read in src/
+switch	env:BOF3X_STATEHASH_FOLD	env	yes		src/hook/statehash.cpp:708 src/hook/statehash.cpp:714	read in src/
+switch	env:BOF3X_STATEHASH_RAW	env	yes		src/hook/statehash.cpp:699	read in src/
+switch	env:BOF3X_STATEHASH_SKIP	env	yes		src/hook/statehash.cpp:801	read in src/
+switch	env:BOF3X_STEAL	launcher	yes		src/launcher/config.cpp:750 src/game/core/cheats.cpp:159 src/launcher/config.cpp:749 src/launcher/config.cpp:1844	read in src/, set by the launcher
 switch	env:BOF3X_STPCENSUS	env	yes		src/hook/stp_census.cpp:128	read in src/
 switch	env:BOF3X_STPVIEW	env	yes		src/render/render_d3d11.cpp:925	read in src/
 switch	env:BOF3X_SWAP	env	yes		src/render/render_d3d11.cpp:911	read in src/
 switch	env:BOF3X_TEXPAGELOG	env	yes		src/game/platform/d3d.cpp:2589	read in src/
-switch	env:BOF3X_TEXT_SPEED	launcher	yes		src/launcher/config.cpp:676 src/game/text/msgbox.cpp:778 src/launcher/config.cpp:675 src/launcher/config.cpp:1775	read in src/, set by the launcher
+switch	env:BOF3X_TEXT_SPEED	launcher	yes		src/launcher/config.cpp:722 src/game/text/msgbox.cpp:778 src/launcher/config.cpp:721 src/launcher/config.cpp:1840	read in src/, set by the launcher
 switch	env:BOF3X_TEXTLOG	env	yes		src/game/text/text_draw.cpp:261	read in src/
-switch	env:BOF3X_TICK_BASE	env	yes		src/game/platform/game_clock.cpp:78	read in src/
+switch	env:BOF3X_TICK_BASE	env	yes		src/game/platform/game_clock.cpp:79	read in src/
 switch	env:BOF3X_TILE1	env	yes		src/game/platform/d3d.cpp:4001	read in src/
-switch	env:BOF3X_UNLEARNED_BLUE	launcher	yes		src/launcher/config.cpp:679 src/game/battle/battle_action.cpp:2286 src/launcher/config.cpp:678 src/launcher/config.cpp:1776	read in src/, set by the launcher
+switch	env:BOF3X_UNLEARNED_BLUE	launcher	yes		src/launcher/config.cpp:725 src/game/battle/battle_action.cpp:2286 src/launcher/config.cpp:724 src/launcher/config.cpp:1841	read in src/, set by the launcher
 switch	env:BOF3X_VSYNC	env	yes		src/game/platform/d3d.cpp:959	read in src/
-switch	env:BOF3X_WAV_DIR	env	yes		src/hook/wav_dump.cpp:678	read in src/
-switch	env:BOF3X_WAV_LABEL	env	yes		src/hook/wav_dump.cpp:685	read in src/
-switch	env:BOF3X_WIDE	launcher	yes		src/launcher/config.cpp:691 src/game/platform/widescreen.cpp:348 src/launcher/config.cpp:690 src/launcher/config.cpp:1776	read in src/, set by the launcher
-switch	env:BOF3X_WIDE_HIDE	env	yes		src/game/field/wide_staging.cpp:1114	read in src/
-switch	env:BOF3X_WIDE_INSET	env	yes		src/game/platform/widescreen.cpp:446	read in src/
+switch	env:BOF3X_WAV_DIR	env	yes		src/hook/wav_dump.cpp:682	read in src/
+switch	env:BOF3X_WAV_LABEL	env	yes		src/hook/wav_dump.cpp:689	read in src/
+switch	env:BOF3X_WIDE	launcher	yes		src/launcher/config.cpp:737 src/game/platform/widescreen.cpp:349 src/launcher/config.cpp:736 src/launcher/config.cpp:1841	read in src/, set by the launcher
+switch	env:BOF3X_WIDE_HIDE	env	yes		src/game/field/wide_staging.cpp:1115	read in src/
+switch	env:BOF3X_WIDE_INSET	env	yes		src/game/platform/widescreen.cpp:447	read in src/
 switch	env:BOF3X_WIDE_RING	env	yes		src/game/field/map_rim.cpp:682	read in src/
-switch	env:BOF3X_WIDE_STAGING	env	yes		src/game/field/wide_staging.cpp:1113	read in src/
-switch	env:BOF3X_WIDE_STAGING_LOG	env	yes		src/game/field/wide_staging.cpp:1103	read in src/
-switch	env:BOF3X_WIDE_TERRAIN	env	yes		src/game/platform/widescreen.cpp:431	read in src/
+switch	env:BOF3X_WIDE_STAGING	env	yes		src/game/field/wide_staging.cpp:1114	read in src/
+switch	env:BOF3X_WIDE_STAGING_LOG	env	yes		src/game/field/wide_staging.cpp:1104	read in src/
+switch	env:BOF3X_WIDE_TERRAIN	env	yes		src/game/platform/widescreen.cpp:432	read in src/
 switch	env:BOF3X_WRITEWATCH	env	yes		src/hook/windows_only.cpp:73 src/hook/write_watch.cpp:190	read in src/
-switch	env:BOF3X_ZENNY	launcher	yes		src/launcher/config.cpp:702 src/game/core/cheats.cpp:144 src/launcher/config.cpp:701 src/launcher/config.cpp:1778	read in src/, set by the launcher
-switch	ini:background	launcher	yes		src/launcher/config.cpp:244	ini key -> BOF3X_BACKGROUND
-switch	ini:cache	launcher	yes		src/launcher/config.cpp:225	ini key -> BOF3X_CACHE
-switch	ini:cheat.enemy_info	launcher	yes		src/launcher/config.cpp:308	ini key -> BOF3X_ENEMY_INFO
-switch	ini:cheat.exp	launcher	yes		src/launcher/config.cpp:296	ini key -> BOF3X_EXP,BOF3X_ZENNY
-switch	ini:cheat.learn	launcher	yes		src/launcher/config.cpp:314	ini key -> BOF3X_LEARN
-switch	ini:cheat.no_fail	launcher	yes		src/launcher/config.cpp:311	ini key -> BOF3X_NO_FAIL
-switch	ini:cheat.steal	launcher	yes		src/launcher/config.cpp:305	ini key -> BOF3X_STEAL
-switch	ini:cheat.zenny	launcher	yes		src/launcher/config.cpp:296	ini key -> BOF3X_EXP,BOF3X_ZENNY
-switch	ini:desert_faerie	launcher	yes		src/launcher/config.cpp:283	ini key -> BOF3X_DESERT_FAERIE
-switch	ini:display	launcher	yes		src/launcher/config.cpp:235	ini key
-switch	ini:ffmpeg	launcher	yes		src/launcher/config.cpp:227	ini key
-switch	ini:filter	launcher	yes		src/launcher/config.cpp:232	ini key -> BOF3X_FILTER
-switch	ini:fkey.	launcher	yes		src/launcher/config.cpp:321	ini key
-switch	ini:fpad.	launcher	yes		src/launcher/config.cpp:321	ini key
-switch	ini:interp	launcher	yes		src/launcher/config.cpp:289	ini key -> BOF3X_INTERP
-switch	ini:key.	launcher	yes		src/launcher/config.cpp:317	ini key -> BOF3X_KEYS
-switch	ini:language	launcher	yes		src/launcher/config.cpp:181	ini key -> BOF3X_LANG
-switch	ini:mods_off	launcher	yes		src/launcher/config.cpp:215	ini key -> BOF3X_OPT
-switch	ini:music	launcher	yes		src/launcher/config.cpp:229	ini key -> BOF3X_MUSIC
-switch	ini:off	launcher	yes		src/launcher/config.cpp:209	ini key -> BOF3X_OFF,BOF3X_ON
-switch	ini:on	launcher	yes		src/launcher/config.cpp:211	ini key -> BOF3X_ON
-switch	ini:opt	launcher	yes		src/launcher/config.cpp:202	ini key -> BOF3X_MUSIC,BOF3X_OPT
-switch	ini:pad.	launcher	yes		src/launcher/config.cpp:329	ini key -> BOF3X_PAD
-switch	ini:preset	launcher	yes		src/launcher/config.cpp:217	ini key
-switch	ini:psp	launcher	yes		src/launcher/config.cpp:207	ini key -> BOF3X_PSP
-switch	ini:renderer	launcher	yes		src/launcher/config.cpp:238	ini key
-switch	ini:ruby	launcher	yes		src/launcher/config.cpp:189	ini key -> BOF3X_OPT
-switch	ini:ruby_key	launcher	yes		src/launcher/config.cpp:192	ini key -> BOF3X_RUBY_KEY
-switch	ini:ruby_ui	launcher	yes		src/launcher/config.cpp:196	ini key
-switch	ini:satpixie.	launcher	yes		src/launcher/config.cpp:252	ini key -> BOF3X_SATPIXIE
-switch	ini:scale	launcher	yes		src/launcher/config.cpp:333	ini key -> BOF3X_SCALE
-switch	ini:screen	launcher	yes		src/launcher/config.cpp:247	ini key -> BOF3X_PRESENT,BOF3X_SATPIXIE
-switch	ini:show_launcher	launcher	yes		src/launcher/config.cpp:241	ini key
-switch	ini:snap	launcher	yes		src/launcher/config.cpp:286	ini key -> BOF3X_SNAP
-switch	ini:solo.champion	launcher	yes		src/launcher/config.cpp:213	ini key -> BOF3X_SOLO
-switch	ini:text_speed	launcher	yes		src/launcher/config.cpp:277	ini key -> BOF3X_TEXT_SPEED
-switch	ini:unlearned_blue	launcher	yes		src/launcher/config.cpp:280	ini key -> BOF3X_UNLEARNED_BLUE
-switch	ini:wide	launcher	yes		src/launcher/config.cpp:292	ini key -> BOF3X_WIDE
-switch	lang	launcher	yes		src/launcher/config.cpp:181	the language box (ini:language -> BOF3X_LANG)
+switch	env:BOF3X_ZENNY	launcher	yes		src/launcher/config.cpp:748 src/game/core/cheats.cpp:145 src/launcher/config.cpp:747 src/launcher/config.cpp:1843	read in src/, set by the launcher
+switch	ini:background	launcher	yes		src/launcher/config.cpp:246	ini key -> BOF3X_BACKGROUND
+switch	ini:cache	launcher	yes		src/launcher/config.cpp:227	ini key -> BOF3X_CACHE
+switch	ini:cheat.enemy_info	launcher	yes		src/launcher/config.cpp:310	ini key -> BOF3X_ENEMY_INFO
+switch	ini:cheat.exp	launcher	yes		src/launcher/config.cpp:298	ini key -> BOF3X_EXP,BOF3X_ZENNY
+switch	ini:cheat.learn	launcher	yes		src/launcher/config.cpp:316	ini key -> BOF3X_LEARN
+switch	ini:cheat.no_fail	launcher	yes		src/launcher/config.cpp:313	ini key -> BOF3X_NO_FAIL
+switch	ini:cheat.steal	launcher	yes		src/launcher/config.cpp:307	ini key -> BOF3X_STEAL
+switch	ini:cheat.zenny	launcher	yes		src/launcher/config.cpp:298	ini key -> BOF3X_EXP,BOF3X_ZENNY
+switch	ini:desert_faerie	launcher	yes		src/launcher/config.cpp:285	ini key -> BOF3X_DESERT_FAERIE
+switch	ini:display	launcher	yes		src/launcher/config.cpp:237	ini key
+switch	ini:ffmpeg	launcher	yes		src/launcher/config.cpp:229	ini key
+switch	ini:filter	launcher	yes		src/launcher/config.cpp:234	ini key -> BOF3X_FILTER
+switch	ini:fkey.	launcher	yes		src/launcher/config.cpp:323	ini key
+switch	ini:fpad.	launcher	yes		src/launcher/config.cpp:323	ini key
+switch	ini:interp	launcher	yes		src/launcher/config.cpp:291	ini key -> BOF3X_INTERP
+switch	ini:key.	launcher	yes		src/launcher/config.cpp:319	ini key -> BOF3X_KEYS
+switch	ini:language	launcher	yes		src/launcher/config.cpp:183	ini key -> BOF3X_LANG
+switch	ini:mods_off	launcher	yes		src/launcher/config.cpp:217	ini key -> BOF3X_OPT
+switch	ini:music	launcher	yes		src/launcher/config.cpp:231	ini key -> BOF3X_MUSIC
+switch	ini:off	launcher	yes		src/launcher/config.cpp:211	ini key -> BOF3X_OFF,BOF3X_ON
+switch	ini:on	launcher	yes		src/launcher/config.cpp:213	ini key -> BOF3X_ON
+switch	ini:opt	launcher	yes		src/launcher/config.cpp:204	ini key -> BOF3X_MUSIC,BOF3X_OPT
+switch	ini:pad.	launcher	yes		src/launcher/config.cpp:331	ini key -> BOF3X_PAD
+switch	ini:preset	launcher	yes		src/launcher/config.cpp:219	ini key
+switch	ini:psp	launcher	yes		src/launcher/config.cpp:209	ini key -> BOF3X_PSP
+switch	ini:renderer	launcher	yes		src/launcher/config.cpp:240	ini key
+switch	ini:ruby	launcher	yes		src/launcher/config.cpp:191	ini key -> BOF3X_OPT
+switch	ini:ruby_key	launcher	yes		src/launcher/config.cpp:194	ini key -> BOF3X_RUBY_KEY
+switch	ini:ruby_ui	launcher	yes		src/launcher/config.cpp:198	ini key
+switch	ini:satpixie.	launcher	yes		src/launcher/config.cpp:254	ini key -> BOF3X_SATPIXIE
+switch	ini:scale	launcher	yes		src/launcher/config.cpp:335	ini key -> BOF3X_SCALE
+switch	ini:screen	launcher	yes		src/launcher/config.cpp:249	ini key -> BOF3X_PRESENT,BOF3X_SATPIXIE
+switch	ini:show_launcher	launcher	yes		src/launcher/config.cpp:243	ini key
+switch	ini:snap	launcher	yes		src/launcher/config.cpp:288	ini key -> BOF3X_SNAP
+switch	ini:solo.champion	launcher	yes		src/launcher/config.cpp:215	ini key -> BOF3X_SOLO
+switch	ini:text_speed	launcher	yes		src/launcher/config.cpp:279	ini key -> BOF3X_TEXT_SPEED
+switch	ini:unlearned_blue	launcher	yes		src/launcher/config.cpp:282	ini key -> BOF3X_UNLEARNED_BLUE
+switch	ini:wide	launcher	yes		src/launcher/config.cpp:294	ini key -> BOF3X_WIDE
+switch	lang	launcher	yes		src/launcher/config.cpp:183	the language box (ini:language -> BOF3X_LANG)
 entry	DIV-0001					tier Intent; kind unparsed; Reversible? is 827 characters: read it by hand
 entry	DIV-0002	detour	costly	Save_WriteFile		tier Intent; kind detour
 entry	DIV-0003	detour	costly	File_OpenWrite		tier Intent; kind detour
@@ -10735,3 +10736,5 @@ entry	DIV-0237	detour	costly	Game_WinMain		tier Intent; kind detour
 entry	DIV-0238	code,detour,launcher	yes	WindowSdl, env:BOF3X_OFF, ini:off		tier Sensible; kind mixed
 entry	DIV-0239	code,detour,launcher	yes	KeyboardSdl, env:BOF3X_OFF, ini:off		tier Sensible; kind mixed
 entry	DIV-0240	launcher	yes	env:BOF3X_FKEYS		tier Sensible; kind launcher
+entry	DIV-0241	env	yes	env:BOF3X_EXEFILE		tier Sensible; kind launcher
+entry	DIV-0242	env	yes	env:BOF3X_EXEFILE		tier Sensible; kind launcher
