@@ -1,11 +1,16 @@
 # One launcher for Windows and Linux: what it would take
 
-**Status:** PROPOSED (2026-11-19, measured at `main` `8cd45199`; nothing built).
+**Status:** IN PROGRESS (2026-11-20: stage P0 is in `main`, the Linux
+round's group C7; stage P1, the frame, is built on the branch
+`launcher/p1-frame` and waits for the owner's look, section 9; stages P2 to
+P6 are not started. Sections 1 to 8 are the staging of 2026-11-19, measured
+at `main` `8cd45199`.)
 An estimate and a staging for the owner's question "a launcher that works on
 either Windows or Linux". It is tier 3 of [`linux-round.md`](linux-round.md)
 (section 5, stand-in 3; section 8) and IDEAS I69. Stage P0 below is also
 group C7 of that round's staging and is needed for any native Linux build.
-Stages P1 to P6 wait for the owner's four calls in section 7.
+Of the owner's four calls in section 7, calls 1 and 4 are answered; calls 2
+and 3 are open.
 
 Every count was made by the command beside it. What was not measured is in
 section 8. The licence remarks in section 4 are a reading, not advice, and
@@ -208,6 +213,9 @@ player can use with no text file. P5 can follow.**
    P0 (the Linux round's group C7) hands back.
 2. **The look.** A mock-up from the owner, as the title page had, or the
    first capture of P1 as the starting point for words.
+   **Open (2026-11-20):** the first captures are made (section 9). With the
+   look goes the font: which font ships for the text and which for the
+   banner (section 9, "The fonts").
 3. **The Win32 dialogs after P6.** Proposed: removed in the release that
    ships the new launcher, since two sets of pages is way C's cost. The
    other answer: kept one release behind a switch, as the keyboard's proof
@@ -215,6 +223,8 @@ player can use with no text file. P5 can follow.**
 4. **When.** P0 runs with the Linux round (its C7). Proposed for the rest:
    after that round's first native release, so a Linux player can test the
    pages where they are needed. It does not gate that release.
+   **Answered (the owner, 2026-11-20):** now. The owner asked for the work
+   to begin before that release.
 
 ## 8. Not measured
 
@@ -236,3 +246,150 @@ player can use with no text file. P5 can follow.**
   ways E and F take it away and way D keeps it.
 - The licences of the candidate fonts and of each library in section 4,
   against their own texts.
+
+## 9. Stage P1 as run (2026-11-20, branch `launcher/p1-frame`)
+
+**What is built.** A second executable, `bof3x-launcher-ui`, beside the
+player's launcher: the title page (the picture, the banner, Play, Configure,
+Jukebox, Exit) and Configure's six tabs with their sub-tabs and third rows,
+as [`launcher-settings.md`](launcher-settings.md) 2a places them. **Play
+starts the game** by the steps of stage P0 (`launcher/start.h`), with
+`bof3x.ini` as it is: no page changes a setting yet. It does not make an
+install (the Sources page is P4's; it stops with a sentence that names
+`bof3x-launcher`) and does not run the Win32 launcher's check for an install
+of an older release. The Jukebox and the save editor's button are shown grey
+with the reason, and each page of Configure but one says it is not in this
+launcher yet. The one page is a **sample of every widget** in the Settings
+page's arrangement (`sample_page.cpp`), for the look; it changes no setting
+and goes when P2 writes Settings. No release ships the executable
+(`tools/make_release.py` names its files).
+
+**The files** (`src/launcher/ui/`, 1,549 lines with `tools/embed_file.py`;
+the staging said about 900):
+
+| File | What |
+|---|---|
+| `ui.h` | The widgets the pages are written against, with no library named: the window, a frame, 11 widgets, a group and an area, the picture and the banner's text, a message, the file and folder pickers. Places are the picture's pixels, as the Win32 window's |
+| `ui_imgui.cpp` | `ui.h` drawn by Dear ImGui on SDL3's renderer. The only file that includes Dear ImGui (section 4, "why not F first") |
+| `frame.h`, `frame.cpp` | The title page and Configure's rows, with `config_dialog.cpp`'s numbers |
+| `sample_page.cpp` | The sample |
+| `main.cpp` | The arguments, the start's steps, the loop, `--capture` and `--keys` |
+| `assets.h` | The picture and the text font, built in as byte arrays by `tools/embed_file.py` |
+
+**Measured** (each by the command of this section's last paragraph, or the
+one beside it):
+
+- **It builds and runs at both Windows widths and on Linux.** 32-bit and
+  64-bit llvm-mingw (clang 22.1.8): 24.2 MB and 26.9 MB with debug
+  information, against the Win32 launcher's 28.1 MB in the same 32-bit
+  build. In the WSL (Ubuntu 26.04, clang 21.1.8), `cmake --preset
+  linux-x86_64 -DSDL_X11_XTEST=OFF` and the target `bof3x_launcher_ui`: an
+  18.8 MB ELF, linked at the first try. (`-DSDL_X11_XTEST=OFF` is this WSL's
+  need: it has no `libxtst-dev`. SDL found X11 there and not Wayland.) So
+  section 8's first line is measured for the three builds.
+- **A page's picture with no screen.** `--capture FILE.png --page NAME`
+  draws the face in a hidden window and writes the frame as SDL read it
+  back. The title page from the 64-bit build equals the 32-bit build's byte
+  for byte. On Linux it works under X11 (WSLg), under SDL's `offscreen`
+  video driver and under its `dummy` one.
+- **The keyboard and the pad with no hands.** `--keys LIST` presses keys and
+  pad buttons before the capture, and the line on stdout says the face and
+  what the window asked. On Windows and in the WSL alike: Enter, Space, the
+  pad's cross and Start on the title page ask Play; Escape and the circle
+  ask Exit; the arrows and the d-pad move through the buttons, the tabs, the
+  sub-tabs and the sample's controls; a grey button is passed over; Escape
+  and the circle on Configure go back to the title page; Start on Configure
+  asks Play. One difference from the Win32 window, kept: Enter uses the
+  control that has the focus, so on Configure it is not Play (the Win32
+  window makes Enter Play on either face).
+- **Play, through the window on the screen.** `BOF3X_SELFTEST_ONLY=1
+  BOF3X_EXEFILE=1 bof3x-launcher-ui --game <main>\bof3 --keys enter` from an
+  ini-less launcher copy: the window opened, Enter was Play, the game ran its
+  self-tests and the launcher ended with its exit code, 0 (`self-test only:
+  done` in `bof3x.log`).
+- **The banner's size is the Win32 one's.** At scale 1 its ink ends at
+  x = 434; the same four runs measured in Palatino Linotype by Pillow end at
+  435.9. Dear ImGui sizes a font by its line and the Win32 launcher by its
+  em, so `ui_imgui.cpp` reads each font's `hhea` and `head` tables and the
+  pages keep the em numbers.
+- **The renderer on Windows must not be SDL's software one.** Timed over
+  about 1,000 frames in a hidden window: the software renderer costs 12 to
+  15 ms a frame at 640 x 480 and 30 to 44 ms at 1280 x 960; SDL's Direct3D 11
+  renderer costs 0.35 to 0.43 ms. So the build turns SDL's Direct3D 11
+  renderer on. `SDL_DIRECTX`, which it needs, would also add SDL's
+  DirectSound output and DirectInput pad driver to the game (DIV-0201,
+  DIV-0050): `CMakeLists.txt` answers SDL's four header questions itself so
+  they are not taken in, and stops the configure if SDL's own variables say
+  one was. SDL's lists of audio and joystick drivers are the same before and
+  after (`disk dummy wasapi`; `hidapi rawinput virtual wgi xinput`), read
+  from the configure of this branch and of `main` `c7209fc2` side by side.
+  On Linux the renderer is SDL's Vulkan one (already on for DXVK), with the
+  software one when there is no display.
+- **The software renderer loses long thin lines.** With Dear ImGui's
+  textured lines, a group box's edges 300 pixels long were not drawn by
+  SDL's software renderer (a box at a whole pixel; the one beside it at a
+  half pixel was drawn). `AntiAliasedLinesUseTex` is off for that reason: the
+  software renderer is still what a Linux machine with no Vulkan gets.
+- **An idle window.** The loop waits for an event when nothing moves.
+  Software renderer: 0.14 s of processor time in 5 s idle, 21 MB working
+  set. Not measured again with Direct3D 11.
+- **What the game's build gains.** SDL is one static library for the game
+  and the launchers, so the renderer is now in `bof3x.dll` too, never
+  called: 92.6 MB against 90.1 MB with debug information, the same source
+  built with `main`'s SDL options (a worktree at `c7209fc2`). Not measured
+  stripped. With the new DLL the exe host's self-tests end 0 and
+  `attract_run.py --minutes 2` ran 3,596 logic frames in 120 s with SDL's
+  window and sound output up. The routes and the state hash were not run:
+  no file of the game's own changed.
+- **The gates.** `os_census.py --check` and `--boundary`, `width_census.py
+  --check`, `data_census.py --check`, `reloc_census.py --check`,
+  `reloc_bare.py --check`, `tu_census.py --check --strict`, `ledger_check.py`,
+  `ledger_registry.py --check`, and in the WSL `linux_tree.py --check`: ok. Two were not
+  ok at first, and why is a rule for P2 to P5: **a widget call must not be
+  named as an engine accessor is** (the first name of `ui::Place` was `At`,
+  which the typed-data census reads as a raw read of game memory), **and a
+  colour is written as red, green and blue, not as one hexadecimal number**
+  (two of the look's colours were numbers inside the image's address range,
+  and the census took them for addresses; `CLAUDE.md` rule 3).
+
+**The fonts** (call 2). The text is Droid Sans (Apache 2.0), from Dear
+ImGui's own tree: 871 code points, Latin, Greek and Cyrillic, no Japanese
+or Chinese (`fontTools`, the font's `cmap`). The banner is Palatino Linotype
+read from the system's fonts folder where `WINDIR` names one, and Droid Sans
+where it does not: the Linux captures show the banner in Droid Sans. That is
+a stand-in until the owner chooses, since a Windows font cannot ship. What
+the owner is asked: a font for the banner that may ship (a Palatino-like
+face under a free licence, or the banner as a picture made once), and
+whether Droid Sans stays the text font. The Jukebox's titles and a save's
+names need Japanese before P5. Text is drawn by Dear ImGui's own rasteriser
+(stb_truetype), with no hinting: at scale 1 it is softer than the Win32
+launcher's ClearType text. FreeType would sharpen it and is one more
+library; not tried.
+
+**Not run, not built.**
+
+- **The owner's eye**: the look, on the captures. Nothing of P2 to P5 starts
+  on a look that may be refused (section 6).
+- A hand on the window: the mouse, a real pad, a real keyboard. Every key
+  check above went through `--keys`, which gives Dear ImGui the key and not
+  SDL the event.
+- The window on a display scaled other than 100 %: `--scale 1.5` and
+  `--scale 2` captures are right, and the scale read from the display
+  (`SDL_GetDisplayContentScale`) was not seen at another value.
+- The message box and the file and folder pickers (`ui::Message`,
+  `ui::PickFile`, `ui::PickFolder`): written over SDL's, compiled, and not
+  shown once. A refusal of the start shows the message box, so **an
+  unattended run of `bof3x-launcher-ui` that can be refused shows a modal
+  window** (the same trap as the Win32 launcher's, `HANDOFF.md`).
+- A Deck, gamescope, Wayland, the on-screen keyboard.
+- Windows Defender's verdict on the new executable outside the excluded
+  folders.
+- `config_tests` and `dialog_test.py` were not run: no file they test
+  changed, and the Win32 launcher's sources are as they were.
+
+**How to run it.** `cmake --build build --target bof3x_launcher_ui`, then
+`build/bof3x-launcher-ui.exe --capture out.png --page settings` (pages:
+`title`, `settings`, `controls`, `music`, `game`, `mods`, `data`; `--sub N`
+and `--sheet N` for a tab's sub-tab and its page; `--scale 2`; `--keys
+right,enter`). With no `--capture` it opens the window; it wants
+`bof3x.exe` beside it and finds the game as `bof3x-launcher` does.

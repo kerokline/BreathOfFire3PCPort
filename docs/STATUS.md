@@ -8,6 +8,17 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
+**The drawn launcher's frame, 2026-11-20 (stage P1 of [`launcher-portable.md`](launcher-portable.md), IDEAS I69; on the local
+branch `launcher/p1-frame`, not merged to `main`, not pushed).** Asked by the owner that morning. A second executable,
+`bof3x-launcher-ui`, drawn by Dear ImGui `v1.92.9b` on SDL3's renderer ([`THIRD_PARTY.md`](THIRD_PARTY.md) section 6): the
+title page, Configure's tabs and rows, Play through stage P0's start, and a sample page of every widget for the look. The
+pages are written against `src/launcher/ui/ui.h`, which names no library. It builds and runs at both Windows widths and
+in the WSL; a page is captured and its keyboard and pad checked with no screen (`--capture`, `--keys`). SDL's 2D renderer
+(Direct3D 11 on Windows, 0.4 ms a frame where the software one cost 12 to 44) and file dialog are now built, with SDL's audio
+and pad drivers as before; `bof3x.dll` is 2.5 MB larger for it, and its self-tests and a two-minute attract run pass.
+**Owed: the owner's look** (the captures, and a font for the banner and the text that may ship); stages P2 to P6. Not
+run: a hand on the window, a scaled display, the message box and the pickers, a Deck. The document's section 9 is the record.
+
 **`BOF3.exe` out of the player's run, 2026-11-19 (the exe-retire round, IDEAS I70; on the local branch `exe-retire/round`,
 not merged to `main`, not pushed).** Asked by the owner the same day: "remove the original exe from any post-install player
 usage". After an install is made, nothing a player runs opens `BOF3.exe` (DIV-0242): `.data` is the cache's image on every

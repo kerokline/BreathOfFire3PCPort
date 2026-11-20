@@ -65,6 +65,11 @@ the pad through the same code the game does (`src/input/pad_sdl.cpp`), and
 the dialogs take the pad as navigation. Still one 32-bit executable with no
 DLL beside it; 9 MB where it was 1.
 
+**Since 2026-11-19 this choice is being replaced** (the owner's call: one launcher for Windows and Linux,
+drawn by Dear ImGui on SDL3; [`launcher-portable.md`](launcher-portable.md), whose section 4 says what changed
+since the paragraph below, and whose section 9 is the first stage as built). The Win32 dialogs stay the
+player's launcher until that document's stage P6.
+
 Considered and rejected: **Dear ImGui** (MIT, so vendorable — but it needs its
 own window and render backend, and looks non-native); **Qt / wxWidgets** (LGPL
 and a large redistributable — friction on the commercial path,

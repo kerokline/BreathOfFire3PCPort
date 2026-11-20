@@ -113,7 +113,13 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      stale, and so is the second backend as tier 2's gate in the line below (call 1 chose DXVK-native). Found for the staging:
      nothing on Linux reads `bof3x.ini`, the seam starts no process, the movie's picture is a `Fatal` off Windows, LB8 did
      not run, and no Windows 64-bit state-hash reference is recorded. **A launcher for both systems** is estimated in
-     [`launcher-portable.md`](launcher-portable.md) (IDEAS I69); its stage P0 is the round's group C7.
+     [`launcher-portable.md`](launcher-portable.md) (IDEAS I69); its stage P0 is the round's group C7. **Its stage P1, the frame, is built
+     (2026-11-20, branch `launcher/p1-frame`, local): `bof3x-launcher-ui`, Dear ImGui on SDL3, its section 9.** Next there:
+     the owner's look off the captures (`build/bof3x-launcher-ui.exe --capture out.png --page settings`) and the font
+     call; then P2 to P5 as five groups side by side over `src/launcher/ui/ui.h`, each page's proof the settings file it
+     writes against the Win32 dialog's. Two rules the gates taught: no widget call named as an engine accessor is (`At`),
+     and a colour as red, green and blue, never one hexadecimal number. An unattended run of it that the start can
+     refuse shows a modal message box.
    - **`BOF3.exe` out of the player's run: groups X1 to X6 built on the local branch `exe-retire/round` (2026-11-19), not
      merged to `main`, not pushed:** [`exe-retire-round.md`](exe-retire-round.md) "As run", IDEAS I70, DIV-0241, DIV-0242,
      DIV-0212 amended, D432. A player's start reads no `BOF3.exe`; a PC folder with no image is set up in place first.

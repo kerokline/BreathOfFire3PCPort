@@ -1,6 +1,6 @@
 # Third-party code carried in this repository
 
-**Status:** CURRENT (2026-11-11)
+**Status:** CURRENT (2026-11-20)
 
 `CLAUDE.md` rule 5 keeps this list short: nothing copyleft, nothing whose
 terms we could not grant on at a handoff ([`LICENSING.md`](LICENSING.md)
@@ -66,6 +66,10 @@ at the tag `release-3.4.16` at configure time and builds its joystick and
 gamepad layers (no video, audio or render) as a static library into
 `bof3x.dll` and, since the same day, into `bof3x-launcher.exe`;
 `src/input/pad_sdl.cpp` is the one file that includes it.
+(Since then the build takes more of SDL: its audio for the sound output,
+DIV-0201; its video for the game's window, the Linux round; and since
+2026-11-20 its 2D renderer and file dialog, for the drawn launcher of
+section 6. `CMakeLists.txt` says which parts and why.)
 Nothing of SDL is copied into this repository. SDL is offered under the zlib
 licence, whose notice, taken from the repository's `LICENSE.txt` on
 2026-09-24, is:
@@ -270,3 +274,53 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## 6. Dear ImGui and Droid Sans (the drawn launcher, `bof3x-launcher-ui`)
+
+`CMakeLists.txt` fetches [ocornut/imgui](https://github.com/ocornut/imgui) at
+the tag `v1.92.9b` (commit `f1cc2ae1`) at configure time, as it fetches SDL3,
+and compiles its four core files, its `std::string` helper and its two SDL3
+backends into a static library that only the drawn launcher links
+([`launcher-portable.md`](launcher-portable.md), stage P1; the owner's call
+of 2026-11-19). `src/launcher/ui/ui_imgui.cpp` is the one file that includes
+it. Nothing of Dear ImGui is copied into this repository, and no release
+ships the drawn launcher yet (stage P6 is the cutover). Dear ImGui is MIT; its
+notice, from the tag's `LICENSE.txt`:
+
+```
+The MIT License (MIT)
+
+Copyright (c) 2014-2026 Omar Cornut
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+**Droid Sans.** The drawn launcher's text font is `misc/fonts/DroidSans.ttf`
+from the same fetched tree, built into the executable as a byte array at
+build time (`tools/embed_file.py`); the file is not copied into this
+repository. Dear ImGui's `docs/FONTS.md` gives it as "DroidSans.ttf, by Steve
+Matteson, Apache License 2.0". **Owed before a release ships the drawn
+launcher:** the Apache License 2.0's text beside the executable (its section
+4 asks for a copy of the licence with a redistribution), and the font's own
+notice read from the font file. Which font ships, for the text and for the
+banner, is the owner's call ([`launcher-portable.md`](launcher-portable.md)
+section 7, call 2): Droid Sans is the first proposal, taken because it came
+with the library and needed no other download. It holds no Japanese or
+Chinese: the pages that show such text (the Jukebox's titles, a save's
+names) need a font that does before stage P5.
