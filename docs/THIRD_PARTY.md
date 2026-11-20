@@ -319,8 +319,80 @@ Matteson, Apache License 2.0". **Owed before a release ships the drawn
 launcher:** the Apache License 2.0's text beside the executable (its section
 4 asks for a copy of the licence with a redistribution), and the font's own
 notice read from the font file. Which font ships, for the text and for the
-banner, is the owner's call ([`launcher-portable.md`](launcher-portable.md)
-section 7, call 2): Droid Sans is the first proposal, taken because it came
-with the library and needed no other download. It holds no Japanese or
+banner, was the owner's call ([`launcher-portable.md`](launcher-portable.md)
+section 7, call 2): Droid Sans stays the text font (the owner, 2026-11-20),
+and the banner's font is section 7's. It holds no Japanese or
 Chinese: the pages that show such text (the Jukebox's titles, a save's
 names) need a font that does before stage P5.
+
+## 7. TeX Gyre Pagella (the drawn launcher's banner)
+
+[`third_party/tex-gyre-pagella/`](../third_party/tex-gyre-pagella) holds
+`texgyrepagella-regular.otf`, version 2.609 (31 March 2026), byte for byte
+from the OpenType archive on [GUST's page of the
+font](https://www.gust.org.pl/projects/e-foundry/tex-gyre/pagella) (sha256
+`5dcecb4f...538e100f`, in full in the folder's `README-bof3x.txt`), with the
+family's manifest, the GUST Font License and the LPPL 1.3c text beside it.
+The drawn launcher draws its banner with it, in place of the Win32 launcher's
+Palatino Linotype, which is Windows' font and cannot ship (the owner's
+choice, 2026-11-20; [`launcher-portable.md`](launcher-portable.md) section
+9). The build writes the file into `bof3x-launcher-ui` as a byte array
+(`tools/embed_file.py`).
+
+The font is offered under the GUST Font License, whose text is:
+
+```
+% This is version 1.0, dated 22 June 2009, of the GUST Font License.
+% (GUST is the Polish TeX Users Group, https://www.gust.org.pl)
+%
+% For the most recent version of this license see
+% https://www.gust.org.pl/fonts/licenses/GUST-FONT-LICENSE.txt
+% or
+% https://tug.org/fonts/licenses/GUST-FONT-LICENSE.txt
+%
+% This work may be distributed and/or modified under the conditions
+% of the LaTeX Project Public License, either version 1.3c of this
+% license or (at your option) any later version.
+% 
+% Please also observe the following clause:
+% 1) it is requested, but not legally required, that derived works be
+%    distributed only after changing the names of the fonts comprising this
+%    work and given in an accompanying "manifest", and that the
+%    files comprising the Work, as listed in the manifest, also be given
+%    new names. Any exceptions to this request are also given in the
+%    manifest.
+%    
+%    We recommend the manifest be given in a separate file named
+%    MANIFEST-<fontid>.txt, where <fontid> is some unique identification
+%    of the font family. If a separate "readme" file accompanies the Work, 
+%    we recommend a name of the form README-<fontid>.txt.
+%
+% The latest version of the LaTeX Project Public License is in
+% https://www.latex-project.org/lppl.txt and version 1.3c or later
+% is part of all distributions of LaTeX version 2006/05/20 or later.
+```
+
+**What the licence asks, as this project reads it** (a reading, not advice;
+the LPPL 1.3c's text is in the folder):
+
+- The LPPL's clause 2 counts the distribution of a part of the Work as a
+  modification. The Work is the whole family that the manifest lists, and
+  this repository and the launcher carry one file of it. So both carry a
+  Derived Work, under clause 6.
+- Clause 6 asks, for that: a prominent notice of what was changed (6b), no
+  suggestion that the authors support the copy (6c), and the whole
+  unchanged Work or where to get it (6d). `README-bof3x.txt` in the folder
+  says the three. Clause 6a (a changed component names itself as changed
+  when it is used with its Base Interpreter) is about use with TeX; the
+  file is unchanged and keeps its name.
+- The GUST licence's own clause asks, and does not require, that a derived
+  work's fonts take new names. The file is unchanged, so it keeps its name.
+- Clause 11: the licence puts no condition on works that are not the Work,
+  or on putting them together with it. It asks nothing of the launcher's
+  own code. That is why it is here under `CLAUDE.md` rule 5: it is not a
+  copyleft over the program, and what it asks travels with the font file
+  as a notice does.
+
+**Owed before a release ships the drawn launcher:** the folder's four text
+files beside the executable (the licence, the LPPL text, the manifest, the
+README), since the release then distributes the font inside the program.

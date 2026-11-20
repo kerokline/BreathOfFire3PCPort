@@ -6,8 +6,6 @@
 #include "launcher/ui/ui.h"
 
 #include "launcher/ui/assets.h"
-#include "os/env.h"
-#include "os/text.h"
 
 #include <SDL3/SDL.h>
 
@@ -68,7 +66,7 @@ struct State {
     bool imgui = false, hidden = false, closed = false;
     float scale = 1.0f;
     FaceFont faces[2];
-    std::vector<unsigned char> banner_file;   // the banner font's bytes: Dear ImGui reads them for as long as it lives
+    std::vector<unsigned char> banner_file;   // --banner-font's bytes: Dear ImGui reads them for as long as it lives
     std::vector<Picture*> pictures;
     Next next;
     int wake = 0;             // frames still to draw without waiting
@@ -120,25 +118,11 @@ ImFont* AddFont(const unsigned char* bytes, std::size_t size, FaceMetrics* metri
                                                       &cfg);
 }
 
-// The banner's type. The Win32 launcher draws it in Palatino Linotype, "which
-// every Windows install has" (docs/launcher-settings.md 2a), and no font is
-// the same on both systems: which font ships for the banner is the owner's to
-// choose (docs/launcher-portable.md section 7, call 2). Until then the banner
-// is in the system's Palatino Linotype where the system has it, by the
-// WINDIR variable and so with no system named here, and in the text font
-// where it has not. OpenOptions::banner_font names another file, to try one.
-bool ReadBannerFile(const char* named) {
-    std::string path;
-    if (named) {
-        path = named;
-    } else {
-    wchar_t dir[512];
-    const unsigned n = bof3::os::GetEnvW(L"WINDIR", dir, 512);
-    if (n == 0 || n >= 512) return false;
-    path = bof3::os::ToUtf8((std::wstring(dir) + L"/Fonts/pala.ttf").c_str());
-    }
+// A font file for the banner in place of the built-in one, to try a font
+// (OpenOptions::banner_font; main.cpp --banner-font).
+bool ReadBannerFile(const char* path) {
     std::size_t size = 0;
-    void* data = SDL_LoadFile(path.c_str(), &size);
+    void* data = SDL_LoadFile(path, &size);
     if (!data) return false;
     g.banner_file.assign(static_cast<unsigned char*>(data), static_cast<unsigned char*>(data) + size);
     SDL_free(data);
@@ -334,8 +318,13 @@ bool Open(const OpenOptions& options, std::string* why) {
         Close();
         return false;
     }
+    // The banner's lettering: TeX Gyre Pagella, built in (assets.h), the same
+    // on both systems. The Win32 launcher draws it in Palatino Linotype, which
+    // Pagella follows letter for letter (docs/launcher-portable.md section 9).
     FaceFont& banner = g.faces[static_cast<int>(Face::kBanner)];
-    if (ReadBannerFile(options.banner_font)) banner.font = AddFont(g.banner_file.data(), g.banner_file.size(), &banner.metrics);
+    if (options.banner_font && ReadBannerFile(options.banner_font))
+        banner.font = AddFont(g.banner_file.data(), g.banner_file.size(), &banner.metrics);
+    if (!banner.font) banner.font = AddFont(kUiBannerFont, kUiBannerFontSize, &banner.metrics);
     if (!banner.font) banner = text;
     io.FontDefault = text.font;
 

@@ -216,6 +216,8 @@ player can use with no text file. P5 can follow.**
    **Open (2026-11-20):** the first captures are made (section 9). With the
    look goes the font: which font ships for the text and which for the
    banner (section 9, "The fonts").
+   **Answered (the owner, 2026-11-20):** the dark look is right as a start;
+   Droid Sans for the text; TeX Gyre Pagella for the banner.
 3. **The Win32 dialogs after P6.** Proposed: removed in the release that
    ships the new launcher, since two sets of pages is way C's cost. The
    other answer: kept one release behind a switch, as the keyboard's proof
@@ -352,7 +354,16 @@ one beside it):
   (two of the look's colours were numbers inside the image's address range,
   and the census took them for addresses; `CLAUDE.md` rule 3).
 
-**The fonts** (call 2). The text is Droid Sans (Apache 2.0), from Dear
+**The fonts, decided (the owner, 2026-11-20).** The text stays Droid Sans.
+The banner is TeX Gyre Pagella, a free face that follows Palatino Linotype
+letter for letter: built into the program
+([`THIRD_PARTY.md`](THIRD_PARTY.md) section 7), so the banner is the same on
+Windows and Linux, and the stand-in below is gone. Seen side by side with
+Palatino at scales 1 and 2 before it was taken (`--banner-font FILE` tries
+any font file): the banner's ink ends at x = 434 in both, and in the Linux
+build too. What stays open is Japanese and Chinese text before P5.
+
+**The fonts as stage P1 left them** (call 2). The text is Droid Sans (Apache 2.0), from Dear
 ImGui's own tree: 871 code points, Latin, Greek and Cyrillic, no Japanese
 or Chinese (`fontTools`, the font's `cmap`). The banner is Palatino Linotype
 read from the system's fonts folder where `WINDIR` names one, and Droid Sans

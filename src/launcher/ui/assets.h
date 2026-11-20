@@ -11,5 +11,10 @@ extern const unsigned kUiBackgroundPngSize;
 // The pages' text font (docs/THIRD_PARTY.md section 6).
 extern const unsigned char kUiTextFont[];
 extern const unsigned kUiTextFontSize;
+// The banner's font, TeX Gyre Pagella regular (third_party/tex-gyre-pagella,
+// docs/THIRD_PARTY.md section 7): the owner's choice of 2026-11-20 in place of
+// Palatino Linotype, which is Windows' and cannot ship.
+extern const unsigned char kUiBannerFont[];
+extern const unsigned kUiBannerFontSize;
 
 }  // namespace bof3x::ui

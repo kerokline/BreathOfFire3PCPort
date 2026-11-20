@@ -232,17 +232,21 @@ target_include_directories(bof3x_imgui PUBLIC "${imgui_SOURCE_DIR}" "${imgui_SOU
 target_compile_definitions(bof3x_imgui PUBLIC IMGUI_DISABLE_DEMO_WINDOWS IMGUI_DISABLE_DEBUG_TOOLS IMGUI_DISABLE_OBSOLETE_FUNCTIONS)
 target_link_libraries(bof3x_imgui PUBLIC SDL3::SDL3-static)
 
-# The drawn launcher's two built-in files, each as a byte array
+# The drawn launcher's three built-in files, each as a byte array
 # (tools/embed_file.py): the title page's picture, which the Win32 launcher
-# holds as a resource, and the text font, from Dear ImGui's own tree (Droid
-# Sans, Apache 2.0; docs/THIRD_PARTY.md section 6).
+# holds as a resource; the text font, from Dear ImGui's own tree (Droid
+# Sans, Apache 2.0; docs/THIRD_PARTY.md section 6); and the banner's font,
+# TeX Gyre Pagella (GUST Font License; third_party/tex-gyre-pagella,
+# docs/THIRD_PARTY.md section 7).
 set(_ui_assets "${_gen_dir}/launcher/ui_assets.gen.cpp")
 add_custom_command(OUTPUT "${_ui_assets}"
   COMMAND "${BOF3X_PYTHON}" "${CMAKE_SOURCE_DIR}/tools/embed_file.py" "${_ui_assets}"
           kUiBackgroundPng "${CMAKE_SOURCE_DIR}/docs/images/launcherBackground.png"
           kUiTextFont "${imgui_SOURCE_DIR}/misc/fonts/DroidSans.ttf"
+          kUiBannerFont "${CMAKE_SOURCE_DIR}/third_party/tex-gyre-pagella/texgyrepagella-regular.otf"
   DEPENDS "${CMAKE_SOURCE_DIR}/tools/embed_file.py" "${CMAKE_SOURCE_DIR}/docs/images/launcherBackground.png"
           "${imgui_SOURCE_DIR}/misc/fonts/DroidSans.ttf"
+          "${CMAKE_SOURCE_DIR}/third_party/tex-gyre-pagella/texgyrepagella-regular.otf"
   COMMENT "Generating launcher/ui_assets.gen.cpp"
   VERBATIM)
 # The drawn launcher's sources, for this file's target on Windows and
