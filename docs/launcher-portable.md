@@ -490,11 +490,15 @@ list) and `SliderShowing` (a slider that shows a text for its step) are new.
   through `--script`.
 - The folder picker behind Data's Browse... (SDL's): never shown.
 - **SatPixie's options do not fit as the Win32 window lays them out** (252
-  dialog units high against 214): the rows are closer, each value shows
-  inside its slider, and OK, Cancel and Defaults are a column at the right.
-  Every control and text is kept. The owner's look is owed.
-- **The Cheats sliders show their number twice**: inside the bar, and in
-  the Win32 page's value label beside it.
+  dialog units high against 214): the rows are closer and each value shows
+  inside its slider. **By the owner's words of 2026-11-20:** "Natural
+  vision" and "Overscan crop" lose their words in brackets, the eight check
+  boxes are four rows of two, and Defaults, OK and Cancel are a row under
+  the boxes. Every control is kept.
+- **The Cheats sliders show their number in the bar alone** (the owner,
+  2026-11-20): the Win32 page's value text beside the slider is not drawn.
+- The two changes above are in the look only: the SatPixie and cheat cases
+  of `ui_compare.py` were run again after them, 8 of 8 equal.
 - A `solo.champion=` that names no champion is cut off in its closed box,
   as the Win32 box cuts it.
 - The comparison's entry numbers are this install's (which languages it

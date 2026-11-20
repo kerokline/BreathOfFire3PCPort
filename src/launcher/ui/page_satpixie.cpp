@@ -1,7 +1,8 @@
 // SatPixie's options, the CRT look's parameters (launcher.rc IDD_SATPIXIE;
 // DIV-0043). config_dialog.cpp's kSliders, kToggles, SliderSteps,
 // ShowSliderValue, SatpixiePopulate, SatpixieReadBack and SatpixieProc, less
-// the windows. The texts are the Win32 window's, word for word.
+// the windows. The texts are the Win32 window's, word for word but two
+// check boxes' labels (kToggles).
 //
 // The Win32 launcher shows a window of its own over the settings; this one
 // shows the page in place of the tabs while Pages::satpixie_open is true
@@ -15,8 +16,10 @@
 // window's caption is a line at the top; the Amounts rows are 14 dialog units
 // apart (16 there) and each value text is shown in its slider (beside it
 // there); the Effects rows are 11 apart (14 there), and the sentence under
-// the mask takes two lines (one there: the type here is wider); OK, Cancel
-// and Defaults are a column at the right of the boxes (a row under them there).
+// the mask is under the mask box; two check boxes' labels lose their words in
+// brackets, so the eight are four rows of two (five rows there), and
+// Defaults, OK and Cancel are a row under the boxes, as there (the owner,
+// 2026-11-20).
 #include "launcher/ui/pages.h"
 
 #include "launcher/ui/ui.h"
@@ -51,15 +54,19 @@ struct ToggleRow {
     bool Config::Satpixie::*value;
     float x, y;
 };
+// Two labels are the Win32 window's less their words in brackets (the owner,
+// 2026-11-20): "Natural vision (neutral colours, gamma above)" and "Overscan
+// crop (trims the picture's edges)". That makes four rows of two, and room
+// for the buttons under the boxes.
 constexpr ToggleRow kToggles[] = {
-    {"Natural vision (neutral colours, gamma above)", &Config::Satpixie::natural, 7, 14},
+    {"Natural vision", &Config::Satpixie::natural, 7, 14},
+    {"Overscan crop", &Config::Satpixie::overscan, 175, 14},
     {"Ghosting", &Config::Satpixie::ghosting, 7, 25},
-    {"Chromatic aberration", &Config::Satpixie::chroma_on, 143, 25},
+    {"Chromatic aberration", &Config::Satpixie::chroma_on, 175, 25},
     {"Vignette", &Config::Satpixie::vignette, 7, 36},
-    {"Vignette shaped for 4:3 only", &Config::Satpixie::vignette_43, 143, 36},
+    {"Vignette shaped for 4:3 only", &Config::Satpixie::vignette_43, 175, 36},
     {"Interference wiggle", &Config::Satpixie::wiggle, 7, 47},
-    {"Rolling scanlines", &Config::Satpixie::scanroll, 143, 47},
-    {"Overscan crop (trims the picture's edges)", &Config::Satpixie::overscan, 7, 58},
+    {"Rolling scanlines", &Config::Satpixie::scanroll, 175, 47},
 };
 constexpr int kToggleCount = static_cast<int>(sizeof kToggles / sizeof kToggles[0]);
 
@@ -128,7 +135,7 @@ void SatpixiePage(Pages& p) {
     Place(0, 0);
     Label("CRT options (SatPixie)");
 
-    GroupBegin("Amounts", 0, Dy(12), Dx(286), Dy(87));
+    GroupBegin("Amounts", 0, Dy(12), Dx(350), Dy(87));
     for (int i = 0; i < kSliderCount; ++i) {
         const SliderRow& s = kSliders[i];
         const float y = 11 + 14 * static_cast<float>(i);
@@ -137,39 +144,41 @@ void SatpixiePage(Pages& p) {
         char text[32];
         std::snprintf(text, sizeof text, s.format, static_cast<double>(b.shown[i]));
         Place(Dx(99), Dy(y));
-        Size(Dx(180));
+        Size(Dx(244));
         if (SliderShowing((std::string("##") + s.name).c_str(), &b.pos[i], 0, SliderSteps(s), text))
             b.shown[i] = ValueOf(s, b.pos[i]);
     }
     GroupEnd();
 
-    GroupBegin("Effects", 0, Dy(102), Dx(286), Dy(105));
+    GroupBegin("Effects", 0, Dy(102), Dx(350), Dy(94));
     for (int i = 0; i < kToggleCount; ++i) {
         Place(Dx(kToggles[i].x), Dy(kToggles[i].y));
         Check(kToggles[i].text, &b.on[i]);
     }
-    Place(Dx(7), Dy(72));
+    Place(Dx(7), Dy(61));
     Label("Shadow mask:");
-    Place(Dx(69), Dy(70));
+    Place(Dx(69), Dy(59));
     Size(Dx(120));
     Combo("##mask", &b.mask, {"Off", "Brightness lines", "Colour stripes"});
-    Place(Dx(19), Dy(85));
-    Size(Dx(260));
+    Place(Dx(19), Dy(74));
+    Size(Dx(324));
     Label("On: the side bands of a wide picture stay bright. Off: the vignette covers the full picture.");
     GroupEnd();
 
-    // OK is the window's default button: it takes the focus when the page opens.
-    Place(Dx(292), Dy(17));
+    // The buttons in a row under the boxes (the owner, 2026-11-20): Defaults
+    // at the left, OK and Cancel at the right. OK is the window's default
+    // button: it takes the focus when the page opens.
+    Place(0, Dy(200));
+    Size(Dx(52), 23);
+    if (Button("Defaults")) FillBoxes(Config::Satpixie{});
+    Place(Dx(350 - 52 - 4 - 52), Dy(200));
     Size(Dx(52), 23);
     const bool ok = Button("OK");
     if (b.focus) DefaultFocus();
     b.focus = false;
-    Place(Dx(292), Dy(34));
+    Place(Dx(350 - 52), Dy(200));
     Size(Dx(52), 23);
     const bool cancel = Button("Cancel");
-    Place(Dx(292), Dy(193));
-    Size(Dx(52), 23);
-    if (Button("Defaults")) FillBoxes(Config::Satpixie{});
 
     if (ok) {
         StoreBoxes(p.cfg->sp);

@@ -49,15 +49,14 @@ void DefaultsButton() {
     }
 }
 
-// One multiplier's row: its name, the slider and the value beside it.
+// One multiplier's row: its name and the slider, which shows its value.
 void MultiplierRow(const char* text, const char* name, int* value, float y) {
     Place(Dx(7), Dy(y + 3));
     Label(text);
     Place(Dx(99), Dy(y));
     Size(Dx(150));
     if (Slider(name, value, 0, kCheatMultiplierMax)) g_boxes.touched = true;
-    Place(Dx(253), Dy(y + 3));
-    Label(std::to_string(*value).c_str());
+    // No number beside the slider (the Win32 page's value text at 253): the slider shows it (the owner, 2026-11-20).
 }
 
 }  // namespace
