@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Which source files compile for x86-64 Linux today (docs/linux-round.md, unit LB0).
 
-Every `.cpp` under src/ but the launcher's window files (SKIP), the Win32 backend's and the fuzz files (`*_fuzz.cpp`: the 64-bit host
+Every `.cpp` under src/ but the launchers' own files (SKIP), the Win32 backend's and the fuzz files (`*_fuzz.cpp`: the 64-bit host
 drops them, CMakeLists.txt, and a Linux build is the 64-bit host) and the Windows-only files by design
 (WINDOWS_ONLY below, each with its reason) is compiled `-fsyntax-only` for
 `x86_64-linux-gnu` with clang, with no stub for any Windows header: a file that needs one fails on the include,
@@ -37,15 +37,14 @@ import argparse, collections, concurrent.futures, glob, os, re, subprocess, sys,
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 LIST = 'analysis/linux_tree.tsv'
-# The launcher's windows (the Win32 dialogs, and launcher.cpp, the window half of its start): its settings model,
-# the start of the game with no window (start.cpp) and the windowless main (headless.cpp) are compiled
-# (docs/launcher-portable.md, stage P0; the Linux round's C7).
-# The drawn launcher (src/launcher/ui/, docs/launcher-portable.md stage P1) is not Windows': it is left out
-# here because it needs Dear ImGui's headers, which the build fetches; its own target compiles and links it
-# (bof3x_launcher_ui, cmake/linux_target.cmake).
-SKIP = ('src/os/win32/', 'src/launcher/config_dialog.cpp', 'src/launcher/sources_dialog.cpp',
-        'src/launcher/save_dialog.cpp', 'src/launcher/music_player.cpp', 'src/launcher/launcher.cpp',
-        'src/launcher/ui/')
+# The developer launcher (launcher.cpp, Windows and 32-bit by design: the hosted build's injection and a moved
+# image's fence; docs/launcher-portable.md section 6) is left out. The launcher's settings model and the start of
+# the game with no window (start.cpp) are compiled (stage P0; the Linux round's C7). The Win32 dialogs and the
+# launcher with no window (headless.cpp) went at the cutover (stage P6, 2026-11-20).
+# The player's launcher (src/launcher/ui/, the drawn one, docs/launcher-portable.md stages P1 to P6) is not
+# Windows': it is left out here because it needs Dear ImGui's headers, which the build fetches; its own target
+# compiles and links it (bof3x_launcher, cmake/linux_target.cmake).
+SKIP = ('src/os/win32/', 'src/launcher/launcher.cpp', 'src/launcher/ui/')
 # Files that are Windows files by design and leave the Linux source list (docs/linux-round.md, "The 38 files, staged
 # as one round"): exact names, one reason each. Not compiled; --check and --write do not list them.
 WINDOWS_ONLY = (

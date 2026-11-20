@@ -8,7 +8,7 @@
 // The values are the Windows SDK's and must never change: they are stored in
 // the player's files and compared with what the device reports. Each one is
 // proved equal to the SDK's name, on Windows, by
-// src/launcher/key_codes_check.cpp. `int`, as the SDK's macros are, so a
+// src/launcher/key_codes_check.cpp (compiled with the developer launcher). `int`, as the SDK's macros are, so a
 // switched use site's arithmetic and comparisons keep their types.
 //
 // Only the names the tree uses are here; add one with its static_assert.

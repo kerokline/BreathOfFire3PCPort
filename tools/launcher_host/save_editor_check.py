@@ -1,15 +1,15 @@
 """save_editor_drive.py's cases, and more, said again against the drawn launcher's save editor with no window.
 
-    python tools/launcher_host/save_editor_check.py <folder with bof3x-launcher-ui and save-names.tsv>
+    python tools/launcher_host/save_editor_check.py <folder with bof3x-launcher and save-names.tsv>
         --pc <a folder of PC save files> --card <a memory card file with a save of the game> --ini <a bof3x.ini>
         --out <scratch dir> [--pc-names Ryu,...] [--stand-in <tools/os_host's os_tests>] [--only NAME,...]
     python tools/launcher_host/save_editor_check.py --list
 
 Stage P5 of docs/launcher-portable.md. Each case copies the PC saves (BISLPS00..0F.DAT) into <out>/<case>/game and
-the card into <out>/<case>, then runs `bof3x-launcher-ui --check --ini <ini> --game <out>/<case>/game --script ...`
+the card into <out>/<case>, then runs `bof3x-launcher --check --ini <ini> --game <out>/<case>/game --script ...`
 (the editor opened from the Mods tab; a picker is answered by the script's `pick` step, a question by `answer`),
 once or a few times, and judges the result from the `report saves` step's text and from the files written, read back
-with tools/save_convert.py (the reader save_editor_drive.py checks the Win32 window's files with) and with the editor
+with tools/save_convert.py (the reader save_editor_drive.py checked the Win32 window's files with) and with the editor
 itself (a later run opens the file and reports its fields). Nothing is shown on the screen and no game starts.
 
 The ini names the install the editor reads its names and tables from (its cache= line, or BOF3X_HOME's); the
@@ -17,6 +17,10 @@ saves and the card are copies, and every file the editor writes is under --out. 
 program: copied under another name and started in its stand-in mode, it is "a game that is running" for the
 seam's question (os/running.h). The cases `drive_*` are save_editor_drive.py's 33 checks, one by one (for a card
 with two saves of one release; another card gives another count, as there). Exit code 0 when every check passed.
+
+save_editor_drive.py drove the Win32 launcher's save editor through ctypes; it went with that window at the cutover
+(docs/launcher-portable.md, stage P6, 2026-11-20), and so did this tool's two cases that ran it beside the drawn
+editor (win32, win32_drive: section 13 has their results). Its cases are kept here by their names.
 
 These files are game data: they stay under --out, and this tool prints counts, names of fields and the editor's
 own sentences only.
@@ -27,7 +31,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'
 import save_convert as sc                             # noqa: E402
 
 checks = failures = 0
-PREFIX = 'bof3x-launcher-ui: report: '
+PREFIX = 'bof3x-launcher: report: '
 
 
 def expect(ok, what):
@@ -546,152 +550,10 @@ def case_untouched(a):
                                      for i in range(16) if os.path.exists(slot(case, i))), 'no file changed')
 
 
-SHOTS = ['.']
-
-
-def win32_session(a, case, actions):
-    """The Win32 launcher's save editor on the same copies, driven by control id as save_editor_drive.py drives it
-    (its window is shown for the run). Each action gets the drive module, the dialog, the process id and the windows
-    known; message boxes are answered Yes, as there."""
-    import save_editor_drive as d
-    env = {k: v for k, v in os.environ.items() if not k.startswith('BOF3X_')}
-    exe = os.path.join(a.win32, 'bof3x-launcher.exe')
-    SHOTS[0] = os.path.join(case, 'shots')   # save_editor_drive.py's answer() grabs each message box there
-    os.makedirs(SHOTS[0], exist_ok=True)
-    p = subprocess.Popen([exe, '--game', os.path.join(case, 'game')], env=env, cwd=a.win32)
-    said = []
-    try:
-        main_dlg = d.popup(p.pid, set(), 20)
-        if not main_dlg:
-            sys.exit('the Win32 launcher did not open')
-        d.u.PostMessageW(main_dlg, d.WM_COMMAND, d.IDC_SAVEEDITOR, 0)
-        dlg = d.popup(p.pid, {main_dlg}, 10)
-        if not dlg or not d.item(dlg, d.IDC_SE_SLOT):
-            sys.exit('the Win32 save editor did not open')
-        known = {main_dlg, dlg}
-        time.sleep(0.5)
-        for act in actions:
-            said += act(d, dlg, p.pid, known) or []
-        d.u.PostMessageW(dlg, d.WM_COMMAND, d.IDCANCEL, 0)
-        d.answer(p.pid, {main_dlg}, SHOTS[0], 'close', limit=2)
-        d.u.PostMessageW(main_dlg, d.WM_COMMAND, d.IDCANCEL, 0)
-        time.sleep(0.5)
-    finally:
-        if p.poll() is None:
-            p.kill()
-    return said
-
-
-IDC_SE_SECTIONS, IDC_SE_FIELDS, IDC_SE_VALUE, IDC_SE_RECORD = 1803, 1805, 1806, 1804
-LB_SETCURSEL, WM_KEYDOWN, VK_HOME, VK_DOWN = 0x186, 0x100, 0x24, 0x28
-
-
-def w_section(i):
-    def act(d, dlg, pid, known):
-        d.u.SendMessageW(d.item(dlg, IDC_SE_SECTIONS), LB_SETCURSEL, i, None)
-        d.u.SendMessageW(dlg, d.WM_COMMAND, (1 << 16) | IDC_SE_SECTIONS, d.item(dlg, IDC_SE_SECTIONS))
-        time.sleep(0.2)
-    return act
-
-
-def w_value(row, text):
-    """The field list's row chosen by its keys (Home, then Down), the value typed, Set."""
-    def act(d, dlg, pid, known):
-        lv = d.item(dlg, IDC_SE_FIELDS)
-        d.u.SendMessageW(lv, WM_KEYDOWN, VK_HOME, None)
-        for _ in range(row):
-            d.u.SendMessageW(lv, WM_KEYDOWN, VK_DOWN, None)
-        time.sleep(0.2)
-        import ctypes
-        d.u.SendMessageW(d.item(dlg, IDC_SE_VALUE), d.WM_SETTEXT, 0, ctypes.cast(ctypes.c_wchar_p(text), ctypes.c_void_p))
-        d.u.SendMessageW(dlg, d.WM_COMMAND, d.IDOK, None)
-        time.sleep(0.2)
-    return act
-
-
-def w_pick(cid, row, answers=True):
-    def act(d, dlg, pid, known):
-        d.pick(dlg, cid, row)
-        return d.answer(pid, known, SHOTS[0], f'pick{cid}') if answers else time.sleep(0.4)
-    return act
-
-
-def w_save(d, dlg, pid, known):
-    d.u.PostMessageW(dlg, d.WM_COMMAND, d.IDC_SE_SAVE, 0)
-    return d.answer(pid, known, SHOTS[0], 'save')
-
-
-def case_win32(a):
-    """The same file from both editors: a Zenny and a Level edit saved to the slot, a second edit written over
-    another slot (Replace: Yes), a damaged save opened (Yes) and saved; the slot files compared byte for byte with
-    the Win32 editor's on the same copies."""
-    if not a.win32:
-        print('  (no --win32: the case is not run)')
-        return
-    n = first_good_slot(a.pc)
-    sides = {}
-    for side in ('drawn', 'win32'):
-        case, _ = fresh(a.out, 'same_' + side, a.pc, None)
-        good = bytearray(read(slot(case, n)))
-        good[0x70] ^= 0x5A
-        with open(slot(case, 3), 'wb') as f:
-            f.write(good)
-        sides[side] = case
-    other = next((i for i in range(16) if i not in (n, 3) and os.path.exists(slot(sides['drawn'], i))), -1)
-    code, reps, _ = run(a.ui, sides['drawn'], f'set fields=0; set value=12345; press Set; set sections=2; set fields=1; '
-                        f'set value=12; press Set; press Save; set sections=0; set fields=0; set value=4242; press Set; '
-                        f'set target={other}; press Save; answer yes; set file=3; answer yes; press Save; report saves', a.ini)
-    expect(code == 0, 'the drawn editor ran the steps')
-    said = win32_session(a, sides['win32'], [
-        w_value(0, '12345'), w_section(2), w_value(1, '12'), w_save,
-        w_section(0), w_value(0, '4242'), w_pick(1810, other, False), w_save,
-        w_pick(1800, 3), w_save])
-    for s in said:
-        print('   win32 said: ' + s[:120].replace('\n', ' '))
-    for i in sorted({n, other, 3}):
-        x, y = read(slot(sides['drawn'], i)), read(slot(sides['win32'], i))
-        orig = read(os.path.join(a.pc, 'BISLPS0%X.DAT' % i)) if os.path.exists(os.path.join(a.pc, 'BISLPS0%X.DAT' % i)) else b''
-        expect(x == y and x != orig, f'slot {i:X}: the two editors wrote the same file, byte for byte ({len(x)} bytes, '
-               f'{sum(1 for k in range(min(len(x), len(orig))) if x[k] != orig[k])} differ from the input)')
-        if x != y:
-            print('   differ at:', [hex(k) for k in range(min(len(x), len(y))) if x[k] != y[k]][:20])
-    expect(len(backups(sides['drawn'])) == len(backups(sides['win32'])), f'the same number of copies in save-backups '
-           f'({len(backups(sides["drawn"]))})')
-
-
-def case_win32_drive(a):
-    """save_editor_drive.py itself on a copy of the same saves and card, and its three written files (slot F, the
-    card, the new card) compared byte for byte with the drawn editor's from the case drive."""
-    if not a.win32:
-        print('  (no --win32: the case is not run)')
-        return
-    drawn = os.path.join(a.out, 'drive')
-    if not os.path.isfile(os.path.join(drawn, 'made-by-editor.mcr')):
-        case_drive(a)
-    case, card_path = fresh(a.out, 'drive_win32', a.pc, a.card)
-    tool = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'save_editor_drive.py')
-    p = subprocess.run([sys.executable, tool, a.win32, '--game', os.path.join(case, 'game'), '--card', card_path,
-                        '--out', os.path.join(case, 'out'), '--pc-names', a.pc_names],
-                       capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=600)
-    with open(os.path.join(case, 'drive.log'), 'w', encoding='utf-8') as log:
-        log.write(p.stdout + p.stderr)
-    last = (p.stdout.strip().splitlines() or ['?'])[-1]
-    expect(p.returncode == 0, f'save_editor_drive.py on the Win32 window: {last}')
-    pairs = [(slot(drawn, 15), slot(case, 15), 'slot F'),
-             (os.path.join(drawn, os.path.basename(a.card)), card_path, 'the card'),
-             (os.path.join(drawn, 'made-by-editor.mcr'), os.path.join(case, 'out', 'made-by-editor.mcr'), 'the new card')]
-    for x, y, what in pairs:
-        bx = read(x) if os.path.exists(x) else b''
-        by = read(y) if os.path.exists(y) else b''
-        expect(bx == by and bx != b'', f'{what}: the two editors wrote the same file, byte for byte ({len(bx)} bytes)')
-        if bx != by and bx and by:
-            print('   differ at:', [hex(k) for k in range(min(len(bx), len(by))) if bx[k] != by[k]][:20])
-
-
 CASES = {'drive': case_drive, 'edit': case_edit, 'checksum': case_checksum, 'refuse': case_refusals,
          'running': case_running, 'discard': case_discard, 'replace': case_replace, 'fields': case_fields,
-         'pcfile': case_pcfile, 'untouched': case_untouched, 'win32': case_win32, 'win32_drive': case_win32_drive}
-DEFAULT = [c for c in CASES if not c.startswith('win32')]   # the Win32 window's cases show a window: asked for by name
+         'pcfile': case_pcfile, 'untouched': case_untouched}
+DEFAULT = list(CASES)
 
 
 def main():
@@ -704,8 +566,6 @@ def main():
     ap.add_argument('--pc-names', default='Ryu,Nina,Garr,Teepo,Rei,Momo,Peco,Whelp',
                     help='the eight default names of the install, as its letters (the English layer\'s by default)')
     ap.add_argument('--stand-in', help='tools/os_host\'s os_tests, for "a game is running"')
-    ap.add_argument('--win32', help='a folder with the Win32 bof3x-launcher.exe (and bof3x.ini naming the same install): '
-                    'the cases win32 and win32_drive, which show its window on the screen, compare the files')
     ap.add_argument('--only', help='cases, with , between them')
     ap.add_argument('--list', action='store_true')
     a = ap.parse_args()
@@ -715,12 +575,11 @@ def main():
         return 0
     if not (a.launcher_dir and a.pc and a.card and a.ini and a.out):
         ap.error('the launcher folder, --pc, --card, --ini and --out are needed')
-    exe = 'bof3x-launcher-ui.exe' if sys.platform == 'win32' else 'bof3x-launcher-ui'
+    exe = 'bof3x-launcher.exe' if sys.platform == 'win32' else 'bof3x-launcher'
     a.ui = os.path.join(os.path.abspath(a.launcher_dir), exe)
     a.pc, a.card, a.ini, a.out = (os.path.abspath(p) for p in (a.pc, a.card, a.ini, a.out))
     a.stand_in = os.path.abspath(a.stand_in) if a.stand_in else None
     os.makedirs(a.out, exist_ok=True)
-    a.win32 = os.path.abspath(a.win32) if a.win32 else None
     for name in (a.only.split(',') if a.only else DEFAULT):
         print(f'== {name}: {" ".join(CASES[name].__doc__.split())[:110]}')
         CASES[name](a)

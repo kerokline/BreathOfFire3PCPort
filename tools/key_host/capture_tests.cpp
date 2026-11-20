@@ -1,11 +1,14 @@
 // Host test of the drawn launcher's bind capture against the Win32 one
 // (docs/launcher-portable.md, stage P3: "the stored binding numbers for every
 // key equal the Win32 capture's"). No key is pressed: the proof is made from
-// the two mappings, for every key a WM_KEYDOWN can name.
+// the two mappings, for every key a WM_KEYDOWN can name. The Win32 capture is
+// the Win32 capture as it was, removed 2026-11-20 with the Win32 dialogs
+// (stage P6): Win32Take below holds its own copy of that rule.
 //
 // For a key whose message carries the scan code `scan` (1..0x7F) and the
 // extended flag `ext`:
-//   the Win32 capture   src/launcher/config_dialog.cpp CaptureKeyHook: scan 1
+//   the Win32 capture   the Win32 capture as it was, removed 2026-11-20
+//                       (src/launcher/config_dialog.cpp CaptureKeyHook): scan 1
 //                       cancels; on a Function keys cell F10 (0x44, not
 //                       extended) and either Alt (0x38) are refused; else it
 //                       stores scan | ext << 7. Win32Take below is that code.
@@ -58,7 +61,8 @@ struct Answer {
     bool operator==(const Answer& o) const { return take == o.take && (take != ui::CaptureTake::kKey || number == o.number); }
 };
 
-// CaptureKeyHook, for a key going down (config_dialog.cpp, the capture).
+// CaptureKeyHook, for a key going down: the Win32 capture as it was, removed
+// 2026-11-20 (config_dialog.cpp, the capture).
 Answer Win32Take(int scan, bool extended, bool fn) {
     if (scan == 0x01) return {ui::CaptureTake::kCancel, -1};
     if (fn && ((scan == 0x44 && !extended) || scan == 0x38)) return {ui::CaptureTake::kRefused, -1};

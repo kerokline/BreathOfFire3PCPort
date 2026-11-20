@@ -83,7 +83,8 @@ ENGINE = ('bof3x.dll', ['Engine_Main'])
 # draw_pool_room.h's kStamp, with its NUL: what DrawPool_Reserve looks for.
 POOL_STAMP = b'BOF3X-DRAWPOOL-2048\0'
 
-# The launcher's declarations (src/launcher/launcher.manifest) plus the code
+# The Win32 launcher's declarations (src/launcher/launcher.manifest as it was
+# until stage P6 of docs/launcher-portable.md, 2026-11-20) plus the code
 # page and long paths (docs/state3-design.md section 9) and, since the owner's
 # call of 2026-10-11, DPI awareness (per-monitor v2 with the v1 fallback):
 # BOF3.exe has no manifest, so Windows stretched its window on a scaled

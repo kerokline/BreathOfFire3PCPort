@@ -4,7 +4,8 @@
 //
 // What a key gives, per path, for a key whose WM_KEYDOWN lParam carries the
 // scan code `scan` and the extended flag `ext` (c = scan | ext << 7):
-//   the launcher's capture   c (src/launcher/config_dialog.cpp CaptureKeyHook)
+//   the launcher's capture   c (the Win32 capture as it was, removed 2026-11-20:
+//                            src/launcher/config_dialog.cpp CaptureKeyHook)
 //   SDL on Windows           windows_scancode_table[c], but Pause - c 0x45 -
 //                            is looked up at 0xC6 (WindowsScanCodeToSDLScanCode)
 //   DirectInput              the key's set-1 code, E0 as bit 7: c, but NumLock

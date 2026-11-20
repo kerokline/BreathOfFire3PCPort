@@ -10,8 +10,8 @@
 namespace bof3x::input {
 namespace {
 
-// In the Controls dialog's row order: row r's cells are IDC_CT_KEY1 + r and
-// so on (src/launcher/resource.h, launcher.rc), so never reorder alone.
+// In the Controls page's row order (src/launcher/ui/page_controls.cpp; the
+// Win32 dialog's IDC_CT_KEY1 + r until stage P6), so never reorder alone.
 const ActionInfo kActions[kActionCount] = {
     {kUp, "up", "Up"},           {kDown, "down", "Down"},     {kLeft, "left", "Left"},
     {kRight, "right", "Right"},  {kCross, "cross", "Cross"},  {kCircle, "circle", "Circle"},

@@ -1789,7 +1789,7 @@ bool PresetWantsOn(Preset preset, const ledger::Entry& e) {
 bool IsDir(const std::wstring& d) { return bof3::os::IsDirectoryW(d); }
 
 // Why this install cannot take an ini: value, or empty when it can. The Music
-// box's own test (config_dialog.cpp MusicRefresh) for music=; any other key
+// box's own test (src/launcher/ui/page_music.cpp; config_dialog.cpp MusicRefresh's until stage P6) for music=; any other key
 // can be set on any install.
 std::string IniNotHere(const std::wstring& game_dir, const Config& cfg, const std::string& key,
                        const std::string& value) {
