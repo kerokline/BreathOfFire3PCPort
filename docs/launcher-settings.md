@@ -247,18 +247,29 @@ close box after the same change left the ini byte for byte.
 The game process inherits the launcher's environment, so the first two needed
 no new channel and **no change to the DLL at all**.
 
-**A game directory with no `BOF3.exe`** (the disc-only round, 2026-10-12):
-accepted when `cache=` / `BOF3X_CACHE` names a cache (and `BOF3X_CACHE_DATA`
-is not `0`) or the environment already sets `BOF3X_EXEIMAGE` - a disc-built
-install. The hash check and the key table's comparison are skipped (the
-default keys are the engine's rule, [`controls.md`](controls.md) section 1),
-`BOF3X_EXEIMAGE` is set to the cache unless the environment set it, and
-stderr says so: `no BOF3.exe in <dir>: a disc-built install - no hash check,
-the default keys by the engine's rule, .data from <cache>`. Without a cache
-the refusal is the old one (`no BOF3.exe in <dir>. Point --game or
-BOF3_GAME_DIR at your own install.`), and the hosted build (`--host bof3`,
-or a hosted-only switch) still needs the file and says why. With the file
-there, everything is checked as before
+**Where `.data` comes from** (the exe-retire round, 2026-11-19, DIV-0242;
+the disc-only round of 2026-10-12 began it for a disc-built install): a
+player's start - not the hosted build, not `BOF3X_EXEFILE=1` - opens, hashes
+and tests for no `BOF3.exe`, on any install. `BOF3X_EXEIMAGE` is set to the
+data cache (`cache=` / `BOF3X_CACHE`, else the home's) unless the
+environment set it, the default keys are the engine's rule
+([`controls.md`](controls.md) section 1), and stderr names the source and
+the install's kind from the cache's record: `.data from <cache> (a PC
+install: the image built from the PC game, its table files laid in); BOF3.exe
+is not read (BOF3X_EXEFILE=1 reads it)`, or `a disc-built install: the image
+built from a disc`. The engine hashes the image as it maps it against the
+manifest's `[exe] sha256`. A game folder with no image (no cache, or a cache
+with no `base\exe`) is set up first at a start with the window (DIV-0241);
+under `--no-config`, a self-test, the windowless launcher, a cache the player
+chose and `BOF3X_EXEIMAGE` set, the start stops: `This install has no game
+data, so the game cannot start (...). Set up the install: open the launcher,
+go to the Sources page and add the game.` The game folder, when neither
+`--game` nor `BOF3_GAME_DIR` names one: the working folder when it holds
+`DAT\FIRST.DAT`, then the home's `game\`, then the PC folder the home plays
+in place (`sources.toml`), else `.\bof3`. The hosted build (`--host bof3`, or
+a hosted-only switch) still needs the file and says why; under
+`BOF3X_EXEFILE=1` (the developer's switch, which no preset sets) the file is
+read and everything is checked against it as before
 ([`exe-import-engine.md`](exe-import-engine.md) 2.2).
 
 ### 3.1 The Music, Cache folder and PSP extras boxes (2026-10-10)
@@ -477,9 +488,11 @@ dialog, for the language the game is given:
 
 - *not on this install*: `music=pc` without a `BGM\` folder of the PC's MP3s
   (the Music box's own test); `music=psx` / `psp` without those songs in the
-  cache; `BOF3X_CACHE_DATA=0` and `BOF3X_EXEIMAGE_STRICT=1` without `BOF3.exe`
-  in the game folder (a disc-built install has no PC `DAT\` to read in place
-  of the cache, and its `.data` has gaps that the strict switch refuses).
+  cache; `BOF3X_CACHE_DATA=0` and `BOF3X_EXEIMAGE_STRICT=1` on an install the
+  cache records as disc-built (`[build] install_kind`; a disc-built install has
+  no PC `DAT\` to read in place of the cache, and its `.data` has gaps that the
+  strict switch refuses). `BOF3X_EXEFILE=1` is not among them since
+  2026-11-19: DIV-0212 is `Player: never`, so no preset asks for it.
 - *kept*: `opt=none` when the ini's `opt=` names its own list (the ledger's
   `ini:opt=none` is written for the default list, `area4-walls` alone; over a
   list it would take off the player's suites too); an env value the
@@ -627,8 +640,10 @@ it (which English?) the next; saying so once, loudly, is neither.
 
 **An install without the Chinese text (DIV-0102, 2026-10-12).** The
 port's Chinese is in the PC's `DAT\` alone, so `original` plays only from a
-PC install (`BOF3.exe` in the game directory) or with a cache holding
-`loc\zh-CN` (built from the PC's `DAT\`); a disc-only install
+PC install (by the cache's record, `[build] install_kind`; before 2026-11-19,
+`BOF3.exe` in the game directory) or with a cache holding `loc\zh-CN` (built
+from the PC's `DAT\`); a PC folder beside a disc-built cache has neither
+(DIV-0102 as amended); a disc-only install
 ([`disc-only-install.md`](disc-only-install.md)) has neither. There the
 Language box does not offer "Chinese (PC script)" - it lists the languages
 held (`DAT\<tag>.*` or the cache's `loc\<tag>\`) and its note says Chinese

@@ -11547,4 +11547,9 @@ file was opened, and "BOF3.exe's" otherwise (the hosted build, or
 opens it), so not compared" (or "not verified"). `src/hook/exe_own.cpp`'s
 after-digest in `tools/importer.py` `STALE_SAME_DATA` changed with it;
 `importer.py stale` on X3's installs made by the round's base importer
-(`oldcopy`, `olddisc_copy`) still says `fresh`.
+(`oldcopy`, `olddisc_copy`) still says `fresh`. Seen in X6's runs of the exe
+host's self-test on an install set up in place, without `BOF3X_EXEFILE=1`:
+the fishing labels', the key table's and the `.rdata` constants' lines say
+the new words; under the switch on `<main checkout>\bof3` the log is the same
+as before, line for line. The disc-built image's and `exe_own`'s lines were
+not seen (no disc-built install was started).

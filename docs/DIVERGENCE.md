@@ -18221,7 +18221,11 @@ designed in rather than bolted on.
   save-named file of its own bytes among them; the exe host's self-test from
   that folder (10,397 lines, 0 FATAL, both bases); the same folder under
   `--no-config` before the set-up: the refusal. X6's `config_tests` rows for
-  the folder a home plays in place (`HomeInPlaceFolder`). **Not run:** the
+  the folder a home plays in place (`HomeInPlaceFolder`), and its run: a
+  set-up in place of a copy of the PC's files (7 s, the folder's 3,040 files
+  the same sha256 afterwards), then the exe host's self-test started with no
+  `--game` from a folder that is not a game folder, the same run as with
+  `--game` (10,399 lines, 0 FATAL). **Not run:** the
   Sources page's window (not shown or driven: the same importer commands
   were run from the command line), the round's final proof (X7), the ten
   state-hash routes. Not played.
@@ -18319,7 +18323,7 @@ designed in rather than bolted on.
   the base build's. X5: `setup` from the developer's PC folder, 0
   `BOF3.exe` in `game\`; `verify` rc 0, one bit flipped named, rc 1. X1 and
   X3: `config_tests` rows for each install kind, old and new manifest; the
-  hosted suite (927 `MISMATCHES` lines, all 0, X3's run). X4: the save
+  hosted suite (922 `MISMATCHES` lines, all 0: X3's run, and X6's on the round's tip). X4: the save
   editor's readers on the PC-built image against the file, 121 checks, 0
   failures, at both Windows widths and in the WSL. X3: `stale` on installs
   made by the round's base importer says `fresh`. **Not run:** the ten
