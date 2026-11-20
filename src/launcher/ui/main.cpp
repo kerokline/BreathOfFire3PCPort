@@ -1,14 +1,48 @@
-// bof3x-launcher-ui: the drawn launcher (docs/launcher-portable.md, stages P1
-// to P4). One set of windows for Windows and Linux, drawn through
-// launcher/ui/ui.h. A second program beside the player's launcher until the
-// cutover (stage P6).
+// bof3x-launcher: the player's launcher, drawn (docs/launcher-portable.md,
+// stages P1 to P6). One set of windows for Windows and Linux, drawn through
+// launcher/ui/ui.h. Since the cutover (stage P6, 2026-11-20) it is
+// bof3x-launcher on both systems, and the Win32 dialogs are gone; it takes the
+// Win32 launcher's command line and start as they were, so every harness's
+// command keeps its meaning (docs/launcher-settings.md section 4).
 //
-//   bof3x-launcher-ui [--game <folder>] [--scale <number>] [--script <steps>] [-- <arguments for the game>]
-//   bof3x-launcher-ui --check [--start] [--ini <file>] [--game <folder>] [--save <file>] [--script <steps>]
-//                     [--page <name>] [--sub <n>] [--sheet <n>] [--keys <list>] [--capture <file.png>]
-//                     [--scale <number>]
+//   bof3x-launcher [--game <folder>] [--config|--no-config] [--host exe|bof3] [--scale <number>]
+//                  [--script <steps>] [-- <arguments for the game>]
+//   bof3x-launcher [--game <folder>] [--set <key>=<value>]... [--list]
+//   bof3x-launcher --check [--start] [--ini <file>] [--game <folder>] [--save <file>] [--script <steps>]
+//                  [--page <name>] [--sub <n>] [--sheet <n>] [--keys <list>] [--capture <file.png>]
+//                  [--scale <number>]
 //
-// The start, as launcher.cpp's (lines 418-500): the game folder found, the
+// The game folder: --game, BOF3_GAME_DIR, then StartFindGame (launcher/start.h).
+// The window: neither --config nor --no-config, bof3x.ini's show_launcher
+// decides (1, the default: the window); --config shows it whatever the file
+// says; --no-config shows none. With no window, and under a self-test
+// (BOF3X_SELFTEST_ONLY), the game starts with the settings as they are and
+// nothing on the screen: no Sources page and no stale-install question under
+// --no-config or a self-test (StartSetUpFor; the stale check), as the Win32
+// launcher did. With show_launcher=0 and no --no-config, the Sources page's
+// first run and the stale question still come first, as they did there.
+//
+// The hosted build (--host bof3, or a switch only it serves: BOF3X_ORIGINAL,
+// BOF3X_SHADOW, BOF3X_CALLTRACE, BOF3X_MP3_COMPARE, BOF3X_MP3=original) and a
+// moved image (BOF3X_IMAGEBASE other than 0x400000) are the developer
+// launcher's, bof3x-launcher-dev.exe (src/launcher/launcher.cpp, Windows and
+// 32-bit): this launcher holds no code that writes into another process. It
+// hands such a run to the developer launcher beside it, with the same
+// arguments, environment and redirected output, and ends with its exit code
+// (os/process.h own_output). With none beside it (a release), or on Linux,
+// where there is no hosted build, it stops with a sentence.
+//
+// --set and --list change one setting in bof3x.ini or show the settings, and
+// stop: no window, no game (the launcher with no window of stage P0 had them).
+//
+// A refusal (StartDie) is said on stderr and ends the launcher with exit code
+// 1. It is also shown in a message box, but only where a player can be looking
+// and no script waits (docs/HANDOFF.md, Traps): not under --check, not under
+// --no-config, not under a self-test, and not when stdout and stderr both go
+// to a file or a pipe (os/process.h OutputRedirected). That covers a failed
+// hand-over to the developer launcher in a scripted run.
+//
+// The start with the window, as launcher.cpp's was (its lines 418-500): the game folder found, the
 // settings read (launcher/start.h), then the Sources page first when there is
 // no install, or a game folder to set up in place (StartReadSettings's
 // StartSetUp) - closed with no build, nothing starts; built, the game folder
@@ -62,14 +96,14 @@
 //   report jukebox                 the Jukebox as text: its sources, note, songs (grey ones with why),
 //                                  status and battle-chord box (stage P5)
 //   rest <seconds>                 frames for that long, as the window idles: a song plays on (stage P5)
+//   report saves                  the save editor as text (stage P5): its boxes, fields, notes, messages and questions
+//   game-program <file>|-          the save editor asks whether a program of this file name runs, in place of
+//                                  the game's (bof3x.exe; bof3x on Linux): a stand-in for "a game is running"
+//   game-window <class>|-          the same for the window class it asks for on Windows (Bof3)
 // The Jukebox in a check plays to SDL's dummy sound driver whatever the
 // environment says, so a check never sounds; --samples <file> also writes the
 // samples it hands to the sound into that file (16-bit stereo, 44,100 Hz, no
 // header) for the proof against the Win32 player (stage P5).
-//   report saves                   the save editor as text (stage P5): its boxes, fields, notes, messages and questions
-//   game-program <file>|-          the save editor asks whether a program of this file name runs, in place of
-//                                  the game's (bof3x.exe; bof3x on Linux): a stand-in for "a game is running"
-//   game-window <class>|-          the same for the window class it asks for on Windows (Bof3)
 // A step that names a widget the page does not draw, or a grey one, stops the
 // program with exit code 1: a grey control is a thing a check can ask for. So
 // do a bind step with no capture open, a red step the widget does not meet, a
@@ -91,7 +125,9 @@
 
 #include "os/clock.h"
 #include "os/env.h"
+#include "os/process.h"
 #include "os/text.h"
+#include "os/wide_file.h"
 #include "os/wide_text.h"
 
 #include <SDL3/SDL_main.h>
@@ -99,7 +135,11 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cwchar>
+#include <filesystem>
+#include <initializer_list>
 #include <string>
+#include <system_error>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -109,11 +149,21 @@ namespace ui = bof3x::ui;
 const char kTitle[] = "Breath of Fire III - bof3x";
 
 const char kUsage[] =
-    "usage: bof3x-launcher-ui [--game <folder>] [--scale <number>] [--script <steps>] [-- <arguments for the game>]\n"
-    "       bof3x-launcher-ui --check [--start] [--ini <file>] [--game <folder>] [--save <file>] [--script <steps>]\n"
-    "                         [--page <name>] [--sub <n>] [--sheet <n>] [--keys <list>] [--capture <file.png>]\n"
-    "                         [--scale <number>]\n"
-    "  --game <folder>       The folder of the game. Without it, the launcher finds the folder as bof3x-launcher does.\n"
+    "usage: bof3x-launcher [--game <folder>] [--config|--no-config] [--host exe|bof3] [--scale <number>]\n"
+    "                      [--script <steps>] [-- <arguments for the game>]\n"
+    "       bof3x-launcher [--game <folder>] [--set <key>=<value>]... [--list]\n"
+    "       bof3x-launcher --check [--start] [--ini <file>] [--game <folder>] [--save <file>] [--script <steps>]\n"
+    "                      [--page <name>] [--sub <n>] [--sheet <n>] [--keys <list>] [--capture <file.png>]\n"
+    "                      [--scale <number>]\n"
+    "  --game <folder>       The folder of the game. Without it, the launcher uses BOF3_GAME_DIR, then the current\n"
+    "                        folder if it is a game folder, then the game folder of the home, then the PC game\n"
+    "                        folder that the home plays in place.\n"
+    "  --config              Shows the window. Without --config and --no-config, show_launcher in bof3x.ini decides.\n"
+    "  --no-config           Shows no window and no message. The game starts with the settings in bof3x.ini.\n"
+    "  --host exe|bof3       exe starts bof3x (the default). bof3 starts the hosted build, which the developer\n"
+    "                        launcher (bof3x-launcher-dev.exe) starts on Windows.\n"
+    "  --set <key>=<value>   Changes one setting in bof3x.ini, then stops. You can use --set more than one time.\n"
+    "  --list                Shows the settings in bof3x.ini, then stops.\n"
     "  --scale <number>      The size of the window: 1 is 640 x 480. Without it, the launcher uses the scale of the display.\n"
     "  --check               Shows no window and starts no game. Use it to check a page.\n"
     "  --start               With --check: first do the start of the window (find the game, read --ini, the Sources\n"
@@ -135,6 +185,7 @@ const char kUsage[] =
 
 bool g_window_open = false;
 bool g_check = false;        // --check: no window, message, question or picker on the screen
+bool g_no_box = false;       // a refusal shows no message box (the rule in the header above)
 std::string g_banner_font;   // --banner-font
 double g_scale = 0;          // --scale
 std::string g_samples;       // --samples (stage P5)
@@ -148,18 +199,95 @@ std::string g_samples;       // --samples (stage P5)
 }
 
 [[noreturn]] void Refuse(const std::string& sentence) {
-    std::fprintf(stderr, "bof3x-launcher-ui: %s\n%s", sentence.c_str(), kUsage);
+    std::fprintf(stderr, "bof3x-launcher: %s\n%s", sentence.c_str(), kUsage);
     Leave(1);
 }
 
 [[noreturn]] void Fail(const std::string& sentence) {
-    std::fprintf(stderr, "bof3x-launcher-ui: %s\n", sentence.c_str());
+    std::fprintf(stderr, "bof3x-launcher: %s\n", sentence.c_str());
     Leave(1);
 }
 
 void Say(const std::string& line) {
-    std::printf("bof3x-launcher-ui: check: %s\n", line.c_str());
+    std::printf("bof3x-launcher: check: %s\n", line.c_str());
     std::fflush(stdout);
+}
+
+// --list: the setting lines of bof3x.ini as ConfigSave writes them, with no
+// comment and no section (the launcher with no window's, stage P0).
+void List(const bof3x::Config& cfg) {
+    const std::string text = bof3x::ConfigText(cfg);
+    std::size_t at = 0;
+    while (at < text.size()) {
+        std::size_t end = text.find('\n', at);
+        if (end == std::string::npos) end = text.size();
+        std::string line = text.substr(at, end - at);
+        at = end + 1;
+        if (!line.empty() && line.back() == '\r') line.pop_back();
+        if (line.empty() || line[0] == '#' || line[0] == '[') continue;
+        std::printf("%s\n", line.c_str());
+    }
+}
+
+// The switches that need Capcom's code, which only the hosted build maps
+// (src/hook/exe_host.cpp RefuseHostedSwitches; launcher.cpp's HostedOnlyAsked
+// before stage P6).
+bool HostedOnlyAsked() {
+    for (const wchar_t* name : {L"BOF3X_ORIGINAL", L"BOF3X_SHADOW", L"BOF3X_CALLTRACE", L"BOF3X_MP3_COMPARE"})
+        if (bof3::os::GetEnvW(name, nullptr, 0) > 0) return true;
+    wchar_t mp3[16] = {};
+    const std::uint32_t n = bof3::os::GetEnvW(L"BOF3X_MP3", mp3, 16);
+    return n > 0 && n < 16 && std::wcscmp(mp3, L"original") == 0;
+}
+
+// The hosted build and a moved image are the developer launcher's
+// (launcher.cpp's ForwardToDevLauncher before stage P6): the whole run handed
+// to bof3x-launcher-dev.exe beside this one, with the same arguments and
+// environment, on this launcher's own file or pipe when a script gave one
+// (os/process.h own_output), and this launcher ends with its exit code. A
+// release ships no developer launcher, and Linux has no hosted build: there
+// it stops here.
+[[noreturn]] void ForwardToDevLauncher(int argc, char** argv, const std::wstring& own, bool windows) {
+    if (!windows)
+        bof3x::StartDie(L"--host bof3, the hosted-only switches (BOF3X_ORIGINAL, BOF3X_SHADOW, BOF3X_CALLTRACE, "
+                        L"BOF3X_MP3_COMPARE, BOF3X_MP3=original) and a moved image (BOF3X_IMAGEBASE) need the hosted "
+                        L"build. The hosted build is on Windows only. This launcher starts bof3x (--host exe).");
+    const std::wstring dev = own + bof3x::StartSep(L"\\bof3x-launcher-dev.exe");
+    if (!bof3x::StartFileExists(dev))
+        bof3x::StartDie(L"--host bof3, the hosted-only switches (BOF3X_ORIGINAL, BOF3X_SHADOW, BOF3X_CALLTRACE, "
+                        L"BOF3X_MP3_COMPARE, BOF3X_MP3=original) and a moved image (BOF3X_IMAGEBASE) are the developer "
+                        L"launcher's, bof3x-launcher-dev.exe, which a source build writes beside this one; a release "
+                        L"does not ship it.");
+    bof3::os::ChildSpec spec;
+    spec.program = dev;
+    for (int i = 1; i < argc; ++i) spec.args.push_back(bof3::os::ToWide(argv[i]));
+    spec.own_output = true;
+    std::fflush(stdout);
+    std::fflush(stderr);
+    bof3::os::Child child;
+    std::uint32_t error = 0;
+    if (!bof3::os::ChildStart(spec, &child, &error))
+        bof3x::StartDie(L"CreateProcess failed for " + dev + L" (" + std::to_wstring(error) + L")");
+    std::uint32_t code = 1;
+    bof3::os::ChildWait(child, &code);
+    bof3::os::ChildClose(child);
+    std::exit(static_cast<int>(code));
+}
+
+// Until 2026-10-15 the game wrote bof3x.exe.new with an icon generated from
+// the game's data and the bof3x.icon stamp, and the launcher moved the new
+// file over bof3x.exe (DIV-0095). Rewriting an executable and running it is
+// what Windows Defender took for defence evasion, so bof3x.exe now carries our
+// own icon from the build and is never rewritten. What an older build left
+// behind beside it is deleted; nothing of it is used (launcher.cpp's
+// RemoveOldIconFiles before stage P6).
+void RemoveOldIconFiles(const std::wstring& own) {
+    for (const wchar_t* name : {L"\\bof3x.exe.new", L"\\bof3x.icon", L"\\bof3x.icon-work.exe"}) {
+        const std::wstring path = own + bof3x::StartSep(name);
+        std::error_code ec;
+        if (bof3x::StartFileExists(path) && std::filesystem::remove(bof3::os::PathW(path), ec))
+            bof3x::StartSay(path + L", an older build's icon file, deleted (bof3x.exe keeps its own icon)\n");
+    }
 }
 
 // The window, opened the first time a frame is owed (the window on the screen
@@ -178,7 +306,7 @@ void EnsureWindow() {
         bof3x::StartDie(L"The window did not open. " + bof3::os::ToWide(why.c_str()));
     }
     g_window_open = true;
-    if (!g_check) std::fprintf(stderr, "bof3x-launcher-ui: scale %g, renderer %s\n", ui::Scale(), ui::RendererName());
+    if (!g_check) std::fprintf(stderr, "bof3x-launcher: scale %g, renderer %s\n", ui::Scale(), ui::RendererName());
 }
 
 std::vector<std::string> Split(const std::string& text, char at) {
@@ -213,9 +341,13 @@ struct Session {
         kSources,   // the Sources page shown
         kWindow,    // the title page and Configure
         kOver,      // the start ended with nothing to start: the Sources page closed with no build, or No
+        kNoWindow,  // the start is done and no window is wanted (--no-config, show_launcher=0): the game starts
     };
     Phase phase = Phase::kFind;
     bool start = false;        // StartFindGame, StartReadSettings and the stale check (the window; --check --start)
+    // --config 1, --no-config 0, neither -1: then show_launcher decides (the Win32 launcher's want_dialog).
+    // A check's start always shows the window.
+    int want_window = 1;
     std::wstring named;        // --game or BOF3_GAME_DIR
     std::wstring read_ini, save_ini;
     bof3x::Config cfg;
@@ -226,13 +358,15 @@ struct Session {
     ui::StaleCheck stale;
     std::string asked;         // the question last said on stdout (a check)
 
-    bool Over() const { return closed || ask != ui::FrameAsk::kNone || phase == Phase::kOver; }
+    bool Over() const {
+        return closed || ask != ui::FrameAsk::kNone || phase == Phase::kOver || phase == Phase::kNoWindow;
+    }
 
     // Where the window saves bof3x.ini; a check's --save, read again from then on.
     void Save(const char* what) {
         if (save_ini.empty()) return;
         if (!bof3x::ConfigSave(save_ini, cfg)) {
-            bof3::os::PrintW(stderr, L"bof3x-launcher-ui: cannot write " + save_ini + L"; settings not saved\n");
+            bof3::os::PrintW(stderr, L"bof3x-launcher: cannot write " + save_ini + L"; settings not saved\n");
             return;
         }
         if (g_check) {
@@ -285,6 +419,7 @@ struct Session {
                     ui::PagesApply(pages);
                     Save("the Sources page built the install");
                     reopen_data = true;
+                    want_window = 1;   // shown anew whatever show_launcher now says (the Win32 want_dialog = 1)
                     phase = Phase::kFind;
                     continue;
                 }
@@ -297,6 +432,7 @@ struct Session {
                 }
                 return;
             case Phase::kOver:
+            case Phase::kNoWindow:
                 return;
             }
         }
@@ -327,7 +463,8 @@ struct Session {
             return;
         }
         exe_read = bof3x::StartFindGame(named, false, &game_dir, &exe);
-        const bof3x::StartSetUp set_up = bof3x::StartReadSettings(read_ini, game_dir, named, false, exe_read, 1, cfg);
+        const bof3x::StartSetUp set_up =
+            bof3x::StartReadSettings(read_ini, game_dir, named, false, exe_read, want_window, cfg);
         if (set_up != bof3x::StartSetUp::kNone) {
             // The Sources page first (start.h StartSetUpFor): its first run, or
             // this game folder set up in place - the page adds it as a source,
@@ -340,19 +477,20 @@ struct Session {
         // HANDOFF item 11 (docs/install-staleness.md): the home's install against
         // this release's importer, piece by piece. Only the install the Sources
         // page made and can make again - its game folder and its cache, no other
-        // cache named - and never under a self-test. Stale: the player is asked.
+        // cache named - and never under a self-test or --no-config. Stale: the player is asked.
         const std::wstring home_game = bof3x::HomeGameDefault();
-        if (!bof3x::StartSelfTestOnly() && named.empty() && cfg.cache.empty() && !StartSwitchSet(L"BOF3X_CACHE") &&
+        if (!bof3x::StartSelfTestOnly() && want_window != 0 && named.empty() && cfg.cache.empty() && !StartSwitchSet(L"BOF3X_CACHE") &&
             !StartSwitchSet(L"BOF3X_EXEIMAGE") && !home_game.empty() && game_dir == bof3x::StartFullPath(home_game)) {
             stale = ui::SourcesCheckStale();
-            if (!stale.error.empty()) std::fprintf(stderr, "bof3x-launcher-ui: %s\n", stale.error.c_str());
+            if (!stale.error.empty()) std::fprintf(stderr, "bof3x-launcher: %s\n", stale.error.c_str());
             if (g_check) Say(stale.stale ? "the install is stale" : "the install is not stale");
             if (stale.stale) {
                 phase = Phase::kAsk;
                 return;
             }
         }
-        ShowWindow();
+        if (want_window == 1 || (want_window == -1 && cfg.show_launcher)) ShowWindow();
+        else phase = Phase::kNoWindow;   // the settings as they are: no page is opened, nothing is saved
     }
 
     void ShowWindow() {
@@ -475,7 +613,7 @@ struct Session {
             else if (rest == "jukebox") text = ui::JukeboxText();   // stage P5
             else if (rest == "saves") text = ui::SavesText();   // the save editor (stage P5)
             else Refuse("The step \"" + step + "\" needs sources, mods, jukebox or saves.");
-            for (const std::string& line : Split(text, '\n')) std::printf("bof3x-launcher-ui: report: %s\n", line.c_str());
+            for (const std::string& line : Split(text, '\n')) std::printf("bof3x-launcher: report: %s\n", line.c_str());
             std::fflush(stdout);
         } else if (verb == "game-program" || verb == "game-window") {
             // The save editor's question "a game is running" (stage P5), asked for a stand-in.
@@ -555,7 +693,7 @@ int Check(const std::wstring& game_dir, const std::string& ini, const std::strin
     if (saved && !save.empty() && !bof3x::ConfigSave(s.save_ini, s.cfg)) Fail("Cannot write " + save + ".");
     if (const int ended = ui::ToolsEnd(); ended > 0) Say("ended " + std::to_string(ended) + " running tool(s)");
     const int tab = s.state.page;
-    std::printf("bof3x-launcher-ui: check (scale %g, renderer %s); page %d sub %d sheet %d%s, asked %s, %s\n",
+    std::printf("bof3x-launcher: check (scale %g, renderer %s); page %d sub %d sheet %d%s, asked %s, %s\n",
                 ui::Scale(), ui::RendererName(), tab, tab >= 0 ? s.state.sub[tab] : 0,
                 tab >= 0 ? s.state.sheet[tab] : 0, s.pages.sources_open ? " (the Sources page shown)" : "",
                 AskName(s), saved ? "saved the settings" : "saved nothing");
@@ -567,19 +705,25 @@ int Check(const std::wstring& game_dir, const std::string& ini, const std::strin
 }  // namespace
 
 // The start's refusals (launcher/start.h): on stderr, and in a message box
-// unless this is a check.
+// only where no script waits for the launcher (g_no_box, the header's rule).
 [[noreturn]] void bof3x::StartDie(const std::wstring& message) {
-    bof3::os::PrintW(stderr, L"bof3x-launcher-ui: " + message + L"\n");
-    if (!g_check) ui::Message(kTitle, bof3::os::ToUtf8(message.c_str()).c_str(), true);
+    bof3::os::PrintW(stderr, L"bof3x-launcher: " + message + L"\n");
+    if (!g_check && !g_no_box) ui::Message(kTitle, bof3::os::ToUtf8(message.c_str()).c_str(), true);
     Leave(1);
 }
 
 int main(int argc, char* argv[]) {
+    // A windowed program started from a terminal writes its lines there; with
+    // its output redirected (a script's pipe or file) nothing changes.
+    bof3::os::AttachParentTerminal();
     std::wstring named;
     std::vector<std::wstring> game_args;
     std::string capture, page = "title", ini, save;
     std::vector<std::string> steps;
-    bool check = false, start = false;
+    std::vector<std::pair<std::string, std::string>> sets;
+    bool check = false, start = false, list = false;
+    int want_window = -1;   // --config 1, --no-config 0, neither: show_launcher decides
+    int host_asked = -1;    // --host: 0 exe, 1 bof3; -1 not given
     int sub = 0, sheet = 0;
     auto number = [](const char* text, const char* what) {
         char* end = nullptr;
@@ -592,6 +736,22 @@ int main(int argc, char* argv[]) {
         const bool more = i + 1 < argc;
         if (arg == "--game" && more) {
             named = bof3::os::ToWide(argv[++i]);
+        } else if (arg == "--config") {
+            want_window = 1;
+        } else if (arg == "--no-config") {
+            want_window = 0;
+        } else if (arg == "--host" && more) {
+            const std::string host = argv[++i];
+            if (host == "bof3") host_asked = 1;
+            else if (host == "exe") host_asked = 0;
+            else Refuse("--host " + host + ": use exe (bof3x, the default) or bof3 (BOF3.exe, the hosted build).");
+        } else if (arg == "--set" && more) {
+            const std::string kv = argv[++i];
+            const std::size_t eq = kv.find('=');
+            if (eq == std::string::npos || eq == 0) Refuse("--set needs a key and a value: --set <key>=<value>.");
+            sets.emplace_back(kv.substr(0, eq), kv.substr(eq + 1));
+        } else if (arg == "--list") {
+            list = true;
         } else if (arg == "--check") {
             check = true;
         } else if (arg == "--start") {
@@ -627,34 +787,83 @@ int main(int argc, char* argv[]) {
         }
     }
     g_check = check;
-    if (check) return Check(named, ini, save, page, sub, sheet, steps, capture, start);
+    // The box rule (the header): no box under --no-config, a self-test, or a script's file or pipe.
+    g_no_box = want_window == 0 || bof3x::StartSelfTestOnly() || bof3::os::OutputRedirected();
+    if (check) {
+        if (want_window >= 0 || host_asked >= 0 || list || !sets.empty())
+            Refuse("--config, --no-config, --host, --set and --list are not for --check.");
+        return Check(named, ini, save, page, sub, sheet, steps, capture, start);
+    }
     if (!g_samples.empty()) Refuse("--samples is for --check.");
     if (!ini.empty() || !save.empty() || start) Refuse("--ini, --save and --start are for --check. The window uses bof3x.ini.");
+
+    const std::wstring own = bof3x::StartOwnDirectory();
+    // Settings. The file lives next to the launcher, not in the game folder,
+    // which stays the player's own (CLAUDE.md rule 1) apart from BOF3.CFG.
+    const std::wstring ini_path = own + bof3x::StartSep(L"\\bof3x.ini");
+
+    // --set and --list: bof3x.ini changed or shown, and nothing more (the
+    // launcher with no window's, stage P0, with its texts).
+    if (list || !sets.empty()) {
+        if (want_window >= 0 || host_asked >= 0 || !steps.empty() || !game_args.empty())
+            Refuse("--set and --list change and show bof3x.ini only. Use them without --config, --no-config, --host, "
+                   "--script and --.");
+        bof3x::Config cfg;
+        std::string why;
+        bof3x::ConfigLoad(ini_path, cfg, why);   // no file: the defaults
+        if (!why.empty()) bof3x::StartDie(bof3x::StartWide(why) + L"\n\n" + ini_path);
+        for (const auto& [key, value] : sets) {
+            if (!bof3x::ConfigSetLine(cfg, key, value, why)) Refuse(why);
+            std::printf("bof3x-launcher: bof3x.ini: %s=%s\n", key.c_str(), value.c_str());
+        }
+        if (!sets.empty() && !bof3x::ConfigSave(ini_path, cfg))
+            bof3x::StartDie(L"Cannot write " + ini_path + L". The settings did not change.");
+        if (list) List(cfg);
+        return 0;
+    }
 
     if (named.empty()) {
         wchar_t env[1024];
         const std::uint32_t n = bof3::os::GetEnvW(L"BOF3_GAME_DIR", env, 1024);
         if (n > 0 && n < 1024) named = env;
     }
-    const std::wstring own = bof3x::StartOwnDirectory();
-    const std::wstring ini_path = own + bof3x::StartSep(L"\\bof3x.ini");
 
-    // The game: the program beside this one, with this one's ending (headless.cpp).
+    // The game: the program beside this one, with this one's ending - bof3x.exe
+    // and its bof3x.dll on Windows, bof3x on Linux.
     std::string self;
     if (!bof3::os::ExecutablePath(&self)) bof3x::StartDie(L"Cannot find the folder of this launcher.");
-    const bool dot_exe = self.size() > 4 && self.compare(self.size() - 4, 4, ".exe") == 0;
-    const std::wstring ours = own + bof3x::StartSep(dot_exe ? L"\\bof3x.exe" : L"\\bof3x");
-    if (wchar_t base[32]; bof3::os::GetEnvW(L"BOF3X_IMAGEBASE", base, 32) > 0) {
+    const bool windows = self.size() > 4 && self.compare(self.size() - 4, 4, ".exe") == 0;
+    if (windows) {
+        const std::wstring dll = own + bof3x::StartSep(L"\\bof3x.dll");
+        if (!bof3x::StartFileExists(dll)) bof3x::StartDie(dll + L" is missing; it belongs next to this launcher.");
+    }
+    // Not given: our own executable - unless the environment asks for what
+    // only the hosted build has (Capcom's code: the A/B switch, the shadow
+    // fuzz, the call trace, Capcom's MP3 decoder and its comparison; bof3x
+    // refuses each), so the documented self-test and A/B commands keep their meaning.
+    const bool hosted = host_asked >= 0 ? host_asked == 1 : HostedOnlyAsked();
+    if (hosted) ForwardToDevLauncher(argc, argv, own, windows);
+    // BOF3X_IMAGEBASE (a developer switch, docs/relocatable-image-design.md
+    // 1.5; no ini key): bof3x.exe written at another base, bof3x-<BASE>.exe,
+    // which the developer launcher starts and fences. 0x400000 is bof3x.exe itself.
+    const std::wstring ours = own + bof3x::StartSep(windows ? L"\\bof3x.exe" : L"\\bof3x");
+    if (wchar_t base_text[32]; bof3::os::GetEnvW(L"BOF3X_IMAGEBASE", base_text, 32) > 0) {
         wchar_t* end = nullptr;
-        if (std::wcstoul(base, &end, 0) != 0x400000 || !end || *end)
-            bof3x::StartDie(L"BOF3X_IMAGEBASE asks for a moved image. This launcher does not start one. Remove "
-                            L"BOF3X_IMAGEBASE or set it to 0x400000.");
+        const std::uint64_t base = std::wcstoull(base_text, &end, 0);
+        if (!end || *end || end == base_text)
+            bof3x::StartDie(L"BOF3X_IMAGEBASE=" + std::wstring(base_text) + L" is not a number");
+        if (base != 0x400000) ForwardToDevLauncher(argc, argv, own, windows);
+        bof3x::StartSay(L"BOF3X_IMAGEBASE=" + std::wstring(base_text) + L": starting " + ours + L"\n");
     }
     if (!bof3x::StartFileExists(ours))
-        bof3x::StartDie(ours + L" is not there. It belongs next to this launcher.");
+        bof3x::StartDie(ours + (windows ? L" is missing; it belongs next to this launcher (or start the hosted build "
+                                          L"with --host bof3)."
+                                        : L" is missing; it belongs next to this launcher."));
+    RemoveOldIconFiles(own);
 
     Session s;
     s.start = true;
+    s.want_window = want_window;
     s.named = named;
     s.read_ini = ini_path;
     s.save_ini = ini_path;
@@ -672,20 +881,23 @@ int main(int argc, char* argv[]) {
     g_window_open = false;
 
     if (s.phase == Session::Phase::kOver) return 0;   // the start ended: what it saved is saved
-    if (s.closed && s.phase == Session::Phase::kSources && s.set_up_page) {
-        s.Save("the Sources page");   // Locate ffmpeg's choice, kept whatever happened
-        return 0;
+    // kNoWindow: --no-config or show_launcher=0 - the settings as read, nothing saved (as the Win32 launcher)
+    if (s.phase != Session::Phase::kNoWindow) {
+        if (s.closed && s.phase == Session::Phase::kSources && s.set_up_page) {
+            s.Save("the Sources page");   // Locate ffmpeg's choice, kept whatever happened
+            return 0;
+        }
+        if (s.ask != ui::FrameAsk::kPlay) {
+            // Exit, or the close box: after a Back, what the pages said is saved; nothing starts.
+            if (s.pages.applied) s.Save("exit");
+            return 0;
+        }
+        ui::PagesApply(s.pages);
+        // DIV-0102: the window's choice of language, under the cache it may have changed.
+        std::string why;
+        if (!bof3x::ConfigResolveLanguage(s.game_dir, s.cfg, why)) bof3x::StartDie(bof3x::StartWide(why));
+        s.Save("play");
     }
-    if (s.ask != ui::FrameAsk::kPlay) {
-        // Exit, or the close box: after a Back, what the pages said is saved; nothing starts.
-        if (s.pages.applied) s.Save("exit");
-        return 0;
-    }
-    ui::PagesApply(s.pages);
-    // DIV-0102: the window's choice of language, under the cache it may have changed.
-    std::string why;
-    if (!bof3x::ConfigResolveLanguage(s.game_dir, s.cfg, why)) bof3x::StartDie(bof3x::StartWide(why));
-    s.Save("play");
 
     bof3x::StartApply(s.game_dir, s.cfg, false, s.exe_read);
     bool waited = false;

@@ -1123,7 +1123,7 @@ void Message(const char* title, const char* text, bool error) {
         std::string line = text ? text : "";
         for (char& c : line)
             if (c == '\n') c = ' ';
-        std::printf("bof3x-launcher-ui: check: message: %s: %s\n", title, line.c_str());
+        std::printf("bof3x-launcher: check: message: %s: %s\n", title, line.c_str());
         std::fflush(stdout);
         return;
     }
@@ -1166,11 +1166,11 @@ int Ask(const char* title, const char* text) {
 
 void OpenLink(const char* url) {
     if (g.hidden) {
-        std::printf("bof3x-launcher-ui: check: the page asked to open %s\n", url);
+        std::printf("bof3x-launcher: check: the page asked to open %s\n", url);
         std::fflush(stdout);
         return;
     }
-    if (!SDL_OpenURL(url)) std::fprintf(stderr, "bof3x-launcher-ui: cannot open %s: %s\n", url, SDL_GetError());
+    if (!SDL_OpenURL(url)) std::fprintf(stderr, "bof3x-launcher: cannot open %s: %s\n", url, SDL_GetError());
 }
 
 void PickFile(int ask, const char* kind, const char* pattern, const char* title) {

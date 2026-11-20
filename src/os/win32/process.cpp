@@ -5,6 +5,7 @@
 
 #include <windows.h>
 
+#include <cstdio>
 #include <cwctype>
 
 namespace bof3::os {
@@ -104,12 +105,22 @@ bool ChildStart(const ChildSpec& spec, Child* child, std::uint32_t* error) noexc
             si.hStdOutput = wr;
             si.hStdError = wr;
         }
+        // own_output: the child writes to this process's own file or pipe
+        // (the hand-over to the developer launcher, as launcher.cpp's
+        // ForwardToDevLauncher made it before stage P6).
+        const bool own = !spec.capture && spec.own_output && OutputRedirected();
+        if (own) {
+            si.dwFlags = STARTF_USESTDHANDLES;
+            si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+            si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+            si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
+        }
         DWORD flags = 0;
         if (spec.suspended) flags |= CREATE_SUSPENDED;
         if (spec.no_window) flags |= CREATE_NO_WINDOW;
         if (!block.empty()) flags |= CREATE_UNICODE_ENVIRONMENT;
         PROCESS_INFORMATION pi{};
-        const BOOL ok = CreateProcessW(spec.program.c_str(), line.data(), nullptr, nullptr, spec.capture ? TRUE : FALSE,
+        const BOOL ok = CreateProcessW(spec.program.c_str(), line.data(), nullptr, nullptr, spec.capture || own ? TRUE : FALSE,
                                        flags, block.empty() ? nullptr : block.data(),
                                        spec.directory.empty() ? nullptr : spec.directory.c_str(), &si, &pi);
         const DWORD why = ok ? 0 : GetLastError();
@@ -164,6 +175,30 @@ void ChildClose(Child& child) noexcept {
             CloseHandle(reinterpret_cast<HANDLE>(*h));
             *h = -1;
         }
+}
+
+bool OutputRedirected() noexcept {
+    // launcher.cpp's test before stage P6 (ForwardToDevLauncher): a harness's pipe or a file, not a console
+    const auto redirected = [](DWORD which) {
+        const HANDLE h = GetStdHandle(which);
+        if (!h || h == INVALID_HANDLE_VALUE) return false;
+        const DWORD type = GetFileType(h);
+        return type == FILE_TYPE_PIPE || type == FILE_TYPE_DISK;
+    };
+    return redirected(STD_OUTPUT_HANDLE) && redirected(STD_ERROR_HANDLE);
+}
+
+void AttachParentTerminal() noexcept {
+    // launcher.cpp's AttachParentConsole before stage P6, unchanged
+    const auto held = [](DWORD which) {
+        const HANDLE h = GetStdHandle(which);
+        return h != nullptr && h != INVALID_HANDLE_VALUE && GetFileType(h) != FILE_TYPE_UNKNOWN;
+    };
+    const bool out = held(STD_OUTPUT_HANDLE), err = held(STD_ERROR_HANDLE);
+    if (out && err) return;
+    if (!AttachConsole(ATTACH_PARENT_PROCESS)) return;   // double-clicked: no terminal to write to
+    if (!out) std::freopen("CONOUT$", "w", stdout);
+    if (!err) std::freopen("CONOUT$", "w", stderr);
 }
 
 }  // namespace bof3::os

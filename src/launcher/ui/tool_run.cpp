@@ -289,7 +289,7 @@ bool StartChild(const Runtime& rt, const std::wstring& script, const std::vector
         return false;
     }
     if (g_say_starts) {
-        std::string line = "bof3x-launcher-ui: check: started pid " + std::to_string(child->pid) + ":";
+        std::string line = "bof3x-launcher: check: started pid " + std::to_string(child->pid) + ":";
         for (const std::wstring& a : spec.args) line += " [" + bof3::os::ToUtf8(a.c_str()) + "]";
         std::printf("%s\n", line.c_str());
         std::fflush(stdout);

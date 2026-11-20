@@ -70,7 +70,7 @@ void JukeReading(const std::wstring& path) { g_reading = path; }
 
 void JukeFatal(const std::wstring& message) {
     const std::string text = ConfigToUtf8(message);
-    std::fprintf(stderr, "bof3x-launcher-ui: music: %s\n", text.c_str());
+    std::fprintf(stderr, "bof3x-launcher: music: %s\n", text.c_str());
     if (!g_check) Message(kTitle, text.c_str(), true);
     bof3::os::EndProcess(1);   // the Win32 player's ExitProcess(1)
 }
@@ -82,7 +82,7 @@ namespace {
 void MusicAbort(const char* message) {
     const std::string text = std::string(message) + "\n\nwhile reading " +
                              (g_reading.empty() ? std::string("(no file)") : ConfigToUtf8(g_reading));
-    std::fprintf(stderr, "bof3x-launcher-ui: music: %s\n", text.c_str());
+    std::fprintf(stderr, "bof3x-launcher: music: %s\n", text.c_str());
     if (!g_check) Message(kTitle, text.c_str(), true);
 }
 
@@ -347,7 +347,7 @@ void JukeOutCheck(const std::string& samples) {
     if (samples.empty() || g_out.samples) return;
     g_out.samples = std::fopen(samples.c_str(), "wb");
     if (!g_out.samples) {
-        std::fprintf(stderr, "bof3x-launcher-ui: cannot write %s\n", samples.c_str());
+        std::fprintf(stderr, "bof3x-launcher: cannot write %s\n", samples.c_str());
         bof3::os::EndProcess(1);
     }
 }

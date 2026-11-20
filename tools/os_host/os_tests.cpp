@@ -1670,6 +1670,41 @@ bool C7IsChild() {
     return os::GetEnv("BOF3X_C7_CHILD", v, sizeof v) > 0;
 }
 
+// Stage P6's relay (ChildSpec::own_output): started with its output on a
+// pipe, it starts the child above with own_output and no pipe of its own, as
+// the player's launcher hands a hosted run to the developer's, and ends with
+// the child's exit code. The child's lines must reach the relay's pipe. On
+// Windows the child is os_tests_gui.exe, this file built as a windowed program
+// (-mwindows, as the developer launcher is): a console program finds its
+// parent's handles without being given them, a windowed one does not, so only
+// a windowed child shows that own_output hands them over.
+bool C7IsRelay() {
+    char v[8];
+    return os::GetEnv("BOF3X_C7_RELAY", v, sizeof v) > 0;
+}
+
+int C7RelayMain() {
+    std::string self8;
+    if (!os::ExecutablePath(&self8)) return 90;
+    std::printf("relay: redirected=%d\n", os::OutputRedirected() ? 1 : 0);
+    std::fflush(stdout);
+    std::wstring program = os::ToWide(self8.c_str());
+#ifdef _WIN32
+    program = program.substr(0, program.find_last_of(L"\\/") + 1) + L"os_tests_gui.exe";
+#endif
+    os::ChildSpec spec;
+    spec.program = program;
+    spec.args = {L"relayed"};
+    spec.env = {{L"BOF3X_C7_RELAY", L""}, {L"BOF3X_C7_CHILD", L"1"}};
+    spec.own_output = true;
+    os::Child child;
+    std::uint32_t error = 0, code = 91;
+    if (!os::ChildStart(spec, &child, &error)) return 92;
+    if (!os::ChildWait(child, &code)) code = 93;
+    os::ChildClose(child);
+    return static_cast<int>(code);
+}
+
 void TestProcess() {
     namespace fs = std::filesystem;
     std::string self8;
@@ -1738,6 +1773,31 @@ void TestProcess() {
     } else {
         CHECK(!"the child without a pipe started");
     }
+
+    // own_output (stage P6): a relay on a pipe hands its pipe to its own child, which writes there
+    {
+        os::ChildSpec relay;
+        relay.program = self;
+        relay.env = {{L"BOF3X_C7_RELAY", L"1"}};
+        relay.capture = true;
+        relay.no_window = true;
+        std::string got;
+        if (os::ChildStart(relay, &child, &error)) {
+            char buf[256];
+            for (std::int64_t n; (n = os::ChildRead(child, buf, sizeof buf)) > 0;) got.append(buf, static_cast<std::size_t>(n));
+            std::uint32_t code = 0;
+            CHECK(os::ChildWait(child, &code) && code == 7);
+            os::ChildClose(child);
+        } else {
+            CHECK(!"the relay started");
+        }
+        const auto saw = [&got](const std::string& line) { return got.find(line + "\n") != std::string::npos ||
+                                                                  got.find(line + "\r\n") != std::string::npos; };
+        CHECK(saw("relay: redirected=1"));   // a pipe is redirected output
+        CHECK(saw("arg=relayed"));           // the relay's child wrote on the relay's pipe, stdout ...
+        CHECK(saw("on stderr"));             // ... and stderr
+    }
+    std::printf("process: own_output - a child writes on its parent's pipe and its exit code comes back\n");
 
     // a program that is not there: no child, the system's error number
     os::ChildSpec none;
@@ -1940,6 +2000,7 @@ void TestRunning() {
 }  // namespace
 
 int main(int argc, char** argv) {
+    if (C7IsRelay()) return C7RelayMain();               // TestProcess's relay (stage P6)
     if (C7IsChild()) return C7ChildMain(argc, argv);   // TestProcess's child
     if (StandInAsked()) return StandInMain();           // TestRunning's stand-in
     TestMemory();

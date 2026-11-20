@@ -2,9 +2,9 @@
 # docs/linux-round.md, stage LC, group C1). CMakeLists.txt includes this file
 # when the target is not Windows, in place of everything from the DLL's
 # target down, and stops there: no PE, no make_exe.py, and of the launchers
-# the drawn one alone (bof3x_launcher_ui below, stage P1 of
-# docs/launcher-portable.md; the launcher without a window is stage P0's and
-# is linked in wave B).
+# the player's alone (bof3x_launcher below, bof3x-launcher: the drawn launcher
+# of docs/launcher-portable.md, the player's on both systems since stage P6;
+# the developer launcher is Windows' only).
 #
 # One target, `bof3x`: an ELF executable made of the exe host's sources -
 # the 64-bit DLL's list (_dll_sources in CMakeLists.txt, fuzz files already
@@ -90,32 +90,32 @@ if(BOF3X_LINK_ERROR_LIMIT)
 endif()
 target_link_libraries(bof3x PRIVATE bof3x_media bof3x_dxvk_headers SDL3::SDL3-static bof3x_os ${BOF3X_DXVK_LIBRARIES})
 
-# --- the drawn launcher (docs/launcher-portable.md, stage P1) -------------------
-# The same sources as on Windows (BOF3X_LAUNCHER_UI_SOURCES, CMakeLists.txt),
+# --- the launcher, bof3x-launcher (docs/launcher-portable.md, stages P1 to P6) ---
+# The same sources as on Windows (BOF3X_LAUNCHER_SOURCES, CMakeLists.txt),
 # compiled as the ELF's are: the seam's library is built with these options,
 # and a caller of it must agree on __cdecl.
-add_executable(bof3x_launcher_ui ${BOF3X_LAUNCHER_UI_SOURCES})
-add_dependencies(bof3x_launcher_ui bof3x_symbols bof3x_suites)
-target_include_directories(bof3x_launcher_ui PRIVATE src third_party "${_gen_dir}")
-target_compile_options(bof3x_launcher_ui PRIVATE ${BOF3X_LINUX_COMPILE_OPTIONS})
-set_target_properties(bof3x_launcher_ui PROPERTIES POSITION_INDEPENDENT_CODE OFF OUTPUT_NAME "bof3x-launcher-ui")
-target_link_options(bof3x_launcher_ui PRIVATE -no-pie)
-target_link_libraries(bof3x_launcher_ui PRIVATE bof3x_imgui SDL3::SDL3-static bof3x_os)
+add_executable(bof3x_launcher ${BOF3X_LAUNCHER_SOURCES})
+add_dependencies(bof3x_launcher bof3x_symbols bof3x_suites)
+target_include_directories(bof3x_launcher PRIVATE src third_party "${_gen_dir}")
+target_compile_options(bof3x_launcher PRIVATE ${BOF3X_LINUX_COMPILE_OPTIONS})
+set_target_properties(bof3x_launcher PROPERTIES POSITION_INDEPENDENT_CODE OFF OUTPUT_NAME "bof3x-launcher")
+target_link_options(bof3x_launcher PRIVATE -no-pie)
+target_link_libraries(bof3x_launcher PRIVATE bof3x_imgui SDL3::SDL3-static bof3x_os)
 # The Jukebox's names beside it (stage P5), as CMakeLists.txt copies them for
-# the Windows launchers: edit data/music-names.tsv, not the copy.
+# the Windows launcher: edit data/music-names.tsv, not the copy.
 add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/music-names.tsv"
   COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/data/music-names.tsv" "${CMAKE_BINARY_DIR}/music-names.tsv"
   DEPENDS "${CMAKE_SOURCE_DIR}/data/music-names.tsv"
   VERBATIM)
 add_custom_target(bof3x_music_names DEPENDS "${CMAKE_BINARY_DIR}/music-names.tsv")
-add_dependencies(bof3x_launcher_ui bof3x_music_names)
+add_dependencies(bof3x_launcher bof3x_music_names)
 # The save editor's reference names beside it (stage P5), as CMakeLists.txt copies them on Windows.
 add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/save-names.tsv"
   COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/data/save-names.tsv" "${CMAKE_BINARY_DIR}/save-names.tsv"
   DEPENDS "${CMAKE_SOURCE_DIR}/data/save-names.tsv"
   VERBATIM)
 add_custom_target(bof3x_save_names DEPENDS "${CMAKE_BINARY_DIR}/save-names.tsv")
-add_dependencies(bof3x_launcher_ui bof3x_save_names)
+add_dependencies(bof3x_launcher bof3x_save_names)
 
 # --- every object, no link (as CMakeLists.txt's bof3x_compile on Windows) --------
 add_custom_target(bof3x_compile
