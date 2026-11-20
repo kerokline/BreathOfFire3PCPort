@@ -71,8 +71,7 @@ void DataPage(Pages& p) {
     Label("Your copies of the game. The importer checks them and builds this install from them.");
     Place(Dx(9), Dy(32));
     Size(Dx(60), 23);
-    Grey("The Sources page is not in this launcher yet. To change the sources, use bof3x-launcher.");
-    Button("Sources...");
+    if (Button("Sources...")) SourcesBegin(p, false, false, std::wstring());
     GroupEnd();
 }
 

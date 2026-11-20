@@ -55,6 +55,15 @@ struct Pages {
     bool satpixie_open = false;
     // A Controls cell was used: the bind capture is shown in place of the tabs' page.
     bool capture_open = false;
+    // The Sources page (stage P4) is shown in place of the title page or the
+    // tabs' page, from Data's Sources... or before the window (main.cpp: a
+    // first run, a game folder to set up in place, a rebuild). When it closes,
+    // `sources_closed` is raised for the window, with `sources_built` true
+    // when a build finished (SourcesDialogRun's answer).
+    bool sources_open = false, sources_closed = false, sources_built = false;
+    // Raised when the Mods page added, built or removed a mod
+    // (kMsgModsChanged): Settings' Row above the text box is made again.
+    unsigned mods_stamp = 0;
 };
 
 // The Win32 pages are laid out in dialog units of Segoe UI 9: 1.75 of the
@@ -138,6 +147,45 @@ void CapturePage(Pages& p);
 // it now (a key number, -1 for none): the Settings page's Display box names it
 // (config_dialog.cpp DisplayItems).
 int PagesWindowKey(const Pages& p);
+
+// The Sources page (page_sources.cpp; sources_dialog.cpp's IDD_SOURCES): the
+// player's copies of the game, checked and built by tools/importer.py.
+// SourcesBegin opens it (SourcesDialogRun's arguments): `first_run`, no
+// install was found; `rebuild`, the player agreed to rebuild a stale install,
+// so the build starts at once and the page closes when it is done; `folder`
+// (with `first_run`), a game folder with no image to set up in place
+// (docs/exe-retire-round.md X3). Pages::cfg must be set: Locate ffmpeg.exe...
+// writes cfg->ffmpeg at once, and the caller saves it.
+void SourcesBegin(Pages& p, bool first_run, bool rebuild, const std::wstring& folder);
+void SourcesPage(Pages& p);
+// The page's tool, each frame, shown or not: its lines and its end.
+void SourcesPoll(Pages& p);
+// The page as text, for a check's `report sources`: the intro, the folders,
+// the list, the status, the progress and the log.
+std::string SourcesText();
+
+// The home's install against this release (sources_dialog.h SourcesCheckStale,
+// docs/install-staleness.md): `importer.py stale --home H`, run once for each
+// launcher and importer the install meets.
+struct StaleCheck {
+    bool stale = false;                  // a piece would be made differently: offer the rebuild
+    std::vector<std::string> pieces;     // each, as the player reads it (the step and why)
+    std::string error;                   // the check could not run: said, and the game starts
+};
+StaleCheck SourcesCheckStale();
+// The question SourcesAskRebuild asked, its title and its text.
+extern const char kRebuildTitle[];
+std::string SourcesRebuildText(const StaleCheck& check);
+
+// Mods, Data: the player's mods as tools/mods.py lists them (page_mods.cpp;
+// sources_dialog.cpp's IDD_PAGE_MODS). Open reads mods_off=; the list is
+// asked for the first time the page is shown. A box changed writes mods_off=
+// into the settings at once, as the Win32 window does (kMsgModsOffChanged).
+void ModsOpen(Pages& p);
+void ModsPage(Pages& p);
+void ModsPoll(Pages& p);
+// The page as text, for a check's `report mods`.
+std::string ModsText();
 
 // A page that is not in this launcher yet: its sentence.
 void PageNotYet();

@@ -30,6 +30,7 @@ struct Boxes {
     std::string ruby_pick;
     bool ruby_touched = false;
     unsigned ruby_stamp = 0;
+    unsigned ruby_mods = 0;   // Pages::mods_stamp it was made at: the Mods page changed the mods (kMsgModsChanged)
     // The Preset page's list, made at this stamp.
     std::string preset_list;
     unsigned preset_stamp = 0;
@@ -45,11 +46,12 @@ const wchar_t* LanguageLabel(const std::string& code) {
 // None; each installed reading-row mod; each other held language. Every
 // entry is listed, and one this install cannot play is grey with its reason
 // (the owner's rule, 2026-10-10). Made again when the language or the cache
-// folder changes.
+// folder changes, and when the Mods page added, built or removed a mod.
 void RubyRefresh(Pages& p) {
     Boxes& b = g_boxes;
-    if (b.ruby_stamp == p.stamp) return;
+    if (b.ruby_stamp == p.stamp && b.ruby_mods == p.mods_stamp) return;
     b.ruby_stamp = p.stamp;
+    b.ruby_mods = p.mods_stamp;
     b.ruby = ConfigRubyChoices(p.game_dir, PagesLanguageChosen(p), PagesDataRoot(p), PagesCacheRoot(p), HomeDir());
     const std::string want = b.ruby_touched ? b.ruby_pick : p.cfg->ruby;
     int sel = -1;

@@ -31,8 +31,7 @@ const char* const kTabNames[kFrameTabs] = {"settings", "controls", "music", "gam
 // A tab's pages, as config_dialog.cpp's kSubPages: a tab with more than one
 // shows a sub-tab button for each `label`; a sub-tab with more than one page
 // shows a third row of buttons, one for each `sheet`. `body` draws the page
-// (launcher/ui/pages.h); null: the page is not in this launcher yet (the
-// Mods page is stage P4's).
+// (launcher/ui/pages.h); null: the page is not in this launcher yet.
 struct SubPage {
     int tab;
     const char* label;
@@ -51,7 +50,7 @@ constexpr SubPage kSubPages[] = {
     {3, "Cheats", "Page 1", CheatsPage1},
     {3, "Cheats", "Page 2", CheatsPage2},
     {3, "Solo character", nullptr, SoloPage},
-    {4, "Data", nullptr, nullptr},
+    {4, "Data", nullptr, ModsPage},
     {4, "Extras", "Page 1", ExtrasPage},
     {4, "Extras", "Page 2", NewGamePage},
     {5, nullptr, nullptr, DataPage},
@@ -255,7 +254,25 @@ bool FrameOpen(FrameState& state, const char* name) {
     return false;
 }
 
+// The Sources page (stage P4), in place of the title page or the tabs, with
+// the banner above it, until its Close (the Win32 launcher shows a window of
+// its own): from Data's Sources..., or before the window (main.cpp).
+static FrameAsk SourcesFace(Pages& pages) {
+    Fill(0, 0, kPictureW, kBandH, kBlack);
+    Fill(0, kBandH, kPictureW, kPictureH - kBandH, Paper());
+    Banner(0);
+    AreaBegin("##sources", kMargin, kTabsY, kPictureW - 2 * kMargin, kPictureH - kTabsY - kBottom);
+    SourcesPage(pages);
+    AreaEnd();
+    return FrameAsk::kNone;
+}
+
 FrameAsk FrameDraw(FrameState& state, Pages& pages) {
+    // The tools' lines and ends, whichever page is shown, as the Win32 pages
+    // take their messages while hidden.
+    SourcesPoll(pages);
+    ModsPoll(pages);
+    if (pages.sources_open) return SourcesFace(pages);
     return state.page < 0 ? Title(state) : Configure(state, pages);
 }
 
