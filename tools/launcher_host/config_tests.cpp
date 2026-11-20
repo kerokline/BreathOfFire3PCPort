@@ -680,7 +680,8 @@ std::string Env(const char* name) {
 
 void ClearEnv() {
     for (const char* v : {"BOF3X_OPT", "BOF3X_CACHE", "BOF3X_CACHE_DATA", "BOF3X_LANG", "BOF3X_PSP", "BOF3X_MUSIC",
-                          "BOF3X_RUBY_KEY", "BOF3X_OFF", "BOF3X_ON", "BOF3X_SCALE", "BOF3X_SOLO"})
+                          "BOF3X_RUBY_KEY", "BOF3X_OFF", "BOF3X_ON", "BOF3X_SCALE", "BOF3X_SOLO", "BOF3X_EXEIMAGE",
+                          "BOF3X_EXEFILE"})
         bof3::os::SetEnv(v, nullptr);
 }
 
@@ -1399,6 +1400,188 @@ void TestPresetsFixture() {
     }
 }
 
+// ---- The install's kind (docs/exe-retire-round.md, X1) ----------------------
+//
+// [build] install_kind as tools/importer.py write_manifest writes it, and the
+// manifests of before it, which answer from their [cache] assets rows. Each
+// install kind the project has, with an old and a new manifest, through the
+// launcher's four questions: the Chinese text (ConfigOriginalAvailable,
+// DIV-0102), BOF3X_CACHE_DATA=0 and BOF3X_EXEIMAGE_STRICT=1 (a preset's env
+// values, EnvNotHere), BOF3X_EXEFILE=1, and the game folder. Builds, layer
+// names and made-up hashes only; BOF3.exe an empty file.
+
+std::string KindManifest(const char* policy, const char* tables, const char* kind, const char* source, bool zh,
+                         bool exe = true) {
+    std::string t = "[meta]\ntarget = \"pc-zh\"\n\n[build]\nbase_policy = \"" + std::string(policy) + "\"\n";
+    if (exe) t += "exe_tables_from = \"" + std::string(tables) + "\"\n";
+    if (kind) t += "install_kind = \"" + std::string(kind) + "\"\n";
+    t += "\n[[source]]\nbuild = \"" + std::string(source) + "\"\npath = \"x\"\n\n[cache]\nassets = [\n"
+         "  [\"A.DAT\", 0, \"base\", \"" + std::string(source) + ":chunk\", \"h\"],\n";
+    if (zh) t += "  [\"A.DAT\", 1, \"loc/zh-CN\", \"pc-zh:chunk\", \"h\"],\n";
+    t += "]\n";
+    if (exe) t += "\n[exe]\nbuild = \"" + std::string(tables) + "\"\nfile = \"base/exe/data.bin\"\nsha256 = \"h\"\n";
+    return t;
+}
+
+void TestInstallKind() {
+    using bof3x::InstallKind;
+    ClearEnv();
+    // The reader: the key, its two values, an error for any other, and a
+    // manifest from before it answered from its rows.
+    const bof3x::CacheManifest pc = bof3x::ManifestParse(KindManifest("psx", "pc-zh", "pc", "pc-zh", true));
+    const bof3x::CacheManifest disc = bof3x::ManifestParse(KindManifest("psx", "psx-us", "disc", "psx-us", false));
+    const bof3x::CacheManifest pc_old = bof3x::ManifestParse(KindManifest("psx", "pc-zh", nullptr, "pc-zh", true));
+    const bof3x::CacheManifest disc_old = bof3x::ManifestParse(KindManifest("psx", "psx-us", nullptr, "psx-us", false));
+    Check(pc.error.empty() && pc.install_kind == "pc" && bof3x::ManifestInstallKind(pc) == InstallKind::kPc &&
+              !bof3x::ManifestKindFromRows(pc),
+          "install_kind = \"pc\" read, recorded");
+    Check(disc.error.empty() && bof3x::ManifestInstallKind(disc) == InstallKind::kDisc && !bof3x::ManifestKindFromRows(disc),
+          "install_kind = \"disc\" read, recorded");
+    Check(pc_old.zh_rows && bof3x::ManifestInstallKind(pc_old) == InstallKind::kPc && bof3x::ManifestKindFromRows(pc_old),
+          "no install_kind, a loc/zh-CN row: a PC install, from the rows");
+    Check(!disc_old.zh_rows && bof3x::ManifestInstallKind(disc_old) == InstallKind::kDisc &&
+              bof3x::ManifestKindFromRows(disc_old),
+          "no install_kind, no loc/zh-CN row: a disc-built install, from the rows");
+    Check(!bof3x::ManifestParse(KindManifest("psx", "psx-us", "disc", "psx-us", true)).error.size() &&
+              bof3x::ManifestInstallKind(bof3x::ManifestParse(KindManifest("psx", "psx-us", "disc", "psx-us", true))) ==
+                  InstallKind::kDisc,
+          "the recorded kind wins over the rows");
+    Check(bof3x::ManifestInstallKind(bof3x::CacheManifest()) == InstallKind::kNone, "no manifest: no kind");
+    for (const char* bad : {"\"PC\"", "pc", "\"psx\"", "\"\"", "[\"pc\"]"}) {
+        const bof3x::CacheManifest m = bof3x::ManifestParse(std::string("[build]\ninstall_kind = ") + bad + "\n");
+        Check(m.error.find(std::string("manifest.toml's [build] install_kind is ") + bad) == 0 &&
+                  !bof3x::ManifestRefusal(m, "x").empty(),
+              (std::string("install_kind = ") + bad + " refused, named").c_str(), m.error);
+    }
+    Check(!bof3x::ManifestParse("[cache]\noverlays = [\n  [\"A.DAT\", \"loc/zh-CN\", \"x\", \"h\"],\n]\n").zh_rows,
+          "a loc/zh-CN text only in [cache] assets counts");
+    // Said once: the first ask of an older manifest, never again, never for a recorded one.
+    const std::string first = bof3x::ManifestKindNoteOnce(pc_old);
+    Check(first.find("no [build] install_kind") != std::string::npos && first.find("a PC install") != std::string::npos,
+          "an older manifest is said once, naming what it is read as", first);
+    Check(bof3x::ManifestKindNoteOnce(pc_old).empty() && bof3x::ManifestKindNoteOnce(disc_old).empty() &&
+              bof3x::ManifestKindNoteOnce(pc).empty(),
+          "and not again");
+
+    // The calls: a player's start does not ask the file.
+    bof3x::InstallAsk player;            // the launcher's: no switch, true with no cache
+    player.no_cache = true;
+    player.exe_present = true;           // set, and not read: BOF3.exe beside a disc-built cache
+    bof3x::InstallAsk developer = player;
+    developer.developer = true;
+    Check(bof3x::InstallPcDat(pc, player) && !bof3x::InstallPcDat(disc, player) && bof3x::InstallPcDat(pc_old, player) &&
+              !bof3x::InstallPcDat(disc_old, player),
+          "InstallPcDat: the cache's kind, the file's presence not read");
+    Check(bof3x::InstallPcDat(bof3x::CacheManifest(), player), "InstallPcDat with no cache: the caller's answer");
+    Check(bof3x::InstallPcDat(disc, developer), "InstallPcDat under BOF3X_EXEFILE=1: today's test, the file's presence");
+    developer.exe_present = false;
+    Check(!bof3x::InstallPcDat(pc, developer), "InstallPcDat under the switch with no file: false, as today");
+    Check(bof3x::InstallChineseText(disc, true, player) && !bof3x::InstallChineseText(disc, false, player) &&
+              bof3x::InstallChineseText(pc, false, player),
+          "InstallChineseText: the loc\\zh-CN layer, or the PC's DAT\\");
+    Check(bof3x::InstallImageWhole(pc, player) && !bof3x::InstallImageWhole(disc, player) &&
+              !bof3x::InstallImageWhole(bof3x::ManifestParse(KindManifest("psp", "psp-jp", "disc", "psp-jp", false)), player),
+          "InstallImageWhole: the image's build");
+    Check(bof3x::InstallImageWhole(bof3x::ManifestParse(KindManifest("psx", "", nullptr, "pc-zh", true, false)), player) &&
+              !bof3x::InstallImageWhole(bof3x::ManifestParse(KindManifest("psx", "", nullptr, "psx-us", false, false)), player),
+          "InstallImageWhole with no image recorded: as InstallPcDat");
+    {
+        const bof3x::InstallAsk e = bof3x::InstallAskEngine(false, true);
+        Check(!e.developer && e.no_cache && !bof3x::InstallPcDat(disc, e), "the engine's ask, exe host: the cache's kind");
+        Check(bof3x::InstallAskEngine(true, true).developer, "the engine's ask, hosted: the developer's");
+        bof3::os::SetEnv("BOF3X_EXEFILE", "1");
+        Check(bof3x::InstallExeFileSwitch() && bof3x::InstallAskEngine(false, true).developer,
+              "the engine's ask under BOF3X_EXEFILE=1: the developer's");
+        bof3::os::SetEnv("BOF3X_EXEFILE", "0");
+        Check(!bof3x::InstallExeFileSwitch(), "BOF3X_EXEFILE=0: not the switch");
+        bof3::os::SetEnv("BOF3X_EXEFILE", nullptr);
+    }
+
+    // Every install kind through the launcher's own sites. The game folder
+    // holds DAT\FIRST.DAT; `exe` an empty BOF3.exe beside it; the cache a
+    // manifest and, with `zh_dir`, a loc\zh-CN layer on disk.
+    struct Kind {
+        const char* what;
+        bool exe;
+        const char* manifest_new;   // null: no cache
+        const char* manifest_old;
+        bool zh_dir;
+        bool original, cache_data0, strict;
+    };
+    const std::string m_pc = KindManifest("psx", "pc-zh", "pc", "pc-zh", true),
+                      m_pc_old = KindManifest("psx", "pc-zh", nullptr, "pc-zh", true),
+                      m_disc = KindManifest("psx", "psx-us", "disc", "psx-us", false),
+                      m_disc_old = KindManifest("psx", "psx-us", nullptr, "psx-us", false),
+                      m_psp = KindManifest("psp", "psp-jp", "disc", "psp-jp", false),
+                      m_psp_old = KindManifest("psp", "psp-jp", nullptr, "psp-jp", false);
+    const Kind kinds[] = {
+        {"a PC folder used in place, no cache", true, nullptr, nullptr, false, true, true, true},
+        {"an install the importer made from a PC source (no BOF3.exe)", false, m_pc.c_str(), m_pc_old.c_str(), true,
+         true, true, true},
+        {"the same, its loc\\zh-CN layer gone", false, m_pc.c_str(), m_pc_old.c_str(), false, true, true, true},
+        {"an older PC install (BOF3.exe in its game folder)", true, m_pc.c_str(), m_pc_old.c_str(), true, true, true, true},
+        {"a disc-built install", false, m_disc.c_str(), m_disc_old.c_str(), false, false, false, false},
+        // section 6's change: the cache's record decides where today the file did
+        {"a PC folder beside a disc-built cache", true, m_disc.c_str(), m_disc_old.c_str(), false, false, false, false},
+        {"a PSP-only install", false, m_psp.c_str(), m_psp_old.c_str(), false, false, false, false},
+    };
+    auto env_has = [](const bof3x::PresetPlan& plan, const char* k, const char* v) {
+        for (const auto& kv : plan.env)
+            if (kv.first == k && kv.second == v) return true;
+        return false;
+    };
+    const std::wstring game = Temp(L"bof3x_kind_game"), cache = Temp(L"bof3x_kind_cache");
+    for (const Kind& k : kinds) {
+        for (int old = 0; old < 2; ++old) {
+            if (!k.manifest_new && old) continue;
+            ClearEnv();
+            std::error_code ec;
+            std::filesystem::remove_all(bof3::os::PathW(game), ec);
+            std::filesystem::remove_all(bof3::os::PathW(cache), ec);
+            MakeDirs(game + P(L"\\DAT"));
+            WriteAll(game + P(L"\\DAT\\FIRST.DAT"), "");
+            if (k.exe) WriteAll(game + P(L"\\BOF3.exe"), "");
+            std::wstring root;
+            if (k.manifest_new) {
+                MakeDirs(cache);
+                WriteAll(cache + P(L"\\manifest.toml"), old ? k.manifest_old : k.manifest_new);
+                if (k.zh_dir) {
+                    MakeDirs(cache + P(L"\\loc\\zh-CN\\dat"));
+                    WriteAll(cache + P(L"\\loc\\zh-CN\\dat\\A.DAT"), "");
+                }
+                root = cache;
+                bof3::os::SetEnv("BOF3X_CACHE", Narrow(cache).c_str());
+            }
+            const std::string what = std::string(k.what) + (k.manifest_new ? (old ? ", old manifest" : ", new manifest") : "");
+            Check(bof3x::ConfigOriginalAvailable(game, root) == k.original, (what + ": the Chinese text").c_str());
+            bof3x::Config cfg;
+            const bof3x::PresetPlan plan = bof3x::ConfigPresetPlan(game, cfg, bof3x::Preset::kShipped, "original");
+            Check(env_has(plan, "BOF3X_CACHE_DATA", "0") == k.cache_data0, (what + ": BOF3X_CACHE_DATA=0").c_str());
+            Check(env_has(plan, "BOF3X_EXEIMAGE_STRICT", "1") == k.strict, (what + ": BOF3X_EXEIMAGE_STRICT=1").c_str());
+            Check(bof3x::InstallGameFolder(game), (what + ": a game folder").c_str());
+            // The developer's switch: today's test, the file's presence
+            bof3::os::SetEnv("BOF3X_EXEFILE", "1");
+            Check(bof3x::ConfigOriginalAvailable(game, root) == (k.exe || k.zh_dir),
+                  (what + ": the Chinese text under BOF3X_EXEFILE=1, as today").c_str());
+            const bof3x::PresetPlan dev = bof3x::ConfigPresetPlan(game, cfg, bof3x::Preset::kShipped, "original");
+            bof3::os::SetEnv("BOF3X_EXEFILE", nullptr);
+            Check(env_has(dev, "BOF3X_CACHE_DATA", "0") == k.exe && env_has(dev, "BOF3X_EXEIMAGE_STRICT", "1") == k.exe,
+                  (what + ": BOF3X_CACHE_DATA=0 and STRICT=1 under BOF3X_EXEFILE=1, as today").c_str());
+        }
+    }
+    // BOF3X_EXEIMAGE alone names the cache when BOF3X_CACHE does not
+    {
+        ClearEnv();
+        bof3::os::SetEnv("BOF3X_EXEIMAGE", Narrow(cache).c_str());   // the PSP-only cache, old manifest, from the loop
+        Check(!bof3x::ConfigOriginalAvailable(game, L""), "BOF3X_EXEIMAGE's cache read for the kind when BOF3X_CACHE is unset");
+        ClearEnv();
+    }
+    Check(!bof3x::InstallGameFolder(cache) && !bof3x::InstallGameFolder(L""), "a cache is not a game folder; nor is no folder");
+    std::error_code ec;
+    std::filesystem::remove_all(bof3::os::PathW(game), ec);
+    std::filesystem::remove_all(bof3::os::PathW(cache), ec);
+}
+
 // The plan at launch on a fake install: what goes to BOF3X_OFF, which ini
 // values the game gets, which env values are set, and the install rules.
 void TestPresetPlan() {
@@ -1543,9 +1726,14 @@ void TestPresetPlan() {
         ClearEnv();
     }
 
-    // The same on a disc-built install: the install rules
+    // The same on a disc-built install: the install rules. Its cache says what
+    // it is (docs/exe-retire-round.md X1); with none, a folder could only be a PC's.
     {
+        const std::wstring disc_cache =
+            FakeCache(L"bof3x_pr_disc_cache", {}, KindManifest("psx", "psx-us", "disc", "psx-us", false).c_str());
+        bof3::os::SetEnv("BOF3X_CACHE", Narrow(disc_cache).c_str());
         const bof3x::PresetPlan plan = bof3x::ConfigPresetPlan(disc, cfg, Preset::kShipped, "en-US");
+        bof3::os::SetEnv("BOF3X_CACHE", nullptr);
         Check(!bof3x::PresetOverrides(plan, "music"), "disc-built: no music=pc (no BGM folder)");
         Check(!has(plan.env, "BOF3X_CACHE_DATA", "0") && !has(plan.env, "BOF3X_EXEIMAGE_STRICT", "1"),
               "disc-built: no BOF3X_CACHE_DATA=0, no BOF3X_EXEIMAGE_STRICT=1");
@@ -2150,6 +2338,8 @@ int main() {
     TestHomeDefaults();
     std::printf("cache manifest\n");
     TestManifest();
+    std::printf("the install's kind (docs/exe-retire-round.md X1)\n");
+    TestInstallKind();
     std::printf("review fixes: hosted opt=, listed layers, music only, one reader, chord round trip, psp=\n");
     TestHostedOpt();
     TestListedLayers();

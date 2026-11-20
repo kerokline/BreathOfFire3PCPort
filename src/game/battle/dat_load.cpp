@@ -5,6 +5,7 @@
 // locals here.
 #include "game/dat_load.h"
 
+#include "common/cache_manifest.h"   // the install's kind (docs/exe-retire-round.md X1)
 #include "game/battle_text.h"
 #include "game/char_names.h"
 #include "game/dat_cache.h"
@@ -838,14 +839,20 @@ void CacheSelfTest() {
 
 // DIV-0102 (docs/disc-only-install.md): the port's own Chinese text
 // is in the PC's DAT\ alone. With BOF3X_LANG unset or "original" it plays
-// from a PC install (BOF3.exe in the game directory: its DAT\ is the port's,
-// and `importer.py install --base` refuses such a directory) or from the
-// cache's loc\zh-CN layer (built from the PC's DAT\); otherwise - a
+// from the cache's loc\zh-CN layer (built from the PC's DAT\) or from a PC
+// install (the cache's [build] install_kind, common/cache_manifest.h
+// InstallChineseText - not BOF3.exe beside the game, docs/exe-retire-round.md
+// X1; the hosted build and BOF3X_EXEFILE=1 still ask the file); otherwise - a
 // disc-only install - every Chinese chunk is missing and the game would play
 // without text, so it is refused here, naming the languages the install and
 // the cache hold. The launcher's rule is the same (ConfigOriginalAvailable).
 void RefuseOriginalWithoutChinese() {
-    if (dat_load::g_lang[0] || bof3::ExeFile_Present() || dat_cache::HasLayer("loc", "zh-CN")) return;
+    if (dat_load::g_lang[0] || dat_cache::HasLayer("loc", "zh-CN")) return;
+    std::string where;
+    const bof3x::CacheManifest m = bof3x::ManifestReadEnvironment(&where);
+    if (!m.error.empty()) bof3::Fatal("DIV-0102: %s", bof3x::ManifestRefusal(m, where).c_str());
+    if (const std::string note = bof3x::ManifestKindNoteOnce(m); !note.empty()) bof3::Log("DIV-0102    %s", note.c_str());
+    if (bof3x::InstallChineseText(m, false, bof3x::InstallAskEngine(!bof3::IsExeHost(), bof3::ExeFile_Present()))) return;
     std::string held;
     for (const char* tag : bof3x::kLanguageTags) {
         char pattern[32];
@@ -856,7 +863,7 @@ void RefuseOriginalWithoutChinese() {
         held += tag;
     }
     bof3::Fatal("DIV-0102: BOF3X_LANG is unset or \"original\" (the port's Chinese text), but this is a "
-                "disc-only install: no BOF3.exe in the game directory and no loc\\zh-CN layer in the cache%s, so "
+                "disc-only install: its cache is not built from the PC game and has no loc\\zh-CN layer%s, so "
                 "there is no Chinese text to play. Set BOF3X_LANG (bof3x.ini's language=) to a language it holds: %s",
                 dat_cache::Root() ? "" : " (no BOF3X_CACHE)",
                 held.empty() ? "none - build one: importer.py build --lang <tag>, install --lang <tag>" : held.c_str());
