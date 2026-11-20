@@ -10,13 +10,24 @@
 // --dump writes each card save as a PC file into a folder outside the
 // repository, for the comparison with tools/save_convert.py.
 // With no folder the tests that need no save still run.
+// The developer's oracle (docs/exe-retire-round.md X4): BOF3X_ORACLE_EXE=<a
+// BOF3.exe> and/or BOF3X_ORACLE_CACHE=<a cache> run the save editor's image
+// readers (launcher/exe_image.h) on the file and on the cache's image and,
+// with both, compare their answers; BOF3X_ORACLE_TRACE=1 adds what each reader
+// touched. Counts and addresses only are printed.
+#include <algorithm>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <iterator>
+#include <map>
 #include <string>
 #include <vector>
 
+#include "common/sha256.h"
+#include "launcher/exe_image.h"
 #include "launcher/save/block.h"
 #include "launcher/save/card.h"
 #include "launcher/save/finds.h"
@@ -691,6 +702,233 @@ void TestFinds(const fs::path& temp) {
     Expect(passages[1].label == "Passage finds 1", "a passage bit with no name keeps its number");
 }
 
+// --- The install's image (launcher/exe_image.h; docs/exe-retire-round.md X4) ---
+
+std::string Hex(const std::vector<unsigned char>& b) {
+    std::string h;
+    bof3x::Sha256HexBytes(b.data(), b.size(), h);
+    return h;
+}
+
+void WriteBytes(const fs::path& p, const std::vector<unsigned char>& b) {
+    std::ofstream f(p, std::ios::binary);
+    f.write(reinterpret_cast<const char*>(b.data()), static_cast<std::streamsize>(b.size()));
+}
+
+void WriteText(const fs::path& p, const std::string& t) {
+    std::ofstream f(p, std::ios::binary);
+    f << t;
+}
+
+// A cache of our own bytes, in the shape tools/exe_tables.py writes: an image
+// at 0x1000 of 0x100 bytes, four ranges (the file's, a table file, a gap, the
+// PC's zeros) and the table's file. No byte of the game's.
+struct TestCache {
+    fs::path root;
+    std::vector<unsigned char> bin, table, whole;
+    void Write(const std::string& image_sha_override = "") const {
+        const fs::path exe = root / "base" / "exe";
+        std::error_code ec;
+        fs::create_directories(exe / "tables", ec);
+        WriteBytes(exe / "data.bin", bin);
+        WriteBytes(exe / "tables" / "demo_table.bin", table);
+        WriteText(exe / "data.toml",
+                  "# a test's\n\n[image]\nfile = \"data.bin\"\nva = 0x001000\nsize = 256\nbss_end = 0x002000\n"
+                  "sha256 = \"" + Hex(bin) + "\"\nimage_sha256 = \"" +
+                      (image_sha_override.empty() ? Hex(whole) : image_sha_override) +
+                      "\"\nbuild = \"test\"\nsource = \"test\"\n\nranges = [\n"
+                      "  [0x001000, 0x001040, \"exe\", \".data\"],\n"
+                      "  [0x001040, 0x001080, \"file\", \"demo_table\"],\n"
+                      "  [0x001080, 0x0010C0, \"gap\", \"x y\"],\n"
+                      "  [0x0010C0, 0x001100, \"none\", \"\"],\n]\n\naccepted = [\n  [\"layer\", 0x001080, 0x0010C0],\n]\n");
+        WriteText(exe / "tables" / "tables.toml", "build = \"test\"\n\ntables = [\n  [\"demo_table\", 0x001040, 0x001080, 16, 4, \"" +
+                                                      Hex(table) + "\", \"exe .data\"],\n]\n");
+    }
+};
+
+void TestImage(const fs::path& temp) {
+    std::error_code ec;
+    fs::remove_all(temp, ec);
+    TestCache c;
+    c.root = temp;
+    c.bin.assign(0x100, 0);
+    for (unsigned i = 0; i < 0x40; ++i) c.bin[i] = static_cast<unsigned char>(i + 1);
+    c.table.assign(0x40, 0);
+    for (unsigned i = 0; i < 0x40; ++i) c.table[i] = static_cast<unsigned char>(0x80 + i);
+    c.whole = c.bin;
+    std::memcpy(c.whole.data() + 0x40, c.table.data(), 0x40);
+    c.Write();
+
+    bof3x::ExeImage img;
+    std::string why;
+    std::vector<unsigned char> out;
+    Expect(!bof3x::ExeImageFromCache((temp / "none").wstring(), img, why) && why.find("no image") != std::string::npos,
+           "a cache with no base\\exe has no image, and says so");
+    Expect(bof3x::ExeImageFromCache(temp.wstring(), img, why), "the test cache's image is read (" + why + ")");
+    Expect(img.build == "test" && img.runs.size() == 1 && img.ranges.size() == 4, "one run, four ranges, the build");
+    Expect(bof3x::ExeImageRead(img, 0x1000, 0x40, out, why) && out == std::vector<unsigned char>(c.bin.begin(), c.bin.begin() + 0x40),
+           "an `exe` range reads data.bin's bytes");
+    Expect(bof3x::ExeImageRead(img, 0x1040, 0x40, out, why) && out == c.table, "a `file` range reads its table file, laid in");
+    Expect(bof3x::ExeImageRead(img, 0x1030, 0x20, out, why), "a read across two held ranges is one read");
+    Expect(bof3x::ExeImageRead(img, 0x10C0, 0x40, out, why), "a `none` range is held (the PC's zeros)");
+    Expect(!bof3x::ExeImageRead(img, 0x1070, 0x20, out, why) && why.find("class gap") != std::string::npos && img.not_held == 1 &&
+               img.refused_how == "gap",
+           "a read that touches a `gap` gets nothing and names the class (" + why + ")");
+    Expect(!img.At(0x10F0, 0x20) && img.outside == 1, "a read past the image gets nothing");
+    Expect(!img.At(0xFFF, 2) && img.outside == 2, "a read before the image gets nothing");
+
+    // Each file checked against its recorded hash.
+    TestCache d = c;
+    d.bin[3] ^= 1;
+    d.whole[3] ^= 1;
+    WriteBytes(temp / "base" / "exe" / "data.bin", d.bin);   // data.toml still names the old bytes
+    Expect(!bof3x::ExeImageFromCache(temp.wstring(), img, why) && why.find("data.bin") != std::string::npos,
+           "one byte of data.bin changed: refused, named (" + why + ")");
+    c.Write();
+    d = c;
+    d.table[5] ^= 1;
+    WriteBytes(temp / "base" / "exe" / "tables" / "demo_table.bin", d.table);
+    Expect(!bof3x::ExeImageFromCache(temp.wstring(), img, why) && why.find("demo_table") != std::string::npos,
+           "one byte of a table file changed: refused, named (" + why + ")");
+    c.Write(std::string(64, '0'));
+    Expect(!bof3x::ExeImageFromCache(temp.wstring(), img, why) && why.find("image_sha256") != std::string::npos,
+           "the image with its table files against image_sha256 (" + why + ")");
+    c.Write();
+    {
+        // A class this reader does not know is refused, not read as held.
+        std::ifstream f(temp / "base" / "exe" / "data.toml", std::ios::binary);
+        std::string t((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+        f.close();
+        t.replace(t.find("\"none\""), 6, "\"other\"");
+        WriteText(temp / "base" / "exe" / "data.toml", t);
+        Expect(!bof3x::ExeImageFromCache(temp.wstring(), img, why) && why.find("other") != std::string::npos,
+               "a range of a class the reader does not know: refused (" + why + ")");
+    }
+    fs::remove_all(temp, ec);
+}
+
+// The developer's oracle (docs/exe-retire-round.md X4 step 4): the save
+// editor's readers on BOF3.exe (BOF3X_ORACLE_EXE, the file) and on a cache's
+// image (BOF3X_ORACLE_CACHE), each alone or both compared answer for answer.
+// It prints counts and addresses, never a value read. BOF3X_ORACLE_TRACE=1
+// also prints, for the cache's image, what each reader touched: its reads,
+// their lowest and highest address, the bytes by data.toml class, the reads
+// the image refused.
+struct Answers {
+    bool party = false, names = false, links = false, finds = false;
+    std::string party_why, names_why, links_why, finds_why;
+    std::vector<unsigned char> table;
+    bof3x::DefaultNameTables tables;
+    std::vector<bof3x::AreaLink> area_links;
+    std::vector<bof3x::save::Find> chests, passages;
+};
+
+const char* Env(const char* name) {
+    const char* v = std::getenv(name);
+    return v && *v ? v : nullptr;
+}
+
+void Trace(const char* reader, const bof3x::ExeImage& img, const std::vector<std::pair<std::uint32_t, std::uint32_t>>& reads,
+           std::uint32_t refused) {
+    if (img.runs.empty()) return;
+    const std::uint32_t va = img.runs[0].va;
+    std::vector<bool> seen(img.runs[0].size, false);
+    std::uint32_t lo = 0xFFFFFFFFu, hi = 0, outside = 0;
+    for (const auto& r : reads) {
+        if (r.first < va || r.first + r.second > va + img.runs[0].size) {
+            ++outside;
+            continue;
+        }
+        lo = std::min(lo, r.first);
+        hi = std::max(hi, r.first + r.second);
+        for (std::uint32_t a = r.first; a < r.first + r.second; ++a) seen[a - va] = true;
+    }
+    std::map<std::string, std::uint32_t> by;
+    for (const bof3x::ExeImage::Range& g : img.ranges)
+        for (std::uint32_t a = g.lo; a < g.hi; ++a)
+            if (seen[a - va]) ++by[g.how + (g.held ? "" : " (not held)")];
+    std::printf("  trace %s: %u reads, 0x%06X..0x%06X, %u outside .data, %u refused;", reader, (unsigned)reads.size(),
+                (unsigned)(lo == 0xFFFFFFFFu ? 0 : lo), (unsigned)hi, (unsigned)outside, (unsigned)refused);
+    for (const auto& [how, n] : by) std::printf(" %s %u", how.c_str(), (unsigned)n);
+    std::printf("\n");
+}
+
+Answers Ask(const bof3x::ExeImage& img, bool trace) {
+    Answers a;
+    std::vector<std::pair<std::uint32_t, std::uint32_t>> reads;
+    const auto step = [&](const char* name, auto&& run) {
+        reads.clear();
+        img.trace = trace ? &reads : nullptr;
+        const std::uint32_t before = img.not_held + img.outside;
+        run();
+        img.trace = nullptr;
+        if (trace) Trace(name, img, reads, img.not_held + img.outside - before);
+    };
+    step("party table", [&] { a.party = bof3x::ExePartyTable(img, a.table, a.party_why); });
+    step("default names", [&] { a.names = bof3x::ExeDefaultNameTables(img, a.tables, a.names_why); });
+    step("area links", [&] { a.links = bof3x::ExeAreaLinks(img, a.area_links, a.links_why); });
+    step("area finds", [&] { a.finds = bof3x::ExeAreaFinds(img, a.chests, a.passages, a.finds_why); });
+    return a;
+}
+
+void Print(const char* what, const Answers& a) {
+    std::printf("  %s: party table %s (%u bytes); default names %s; %u area links%s; %u chests, %u passages%s\n", what,
+                a.party ? "read" : ("not read: " + a.party_why).c_str(), (unsigned)a.table.size(),
+                a.names ? "read" : ("not read: " + a.names_why).c_str(), (unsigned)a.area_links.size(),
+                a.links ? "" : (" (" + a.links_why + ")").c_str(), (unsigned)a.chests.size(), (unsigned)a.passages.size(),
+                a.finds ? "" : (" (" + a.finds_why + ")").c_str());
+}
+
+bool SameFinds(const std::vector<bof3x::save::Find>& x, const std::vector<bof3x::save::Find>& y) {
+    if (x.size() != y.size()) return false;
+    for (std::size_t i = 0; i < x.size(); ++i)
+        if (x[i].area != y[i].area || x[i].bit != y[i].bit || x[i].x != y[i].x || x[i].z != y[i].z ||
+            x[i].category != y[i].category || x[i].value != y[i].value)
+            return false;
+    return true;
+}
+
+void Oracle() {
+    const char* exe = Env("BOF3X_ORACLE_EXE");
+    const char* cache = Env("BOF3X_ORACLE_CACHE");
+    if (!exe && !cache) return;
+    const bool trace = Env("BOF3X_ORACLE_TRACE") != nullptr;
+    std::printf("oracle (docs/exe-retire-round.md X4):\n");
+    Answers from_file, from_image;
+    bof3x::ExeImage file_img, cache_img;
+    std::string why;
+    if (exe) {
+        Expect(bof3x::ExeImageFromFile(fs::path(exe).wstring(), file_img, why), "oracle: BOF3X_ORACLE_EXE reads (" + why + ")");
+        from_file = Ask(file_img, false);
+        Print("BOF3.exe", from_file);
+    }
+    if (cache) {
+        Expect(bof3x::ExeImageFromCache(fs::path(cache).wstring(), cache_img, why), "oracle: BOF3X_ORACLE_CACHE's image reads (" + why + ")");
+        std::printf("  the cache's image: build %s, %u ranges, %u bytes\n", cache_img.build.c_str(), (unsigned)cache_img.ranges.size(),
+                    (unsigned)cache_img.b.size());
+        from_image = Ask(cache_img, trace);
+        Print("the cache's image", from_image);
+        std::printf("  the cache's image refused %u reads in no run and %u on a range it does not hold%s%s\n",
+                    (unsigned)cache_img.outside, (unsigned)cache_img.not_held, cache_img.not_held ? ", the first " : "",
+                    cache_img.refused_how.c_str());
+    }
+    if (exe && cache) {
+        Expect(from_file.party == from_image.party && from_file.table == from_image.table, "oracle: the party table is the same");
+        Expect(from_file.names == from_image.names && from_file.tables.chars == from_image.tables.chars &&
+                   from_file.tables.faeries == from_image.tables.faeries,
+               "oracle: the default name tables are the same");
+        bool links = from_file.links == from_image.links && from_file.area_links.size() == from_image.area_links.size();
+        for (std::size_t i = 0; links && i < from_file.area_links.size(); ++i) {
+            const bof3x::AreaLink &x = from_file.area_links[i], &y = from_image.area_links[i];
+            links = x.from == y.from && x.to == y.to && x.x == y.x && x.z == y.z && x.flags == y.flags;
+        }
+        Expect(links, "oracle: the area links are the same, link for link");
+        Expect(from_file.finds == from_image.finds && SameFinds(from_file.chests, from_image.chests) &&
+                   SameFinds(from_file.passages, from_image.passages),
+               "oracle: the chests and passages are the same, find for find");
+    }
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -700,6 +938,8 @@ int main(int argc, char** argv) {
     TestCard(fs::temp_directory_path() / "bof3x_save_tests_card");
     TestNames(fs::temp_directory_path() / "bof3x_save_tests_names");
     TestFinds(fs::temp_directory_path() / "bof3x_save_tests_finds");
+    TestImage(fs::temp_directory_path() / "bof3x_save_tests_image");
+    Oracle();
     int fixtures = 0, cards = 0, card_saves = 0, empty_same = 0, all_default = 0;
     fs::path dump;
     std::vector<NameSet> sets;

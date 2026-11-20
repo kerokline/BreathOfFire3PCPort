@@ -35,7 +35,26 @@ target_compile_definitions(config_tests PRIVATE BOF3X_LAUNCHER_HOST_DIR="${CMAKE
 
 # The save editor's format core (src/launcher/save/; docs/save-editor.md):
 #   <scratch>/lh/save_tests.exe <a folder of your own save files> ...
+# With the image's readers (src/launcher/exe_image.cpp; docs/exe-retire-round.md X4), which see
+# symbols.toml's addresses: bof3/symbols.gen.h generated here as the main build makes it.
+#   BOF3X_ORACLE_EXE=<BOF3.exe> BOF3X_ORACLE_CACHE=<a cache> <scratch>/lh/save_tests.exe   the oracle, counts only
+set(_symbols_hdr "${CMAKE_BINARY_DIR}/gen/bof3/symbols.gen.h")
+add_custom_command(
+  OUTPUT "${_symbols_hdr}" "${CMAKE_BINARY_DIR}/gen/bof3/bind.gen.h"
+  COMMAND "${BOF3X_PYTHON}" "${REPO}/tools/gen_symbols.py" --toml "${REPO}/symbols.toml" --out "${_symbols_hdr}"
+          --bind-out "${CMAKE_BINARY_DIR}/gen/bof3/bind.gen.h"
+  DEPENDS "${REPO}/symbols.toml" "${REPO}/tools/gen_symbols.py" "${REPO}/tools/record_sizes.py"
+          "${REPO_SRC}/game/records.h" "${REPO_SRC}/game/records_effect.h" "${REPO_SRC}/game/records_gpu.h"
+  VERBATIM)
 add_executable(save_tests save_tests.cpp ${REPO_SRC}/launcher/save/block.cpp ${REPO_SRC}/launcher/save/card.cpp
-               ${REPO_SRC}/launcher/save/finds.cpp ${REPO_SRC}/launcher/save/namemap.cpp)
-target_include_directories(save_tests PRIVATE ${REPO_SRC})
+               ${REPO_SRC}/launcher/save/finds.cpp ${REPO_SRC}/launcher/save/namemap.cpp
+               ${REPO_SRC}/launcher/exe_image.cpp ${REPO_SRC}/common/sha256.cpp
+               ${REPO_SRC}/input/bindings.cpp ${REPO_SRC}/input/function_keys.cpp "${_symbols_hdr}")
+target_include_directories(save_tests PRIVATE ${REPO_SRC} "${CMAKE_BINARY_DIR}/gen")
+target_link_libraries(save_tests PRIVATE bof3x_os)
 target_compile_options(save_tests PRIVATE -Wall -Wextra)
+# symbols.gen.h declares Capcom's functions __stdcall, which a 64-bit or Linux target ignores with a
+# warning per declaration; exe_image.cpp takes only its addresses.
+if(NOT CMAKE_SIZEOF_VOID_P EQUAL 4)
+  target_compile_options(save_tests PRIVATE -Wno-ignored-attributes)
+endif()

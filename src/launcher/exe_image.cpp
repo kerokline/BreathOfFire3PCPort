@@ -1,7 +1,10 @@
 #include "launcher/exe_image.h"
 
+#include "common/sha256.h"
 #include "os/wide_file.h"
 
+#include <algorithm>
+#include <cstdio>
 #include <cstring>
 
 // The one launcher file that sees symbols.toml: its names are macros, kept
@@ -48,59 +51,284 @@ struct Section {
 };
 Section SectionOf(const unsigned char* s) { return {U32(s + 12), U32(s + 16), U32(s + 20)}; }
 
-}  // namespace
-
-bool ExeImageRead(const std::wstring& exe, std::uint32_t va, std::uint32_t size, std::vector<unsigned char>& out,
-                  std::string& why) {
-    const bof3::os::InFile file = bof3::os::InOpenW(exe, false);
-    if (file == bof3::os::kNoInFile) {
-        why = "cannot open the file";
-        return false;
-    }
-    auto read_at = [&](std::uint32_t offset, void* to, std::uint32_t n) {
-        std::uint32_t got = 0;
-        // SetFilePointer's LONG distance, as this read made it before the seam:
-        // an offset of 2 GB or more is refused
-        return offset < 0x80000000u && bof3::os::InSeek(file, offset) && bof3::os::InRead(file, to, n, &got) &&
-               got == n;
-    };
-    bool ok = false;
-    unsigned char dos_bytes[kDosSize], nt_bytes[kNtSize];
-    Dos dos{};
-    Nt nt{};
-    if (!read_at(0, dos_bytes, sizeof dos_bytes) || (dos = DosOf(dos_bytes)).magic != kDosMagic ||
-        !read_at(static_cast<std::uint32_t>(dos.lfanew), nt_bytes, sizeof nt_bytes) ||
-        (nt = NtOf(nt_bytes)).signature != kNtSignature || nt.magic != kPe32Magic) {
-        why = "not a 32-bit PE";
-    } else if (va < nt.image_base) {
-        why = "address below the image";
-    } else {
-        const std::uint32_t rva = va - nt.image_base;
-        const std::uint32_t first = static_cast<std::uint32_t>(dos.lfanew) + kNtOptional + nt.optional_size;
-        why = "address in no section's initialised data";
-        for (unsigned i = 0; i < nt.sections; ++i) {
-            unsigned char sec_bytes[kSecSize];
-            if (!read_at(first + i * kSecSize, sec_bytes, sizeof sec_bytes)) {
-                why = "section table cut short";
-                break;
-            }
-            const Section sec = SectionOf(sec_bytes);
-            if (rva < sec.virtual_address || rva + size > sec.virtual_address + sec.raw_size) continue;
-            out.resize(size);
-            ok = read_at(sec.raw_pointer + (rva - sec.virtual_address), out.data(), size);
-            if (!ok) why = "read error";
-            break;
-        }
-    }
+// A file whole, or false.
+bool ReadWhole(const std::wstring& path, std::vector<unsigned char>& b) {
+    const bof3::os::InFile file = bof3::os::InOpenW(path, false);
+    if (file == bof3::os::kNoInFile) return false;
+    std::uint64_t size = 0;
+    bool ok = bof3::os::InSize(file, &size) && size < 0x80000000u;
+    b.assign(ok ? static_cast<std::size_t>(size) : 0u, 0);
+    std::uint32_t got = 0;
+    ok = ok && (b.empty() || (bof3::os::InRead(file, b.data(), static_cast<std::uint32_t>(b.size()), &got) && got == b.size()));
     bof3::os::InClose(file);
     return ok;
+}
+
+std::string Narrow(const std::wstring& w) {
+    std::string out;
+    for (const wchar_t c : w) out += c < 0x80 ? static_cast<char>(c) : '?';
+    return out;
+}
+
+// The classes of tools/exe_tables.py write_exe whose bytes in the image are
+// the game's own values (src/hook/exe_image.cpp kClasses): the PC's (`exe`),
+// a disc's (`map`, `place`, `table`, `widen`, and `file`, laid in), the PC's
+// pointers (`rebuilt`, `layout`) and the PC's zeros (`none`). The others are
+// zero in the image: `own` and `keys` the engine fills from its own tables,
+// `language` a language layer writes, `unread`, `gap` and `pointer` no disc
+// carries. A class this list does not name is refused by the reader.
+bool HowHeld(const std::string& how, bool* known) {
+    static const char* const kHeld[] = {"exe", "map", "place", "table", "widen", "file", "rebuilt", "layout", "none"};
+    static const char* const kNot[] = {"own", "keys", "language", "unread", "gap", "pointer"};
+    *known = true;
+    for (const char* h : kHeld)
+        if (how == h) return true;
+    for (const char* h : kNot)
+        if (how == h) return false;
+    *known = false;
+    return false;
+}
+
+// One `[0x.., 0x.., "how", "from"],` line of data.toml's ranges (four fields),
+// or one `["key", 0x.., 0x.., count, stride, "sha256", ...]` row of
+// tables.toml; the lines around them are `key = value` and comments.
+struct TomlRange {
+    std::uint32_t lo, hi;
+    std::string how, from;
+};
+struct TomlRow {
+    std::string key, sha;
+    std::uint32_t lo, hi;
+};
+
+std::vector<std::string> Lines(const std::vector<unsigned char>& text) {
+    std::vector<std::string> out;
+    std::string line;
+    for (const unsigned char c : text) {
+        if (c == '\n') {
+            if (!line.empty() && line.back() == '\r') line.pop_back();
+            out.push_back(line);
+            line.clear();
+        } else {
+            line += static_cast<char>(c);
+        }
+    }
+    if (!line.empty()) out.push_back(line);
+    return out;
+}
+
+}  // namespace
+
+const ExeImage::Range* ExeImage::FirstNotHeld(std::uint32_t va, std::uint32_t size) const {
+    // ranges are in order and cover the run (ExeImageFromCache checks it)
+    std::size_t lo = 0, hi = ranges.size();
+    while (lo < hi) {   // the first range whose end is past va
+        const std::size_t mid = (lo + hi) / 2;
+        if (ranges[mid].hi <= va) lo = mid + 1;
+        else hi = mid;
+    }
+    for (std::size_t i = lo; i < ranges.size() && ranges[i].lo < va + size; ++i)
+        if (!ranges[i].held) return &ranges[i];
+    return nullptr;
+}
+
+const unsigned char* ExeImage::At(std::uint32_t va, std::uint32_t size) const {
+    if (trace) trace->push_back({va, size});
+    for (const Run& r : runs) {
+        if (va < r.va || static_cast<std::uint64_t>(va) + size > static_cast<std::uint64_t>(r.va) + r.size) continue;
+        if (const Range* n = FirstNotHeld(va, size)) {
+            if (!not_held++) refused_how = n->how;
+            return nullptr;
+        }
+        return b.data() + r.at + (va - r.va);
+    }
+    ++outside;
+    return nullptr;
+}
+
+bool ExeImageFromCache(const std::wstring& cache, ExeImage& img, std::string& why) {
+    img = ExeImage();
+    const std::wstring dir = cache + L"\\base\\exe\\";
+    std::vector<unsigned char> toml_bytes;
+    if (cache.empty() || !ReadWhole(dir + L"data.toml", toml_bytes)) {
+        why = "the cache has no image (base\\exe\\data.toml)";
+        return false;
+    }
+    std::uint32_t va = 0, size = 0;
+    std::string file, sha, image_sha;
+    std::vector<TomlRange> ranges;
+    bool in_image = false;
+    for (const std::string& line : Lines(toml_bytes)) {
+        if (!line.empty() && line[0] == '[' && line.compare(0, 2, "[0") != 0) {
+            in_image = line == "[image]";
+            continue;
+        }
+        unsigned a = 0, z = 0;
+        char s[64] = {}, f[256] = {}, h[80] = {};
+        const char* p = line.c_str();
+        while (*p == ' ') ++p;
+        if (std::sscanf(p, "[0x%x, 0x%x, \"%63[^\"]\", \"%255[^\"]\"]", &a, &z, s, f) == 4 ||
+            std::sscanf(p, "[0x%x, 0x%x, \"%63[^\"]\", \"\"]", &a, &z, s) == 3) {
+            ranges.push_back({a, z, s, f});
+        } else if (!in_image) {
+            continue;
+        } else if (std::sscanf(p, "va = 0x%x", &a) == 1) {
+            va = a;
+        } else if (std::sscanf(p, "size = %u", &a) == 1) {
+            size = a;
+        } else if (std::sscanf(p, "file = \"%63[^\"]\"", s) == 1) {
+            file = s;
+        } else if (std::sscanf(p, "sha256 = \"%79[^\"]\"", h) == 1) {
+            sha = h;
+        } else if (std::sscanf(p, "image_sha256 = \"%79[^\"]\"", h) == 1) {
+            image_sha = h;
+        } else if (std::sscanf(p, "build = \"%63[^\"]\"", s) == 1) {
+            img.build = s;
+        }
+    }
+    if (!va || !size || file.empty() || sha.size() != 64 || img.build.empty() || ranges.empty() ||
+        file.find_first_of("\\/:") != std::string::npos) {
+        why = "base\\exe\\data.toml is not one tools/exe_tables.py wrote";
+        return false;
+    }
+    // The ranges cover the image in order, each of a class the reader knows.
+    std::uint32_t covered = va;
+    for (const TomlRange& r : ranges) {
+        bool known = false;
+        const bool held = HowHeld(r.how, &known);
+        if (!known || r.lo != covered || r.hi <= r.lo || r.hi - va > size) {
+            char m[160];
+            std::snprintf(m, sizeof m, "base\\exe\\data.toml's range at 0x%X (\"%s\") is not one this launcher reads",
+                          (unsigned)r.lo, r.how.c_str());
+            why = m;
+            return false;
+        }
+        covered = r.hi;
+        img.ranges.push_back({r.lo, r.hi, held, r.how});
+    }
+    if (covered != va + size) {
+        why = "base\\exe\\data.toml's ranges do not cover the image";
+        return false;
+    }
+    std::wstring wfile(file.begin(), file.end());
+    std::string got;
+    if (!ReadWhole(dir + wfile, img.b) || img.b.size() != size) {
+        why = "base\\exe\\" + file + " is absent or not the size data.toml gives";
+        return false;
+    }
+    if (!Sha256HexBytes(img.b.data(), img.b.size(), got) || got != sha) {
+        why = "base\\exe\\" + file + " is not the file data.toml's sha256 names";
+        return false;
+    }
+    // The table files, laid where data.bin leaves them out (an image written
+    // before them has no `file` range: data.bin is the image whole).
+    bool files = false;
+    for (const TomlRange& r : ranges) files = files || r.how == "file";
+    if (files) {
+        std::vector<unsigned char> rows_bytes;
+        if (!ReadWhole(dir + L"tables\\tables.toml", rows_bytes)) {
+            why = "base\\exe\\tables\\tables.toml is absent";
+            return false;
+        }
+        std::vector<TomlRow> rows;
+        for (const std::string& line : Lines(rows_bytes)) {
+            const char* p = line.c_str();
+            while (*p == ' ') ++p;
+            unsigned a = 0, z = 0, c = 0, s = 0;
+            char key[128] = {}, h[128] = {};
+            if (std::sscanf(p, "[\"%127[^\"]\", 0x%x, 0x%x, %u, %u, \"%127[^\"]\"", key, &a, &z, &c, &s, h) == 6)
+                rows.push_back({key, h, a, z});
+        }
+        for (const TomlRange& r : ranges) {
+            if (r.how != "file") continue;
+            const TomlRow* row = nullptr;
+            for (const TomlRow& t : rows)
+                if (t.key == r.from) row = &t;
+            if (!row || r.from.find_first_not_of("abcdefghijklmnopqrstuvwxyz0123456789_") != std::string::npos ||
+                r.lo < row->lo || r.hi > row->hi) {
+                why = "base\\exe\\tables\\tables.toml has no row for the table " + r.from;
+                return false;
+            }
+            std::vector<unsigned char> body;
+            const std::wstring wkey(r.from.begin(), r.from.end());
+            if (!ReadWhole(dir + L"tables\\" + wkey + L".bin", body) || body.size() != row->hi - row->lo ||
+                !Sha256HexBytes(body.data(), body.size(), got) || got != row->sha) {
+                why = "base\\exe\\tables\\" + r.from + ".bin is absent or not the file tables.toml names";
+                return false;
+            }
+            for (std::uint32_t a = r.lo; a < r.hi; ++a)
+                if (img.b[a - va]) {
+                    why = "base\\exe\\" + file + " is not zero where the table " + r.from + " is laid";
+                    return false;
+                }
+            std::memcpy(img.b.data() + (r.lo - va), body.data() + (r.lo - row->lo), r.hi - r.lo);
+        }
+        if (!Sha256HexBytes(img.b.data(), img.b.size(), got) || got != image_sha) {
+            why = "the image with its table files is not the image data.toml's image_sha256 names";
+            return false;
+        }
+    }
+    img.runs.push_back({va, 0, size});
+    return true;
+}
+
+bool ExeImageFromFile(const std::wstring& exe, ExeImage& img, std::string& why) {
+    img = ExeImage();
+    std::vector<unsigned char> b;
+    if (!ReadWhole(exe, b)) {
+        why = "cannot open " + Narrow(exe);
+        return false;
+    }
+    Dos dos{};
+    Nt nt{};
+    if (b.size() < kDosSize || (dos = DosOf(b.data())).magic != kDosMagic || dos.lfanew < 0 ||
+        static_cast<std::size_t>(dos.lfanew) + kNtSize > b.size() ||
+        (nt = NtOf(b.data() + dos.lfanew)).signature != kNtSignature || nt.magic != kPe32Magic) {
+        why = "not a 32-bit PE";
+        return false;
+    }
+    const std::size_t first = static_cast<std::size_t>(dos.lfanew) + kNtOptional + nt.optional_size;
+    for (unsigned i = 0; i < nt.sections; ++i) {
+        if (first + (i + 1) * kSecSize > b.size()) {
+            why = "section table cut short";
+            return false;
+        }
+        const Section sec = SectionOf(b.data() + first + i * kSecSize);
+        // a section whose raw part runs past the file is held as far as the file goes, as the reader of the
+        // whole file took it before
+        if (sec.raw_pointer >= b.size()) continue;
+        const std::size_t n = std::min<std::size_t>(sec.raw_size, b.size() - sec.raw_pointer);
+        img.runs.push_back({nt.image_base + sec.virtual_address, sec.raw_pointer, n});
+    }
+    img.b = std::move(b);
+    img.build = "BOF3.exe";
+    return true;
+}
+
+bool ExeImageRead(const ExeImage& img, std::uint32_t va, std::uint32_t size, std::vector<unsigned char>& out,
+                  std::string& why) {
+    const ExeImage::Range* n = img.FirstNotHeld(va, size);
+    const unsigned char* p = img.At(va, size);
+    if (!p) {
+        char m[160];
+        if (n)
+            std::snprintf(m, sizeof m, "0x%06X..0x%06X: this install's image does not hold it (class %s)", (unsigned)va,
+                          (unsigned)(va + size), n->how.c_str());
+        else
+            std::snprintf(m, sizeof m, "0x%06X..0x%06X: not in this install's image", (unsigned)va, (unsigned)(va + size));
+        why = m;
+        return false;
+    }
+    out.assign(p, p + size);
+    return true;
 }
 
 bool ExeDefaultKeys(const std::wstring& exe, std::vector<input::KeyBinding>& keys, std::string& why) {
     const std::uint32_t va = Key_TableDefault_addr;   // a VA, read from the file: the launcher places nothing
     const std::uint32_t size = Key_TableDefault_count * sizeof Key_TableDefault[0];
+    ExeImage img;
     std::vector<unsigned char> table;
-    if (!ExeImageRead(exe, va, size, table, why)) return false;
+    if (!ExeImageFromFile(exe, img, why) || !ExeImageRead(img, va, size, table, why)) return false;
     keys.clear();
     if (!input::KeysFromTable(table.data(), table.size(), keys)) {
         why = "Key_TableDefault holds a key above 0xFF";
@@ -109,63 +337,8 @@ bool ExeDefaultKeys(const std::wstring& exe, std::vector<input::KeyBinding>& key
     return true;
 }
 
-namespace {
-
-// The whole of an exe file, and its sections, for the readers that make many
-// small reads: `At` gives `size` bytes at a virtual address from a section's
-// initialised part, or null.
-struct WholeImage {
-    std::vector<unsigned char> b;
-    Nt nt{};
-    std::size_t first = 0;   // the section table
-
-    const unsigned char* At(std::uint32_t va, std::uint32_t size) const {
-        if (va < nt.image_base) return nullptr;
-        const std::uint32_t rva = va - nt.image_base;
-        for (unsigned i = 0; i < nt.sections; ++i) {
-            if (first + (i + 1) * kSecSize > b.size()) return nullptr;
-            const Section sec = SectionOf(b.data() + first + i * kSecSize);
-            if (rva < sec.virtual_address || rva + size > sec.virtual_address + sec.raw_size) continue;
-            const std::size_t off = sec.raw_pointer + (rva - sec.virtual_address);
-            return off + size <= b.size() ? b.data() + off : nullptr;
-        }
-        return nullptr;
-    }
-};
-
-bool LoadWholeImage(const std::wstring& exe, WholeImage& img, std::string& why) {
-    const bof3::os::InFile file = bof3::os::InOpenW(exe, false);
-    if (file == bof3::os::kNoInFile) {
-        why = "cannot open the file";
-        return false;
-    }
-    std::vector<unsigned char>& b = img.b;
-    std::uint64_t size = 0;
-    // GetFileSize's low half, as before the seam (no exe is 4 GB)
-    b.assign(bof3::os::InSize(file, &size) ? static_cast<std::uint32_t>(size) : 0u, 0);
-    std::uint32_t got = 0;
-    const bool read = !b.empty() && bof3::os::InRead(file, b.data(), static_cast<std::uint32_t>(b.size()), &got) &&
-                      got == b.size();
-    bof3::os::InClose(file);
-    Dos dos{};
-    Nt& nt = img.nt;
-    if (!read || b.size() < kDosSize || (dos = DosOf(b.data())).magic != kDosMagic ||
-        static_cast<std::size_t>(dos.lfanew) + kNtSize > b.size() ||
-        (nt = NtOf(b.data() + dos.lfanew)).signature != kNtSignature || nt.magic != kPe32Magic) {
-        why = "not a 32-bit PE";
-        return false;
-    }
-    img.first = static_cast<std::uint32_t>(dos.lfanew + kNtOptional + nt.optional_size);
-    return true;
-}
-
-}  // namespace
-
-bool ExeAreaLinks(const std::wstring& exe, std::vector<AreaLink>& links, std::string& why) {
+bool ExeAreaLinks(const ExeImage& img, std::vector<AreaLink>& links, std::string& why) {
     links.clear();
-    // The whole file once: some two thousand small reads follow.
-    WholeImage img;
-    if (!LoadWholeImage(exe, img, why)) return false;
     const auto at = [&img](std::uint32_t va, std::uint32_t size) { return img.At(va, size); };
     const auto u16 = [](const unsigned char* p) { return static_cast<std::uint16_t>(p[0] | (p[1] << 8)); };
     const auto u32 = [](const unsigned char* p) {
@@ -178,7 +351,7 @@ bool ExeAreaLinks(const std::wstring& exe, std::vector<AreaLink>& links, std::st
     constexpr unsigned kAreas = Area_Descriptors_count;
     const unsigned char* table = at(Area_Descriptors_addr, kAreas * 4);
     if (!table) {
-        why = "Area_Descriptors is not in the file";
+        why = "Area_Descriptors is not in the image";
         return false;
     }
     // A link list that several areas share is a placeholder (one list of a
@@ -216,12 +389,10 @@ bool ExeAreaLinks(const std::wstring& exe, std::vector<AreaLink>& links, std::st
     return true;
 }
 
-bool ExeAreaFinds(const std::wstring& exe, std::vector<save::Find>& chests, std::vector<save::Find>& passages,
+bool ExeAreaFinds(const ExeImage& img, std::vector<save::Find>& chests, std::vector<save::Find>& passages,
                   std::string& why) {
     chests.clear();
     passages.clear();
-    WholeImage img;
-    if (!LoadWholeImage(exe, img, why)) return false;
     const save::ImageAt at = [&img](std::uint32_t va, std::uint32_t size) { return img.At(va, size); };
     const auto u32 = [](const unsigned char* p) {
         return static_cast<std::uint32_t>(p[0]) | (static_cast<std::uint32_t>(p[1]) << 8) |
@@ -231,7 +402,7 @@ bool ExeAreaFinds(const std::wstring& exe, std::vector<save::Find>& chests, std:
     const unsigned char* table = at(Area_Descriptors_addr, kAreas * 4);
     const unsigned char* lengths = at(EventScript_OpLengths_addr, EventScript_OpLengths_count);
     if (!table || !lengths) {
-        why = "Area_Descriptors or EventScript_OpLengths is not in the file";
+        why = "Area_Descriptors or EventScript_OpLengths is not in the image";
         return false;
     }
     constexpr std::uint32_t kOp9 = 13;   // EventOp_9x's record
@@ -263,8 +434,23 @@ bool ExeAreaFinds(const std::wstring& exe, std::vector<save::Find>& chests, std:
     return true;
 }
 
-bool ExePartyTable(const std::wstring& exe, std::vector<unsigned char>& rows, std::string& why) {
-    return ExeImageRead(exe, MoveScript_EffectArg_addr + 0xC, 19 * 3, rows, why);
+bool ExePartyTable(const ExeImage& img, std::vector<unsigned char>& rows, std::string& why) {
+    return ExeImageRead(img, MoveScript_EffectArg_addr + 0xC, 19 * 3, rows, why);
+}
+
+bool ExeDefaultNameTables(const ExeImage& img, DefaultNameTables& out, std::string& why) {
+    out.chars.clear();
+    out.faeries.clear();
+    std::vector<unsigned char> name;
+    for (std::uint32_t k = 0; k < 8; ++k) {   // the seven records, then the whelp's (NewGame_InitCharacters' n = 7)
+        if (!ExeImageRead(img, k < 7 ? Char_DefaultRecords_addr + 0xA4 * k : 0x64B80C, 9, name, why)) return false;
+        out.chars.insert(out.chars.end(), name.begin(), name.end());
+    }
+    for (std::uint32_t r = 0; r < 60; ++r) {
+        if (!ExeImageRead(img, 0x653200 + 20 * r, 5, name, why)) return false;
+        out.faeries.insert(out.faeries.end(), name.begin(), name.end());
+    }
+    return true;
 }
 
 NameTableTags ExeNameTableTags() {
