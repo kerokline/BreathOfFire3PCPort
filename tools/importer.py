@@ -1466,6 +1466,20 @@ def build_languages_disc_only(asked, sources, out, reuse=None):
     return assets
 
 
+# The install's kind as a recorded fact (docs/exe-retire-round.md, X1): the
+# launcher and the engine read it (common/cache_manifest.h ManifestInstallKind)
+# where they once looked for BOF3.exe beside the game. "pc": the PC game's DAT/
+# is a source - base/ and loc/zh-CN/ are its chunks, and setup lays the game
+# folder from that PC folder; "disc": it is not - a disc (PlayStation or PSP) is
+# the base and setup lays the game folder from the cache (install --base).
+# BOF3.exe alone among discs is "disc": its .data makes base/exe/, not DAT/.
+INSTALL_KIND_KEY = "install_kind"
+
+
+def install_kind(sources):
+    return "pc" if any(isinstance(s, PcSource) for s in sources) else "disc"
+
+
 def write_manifest(out, recipe_path, rec, sources, assets, loc_assets=(), opt_assets=(), opt_recipe=None, exe=None,
                    bgm=None, psp_snd=None, prefer_path=None, psx_jingles=None):
     with open(recipe_path, "rb") as f:
@@ -1484,6 +1498,7 @@ def write_manifest(out, recipe_path, rec, sources, assets, loc_assets=(), opt_as
              ""]
     lines += psp_standins.manifest_lines(sources)     # [build] base_policy: the launcher's key (LT)
     lines[-1:-1] = psp_exe.manifest_build(exe)        # [build] exe_tables_from, in the same table (docs/psp-image.md)
+    lines[-1:-1] = ["%s = %s" % (INSTALL_KIND_KEY, toml_str(install_kind(sources)))]   # the same table (X1)
     for s in sources:
         lines += ["[[source]]", "build = %s" % toml_str(s.id), "path = %s" % toml_str(os.path.basename(os.path.normpath(s.path))), ""]
     lines += ["[cache]", "assets = ["]          # a table of its own, not the last [[source]]'s

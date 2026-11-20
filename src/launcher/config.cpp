@@ -1135,8 +1135,39 @@ bool ConfigLanguageKnown(const std::string& code) {
     return false;
 }
 
+// The install's kind (docs/exe-retire-round.md, X1): what the launcher asks
+// in place of BOF3.exe beside the game. Only the developer's switch,
+// BOF3X_EXEFILE=1, asks the file: then today's test, its presence. With no
+// cache, only a PC folder can start (common/cache_manifest.h InstallAsk).
+static InstallAsk LauncherAsk(const std::wstring& game_dir) {
+    InstallAsk ask;
+    ask.developer = InstallExeFileSwitch();
+    ask.exe_present = ask.developer && AnyMatch(game_dir + Sep(L"\\BOF3.exe"));
+    ask.no_cache = true;
+    return ask;
+}
+
+// The manifest the kind is read from: `cache`, or with none the cache the
+// environment names (BOF3X_CACHE, else BOF3X_EXEIMAGE), as the engine reads it.
+// A manifest from before install_kind is said once.
+static const CacheManifest& KindManifest(const std::wstring& cache) {
+    std::wstring root = cache;
+    for (const wchar_t* name : {L"BOF3X_CACHE", L"BOF3X_EXEIMAGE"}) {
+        if (!root.empty()) break;
+        wchar_t v[bof3::os::kMaxPath];
+        const std::uint32_t n = bof3::os::GetEnvW(name, v, bof3::os::kMaxPath);
+        if (n > 0 && n < bof3::os::kMaxPath) root.assign(v, n);
+    }
+    const CacheManifest& m = CachedManifest(root);
+    if (const std::string note = ManifestKindNoteOnce(m); !note.empty())
+        std::fprintf(stderr, "bof3x-launcher: %s\n", note.c_str());
+    return m;
+}
+
 bool ConfigOriginalAvailable(const std::wstring& game_dir, const std::wstring& cache) {
-    return AnyMatch(game_dir + Sep(L"\\BOF3.exe")) || CacheHasLayer(cache, L"loc", "zh-CN");
+    const bool zh_layer = CacheHasLayer(cache, L"loc", "zh-CN");
+    const CacheManifest m = KindManifest(cache);   // a copy: CachedManifest's slot may be read again for another root
+    return InstallChineseText(m, zh_layer, LauncherAsk(game_dir));
 }
 
 bool ConfigResolveLanguage(const std::wstring& game_dir, Config& cfg, std::string& error) {
@@ -1146,7 +1177,7 @@ bool ConfigResolveLanguage(const std::wstring& game_dir, Config& cfg, std::strin
     std::string list;
     for (const std::string& tag : held) list += (list.empty() ? "" : ", ") + tag;
     const std::string why =
-        "This is a disc-only install: no BOF3.exe in the game directory and no loc\\zh-CN layer in the cache" +
+        "This is a disc-only install: its cache is not built from the PC game and has no loc\\zh-CN layer" +
         std::string(cache.empty() ? " (no cache= or BOF3X_CACHE)" : "") +
         ", so the port's Chinese text is not there and the game would play without text (DIV-0102).\n\n" +
         (held.empty() ? std::string("It holds no language layer: build one (tools/importer.py build --lang <tag>, "
@@ -1774,19 +1805,25 @@ std::string IniNotHere(const std::wstring& game_dir, const Config& cfg, const st
 }
 
 // Why this install cannot take an env: value, or empty when it can: the two
-// that stop a disc-built install (no BOF3.exe), whose DAT\ is not the PC's
-// and whose .data has gaps (DIV-0089, DIV-0101). BOF3X_EXEIMAGE_STRICT=1
-// refuses every gap, the accepted ones too; the engine's default (unset)
-// refuses only a gap that recipes/exe-gaps-accepted.tsv does not answer, and
-// =0 refuses none, so only =1 is kept from a disc-built install.
-std::string EnvNotHere(const std::wstring& game_dir, const std::string& name, const std::string& value) {
-    const bool pc = AnyMatch(game_dir + Sep(L"\\BOF3.exe"));
-    if (name == "BOF3X_CACHE_DATA" && value == "0" && !pc)
-        return "a disc-built install (no BOF3.exe) has no PC DAT folder to read in place of the cache";
-    if (name == "BOF3X_EXEIMAGE_STRICT" && value != "0" && !pc)
-        return "a disc-built install (no BOF3.exe) has gaps in its .data, and this value stops the game at all "
+// that stop a disc-built install, whose DAT\ is not the PC's and whose .data
+// has gaps (DIV-0089, DIV-0101), and the developer's switch to read BOF3.exe.
+// BOF3X_EXEIMAGE_STRICT=1 refuses every gap, the accepted ones too; the
+// engine's default (unset) refuses only a gap that
+// recipes/exe-gaps-accepted.tsv does not answer, and =0 refuses none, so only
+// =1 is kept from a disc-built image. Each asks its own question of the
+// install's kind (common/cache_manifest.h, docs/exe-retire-round.md X1):
+// the cache's record, not BOF3.exe; BOF3X_EXEFILE=1 alone asks for the file,
+// which it reads.
+std::string EnvNotHere(const std::wstring& game_dir, const Config& cfg, const std::string& name,
+                       const std::string& value) {
+    const CacheManifest m = KindManifest(ConfigCacheRoot(cfg));   // a copy, as ConfigOriginalAvailable's
+    const InstallAsk ask = LauncherAsk(game_dir);
+    if (name == "BOF3X_CACHE_DATA" && value == "0" && !InstallPcDat(m, ask))
+        return "a disc-built install has no PC DAT folder to read in place of the cache";
+    if (name == "BOF3X_EXEIMAGE_STRICT" && value != "0" && !InstallImageWhole(m, ask))
+        return "a disc-built install has gaps in its .data, and this value stops the game at all "
                "gaps, also at the gaps that this release accepts";
-    if (name == "BOF3X_EXEFILE" && value == "1" && !pc)
+    if (name == "BOF3X_EXEFILE" && value == "1" && !AnyMatch(game_dir + Sep(L"\\BOF3.exe")))
         return "a disc-built install (no BOF3.exe) has no file to read the game's tables from (DIV-0212)";
     return std::string();
 }
@@ -1873,7 +1910,7 @@ PresetPlan ConfigPresetPlan(const std::wstring& game_dir, const Config& cfg, Pre
                 if (const char* var = IniVariable(k); var && name == var) by_ini = k + "=" + v;
             if (EnvironmentHas(name))
                 item.kept.emplace_back(text, "the environment sets " + name);
-            else if (const std::string why = EnvNotHere(game_dir, name, value); !why.empty())
+            else if (const std::string why = EnvNotHere(game_dir, cfg, name, value); !why.empty())
                 item.not_here.emplace_back(text, why);
             else if (!by_ini.empty())
                 item.kept.emplace_back(text, "the preset's " + by_ini + " decides " + name);
