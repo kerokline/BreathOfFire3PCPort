@@ -520,6 +520,13 @@ bool TestKey(const char* name, bool down) {
     return false;
 }
 
+void TestMouse(float x, float y, bool down) {
+    ImGuiIO& io = ImGui::GetIO();
+    io.AddMousePosEvent(S(x), S(y));
+    io.AddMouseButtonEvent(ImGuiMouseButton_Left, down);
+    g.wake = 8;
+}
+
 void TestSet(const char* widget, const char* value) {
     g.test_set = true;
     g.test_grey = false;
@@ -931,10 +938,22 @@ bool CheckList(const char* label, int* index, const std::vector<ListRow>& rows, 
                     *index = i;
                     changed = true;
                 }
-                if (r.box && ImGui::IsItemClicked() && ImGui::GetIO().MousePos.x - at.x < side) *toggled = i;
+                // The row's box. Dear ImGui says a row is used when the mouse button is let go, so the
+                // place is where the button went down (a test of "clicked in this frame" never held: the
+                // box could not be changed by the mouse until 2026-11-20). With no mouse button let go
+                // in this frame the row was used by the keyboard or the pad: Space and the pad's cross
+                // change the box, and Enter chooses the row alone, as the Win32 list did with Space.
+                if (r.box) {
+                    const ImGuiIO& io = ImGui::GetIO();
+                    if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
+                        if (io.MouseClickedPos[ImGuiMouseButton_Left].x - at.x < side) *toggled = i;
+                    } else if (ImGui::IsKeyDown(ImGuiKey_Space) || ImGui::IsKeyReleased(ImGuiKey_Space) ||
+                               ImGui::IsKeyDown(ImGuiKey_GamepadFaceDown) ||
+                               ImGui::IsKeyReleased(ImGuiKey_GamepadFaceDown)) {
+                        *toggled = i;
+                    }
+                }
             }
-            // Space on the row the focus is on: it is chosen (Dear ImGui's own use of the row) and its box used
-            if (r.box && ImGui::IsItemFocused() && ImGui::IsKeyPressed(ImGuiKey_Space, false)) *toggled = i;
             ImDrawList* dl = ImGui::GetWindowDrawList();
             const ImU32 ink = ImGui::GetColorU32(r.grey ? ImGuiCol_TextDisabled : ImGuiCol_Text);
             if (r.box) {

@@ -1172,3 +1172,20 @@ byte; `save_editor_check.py` 97 checks, 0 failures; every gate of
 `bof3x-launcher`, `--list` and `--set` work, a page is captured, and
 `--host bof3` is refused with the sentence. The pull request's checks were
 9 of 9 at stage P5's commits.
+
+**Found by the owner's hand, 2026-11-20: a mod's box could not be changed
+with the mouse.** `CheckList` asked whether the mouse was clicked in the
+frame the row was used, and Dear ImGui says a row is used when the button
+is let go, so the test never held. Stage P4's checks did not see it: the
+script's `set mods=box N` sets the box past the mouse. Fixed (the box by
+where the button went down; Space and the pad's cross on the focused row
+change it, Enter chooses the row alone), and a new step, `click <x> <y>`,
+presses the mouse's button at a place of the window as the player does.
+With it, on the owner's install read and not written: a click on a row's
+box changes `mods_off=`, twice changes it back, a click on the row's text
+changes nothing, a grey row's place changes nothing; Space and the pad's
+cross after the arrows change it, Enter does not. **What it says about the
+other pages:** every check of stages P2 to P5 used `set` and `press`, which
+also go past the mouse, so a widget of ours that reads the mouse by itself
+is checked by hand alone. `CheckList` was the one such widget that read a
+click's place; the others are Dear ImGui's own buttons, boxes and lists.

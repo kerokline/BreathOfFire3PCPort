@@ -71,6 +71,12 @@ bool Pressed(Press press);
 // pad-start. False: no such name.
 bool TestKey(const char* name, bool down);
 
+// The mouse moved to a place of the window, in the picture's pixels, with its
+// left button held or let go there, as if the player did it: a check of what
+// a widget makes of a real click (main.cpp's `click` step). TestSet below
+// sets a widget's value past the mouse, so it cannot show that a click works.
+void TestMouse(float x, float y, bool down);
+
 // A widget used by its name, as if the player did it, in the next frame that
 // draws it: a button or a tab pressed (any value), a check box set ("0" or
 // "1"), a radio button chosen (any value), a combo box, a list or a slider

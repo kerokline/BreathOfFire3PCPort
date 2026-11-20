@@ -78,6 +78,8 @@
 //   set <widget>=<value>           a widget of the page shown, by its name (ui.h TestSet)
 //   press <widget>                 a button, a tab or a radio button, by its name
 //   key <name>                     a key or a pad button (ui.h TestKey)
+//   click <x> <y>                  the mouse's left button pressed and let go at that place of the window, in the
+//                                  picture's pixels (640 x 480): what a widget makes of a real click
 //   shot <file.png>                the frame as it is now
 //   bind-key <name>                the bind capture, open over a Controls cell, gets a key as if the
 //                                  player pressed it: <name> is the key's name as the cells show it
@@ -541,6 +543,16 @@ struct Session {
                 Fail(ui::TestGrey() ? "The widget \"" + widget + "\" is grey. The step \"" + step + "\" did nothing."
                                     : "The page does not show a widget \"" + widget + "\". The step \"" + step +
                                           "\" did nothing.");
+            Frames(3);
+        } else if (verb == "click") {
+            const std::vector<std::string> words = Split(rest, ' ');
+            if (words.size() != 2) Refuse("The step \"" + step + "\" needs a place: click <x> <y>.");
+            const float x = static_cast<float>(std::atof(words[0].c_str())), y = static_cast<float>(std::atof(words[1].c_str()));
+            ui::TestMouse(x, y, false);   // the pointer there first, so the widget under it knows
+            Frames(2);
+            ui::TestMouse(x, y, true);
+            Frames(2);
+            ui::TestMouse(x, y, false);
             Frames(3);
         } else if (verb == "key") {
             if (!ui::TestKey(rest.c_str(), true)) Refuse("The key " + rest + " is not known.");
