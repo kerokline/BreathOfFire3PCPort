@@ -8,6 +8,15 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
+**The drawn launcher's Controls pages, 2026-11-20 (stage P3 of [`launcher-portable.md`](launcher-portable.md), its
+section 11; the same local branch as the two paragraphs below).** The three Controls pages and the bind capture: a key
+from SDL's key event through `input/key_sdl.h`, the pad shared with Dear ImGui's navigation. A host test
+(`tools/key_host/capture_tests.cpp`) walks every code a key can send: the 159 keys SDL knows store the same number in both
+launchers; Ctrl+Pause is the one key that differs (the Win32 capture stores its own number, SDL calls it Pause).
+`ui_compare.py` is 64 cases, 64 equal. **D427 is carried, not decided:** the drawn capture stores Pause and NumLock
+crossed as the Win32 one does, so a game button bound to Pause is worked by NumLock, and a function key bound to Pause
+works with Pause; the choice is the owner's. **Owed:** a real key and a real pad on the capture; stages P4 to P6.
+
 **The drawn launcher's settings pages, 2026-11-20 (stage P2 of [`launcher-portable.md`](launcher-portable.md), its
 section 10; the same local branch as the paragraph below).** Every settings page is written from the Win32 page's fill
 and read-back code: Settings, Preset, the three suites, the cheats, the solo character, Extras, New Game, Music, the
