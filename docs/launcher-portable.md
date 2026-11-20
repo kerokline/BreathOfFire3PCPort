@@ -1155,3 +1155,20 @@ WSL has no Linux game build here). A message box under the new rule on a
 player's double-click was not shown (by design of this stage). The start
 comparison used `BOF3X_EXEFILE=1` for seven of its eight cases; the eighth is
 a player's start from a cache image.
+
+**On the pull request's branch, the coordinator's own runs** (2026-11-20,
+`launcher/drawn` moved forward to this stage's commits): the 32-bit and the
+64-bit builds whole; the player's launcher at both widths imports none of
+`VirtualAllocEx`, `WriteProcessMemory`, `CreateRemoteThread`, and the
+developer launcher all three; from a launcher copy of the four files with
+no ini, `--no-config` runs the exe host's self-tests to exit 0, a
+hosted-only switch is handed to the developer launcher and comes back 0
+with its lines on a file and on a pipe, and with no developer launcher, or
+an argument that is not known, the launcher prints its sentence and ends 1
+with no box; an untouched window with every page, the Jukebox, the save
+editor and the Sources page opened writes the owner's `bof3x.ini` byte for
+byte; `save_editor_check.py` 97 checks, 0 failures; every gate of
+`checks.yml` that reads the tree; in the WSL the launcher builds as
+`bof3x-launcher`, `--list` and `--set` work, a page is captured, and
+`--host bof3` is refused with the sentence. The pull request's checks were
+9 of 9 at stage P5's commits.
