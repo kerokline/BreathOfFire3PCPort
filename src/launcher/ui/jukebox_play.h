@@ -60,5 +60,8 @@ bool JukeOutEnded();
 void JukeOutCheck(const std::string& samples);
 // The frames written to the check's file so far.
 std::uint64_t JukeOutSamples();
+// The name of SDL's sound driver in use ("dummy", "wasapi", ...), "" with no
+// device open: a check's report says it.
+std::string JukeOutDriver();
 
 }  // namespace bof3x::ui

@@ -587,7 +587,8 @@ std::string JukeboxText() {
     out += std::string("battle chord: ") + (s.chord.checked ? "on" : "off") +
            (s.chord.enabled ? "" : ", grey (" + ConfigToUtf8(s.chord.why) + ")") + "\n";
     out += std::string("play and stop: ") + (s.first >= 0 && s.open ? "usable" : "grey") +
-           "; sound device: " + (s.open ? "open" : "not open") + "; playing: " + (s.playing ? "yes" : "no") + "\n";
+           "; sound device: " + (s.open ? "open (SDL's " + JukeOutDriver() + " driver)" : "not open") +
+           "; playing: " + (s.playing ? "yes" : "no") + "\n";
     out += "samples written: " + std::to_string(JukeOutSamples()) + " frames\n";
     return out;
 }

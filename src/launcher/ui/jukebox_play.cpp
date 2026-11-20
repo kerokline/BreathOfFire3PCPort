@@ -354,4 +354,9 @@ void JukeOutCheck(const std::string& samples) {
 
 std::uint64_t JukeOutSamples() { return g_out.written; }
 
+std::string JukeOutDriver() {
+    const char* name = g_out.stream ? SDL_GetCurrentAudioDriver() : nullptr;
+    return name ? name : "";
+}
+
 }  // namespace bof3x::ui
