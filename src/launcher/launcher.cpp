@@ -20,10 +20,11 @@
 // this launcher, started with the game directory as its current directory -
 // no suspension, no reservation, no remote thread; the executable imports
 // bof3x.dll and maps the player's data itself (src/hook/exe_host.cpp).
-// BOF3.exe is optional there when the settings name a cache (cache= or
-// BOF3X_CACHE) or the environment sets BOF3X_EXEIMAGE: a disc-built install,
-// whose .data the cache holds (the launcher sets BOF3X_EXEIMAGE to the
-// settings' cache unless the environment already does).
+// No BOF3.exe is read there (docs/exe-retire-round.md, X2): .data is the
+// cache's image, whatever built it - the launcher sets BOF3X_EXEIMAGE to the
+// settings' cache unless the environment already does, and refuses a game
+// folder with no image (start.cpp StartRefuseNoImage). Only the developer's
+// BOF3X_EXEFILE=1 has the engine read the file.
 //
 // --host bof3: the hosted build, kept for the shadow fuzz, the A/B switch and
 // the reference pairs - and chosen without --host when the environment sets
@@ -413,13 +414,13 @@ int wmain(int argc, wchar_t** argv) {
     // (docs/install-sources.md) can lay out a new game folder and cache, so
     // both are found again, and the settings read again, after it builds.
     std::wstring exe;
-    bool exe_present = false;
+    bool exe_read = false;
     bof3x::Config cfg;
     for (bool again = true; again;) {
         again = false;
-        exe_present = bof3x::StartFindGame(named_game, hosted, &game_dir, &exe);
+        exe_read = bof3x::StartFindGame(named_game, hosted, &game_dir, &exe);
         const bool no_install =
-            bof3x::StartReadSettings(ini, game_dir, named_game, hosted, exe_present, want_dialog, cfg);
+            bof3x::StartReadSettings(ini, game_dir, named_game, hosted, exe_read, want_dialog, cfg);
 
         if (no_install) {   // the Sources page's first run (above)
             const bool built = bof3x::SourcesDialogRun(nullptr, cfg, true);
@@ -480,14 +481,14 @@ int wmain(int argc, wchar_t** argv) {
                 continue;
             }
             std::string why;   // DIV-0102: the dialog's choice, under the cache it may have changed
-            if (!bof3x::ConfigResolveLanguage(game_dir, cfg, why)) Die(L"%hs", why.c_str());
+            if (!bof3x::ConfigResolveLanguage(game_dir, cfg, why, hosted)) Die(L"%hs", why.c_str());
             if (!bof3x::ConfigSave(ini, cfg))
                 std::fwprintf(stderr, L"bof3x-launcher: cannot write %ls; settings not saved\n",
                               ini.c_str());
         }
     }
 
-    bof3x::StartApply(game_dir, cfg, hosted, exe_present);
+    bof3x::StartApply(game_dir, cfg, hosted, exe_read);
 
     if (!hosted) {
         bool waited = false;

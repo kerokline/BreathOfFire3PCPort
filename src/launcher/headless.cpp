@@ -132,9 +132,9 @@ int main(int argc, char** argv) {
 
     std::wstring game_dir, exe;
     bof3x::Config cfg;
-    const bool exe_present = bof3x::StartFindGame(named, false, &game_dir, &exe);
-    bof3x::StartReadSettings(ini, game_dir, named, false, exe_present, 0, cfg);   // --no-config: no Sources page
-    bof3x::StartApply(game_dir, cfg, false, exe_present);
+    const bool exe_read = bof3x::StartFindGame(named, false, &game_dir, &exe);
+    bof3x::StartReadSettings(ini, game_dir, named, false, exe_read, 0, cfg);   // --no-config: no Sources page
+    bof3x::StartApply(game_dir, cfg, false, exe_read);
     bool waited = false;
     const std::uint32_t code = bof3x::StartGame(ours, game_args, game_dir, nullptr, &waited);
     return waited ? static_cast<int>(code) : 0;

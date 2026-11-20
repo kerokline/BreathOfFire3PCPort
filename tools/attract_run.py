@@ -103,15 +103,50 @@ def kill_stale(launcher):
             subprocess.run(['taskkill', '/F', '/PID', pid], capture_output=True)
 
 
+def _ini_names_cache(ini):
+    """Whether the launcher's bof3x.ini has a cache= line with a value."""
+    try:
+        with open(ini, encoding='utf-8', errors='replace') as f:
+            return any(line.split('=', 1)[0].strip() == 'cache' and line.split('=', 1)[1].strip()
+                       for line in f if '=' in line)
+    except OSError:
+        return False
+
+
+def developer_exefile(env, game, launcher, host):
+    """docs/exe-retire-round.md, X2: a player's start reads no BOF3.exe - .data
+    comes from the cache's image, and the launcher refuses a game folder with
+    none. The developer's runs on a PC folder with no cache (<main>/bof3, the
+    references' conditions) read the file under BOF3X_EXEFILE=1, which this sets
+    in `env` when `game` holds BOF3.exe, no cache is named (BOF3X_CACHE,
+    BOF3X_EXEIMAGE, the launcher's bof3x.ini cache=, the home's cache/) and the
+    caller did not set the switch either way, and says so in one line. Not for
+    the hosted build (`host` bof3), which runs inside the file. True when set."""
+    if host == 'bof3' or 'BOF3X_EXEFILE' in env or not os.path.isfile(os.path.join(game, 'BOF3.exe')):
+        return False
+    if env.get('BOF3X_CACHE') or env.get('BOF3X_EXEIMAGE'):
+        return False
+    ldir = os.path.dirname(os.path.abspath(launcher))
+    home = env.get('BOF3X_HOME') or ldir
+    if os.path.isfile(os.path.join(home, 'cache', 'manifest.toml')) or _ini_names_cache(os.path.join(ldir, 'bof3x.ini')):
+        return False
+    env['BOF3X_EXEFILE'] = '1'
+    print(f'  BOF3X_EXEFILE=1: {game} holds BOF3.exe and no cache is named, so the game reads .data from '
+          f'BOF3.exe (a developer\'s run, docs/exe-retire-round.md)')
+    return True
+
+
 def launch(launcher, game, env, host=None):
     """Start the game through the launcher and remember its pid. A retired
     language code in `env` or the launcher's bof3x.ini stops here, not at the
     launcher's message box (DIV-0005). `host`: exe or bof3 (host_for decides
-    when None)."""
+    when None). On a PC folder with no cache the exe host's run reads BOF3.exe
+    (developer_exefile sets BOF3X_EXEFILE=1 in `env`)."""
     global OURS
     language_tags.refuse_retired_run(launcher, env)
     host = host_for(env, host)
     print(f'  host: {host} ({"bof3x.exe" if host == "exe" else "BOF3.exe, hosted"})')
+    developer_exefile(env, game, launcher, host)
     r = subprocess.run([launcher, '--game', game, '--no-config', '--host', host], env=env, capture_output=True, text=True)
     sys.stdout.write(r.stdout)
     m = re.search(r'\(pid (\d+)\)', r.stdout)

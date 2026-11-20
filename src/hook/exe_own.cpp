@@ -357,7 +357,10 @@ void ExeOwn_CheckAtStart() {
         ExeOwn_Verify(file.data(), "BOF3.exe's .data (the file; the running .data is a disc-built image)");
         return;
     }
-    ExeOwn_Verify(live, "BOF3.exe's .data");
+    // The running .data is the file's, or at a start that did not open the
+    // file (docs/exe-retire-round.md) the cache's pc-zh image, which
+    // ExeImage_Source checked against its recorded hash.
+    ExeOwn_Verify(live, ExeFile_Present() ? "BOF3.exe's .data" : "the cache's image of BOF3.exe's .data (pc-zh)");
     if (!WantsShadow("exe_own")) return;
     // The self-test: into a zeroed image the fill writes the regions' bytes,
     // equal to the PC's, and leaves every other byte zero.

@@ -70,16 +70,32 @@
 //     start-up's own mapping (MEM_IMAGE has no counterpart).
 // 10. TrapStub (:600; :497..509): .stub made no-access and read back.
 //     Windows: VirtualProtect, VirtualQuery. Linux: os/memory.h.
-// 11. CopyData (:601; :281..308, with OpenExe :246..279): BOF3.exe in the
-//     current directory hashed (SHA-256) and opened through exe_file.h, its
-//     section table checked against exe_layout.h - or, without the file,
-//     BOF3X_EXEIMAGE required; .game asserted zero; rdata::Map; .data from
-//     ExeImage_Source or the file (exe_file::ReadAt); Shell_MapDefaultKeys;
-//     ExeImage_LayOptTables, ExeImage_LogMapped, ExeImage_CompareWithFile;
-//     .bss asserted zero.
-//     Windows: GetCurrentDirectoryW, GetFileAttributesW,
-//     GetEnvironmentVariableA, the wide path for Sha256Hex. The reader
-//     (exe_file.cpp) and every fill are portable.
+// 11. CopyData (CopyData, with OpenExe; docs/exe-retire-round.md X2 set this
+//     order). A player's start and the developer's differ only in 11a:
+//     11a. OpenExe. A player's start (no BOF3X_EXEFILE=1): BOF3X_EXEIMAGE
+//          required, nothing opened or tested - ExeFile_Present() false, and
+//          every check against the file (11c's DIV-0212, 11d, 11e's
+//          CompareWithFile, rdata::Verify, ExeOwn_CheckAtStart) says it did
+//          not compare. The developer's
+//          half, BOF3X_EXEFILE=1 alone: BOF3.exe in the current directory
+//          hashed (SHA-256) and opened through exe_file.h, its section table
+//          checked against exe_layout.h - or, without the file,
+//          BOF3X_EXEIMAGE required.
+//     11b. .game asserted zero; rdata::Map.
+//     11c. .data from ExeImage_Source: the cache's image with its table
+//          files laid in (ComposeBase), then at a player's start that image
+//          hashed against the manifest's [exe] sha256 (call 2, a Fatal on a
+//          difference), under the switch a pc-zh image against the file's
+//          .data (DIV-0212); or, the developer's half only, from the file
+//          (exe_file::ReadAt) when BOF3X_EXEIMAGE is unset.
+//     11d. Shell_MapDefaultKeys (against the file's table when opened).
+//     11e. ExeImage_LayOptTables, ExeImage_LogMapped, ExeImage_CompareWithFile
+//          (a disc-built image against the opened file only).
+//     11f. .bss asserted zero.
+//     Windows: GetCurrentDirectoryW and GetFileAttributesW (the developer's
+//     half only), GetEnvironmentVariableA, the wide path for Sha256Hex. The
+//     reader (exe_file.cpp), the image's hash and every fill are portable;
+//     a Linux start needs only the player's half.
 // 12. Rebase (:602; :325..370): every pointer word of rebase.gen.h checked
 //     in its linked range, the data words moved, the code words bound
 //     (Bind_Word). Portable.

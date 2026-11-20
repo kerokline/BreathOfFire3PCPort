@@ -1136,12 +1136,13 @@ bool ConfigLanguageKnown(const std::string& code) {
 }
 
 // The install's kind (docs/exe-retire-round.md, X1): what the launcher asks
-// in place of BOF3.exe beside the game. Only the developer's switch,
-// BOF3X_EXEFILE=1, asks the file: then today's test, its presence. With no
-// cache, only a PC folder can start (common/cache_manifest.h InstallAsk).
-static InstallAsk LauncherAsk(const std::wstring& game_dir) {
+// in place of BOF3.exe beside the game. Only the developer's start - the
+// switch, BOF3X_EXEFILE=1, or the hosted build, which runs inside the file -
+// asks the file: then today's test, its presence. With no cache, only a PC
+// folder can start (common/cache_manifest.h InstallAsk).
+static InstallAsk LauncherAsk(const std::wstring& game_dir, bool hosted = false) {
     InstallAsk ask;
-    ask.developer = InstallExeFileSwitch();
+    ask.developer = hosted || InstallExeFileSwitch();
     ask.exe_present = ask.developer && AnyMatch(game_dir + Sep(L"\\BOF3.exe"));
     ask.no_cache = true;
     return ask;
@@ -1164,15 +1165,15 @@ static const CacheManifest& KindManifest(const std::wstring& cache) {
     return m;
 }
 
-bool ConfigOriginalAvailable(const std::wstring& game_dir, const std::wstring& cache) {
+bool ConfigOriginalAvailable(const std::wstring& game_dir, const std::wstring& cache, bool hosted) {
     const bool zh_layer = CacheHasLayer(cache, L"loc", "zh-CN");
     const CacheManifest m = KindManifest(cache);   // a copy: CachedManifest's slot may be read again for another root
-    return InstallChineseText(m, zh_layer, LauncherAsk(game_dir));
+    return InstallChineseText(m, zh_layer, LauncherAsk(game_dir, hosted));
 }
 
-bool ConfigResolveLanguage(const std::wstring& game_dir, Config& cfg, std::string& error) {
+bool ConfigResolveLanguage(const std::wstring& game_dir, Config& cfg, std::string& error, bool hosted) {
     const std::wstring cache = ConfigCacheDataRoot(cfg);
-    if (ConfigOriginalAvailable(game_dir, cache)) return true;
+    if (ConfigOriginalAvailable(game_dir, cache, hosted)) return true;
     const std::vector<std::string> held = ConfigLanguagesAvailable(game_dir, cache);
     std::string list;
     for (const std::string& tag : held) list += (list.empty() ? "" : ", ") + tag;
@@ -1812,8 +1813,9 @@ std::string IniNotHere(const std::wstring& game_dir, const Config& cfg, const st
 // recipes/exe-gaps-accepted.tsv does not answer, and =0 refuses none, so only
 // =1 is kept from a disc-built image. Each asks its own question of the
 // install's kind (common/cache_manifest.h, docs/exe-retire-round.md X1):
-// the cache's record, not BOF3.exe; BOF3X_EXEFILE=1 alone asks for the file,
-// which it reads.
+// the cache's record, not BOF3.exe. BOF3X_EXEFILE=1 is the developer's
+// switch (docs/exe-retire-round.md, X2): a player's start reads no BOF3.exe,
+// so a preset never sets it; the environment's is kept (ConfigPresetPlan).
 std::string EnvNotHere(const std::wstring& game_dir, const Config& cfg, const std::string& name,
                        const std::string& value) {
     const CacheManifest m = KindManifest(ConfigCacheRoot(cfg));   // a copy, as ConfigOriginalAvailable's
@@ -1823,8 +1825,9 @@ std::string EnvNotHere(const std::wstring& game_dir, const Config& cfg, const st
     if (name == "BOF3X_EXEIMAGE_STRICT" && value != "0" && !InstallImageWhole(m, ask))
         return "a disc-built install has gaps in its .data, and this value stops the game at all "
                "gaps, also at the gaps that this release accepts";
-    if (name == "BOF3X_EXEFILE" && value == "1" && !AnyMatch(game_dir + Sep(L"\\BOF3.exe")))
-        return "a disc-built install (no BOF3.exe) has no file to read the game's tables from (DIV-0212)";
+    if (name == "BOF3X_EXEFILE" && value == "1")
+        return "a player's start reads the game's tables from the install's own image, not from BOF3.exe; "
+               "BOF3X_EXEFILE=1 is a developer's switch (DIV-0212)";
     return std::string();
 }
 

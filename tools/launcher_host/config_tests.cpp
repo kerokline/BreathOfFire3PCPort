@@ -1582,6 +1582,56 @@ void TestInstallKind() {
     std::filesystem::remove_all(bof3::os::PathW(cache), ec);
 }
 
+// docs/exe-retire-round.md X2: BOF3X_EXEFILE=1 is the developer's switch. A
+// preset never sets it, also on a PC folder with BOF3.exe there (it did: As
+// shipped and Repaired turned DIV-0212 off through it); the environment's is
+// kept. The hosted build asks the file as the switch does (ConfigOriginalAvailable's
+// `hosted`). An empty BOF3.exe; no game data.
+void TestExeFileDeveloper() {
+    ClearEnv();
+    const std::wstring game = Temp(L"bof3x_x2_game"), cache = Temp(L"bof3x_x2_cache");
+    std::error_code ec;
+    std::filesystem::remove_all(bof3::os::PathW(game), ec);
+    std::filesystem::remove_all(bof3::os::PathW(cache), ec);
+    MakeDirs(game + P(L"\\DAT"));
+    WriteAll(game + P(L"\\DAT\\FIRST.DAT"), "");
+    WriteAll(game + P(L"\\BOF3.exe"), "");
+    auto sets = [](const bof3x::PresetPlan& plan, const char* k) {
+        for (const auto& kv : plan.env)
+            if (kv.first == k) return true;
+        return false;
+    };
+    auto said = [](const bof3x::PresetPlan& plan, bool kept, const char* text) {
+        for (const auto& item : plan.items)
+            for (const auto& [sw, why] : kept ? item.kept : item.not_here)
+                if (sw.find("BOF3X_EXEFILE") != std::string::npos && why.find(text) != std::string::npos) return true;
+        return false;
+    };
+    bof3x::Config cfg;
+    for (bof3x::Preset p : {bof3x::Preset::kShipped, bof3x::Preset::kRepaired}) {
+        const bof3x::PresetPlan plan = bof3x::ConfigPresetPlan(game, cfg, p, "original");
+        Check(!sets(plan, "BOF3X_EXEFILE"), "a preset on a PC folder with BOF3.exe does not set BOF3X_EXEFILE");
+        Check(said(plan, false, "a developer's switch"), "  and lists it as not for this install, naming the switch");
+    }
+    bof3::os::SetEnv("BOF3X_EXEFILE", "1");
+    {
+        const bof3x::PresetPlan plan = bof3x::ConfigPresetPlan(game, cfg, bof3x::Preset::kShipped, "original");
+        Check(!sets(plan, "BOF3X_EXEFILE") && said(plan, true, "the environment sets BOF3X_EXEFILE"),
+              "the environment's BOF3X_EXEFILE=1 is kept, as every variable the environment sets");
+    }
+    bof3::os::SetEnv("BOF3X_EXEFILE", nullptr);
+
+    // A PC folder beside a disc-built cache: the cache's record decides a
+    // player's start (X1); the hosted build, inside the file, asks it.
+    MakeDirs(cache);
+    WriteAll(cache + P(L"\\manifest.toml"), KindManifest("psx", "psx-us", "disc", "psx-us", false));
+    Check(!bof3x::ConfigOriginalAvailable(game, cache), "a player's start beside a disc-built cache: no Chinese text");
+    Check(bof3x::ConfigOriginalAvailable(game, cache, true), "the hosted build there: the file's DAT, the Chinese text");
+    std::filesystem::remove_all(bof3::os::PathW(game), ec);
+    std::filesystem::remove_all(bof3::os::PathW(cache), ec);
+    ClearEnv();
+}
+
 // The plan at launch on a fake install: what goes to BOF3X_OFF, which ini
 // values the game gets, which env values are set, and the install rules.
 void TestPresetPlan() {
@@ -2340,6 +2390,8 @@ int main() {
     TestManifest();
     std::printf("the install's kind (docs/exe-retire-round.md X1)\n");
     TestInstallKind();
+    std::printf("BOF3X_EXEFILE=1, the developer's switch (docs/exe-retire-round.md X2)\n");
+    TestExeFileDeveloper();
     std::printf("review fixes: hosted opt=, listed layers, music only, one reader, chord round trip, psp=\n");
     TestHostedOpt();
     TestListedLayers();

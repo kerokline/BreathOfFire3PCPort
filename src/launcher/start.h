@@ -45,25 +45,39 @@ std::wstring StartOwnDirectory();
 std::wstring StartFullPath(const std::wstring& path);
 
 // The game folder for this pass - `named` (--game or BOF3_GAME_DIR), the
-// working folder when it holds BOF3.exe, the home's game folder, else ./bof3,
-// made absolute - and its BOF3.exe. Whether BOF3.exe is there: then it must be
-// the build this project targets, with the engine's default key table, or
-// StartDie. Hosted, BOF3.exe must be there.
+// working folder when it is a game folder, the home's game folder, else
+// ./bof3, made absolute - and the path of its BOF3.exe. True when this start
+// reads BOF3.exe (docs/exe-retire-round.md, X2): only the developer's - the
+// hosted build, or BOF3X_EXEFILE=1 - with the file there; then it must be the
+// build this project targets, with the engine's default key table, or
+// StartDie. Hosted, BOF3.exe must be there. A player's start never opens,
+// hashes or tests for the file: false, and the working folder is a game
+// folder by InstallGameFolder (the developer's start: by BOF3.exe, as before).
+// A BOF3X_EXEFILE other than 0 or 1 is a StartDie.
 bool StartFindGame(const std::wstring& named, bool hosted, std::wstring* game_dir, std::wstring* exe);
 
 // bof3x.ini into `cfg` and its checks, before any window (DIV-0005, DIV-0102,
 // DIV-0086, DIV-0108): StartDie on a refusal. True when there is no install at
 // all and the Sources page is to make one (never under a self-test or
-// `want_dialog` 0, the windowless launcher's always).
+// `want_dialog` 0, the windowless launcher's always). `exe_read`:
+// StartFindGame's answer.
 bool StartReadSettings(const std::wstring& ini, const std::wstring& game_dir, const std::wstring& named, bool hosted,
-                       bool exe_present, int want_dialog, Config& cfg);
+                       bool exe_read, int want_dialog, Config& cfg);
+
+// A player's start with no image of .data: no cache, or a cache with no
+// base\exe. StartDie with the sentence that names the set-up (the Sources
+// page; the importer's setup for a developer, or BOF3X_EXEFILE=1).
+// docs/exe-retire-round.md X3 puts the set-up before its one call, in
+// StartApply.
+[[noreturn]] void StartRefuseNoImage(const std::wstring& game_dir, const std::wstring& cache);
 
 // After the settings: the cache's manifest checked (StartDie with the DLL's
-// sentence), BOF3X_EXEIMAGE for a disc-built install, the preset, BOF3.CFG
-// (not under a self-test) and the environment the game inherits, and DIV-0212's
-// BOF3X_EXEIMAGE for a PC install whose cache holds the image built from
-// BOF3.exe. `hosted`: no layer the hosted build refuses.
-void StartApply(const std::wstring& game_dir, Config& cfg, bool hosted, bool exe_present);
+// sentence); .data's source - for every start that does not read BOF3.exe
+// (`exe_read` false, not hosted) BOF3X_EXEIMAGE, the cache's image, whatever
+// built it, or StartRefuseNoImage; then the preset, BOF3.CFG (not under a
+// self-test) and the environment the game inherits. `hosted`: no layer the
+// hosted build refuses.
+void StartApply(const std::wstring& game_dir, Config& cfg, bool hosted, bool exe_read);
 
 // bof3x started from `program` with `args` (each passed in double quotes on
 // Windows, as the launcher always passed them) in `game_dir`, with
