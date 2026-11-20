@@ -233,7 +233,15 @@ void CaseCheck(const std::filesystem::path& asked) noexcept {
             }
             Native stored;
             if (!StoredSpelling(found / part, &stored)) return;
-            if (stored != s) differs = true;
+            // Another spelling is a name equal but for ASCII case. Windows also
+            // answers a short alias ("RUNNER~1") with the long name it stands
+            // for: that is another name, not another case, and it opens on
+            // no other system anyway, so the part stays as asked and gives no line.
+            if (stored == s || UpperAll(stored) != UpperAll(s)) {
+                found /= part;
+                continue;
+            }
+            differs = true;
             found /= std::filesystem::path(stored);
         }
         if (differs) Say("CASECHECK asked " + Utf8Of(asked) + " found " + Utf8Of(found));

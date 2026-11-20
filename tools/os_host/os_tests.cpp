@@ -1554,6 +1554,26 @@ void TestCaseCheck() {
     // A part that is not there ends the check: no line.
     (void)os::Path((dir + "/casedir/NOPE.DAT").c_str());
     CHECK(CaseLinesWith("NOPE.DAT") == 0);
+#ifdef _WIN32
+    // A short alias of a folder is another name, not another case: no line for
+    // it, and a part after it is still checked (a CI runner's TEMP holds the
+    // part RUNNER~1, which failed this suite once). Where the volume makes no
+    // short names the alias is the long name and the checks hold too.
+    {
+        const fs::path longdir = fs::path(os::Path(dir.c_str())) / L"LongAliasFolderName";
+        fs::create_directories(longdir, ec);
+        std::ofstream(longdir / L"Alias.BIN", std::ios::binary) << "x";
+        wchar_t shortdir[MAX_PATH];
+        const DWORD n = GetShortPathNameW(longdir.c_str(), shortdir, MAX_PATH);
+        CHECK(n > 0 && n < MAX_PATH);
+        const fs::path alias(shortdir);
+        CHECK(os::IsFile((alias / L"Alias.BIN").c_str()));
+        CHECK(CaseLinesWith("Alias.BIN") == 0);
+        CHECK(os::IsFile((alias / L"alias.bin").c_str()));
+        CHECK(CaseLinesWith("alias.bin") == 1);
+        CHECK(CaseLinesWith(" found " + Utf8(alias / L"Alias.BIN")) == 1);
+    }
+#endif
     // The game's fopen road.
     os::CaseCheckNarrow((dir + "/CASEDIR/File.DAT").c_str());
     CHECK(CaseLinesWith("CASEDIR") == 1);

@@ -30,7 +30,9 @@
 // filesystem never has for a name that opened, and a case-insensitive mount
 // (FAT, ntfs3, a WSL /mnt/c folder, ext4 with casefold) does. So on a
 // case-sensitive filesystem a line names a name that did NOT open for its
-// case alone - the Linux failure itself.
+// case alone - the Linux failure itself. A part the folder answers under a
+// name that differs by more than ASCII case (a Windows short alias, "RUNNER~1"
+// for "runneradmin") is not another spelling: it stays as asked, with no line.
 //
 // The lines go to the sink the log sets (hook/log.cpp's LogOpen); those made
 // before it are kept, up to 1,000, and handed when it is set.
