@@ -2916,12 +2916,22 @@ STALE_SAME = (
      "73d17d83e1c3ce738989b7fa69428d85d34d8e5b3635cf0b1cd2887ab61e0310",
      "7ad6af21b4b3bc58db4ad687c45dd6098f09321052ee3336351bf31e1b7f723b"),
 )
+# The same for a data file a step reads whole (build_reuse.SHIPPED_DATA), by
+# its sha256 before and after: on a disc-built install made by the base's
+# importer, `stale` named exe (src/hook/exe_own.cpp changed): X2 changed one
+# log line's text there, not a region exe_tables.py reads.
+STALE_SAME_DATA = (
+    ("src/hook/exe_own.cpp",
+     "1e6f881f4c7864d12aa3de4d8b41ee3ca94d8e81152d6c28282a44e26c286120",
+     "ed58c9f1224245e474f4cf0608109c3dc9e2758b125d41018cfe1908f10f07db"),
+)
 
 
 def stale_same(cache, step):
     """True when `step`'s record holds once each STALE_SAME function recorded at
     its digest before the round is read at its digest after it, and the file
-    holds exactly that after-digest now."""
+    holds exactly that after-digest now; each STALE_SAME_DATA file likewise
+    by its sha256."""
     import copy
     import build_reuse
     rec = build_reuse.read_record(cache, step)
@@ -2934,6 +2944,15 @@ def stale_same(cache, step):
         if row.get(q) == [before] and now is not None and {d for d, _ in now.get(q, [])} == {after}:
             row[q] = [after]
             changed = True
+    data = patched.get("data", {})
+    for rel, before, after in STALE_SAME_DATA:
+        p = os.path.join(ROOT, rel)
+        if data.get(rel) != before or not os.path.isfile(p):
+            continue
+        with open(p, "rb") as fh:
+            if sha(fh.read()) == after:
+                data[rel] = after
+                changed = True
     return changed and build_reuse.why_stale(patched) is None
 
 
