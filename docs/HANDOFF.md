@@ -113,22 +113,24 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      stale, and so is the second backend as tier 2's gate in the line below (call 1 chose DXVK-native). Found for the staging:
      nothing on Linux reads `bof3x.ini`, the seam starts no process, the movie's picture is a `Fatal` off Windows, LB8 did
      not run, and no Windows 64-bit state-hash reference is recorded. **A launcher for both systems** is estimated in
-     [`launcher-portable.md`](launcher-portable.md) (IDEAS I69); its stage P0 is the round's group C7. **Its stages P1 to P5 are built
-     (2026-11-20, branch `launcher/p1-frame`, local, not pushed): `bof3x-launcher-ui`, Dear ImGui on SDL3, the title
-     page, Configure, every settings page, the Controls pages and the bind capture, the Sources and Mods pages, the Jukebox
-     and the save editor, its sections 9 to 13: every window of the Win32 launcher.** The proof: `python
-     tools/launcher_host/ui_compare.py --ui build/bof3x-launcher-ui.exe --win32 <ini-less launcher copy> --home <home>
-     --game <game folder> --ini <a copy of a bof3x.ini> --out <dir>`, 66 cases equal (it shows the Win32 window for a
-     moment in each case and never sends Play). A page is checked with no screen by `build/bof3x-launcher-ui.exe --check
-     --ini IN --save OUT --script "open settings; set wide=1; press Back; press Exit"`. Next there: the owner's eye on
-     the pages, a hand on the window, a real key and pad on the capture (Pause and NumLock after D427's fix); the owner's
-     one install made through the Sources page, the pickers and the questions seen on a screen, and the Jukebox heard; then P6, the cutover
-     (`launcher-portable.md` sections 5 and 13's last paragraph; the owner's call 3, what becomes of the Win32 dialogs,
-     is open). The checks with no window: `ui_compare.py` (above; run it alone, two runs on one launcher copy disturb
-     each other), `tools/launcher_host/save_editor_check.py` (97 checks; copies of saves only), `tools/jukebox_host`
-     (the samples; `SDL_AUDIODRIVER=dummy`, and a check's Jukebox is silent whatever it says), `tools/key_host`. Two rules the gates taught: no widget call named as an engine accessor is (`At`), and a colour
-     as red, green and blue, never one hexadecimal number. An unattended run of it without `--check` that the start can
-     refuse shows a modal message box.
+     [`launcher-portable.md`](launcher-portable.md) (IDEAS I69); its stage P0 is the round's group C7. **Its stages P1 to P6 are built
+     (2026-11-20, branch `launcher/drawn`, pull request 267, a draft; P6 on the local branch `launcher/p6-cutover`):
+     the drawn launcher, Dear ImGui on SDL3 - the title page, Configure, every settings page, the Controls pages and the
+     bind capture, the Sources and Mods pages, the Jukebox and the save editor, its sections 9 to 13 - and since P6, the
+     cutover (section 14; the owner's call 3: "no need to keep both"), it is `bof3x-launcher` on Windows at both widths
+     and on Linux, and the Win32 dialogs are gone.** It takes the Win32 launcher's command line and start as they were
+     (`--game`, `BOF3_GAME_DIR`, `--config`, `--no-config`, `--host`, `--`, and `--set`/`--list`); the hosted build and
+     a moved image go to `bof3x-launcher-dev.exe`, the developer launcher, Win32 and 32-bit with no window. A page is
+     checked with no screen by `build/bof3x-launcher.exe --check --ini IN --save OUT --script "open settings; set wide=1;
+     press Back; press Exit"`. Next there: the owner's eye on the pages, a hand on the window, a real key and pad on the
+     capture (Pause and NumLock after D427's fix); the owner's one install made through the Sources page, the pickers
+     and the questions seen on a screen, and the Jukebox heard; the release's zips and tarball started on clean machines
+     and Windows Defender's verdict on the new executable (section 14, "Not run"). The checks with no window:
+     `tools/launcher_host/save_editor_check.py` (97 checks; copies of saves only), `tools/key_host`, and `--check`
+     scripts (`SDL_AUDIODRIVER=dummy`; a check's Jukebox is silent whatever it says). Two rules the gates taught: no
+     widget call named as an engine accessor is (`At`), and a colour as red, green and blue, never one hexadecimal
+     number. A refusal of the start shows a modal message box only when no script can wait for it: never under
+     `--check`, `--no-config`, a self-test, or a redirected stdout and stderr (section 14).
    - **`BOF3.exe` out of the player's run: groups X1 to X6 built on the local branch `exe-retire/round` (2026-11-19), not
      merged to `main`, not pushed:** [`exe-retire-round.md`](exe-retire-round.md) "As run", IDEAS I70, DIV-0241, DIV-0242,
      DIV-0212 amended, D432. A player's start reads no `BOF3.exe`; a PC folder with no image is set up in place first.
@@ -730,8 +732,9 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
 - **Build:** `cmake --preset i686 && cmake --build build` - llvm-mingw's `i686-w64-mingw32-clang++` (the `retcomm`
   toolchain under `~/.local/share`), **not** MSYS2's. The first configure fetches SDL3 (network). The 64-bit
   developer build: `cmake --preset x86_64 && cmake --build build-x86_64` (exe host only; item 14a).
-- **Run:** `BOF3X_EXEFILE=1 build/bof3x-launcher.exe --game bof3 --no-config` from a script (`--no-config` skips the
-  settings dialog, [`launcher-settings.md`](launcher-settings.md) §4); log in `build/bof3x.log`. `<main checkout>\bof3` is
+- **Run:** `BOF3X_EXEFILE=1 build/bof3x-launcher.exe --game bof3 --no-config` from a script (`--no-config` opens no
+  window and shows no message box, [`launcher-settings.md`](launcher-settings.md) §4; the launcher is the drawn one
+  since 2026-11-20, [`launcher-portable.md`](launcher-portable.md) 14); log in `build/bof3x.log`. `<main checkout>\bof3` is
   a PC folder with no cache, and since the exe-retire round a player's start refuses a game folder with no image: the
   developer's switch `BOF3X_EXEFILE=1` reads its `BOF3.exe` as before. `input_run.py`, `attract_run.py` and `abc_run.py`
   set it themselves when the game folder holds `BOF3.exe` and no cache is named, and say so in one line; the hosted
@@ -741,11 +744,13 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
   copy with its own `bof3x.ini` (or none: self-tests and references want an ini-less copy, Traps). End a run with
   `taskkill //F //IM BOF3.exe` only for a game you started (the runners do exactly that now,
   [`world-map.md`](world-map.md) §6); batches run detached.
-- **Self-tests, headless:** `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*' build/bof3x-launcher.exe --game <dir> --no-config` (a hosted run: the player's launcher hands it to `bof3x-launcher-dev.exe` beside it since 2026-10-15, [`launcher-settings.md`](launcher-settings.md) 2). **Keep the `BOF3X_SHADOW='*'`:** without it only the start-up self-tests run, not the shadow fuzz suite - the relocatable-image round's gate dropped it and shipped a fault the suite finds in its first module (2026-10-29, [`relocatable-image-round.md`](relocatable-image-round.md) 5 "Before the PR"). A fault inside a self-test is silent (the crash reporter's thread cannot run under the loader lock; the process exits 0xC0000005 after 20 s): the log's last line names the module, and a `Log` in `crash.cpp`'s handler itself names the fault. Beside it the exe host's: `BOF3X_EXEFILE=1 ... --host exe`, and moved: `BOF3X_EXEFILE=1 BOF3X_IMAGEBASE=0xA00000 ... --host exe` (the switch on `<main checkout>\bof3`, which has no cache; none on an install with a cache image).
+- **Self-tests, headless:** `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*' build/bof3x-launcher.exe --game <dir> --no-config` (a hosted run: the player's launcher hands it to `bof3x-launcher-dev.exe` beside it since 2026-10-15, [`launcher-settings.md`](launcher-settings.md) 2; through the seam since 2026-11-20, [`launcher-portable.md`](launcher-portable.md) 14). **Keep the `BOF3X_SHADOW='*'`:** without it only the start-up self-tests run, not the shadow fuzz suite - the relocatable-image round's gate dropped it and shipped a fault the suite finds in its first module (2026-10-29, [`relocatable-image-round.md`](relocatable-image-round.md) 5 "Before the PR"). A fault inside a self-test is silent (the crash reporter's thread cannot run under the loader lock; the process exits 0xC0000005 after 20 s): the log's last line names the module, and a `Log` in `crash.cpp`'s handler itself names the fault. Beside it the exe host's: `BOF3X_EXEFILE=1 ... --host exe`, and moved: `BOF3X_EXEFILE=1 BOF3X_IMAGEBASE=0xA00000 ... --host exe` (the switch on `<main checkout>\bof3`, which has no cache; none on an install with a cache image).
   **A launcher copy holds four files** - `bof3x-launcher.exe`, `bof3x-launcher-dev.exe`, `bof3x.dll` and `bof3x.exe`
-  (the exe host) - and no `bof3x.ini`; without `bof3x.exe` the launcher stops on a modal "bof3x.exe is missing"
-  dialog (Traps). `abc_run.py prepare` copies all four; a hand-made copy must too. Unattended runs that pass a
-  hosted-only switch go through `bof3x-launcher-dev.exe`, since the release launcher refuses them with a dialog:
+  (the exe host) - and no `bof3x.ini`; the names files `music-names.tsv` and `save-names.tsv` are not needed for a
+  `--no-config` start (measured 2026-11-20). Without `bof3x.exe` the launcher stops with "bof3x.exe is missing" on
+  stderr and exit 1, with no box under `--no-config` (Traps). `abc_run.py prepare` copies all four; a hand-made copy
+  must too. Unattended runs that pass a hosted-only switch go through `bof3x-launcher-dev.exe`, which the player's
+  launcher hands them to; with no developer launcher beside it (a release) it refuses with a sentence and exit 1:
   exit 0 passed, 3 a Fatal ([`SCAFFOLDING.md`](SCAFFOLDING.md) §2). Shadow names per module are in each module's
   doc; comma-separated lists work.
 - **A disc-only install** ([`disc-only-install.md`](disc-only-install.md)): `python tools/importer.py build --source
@@ -960,8 +965,10 @@ _One line each, with a pointer. Add when something costs more than an hour._
   `# save` header loads whatever slot 0 holds; `input_run` says `slot 0: left alone` in its first line. A rope
   measurement ran an hour in the owner's whelpBoss area before it was caught. Check that line, or pass `--save`.
 - **The release launcher refuses the A/B switches** (2026-10-23): `BOF3X_ORIGINAL` / `BOF3X_SHADOW` want
-  `bof3x-launcher-dev.exe` **and** `--host bof3`; with the release launcher it shows a modal dialog on the owner's
-  screen and the run waits.
+  `bof3x-launcher-dev.exe` beside the launcher; the player's launcher hands such a run to it. With none beside it
+  (a release zip) it refuses: since 2026-11-20 ([`launcher-portable.md`](launcher-portable.md) 14) the refusal is a
+  line on stderr and exit 1 under `--no-config`, a self-test or a redirected output, with no box; before, the Win32
+  launcher showed a modal dialog on the owner's screen and the run waited.
 
 - **A recorded route splits pages under a reading-row layer** (2026-10-22, D329): every page the builder splits adds
   a confirm press, so a route recorded without the layer desyncs at the first one (`dolphinBoss.txt` under
@@ -1025,8 +1032,9 @@ _One line each, with a pointer. Add when something costs more than an hour._
   `98c17e8b`, and `main` took DIV-0102 after it, so numbering from the branch's DIV-0101 would have collided at the
   rebase. `psp/ledger` took `main`'s ledger first and numbered from DIV-0103. Check that `main` is an ancestor of the
   branch (`merge-base --is-ancestor`) before numbering.
-- **`dialog_test.py` needs a `bof3x.exe` beside the launcher** since state 3, or the dialog never opens (LT placed a
-  stand-in); and the Jukebox's `IDD_MUSIC` grew 36 dialog units for the chord box (TG), which moved its buttons.
+- **`dialog_test.py` needed a `bof3x.exe` beside the launcher** since state 3, or the dialog never opened (LT placed a
+  stand-in); and the Jukebox's `IDD_MUSIC` grew 36 dialog units for the chord box (TG), which moved its buttons. The
+  tool and the Win32 dialogs went at stage P6 of [`launcher-portable.md`](launcher-portable.md) (2026-11-20).
 - **`attract_run.py` overrides `BOF3X_LANG` with its own `--lang`, default `original`** (2026-10-12): the round's end
   batch set the language in the environment and both gate runs played under the port's Chinese - which a disc-only
   cache does not have - so the disc side stalled in area 4's text box and 349 pages differed. Pass `--lang en-US` to
@@ -1090,7 +1098,8 @@ _One line each, with a pointer. Add when something costs more than an hour._
   the tags (the 29 headers said `en`; they say `en-US` since 2026-10-10, comment lines only; `input-script.md`).
 - **The bare language codes are retired** (2026-10-10, DIV-0005): `BOF3X_LANG=en` (`fr`, `de`, `ja`), an ini
   `language=en` or `--lang en` to any tool stops it with the tag to use - the launcher by a message box (which a
-  scripted run would wait on; the runners check first), the DLL by a Fatal. Old commands in the round docs that say
+  scripted run would wait on; the runners check first; since 2026-11-20 no box under `--no-config`, a self-test or
+  a redirected output), the DLL by a Fatal. Old commands in the round docs that say
   `--lang en` want `--lang en-US`.
 - **`git am` of a cloud session's patches** (2026-10-08): it refuses a file that already exists untracked (a copy
   downloaded earlier) and a tracked file with uncommitted changes ("does not match index"), and a failed run leaves

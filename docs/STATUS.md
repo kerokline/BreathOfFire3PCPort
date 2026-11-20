@@ -8,6 +8,20 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
+**The cutover: the drawn launcher is `bof3x-launcher`, 2026-11-20 (stage P6 of
+[`launcher-portable.md`](launcher-portable.md), its section 14; local branch `launcher/p6-cutover`, cut from
+`launcher/drawn`, not pushed).** The owner's call 3: "no need to keep both". `bof3x-launcher` is the drawn launcher on
+Windows at both widths and on Linux, and the Win32 dialogs are gone, with the four `ctypes` drivers and
+`tools/jukebox_host` (11,469 lines removed in all). It takes the Win32 launcher's command line and start as they were;
+`--set` and `--list` came from the launcher with no window, which went too. The hosted build and a moved image go to
+`bof3x-launcher-dev.exe`, now Win32 with no window, through a new call of the seam (a child on its parent's own file or
+pipe). A refusal shows no message box under `--check`, `--no-config`, a self-test or a redirected output. **Measured:**
+from one ini and a stand-in game, the old Win32 launcher and the new one give the game the same environment, command
+line, folder, `BOF3.CFG` and ini, byte for byte, and print the same lines but the pid (eight cases); the harness's
+self-test, its hosted hand-over and a two-minute attract run go through a launcher copy; an untouched window writes the
+owner's ini byte for byte; the release zip carries `licenses\` (Dear ImGui, Droid Sans, TeX Gyre Pagella). **Owed:**
+a hand on the window; the release started on a clean machine and Windows Defender's verdict on the new executable.
+
 **The drawn launcher's Jukebox and save editor, 2026-11-20 (stage P5 of [`launcher-portable.md`](launcher-portable.md),
 its section 13; the same local branch as the paragraphs below).** With them every window of the Win32 launcher is in the
 drawn one. The Jukebox plays through SDL's audio stream: its samples equal the Win32 player's byte for byte for seven

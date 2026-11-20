@@ -2,16 +2,19 @@
 
 **Status:** IN PROGRESS (2026-11-20: stage P0 is in `main`, the Linux
 round's group C7; stages P1 to P5 - the frame, the settings pages,
-Controls, Sources and Mods, the Jukebox and the save editor - are built on
-the local branch `launcher/p1-frame`, sections 9 to 13; stage P6, the
-cutover, is not started and waits for the owner's hand on the window. Sections 1 to 8 are the staging of 2026-11-19, measured
-at `main` `8cd45199`.)
+Controls, Sources and Mods, the Jukebox and the save editor - are on the
+branch `launcher/drawn` (pull request 267, a draft), sections 9 to 13;
+stage P6, the cutover, is built on the local branch `launcher/p6-cutover`,
+section 14: the drawn launcher is `bof3x-launcher` on both systems and the
+Win32 dialogs are gone. What is left is the owner's: a hand on the window,
+and the release started on clean machines. Sections 1 to 8 are the staging
+of 2026-11-19, measured at `main` `8cd45199`.)
 An estimate and a staging for the owner's question "a launcher that works on
 either Windows or Linux". It is tier 3 of [`linux-round.md`](linux-round.md)
 (section 5, stand-in 3; section 8) and IDEAS I69. Stage P0 below is also
 group C7 of that round's staging and is needed for any native Linux build.
-Of the owner's four calls in section 7, calls 1, 2 and 4 are answered; call 3
-is open.
+All four of the owner's calls in section 7 are answered (call 3 on
+2026-11-20).
 
 Every count was made by the command beside it. What was not measured is in
 section 8. The licence remarks in section 4 are a reading, not advice, and
@@ -223,6 +226,9 @@ player can use with no text file. P5 can follow.**
    ships the new launcher, since two sets of pages is way C's cost. The
    other answer: kept one release behind a switch, as the keyboard's proof
    tool was.
+   **Answered (the owner, 2026-11-20):** "We can make this the default
+   launcher - no need to keep both." The Win32 dialogs go at P6, with no
+   switch (section 14).
 4. **When.** P0 runs with the Linux round (its C7). Proposed for the rest:
    after that round's first native release, so a Linux player can test the
    pages where they are needed. It does not gate that release.
@@ -942,3 +948,210 @@ on the window (the mouse, a keyboard, a pad), sound heard, a picker, a
 question or a message box seen on a screen, a display scaled other than
 100 %, a Deck, Windows Defender's verdict, and the release's files beside
 the program (the two names files, the fonts' and libraries' notices).
+
+## 14. Stage P6 as run (2026-11-20, branch `launcher/p6-cutover`, cut from `launcher/drawn`)
+
+The owner's call 3 (section 7): "We can make this the default launcher - no
+need to keep both." So the Win32 dialogs go in this stage, with no switch.
+
+**What changed.**
+
+- **The drawn launcher is `bof3x-launcher`** on both systems:
+  `bof3x-launcher.exe` on Windows at 32 and 64 bits, `bof3x-launcher` on
+  Linux. The CMake target `bof3x_launcher_ui` is `bof3x_launcher` (its
+  source list `BOF3X_LAUNCHER_SOURCES`), and the name `bof3x-launcher-ui`
+  is gone from the program's lines, its usage text and the tools. On
+  Windows it has `launcher.rc` again, cut to what a player's program needs:
+  the version block, the icon (the first icon resource, which SDL also
+  gives the window) and a manifest with the program's identity and
+  `asInvoker`. The manifest has no DPI line: SDL declares the window
+  per-monitor DPI aware (v2) when its video starts
+  (`SDL_windowsvideo.c` `WIN_InitDPIAwareness`, no hint set), and a DPI line
+  in the manifest would make that call fail. It has no Common Controls 6
+  dependency: no common control is left in either launcher.
+- **It takes the Win32 launcher's command line and start** (`main.cpp`):
+  `--game`, `BOF3_GAME_DIR`, `--config`, `--no-config`, `--host exe|bof3`,
+  `-- <game args>`, with their meanings. Neither `--config` nor
+  `--no-config`: `show_launcher` decides. `--no-config`, `show_launcher=0`
+  and a self-test start the game with no window (a new phase of the start,
+  `kNoWindow`: the settings as read, nothing saved, as the Win32 launcher).
+  Under `--no-config` and a self-test there is no Sources page first and no
+  stale-install check (`StartSetUpFor` and the check's own condition, as
+  before). With `show_launcher=0` and no `--no-config` the Sources page's
+  first run and the stale question still come first, as they did in the
+  Win32 launcher, whose `want_dialog` was -1 there. The lines it prints come
+  from `start.cpp` as before. What `launcher.cpp` did around the start that
+  the drawn `main.cpp` did not, each now in `main.cpp`: `AttachParentConsole`
+  (now the seam's `AttachParentTerminal`), `RemoveOldIconFiles`, the
+  `bof3x.dll is missing` check (on Windows), `HostedOnlyAsked`,
+  `ForwardToDevLauncher`, the `BOF3X_IMAGEBASE=...: starting ...` line and
+  its "is not a number" refusal, the Win32 launcher's sentence for a missing
+  `bof3x.exe`, and the `--host` refusal. `--set` and `--list` came from
+  `headless.cpp` with their texts.
+- **The hosted build and a moved image are the developer launcher's.** The
+  player's launcher hands such a run to `bof3x-launcher-dev.exe` beside it,
+  with the same arguments and environment, on its own file or pipe when a
+  script gave one, and ends with its exit code. It does this through the
+  seam: `ChildSpec::own_output` is new (`os/process.h`; Windows: the
+  process's standard handles, inherited, when stdout and stderr both go to
+  a file or a pipe; POSIX: nothing to do, the fork keeps them), and so are
+  `OutputRedirected` and `AttachParentTerminal`. `tools/os_host` tests
+  `own_output` with a relay on a pipe whose child is `os_tests_gui.exe`, the
+  same tests built as a windowed program, because a console child finds its
+  parent's handles without being given them and a windowed one does not
+  (with `own_output` false the check fails, 2 of 632; true, 0 failed). With
+  no developer launcher beside it (a release) the refusal is the Win32
+  launcher's sentence; on Linux it says that the hosted build is on Windows
+  only.
+- **A refusal shows a message box only when no script can wait for it.**
+  The rule (`main.cpp`, `g_no_box`): no box under `--check`, under
+  `--no-config`, under a self-test (`BOF3X_SELFTEST_ONLY`), or when stdout
+  and stderr both go to a file or a pipe (`OutputRedirected`). A player's
+  start from a double-click or a terminal with no `--no-config` still shows
+  the box. A failed hand-over to the developer launcher in a scripted run
+  is covered by the last two. The Win32 launcher showed its box under
+  `--no-config` too (measured below: its box stopped a run of this stage
+  until the process was ended).
+- **The developer launcher stays Win32 and 32-bit** (section 6).
+  `launcher.cpp` is that launcher alone, 363 lines: the hosted start (the
+  injection) and a moved image's fence, the settings read, no window, as
+  `--no-config` always; `--config` is refused with a sentence; its other
+  refusals keep their texts, and none shows a box. It does not call
+  `RemoveOldIconFiles` (the player's launcher does). `key_codes_check.cpp`
+  (the build-time check of `src/input/key_codes.h` against the Windows
+  SDK's names) is compiled with it, in the 32-bit build. The player's
+  launcher imports none of `VirtualAllocEx`, `WriteProcessMemory`,
+  `CreateRemoteThread` (`llvm-readobj --coff-imports`, both widths); the
+  developer launcher imports all three. `build.yml` did not check it
+  before; it does now, in both jobs.
+- **Removed** (lines): `config_dialog.cpp` 2,190 and `.h` 27,
+  `sources_dialog.cpp` 1,449 and `.h` 89, `save_dialog.cpp` 1,015 and `.h`
+  16, `music_player.cpp` 943 and `.h` 25, `resource.h` 221, `headless.cpp`
+  142, `launcher.rc`'s 21 dialog templates (660 of its 672 lines),
+  `launcher.cpp`'s window half (247 lines out, 59 in), the
+  `bof3x_launcher_parts` library and the libraries only the dialogs linked
+  (`comctl32`, `comdlg32`, `uxtheme`, `windowscodecs`, `shell32`, `ole32`,
+  `winmm`). The tools that drove the Win32 window:
+  `tools/launcher_host/dialog_test.py` 926, `capture_page.py` 158,
+  `save_editor_drive.py` 341, `ui_compare.py` 622 (its 66 cases are on
+  record in sections 10 to 13), `tools/jukebox_host` 113 (its result is in
+  section 13). `save_editor_check.py` loses its two cases that ran the Win32
+  editor. In all, 52 files: 1,201 lines added, 11,469 removed, the censuses
+  included. `src/launcher/` is 17,017 lines of `.cpp` and `.h`.
+- **Kept:** `tools/key_host/capture_tests.cpp`, with its own copy of the
+  Win32 capture's rule, now said to be the capture as it was, removed
+  2026-11-20. The Linux round planned a tarball with a start script for
+  this stage to remove; no such tarball or script exists in the tree.
+- **The release:** the zip's `bof3x-launcher.exe` is the drawn one, with
+  `music-names.tsv` and `save-names.tsv` beside it, and a new `licenses\`
+  folder: Dear ImGui's MIT notice from the build's fetched tree, and
+  `third_party/droid-sans/` (new: the Apache License 2.0's text and a
+  README with the font's name-table notices) and
+  `third_party/tex-gyre-pagella/`'s four text files
+  ([`THIRD_PARTY.md`](THIRD_PARTY.md) sections 6 and 7, both owed lines
+  paid). The release's README says what the folder holds.
+- **The censuses**, each by its own tool: `analysis/os_census.tsv` (its
+  `--check` failed on the seam's new sites): the launcher's rows 1,802 to
+  124, `src/os/win32/process.cpp` 52 to 79. `analysis/width_census.tsv`
+  (its `--check` passed and named 8 keys gone) and
+  `analysis/ledger_switches.tsv` (passed; the readers of five switches now
+  name the files that read them). No ledger line was touched: no gate needs
+  a file that `docs/DIVERGENCE.md` cites to exist (`ledger_check.py` 242
+  entries, 0 errors, after the removal).
+
+**Measured.**
+
+- **Builds.** `cmake --preset i686 -DFETCHCONTENT_SOURCE_DIR_SDL3=...` and
+  `cmake --build build`: whole, no error (the launcher 37,947,392 bytes, the
+  developer launcher 9,809,408). `cmake --preset x86_64 ...` and `cmake
+  --build build-x86_64`: whole, no error, the launcher an x86-64 image. In
+  the WSL (`rsync` to `~/src/bof3x-p6`, `cmake --preset linux-x86_64
+  -DSDL_X11_XTEST=OFF`, target `bof3x_launcher`): an ELF
+  `bof3x-launcher` with both names files beside it.
+- **The two launchers give the game the same start.** As stage P0's C7: the
+  old Win32 launcher (`C:\Users\kerok\bof3x-runs\p2cmp\L\bof3x-launcher.exe`,
+  built from `launcher/drawn` before this stage) and the new one, each in
+  turn in one folder with a stand-in `bof3x.exe` that writes down its
+  environment (sorted), command line and working folder and ends with a
+  given code, a dummy `bof3x.dll`, and a fresh copy of one `bof3x.ini`
+  (`p2cmp\start.ini`), the game folder the tooling install
+  (`D:\bof3x-runs\p6cut\startcmp.sh`). Eight cases: the plain ini, a preset
+  (`preset=shipped`), `-- -a "two words" D:\x\`, `BOF3X_SELFTEST_ONLY=1`
+  with the stand-in's code 5, `show_launcher=0` and no `--no-config`, a
+  player's start from a cache image (`BOF3X_CACHE`, no `BOF3X_EXEFILE`),
+  `BOF3_GAME_DIR` in place of `--game`, and `BOF3X_IMAGEBASE=0x400000`.
+  In every case the exit code, stderr, the stand-in's record (129 to 141
+  lines), `BOF3.CFG` and the ini afterwards are byte-identical, and stdout
+  is identical but for the pid. The self-test carries code 5 back from
+  both. The two refusals were run on the new launcher alone: a bad
+  `BOF3X_IMAGEBASE` and an unknown argument end with exit 1 and a line on
+  stderr, no box, `BOF3.CFG` and the ini unchanged. A first run of the
+  bad-`BOF3X_IMAGEBASE` case on the old launcher showed its modal box under
+  `--no-config` and waited until the process (this stage's own) was ended.
+  The tooling install's `BOF3.CFG` was put back as it was.
+- **The harness runs through it.** A launcher copy as the harness makes one
+  (`D:\bof3x-runs\p6cut\harness`: the four files, no ini, no names files;
+  a missing names file does not stop a `--no-config` start):
+  (a) `BOF3X_SELFTEST_ONLY=1 BOF3X_EXEFILE=1 bof3x-launcher.exe --game
+  ...\bof3 --no-config`: exit 0, "self-test only, game process exit code
+  0", and `self-test only: done, ending the process` in `bof3x.log`.
+  (b) `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=EffectKind5B_Fade` the same way:
+  handed to the developer launcher, its lines (the hosted-only line, the
+  key table, the pid, exit code 0) on the file, exit 0, the log's
+  `self-test only: done`; the same with the output to a pipe; with no
+  developer launcher beside it, the refusal and exit 1 with no box, with
+  and without `--no-config` (the output on a file and on a pipe). A moved
+  image goes to the developer launcher, which refuses the missing
+  `bof3x-A00000.exe` with its sentence; `--config` with a hosted switch
+  reaches the developer launcher, which refuses it.
+  (c) `python tools/attract_run.py --out D:\bof3x-runs\p6cut\attract\a.tsv
+  --minutes 2 --game ...\bof3 --no-front --launcher
+  D:\bof3x-runs\p6cut\harness\bof3x-launcher.exe`: "3596 logic frames in
+  120 s", exit 0.
+- **The window, with no screen.** An untouched window with every page, the
+  Jukebox, the save editor and the Sources page opened (`--check`, the
+  owner's home as `BOF3X_HOME`, `--game ...\game\game`,
+  `SDL_AUDIODRIVER=dummy`, `D:\bof3x-runs\p6cut\window_check.sh`) writes a
+  copy of the owner's `bof3x.ini` byte for byte (7,659 bytes); the owner's
+  saves keep their dates. `save_editor_check.py` on the build: 97 checks,
+  0 failures. `tools/key_host`: `key_tests` 133,780 checks and
+  `capture_tests` 329, 0 failed. `tools/launcher_host`: `config_tests`
+  4,402 checks and `save_tests` 139, 0 failures (its `CMakeLists.txt` names
+  no removed file). `tools/os_host`: 632 checks on Windows, 544 in the WSL,
+  0 failed. In the WSL the same script but the Sources page (no install
+  there) writes the same ini as the Windows build does from the same input
+  with no install (both turn `language=en-US` into `original`: the
+  window's DIV-0102 rule when no install holds the language).
+- **`--set` and `--list`** against `headless.cpp` itself, built from the
+  branch before its removal: on Windows `--list` (105 lines), `--set
+  filter=linear --set display=fullscreen --list` and the ini it writes are
+  byte-identical, and a refused key gives the same sentence; in the WSL the
+  same but for the line ends (LF there, CRLF from the Windows build).
+- **The hosted build on Linux:** `--host bof3`, `BOF3X_SHADOW` and
+  `BOF3X_IMAGEBASE=0xA00000` each end with exit 1 and the Linux sentence.
+- **The release zip** (`python tools/make_release.py --version
+  v0.1.0-p6test --build build --out D:\bof3x-runs\p6cut\release\...`, not
+  published): 1,219 files, 74.6 MB, the game-data scan clean; at its top
+  `bof3x-launcher.exe`, `bof3x.dll`, `bof3x.exe`, `music-names.tsv`,
+  `save-names.tsv`, `README.txt`, `LICENSE`, `THIRD_PARTY.md`,
+  `THIRD_PARTY_RUNTIME.txt`, then `licenses\` (seven files) and
+  `runtime\`. The launcher started from the unpacked folder with `--check
+  --capture` draws the title page, and a script through the Jukebox, the
+  save editor and Data ends 0; nothing is beside it but what the zip holds.
+  Its resources: version, manifest, icon.
+- **The gates**, as `checks.yml` runs them: `ledger_check`,
+  `ledger_switches --check`, `ledger_registry --check`, `data_census
+  --check` and `--strict`, `reloc_census --check`, `reloc_bare --check`,
+  `width_census --check`, `tu_renames --check`, `tu_census --check
+  --strict`, `retire_shells --check --strict`, `os_census --check` and
+  `--boundary`, and `linux_tree.py --check` in the WSL: all pass.
+
+**Not run, or not shown.** No window on a screen, no hand, no key or pad, no
+picker, question or box seen: everything above is `--check` or a start with
+no window. The release's zips started on a clean machine; Windows Defender's
+verdict on the new executable (it is the drawn one, 37 MB, unsigned in a
+local build); the 64-bit zip; the Linux launcher starting a real game (the
+WSL has no Linux game build here). A message box under the new rule on a
+player's double-click was not shown (by design of this stage). The start
+comparison used `BOF3X_EXEFILE=1` for seven of its eight cases; the eighth is
+a player's start from a cache image.

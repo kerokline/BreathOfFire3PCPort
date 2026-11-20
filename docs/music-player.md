@@ -23,7 +23,9 @@ cataloguing job). Songs only, no effects.
 ## 1. What it is
 
 `Jukebox...` on the settings dialog opens `IDD_MUSIC`
-(`src/launcher/music_player.cpp`):
+(`src/launcher/music_player.cpp`; since 2026-11-20 the drawn launcher's
+Jukebox, `src/launcher/ui/page_jukebox.cpp` and `jukebox_play.cpp`, with the
+same lists and words, [`launcher-portable.md`](launcher-portable.md) 13 and 14):
 
 - **Source**: three radio buttons. A source the install lacks is greyed, with the reason
   under it (the Config screen's rule: everything listed, greyed by source).

@@ -25,9 +25,10 @@ src/launcher/save/card.h/.cpp    the memory card image, its directory, the PlayS
 src/launcher/save/namemap.h/.cpp each release's default names, and a save's names changed between them
 src/launcher/save/names.h/.cpp   the lists of names, read from the install and from save-names.tsv
 data/save-names.tsv              the reference names; the build copies it beside the launcher
-src/launcher/save_dialog.cpp     the window
+src/launcher/ui/page_saves.cpp   the window (the drawn launcher's; save_dialog.cpp's until 2026-11-20)
 tools/launcher_host/save_tests.cpp   the format tests
-tools/launcher_host/save_editor_drive.py   the window driven through a card and a conversion
+tools/launcher_host/save_editor_check.py   the window driven through a card and a conversion, with no screen
+                                 (save_editor_drive.py drove the Win32 window until 2026-11-20)
 ```
 
 `save/` has no window code. The window holds no offset of its own: every row it
