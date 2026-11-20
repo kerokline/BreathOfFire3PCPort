@@ -338,9 +338,11 @@ int wmain(int argc, wchar_t** argv) {
         }
     }
 
-    // The game directory: --game, BOF3_GAME_DIR, the current directory when it
-    // holds BOF3.exe, the home's game\ when the Sources page laid one out
-    // (common/home.h, docs/install-sources.md), else ./bof3.
+    // The game directory: --game, BOF3_GAME_DIR, then StartFindGame: the
+    // current directory when it is a game folder (the developer's start: when
+    // it holds BOF3.exe), the home's game\ when the Sources page laid one out
+    // (common/home.h, docs/install-sources.md), the PC folder the home plays
+    // in place, else ./bof3.
     if (game_dir.empty()) {
         wchar_t env[MAX_PATH];
         DWORD n = GetEnvironmentVariableW(L"BOF3_GAME_DIR", env, MAX_PATH);

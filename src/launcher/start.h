@@ -45,8 +45,10 @@ std::wstring StartOwnDirectory();
 std::wstring StartFullPath(const std::wstring& path);
 
 // The game folder for this pass - `named` (--game or BOF3_GAME_DIR), the
-// working folder when it is a game folder, the home's game folder, else
-// ./bof3, made absolute - and the path of its BOF3.exe. True when this start
+// working folder when it is a game folder, the home's game folder, the PC
+// folder the home's sources.toml says is played in place (play_in_place =
+// true) when it is a game folder, else ./bof3, made absolute - and the path of
+// its BOF3.exe. True when this start
 // reads BOF3.exe (docs/exe-retire-round.md, X2): only the developer's - the
 // hosted build, or BOF3X_EXEFILE=1 - with the file there; then it must be the
 // build this project targets, with the engine's default key table, or

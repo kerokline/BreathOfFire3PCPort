@@ -2919,11 +2919,12 @@ STALE_SAME = (
 # The same for a data file a step reads whole (build_reuse.SHIPPED_DATA), by
 # its sha256 before and after: on a disc-built install made by the base's
 # importer, `stale` named exe (src/hook/exe_own.cpp changed): X2 changed one
-# log line's text there, not a region exe_tables.py reads.
+# log line's text there, and X6 (D432) one more, not a region exe_tables.py
+# reads. The after-digest is of the file as checked out on Windows (CRLF).
 STALE_SAME_DATA = (
     ("src/hook/exe_own.cpp",
      "1e6f881f4c7864d12aa3de4d8b41ee3ca94d8e81152d6c28282a44e26c286120",
-     "ed58c9f1224245e474f4cf0608109c3dc9e2758b125d41018cfe1908f10f07db"),
+     "640dd46df1450865ac1fdf7e193bcf8d20d2229ed5396d7b49afc9b3a42ce441"),
 )
 
 
