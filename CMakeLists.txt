@@ -284,6 +284,13 @@ set(BOF3X_LAUNCHER_UI_SOURCES
   src/input/function_keys.cpp
   src/input/key_sdl.cpp
   src/input/pad_sdl.cpp)
+# The save editor (stage P5): its page and the format core it is over.
+list(APPEND BOF3X_LAUNCHER_UI_SOURCES
+  src/launcher/ui/page_saves.cpp
+  src/launcher/save/block.cpp
+  src/launcher/save/card.cpp
+  src/launcher/save/namemap.cpp
+  src/launcher/save/names.cpp)
 
 # --- DXVK-native's Direct3D 11 headers, for a target that is not Windows ----
 # (docs/linux-round.md section 6, call 1). Read only when the target is not
@@ -542,6 +549,7 @@ add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/save-names.tsv"
   VERBATIM)
 add_custom_target(bof3x_save_names DEPENDS "${CMAKE_BINARY_DIR}/save-names.tsv")
 add_dependencies(bof3x_launcher bof3x_save_names)
+add_dependencies(bof3x_launcher_ui bof3x_save_names)   # the drawn launcher's save editor (stage P5)
 
 # --- every object, no link ---------------------------------------------------
 # The x86_64 CI job's compile step (docs/x64-build-round.md 3 "XA4"): a

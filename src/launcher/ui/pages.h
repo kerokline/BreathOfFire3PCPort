@@ -64,6 +64,11 @@ struct Pages {
     // Raised when the Mods page added, built or removed a mod
     // (kMsgModsChanged): Settings' Row above the text box is made again.
     unsigned mods_stamp = 0;
+
+    // ---- The save editor (stage P5) ----
+    // Mods' Save Editor...: the editor is shown in place of the tabs' page
+    // until its Close (the Win32 launcher shows a window of its own).
+    bool saves_open = false;
 };
 
 // The Win32 pages are laid out in dialog units of Segoe UI 9: 1.75 of the
@@ -186,6 +191,21 @@ void ModsPage(Pages& p);
 void ModsPoll(Pages& p);
 // The page as text, for a check's `report mods`.
 std::string ModsText();
+
+// ---- The save editor (stage P5; page_saves.cpp, save_dialog.cpp's IDD_SAVEEDIT) ----
+// SavesBegin reads the install's names and tables for the language the game
+// plays now (SaveEditorRun) from Pages::game_dir and Pages::cfg as saved, opens
+// the first good slot and sets Pages::saves_open; the page's Close clears it.
+void SavesBegin(Pages& p);
+void SavesPage(Pages& p);
+// The editor as text, for a check's `report saves`: the two file boxes, the
+// sections, the records, the fields, the value box, the notes, and each
+// message and question with its answer.
+std::string SavesText();
+// A check's stand-ins for the game's marks (main.cpp game-program,
+// game-window): the program's file name and the window class the editor asks
+// the seam about before it writes a PC save. Null keeps one; "" asks for none.
+void SavesGameMarks(const std::string* program, const std::string* window_class);
 
 // A page that is not in this launcher yet: its sentence.
 void PageNotYet();
