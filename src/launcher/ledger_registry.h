@@ -71,7 +71,7 @@ struct Entry {
     std::uint8_t languages;        // kLang* bits, or kLangAny
 };
 
-inline constexpr std::size_t kSwitchCount = 232;
+inline constexpr std::size_t kSwitchCount = 234;
 inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "Save_WriteFile", 0, 14},   // DIV-0002
     {SwitchForm::Name, "File_OpenWrite", 0, 14},   // DIV-0003
@@ -305,9 +305,11 @@ inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "WindowSdl", 0, 9},   // DIV-0238
     {SwitchForm::Name, "KeyboardSdl", 0, 11},   // DIV-0239
     {SwitchForm::Env, "env:BOF3X_FKEYS=", 4, 11},   // DIV-0240
+    {SwitchForm::Env, "env:BOF3X_EXEFILE=1", 4, 13},   // DIV-0241
+    {SwitchForm::Env, "env:BOF3X_EXEFILE=1", 4, 13},   // DIV-0242
 };
 
-inline constexpr std::size_t kEntryCount = 240;
+inline constexpr std::size_t kEntryCount = 242;
 inline constexpr Entry kEntries[kEntryCount] = {
     {1, "Re-encode `capcom.avi` from Indeo 5 to Cinepak",
      Tier::Intent, State::Active, 0, 0, 0, true, Player::Never, 0, kLangAny},
@@ -732,7 +734,7 @@ inline constexpr Entry kEntries[kEntryCount] = {
     {211, "The launcher has a save editor",
      Tier::Extension, State::Active, 0, 205, 0, true, Player::Never, 0, kLangAny},
     {212, "A PC install reads .data from the cache's image and its table files",
-     Tier::Sensible, State::Active, 0, 205, 1, true, Player::Yes, kTowardPsx, kLangAny},
+     Tier::Sensible, State::Active, 0, 205, 1, true, Player::Never, kTowardPsx, kLangAny},
     {213, "A mod can change the numbers of the game's tables",
      Tier::Extension, State::Active, 0, 206, 1, false, Player::Yes, 0, kLangAny},
     {214, "The PSX logo movie plays from the disc's own CAPCOM30.STR, decoded by our MDEC",
@@ -789,6 +791,10 @@ inline constexpr Entry kEntries[kEntryCount] = {
      Tier::Sensible, State::Active, 0, 230, 1, true, Player::Yes, 0, kLangAny},
     {240, "The function actions rebindable to any key and to a pad input",
      Tier::Sensible, State::Active, 0, 231, 1, false, Player::Yes, 0, kLangAny},
+    {241, "A PC game folder with no image is set up in place before its first start",
+     Tier::Sensible, State::Active, 0, 232, 1, true, Player::Never, 0, kLangAny},
+    {242, "BOF3.exe is not read after an install is made",
+     Tier::Sensible, State::Active, 0, 233, 1, true, Player::Never, 0, kLangAny},
 };
 
 // The switches of one entry.

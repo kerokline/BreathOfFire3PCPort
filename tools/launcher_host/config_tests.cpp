@@ -1670,23 +1670,25 @@ void TestExeFileDeveloper() {
             if (kv.first == k) return true;
         return false;
     };
-    auto said = [](const bof3x::PresetPlan& plan, bool kept, const char* text) {
+    // DIV-0212's Player: never since X6 (the owner's decision 2, 2026-11-19):
+    // no preset turns it off, so it is left alone (kNever), never sent.
+    auto action_212 = [](const bof3x::PresetPlan& plan) {
         for (const auto& item : plan.items)
-            for (const auto& [sw, why] : kept ? item.kept : item.not_here)
-                if (sw.find("BOF3X_EXEFILE") != std::string::npos && why.find(text) != std::string::npos) return true;
-        return false;
+            if (item.entry->id == 212) return static_cast<int>(item.action);
+        return -1;
     };
     bof3x::Config cfg;
     for (bof3x::Preset p : {bof3x::Preset::kShipped, bof3x::Preset::kRepaired}) {
         const bof3x::PresetPlan plan = bof3x::ConfigPresetPlan(game, cfg, p, "original");
         Check(!sets(plan, "BOF3X_EXEFILE"), "a preset on a PC folder with BOF3.exe does not set BOF3X_EXEFILE");
-        Check(said(plan, false, "a developer's switch"), "  and lists it as not for this install, naming the switch");
+        Check(action_212(plan) == static_cast<int>(bof3x::PresetAction::kNever),
+              "  DIV-0212 is left alone: Player never, the developer's switch", std::to_string(action_212(plan)));
     }
     bof3::os::SetEnv("BOF3X_EXEFILE", "1");
     {
         const bof3x::PresetPlan plan = bof3x::ConfigPresetPlan(game, cfg, bof3x::Preset::kShipped, "original");
-        Check(!sets(plan, "BOF3X_EXEFILE") && said(plan, true, "the environment sets BOF3X_EXEFILE"),
-              "the environment's BOF3X_EXEFILE=1 is kept, as every variable the environment sets");
+        Check(!sets(plan, "BOF3X_EXEFILE") && action_212(plan) == static_cast<int>(bof3x::PresetAction::kNever),
+              "the environment's BOF3X_EXEFILE=1: the preset neither sets nor changes it");
     }
     bof3::os::SetEnv("BOF3X_EXEFILE", nullptr);
 
@@ -1783,7 +1785,8 @@ void TestPresetPlan() {
         const bof3x::PresetPlan plan = bof3x::ConfigPresetPlan(pc, cfg, Preset::kShipped, "original");
         int off = 0;
         for (const auto& it : plan.items) off += it.action == bof3x::PresetAction::kOff ? 1 : 0;
-        Check(off == 94, "as shipped, original: 94 entries off, as the tool's table", std::to_string(off));
+        // 93 since DIV-0212 became Player never (the exe-retire round's X6, the owner's decision 2): it was 94
+        Check(off == 93, "as shipped, original: 93 entries off, as the tool's table", std::to_string(off));
         const std::vector<std::string> n = names(plan.off);
         Check(std::find(n.begin(), n.end(), "SunderLoop") != n.end() &&
                   std::find(n.begin(), n.end(), "Game_Clock") != n.end(),
@@ -2161,6 +2164,63 @@ void TestHomeDefaults() {
     bof3::os::SetEnvW(L"BOF3X_HOME", nullptr);
 }
 
+// docs/exe-retire-round.md X6 (X3's limit 4): after a set-up in place the home
+// holds a cache and no game\, and sources.toml's PC row says play_in_place =
+// true. HomeInPlaceFolder reads that row; StartFindGame takes the folder after
+// the working folder and the home's game\, when InstallGameFolder says it is a
+// game folder. Rows as player_sources.py save_sources writes them; no game data.
+void TestHomeInPlace() {
+    ClearEnv();
+    const std::wstring home = Temp(L"bof3x_x6_home"), pc = Temp(L"bof3x_x6_pc");
+    std::error_code ec;
+    std::filesystem::remove_all(bof3::os::PathW(home), ec);
+    std::filesystem::remove_all(bof3::os::PathW(pc), ec);
+    MakeDirs(home + P(L"\\cache"));
+    WriteAll(home + P(L"\\cache\\manifest.toml"), "[meta]\n");
+    MakeDirs(pc + P(L"\\DAT"));
+    bof3::os::SetEnvW(L"BOF3X_HOME", home.c_str());
+    // The folder as a TOML basic string, json.dumps's escapes: \ and " doubled.
+    std::string quoted = "\"";
+    for (const char c : bof3x::ConfigToUtf8(pc)) quoted += (c == '\\' || c == '"') ? std::string("\\") + c : std::string(1, c);
+    quoted += "\"";
+    const std::string head = "# The player's sources\n\n";
+    const std::string row = "[[source]]\npath = " + quoted +
+                            "\nbuild = \"pc-zh\"\nkind = \"pc-folder\"\nlabel = \"PC\"\nadded = \"2026-11-19T00:00:00\"\n";
+    const std::string disc = "[[source]]\npath = \"us.cue\"\nbuild = \"psx-us\"\nkind = \"psx-cue\"\nlabel = \"US\"\n"
+                             "added = \"2026-11-19T00:00:01\"\n";
+
+    Check(bof3x::HomeInPlaceFolder().empty(), "no sources.toml: no folder played in place");
+    WriteAll(home + P(L"\\sources.toml"), head + row + "\n" + disc);
+    Check(bof3x::HomeInPlaceFolder().empty(), "a PC row without play_in_place: none (a home with its own game\\)");
+    WriteAll(home + P(L"\\sources.toml"), head + row + "play_in_place = true\n\n" + disc);
+    Check(bof3x::HomeInPlaceFolder() == pc, "the PC row with play_in_place = true: its folder",
+          bof3x::ConfigToUtf8(bof3x::HomeInPlaceFolder()));
+    Check(bof3x::HomeGameDefault().empty(), "  and the home has no game\\ (HomeGameDefault empty)");
+    Check(!bof3x::InstallGameFolder(bof3x::HomeInPlaceFolder()),
+          "  a folder with no DAT\\FIRST.DAT: not a game folder, so StartFindGame does not take it");
+    WriteAll(pc + P(L"\\DAT\\FIRST.DAT"), "");
+    Check(bof3x::InstallGameFolder(bof3x::HomeInPlaceFolder()), "  with DAT\\FIRST.DAT: a game folder, taken");
+    WriteAll(home + P(L"\\sources.toml"), head + disc + "\n" + row + "play_in_place = true\n");
+    Check(bof3x::HomeInPlaceFolder() == pc, "the row after a disc's: found", bof3x::ConfigToUtf8(bof3x::HomeInPlaceFolder()));
+    WriteAll(home + P(L"\\sources.toml"), head + row + "play_in_place = false\n");
+    Check(bof3x::HomeInPlaceFolder().empty(), "play_in_place = false: none");
+    WriteAll(home + P(L"\\sources.toml"),
+             head + "[[source]]\npath = \"C:\\\\pc\\u0001\"\nkind = \"pc-folder\"\nplay_in_place = true\n");
+    Check(bof3x::HomeInPlaceFolder().empty(), "a path with an escape other than \\\\ and \\\": not taken");
+    WriteAll(home + P(L"\\sources.toml"), head + "[[source]]\npath = \"a\\\\b \\\"c\\\"\"\nplay_in_place = true\n");
+    Check(bof3x::HomeInPlaceFolder() == home + P(L"\\") + L"a\\b \"c\"",
+          "\\\\ and \\\" read; a relative path is the home's", bof3x::ConfigToUtf8(bof3x::HomeInPlaceFolder()));
+    WriteAll(home + P(L"\\sources.toml"), head + "[other]\npath = " + quoted + "\nplay_in_place = true\n");
+    Check(bof3x::HomeInPlaceFolder().empty(), "a row of another table: not a source");
+    // The home's own game\ is taken first (StartFindGame asks HomeGameDefault
+    // before this): it is the install the stale check may rebuild.
+    MakeDirs(home + P(L"\\game\\DAT"));
+    Check(!bof3x::HomeGameDefault().empty(), "a home with game\\DAT: HomeGameDefault answers, before the folder in place");
+    bof3::os::SetEnvW(L"BOF3X_HOME", nullptr);
+    std::filesystem::remove_all(bof3::os::PathW(home), ec);
+    std::filesystem::remove_all(bof3::os::PathW(pc), ec);
+}
+
 // The row above the text (docs/mods.md 5): ruby= read, saved, and composed into
 // BOF3X_OPT after the ini's layers - for each choice the Settings box offers, and
 // each refusal (said on stderr, no row). The mods.toml reader the box rests on.
@@ -2455,6 +2515,8 @@ void TestSetLine() {
 int main() {
     std::printf("home defaults (docs/install-sources.md)\n");
     TestHomeDefaults();
+    std::printf("the folder a home plays in place (docs/exe-retire-round.md X6)\n");
+    TestHomeInPlace();
     std::printf("cache manifest\n");
     TestManifest();
     std::printf("the install's kind (docs/exe-retire-round.md X1)\n");

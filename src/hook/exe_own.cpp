@@ -348,7 +348,8 @@ void ExeOwn_CheckAtStart() {
     // .data when the file is there, and cannot be without it.
     if (ExeImage_DiscMapped()) {
         if (!ExeFile_Present()) {
-            Log("exe_own: %u regions, %u bytes filled over a disc-built image; no BOF3.exe to verify them against",
+            Log("exe_own: %u regions, %u bytes filled over a disc-built image; BOF3.exe not opened (BOF3X_EXEFILE=1 "
+                "opens it), so not verified",
                 (unsigned)kCount, (unsigned)HeldBytes());
             return;
         }

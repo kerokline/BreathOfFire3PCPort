@@ -124,7 +124,7 @@ void Shell_MapDefaultKeys() {
     std::memcpy(At(::bof3::Img(Key_TableDefault_addr)), rule, sizeof rule);
     bof3::Log("keys: Key_TableDefault 0x%06X written from the engine's rule (%u keys)%s", (unsigned)Key_TableDefault_addr,
               (unsigned)bof3x::input::DefaultKeys().size(),
-              present ? ", equal to BOF3.exe's" : "; no BOF3.exe to compare it with");
+              present ? ", equal to BOF3.exe's" : "; BOF3.exe not opened (BOF3X_EXEFILE=1 opens it), so not compared");
 }
 
 // Game_Init's body. Returns where the entry below jumps: Task_SetStackBase.

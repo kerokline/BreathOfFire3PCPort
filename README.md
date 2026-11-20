@@ -60,8 +60,9 @@ Here's a non-exhaustive list of the things that have changed ->
 ## Building and Running
 
 You need a legally owned copy of the game: the Chinese PC port (`BOF3.exe`,
-2001-04-18 - the launcher checks its SHA-256 and refuses any other build), or
-a PlayStation or PSP disc image of *Breath of Fire III*. Nothing you own is
+2001-04-18 - the importer checks its SHA-256 when it sets up the install and
+refuses any other build), or a PlayStation or PSP disc image of *Breath of
+Fire III*. Nothing you own is
 modified; everything the game reads is built on your machine from your own
 copies.
 
@@ -100,8 +101,10 @@ The shipped `BOF3.exe` (2,584,576 bytes, 2001-04-18), measured:
 OpenLoco model: load the original executable in-process, replace one function at
 a time with readable C++, delete original code paths as subsystems complete. The 
 last of the game's own functions was replaced in October 2026, and since then our 
-`bof3x.exe` runs the game without Capcom's executable. It reads only the data tables, 
-from the player's `BOF3.exe` or from a disc ([`docs/platform-layers-plan.md`](docs/platform-layers-plan.md)).
+`bof3x.exe` runs the game without Capcom's executable. It reads only the data tables,
+which the importer takes one time from the player's `BOF3.exe` or from a disc into the install;
+after that, the game does not read `BOF3.exe` ([`docs/platform-layers-plan.md`](docs/platform-layers-plan.md),
+[`docs/exe-retire-round.md`](docs/exe-retire-round.md)).
 
 This project relies heavily on AI for coding, because my experience is with databases
 and .Net, less Python, and very little memory fiddling in languages like assembly or

@@ -248,6 +248,20 @@ only when everything succeeded:
    step deletes the new folders. Either way the previous install is left
    working.
 
+**A PC folder played in place (the exe-retire round, 2026-11-19, DIV-0241).**
+`setup --game-in-place DIR`, where `DIR` is the PC folder of the source list,
+marks that row `play_in_place = true` in `sources.toml` and builds `H\cache`
+alone: steps 3 and 4 lay out no `H\game`, nothing is written into `DIR`, and
+every later setup does the same; removing the source drops the mark. The
+launcher runs it from the Sources page when a player starts a game folder
+that has no image of `.data` (no cache, or a cache with no `base\exe`) and
+that is not the home's own `game\`: the folder stays the game folder, with its
+saves and `BOF3.CFG`. A later start that names no folder and is not run from
+it finds it through that row (`src/common/home.h` `HomeInPlaceFolder`, asked
+by `StartFindGame` after the working folder and the home's `game\`). The
+stale check and its re-setup, which swap `H\game` whole, are only for the
+home's own `game\` and never reach that folder.
+
 **The checks against `BOF3.exe` (the exe-retire round).** The engine compared
 the cache's image with the `BOF3.exe` beside the game at every start
 (DIV-0212). `importer.py verify --cache H\cache` makes that comparison once

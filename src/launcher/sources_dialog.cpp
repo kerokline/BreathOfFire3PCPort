@@ -753,7 +753,7 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
                             ? L"An older release built this install. The importer will build it again from the copies of the "
                               L"game below. It keeps the parts that do not change."
                         : !s->folder.empty()
-                            ? L"This game folder has no install data yet. The importer checks the folder and makes the data "
+                            ? L"This game folder is not set up yet. The importer checks the folder and makes the game data "
                               L"from it, one time only. The game then starts from this folder, and your saves stay in it."
                         : s->first_run
                             ? L"No install was found. To make one, add your copy of the game: the PC game folder, "

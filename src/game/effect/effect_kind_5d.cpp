@@ -23,7 +23,9 @@
 #include "game/rest_3e_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
+#include "hook/exe_host.h"
 #include "hook/exe_image.h"
+#include "hook/host.h"
 #include "hook/log.h"
 #include "input/sigma.h"
 
@@ -158,8 +160,13 @@ unsigned ListFirstLine() {
                                               : bof3x::input::sigma::ReleaseOfSources(std::vector<std::string>{build}, error);
         if (!error.empty()) bof3::Fatal("DIV-0198 EffectKind5E_DrawList: the mapped image's build: %s", error.c_str());
         cached = release == bof3x::input::sigma::Release::kWest ? 4 : 0x14;
+        // D432: with no disc-built image, the exe host with no file opened (a
+        // player's start) runs the cache's PC-built image, not the file.
+        const char* const pc = bof3::IsExeHost() && !bof3::ExeFile_Present()
+                                   ? "the running .data is the cache's PC-built image (pc-zh)"
+                                   : "the running .data is BOF3.exe's";
         bof3::Log("DIV-0198    EffectKind5E_DrawList: the parts list's first line at the box's y + %d (%s)", cached,
-                  build == nullptr ? "the running .data is BOF3.exe's" : build);
+                  build == nullptr ? pc : build);
     }
     return static_cast<unsigned>(cached);
 }

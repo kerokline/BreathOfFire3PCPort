@@ -29,4 +29,14 @@ std::wstring HomeGameDefault();
 // else empty.
 std::wstring HomeCacheDefault();
 
+// The PC folder this home plays in place (docs/exe-retire-round.md X3, X6):
+// the path of the first [[source]] row of <home>\sources.toml
+// (tools/player_sources.py save_sources) that says `play_in_place = true`,
+// or empty. Whether it is a game folder is the caller's to ask
+// (InstallGameFolder): launcher/start.cpp StartFindGame takes it after
+// HomeGameDefault. The path is a basic string as json.dumps writes it: \" and
+// \\ are read, and a row with any other escape is not taken (a Windows path
+// holds no control character); a relative path is the home's.
+std::wstring HomeInPlaceFolder();
+
 }  // namespace bof3x

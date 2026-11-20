@@ -552,7 +552,7 @@ void CheckRecordedHash(const std::string& dir, const std::vector<unsigned char>&
     if (want.size() != 64)
         Fatal("This install's game data has no recorded hash, so it cannot be checked. Set up the install again: "
               "in the launcher's Sources page add the game again, or run tools/importer.py setup.\n\n"
-              "BOF3X_EXEIMAGE: %s is not there or has no [exe] sha256 (BOF3X_EXEFILE=1 reads BOF3.exe instead)",
+              "BOF3X_EXEIMAGE: %s is not there or has no [exe] sha256",
               where.c_str());
     const auto t0 = std::chrono::steady_clock::now();
     std::string got;
@@ -652,7 +652,7 @@ bool ExeImage_Source(void* to, std::uint32_t va, std::uint32_t size, std::uint32
     const std::string toml_text = ReadWhole(exe_dir + "data.toml");
     const Image im = ParseToml(toml_text, exe_dir + "data.toml");
     if (im.va != va || im.size != size || im.bss_end != bss_end)
-        Fatal("BOF3X_EXEIMAGE: data.toml's image is 0x%X + 0x%X (zero to 0x%X), BOF3.exe's .data 0x%X + 0x%X (to 0x%X)",
+        Fatal("BOF3X_EXEIMAGE: data.toml's image is 0x%X + 0x%X (zero to 0x%X), the engine's .data 0x%X + 0x%X (to 0x%X)",
               (unsigned)im.va, (unsigned)im.size, (unsigned)im.bss_end, (unsigned)va, (unsigned)size, (unsigned)bss_end);
     std::uint32_t covered = va;
     for (const Range& r : im.ranges) {
@@ -1371,8 +1371,8 @@ void ExeImage_CompareWithFile() {
     if (!g_disc_mapped) return;
     const Image& im = g_mapped;
     if (!ExeFile_Present()) {
-        Log("BOF3X_EXEIMAGE: no BOF3.exe to compare the disc-built image with; recipes/exe-gaps.tsv is what says "
-            "where it may differ from the PC's");
+        Log("BOF3X_EXEIMAGE: the disc-built image not compared with BOF3.exe, which is not opened (BOF3X_EXEFILE=1 "
+            "opens it); recipes/exe-gaps.tsv is what says where it may differ from the PC's");
         return;
     }
     std::vector<unsigned char> pc(im.size);

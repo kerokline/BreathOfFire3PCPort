@@ -137,6 +137,13 @@ bool StartFindGame(const std::wstring& named, bool hosted, std::wstring* game_di
         const bool here = developer ? StartFileExists(L"BOF3.exe") : InstallGameFolder(L".");
         if (here) game_dir = L".";
         else if (const std::wstring home_game = HomeGameDefault(); !home_game.empty()) game_dir = home_game;
+        // A PC folder set up in place (docs/exe-retire-round.md X3, X6): the
+        // home holds its cache and no game\, and its source list names the
+        // folder. Taken when it is a game folder; never the home's game\
+        // (HomeGameDefault), so the stale check and its re-setup, which swap
+        // the home's game\ whole, never reach the player's folder.
+        else if (const std::wstring in_place = HomeInPlaceFolder(); InstallGameFolder(in_place))
+            game_dir = in_place;
         else game_dir = L"bof3";
     }
     game_dir = StartFullPath(game_dir);
@@ -221,7 +228,7 @@ StartSetUp StartReadSettings(const std::wstring& ini, const std::wstring& game_d
 }
 
 [[noreturn]] void StartRefuseNoImage(const std::wstring& game_dir, const std::wstring& cache) {
-    StartDie(L"This install has no image of the game data, so the game cannot start (" +
+    StartDie(L"This install has no game data, so the game cannot start (" +
              (cache.empty() ? std::wstring(L"no cache") : L"no base" + StartSep(L"\\exe") + L" in " + cache) +
              L"; the game folder is " + game_dir +
              L").\nSet up the install: open the launcher, go to the Sources page and add the game.\n"

@@ -73,7 +73,9 @@
 #include "game/lang_layout.h"
 #include "game/text_advance.h"
 #include "hook/detour.h"
+#include "hook/exe_host.h"
 #include "hook/exe_image.h"
+#include "hook/host.h"
 #include "hook/log.h"
 #include "input/sigma.h"
 
@@ -153,7 +155,10 @@ std::string g_image_how = "before FishingText_Arm";
 sg::Release ImageRelease(std::string& how) {
     const char* const build = bof3::ExeImage_MappedBuild();
     if (build == nullptr) {
-        how = "the running .data is BOF3.exe's";
+        // D432: in the exe host with no file opened (a player's start) the
+        // .data is the cache's PC-built image, not the file.
+        how = bof3::IsExeHost() && !bof3::ExeFile_Present() ? "the running .data is the cache's PC-built image (pc-zh)"
+                                                            : "the running .data is BOF3.exe's";
         return sg::Release::kJapan;
     }
     std::string error;
