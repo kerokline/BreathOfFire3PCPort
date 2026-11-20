@@ -109,6 +109,13 @@ add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/music-names.tsv"
   VERBATIM)
 add_custom_target(bof3x_music_names DEPENDS "${CMAKE_BINARY_DIR}/music-names.tsv")
 add_dependencies(bof3x_launcher_ui bof3x_music_names)
+# The save editor's reference names beside it (stage P5), as CMakeLists.txt copies them on Windows.
+add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/save-names.tsv"
+  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/data/save-names.tsv" "${CMAKE_BINARY_DIR}/save-names.tsv"
+  DEPENDS "${CMAKE_SOURCE_DIR}/data/save-names.tsv"
+  VERBATIM)
+add_custom_target(bof3x_save_names DEPENDS "${CMAKE_BINARY_DIR}/save-names.tsv")
+add_dependencies(bof3x_launcher_ui bof3x_save_names)
 
 # --- every object, no link (as CMakeLists.txt's bof3x_compile on Windows) --------
 add_custom_target(bof3x_compile

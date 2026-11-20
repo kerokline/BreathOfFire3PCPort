@@ -144,6 +144,15 @@ FrameAsk Configure(FrameState& state, Pages& pages) {
         AreaEnd();
         return FrameAsk::kNone;
     }
+    // The save editor (stage P5), from Mods' Save Editor...: in place of the
+    // tabs and their page until its Close (the Win32 launcher shows a window of
+    // its own). Escape and the pad's circle are its Close; Start is not Play.
+    if (pages.saves_open) {
+        AreaBegin("##saves", kMargin, kTabsY, kPictureW - 2 * kMargin, kPictureH - kTabsY - kBottom);
+        SavesPage(pages);
+        AreaEnd();
+        return FrameAsk::kNone;
+    }
 
     // The tabs from the left, each as wide as its label; Back at the right.
     const int tab = state.page;
@@ -225,8 +234,10 @@ FrameAsk Configure(FrameState& state, Pages& pages) {
     if (tab == 4) {
         Place(x + 6, kPageY);
         Size(ButtonWidth("Save Editor...", 20, 80), kSubTabH);
-        Grey("The save editor is not in this launcher yet.");
-        Button("Save Editor...");
+        if (Button("Save Editor...")) {
+            SavesBegin(pages);   // shown from the next frame, in place of the tabs
+            return FrameAsk::kNone;
+        }
     }
 
     if (shown) {

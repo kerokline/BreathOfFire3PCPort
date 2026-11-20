@@ -7,6 +7,7 @@
 #include "os/os.h"
 
 #include <atomic>
+#include <cctype>
 #include <cerrno>
 #include <chrono>
 #include <ctime>
@@ -1823,8 +1824,124 @@ void TestProcess() {
 
 }  // namespace
 
+// ---- what runs (os/running.h; stage P5's "a game is running") ---------------------
+// A stand-in: a copy of this program under another file name, started in its
+// stand-in mode (BOF3X_RUNNING_STANDIN=<ms>: it waits that long and ends; with
+// BOF3X_RUNNING_CLASS=<name> it first opens a hidden window of that class on
+// Windows, as the game registers "Bof3"). The seam must count its process
+// while it runs and not once it has ended, under a short file name and under
+// one longer than the 15 bytes Linux keeps of a process's name. Then the
+// game's own marks are asked, and the answer said: true there is a true answer
+// when the player's game runs.
+namespace {
+
+int StandInMain() {
+    char v[64];
+    const int ms = os::GetEnv("BOF3X_RUNNING_STANDIN", v, sizeof v) ? std::atoi(v) : 0;
+#ifdef _WIN32
+    if (os::GetEnv("BOF3X_RUNNING_CLASS", v, sizeof v) > 0) {
+        WNDCLASSA wc = {};
+        wc.lpfnWndProc = DefWindowProcA;
+        wc.hInstance = GetModuleHandleA(nullptr);
+        wc.lpszClassName = v;
+        if (RegisterClassA(&wc)) CreateWindowExA(0, v, "", 0, 0, 0, 1, 1, nullptr, nullptr, wc.hInstance, nullptr);
+    }
+#endif
+    std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+    return 0;
+}
+
+bool StandInAsked() {
+    char v[8];
+    return os::GetEnv("BOF3X_RUNNING_STANDIN", v, sizeof v) > 0;
+}
+
+// Polls `ok` for up to 5 s: a process or a window the system lists a moment after it starts or ends.
+template <class F>
+bool Within5s(F ok) {
+    for (int i = 0; i < 100; ++i) {
+        if (ok()) return true;
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
+    return false;
+}
+
+void TestRunning() {
+    namespace fs = std::filesystem;
+    std::string self8;
+    CHECK(os::ExecutablePath(&self8));
+    const fs::path self = fs::path(os::ToWide(self8.c_str()));
+    std::error_code ec;
+    const fs::path dir = fs::temp_directory_path(ec) / "bof3x_running";
+    fs::create_directories(dir, ec);
+#ifdef _WIN32
+    const unsigned id = static_cast<unsigned>(GetCurrentProcessId());
+    const std::string ending = ".exe";
+#else
+    const unsigned id = static_cast<unsigned>(getpid());
+    const std::string ending;
+#endif
+    CHECK(os::ProgramsRunning(self.filename().string().c_str()) >= 1);   // this program itself
+    CHECK(os::ProgramsRunning(("bof3x_no_such_program_" + std::to_string(id) + ending).c_str()) == 0);
+#ifndef _WIN32
+    CHECK(os::ProgramsRunning("a/b") == -1 && os::LastError() == EINVAL);   // a file name, not a path
+#endif
+    const std::string names[2] = {"b3r" + std::to_string(id % 100000) + ending,
+                                  "bof3x_running_stand_in_" + std::to_string(id) + ending};
+    const std::string cls = "bof3x_running_class_" + std::to_string(id);
+    for (const std::string& name : names) {
+        const fs::path copy = dir / name;
+        fs::copy_file(self, copy, fs::copy_options::overwrite_existing, ec);
+        CHECK(!ec);
+        os::ChildSpec spec;
+        spec.program = copy.wstring();
+        spec.env = {{L"BOF3X_RUNNING_STANDIN", L"20000"}, {L"BOF3X_RUNNING_CLASS", os::ToWide(cls.c_str())}};
+        spec.no_window = true;
+        os::Child child;
+        std::uint32_t error = 0;
+        const bool started = os::ChildStart(spec, &child, &error);
+        CHECK(started);
+        if (!started) continue;
+        CHECK(Within5s([&] { return os::ProgramsRunning(name.c_str()) == 1; }));
+#ifdef _WIN32
+        std::string upper = name;   // Windows does not count the case of a file name
+        for (char& c : upper) c = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+        CHECK(os::ProgramsRunning(upper.c_str()) == 1);
+        CHECK(Within5s([&] { return os::WindowClassOpen(cls.c_str()); }));
+#else
+        CHECK(!os::WindowClassOpen(cls.c_str()) && os::LastError() == ENOSYS);
+#endif
+        CHECK(os::ChildEnd(child, 1));
+        std::uint32_t code = 0;
+        CHECK(os::ChildWait(child, &code));
+        os::ChildClose(child);
+        CHECK(Within5s([&] { return os::ProgramsRunning(name.c_str()) == 0; }));
+#ifdef _WIN32
+        CHECK(!os::WindowClassOpen(cls.c_str()));
+#endif
+        fs::remove(copy, ec);
+    }
+    fs::remove_all(dir, ec);
+    // The game's own marks, as the save editor asks for them: said, not checked (the player's game may run).
+#ifdef _WIN32
+    const char* game = "bof3x.exe";
+    const int windows = os::WindowClassOpen("Bof3") ? 1 : 0;
+#else
+    const char* game = "bof3x";
+    const int windows = -1;
+#endif
+    const int games = os::ProgramsRunning(game);
+    CHECK(games >= 0);
+    std::printf("running: a stand-in counted while it ran and not after, under a short and a long name; %s: %d "
+                "process(es), a window of the class Bof3: %s\n",
+                game, games, windows < 0 ? "not asked (no window classes here)" : windows ? "yes" : "no");
+}
+
+}  // namespace
+
 int main(int argc, char** argv) {
     if (C7IsChild()) return C7ChildMain(argc, argv);   // TestProcess's child
+    if (StandInAsked()) return StandInMain();           // TestRunning's stand-in
     TestMemory();
     TestFiles();
     TestNarrowNames();
@@ -1842,6 +1959,7 @@ int main(int argc, char** argv) {
     TestWindowKey();
     TestCaseCheck();
     TestProcess();
+    TestRunning();
     std::printf("os_tests: %d checks, %d failed\n", g_checks, g_fail);
     return g_fail ? 1 : 0;
 }

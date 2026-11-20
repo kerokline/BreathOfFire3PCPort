@@ -66,6 +66,10 @@
 // environment says, so a check never sounds; --samples <file> also writes the
 // samples it hands to the sound into that file (16-bit stereo, 44,100 Hz, no
 // header) for the proof against the Win32 player (stage P5).
+//   report saves                   the save editor as text (stage P5): its boxes, fields, notes, messages and questions
+//   game-program <file>|-          the save editor asks whether a program of this file name runs, in place of
+//                                  the game's (bof3x.exe; bof3x on Linux): a stand-in for "a game is running"
+//   game-window <class>|-          the same for the window class it asks for on Windows (Bof3)
 // A step that names a widget the page does not draw, or a grey one, stops the
 // program with exit code 1: a grey control is a thing a check can ask for. So
 // do a bind step with no capture open, a red step the widget does not meet, a
@@ -119,7 +123,8 @@ const char kUsage[] =
     "  --script <steps>      Steps to do in the window, with ; between them: open <page> [<sub> [<sheet>]],\n"
     "                        set <widget>=<value>, press <widget>, key <name>, shot <file.png>,\n"
     "                        bind-key <key>, bind-pad <pad input>, red <widget>=<0 or 1>, pick [<path>],\n"
-    "                        answer yes|no, wait [<seconds>], report sources|mods.\n"
+    "                        answer yes|no, wait [<seconds>], report sources|mods|saves,\n"
+    "                        game-program <file>|-, game-window <class>|-.\n"
     "  --page <name>         With --check: the page to show first: title, settings, controls, music, game, mods or data.\n"
     "  --sub <n>, --sheet <n>  The sub-tab of that page and its page, counted from 0.\n"
     "  --keys <list>         With --check: keys to press, with , between them (the same as key steps).\n"
@@ -468,9 +473,15 @@ struct Session {
             if (rest == "sources") text = ui::SourcesText();
             else if (rest == "mods") text = ui::ModsText();
             else if (rest == "jukebox") text = ui::JukeboxText();   // stage P5
-            else Refuse("The step \"" + step + "\" needs sources, mods or jukebox.");
+            else if (rest == "saves") text = ui::SavesText();   // the save editor (stage P5)
+            else Refuse("The step \"" + step + "\" needs sources, mods, jukebox or saves.");
             for (const std::string& line : Split(text, '\n')) std::printf("bof3x-launcher-ui: report: %s\n", line.c_str());
             std::fflush(stdout);
+        } else if (verb == "game-program" || verb == "game-window") {
+            // The save editor's question "a game is running" (stage P5), asked for a stand-in.
+            const std::string name = rest == "-" ? std::string() : rest;
+            if (rest.empty()) Refuse("The step \"" + step + "\" needs a name, or - for none.");
+            ui::SavesGameMarks(verb == "game-program" ? &name : nullptr, verb == "game-window" ? &name : nullptr);
         } else if (verb == "shot") {
             ui::SaveFrame(rest);
             Frames(1);

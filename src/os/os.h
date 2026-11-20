@@ -23,6 +23,7 @@
 #include "os/own_stack.h"
 #include "os/path_file.h"
 #include "os/process.h"
+#include "os/running.h"
 #include "os/sampler.h"
 #include "os/stack.h"
 #include "os/out_file.h"
