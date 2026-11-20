@@ -8,6 +8,72 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
+**The cutover: the drawn launcher is `bof3x-launcher`, 2026-11-20 (stage P6 of
+[`launcher-portable.md`](launcher-portable.md), its section 14; local branch `launcher/p6-cutover`, cut from
+`launcher/drawn`, not pushed).** The owner's call 3: "no need to keep both". `bof3x-launcher` is the drawn launcher on
+Windows at both widths and on Linux, and the Win32 dialogs are gone, with the four `ctypes` drivers and
+`tools/jukebox_host` (11,469 lines removed in all). It takes the Win32 launcher's command line and start as they were;
+`--set` and `--list` came from the launcher with no window, which went too. The hosted build and a moved image go to
+`bof3x-launcher-dev.exe`, now Win32 with no window, through a new call of the seam (a child on its parent's own file or
+pipe). A refusal shows no message box under `--check`, `--no-config`, a self-test or a redirected output. **Measured:**
+from one ini and a stand-in game, the old Win32 launcher and the new one give the game the same environment, command
+line, folder, `BOF3.CFG` and ini, byte for byte, and print the same lines but the pid (eight cases); the harness's
+self-test, its hosted hand-over and a two-minute attract run go through a launcher copy; an untouched window writes the
+owner's ini byte for byte; the release zip carries `licenses\` (Dear ImGui, Droid Sans, TeX Gyre Pagella). **The owner's
+hand, 2026-11-20**, from `game\` with this branch's game files: every toggle the owner could think of is in place, and
+the Jukebox works (heard). **Owed:** what the owner did not report on (the document's section 14, last paragraph: a pad,
+bindings with Pause and NumLock, the pickers and questions, an install through the Sources page, the save editor on a
+save); the release started on a clean machine and Windows Defender's verdict on the new executable.
+
+**The drawn launcher's Jukebox and save editor, 2026-11-20 (stage P5 of [`launcher-portable.md`](launcher-portable.md),
+its section 13; the same local branch as the paragraphs below).** With them every window of the Win32 launcher is in the
+drawn one. The Jukebox plays through SDL's audio stream: its samples equal the Win32 player's byte for byte for seven
+songs of different kinds (`tools/jukebox_host`), and one song's on Linux. The save editor is over the unchanged format
+core: `save_editor_check.py` says the Win32 driver's 33 checks again and 64 more with no window (97, 0 failures), and
+the files both editors write from one input are the same byte for byte. "A game is running" is asked of the seam
+(`os/running.h`), the game unchanged. `ui_compare.py` is 66 cases, 66 equal. **Owed before stage P6, the cutover:** a
+hand on the window, sound heard, the pickers and questions seen on a screen - none of it done by anybody yet.
+
+**The drawn launcher's Sources and Mods pages, 2026-11-20 (stage P4 of [`launcher-portable.md`](launcher-portable.md),
+its section 12; the same local branch as the paragraphs below).** The Sources page, the Mods tab's Data page and the
+start's flows that need them: a first run opens the Sources page, an install of an older release asks for the rebuild,
+Data's Sources... button, and the settings read again after a build. The importer and `tools/mods.py` run through the
+seam's process call, their lines read on a thread. **The proof:** an install built from the US disc through the page by
+script, on Windows and in the WSL, has a cache manifest that differs from the importer's own build in the build time
+alone. `ui_compare.py` is 66 cases, 66 equal. A drawn launcher on Linux can now make an install and start the game with
+no text file. One change in the seam: a child's arguments are quoted by the C runtime's rules (a folder `D:\` arrived
+as `D:"` before); the game's self-tests end 0 after it. **Owed:** a hand on the pages, the pickers and the question
+seen on a screen (none was shown), one install made through it by the owner; stages P5 and P6.
+
+**The drawn launcher's Controls pages, 2026-11-20 (stage P3 of [`launcher-portable.md`](launcher-portable.md), its
+section 11; the same local branch as the two paragraphs below).** The three Controls pages and the bind capture: a key
+from SDL's key event through `input/key_sdl.h`, the pad shared with Dear ImGui's navigation. A host test
+(`tools/key_host/capture_tests.cpp`) walks every code a key can send: the 159 keys SDL knows store the same number in both
+launchers; Ctrl+Pause is the one key that differs (the Win32 capture stores its own number, SDL calls it Pause).
+`ui_compare.py` is 64 cases, 64 equal. **D427 is fixed** (the owner's call that day; DIV-0240 amended): a stored key
+number is DirectInput's for every key, in both launchers' captures and in the function keys' reader, so a game button
+and a function key bound to Pause are both worked by Pause. **Owed:** a real key and a real pad on the capture, Pause
+and NumLock pressed on a keyboard; stages P4 to P6.
+
+**The drawn launcher's settings pages, 2026-11-20 (stage P2 of [`launcher-portable.md`](launcher-portable.md), its
+section 10; the same local branch as the paragraph below).** Every settings page is written from the Win32 page's fill
+and read-back code: Settings, Preset, the three suites, the cheats, the solo character, Extras, New Game, Music, the
+cache folder, SatPixie's options. The window saves as the Win32 one does. `tools/launcher_host/ui_compare.py` makes the
+same choices in both launchers and compares the settings files: 48 cases, 48 equal byte for byte, on the owner's
+install read and not written. The banner is TeX Gyre Pagella, built in ([`THIRD_PARTY.md`](THIRD_PARTY.md) section 7; the
+owner's choice), the same on both systems. **Owed:** the owner's eye on the pages, a hand on the window; stages P3 to P6.
+
+**The drawn launcher's frame, 2026-11-20 (stage P1 of [`launcher-portable.md`](launcher-portable.md), IDEAS I69; on the local
+branch `launcher/p1-frame`, not merged to `main`, not pushed).** Asked by the owner that morning. A second executable,
+`bof3x-launcher-ui`, drawn by Dear ImGui `v1.92.9b` on SDL3's renderer ([`THIRD_PARTY.md`](THIRD_PARTY.md) section 6): the
+title page, Configure's tabs and rows, Play through stage P0's start, and a sample page of every widget for the look. The
+pages are written against `src/launcher/ui/ui.h`, which names no library. It builds and runs at both Windows widths and
+in the WSL; a page is captured and its keyboard and pad checked with no screen (`--capture`, `--keys`). SDL's 2D renderer
+(Direct3D 11 on Windows, 0.4 ms a frame where the software one cost 12 to 44) and file dialog are now built, with SDL's audio
+and pad drivers as before; `bof3x.dll` is 2.5 MB larger for it, and its self-tests and a two-minute attract run pass.
+**Owed: the owner's look** (the captures, and a font for the banner and the text that may ship); stages P2 to P6. Not
+run: a hand on the window, a scaled display, the message box and the pickers, a Deck. The document's section 9 is the record.
+
 **`BOF3.exe` out of the player's run, 2026-11-19 (the exe-retire round, IDEAS I70; on the local branch `exe-retire/round`,
 not merged to `main`, not pushed).** Asked by the owner the same day: "remove the original exe from any post-install player
 usage". After an install is made, nothing a player runs opens `BOF3.exe` (DIV-0242): `.data` is the cache's image on every

@@ -34,7 +34,7 @@
 // Pure apart from ManifestRead, ManifestReadEnvironment and InstallGameFolder;
 // no game data (keys, ids and layer names).
 // The DLL (src/game/psp_code.cpp, dat_cache.cpp) and the launcher
-// (src/launcher/suites.cpp, config.cpp, music_player.cpp) both link it.
+// (src/launcher/suites.cpp, config.cpp, ui/page_jukebox.cpp) both link it.
 #pragma once
 
 #include <string>

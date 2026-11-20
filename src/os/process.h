@@ -6,8 +6,10 @@
 //
 // Windows: SetEnvironmentVariableA / W, and CreateProcessW as the launcher
 // called it before the seam - the program's full name, a command line of the
-// program and each argument in double quotes with one space between them (no
-// escaping: an argument holds no double quote), no security attributes, the
+// program and each argument in double quotes with one space between them (an
+// argument by the C runtime's rules: backslashes before its closing quote, a
+// folder "D:\", are doubled, so the child reads the argument back as given -
+// the importer's paths, stage P4), no security attributes, the
 // handles inherited only when the output goes to a pipe, no flags but those a
 // ChildSpec asks for, no environment block of its own unless `env` adds to
 // it, the working folder given. POSIX: setenv / unsetenv, and fork and
@@ -37,7 +39,7 @@ bool SetEnvW(const wchar_t* name, const wchar_t* value) noexcept;
 
 struct ChildSpec {
     std::wstring program;                 // the file to run, its full name
-    std::vector<std::wstring> args;       // after the program's own name; none holds a double quote
+    std::vector<std::wstring> args;       // after the program's own name, each as the child reads it back
     std::wstring directory;               // the working folder; empty: this process's
     // Set for the child only, over a copy of this process's environment; an
     // empty value removes the variable. Empty: the child gets the environment
@@ -46,6 +48,15 @@ struct ChildSpec {
     bool capture = false;     // stdout and stderr on one pipe (ChildRead), stdin the null device
     bool no_window = false;   // Windows: CREATE_NO_WINDOW (no console for a console program). POSIX: no meaning
     bool suspended = false;   // Windows: CREATE_SUSPENDED, until ChildResume. POSIX: ChildStart refuses it (EINVAL)
+    // The child writes where this process writes: when this process's stdout
+    // and stderr both go to a file or a pipe (OutputRedirected - a script's),
+    // the child gets this process's stdin, stdout and stderr (Windows:
+    // STARTF_USESTDHANDLES with them, the handles inherited; a console is the
+    // child's to find for itself). For the player's launcher, which hands a
+    // hosted run to the developer's launcher (docs/launcher-portable.md, stage
+    // P6). POSIX: the child has them already (fork keeps them): no change.
+    // `capture` wins over it.
+    bool own_output = false;
 };
 
 // A started child. `process` and `thread` are the system's own (Windows: the
@@ -77,5 +88,20 @@ bool ChildWait(Child& child, std::uint32_t* code) noexcept;
 bool ChildEnd(Child& child, std::uint32_t code) noexcept;
 // What the child holds of ours closed (the handles, the pipe). The child goes on.
 void ChildClose(Child& child) noexcept;
+
+// This process's own output (stage P6: the launchers are windowed programs).
+// True when stdout and stderr both go to a file or a pipe - a script's or a
+// harness's - and not to a terminal or nowhere. Windows: GetFileType of the two
+// handles is FILE_TYPE_DISK or FILE_TYPE_PIPE. POSIX: neither is a terminal,
+// and each is a regular file or a pipe.
+bool OutputRedirected() noexcept;
+// A windowed program started from a terminal writes its lines there.
+// Windows: a -mwindows program has no console; when stdout or stderr is not
+// redirected (a file, a pipe or a character device the C runtime holds), it
+// attaches to the console of the process that started it, if there is one,
+// and opens the one not redirected on it (CONOUT$). Double-clicked, there is
+// no console to attach to: nothing changes. POSIX: a program has its
+// terminal already: nothing to do.
+void AttachParentTerminal() noexcept;
 
 }  // namespace bof3::os

@@ -2477,7 +2477,7 @@ void TestRuby() {
     Remove(a);
 }
 
-// The windowless launcher's --set (ConfigSetLine, launcher/headless.cpp): a
+// The launcher's --set (ConfigSetLine; launcher/ui/main.cpp, headless.cpp's until stage P6): a
 // setting changed as its line of bof3x.ini would be, refused when the key is
 // none of the file's or the value is not one it takes; and the text ConfigSave
 // writes is ConfigText's.

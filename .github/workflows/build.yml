@@ -105,6 +105,14 @@ jobs:
               echo "::error file=CMakeLists.txt::$f imports a non-system DLL (above); it must link -static"
               fail=1
             fi
+            # The player's launcher writes into no other process
+            # (docs/launcher-portable.md, stage P6): the hosted build's
+            # injection is the developer launcher's alone.
+            if [ "${f##*/}" = bof3x-launcher.exe ] &&
+               "$readobj" --coff-imports "$f" | grep -E '^ *Symbol: (VirtualAllocEx|WriteProcessMemory|CreateRemoteThread) '; then
+              echo "::error file=src/launcher/ui/main.cpp::$f imports a call that writes into another process (above)"
+              fail=1
+            fi
           done
           exit $fail
 
@@ -200,6 +208,14 @@ jobs:
               fi
             elif grep -iE '^(lib.*|sdl3|bof3x)\.dll$' imports.txt; then
               echo "::error file=CMakeLists.txt::$f imports a non-system DLL (above); it must link -static"
+              fail=1
+            fi
+            # The player's launcher writes into no other process
+            # (docs/launcher-portable.md, stage P6): the hosted build's
+            # injection is the developer launcher's alone.
+            if [ "${f##*/}" = bof3x-launcher.exe ] &&
+               "$readobj" --coff-imports "$f" | grep -E '^ *Symbol: (VirtualAllocEx|WriteProcessMemory|CreateRemoteThread) '; then
+              echo "::error file=src/launcher/ui/main.cpp::$f imports a call that writes into another process (above)"
               fail=1
             fi
           done

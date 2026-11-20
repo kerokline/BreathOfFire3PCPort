@@ -9106,35 +9106,26 @@ site	src/input/sigma.cpp	527	low32	object_ours	live	&g_by_source	Low32	bof3::Pat
 site	src/launcher/config.cpp	300	long	l	live	long	-	const long v = std::strtol(value.c_str(), &end, 10);
 site	src/launcher/config.cpp	1404	long	l	live	long	-	long long off = 0;
 site	src/launcher/config.cpp	1417	long	l	live	long	-	off += 16 + static_cast<long long>(len);
-site	src/launcher/config_dialog.cpp	1286	ptr_overlay	unread	live	lp	Capture	auto* c = reinterpret_cast<Capture*>(lp);
-site	src/launcher/config_dialog.cpp	1889	ptr_overlay	unread	live	GetWindowLongPtrW(dlg, GWLP_USERDATA)	DialogState	auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
-site	src/launcher/config_dialog.cpp	1893	ptr_overlay	unread	live	lp	DialogState	state = reinterpret_cast<DialogState*>(lp);
-site	src/launcher/launcher.cpp	136	uintptr	-	live	std::uintptr_t	-	if (!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base)), &dos, sizeof dos, nullptr) ||
-site	src/launcher/launcher.cpp	136	widen	param	live	base	LPCVOID	if (!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base)), &dos, sizeof dos, nullptr) ||
-site	src/launcher/launcher.cpp	138	uintptr	-	live	std::uintptr_t	-	!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base + dos.e_lfanew)), &nt, sizeof nt,
-site	src/launcher/launcher.cpp	138	widen	other	live	base + dos.e_lfanew	LPCVOID	!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base + dos.e_lfanew)), &nt, sizeof nt,
-site	src/launcher/launcher.cpp	141	fmt_place	pointer	live	base	%08X	Die(L"BOF3X_IMAGEBASE: no PE header at 0x%08X in the game process (%lu)", base, GetLastError());
-site	src/launcher/launcher.cpp	146	uintptr	-	live	std::uintptr_t	-	if (!VirtualQueryEx(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(a)), &m, sizeof m))
-site	src/launcher/launcher.cpp	146	widen	param	live	a	LPCVOID	if (!VirtualQueryEx(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(a)), &m, sizeof m))
-site	src/launcher/launcher.cpp	147	fmt_place	word	live	a	%08X	Die(L"BOF3X_IMAGEBASE: VirtualQueryEx(0x%08X) failed (%lu)", a, GetLastError());
-site	src/launcher/launcher.cpp	148	narrow	windows	live	m.BaseAddress	-	const auto lo = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(m.BaseAddress));
-site	src/launcher/launcher.cpp	148	uintptr	-	live	std::uintptr_t	-	const auto lo = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(m.BaseAddress));
-site	src/launcher/launcher.cpp	153	uintptr	-	live	std::uintptr_t	-	if (!VirtualAllocEx(process, reinterpret_cast<LPVOID>(static_cast<std::uintptr_t>(from)), hi - from, MEM_RESERVE,
-site	src/launcher/launcher.cpp	153	valloc_addr	-	live	reinterpret_cast<LPVOID>(static_cast<std::uintptr_t>(from))	-	if (!VirtualAllocEx(process, reinterpret_cast<LPVOID>(static_cast<std::uintptr_t>(from)), hi - from, MEM_RESERVE,
-site	src/launcher/launcher.cpp	153	widen	param	live	from	LPVOID	if (!VirtualAllocEx(process, reinterpret_cast<LPVOID>(static_cast<std::uintptr_t>(from)), hi - from, MEM_RESERVE,
-site	src/launcher/launcher.cpp	155	fmt_place	word	live	from	%08X	Die(L"BOF3X_IMAGEBASE: cannot reserve 0x%08X..0x%08X in the game process (%lu)", from, hi, GetLastError());
-site	src/launcher/launcher.cpp	155	fmt_place	word	live	hi	%08X	Die(L"BOF3X_IMAGEBASE: cannot reserve 0x%08X..0x%08X in the game process (%lu)", from, hi, GetLastError());
-site	src/launcher/launcher.cpp	162	fmt_place	word	live	kHi	%08X	std::fwprintf(stderr, L"bof3x-launcher: BOF3X_IMAGEBASE: 0x%X bytes of 0x%08X..0x%08X reserved no-access in the "
-site	src/launcher/launcher.cpp	162	fmt_place	word	live	kLo	%08X	std::fwprintf(stderr, L"bof3x-launcher: BOF3X_IMAGEBASE: 0x%X bytes of 0x%08X..0x%08X reserved no-access in the "
-site	src/launcher/launcher.cpp	179	uintptr	-	live	std::uintptr_t	-	void* block = VirtualAllocEx(process, reinterpret_cast<void*>(static_cast<std::uintptr_t>(at)), kBytes,
-site	src/launcher/launcher.cpp	179	valloc_addr	-	live	reinterpret_cast<void*>(static_cast<std::uintptr_t>(at))	-	void* block = VirtualAllocEx(process, reinterpret_cast<void*>(static_cast<std::uintptr_t>(at)), kBytes,
-site	src/launcher/launcher.cpp	179	widen	param	live	at	void*	void* block = VirtualAllocEx(process, reinterpret_cast<void*>(static_cast<std::uintptr_t>(at)), kBytes,
-site	src/launcher/launcher.cpp	388	long	ul	live	unsigned long	-	const unsigned long base = std::wcstoul(base_text, &end, 0);
-site	src/launcher/music_player.cpp	800	ptr_overlay	unread	live	lp	State	auto* s = reinterpret_cast<State*>(lp);
-site	src/launcher/music_player.cpp	859	ptr_overlay	unread	live	GetWindowLongPtrW(dlg, GWLP_USERDATA)	State	auto* s = reinterpret_cast<State*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
-site	src/launcher/music_player.cpp	868	ptr_overlay	unread	live	GetWindowLongPtrW(dlg, GWLP_USERDATA)	State	auto* s = reinterpret_cast<State*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
-site	src/launcher/sources_dialog.cpp	447	ptr_overlay	unread	live	GetWindowLongPtrW(dlg, GWLP_USERDATA)	State	State* Get(HWND dlg) { return reinterpret_cast<State*>(GetWindowLongPtrW(dlg, GWLP_USERDATA)); }
-site	src/launcher/sources_dialog.cpp	749	ptr_overlay	unread	live	lp	State	auto* s = reinterpret_cast<State*>(lp);
+site	src/launcher/launcher.cpp	111	uintptr	-	live	std::uintptr_t	-	if (!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base)), &dos, sizeof dos, nullptr) ||
+site	src/launcher/launcher.cpp	111	widen	param	live	base	LPCVOID	if (!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base)), &dos, sizeof dos, nullptr) ||
+site	src/launcher/launcher.cpp	113	uintptr	-	live	std::uintptr_t	-	!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base + dos.e_lfanew)), &nt, sizeof nt,
+site	src/launcher/launcher.cpp	113	widen	other	live	base + dos.e_lfanew	LPCVOID	!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base + dos.e_lfanew)), &nt, sizeof nt,
+site	src/launcher/launcher.cpp	116	fmt_place	pointer	live	base	%08X	Die(L"BOF3X_IMAGEBASE: no PE header at 0x%08X in the game process (%lu)", base, GetLastError());
+site	src/launcher/launcher.cpp	121	uintptr	-	live	std::uintptr_t	-	if (!VirtualQueryEx(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(a)), &m, sizeof m))
+site	src/launcher/launcher.cpp	121	widen	param	live	a	LPCVOID	if (!VirtualQueryEx(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(a)), &m, sizeof m))
+site	src/launcher/launcher.cpp	122	fmt_place	word	live	a	%08X	Die(L"BOF3X_IMAGEBASE: VirtualQueryEx(0x%08X) failed (%lu)", a, GetLastError());
+site	src/launcher/launcher.cpp	123	narrow	windows	live	m.BaseAddress	-	const auto lo = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(m.BaseAddress));
+site	src/launcher/launcher.cpp	123	uintptr	-	live	std::uintptr_t	-	const auto lo = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(m.BaseAddress));
+site	src/launcher/launcher.cpp	128	uintptr	-	live	std::uintptr_t	-	if (!VirtualAllocEx(process, reinterpret_cast<LPVOID>(static_cast<std::uintptr_t>(from)), hi - from, MEM_RESERVE,
+site	src/launcher/launcher.cpp	128	valloc_addr	-	live	reinterpret_cast<LPVOID>(static_cast<std::uintptr_t>(from))	-	if (!VirtualAllocEx(process, reinterpret_cast<LPVOID>(static_cast<std::uintptr_t>(from)), hi - from, MEM_RESERVE,
+site	src/launcher/launcher.cpp	128	widen	param	live	from	LPVOID	if (!VirtualAllocEx(process, reinterpret_cast<LPVOID>(static_cast<std::uintptr_t>(from)), hi - from, MEM_RESERVE,
+site	src/launcher/launcher.cpp	130	fmt_place	word	live	from	%08X	Die(L"BOF3X_IMAGEBASE: cannot reserve 0x%08X..0x%08X in the game process (%lu)", from, hi, GetLastError());
+site	src/launcher/launcher.cpp	130	fmt_place	word	live	hi	%08X	Die(L"BOF3X_IMAGEBASE: cannot reserve 0x%08X..0x%08X in the game process (%lu)", from, hi, GetLastError());
+site	src/launcher/launcher.cpp	137	fmt_place	word	live	kHi	%08X	std::fwprintf(stderr, L"bof3x-launcher: BOF3X_IMAGEBASE: 0x%X bytes of 0x%08X..0x%08X reserved no-access in the "
+site	src/launcher/launcher.cpp	137	fmt_place	word	live	kLo	%08X	std::fwprintf(stderr, L"bof3x-launcher: BOF3X_IMAGEBASE: 0x%X bytes of 0x%08X..0x%08X reserved no-access in the "
+site	src/launcher/launcher.cpp	154	uintptr	-	live	std::uintptr_t	-	void* block = VirtualAllocEx(process, reinterpret_cast<void*>(static_cast<std::uintptr_t>(at)), kBytes,
+site	src/launcher/launcher.cpp	154	valloc_addr	-	live	reinterpret_cast<void*>(static_cast<std::uintptr_t>(at))	-	void* block = VirtualAllocEx(process, reinterpret_cast<void*>(static_cast<std::uintptr_t>(at)), kBytes,
+site	src/launcher/launcher.cpp	154	widen	param	live	at	void*	void* block = VirtualAllocEx(process, reinterpret_cast<void*>(static_cast<std::uintptr_t>(at)), kBytes,
 site	src/os/env.h	33	uintptr	-	live	std::uintptr_t	-	bool ModulePath(const void* inside, std::string* utf8, std::uintptr_t* base = nullptr);
 site	src/os/heap.h	36	uintptr	-	live	std::uintptr_t	-	void* MemReserveBelow4G(std::size_t size, std::uintptr_t floor);
 site	src/os/heap.h	85	uintptr	-	live	std::uintptr_t	-	const auto a = reinterpret_cast<std::uintptr_t>(p);
@@ -15215,17 +15206,13 @@ file	src/input/sigma.cpp	live	low32	object_ours	2
 file	src/input/sigma.cpp	live	uintptr	-	2
 file	src/input/sigma.cpp	live	widen	img_place	2
 file	src/launcher/config.cpp	live	long	l	3
-file	src/launcher/config_dialog.cpp	live	ptr_overlay	unread	3
 file	src/launcher/launcher.cpp	live	fmt_place	pointer	1
 file	src/launcher/launcher.cpp	live	fmt_place	word	5
-file	src/launcher/launcher.cpp	live	long	ul	1
 file	src/launcher/launcher.cpp	live	narrow	windows	1
 file	src/launcher/launcher.cpp	live	uintptr	-	6
 file	src/launcher/launcher.cpp	live	valloc_addr	-	2
 file	src/launcher/launcher.cpp	live	widen	other	1
 file	src/launcher/launcher.cpp	live	widen	param	4
-file	src/launcher/music_player.cpp	live	ptr_overlay	unread	3
-file	src/launcher/sources_dialog.cpp	live	ptr_overlay	unread	2
 file	src/os/env.h	live	uintptr	-	1
 file	src/os/heap.h	live	uintptr	-	4
 file	src/os/heap_arena.cpp	live	narrow	unread	1
@@ -15288,8 +15275,8 @@ file	symbols.toml	live	ptr_member	ours_render	11
 file	symbols.toml	live	ptr_member	windows_function	14
 file	symbols.toml	live	ptr_member	windows_handle	3
 file	symbols.toml	live	ptr_member	windows_object	10
-#count sites	11270
-#count sites_live	7799
+#count sites	11261
+#count sites_live	7790
 #count sites_fuzz	3471
 #count fuzz_files	250
 #count narrow	357
@@ -15376,9 +15363,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count widen_word_read	373
 #count widen_word_read_live	364
 #count widen_word_read_live_files	295
-#count long	2361
-#count long_live	2360
-#count long_live_files	51
+#count long	2360
+#count long_live	2359
+#count long_live_files	50
 #count long_fuzz	1
 #count long_fuzz_files	1
 #count long_ctype:long	42
@@ -15393,9 +15380,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count long_l	354
 #count long_l_live	353
 #count long_l_live_files	38
-#count long_ul	218
-#count long_ul_live	218
-#count long_ul_live_files	29
+#count long_ul	217
+#count long_ul_live	217
+#count long_ul_live_files	28
 #count asm	324
 #count asm_live	203
 #count asm_live_files	81
@@ -15572,9 +15559,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count handle_array_slot_i686	1
 #count handle_array_slot_i686_live	1
 #count handle_array_slot_i686_live_files	1
-#count ptr_overlay	47
-#count ptr_overlay_live	47
-#count ptr_overlay_live_files	14
+#count ptr_overlay	39
+#count ptr_overlay_live	39
+#count ptr_overlay_live_files	11
 #count ptr_overlay_fuzz	0
 #count ptr_overlay_fuzz_files	0
 #count ptr_overlay_crt	2
@@ -15592,9 +15579,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count ptr_overlay_object_ours	1
 #count ptr_overlay_object_ours_live	1
 #count ptr_overlay_object_ours_live_files	1
-#count ptr_overlay_unread	34
-#count ptr_overlay_unread_live	34
-#count ptr_overlay_unread_live_files	11
+#count ptr_overlay_unread	26
+#count ptr_overlay_unread_live	26
+#count ptr_overlay_unread_live_files	8
 #count width_if	48
 #count width_if_live	48
 #count width_if_live_files	24
@@ -15608,15 +15595,15 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count width_if_logic_live_files	15
 #count asm_live_x87_only_files	42
 #count widen_live_fnptr	472
-#count long_src	572
+#count long_src	571
 #count long_src_game	46
 #count long_src_game_ul	1
 #count long_ctype	1789
-#count callconv_CALLBACK	20
+#count callconv_CALLBACK	8
 #count callconv_CALLBACK_fuzz	1
-#count callconv_CALLBACK_live	19
-#count callconv_WINAPI	14
-#count callconv_WINAPI_live	14
+#count callconv_CALLBACK_live	7
+#count callconv_WINAPI	11
+#count callconv_WINAPI_live	11
 #count callconv___cdecl	16384
 #count callconv___cdecl_fuzz	2014
 #count callconv___cdecl_live	14370

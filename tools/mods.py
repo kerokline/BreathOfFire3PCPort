@@ -29,7 +29,7 @@ The home's `mods.toml` is written only by this tool, in the shape of
 `sources.toml` (docs/install-sources.md section 3): one `[[mod]]` table a mod, a
 `key = value` line each, the values JSON-quoted. The launcher reads it for the
 Settings page's box (src/launcher/config.cpp ConfigModsInstalled) and runs this
-tool for the Mods tab (src/launcher/sources_dialog.cpp, the Mods page), as the
+tool for the Mods tab (src/launcher/ui/page_mods.cpp, the Mods page), as the
 Sources page runs importer.py: `--json` lines, one child at a time.
 
 A romhack's patch is added as the file its author released, with no zip of

@@ -16,3 +16,13 @@ add_executable(os_tests os_tests.cpp ${REPO_SRC}/common/sha256.cpp)
 target_include_directories(os_tests PRIVATE ${REPO_SRC})
 target_compile_options(os_tests PRIVATE -Wall -Wextra)
 target_link_libraries(os_tests PRIVATE bof3x_os)
+# Stage P6's own_output check (os/process.h ChildSpec::own_output): the same
+# tests built as a windowed program, the child of TestProcess's relay. A
+# windowed program gets no output handles of its parent unless it is given them.
+if(WIN32)
+  add_executable(os_tests_gui os_tests.cpp ${REPO_SRC}/common/sha256.cpp)
+  target_include_directories(os_tests_gui PRIVATE ${REPO_SRC})
+  target_compile_options(os_tests_gui PRIVATE -Wall -Wextra)
+  target_link_libraries(os_tests_gui PRIVATE bof3x_os)
+  target_link_options(os_tests_gui PRIVATE -mwindows)
+endif()

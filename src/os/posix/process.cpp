@@ -9,6 +9,7 @@
 #include <cstring>
 #include <fcntl.h>
 #include <string>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -191,5 +192,18 @@ void ChildClose(Child& child) noexcept {
     // A child not waited for is left to run; its id is not ours to close.
     child.process = -1;
 }
+
+// ChildSpec::own_output needs nothing here: fork keeps this process's 0, 1 and 2 for the child.
+
+bool OutputRedirected() noexcept {
+    const auto redirected = [](int fd) {
+        struct stat st {};
+        if (isatty(fd) || fstat(fd, &st) != 0) return false;
+        return S_ISREG(st.st_mode) || S_ISFIFO(st.st_mode) || S_ISSOCK(st.st_mode);
+    };
+    return redirected(1) && redirected(2);
+}
+
+void AttachParentTerminal() noexcept {}   // a POSIX program has its terminal already
 
 }  // namespace bof3::os

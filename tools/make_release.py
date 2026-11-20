@@ -14,6 +14,10 @@ differs, and the bundled importer is the same amd64 Python either way:
 
     bof3x-launcher.exe  bof3x.dll  bof3x.exe  music-names.tsv  save-names.tsv
     README.txt  LICENSE  THIRD_PARTY.md  THIRD_PARTY_RUNTIME.txt
+    licenses/             the notices of the work inside the launcher (the
+                          drawn one since docs/launcher-portable.md stage P6):
+                          dear-imgui/LICENSE.txt from the build's fetched tree,
+                          droid-sans/ and tex-gyre-pagella/ from third_party/
     runtime/python/       python.org's embeddable CPython (amd64), its ._pth
                           naming ../tools and Lib/site-packages; numpy, Pillow
                           and capstone installed there from pinned wheels
@@ -90,6 +94,38 @@ from build_reuse import SHIPPED_DATA as DATA   # noqa: E402
 # Copied beside the launcher.
 TOP = [("LICENSE", "LICENSE"), ("docs/THIRD_PARTY.md", "THIRD_PARTY.md")]
 BUILD_FILES = ("bof3x-launcher.exe", "bof3x.dll", "bof3x.exe", "music-names.tsv", "save-names.tsv")
+# The notices of the third-party work inside the launcher (the drawn one since
+# stage P6 of docs/launcher-portable.md; docs/THIRD_PARTY.md sections 6 and 7),
+# into licenses\ in the zip: (folder in licenses\, the file's place in the
+# repository). Dear ImGui's MIT notice is its fetched tree's own LICENSE.txt
+# (imgui_notice below); Droid Sans's Apache License 2.0 and TeX Gyre
+# Pagella's four text files are in third_party/.
+LICENSES = [("droid-sans", "third_party/droid-sans/LICENSE-Apache-2.0.txt"),
+            ("droid-sans", "third_party/droid-sans/README-bof3x.txt"),
+            ("tex-gyre-pagella", "third_party/tex-gyre-pagella/GUST-FONT-LICENSE.txt"),
+            ("tex-gyre-pagella", "third_party/tex-gyre-pagella/LPPL-1.3c.txt"),
+            ("tex-gyre-pagella", "third_party/tex-gyre-pagella/MANIFEST-TeX-Gyre-Pagella.txt"),
+            ("tex-gyre-pagella", "third_party/tex-gyre-pagella/README-bof3x.txt")]
+
+
+def imgui_notice(build):
+    """Dear ImGui's LICENSE.txt in the tree the build compiled: <build>/_deps/imgui-src, or the folder a
+    -DFETCHCONTENT_SOURCE_DIR_IMGUI named (CMakeCache.txt)."""
+    tree = os.path.join(build, "_deps", "imgui-src")
+    cache = os.path.join(build, "CMakeCache.txt")
+    if os.path.isfile(cache):
+        with open(cache, encoding="utf-8", errors="replace") as f:
+            for line in f:
+                if line.startswith("FETCHCONTENT_SOURCE_DIR_IMGUI:") and line.split("=", 1)[1].strip():
+                    tree = line.split("=", 1)[1].strip()
+    p = os.path.join(tree, "LICENSE.txt")
+    if not os.path.isfile(p):
+        raise SystemExit("%s: Dear ImGui's LICENSE.txt is not there; the launcher carries Dear ImGui and the release "
+                         "owes its notice (docs/THIRD_PARTY.md section 6). Build with cmake first." % p)
+    with open(p, encoding="utf-8", errors="replace") as f:
+        if "Omar Cornut" not in f.read():
+            raise SystemExit("%s is not Dear ImGui's MIT notice" % p)
+    return p
 
 # Kinds of file that are game data, or disc images of it: never in a release.
 GAME_DATA_EXT = (".dat", ".bin", ".iso", ".cue", ".chd", ".cso", ".avi", ".mp3", ".str", ".xa", ".emi", ".pmf",
@@ -213,7 +249,10 @@ audio and movie sectors).
 
 {stage_note} See
 the release notes for what is known. Licences: LICENSE (this project),
-THIRD_PARTY.md and THIRD_PARTY_RUNTIME.txt (what it bundles).
+THIRD_PARTY.md and THIRD_PARTY_RUNTIME.txt (what it bundles). The licenses\\
+folder holds the licence texts of the work inside bof3x-launcher.exe: Dear
+ImGui, which draws the window, and the two fonts of its text, Droid Sans and
+TeX Gyre Pagella.
 {width_note}"""
 
 # The README's first line and its last paragraph follow the tag: an alpha was
@@ -344,6 +383,12 @@ def main():
             shutil.copy2(os.path.join(a.build, f), os.path.join(stage, f))
         for src, dst in TOP:
             shutil.copy2(os.path.join(ROOT, src), os.path.join(stage, dst))
+        lic = os.path.join(stage, "licenses")
+        os.makedirs(os.path.join(lic, "dear-imgui"))
+        shutil.copy2(imgui_notice(a.build), os.path.join(lic, "dear-imgui", "LICENSE.txt"))
+        for folder, src in LICENSES:
+            os.makedirs(os.path.join(lic, folder), exist_ok=True)
+            shutil.copy2(os.path.join(ROOT, *src.split("/")), os.path.join(lic, folder, os.path.basename(src)))
         rt = os.path.join(stage, "runtime")
         pydir = os.path.join(rt, "python")
         with zipfile.ZipFile(pyzip) as z:

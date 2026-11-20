@@ -3,7 +3,13 @@
 **Status:** IN PROGRESS (2026-10-15; the workflow and the zip script written and the zip built and run locally; no tag pushed yet)
 
 A release is a zip a player unzips and runs: `bof3x-launcher.exe`,
-`bof3x.dll`, `bof3x.exe`, the Jukebox's `music-names.tsv`, and under
+`bof3x.dll`, `bof3x.exe`, the Jukebox's `music-names.tsv`, the save
+editor's `save-names.tsv`, `licenses\` (the notices of the work inside the
+launcher, which is the drawn one since stage P6 of
+[`../launcher-portable.md`](../launcher-portable.md), 2026-11-20: Dear
+ImGui's MIT notice from the build's fetched tree, Droid Sans's Apache
+License 2.0 and TeX Gyre Pagella's four text files from `third_party/`;
+[`../THIRD_PARTY.md`](../THIRD_PARTY.md) sections 6 and 7), and under
 `runtime\` a bundled Python with the importer, so the player installs
 nothing but the game they own. **No game data is in it** (CLAUDE.md rule 1):
 the player adds their own PC folder or disc images on the launcher's Sources

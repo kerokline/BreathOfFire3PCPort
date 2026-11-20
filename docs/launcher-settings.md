@@ -11,6 +11,22 @@ is the record of what they replaced. **2026-10-15: the dialog is a window
 with a title page and Configure's tabs** - section 2a, from the owner's
 mock-ups)
 
+> **2026-11-20: the window described here is the drawn launcher's now.**
+> Since stage P6 of [`launcher-portable.md`](launcher-portable.md) (its
+> section 14; the owner: "no need to keep both") `bof3x-launcher` is the
+> drawn launcher on Windows and Linux - Dear ImGui on SDL3, the code in
+> `src/launcher/ui/` (`main.cpp` the start and the command line,
+> `frame.cpp` the title page and the tabs, `page_*.cpp` the pages) - and the
+> Win32 dialogs (`config_dialog.cpp`, `sources_dialog.cpp`,
+> `save_dialog.cpp`, `music_player.cpp`, the templates of `launcher.rc`) are
+> gone. The pages, their texts and what they write to `bof3x.ini` are the
+> same (proven page by page, sections 10 to 13 there). History in this
+> document: section 2 (why a Win32 dialog resource) and section 2a's
+> layout in dialog units, its control ids and its Win32 calls; section 6.
+> Still true: sections 1, 3 and 5, the file format, and section 4's command
+> line, which the drawn launcher takes as it was (`--config`, `--no-config`,
+> `--game`, `--host`, `--`), with `--set` and `--list` added.
+
 `bof3x-launcher` now opens a settings dialog before it starts the game. This
 document says what the shipped `START.EXE` / `SETUP.EXE` are (neither is a
 settings program), why the dialog is a bare Win32 resource, where each setting
@@ -56,6 +72,16 @@ The player's copy is left alone (`CLAUDE.md` rule 1); it is simply not used.
 
 ## 2. Why a Win32 dialog resource and not a toolkit
 
+> **2026-11-20: history.** This section is the reasoning of 2026-09-20 and
+> what was built on it. The Win32 dialog resource is gone since stage P6 of
+> [`launcher-portable.md`](launcher-portable.md); its section 4 (way E) says
+> why a drawn window replaced it, and section 14 what replaced what. The
+> two launchers stay: `bof3x-launcher.exe` (the drawn one) holds no code
+> that writes into another process, and `bof3x-launcher-dev.exe`
+> (`src/launcher/launcher.cpp`, Win32 and 32-bit, with no window now)
+> starts the hosted build and a moved image, to which the player's
+> launcher hands such a run.
+
 The dialog is a `DIALOGEX` in [`src/launcher/launcher.rc`](../src/launcher/launcher.rc),
 shown with `DialogBoxParamW`, plus a manifest asking for Common Controls 6 and
 DPI awareness. Nothing is vendored; until 2026-09-24 nothing was linked but
@@ -64,6 +90,11 @@ DPI awareness. Nothing is vendored; until 2026-09-24 nothing was linked but
 the pad through the same code the game does (`src/input/pad_sdl.cpp`), and
 the dialogs take the pad as navigation. Still one 32-bit executable with no
 DLL beside it; 9 MB where it was 1.
+
+**Since 2026-11-19 this choice is being replaced** (the owner's call: one launcher for Windows and Linux,
+drawn by Dear ImGui on SDL3; [`launcher-portable.md`](launcher-portable.md), whose section 4 says what changed
+since the paragraph below, and whose section 9 is the first stage as built). The Win32 dialogs stay the
+player's launcher until that document's stage P6.
 
 Considered and rejected: **Dear ImGui** (MIT, so vendorable — but it needs its
 own window and render backend, and looks non-native); **Qt / wxWidgets** (LGPL
@@ -96,6 +127,13 @@ exit 0; with no developer launcher, the refusal and exit 1;
 `dialog_test.py` on the player's, its 27 checks.
 
 ## 2a. The window: a title page and Configure (2026-10-15)
+
+> **2026-11-20:** the faces, tabs, pages and words below are the drawn
+> launcher's now (`src/launcher/ui/frame.cpp` and `page_*.cpp`, stage P6 of
+> [`launcher-portable.md`](launcher-portable.md)). The dialog units,
+> `IDD_`/`IDC_` names, `launcher.rc` and the Win32 calls named here are
+> history: those files are gone. The drawn banner's font is TeX Gyre
+> Pagella, not Palatino Linotype ([`THIRD_PARTY.md`](THIRD_PARTY.md) 7).
 
 From the owner's two mock-ups. One `DIALOGEX` (`IDD_CONFIG`) with two faces:
 

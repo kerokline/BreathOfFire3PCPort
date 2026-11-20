@@ -137,11 +137,18 @@ int FnRubyKey(const std::string& lower) {
     return -2;
 }
 
+int FnKeyOfScan(int scan_and_extended) {
+    if (scan_and_extended == 0x45) return 0xC5;   // Pause: Windows gives 0x45 plain
+    if (scan_and_extended == 0xC5) return 0x45;   // NumLock: Windows gives 0x45 extended
+    return scan_and_extended;
+}
+
 int FnKeyOfMessage(unsigned vk, std::int32_t lparam) {
     if (vk >= 0x70 && vk <= 0x7B) return FnKeyOfF(static_cast<int>(vk - 0x70) + 1);
     const int scan = static_cast<int>((static_cast<std::uint32_t>(lparam) >> 16) & 0xFF);
     if (scan == 0) return -1;
-    const int key = scan | ((static_cast<std::uint32_t>(lparam) & (1u << 24)) ? 0x80 : 0);
+    int key = scan | ((static_cast<std::uint32_t>(lparam) & (1u << 24)) ? 0x80 : 0);
+    key = FnKeyOfScan(key);   // D427: Pause and NumLock by DirectInput's numbers
     for (int n = 1; n <= 12; ++n)
         if (key == FnKeyOfF(n)) return -1;   // an F key's scan code under another virtual key
     return key;

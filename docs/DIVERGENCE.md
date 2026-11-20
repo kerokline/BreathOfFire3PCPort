@@ -18141,6 +18141,30 @@ designed in rather than bolted on.
   flag (`FnKeyOfMessage`), the number the capture stores; Pause and NumLock
   read as the capture stores them, swapped against DirectInput's numbers (a
   defect of the capture that predates this entry, unchanged here).
+  - **Amended 2026-11-20 (D427 fixed; the owner: "fix both").** A stored key
+    number is DirectInput's number for every key, Pause (0xC5) and NumLock
+    (0x45) too. Windows sends the pair the other way round (Pause as scan
+    code 0x45 plain, NumLock as 0x45 extended), and one function crosses it,
+    `FnKeyOfScan` (`input/function_keys.h`): the Win32 capture stores through
+    it (`config_dialog.cpp` `CaptureKeyHook`), the drawn launcher's capture
+    stores DirectInput's number from SDL's scancode
+    (`launcher/ui/capture_key.cpp`), and `FnKeyOfMessage` reads through it.
+    So a game button and a function key bound to Pause are both worked by
+    Pause, and likewise NumLock; before, the capture stored the pair as
+    Windows sends it, and a game button bound to Pause was worked by
+    NumLock. **An ini made before this:** the name in a line is the key that
+    works. A `key.Pause=` or `key.NumLock=` line keeps its meaning (the game
+    always read that name's key). A `fkey.ACTION=Pause` or `=NumLock` line
+    made on the Function keys page before the fix was made by pressing the
+    other key, and now takes the key it names: bind it again. No default
+    names either key. Verified by `tools/key_host` (`capture_tests`: both
+    captures store 0xC5 for Pause and 0x45 for NumLock, the game button's key
+    byte is the stored number, and a function key's message reads as it on
+    Windows and off it; `key_tests`: the capture's number is DirectInput's
+    for every key but Ctrl+Pause) and through the drawn launcher with no
+    window (Pause and NumLock bound to two buttons and a function key write
+    `key.Pause=`, `key.NumLock=`, `fkey.picture=Pause`). **Not done:** the
+    two keys pressed on a keyboard, in either launcher or in the game.
 - **Rationale:** the owner's ask and calls, 2026-11-18: the function keys
   on a page of their own, rebindable and not only shown; any keyboard key
   and any controller input "just like the others"; a double binding allowed

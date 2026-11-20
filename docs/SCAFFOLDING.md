@@ -18,7 +18,7 @@ was implemented **from those notes' descriptions, not from their source**
 
 | Piece | Where | What it does |
 |---|---|---|
-| `bof3x-launcher.exe` | `src/launcher/` | Hashes the player's `BOF3.exe` against the catalogued build, starts it **suspended**, runs `LoadLibraryW(bof3x.dll)` in it on a remote thread, waits for that to succeed, then resumes the game. Before that (since 2026-09-20) it shows a settings dialog, keeps its settings in `bof3x.ini` beside itself, hands ours to the game as environment variables and writes lines 1-2 of the game's `BOF3.CFG` ([`launcher-settings.md`](launcher-settings.md)). |
+| `bof3x-launcher.exe` | `src/launcher/` | Hashes the player's `BOF3.exe` against the catalogued build, starts it **suspended**, runs `LoadLibraryW(bof3x.dll)` in it on a remote thread, waits for that to succeed, then resumes the game. Before that (since 2026-09-20) it shows a settings dialog, keeps its settings in `bof3x.ini` beside itself, hands ours to the game as environment variables and writes lines 1-2 of the game's `BOF3.CFG` ([`launcher-settings.md`](launcher-settings.md)). Since 2026-11-20 ([`launcher-portable.md`](launcher-portable.md) 14) `bof3x-launcher.exe` is the drawn launcher (`src/launcher/ui/`, Dear ImGui on SDL3, Windows and Linux) and the hosted start above is `bof3x-launcher-dev.exe`'s (`src/launcher/launcher.cpp`, no window), to which the player's launcher hands it. |
 | `bof3x.dll` | `src/hook/` + `src/game/` | In `DllMain`: verify the image, then install every detour. Holds our reimplementations. |
 | `bof3/symbols.gen.h` | generated into `build/gen/` | Every address, and the one binding of every callable name. Generated from [`symbols.toml`](../symbols.toml) by `tools/gen_symbols.py`; never committed, so it cannot drift. |
 
@@ -230,20 +230,22 @@ an i386 process until the last original instruction is gone
 ```
 cmake --preset i686
 cmake --build build
-build/bof3x-launcher.exe --game bof3              # settings dialog, then the game
+build/bof3x-launcher.exe --game bof3              # the launcher's window, then the game
 build/bof3x-launcher.exe --game bof3 --no-config  # straight to the game
 ```
 
-The launcher shows a settings dialog before starting the game
-([`launcher-settings.md`](launcher-settings.md)); `--no-config` skips it, which
-is what scripted and agent runs want.
+The launcher shows its window before starting the game
+([`launcher-settings.md`](launcher-settings.md); the drawn launcher since
+2026-11-20, [`launcher-portable.md`](launcher-portable.md) 14); `--no-config`
+skips it and shows no message box, which is what scripted and agent runs want.
 
 Needs `i686-w64-mingw32-clang++`, `cmake` ≥ 3.25, `ninja` and `python` ≥ 3.11 on
 `PATH` (or `LLVM_MINGW_ROOT` set), and, for the first configure, the network:
 SDL3 is fetched at a pinned tag and built static into the DLL and, since
 2026-09-24, the launcher too (`CMakeLists.txt`, the `bof3x_launcher` target;
-[`THIRD_PARTY.md`](THIRD_PARTY.md) §2, DIV-0050); after that `build/_deps`
-holds it. Verified with llvm-mingw 20260616 / clang
+[`THIRD_PARTY.md`](THIRD_PARTY.md) §2, DIV-0050), and since 2026-11-20 Dear
+ImGui for the launcher's window ([`THIRD_PARTY.md`](THIRD_PARTY.md) §6); after
+that `build/_deps` holds them. Verified with llvm-mingw 20260616 / clang
 22.1.8, cmake 3.31.12, ninja 1.13.2. The build reads no game data; outputs land
 in `build/`, which is gitignored. The DLL is linked `-static` so that it depends
 only on system DLLs — it is loaded by path into a process whose search order we

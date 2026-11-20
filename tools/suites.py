@@ -42,7 +42,7 @@ OVER = {"layer": "kLayer", "engine": "kEngine", "none": "kNone", "switch": "kSwi
 CODES = ["duel-loss", "myria-item"]
 ROLES = {"pc-port": "kPc", "psx-disc": "kPsx", "psp-disc": "kPsp"}
 DEFAULT_LAYERS = {"area4-walls"}                   # importer.py DEFAULT_OPT; config.h kOptDefault
-MEMBERS_MAX = {"graphics": 4, "audio": 4, "data": 6}   # launcher.rc: the member lines each suite has
+MEMBERS_MAX = {"graphics": 4, "audio": 4, "data": 6}   # the member lines each suite has (src/launcher/ui/page_versions.cpp kMemberPlaces; launcher.rc's until stage P6)
 
 
 def _load(path):
@@ -156,13 +156,13 @@ def check(suites=None, opt=None, fixtures=None, psp_layers=None):
     for name in layers:
         if name not in DEFAULT_LAYERS and name not in placed and name not in jukebox:
             errs.append("opt.toml layer %s is in no suite" % name)
-    # The Jukebox's PSP column (src/launcher/music_player.cpp ListPsp) lists one music
+    # The Jukebox's PSP column (src/launcher/ui/page_jukebox.cpp ListPsp) lists one music
     # layer's opt/<layer>/bgm/ beside a PlayStation base: a second bgm member would have
     # its songs dropped from that column (a column per member is not built).
     bgm = ["%s/%s" % (s.get("id"), m.get("id")) for s in cat.get("suite", []) for m in s.get("member", [])
            if m.get("kind") == "bgm"]
     if len(bgm) > 1:
-        errs.append("bgm members %s: the Jukebox's PSP column lists one music layer (music_player.cpp ListPsp); "
+        errs.append("bgm members %s: the Jukebox's PSP column lists one music layer (page_jukebox.cpp ListPsp); "
                     "a second needs a column of its own first" % ", ".join(bgm))
     for code in CODES:
         if code not in codes_placed:

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.25)
 project(bof3x VERSION 0.1.0 LANGUAGES CXX)
 # The resource compiler is Windows' alone: the version resources, the icon and
-# the launcher's dialogs. The Linux build (--preset linux-x86_64,
+# the launchers' manifest. The Linux build (--preset linux-x86_64,
 # cmake/linux_target.cmake) has no .rc file to compile.
 if(WIN32)
   enable_language(RC)
@@ -142,12 +142,35 @@ set(SDL_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(SDL_INSTALL OFF CACHE BOOL "" FORCE)
 set(SDL_AUDIO ON CACHE BOOL "" FORCE)
 # The video subsystem since the Linux round's R6: the game's window is SDL's
-# (src/game/platform/game_window.h). Its renderers stay out: the picture is
-# Direct3D 11's.
+# (src/game/platform/game_window.h). The game's picture is Direct3D 11's and
+# the game creates no SDL renderer.
 set(SDL_VIDEO ON CACHE BOOL "" FORCE)
-foreach(_sub RENDER GPU CAMERA HAPTIC SENSOR POWER DIALOG OPENGL OPENGLES VULKAN DIRECTX)
+# SDL's 2D renderer and its file dialog since stage P1 of
+# docs/launcher-portable.md: the drawn launcher (src/launcher/ui) is drawn by
+# the renderer and picks a file with the dialog. On Windows the renderer is
+# SDL's Direct3D 11 one, with its software one behind it (measured 2026-11-20:
+# the software one alone costs 12 to 15 ms a frame at 640 x 480 and 30 to 44 ms
+# at 1280 x 960); off Windows its Vulkan one, with the software one behind it.
+set(SDL_RENDER ON CACHE BOOL "" FORCE)
+set(SDL_DIALOG ON CACHE BOOL "" FORCE)
+foreach(_sub GPU CAMERA HAPTIC SENSOR POWER OPENGL OPENGLES VULKAN DIRECTX)
   set(SDL_${_sub} OFF CACHE BOOL "" FORCE)
 endforeach()
+if(WIN32)
+  # The Direct3D 11 renderer needs SDL_DIRECTX, which would also add SDL's
+  # DirectSound output and DirectInput pad driver to the game's sound and pad
+  # (DIV-0201, DIV-0050) and its Direct3D 9 and 12 renderers. SDL adds each
+  # only when its header is found, and takes a HAVE_ answer that is in the
+  # cache already: answered here, the four are not looked for. The check after
+  # FetchContent_MakeAvailable reads SDL's own configuration and stops the
+  # build when a later SDL takes one in by another road.
+  set(SDL_DIRECTX ON CACHE BOOL "" FORCE)
+  set(SDL_RENDER_D3D OFF CACHE BOOL "" FORCE)
+  set(SDL_RENDER_D3D12 OFF CACHE BOOL "" FORCE)
+  foreach(_header DSOUND DINPUT DDRAW D3D9)
+    set(HAVE_${_header}_H 0 CACHE INTERNAL "answered by CMakeLists.txt: not looked for")
+  endforeach()
+endif()
 # Off Windows the picture is DXVK-native's, which makes its Vulkan surface
 # from SDL's window (SDL_Vulkan_CreateSurface): SDL's Vulkan support stays in.
 if(NOT WIN32)
@@ -168,6 +191,119 @@ FetchContent_Declare(SDL3
   GIT_TAG release-3.4.16
   GIT_SHALLOW TRUE)
 FetchContent_MakeAvailable(SDL3)
+if(WIN32)
+  # SDL's own answer to the block above: the names its build file set for its
+  # configuration header (the header itself is written when the build files
+  # are, after this line).
+  foreach(_sdl_out SDL_AUDIO_DRIVER_DSOUND SDL_JOYSTICK_DINPUT SDL_VIDEO_RENDER_D3D SDL_VIDEO_RENDER_D3D12)
+    get_directory_property(_sdl_value DIRECTORY "${SDL3_SOURCE_DIR}" DEFINITION ${_sdl_out})
+    if(_sdl_value)
+      message(FATAL_ERROR "SDL was configured with ${_sdl_out}, which this build keeps out: "
+        "see the SDL_DIRECTX block above")
+    endif()
+  endforeach()
+  get_directory_property(_sdl_value DIRECTORY "${SDL3_SOURCE_DIR}" DEFINITION SDL_VIDEO_RENDER_D3D11)
+  if(NOT _sdl_value)
+    message(FATAL_ERROR "SDL was configured without its Direct3D 11 renderer: see the SDL_DIRECTX block above")
+  endif()
+endif()
+
+# --- Dear ImGui, for the drawn launcher (docs/launcher-portable.md, stage P1;
+# the owner's call 1, 2026-11-19) -------------------------------------------------
+# Fetched at configure time as SDL3 is, pinned to a release tag, MIT
+# (docs/THIRD_PARTY.md section 6). It has no build file of its own: the four
+# core files and its two SDL3 backends are compiled here into a static library
+# that only the drawn launcher links (and its std::string helper). Only src/launcher/ui/ui_imgui.cpp
+# includes its headers; the pages name the widgets of src/launcher/ui/ui.h.
+FetchContent_Declare(imgui
+  GIT_REPOSITORY https://github.com/ocornut/imgui.git
+  GIT_TAG v1.92.9b
+  GIT_SHALLOW TRUE)
+FetchContent_MakeAvailable(imgui)
+add_library(bof3x_imgui STATIC
+  "${imgui_SOURCE_DIR}/imgui.cpp"
+  "${imgui_SOURCE_DIR}/imgui_draw.cpp"
+  "${imgui_SOURCE_DIR}/imgui_tables.cpp"
+  "${imgui_SOURCE_DIR}/imgui_widgets.cpp"
+  "${imgui_SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp"
+  "${imgui_SOURCE_DIR}/backends/imgui_impl_sdl3.cpp"
+  "${imgui_SOURCE_DIR}/backends/imgui_impl_sdlrenderer3.cpp")
+target_include_directories(bof3x_imgui PUBLIC "${imgui_SOURCE_DIR}" "${imgui_SOURCE_DIR}/backends")
+target_compile_definitions(bof3x_imgui PUBLIC IMGUI_DISABLE_DEMO_WINDOWS IMGUI_DISABLE_DEBUG_TOOLS IMGUI_DISABLE_OBSOLETE_FUNCTIONS)
+target_link_libraries(bof3x_imgui PUBLIC SDL3::SDL3-static)
+
+# The drawn launcher's three built-in files, each as a byte array
+# (tools/embed_file.py): the title page's picture, which the Win32 launcher
+# held as a resource until stage P6; the text font, from Dear ImGui's own tree (Droid
+# Sans, Apache 2.0; docs/THIRD_PARTY.md section 6); and the banner's font,
+# TeX Gyre Pagella (GUST Font License; third_party/tex-gyre-pagella,
+# docs/THIRD_PARTY.md section 7).
+set(_ui_assets "${_gen_dir}/launcher/ui_assets.gen.cpp")
+add_custom_command(OUTPUT "${_ui_assets}"
+  COMMAND "${BOF3X_PYTHON}" "${CMAKE_SOURCE_DIR}/tools/embed_file.py" "${_ui_assets}"
+          kUiBackgroundPng "${CMAKE_SOURCE_DIR}/docs/images/launcherBackground.png"
+          kUiTextFont "${imgui_SOURCE_DIR}/misc/fonts/DroidSans.ttf"
+          kUiBannerFont "${CMAKE_SOURCE_DIR}/third_party/tex-gyre-pagella/texgyrepagella-regular.otf"
+  DEPENDS "${CMAKE_SOURCE_DIR}/tools/embed_file.py" "${CMAKE_SOURCE_DIR}/docs/images/launcherBackground.png"
+          "${imgui_SOURCE_DIR}/misc/fonts/DroidSans.ttf"
+          "${CMAKE_SOURCE_DIR}/third_party/tex-gyre-pagella/texgyrepagella-regular.otf"
+  COMMENT "Generating launcher/ui_assets.gen.cpp"
+  VERBATIM)
+# The player's launcher's sources (the drawn launcher, bof3x-launcher since
+# stage P6), for this file's target on Windows and cmake/linux_target.cmake's
+# on Linux: its own files, and the launcher's parts with no window (the
+# settings model and the start of the game).
+set(BOF3X_LAUNCHER_SOURCES
+  src/launcher/ui/main.cpp
+  src/launcher/ui/frame.cpp
+  src/launcher/ui/pages.cpp
+  src/launcher/ui/page_settings.cpp
+  src/launcher/ui/page_extras.cpp
+  src/launcher/ui/page_newgame.cpp
+  src/launcher/ui/page_music.cpp
+  src/launcher/ui/page_versions.cpp
+  src/launcher/ui/page_cheats.cpp
+  src/launcher/ui/page_solo.cpp
+  src/launcher/ui/page_data.cpp
+  src/launcher/ui/page_satpixie.cpp
+  src/launcher/ui/page_controls.cpp
+  src/launcher/ui/page_sources.cpp
+  src/launcher/ui/page_mods.cpp
+  src/launcher/ui/tool_run.cpp
+  src/launcher/ui/capture_key.cpp
+  src/launcher/ui/ui_imgui.cpp
+  "${_ui_assets}"
+  src/launcher/config.cpp
+  src/launcher/exe_image.cpp
+  src/launcher/save/finds.cpp
+  src/launcher/start.cpp
+  src/launcher/suites.cpp
+  src/common/sha256.cpp
+  src/common/cache_manifest.cpp
+  src/common/home.cpp
+  src/input/bindings.cpp
+  src/input/function_keys.cpp
+  src/input/key_sdl.cpp
+  src/input/pad_sdl.cpp)
+# The Jukebox (docs/launcher-portable.md, stage P5): its page, its player
+# (the one file of it that calls SDL's audio) and the decoders it plays
+# through, as the Win32 launcher's parts and bof3x_media hold them.
+list(APPEND BOF3X_LAUNCHER_SOURCES
+  src/launcher/ui/page_jukebox.cpp
+  src/launcher/ui/jukebox_play.cpp
+  src/audio/spu.cpp
+  src/audio/seq.cpp
+  src/audio/song.cpp
+  src/media/xa_clip.cpp
+  src/media/xa_adpcm.cpp
+  src/media/resample.cpp)
+# The save editor (stage P5): its page and the format core it is over.
+list(APPEND BOF3X_LAUNCHER_SOURCES
+  src/launcher/ui/page_saves.cpp
+  src/launcher/save/block.cpp
+  src/launcher/save/card.cpp
+  src/launcher/save/namemap.cpp
+  src/launcher/save/names.cpp)
 
 # --- DXVK-native's Direct3D 11 headers, for a target that is not Windows ----
 # (docs/linux-round.md section 6, call 1). Read only when the target is not
@@ -320,63 +456,24 @@ add_custom_command(
   VERBATIM)
 add_custom_target(bof3x_exe_moved ALL DEPENDS "${_exe_moved_stamp}")
 
-# --- the launcher ------------------------------------------------------------
-# The settings dialog is a Win32 DIALOGEX resource driven by DialogBoxParam:
-# no toolkit, nothing vendored, so the launcher stays one dependency-free exe
-# (docs/launcher-settings.md section 2). RC is enabled in project() above:
-# the DLL carries a version resource too (src/hook/bof3x.rc).
-# Two launchers from one set of sources (docs/launcher-settings.md section 2):
-# bof3x-launcher.exe, the player's, holds no code that writes into another
-# process; bof3x-launcher-dev.exe (BOF3X_HOSTED=1) also starts the hosted build
-# (--host bof3: BOF3.exe with bof3x.dll injected) for the harnesses, and the
-# player's hands such a run to it. The release ships only the player's.
-add_library(bof3x_launcher_parts OBJECT
-  src/launcher/config.cpp
-  src/launcher/config_dialog.cpp
-  src/launcher/exe_image.cpp
-  src/launcher/key_codes_check.cpp
-  src/launcher/music_player.cpp
-  src/launcher/save_dialog.cpp
-  src/launcher/save/block.cpp
-  src/launcher/save/card.cpp
-  src/launcher/save/finds.cpp
-  src/launcher/save/namemap.cpp
-  src/launcher/save/names.cpp
-  src/launcher/sources_dialog.cpp
-  src/launcher/start.cpp
-  src/launcher/suites.cpp
-  src/audio/spu.cpp
-  src/audio/seq.cpp
-  src/audio/song.cpp
-  src/common/sha256.cpp
-  src/common/cache_manifest.cpp
-  src/common/home.cpp
-  src/input/bindings.cpp
-  src/input/function_keys.cpp
-  src/input/pad_sdl.cpp)
-# symbols.gen.h for exe_image.cpp alone: Key_TableDefault is read out of the
-# player's BOF3.exe, not copied (docs/exe-table-audit.md).
-target_include_directories(bof3x_launcher_parts PRIVATE src third_party "${_gen_dir}")
-target_link_libraries(bof3x_launcher_parts PRIVATE SDL3::SDL3-static bof3x_os)
-add_dependencies(bof3x_launcher_parts bof3x_symbols bof3x_suites)
-function(bof3x_add_launcher target output hosted)
-  add_executable(${target} src/launcher/launcher.cpp src/launcher/launcher.rc $<TARGET_OBJECTS:bof3x_launcher_parts>)
-  target_compile_definitions(${target} PRIVATE BOF3X_HOSTED=${hosted})
-  target_include_directories(${target} PRIVATE src third_party "${_gen_dir}")
-  add_dependencies(${target} bof3x_symbols bof3x_suites)
-# SDL3 here too, static (docs/launcher-settings.md section 2): the Controls
-# dialog's capture reads the pad, and the dialogs take the pad's d-pad, cross
-# and circle as navigation.
-# shell32 and ole32: the Cache folder box's Browse... (SHBrowseForFolderW);
-# comdlg32: the Sources page's File... and Locate ffmpeg.exe... (GetOpenFileNameW);
-# windowscodecs: the title page's picture, decoded by WIC (docs/launcher-settings.md 2a).
-  target_link_libraries(${target} PRIVATE bof3x_media comctl32 comdlg32 shell32 ole32 windowscodecs winmm uxtheme SDL3::SDL3-static bof3x_os)
-  # -mwindows: no console of its own; wmain still the entry, AttachParentConsole
-  # (launcher.cpp) writes to the terminal it was started from.
-  target_link_options(${target} PRIVATE -municode -mwindows)
-  set_target_properties(${target} PROPERTIES OUTPUT_NAME "${output}")
-endfunction()
-bof3x_add_launcher(bof3x_launcher bof3x-launcher 0)
+# --- the launchers -------------------------------------------------------------
+# The player's launcher, bof3x-launcher.exe, is the drawn one since the
+# cutover (docs/launcher-portable.md, stage P6, 2026-11-20; the owner: "no
+# need to keep both"): one set of windows for Windows and Linux, drawn by Dear
+# ImGui on SDL3's renderer, from BOF3X_LAUNCHER_SOURCES above. The Win32
+# dialogs it replaced are gone. It holds no code that writes into another
+# process (.github/workflows/build.yml checks its imports); the hosted build
+# and a moved image are the developer launcher's below, and it hands such a
+# run to it. RC is enabled in project() above: launcher.rc is its icon, its
+# version block and its manifest.
+add_executable(bof3x_launcher ${BOF3X_LAUNCHER_SOURCES} src/launcher/launcher.rc)
+target_include_directories(bof3x_launcher PRIVATE src third_party "${_gen_dir}")
+add_dependencies(bof3x_launcher bof3x_symbols bof3x_suites)
+target_link_libraries(bof3x_launcher PRIVATE bof3x_imgui SDL3::SDL3-static bof3x_os)
+# -mwindows: no console of its own; os::AttachParentTerminal (main.cpp) writes
+# to the terminal it was started from.
+target_link_options(bof3x_launcher PRIVATE -mwindows)
+set_target_properties(bof3x_launcher PROPERTIES OUTPUT_NAME "bof3x-launcher")
 # bof3x-fmvdump: the FMV decoders (src/video, DIV-0205) as a console tool
 # that writes an AVI's frames raw, for tools/fmv_compare.py to hold against
 # ffmpeg's decode of the same file. Not a player file.
@@ -394,10 +491,37 @@ add_library(bof3x_media STATIC
   src/media/xa_clip.cpp
   src/media/str_movie.cpp)
 target_include_directories(bof3x_media PRIVATE src)
-# The developer launcher starts BOF3.exe with the DLL injected, which only a
-# 32-bit process can do to a 32-bit one: the hosted build's alone.
+# The developer launcher, bof3x-launcher-dev.exe (src/launcher/launcher.cpp):
+# Win32 and 32-bit (docs/launcher-portable.md section 6), with no window since
+# stage P6 - the hosted start (BOF3.exe with bof3x.dll injected, which only a
+# 32-bit process can do to a 32-bit one) and a moved image's fence, under the
+# start's steps with no window (launcher/start.cpp). The release does not ship
+# it. key_codes_check.cpp is the build-time check of src/input/key_codes.h
+# against the Windows SDK's names, compiled with it as it was with the Win32
+# launcher: no code, the build is the check.
 if(BOF3X_HOSTED_BUILD)
-  bof3x_add_launcher(bof3x_launcher_dev bof3x-launcher-dev 1)
+  add_executable(bof3x_launcher_dev
+    src/launcher/launcher.cpp
+    src/launcher/launcher.rc
+    src/launcher/key_codes_check.cpp
+    src/launcher/config.cpp
+    src/launcher/exe_image.cpp
+    src/launcher/save/finds.cpp
+    src/launcher/start.cpp
+    src/launcher/suites.cpp
+    src/common/sha256.cpp
+    src/common/cache_manifest.cpp
+    src/common/home.cpp
+    src/input/bindings.cpp
+    src/input/function_keys.cpp)
+  # symbols.gen.h for exe_image.cpp alone: Key_TableDefault is read out of the
+  # player's BOF3.exe, not copied (docs/exe-table-audit.md).
+  target_include_directories(bof3x_launcher_dev PRIVATE src third_party "${_gen_dir}")
+  add_dependencies(bof3x_launcher_dev bof3x_symbols bof3x_suites)
+  target_link_libraries(bof3x_launcher_dev PRIVATE bof3x_os)
+  # -mwindows: no console of its own; wmain the entry (-municode).
+  target_link_options(bof3x_launcher_dev PRIVATE -municode -mwindows)
+  set_target_properties(bof3x_launcher_dev PROPERTIES OUTPUT_NAME "bof3x-launcher-dev")
 endif()
 # The Jukebox's names (docs/music-player.md section 4), beside the launcher.
 # Edit data/music-names.tsv, not the copy: every build refreshes it.
@@ -407,22 +531,20 @@ add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/music-names.tsv"
   DEPENDS "${CMAKE_SOURCE_DIR}/data/music-names.tsv"
   VERBATIM)
 add_custom_target(bof3x_music_names DEPENDS "${CMAKE_BINARY_DIR}/music-names.tsv")
-add_dependencies(bof3x_launcher bof3x_music_names)
+add_dependencies(bof3x_launcher bof3x_music_names)   # the Jukebox (stage P5)
 # The save editor's reference names (docs/save-editor.md section 4), the same way.
 add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/save-names.tsv"
   COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/data/save-names.tsv" "${CMAKE_BINARY_DIR}/save-names.tsv"
   DEPENDS "${CMAKE_SOURCE_DIR}/data/save-names.tsv"
   VERBATIM)
 add_custom_target(bof3x_save_names DEPENDS "${CMAKE_BINARY_DIR}/save-names.tsv")
-add_dependencies(bof3x_launcher bof3x_save_names)
+add_dependencies(bof3x_launcher bof3x_save_names)   # the save editor (stage P5)
 
 # --- every object, no link ---------------------------------------------------
 # The x86_64 CI job's compile step (docs/x64-build-round.md 3 "XA4"): a
-# target that builds every object of the DLL, the launcher parts, the
-# launcher and SDL3 and links nothing, so a build whose link cannot yet
-# resolve (the 64-bit build until the round's stage C) still gives a whole
-# compile log. `cmake --build <dir> --target bof3x_compile`. Not ALL: a plain
-# build is unchanged by it.
+# target that builds every object of the DLL, the launcher and SDL3 and links
+# nothing, so a build whose link cannot yet resolve (the 64-bit build until
+# the round's stage C) still gives a whole compile log. `cmake --build <dir>
+# --target bof3x_compile`. Not ALL: a plain build is unchanged by it.
 add_custom_target(bof3x_compile
-  DEPENDS $<TARGET_OBJECTS:bof3x> $<TARGET_OBJECTS:bof3x_launcher_parts>
-          $<TARGET_OBJECTS:bof3x_launcher> $<TARGET_OBJECTS:SDL3-static>)
+  DEPENDS $<TARGET_OBJECTS:bof3x> $<TARGET_OBJECTS:bof3x_launcher> $<TARGET_OBJECTS:SDL3-static>)

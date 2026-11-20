@@ -289,8 +289,8 @@ bool ConfigSave(const std::wstring& path, const Config& cfg);
 // The text ConfigSave writes.
 std::string ConfigText(const Config& cfg);
 
-// One setting changed as a line of bof3x.ini would change it - the windowless
-// launcher's --set (launcher/headless.cpp): `cfg` written out as ConfigText,
+// One setting changed as a line of bof3x.ini would change it - the launcher's
+// --set (launcher/ui/main.cpp; headless.cpp's until stage P6): `cfg` written out as ConfigText,
 // the line `key=value` put in place of the line of that key (or added), and
 // the text read again. False, with `why` set to a sentence for the player and
 // `cfg` unchanged, when the key is no setting of bof3x.ini, when the file

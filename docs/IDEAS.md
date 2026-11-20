@@ -110,7 +110,7 @@ rule ([`README.md`](README.md)) here too.
 | I66 | Solo character: a champion whose record is at 0 HP when a battle starts (the owner thinks this is the Mikba fight, with Rei) | gameplay / mode | not assessed | open 2026-11-12 (the owner); today the game's own party fights and the champion starts dead as the original has it |
 | I67 | Increased mapping to allow xdelta cross-disc conversions: a per-patch, per-disc list of offsets so a romhack's patch of the US disc builds from another disc | mods / tools | measured, not built | open 2026-11-13 (the owner, after disc-patch-round.md 11.6); gated on the rule-1 call and a US 1.0 image |
 | I68 | The music staging buffer against the tick: its refill is by wall time, so its pages differ run to run in the state hash, and more often with an in-between present in the wait loop | audio / tools | built (the tool) | 2026-11-14: `statehash.py` sets the buffer's 17 whole pages aside as timing pages; the WAV A/B and the owner's ear still open |
-| I69 | One launcher for Windows and Linux from one source: the settings model off Windows first (a launcher with no window for the native Linux build), then the windows drawn on SDL3 | platform / launcher | MEDIUM | staged 2026-11-19 ([`launcher-portable.md`](launcher-portable.md)); nothing built; its stage P0 is group C7 of the Linux round's LC staging |
+| I69 | One launcher for Windows and Linux from one source: the settings model off Windows first (a launcher with no window for the native Linux build), then the windows drawn on SDL3 | platform / launcher | MEDIUM | staged 2026-11-19 ([`launcher-portable.md`](launcher-portable.md)); stage P0 built as group C7 of the Linux round; stages P1 (the frame), P2 (the settings pages), P3 (Controls and the bind capture) and P4 (Sources and Mods) of `bof3x-launcher-ui`, Dear ImGui on SDL3, built 2026-11-20 on `launcher/p1-frame` (its sections 9 to 12; 66 comparison cases against the Win32 dialog equal; D427 fixed with it; an install made through it by script on Windows and in the WSL), and P5 (the Jukebox, its samples equal to the Win32 player's, and the save editor, its files equal to the Win32 editor's; section 13), on `launcher/drawn` (pull request 267); P6, the cutover, built 2026-11-20 on the local branch `launcher/p6-cutover` (section 14; the owner's call 3: "no need to keep both"): the drawn launcher is `bof3x-launcher` on Windows and Linux, the Win32 dialogs are gone, the release carries the notices; owed: a hand on the window, the release on a clean machine, Windows Defender's verdict |
 | I70 | `BOF3.exe` out of the player's run: after an install is made, the launcher, the engine and the save editor open it no more; it stays a source for the importer and the host of the developer's hosted build | platform / install | HIGH | built 2026-11-19 on the local branch `exe-retire/round`, not merged ([`exe-retire-round.md`](exe-retire-round.md) "As run"; DIV-0241, DIV-0242); the routes and X7 not run |
 
 ---
@@ -2697,6 +2697,9 @@ The estimate is [`launcher-portable.md`](launcher-portable.md). Measured: the la
 
 ### Outcome
 _(2026-11-19) open; staged, nothing built._
+_(2026-11-20) stages P0 to P6 built: the drawn launcher is `bof3x-launcher` on Windows and Linux, and the Win32
+dialogs are gone ([`launcher-portable.md`](launcher-portable.md) sections 9 to 14). Owed: a hand on the window, the
+release on a clean machine._
 
 ## I70 — `BOF3.exe` out of the player's run
 
