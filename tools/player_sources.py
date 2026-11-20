@@ -155,7 +155,12 @@ def lay_out_pc(src, out):
     """The PC game's files as a folder that copy_pc and importer.py build read
     (BOF3.exe, the shipped DAT containers, BGM\\, SND\\, capcom.avi), made in
     the new folder `out`, with the CD pressing's bits put back. `src` is a PC
-    game folder or the CD's .iso. Returns `out`."""
+    game folder or the CD's .iso. Returns `out`.
+
+    `out` is setup's temporary folder under the cache, deleted when setup
+    ends. BOF3.exe is laid here because importer.py build reads it there
+    (base/exe/ and the language layers); copy_pc does not take it into the
+    install's game folder."""
     os.makedirs(os.path.join(out, "DAT"))
     if os.path.isdir(src):
         for name, want_dir in (("BOF3.exe", False), ("BGM", True), ("SND", True), ("capcom.avi", False)):
@@ -190,6 +195,41 @@ def lay_out_pc(src, out):
         if os.path.isfile(p) and _sha_file(p) == r["sha256"]:
             repair_pressing(p, r)
     return out
+
+
+def pc_source_exe(row):
+    """BOF3.exe's bytes from a listed PC source, read as setup reads it: a
+    folder's file, the CD image's BOF3.EXE, or either inside a .zip (unpacked
+    to a temporary folder, deleted afterwards). importer.py verify's check of
+    the cache's image against the source (docs/exe-retire-round.md, X5).
+    Returns (bytes, None), or (None, one sentence that says why not)."""
+    import tempfile
+    path = row["path"]
+    if not os.path.exists(path):
+        return None, "The PC source %s is not there (moved or deleted)." % path
+
+    def read(p):
+        if os.path.isdir(p):
+            exe = _child(p, "BOF3.exe", False)
+            if exe is None:
+                return None, "The PC source %s holds no BOF3.exe now." % path
+            with open(exe, "rb") as f:
+                return f.read(), None
+        import psx_disc
+        d = psx_disc.Disc(p)
+        try:
+            if "BOF3.EXE" not in d.files:
+                return None, "The PC source %s holds no BOF3.EXE now." % path
+            return d.read("BOF3.EXE"), None
+        finally:
+            d.f.close()
+    try:
+        if path.lower().endswith(".zip"):
+            with tempfile.TemporaryDirectory(prefix="bof3_verify_") as tmp:
+                return read(unpack_zip(path, tmp)[0])
+        return read(path)
+    except Exception as e:      # any failure to read is said, never taken as a match
+        return None, "The PC source %s cannot be read (%s)." % (path, _one_line(e))
 
 
 # ---------------------------------------------------------------- identify
@@ -1132,15 +1172,20 @@ DIV0001_ARGS = ["-c:v", "cinepak", "-c:a", "copy", "-fflags", "+bitexact", "-fla
 
 
 def copy_pc(src, dst, ffmpeg, log, progress):
-    """The PC game's files a game folder needs, copied: BOF3.exe, the 742
-    shipped DAT containers (no overlay a tool left there), BGM\\, SND\\ and
-    capcom.avi. capcom.avi as shipped (Indeo 5) is re-encoded by DIV-0001's
-    command when ffmpeg is there, else copied as it is. logos.avi, the
-    porting house's logos, is not copied (DIV-0202): a folder built from the
-    PC starts as one built from a disc does, with the Capcom logo alone."""
+    """The PC game's files a game folder needs, copied: the 742 shipped DAT
+    containers (no overlay a tool left there), BGM\\, SND\\ and capcom.avi.
+    capcom.avi as shipped (Indeo 5) is re-encoded by DIV-0001's command when
+    ffmpeg is there, else copied as it is. logos.avi, the porting house's
+    logos, is not copied (DIV-0202): a folder built from the PC starts as one
+    built from a disc does, with the Capcom logo alone.
+
+    BOF3.exe is not copied (the exe-retire round, docs/exe-retire-round.md
+    section 3 item 5): the importer reads it once, as a source - its .data
+    into the cache's base/exe/ - and nothing a player runs after the install
+    reads it. The source list keeps the PC folder's path for a later build
+    that reads it again (a language layer, a mod)."""
     imp = _imp()
     pc = next(b for b in imp._fixtures()["build"] if b["id"] == "pc-zh")
-    shutil.copy2(_child(src, "BOF3.exe", False), os.path.join(dst, "BOF3.exe"))
     dat = _child(src, "DAT", True)
     os.makedirs(os.path.join(dst, "DAT"))
     n = 0
@@ -1148,7 +1193,7 @@ def copy_pc(src, dst, ffmpeg, log, progress):
         if re.fullmatch(SHIPPED_DAT, f.upper()) and os.path.isfile(os.path.join(dat, f)):
             shutil.copy2(os.path.join(dat, f), os.path.join(dst, "DAT", f.upper()))
             n += 1
-    print("copied BOF3.exe and %d DAT files" % n)
+    print("copied %d DAT files (BOF3.exe is the cache's base/exe, not copied)" % n)
     for d in ("BGM", "SND"):
         s = _child(src, d, True)
         if s:

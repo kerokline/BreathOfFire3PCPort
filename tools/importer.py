@@ -2406,11 +2406,12 @@ def cmd_verify(a):
         exe = tomllib.load(fh).get("exe")
     if exe:
         errs = exe_tables.verify_cache(a.cache)
-        if sha(exe_tables.read_image(os.path.join(a.cache, "base", "exe"), errs)[1]) != exe["sha256"]:
+        if sha(exe_tables.read_image(os.path.join(a.cache, "base", "exe"), [])[1]) != exe["sha256"]:   # its lines: verify_cache's
             errs.append("%s: not the image the manifest recorded" % exe["file"])
         print("  base/exe/ (%s): %s" % (exe["build"], "; ".join(errs) if errs else
                                          "the image recipes/exe.toml records for it"))
         bad += errs
+        bad += verify_exe_source(a.cache, getattr(a, "pc", None), exe)
     rc = 1 if bad else 0
     rc |= verify_bgm(a.cache)
     rc |= verify_opt(a.cache, a.opt_recipe)
@@ -2418,6 +2419,38 @@ def cmd_verify(a):
     if a.overlays:
         rc |= verify_overlays(a.cache, a.overlays)
     return rc
+
+
+def verify_exe_source(cache, pc_path, exe):
+    """The image against the PC source's BOF3.exe (exe_tables.verify_against_pc):
+    the checks the engine made at every start against a BOF3.exe beside the
+    game, made once here (docs/exe-retire-round.md, X5). The source is `pc_path`
+    (--pc: a PC game folder, its CD's .iso or a .zip of either), else the first
+    PC source of the source list beside the cache (<home>/sources.toml, the
+    cache being <home>/cache). With none, or one that cannot be read, one line
+    says so and the image is checked against the manifest's hash alone (above).
+    Returns the problems."""
+    import player_sources
+    if pc_path:
+        row = {"path": os.path.abspath(pc_path), "kind": "pc-folder"}
+    else:
+        home = os.path.dirname(os.path.abspath(cache))
+        row = next((r for r in player_sources.load_sources(home) if r.get("kind") in player_sources.PC_KINDS), None)
+    if row is None:
+        if exe["build"] == "pc-zh":
+            print("  base/exe/ against the PC source: no PC source is listed beside this cache (give --pc); the "
+                  "image is checked against the manifest's hash alone")
+        return []
+    data, why = player_sources.pc_source_exe(row)
+    if data is None:
+        print("  base/exe/ against the PC source: %s The image is checked against the manifest's hash alone." % why)
+        return []
+    errs, info = exe_tables.verify_against_pc(cache, data)
+    for line in info:
+        print("  base/exe/ against the PC source (%s): %s" % (row["path"], line))
+    for e in errs:
+        print("  base/exe/ against the PC source (%s): %s" % (row["path"], e))
+    return errs
 
 
 def verify_bgm(cache):
@@ -2931,6 +2964,8 @@ def main():
     p = s.add_parser("verify")
     p.add_argument("--cache", required=True)
     p.add_argument("--overlays", help="an install's DAT/ whose <lang>.*.DAT overlays the cache's loc/ layers must equal")
+    p.add_argument("--pc", help="the PC source to check base/exe/ against (a PC game folder, its CD's .iso or a .zip "
+                                "of either); default the first PC source of <cache>/../sources.toml")
     p.add_argument("--recipe")
     p.add_argument("--opt-recipe")
     p.add_argument("--prefer")
