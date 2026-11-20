@@ -1,5 +1,5 @@
-r"""The drawn launcher's proof against the Win32 one (docs/launcher-portable.md, stage P2): the
-settings file written from the same choices by both launchers is the same, byte for byte.
+r"""The drawn launcher's proof against the Win32 one (docs/launcher-portable.md, stages P2 and
+P3): the settings file written from the same choices by both launchers is the same, byte for byte.
 
     python tools/launcher_host/ui_compare.py --ui <bof3x-launcher-ui.exe> --win32 <launcher copy>
         --home <BOF3X_HOME> --game <game folder> --ini <starting bof3x.ini> --out <dir>
@@ -103,9 +103,43 @@ PAGES = {
     # SatPixie's options: the CRT look chosen and Options... pressed; a case ends with OK or Cancel.
     "satpixie": dict(drawn="open settings 0; set look=2; press Options...",
                      win32=NAV_SETTINGS + [("IDC_FILTER", 2), ("IDC_LOOKOPTIONS", None)]),
+    # Controls (stage P3): Directions and buttons, Shoulders, Start and Select, Function keys.
+    "controls1": dict(drawn="open controls 0", win32=[("IDC_CONFIGURE", None), (ID["IDC_TAB0"] + 1, None), ("IDC_SUB0", None)]),
+    "controls2": dict(drawn="open controls 1", win32=[("IDC_CONFIGURE", None), (ID["IDC_TAB0"] + 1, None), (ID["IDC_SUB0"] + 1, None)]),
+    "controls3": dict(drawn="open controls 2", win32=[("IDC_CONFIGURE", None), (ID["IDC_TAB0"] + 1, None), (ID["IDC_SUB0"] + 2, None)]),
 }
 # The Win32 buttons that open a window of their own, and that window's title (launcher.rc).
 OPENS = {ID["IDC_LOOKOPTIONS"]: "CRT options (SatPixie)"}
+# Every Controls cell opens the bind capture (IDD_CAPTURE, "Bind"): the binding pages' four columns
+# 20 ids apart from IDC_CT_KEY1, a row each of the fourteen; the Function keys page's two columns,
+# a row each of the nine actions. A case presses only the capture's Clear or Cancel there, never a
+# key: the capture takes keys through a keyboard hook, and this tool sends none (it watches the pad
+# too; no pad is touched).
+for _column in range(4):
+    for _row in range(14):
+        OPENS[ID["IDC_CT_KEY1"] + 20 * _column + _row] = "Bind"
+for _action in range(9):
+    OPENS[ID["IDC_FK_KEY"] + _action] = "Bind"
+    OPENS[ID["IDC_FK_PAD"] + _action] = "Bind"
+# The buttons of such a window that close it: OK, Cancel, and the capture's Clear.
+CLOSES = (ID["IDOK"], ID["IDCANCEL"], ID["IDC_CP_CLEAR"])
+
+# The binding pages' rows, in the order of their cell ids (input/bindings.h Actions()).
+ROWS = ["up", "down", "left", "right", "cross", "circle", "square", "triangle", "l1", "l2", "r1", "r2", "start", "select"]
+# The Function keys page's actions, in the order of their cell ids (input/function_keys.h FnActions()).
+FN_ACTIONS = ["speed", "reading_rows", "quick_menu", "quicksave", "quickload", "window", "pause", "picture", "save_write"]
+
+
+def CELL(column, row):
+    """A binding cell in both vocabularies, pressed: column key1, key2, pad1 or pad2, row by name."""
+    base = {"key1": "IDC_CT_KEY1", "key2": "IDC_CT_KEY2", "pad1": "IDC_CT_PAD1", "pad2": "IDC_CT_PAD2"}[column]
+    return ("%s-%s" % (column, row), None, ID[base] + ROWS.index(row), None)
+
+
+def FNCELL(column, action):
+    """A Function keys cell, pressed: column fkey or fpad, the action by its name in the files."""
+    base = "IDC_FK_KEY" if column == "fkey" else "IDC_FK_PAD"
+    return ("%s-%s" % (column, action), None, ID[base] + FN_ACTIONS.index(action), None)
 
 
 def C(drawn, drawn_value, win32, win32_value):
@@ -210,6 +244,31 @@ CASES = [
     ("newgame-names-off", "newgame", [C("names", "0", "IDC_EXTRA_NAMES", 0)]),
     ("newgame-options-off", "newgame", [C("options", "0", "IDC_EXTRA_OPTIONS", 0)]),
     ("newgame-both-off", "newgame", [C("names", "0", "IDC_EXTRA_NAMES", 0), C("options", "0", "IDC_EXTRA_OPTIONS", 0)]),
+    # Controls (IDD_PAGE_CONTROLS, IDD_PAGE_CONTROLS2, IDD_PAGE_CONTROLS3; stage P3): what the Win32
+    # window can be driven to do with no key pressed - the face buttons' box, each page's Defaults,
+    # and the bind capture's Clear and Cancel over a cell. A key or a pad input into a cell is not
+    # here: the Win32 capture reads the keyboard through a hook, and tools/key_host's capture_tests
+    # holds the two captures' numbers for every key instead.
+    ("controls-untouched", "controls1", [P("controls2"), P("controls3")]),
+    ("controls-layout-nintendo", "controls2", [C("layout", "1", "IDC_CT_LAYOUT", 1)]),
+    ("controls-layout-auto", "controls2", [C("layout", "2", "IDC_CT_LAYOUT", 2)]),
+    ("controls-layout-back", "controls2", [C("layout", "1", "IDC_CT_LAYOUT", 1), C("layout", "0", "IDC_CT_LAYOUT", 0)]),
+    ("controls-defaults", "controls2", [C("Defaults", None, "IDC_CT_DEFAULTS", None)]),
+    ("controls-clear-key2-up", "controls1", [CELL("key2", "up"), C("Clear", None, "IDC_CP_CLEAR", None)]),
+    ("controls-clear-pad1-cross", "controls1", [CELL("pad1", "cross"), C("Clear", None, "IDC_CP_CLEAR", None)]),
+    ("controls-clear-key1-select", "controls2", [CELL("key1", "select"), C("Clear", None, "IDC_CP_CLEAR", None)]),
+    ("controls-cancel-key1-l1", "controls2", [CELL("key1", "l1"), C("Cancel", None, "IDCANCEL", None)]),
+    ("controls-defaults-then-clear", "controls2", [C("Defaults", None, "IDC_CT_DEFAULTS", None),
+                                                   CELL("pad1", "l2"), C("Clear", None, "IDC_CP_CLEAR", None),
+                                                   P("controls1"), CELL("key2", "left"), C("Clear", None, "IDC_CP_CLEAR", None)]),
+    ("fkeys-defaults", "controls3", [C("Defaults", None, "IDC_FK_DEFAULTS", None)]),
+    ("fkeys-clear-window", "controls3", [FNCELL("fkey", "window"), C("Clear", None, "IDC_CP_CLEAR", None)]),
+    ("fkeys-clear-pad-quick-menu", "controls3", [FNCELL("fpad", "quick_menu"), C("Clear", None, "IDC_CP_CLEAR", None)]),
+    ("fkeys-cancel-speed", "controls3", [FNCELL("fkey", "speed"), C("Cancel", None, "IDCANCEL", None)]),
+    ("fkeys-clear-rows", "controls3", [FNCELL("fkey", "reading_rows"), C("Clear", None, "IDC_CP_CLEAR", None)]),
+    ("controls-and-fkeys", "controls2", [C("layout", "2", "IDC_CT_LAYOUT", 2), P("controls3"),
+                                         FNCELL("fkey", "pause"), C("Clear", None, "IDC_CP_CLEAR", None),
+                                         P("settings"), C("display", "0", "IDC_DISPLAY", 0)]),
     # Every page's boxes in one window: what one page writes must not move another's lines.
     ("across-pages", "settings", [C("wide", "1", "IDC_WIDE", 1), P("preset"), C("preset", "3", "IDC_PRESET", 3),
                                   P("cheats1"), C("exp", "2", "IDC_CH_EXP", 2), P("solo"), C("champion", "3", "IDC_SOLO_CHAMPION", 3),
@@ -318,8 +377,9 @@ class Win32Run:
                 raise RuntimeError("the window %r did not open" % title)
             time.sleep(0.2)
             self.target, self.target_title = w, title
-        elif self.target != self.dlg and i in (ID["IDOK"], ID["IDCANCEL"]):
-            # The options window's OK or Cancel: it closes, and the choices go to the main window.
+        elif self.target != self.dlg and i in CLOSES:
+            # The options window's OK or Cancel, or the capture's Clear or Cancel: it closes, and
+            # the choices go to the main window.
             w = self.target
             self.command(h, BN_CLICKED, post=True)
             if not wait_for(lambda: not u.IsWindow(w)):

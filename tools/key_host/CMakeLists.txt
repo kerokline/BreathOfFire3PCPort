@@ -22,3 +22,11 @@ add_executable(key_tests key_tests.cpp ${REPO_SRC}/input/key_sdl.cpp ${REPO_SRC}
 # The shim first, so that SDL's table finds our SDL_internal.h, not SDL's.
 target_include_directories(key_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/shim ${REPO_SRC} ${SDL_SRC}/include ${SDL_SRC}/src)
 target_compile_options(key_tests PRIVATE -Wall -Wextra)
+
+# The drawn launcher's bind capture against the Win32 capture's numbers, every
+# key (docs/launcher-portable.md, stage P3): src/launcher/ui/capture_key.cpp,
+# which names no library, with SDL's Windows table as data.
+add_executable(capture_tests capture_tests.cpp ${REPO_SRC}/launcher/ui/capture_key.cpp ${REPO_SRC}/input/key_sdl.cpp
+               ${REPO_SRC}/input/bindings.cpp ${REPO_SRC}/input/function_keys.cpp)
+target_include_directories(capture_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/shim ${REPO_SRC} ${SDL_SRC}/include ${SDL_SRC}/src)
+target_compile_options(capture_tests PRIVATE -Wall -Wextra)

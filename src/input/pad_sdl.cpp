@@ -151,6 +151,12 @@ void PadSdl_Poll() {
 
 bool PadSdl_Open() { return g_pad != nullptr; }
 
+void PadSdl_Find() {
+    if (!g_started) return;
+    if (g_pad && !SDL_GamepadConnected(g_pad)) ClosePad();
+    OpenAnyPad();
+}
+
 bool PadSdl_InputDown(PadInput input) {
     if (!g_pad) return false;
     auto button = [&](SDL_GamepadButton b) { return SDL_GetGamepadButton(g_pad, b); };

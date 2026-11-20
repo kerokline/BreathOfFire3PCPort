@@ -92,6 +92,9 @@ void PagesOpen(Pages& p, const std::wstring& game_dir, Config& cfg) {
     CheatsOpen(p);
     SoloOpen(p);
     NewGameOpen(p);
+    // The Controls pages' cells, then the Function keys page's table (with
+    // the red cells of all three), as the Win32 window's WM_INITDIALOG.
+    ControlsOpen(p);
     SatpixieOpen(p);
 }
 
@@ -99,7 +102,7 @@ void PagesApply(Pages& p) {
     // ApplyPages' order (config_dialog.cpp): the cache, then ReadBack - the
     // settings, the extras, the music source read against opt= as it was
     // read, then the suites' edit of opt= - then the cheats, the solo
-    // character and New Game's screens.
+    // character, New Game's screens, the bindings and the function keys.
     DataApply(p);
     SettingsApply(p);
     ExtrasApply(p);
@@ -108,6 +111,7 @@ void PagesApply(Pages& p) {
     CheatsApply(p);
     SoloApply(p);
     NewGameApply(p);
+    ControlsApply(p);
     p.applied = true;
     ++p.stamp;   // the settings moved: what a page made from them is made again
 }

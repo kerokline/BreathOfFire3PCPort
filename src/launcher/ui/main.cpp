@@ -1,5 +1,5 @@
 // bof3x-launcher-ui: the drawn launcher (docs/launcher-portable.md, stages P1
-// and P2). One set of windows for Windows and Linux, drawn through
+// to P3). One set of windows for Windows and Linux, drawn through
 // launcher/ui/ui.h. A second program beside the player's launcher until the
 // cutover (stage P6).
 //
@@ -32,13 +32,26 @@
 //   press <widget>                 a button, a tab or a radio button, by its name
 //   key <name>                     a key or a pad button (ui.h TestKey)
 //   shot <file.png>                the frame as it is now
+//   bind-key <name>                the bind capture, open over a Controls cell, gets a key as if the
+//                                  player pressed it: <name> is the key's name as the cells show it
+//                                  (input/bindings.h KeyName: Z, Numpad8, RShift, F6, 0x5C for an unnamed
+//                                  one), which names the physical key DirectInput gives that number
+//                                  (input/key_sdl.h) - all 159 keys have one. "Pause" is the Pause key,
+//                                  which the capture stores as the Win32 one does, as NumLock's number
+//                                  (D427). #<n>: SDL's scancode n, a key with no name too
+//   bind-pad <name>                the capture gets a pad input: its label as the cells show it
+//                                  ("South (A / Cross)", "LB / L1") or its name in the files (south, lb)
+//   red <widget>=<0 or 1>          the widget was drawn in the last frame, with red text (1) or not (0)
 // A step that names a widget the page does not draw, or a grey one, stops the
-// program with exit code 1: a grey control is a thing a check can ask for.
+// program with exit code 1: a grey control is a thing a check can ask for. So
+// do a bind step with no capture open, and a red step the widget does not meet.
 // Without --check the steps run in the window on the screen ("press Play"
 // starts the game), so a script starts the game through the window.
 //
 // Its arguments are UTF-8 on both systems (SDL's main). The texts are the
 // player's (CLAUDE.md, ASD-STE100).
+#include "input/bindings.h"
+#include "input/key_sdl.h"
 #include "launcher/config.h"
 #include "launcher/start.h"
 #include "launcher/ui/frame.h"
@@ -74,7 +87,8 @@ const char kUsage[] =
     "  --ini <file>          With --check: the settings file to read. Without it, the settings are the defaults.\n"
     "  --save <file>         With --check: the file that gets the settings when the window saves them.\n"
     "  --script <steps>      Steps to do in the window, with ; between them: open <page> [<sub> [<sheet>]],\n"
-    "                        set <widget>=<value>, press <widget>, key <name>, shot <file.png>.\n"
+    "                        set <widget>=<value>, press <widget>, key <name>, shot <file.png>,\n"
+    "                        bind-key <key>, bind-pad <pad input>, red <widget>=<0 or 1>.\n"
     "  --page <name>         With --check: the page to show first: title, settings, controls, music, game, mods or data.\n"
     "  --sub <n>, --sheet <n>  The sub-tab of that page and its page, counted from 0.\n"
     "  --keys <list>         With --check: keys to press, with , between them (the same as key steps).\n"
@@ -161,6 +175,35 @@ struct Session {
             Frames(2);
             ui::TestKey(rest.c_str(), false);
             Frames(3);
+        } else if (verb == "bind-key" || verb == "bind-pad") {
+            if (!ui::Capturing()) Fail("No bind capture is open. The step \"" + step + "\" did nothing.");
+            if (verb == "bind-key") {
+                int scancode = 0;
+                if (rest.size() > 1 && rest[0] == '#') {
+                    scancode = std::atoi(rest.c_str() + 1);
+                } else {
+                    const int dik = bof3x::input::KeyFromName(rest);
+                    scancode = dik > 0 && dik < bof3x::input::kKeyStateBytes ? bof3x::input::ScancodeOfDik(dik) : 0;
+                }
+                if (scancode <= 0) Refuse("The key " + rest + " is not known.");
+                ui::TestCaptureKey(scancode);
+            } else {
+                int input = -1;
+                for (int i = 0; i < static_cast<int>(bof3x::input::PadInput::kCount); ++i)
+                    if (rest == bof3x::input::PadInputs()[i].label || rest == bof3x::input::PadInputs()[i].name) input = i;
+                if (input < 0) Refuse("The pad input " + rest + " is not known.");
+                ui::TestCapturePad(input);
+            }
+            Frames(3);
+        } else if (verb == "red") {
+            const std::size_t eq = rest.find('=');
+            if (eq == std::string::npos) Refuse("The step \"" + step + "\" needs a widget and a value: red <widget>=<0 or 1>.");
+            const std::string widget = rest.substr(0, eq);
+            const bool want = rest.substr(eq + 1) != "0";
+            bool red = false;
+            if (!ui::TestDrawn(widget.c_str(), &red)) Fail("The page does not show a widget \"" + widget + "\".");
+            if (red != want)
+                Fail("The widget \"" + widget + "\" is " + (red ? "red" : "not red") + ". The step \"" + step + "\" asked otherwise.");
         } else if (verb == "shot") {
             ui::SaveFrame(rest);
             Frames(1);

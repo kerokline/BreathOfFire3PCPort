@@ -265,6 +265,8 @@ set(BOF3X_LAUNCHER_UI_SOURCES
   src/launcher/ui/page_solo.cpp
   src/launcher/ui/page_data.cpp
   src/launcher/ui/page_satpixie.cpp
+  src/launcher/ui/page_controls.cpp
+  src/launcher/ui/capture_key.cpp
   src/launcher/ui/ui_imgui.cpp
   "${_ui_assets}"
   src/launcher/config.cpp
@@ -276,7 +278,9 @@ set(BOF3X_LAUNCHER_UI_SOURCES
   src/common/cache_manifest.cpp
   src/common/home.cpp
   src/input/bindings.cpp
-  src/input/function_keys.cpp)
+  src/input/function_keys.cpp
+  src/input/key_sdl.cpp
+  src/input/pad_sdl.cpp)
 
 # --- DXVK-native's Direct3D 11 headers, for a target that is not Windows ----
 # (docs/linux-round.md section 6, call 1). Read only when the target is not

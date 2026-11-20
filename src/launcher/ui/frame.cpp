@@ -32,7 +32,7 @@ const char* const kTabNames[kFrameTabs] = {"settings", "controls", "music", "gam
 // shows a sub-tab button for each `label`; a sub-tab with more than one page
 // shows a third row of buttons, one for each `sheet`. `body` draws the page
 // (launcher/ui/pages.h); null: the page is not in this launcher yet (the
-// Controls pages are stage P3's, the Mods page stage P4's).
+// Mods page is stage P4's).
 struct SubPage {
     int tab;
     const char* label;
@@ -42,9 +42,9 @@ struct SubPage {
 constexpr SubPage kSubPages[] = {
     {0, "Settings", nullptr, SettingsPage},
     {0, "Preset", nullptr, PresetPage},
-    {1, "Directions and buttons", nullptr, nullptr},
-    {1, "Shoulders, Start and Select", nullptr, nullptr},
-    {1, "Function keys", nullptr, nullptr},
+    {1, "Directions and buttons", nullptr, ControlsPage1},
+    {1, "Shoulders, Start and Select", nullptr, ControlsPage2},
+    {1, "Function keys", nullptr, FnKeysPage},
     {2, nullptr, nullptr, MusicPage},
     {3, "Graphics and audio", nullptr, VersionsGraphicsPage},
     {3, "Data", nullptr, VersionsDataPage},
@@ -132,6 +132,15 @@ FrameAsk Configure(FrameState& state, Pages& pages) {
         SatpixiePage(pages);
         AreaEnd();
         if (Pressed(Press::kBack)) pages.satpixie_open = false;
+        return FrameAsk::kNone;
+    }
+    // The bind capture, from a Controls cell: in place of the tabs and their
+    // page until it has its answer (the Win32 launcher shows a window of its
+    // own). Escape, the pad's circle and Start are its inputs, not Back or Play.
+    if (pages.capture_open) {
+        AreaBegin("##capture", kMargin, kTabsY, kPictureW - 2 * kMargin, kPictureH - kTabsY - kBottom);
+        CapturePage(pages);
+        AreaEnd();
         return FrameAsk::kNone;
     }
 

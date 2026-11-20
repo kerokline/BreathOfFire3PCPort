@@ -81,6 +81,18 @@ void TestSet(const char* widget, const char* value);
 bool TestPending();
 bool TestGrey();
 
+// The bind capture's two inputs, as if the player pressed them, while a
+// capture is on (CaptureBegin): a key by its SDL scancode, and a pad input by
+// its number (input/bindings.h's PadInput). CaptureKey and CapturePad answer
+// them once, before any key or pad input of the system. A check binds a key
+// with no hands (main.cpp bind-key, bind-pad).
+void TestCaptureKey(int scancode);
+void TestCapturePad(int input);
+
+// Whether the widget of that name (as TestSet names it) was drawn in the last
+// frame, and whether its text was red (Red). False, false: not drawn.
+bool TestDrawn(const char* widget, bool* red);
+
 // ---- Drawing under the widgets ------------------------------------------------
 
 struct Picture;
@@ -114,6 +126,9 @@ void Size(float w, float h = 0);
 // the pointer rests on it. Every option stays listed (the owner's standing
 // call): a page greys a widget, it does not leave it out.
 void Grey(const char* reason);
+// The next widget's text is red: a Controls cell whose key or pad input does
+// two or more things (config_dialog.cpp's red cells).
+void Red();
 // The widget before this call takes the focus when its page opens.
 void DefaultFocus();
 
@@ -148,6 +163,33 @@ void GroupEnd();
 // A part of the window with no box; it scrolls when its widgets do not fit.
 void AreaBegin(const char* name, float x, float y, float w, float h);
 void AreaEnd();
+
+// ---- The bind capture ---------------------------------------------------------
+//
+// The Controls pages' capture (config_dialog.cpp CaptureProc): from
+// CaptureBegin to CaptureEnd the next key the player presses and the next
+// pad input go to the capture, and not to the widgets. A key going down is
+// taken before the widgets' navigation sees it, so Escape, Enter, Tab and the
+// arrows are keys like any other (the Win32 capture's keyboard hook); a key
+// that repeats while held is not a new key. The pad's navigation is off, so
+// the pad's cross and circle are pad inputs like any other. The mouse still
+// uses the widgets (the capture's Clear and Cancel).
+
+// `layout` is input/bindings.h's Layout, as a number: the face buttons'
+// meaning the pad is read with. As the Win32 launcher's pad (launcher.cpp,
+// PadSdl_Start before the window), the first capture's layout stays for
+// later ones.
+void CaptureBegin(int layout);
+void CaptureEnd();
+bool Capturing();
+// The key the player pressed since the last call, as SDL's scancode (SDL's
+// numbers are the USB HID usages on every system). False: none.
+bool CaptureKey(int* scancode);
+// The first pad input (input/bindings.h's PadInput, the layout applied) that
+// went down since CaptureBegin and was not held then: a button that opened
+// the capture through the navigation is still down (CaptureProc's
+// held_at_open). False: none, or no pad.
+bool CapturePad(int* input);
 
 // ---- The system's own windows -------------------------------------------------
 

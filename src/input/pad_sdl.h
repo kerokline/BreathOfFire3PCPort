@@ -27,6 +27,13 @@ bool PadSdl_Started();
 void PadSdl_Poll();
 bool PadSdl_Open();   // a pad is open
 
+// For a caller whose own loop takes SDL's events out of the queue (the drawn
+// launcher's window, launcher/ui/ui_imgui.cpp), so that the pad's added and
+// removed events never reach PadSdl_Poll: closes the pad when it is no longer
+// connected, and opens the first connected pad when none is open. It takes no
+// event out of SDL's queue. Harmless if not started.
+void PadSdl_Find();
+
 // Whether a map-space input is down: the face buttons are read by position,
 // swapped in pairs under the Nintendo layout (or the pad's own labels under
 // auto, decided when the pad opens).

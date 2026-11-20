@@ -7,6 +7,9 @@
 
 #include "launcher/ui/assets.h"
 
+#include "input/bindings.h"
+#include "input/pad_sdl.h"
+
 #include <SDL3/SDL.h>
 
 #include "imgui.h"
@@ -53,6 +56,7 @@ struct Next {
     float x = 0, y = 0, w = 0, h = 0;
     bool grey = false;
     std::string reason;
+    bool red = false;
 };
 
 struct PickAsk {
@@ -80,6 +84,15 @@ struct State {
     std::mutex pick_lock;
     std::map<int, PickAsk> pick_asks;
     std::map<int, std::string> pick_done;
+    // The bind capture (CaptureBegin): the key taken from the events, the pad
+    // inputs held when it began, and a check's key and pad input (TestCaptureKey).
+    bool capturing = false;
+    int cap_key = 0;   // an SDL scancode; 0 none
+    bool cap_held[static_cast<int>(input::PadInput::kCount)] = {};
+    int test_cap_key = 0, test_cap_pad = -1;
+    // The widgets drawn in a check's frame, with their text red or not (TestDrawn).
+    bool cur_red = false;
+    std::map<std::string, bool> drawn_now, drawn_last;
 };
 State g;
 
@@ -140,6 +153,9 @@ constexpr Color kPaper{20, 22, 26}, kInk{232, 228, 220}, kInkGrey{138, 135, 128}
     kField{36, 40, 48}, kFieldHot{48, 53, 63}, kFieldDown{59, 66, 80}, kButton{42, 46, 54}, kButtonHot{58, 63, 74},
     kButtonDown{84, 69, 44}, kEdge{76, 70, 58}, kSand{200, 160, 112}, kSandHot{221, 184, 136},
     kSandDeep{106, 86, 50}, kFocus{242, 214, 154}, kNone{0, 0, 0};
+// A Controls cell that does two or more things (Red). The Win32 page's red is
+// 192, 0, 0 on a light button; on this look's dark buttons a lighter red reads.
+constexpr Color kAlarm{240, 96, 84};
 
 void Look() {
     ImGuiStyle& st = ImGui::GetStyle();
@@ -200,12 +216,17 @@ struct Placed {
     float w, h;
     bool grey;
     std::string reason;
-    Placed() : w(g.next.w), h(g.next.h), grey(g.next.grey), reason(std::move(g.next.reason)) {
+    bool red;
+    Placed() : w(g.next.w), h(g.next.h), grey(g.next.grey), reason(std::move(g.next.reason)), red(g.next.red) {
         if (g.next.at) ImGui::SetCursorPos(ImVec2(S(g.next.x), S(g.next.y)));
         g.next = Next{};
+        g.cur_red = red;
+        if (red) ImGui::PushStyleColor(ImGuiCol_Text, Rgb(kAlarm));
         if (grey) ImGui::BeginDisabled();
     }
     ~Placed() {
+        if (red) ImGui::PopStyleColor();
+        g.cur_red = false;
         if (!grey) return;
         ImGui::EndDisabled();
         if (!reason.empty() && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
@@ -217,12 +238,20 @@ struct Placed {
     ImVec2 Box() const { return ImVec2(S(w), S(h)); }
 };
 
-// TestSet's value for the widget `label`, once, when the widget can be used.
-bool TestTake(const char* label, bool grey, std::string* value) {
-    if (!g.test_set) return false;
+// Whether `widget`, as a check writes it, names the widget `label`: its whole
+// label, its part before ## or its part after.
+bool Names(const std::string& widget, const char* label) {
     const char* cut = std::strstr(label, "##");
     const std::string whole = label, shown = cut ? std::string(label, cut) : whole, name = cut ? cut + 2 : "";
-    if (g.test_widget != whole && g.test_widget != shown && (name.empty() || g.test_widget != name)) return false;
+    return widget == whole || widget == shown || (!name.empty() && widget == name);
+}
+
+// TestSet's value for the widget `label`, once, when the widget can be used.
+// In a check's frame it also notes the widget as drawn (TestDrawn).
+bool TestTake(const char* label, bool grey, std::string* value) {
+    if (g.hidden) g.drawn_now[label] = g.cur_red;   // a check's frame: what it drew (TestDrawn)
+    if (!g.test_set) return false;
+    if (!Names(g.test_widget, label)) return false;
     if (grey) {
         g.test_grey = true;
         return false;
@@ -242,6 +271,14 @@ struct SmallBox {
 };
 
 void Handle(const SDL_Event& e) {
+    // The bind capture takes a key going down before the widgets see it, and
+    // the text it would type; a key's going up still reaches them, so a key
+    // they saw go down is not left down for them.
+    if (g.capturing && (e.type == SDL_EVENT_KEY_DOWN || e.type == SDL_EVENT_TEXT_INPUT)) {
+        if (e.type == SDL_EVENT_KEY_DOWN && !e.key.repeat && g.cap_key == 0 && e.key.scancode != SDL_SCANCODE_UNKNOWN)
+            g.cap_key = static_cast<int>(e.key.scancode);
+        return;
+    }
     ImGui_ImplSDL3_ProcessEvent(&e);
     if (e.type == SDL_EVENT_QUIT) g.closed = true;
     if (e.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED && e.window.windowID == SDL_GetWindowID(g.window)) g.closed = true;
@@ -371,7 +408,8 @@ bool FrameBegin() {
     if (!g.hidden && g.wake <= 0 && !Moving()) {
         // Nothing moves: wait for the player. The timeout is for what comes
         // with no event, a pad plugged in between two polls.
-        if (SDL_WaitEventTimeout(&e, 500)) {
+        // The capture reads the pad each 16 ms, as the Win32 capture's timer.
+        if (SDL_WaitEventTimeout(&e, g.capturing ? 16 : 500)) {
             Handle(e);
             any = true;
         }
@@ -385,6 +423,8 @@ bool FrameBegin() {
     if (any) g.wake = 4;
     else if (g.wake > 0) --g.wake;
     if (g.closed) return false;
+    g.drawn_last.swap(g.drawn_now);
+    g.drawn_now.clear();
 
     ImGui_ImplSDLRenderer3_NewFrame();
     ImGui_ImplSDL3_NewFrame();
@@ -478,6 +518,27 @@ void TestSet(const char* widget, const char* value) {
 }
 
 bool TestPending() { return g.test_set; }
+
+void TestCaptureKey(int scancode) {
+    g.test_cap_key = scancode;
+    g.wake = 8;
+}
+
+void TestCapturePad(int input) {
+    g.test_cap_pad = input;
+    g.wake = 8;
+}
+
+bool TestDrawn(const char* widget, bool* red) {
+    for (const auto& [label, was_red] : g.drawn_last) {
+        if (!Names(widget, label.c_str())) continue;
+        if (red) *red = was_red;
+        return true;
+    }
+    if (red) *red = false;
+    return false;
+}
+
 bool TestGrey() { return g.test_grey; }
 
 // ---- Drawing under the widgets ------------------------------------------------
@@ -534,6 +595,8 @@ void Grey(const char* reason) {
     g.next.grey = true;
     g.next.reason = reason ? reason : "";
 }
+
+void Red() { g.next.red = true; }
 
 void DefaultFocus() {
     ImGui::SetKeyboardFocusHere(-1);
@@ -762,6 +825,75 @@ void AreaBegin(const char* name, float x, float y, float w, float h) {
 }
 
 void AreaEnd() { ImGui::EndChild(); }
+
+// ---- The bind capture ---------------------------------------------------------
+
+void CaptureBegin(int layout) {
+    g.capturing = true;
+    g.cap_key = 0;
+    g.test_cap_key = 0;
+    g.test_cap_pad = -1;
+    // The pad's cross and circle are the capture's, not the navigation's;
+    // Dear ImGui still reads the pad (imgui_impl_sdl3 fills its inputs either way).
+    ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NavEnableGamepad;
+    // The pad as the Win32 launcher reads it (input/pad_sdl.cpp). SDL counts
+    // the opens of one pad, so this and Dear ImGui's backend hold the same pad
+    // at once, and either's close leaves the other's open. PadSdl_Stop is
+    // never called here: it ends SDL with the window (SDL_Quit).
+    input::PadSdl_Start(static_cast<input::Layout>(layout), nullptr);
+    input::PadSdl_Find();
+    for (int i = 0; i < static_cast<int>(input::PadInput::kCount); ++i)
+        g.cap_held[i] = input::PadSdl_InputDown(static_cast<input::PadInput>(i));
+    g.wake = 4;
+}
+
+void CaptureEnd() {
+    g.capturing = false;
+    g.cap_key = 0;
+    g.test_cap_key = 0;
+    g.test_cap_pad = -1;
+    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+    g.wake = 4;
+}
+
+bool Capturing() { return g.capturing; }
+
+bool CaptureKey(int* scancode) {
+    if (!g.capturing) return false;
+    if (g.test_cap_key != 0) {
+        *scancode = g.test_cap_key;
+        g.test_cap_key = 0;
+        return true;
+    }
+    if (g.cap_key == 0) return false;
+    *scancode = g.cap_key;
+    g.cap_key = 0;
+    return true;
+}
+
+bool CapturePad(int* input) {
+    if (!g.capturing) return false;
+    if (g.test_cap_pad >= 0) {
+        *input = g.test_cap_pad;
+        g.test_cap_pad = -1;
+        return true;
+    }
+    if (!input::PadSdl_Started()) return false;
+    // The window's loop pumped SDL's events, which brings the pad's state up
+    // to date; PadSdl_Poll would take the pad's events out of the queue before
+    // Dear ImGui sees them, so the pad is looked for by PadSdl_Find instead.
+    input::PadSdl_Find();
+    for (int i = 0; i < static_cast<int>(input::PadInput::kCount); ++i) {
+        const bool down = input::PadSdl_InputDown(static_cast<input::PadInput>(i));
+        if (!down) {
+            g.cap_held[i] = false;
+        } else if (!g.cap_held[i]) {
+            *input = i;
+            return true;
+        }
+    }
+    return false;
+}
 
 // ---- The system's own windows -------------------------------------------------
 
