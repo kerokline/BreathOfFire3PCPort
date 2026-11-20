@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 
+#include "common/cache_manifest.h"
 #include "launcher/config.h"
 #include "launcher/exe_image.h"
 #include "launcher/resource.h"
@@ -55,7 +56,8 @@ struct State {
     save::Names names;
     save::PartyTable table;
     std::vector<save::NameSet> name_sets;   // each release's default names (save/namemap.h): the discs of the
-                                            // languages installed, this install's layers, the exe's
+                                            // languages installed, this install's layers, the image's
+    std::wstring image_note;   // what the install's image does not hold, for the first status line
 
     bool loaded = false;
     Entry opened;                 // where the open save came from
@@ -741,9 +743,7 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         std::wstring intro = s->names.item[0].empty()
                                  ? L"This install has no names that the editor can show. The lists show numbers."
                                  : L"";
-        if (s->table.empty())
-            intro += (intro.empty() ? L"" : L" ") +
-                     std::wstring(L"This install has no BOF3.exe: you can change the order of the party, not its members.");
+        if (!s->image_note.empty()) intro += (intro.empty() ? L"" : L" ") + s->image_note;
         Status(dlg, intro);
         return TRUE;
     }
@@ -881,27 +881,39 @@ void SaveEditorRun(HWND owner, const std::wstring& game_dir, const std::wstring&
         if (0x38 + k < s.names.item[0].size() && !s.names.item[0][0x38 + k].empty())
             s.names.fish[k] = s.names.item[0][0x38 + k];
 
+    // The game's tables, from the install's own image of .data (docs/exe-retire-round.md X4): the cache's
+    // base\exe with its table files laid in, as the engine maps it, on every install kind. No BOF3.exe is
+    // opened, but under the developer's switch BOF3X_EXEFILE=1, which reads the game folder's file first, as
+    // the engine then does. Where the image does not hold a table the editor offers less and says so.
+    ExeImage image;
     std::string why;
-    if (!ExePartyTable(s.game_dir + L"\\BOF3.exe", s.table, why)) s.table.clear();
+    bool have_image = InstallExeFileSwitch() && ExeImageFromFile(s.game_dir + L"\\BOF3.exe", image, why);
+    if (!have_image) have_image = ExeImageFromCache(cache, image, why);
+    const auto note = [&s](const wchar_t* text) { s.image_note += (s.image_note.empty() ? L"" : L" ") + std::wstring(text); };
+    if (!have_image)
+        note(L"This install has no game data that the editor can read. Set up the install on the Sources page. "
+             L"Until then, you can change the order of the party, but not its members, and the editor shows no "
+             L"entrances, chests or passages.");
+    if (have_image && !ExePartyTable(image, s.table, why)) {
+        s.table.clear();
+        note(L"The game data of this install does not have the party table. You can change the order of the party, "
+             L"but not its members.");
+    }
 
     // Each release's default names (save/namemap.h), all from what the player installed:
-    //  - the exe's own, from its tables: the seven default records New Game copies (Char_DefaultRecords
-    //    0x64B390, 0xA4 apart, the name first) and the whelp's (0x64B80C), and the sixty faerie trait records
-    //    (0x653200, 20 bytes each, the name first) - docs/save-block/range-b-characters.md, range-e-tail.md;
+    //  - the image's own, from its tables (ExeDefaultNameTables): the names of the seven default records New
+    //    Game copies and the whelp's, and of the sixty faerie trait records. A disc-built image does not hold
+    //    them (a gap and a language layer's names there, recipes/exe-gaps.tsv): then there is no such set;
     //  - for each language installed (the Language box's list): the disc's own names and card file name, and
     //    the names as the PC plays that language, both from the layer's FIRST.DAT.
     {
-        std::vector<unsigned char> records, whelp, traits;
-        const std::wstring exe = s.game_dir + L"\\BOF3.exe";
         save::NameSet original;
-        if (ExeImageRead(exe, 0x64B390, 7 * 0xA4, records, why) && ExeImageRead(exe, 0x64B80C, 9, whelp, why) &&
-            ExeImageRead(exe, 0x653200, 60 * 20, traits, why)) {
-            std::vector<std::uint8_t> chars(8 * 9), faeries(60 * 5);
-            for (int k = 0; k < 7; ++k) std::memcpy(chars.data() + k * 9, records.data() + k * 0xA4, 9);
-            std::memcpy(chars.data() + 7 * 9, whelp.data(), 9);
-            for (int r = 0; r < 60; ++r) std::memcpy(faeries.data() + r * 5, traits.data() + r * 20, 5);
-            original = save::NameSetFromTables("pc-original", chars.data(), faeries.data());
-        }
+        DefaultNameTables tables;
+        if (have_image && ExeDefaultNameTables(image, tables, why))
+            original = save::NameSetFromTables("pc-original", tables.chars.data(), tables.faeries.data());
+        else if (have_image)
+            note(L"The game data of this install does not have the default names of the original release, so the "
+                 L"editor does not know them.");
         bool played = false;
         for (const std::string& code : ConfigLanguagesAvailable(s.game_dir, cache)) {
             const std::wstring w = ConfigFromUtf8(code);
@@ -931,8 +943,11 @@ void SaveEditorRun(HWND owner, const std::wstring& game_dir, const std::wstring&
 
     // The ways into each area, from the install's link lists: one entrance for
     // each different position, named by the areas it comes from.
+    // A read the image refuses (a range it does not hold) leaves that link or find out: the lists are then
+    // not complete, and the first status line says so.
+    const std::uint32_t refused_before = image.not_held;
     std::vector<AreaLink> links;
-    if (ExeAreaLinks(s.game_dir + L"\\BOF3.exe", links, why)) {
+    if (have_image && ExeAreaLinks(image, links, why)) {
         const auto place = [&s](unsigned area) {
             const auto it = s.names.area.find(area);
             return it == s.names.area.end() ? "area " + std::to_string(area) : it->second + " (" + std::to_string(area) + ")";
@@ -968,10 +983,13 @@ void SaveEditorRun(HWND owner, const std::wstring& game_dir, const std::wstring&
     // as the other names.
     {
         std::vector<save::Find> chests, passages;
-        if (ExeAreaFinds(s.game_dir + L"\\BOF3.exe", chests, passages, why)) {
+        if (have_image && ExeAreaFinds(image, chests, passages, why)) {
             s.names.chest = save::FindTexts(chests, s.names);
             s.names.passage = save::FindTexts(passages, s.names);
         }
+        if (have_image && image.not_held != refused_before)
+            note(L"The game data of this install does not have all of the area data. The lists of entrances, chests "
+                 L"and passages are not complete.");
         std::error_code ec;
         const bool layer_cached = !cache.empty() && std::filesystem::is_directory(cache + L"\\loc\\" + tag, ec);
         for (unsigned area = 0; latin && area < 200; ++area) {

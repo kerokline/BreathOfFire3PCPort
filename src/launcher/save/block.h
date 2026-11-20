@@ -114,9 +114,10 @@ bool FieldReadOnly(const Field& field);
 // One line for a list of saves: "Ryu, level 12, 3:22:10".
 std::string Describe(const Block& block, const Names& names);
 
-// The party-combination table of the install (57 bytes at 0x669750 of
-// BOF3.exe: 19 rows of three ids), or empty when the install has no file to
-// read it from. With it a change of party members gets its row at +0x74C;
+// The party-combination table of the install (57 bytes at 0x669750 of the
+// install's image of .data, launcher/exe_image.h: 19 rows of three ids), or
+// empty when the editor cannot read it (no image, or an image that does not
+// hold it). With it a change of party members gets its row at +0x74C;
 // without it the members cannot change (Check says so).
 using PartyTable = std::vector<std::uint8_t>;
 
