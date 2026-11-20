@@ -1,17 +1,16 @@
 # One launcher for Windows and Linux: what it would take
 
 **Status:** IN PROGRESS (2026-11-20: stage P0 is in `main`, the Linux
-round's group C7; stage P1, the frame, and stage P2, the settings pages,
-are built on the local branch `launcher/p1-frame`, sections 9 and 10; stage
-P3, Controls, on the local branch `launcher/p3-controls`, section 11, with
-D427 for the owner; stages P4 to P6 are not started. Sections 1 to 8 are the staging of 2026-11-19, measured
+round's group C7; stage P1, the frame, stage P2, the settings pages, and
+stage P3, Controls, are built on the local branch `launcher/p1-frame`,
+sections 9 to 11, with D427 for the owner; stages P4 to P6 are not started. Sections 1 to 8 are the staging of 2026-11-19, measured
 at `main` `8cd45199`.)
 An estimate and a staging for the owner's question "a launcher that works on
 either Windows or Linux". It is tier 3 of [`linux-round.md`](linux-round.md)
 (section 5, stand-in 3; section 8) and IDEAS I69. Stage P0 below is also
 group C7 of that round's staging and is needed for any native Linux build.
-Of the owner's four calls in section 7, calls 1 and 4 are answered; calls 2
-and 2 are answered; call 3 is open.
+Of the owner's four calls in section 7, calls 1, 2 and 4 are answered; call 3
+is open.
 
 Every count was made by the command beside it. What was not measured is in
 section 8. The licence remarks in section 4 are a reading, not advice, and
@@ -512,7 +511,7 @@ list) and `SliderShowing` (a slider that shows a text for its step) are new.
   note says "see the note above" where that page has no note line; a
   manifest error's sentence runs into the member list with no full stop.
 
-## 11. Stage P3 as run (2026-11-20, branch `launcher/p3-controls`)
+## 11. Stage P3 as run (2026-11-20, branch `launcher/p3-controls`, merged into `launcher/p1-frame`)
 
 **What is built.** The Controls tab's three pages - Directions and
 buttons, Shoulders, Start and Select, Function keys: 45, 39 and 42
