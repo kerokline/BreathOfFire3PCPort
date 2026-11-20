@@ -284,6 +284,18 @@ set(BOF3X_LAUNCHER_UI_SOURCES
   src/input/function_keys.cpp
   src/input/key_sdl.cpp
   src/input/pad_sdl.cpp)
+# The Jukebox (docs/launcher-portable.md, stage P5): its page, its player
+# (the one file of it that calls SDL's audio) and the decoders it plays
+# through, as the Win32 launcher's parts and bof3x_media hold them.
+list(APPEND BOF3X_LAUNCHER_UI_SOURCES
+  src/launcher/ui/page_jukebox.cpp
+  src/launcher/ui/jukebox_play.cpp
+  src/audio/spu.cpp
+  src/audio/seq.cpp
+  src/audio/song.cpp
+  src/media/xa_clip.cpp
+  src/media/xa_adpcm.cpp
+  src/media/resample.cpp)
 
 # --- DXVK-native's Direct3D 11 headers, for a target that is not Windows ----
 # (docs/linux-round.md section 6, call 1). Read only when the target is not
@@ -535,6 +547,7 @@ add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/music-names.tsv"
   VERBATIM)
 add_custom_target(bof3x_music_names DEPENDS "${CMAKE_BINARY_DIR}/music-names.tsv")
 add_dependencies(bof3x_launcher bof3x_music_names)
+add_dependencies(bof3x_launcher_ui bof3x_music_names)   # the drawn launcher's Jukebox (stage P5)
 # The save editor's reference names (docs/save-editor.md section 4), the same way.
 add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/save-names.tsv"
   COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/data/save-names.tsv" "${CMAKE_BINARY_DIR}/save-names.tsv"

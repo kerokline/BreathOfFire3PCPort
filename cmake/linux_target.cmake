@@ -101,6 +101,14 @@ target_compile_options(bof3x_launcher_ui PRIVATE ${BOF3X_LINUX_COMPILE_OPTIONS})
 set_target_properties(bof3x_launcher_ui PROPERTIES POSITION_INDEPENDENT_CODE OFF OUTPUT_NAME "bof3x-launcher-ui")
 target_link_options(bof3x_launcher_ui PRIVATE -no-pie)
 target_link_libraries(bof3x_launcher_ui PRIVATE bof3x_imgui SDL3::SDL3-static bof3x_os)
+# The Jukebox's names beside it (stage P5), as CMakeLists.txt copies them for
+# the Windows launchers: edit data/music-names.tsv, not the copy.
+add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/music-names.tsv"
+  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/data/music-names.tsv" "${CMAKE_BINARY_DIR}/music-names.tsv"
+  DEPENDS "${CMAKE_SOURCE_DIR}/data/music-names.tsv"
+  VERBATIM)
+add_custom_target(bof3x_music_names DEPENDS "${CMAKE_BINARY_DIR}/music-names.tsv")
+add_dependencies(bof3x_launcher_ui bof3x_music_names)
 
 # --- every object, no link (as CMakeLists.txt's bof3x_compile on Windows) --------
 add_custom_target(bof3x_compile

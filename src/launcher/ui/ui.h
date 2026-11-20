@@ -205,6 +205,15 @@ struct ListRow {
 bool CheckList(const char* label, int* index, const std::vector<ListRow>& rows, const std::vector<float>& stops,
                int* toggled);
 
+// ---- The Jukebox (stage P5) ---------------------------------------------------
+
+// A combo box whose entries `grey[i]` true are drawn in grey text and can
+// still be chosen, the closed box too when one is chosen: the Win32
+// Jukebox's owner-drawn song box, where a stream a source lacks is grey and
+// Play then says why. A check sets it to any entry, as Combo.
+bool ComboGreyText(const char* label, int* index, const std::vector<std::string>& items,
+                   const std::vector<bool>& grey);
+
 // A box with a title; the widgets up to GroupEnd are placed in its pixels.
 void GroupBegin(const char* title, float x, float y, float w, float h);
 void GroupEnd();

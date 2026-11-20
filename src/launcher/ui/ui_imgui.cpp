@@ -970,6 +970,50 @@ bool CheckList(const char* label, int* index, const std::vector<ListRow>& rows, 
     return changed;
 }
 
+// ---- The Jukebox (stage P5) ---------------------------------------------------
+
+bool ComboGreyText(const char* label, int* index, const std::vector<std::string>& items,
+                   const std::vector<bool>& grey) {
+    Placed p;
+    p.Width();
+    const int count = static_cast<int>(items.size());
+    const auto dim = [&](int i) { return static_cast<std::size_t>(i) < grey.size() && grey[static_cast<std::size_t>(i)]; };
+    bool changed = false;
+    std::string test;
+    if (TestTake(label, p.grey, &test)) {
+        const int want = TestNumber(test);
+        if (want >= 0 && want < count && want != *index) {
+            *index = want;
+            changed = true;
+        }
+    }
+    const bool valid = *index >= 0 && *index < count;
+    const char* shown = valid ? items[static_cast<std::size_t>(*index)].c_str() : "";
+    ImGui::PushID(label);
+    // The closed box in grey when its entry is (the Win32 box draws its edit part with the list's rule).
+    const bool shown_dim = valid && dim(*index);
+    if (shown_dim) ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
+    const bool open = ImGui::BeginCombo("##combo", shown);
+    if (shown_dim) ImGui::PopStyleColor();
+    if (open) {
+        for (int i = 0; i < count; ++i) {
+            ImGui::PushID(i);
+            const bool chosen = i == *index;
+            if (dim(i)) ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
+            if (ImGui::Selectable(items[static_cast<std::size_t>(i)].c_str(), chosen) && !chosen) {
+                *index = i;
+                changed = true;
+            }
+            if (dim(i)) ImGui::PopStyleColor();
+            if (chosen) ImGui::SetItemDefaultFocus();
+            ImGui::PopID();
+        }
+        ImGui::EndCombo();
+    }
+    ImGui::PopID();
+    return changed;
+}
+
 void GroupBegin(const char* title, float x, float y, float w, float h) {
     g.next = Next{};
     // The box's line runs through the middle of its title, as a Win32 group box's does.

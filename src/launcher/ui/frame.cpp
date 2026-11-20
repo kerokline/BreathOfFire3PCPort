@@ -83,7 +83,7 @@ float ButtonWidth(const char* label, float pad, float least) {
     return std::max(TextWidth(Face::kText, kTextEm, label) + pad, least);
 }
 
-FrameAsk Title(FrameState& state) {
+FrameAsk Title(FrameState& state, Pages& pages) {
     if (!g_background_tried) {
         g_background_tried = true;
         g_background = PictureFromPng(kUiBackgroundPng, kUiBackgroundPngSize);
@@ -107,8 +107,10 @@ FrameAsk Title(FrameState& state) {
     }
     Place(439, kTitleButtonY);
     Size(88, kTitleButtonH);
-    Grey("The Jukebox is not in this launcher yet.");
-    Button("Jukebox");
+    if (Button("Jukebox")) {   // stage P5: in place of the title page until its Close
+        JukeboxBegin(pages);
+        return FrameAsk::kNone;
+    }
     Place(541, kTitleButtonY);
     Size(88, kTitleButtonH);
     if (Button("Exit")) ask = FrameAsk::kExit;
@@ -267,13 +269,28 @@ static FrameAsk SourcesFace(Pages& pages) {
     return FrameAsk::kNone;
 }
 
+// The Jukebox (stage P5), in place of the title page with the banner above
+// it, until its Close (the Win32 launcher shows a window of its own); the
+// title page is then shown again with the focus on Play, as when it opens.
+static FrameAsk JukeboxFace(Pages& pages, FrameState& state) {
+    Fill(0, 0, kPictureW, kBandH, kBlack);
+    Fill(0, kBandH, kPictureW, kPictureH - kBandH, Paper());
+    Banner(0);
+    AreaBegin("##jukebox", kMargin, kTabsY, kPictureW - 2 * kMargin, kPictureH - kTabsY - kBottom);
+    JukeboxPage(pages);
+    AreaEnd();
+    if (!pages.jukebox_open) state.opened = true;   // back on the title page: its focus as when it opens
+    return FrameAsk::kNone;
+}
+
 FrameAsk FrameDraw(FrameState& state, Pages& pages) {
     // The tools' lines and ends, whichever page is shown, as the Win32 pages
     // take their messages while hidden.
     SourcesPoll(pages);
     ModsPoll(pages);
     if (pages.sources_open) return SourcesFace(pages);
-    return state.page < 0 ? Title(state) : Configure(state, pages);
+    if (pages.jukebox_open) return JukeboxFace(pages, state);
+    return state.page < 0 ? Title(state, pages) : Configure(state, pages);
 }
 
 }  // namespace bof3x::ui
