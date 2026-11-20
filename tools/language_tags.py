@@ -80,8 +80,16 @@ def cache_kind(cache):
     common/cache_manifest.cpp ManifestInstallKind's answer: "pc" or "disc" from
     the manifest's [build] install_kind; for a manifest from before the key (or
     with a value the reader refuses, which the launcher then refuses to start
-    on), "pc" when a [cache] assets row is of the loc/zh-CN layer - only the
-    PC's DAT/ carries it - else "disc"; None with no manifest (no cache)."""
+    on), "pc" when a [cache] assets row of the loc/zh-CN layer names a source
+    (its chunk came from the PC's DAT/, the one source of that layer) - else
+    "disc"; None with no manifest (no cache). A disc-built cache lists the
+    loc/zh-CN slots too, with no source ("": the slot a language layer fills),
+    so a row alone does not make the PC's (measured 2026-11-19: 275 such rows,
+    none with a source, in each disc-built manifest read; 475, each with a
+    source, in the PC installs'). common/cache_manifest.cpp's ManifestParse
+    counts a row alone (zh_rows): it reads every older disc-built manifest as
+    a PC install, a defect the exe-retire round's X3 hand-back names; this
+    mirror answers as that reader should."""
     import tomllib
     man = os.path.join(cache, "manifest.toml") if cache else None
     if not man or not os.path.isfile(man):
@@ -92,7 +100,7 @@ def cache_kind(cache):
     if kind in ("pc", "disc"):
         return kind
     rows = m.get("cache", {}).get("assets", [])
-    return "pc" if any(isinstance(r, list) and len(r) > 2 and r[2] == "loc/zh-CN" for r in rows) else "disc"
+    return "pc" if any(isinstance(r, list) and len(r) > 3 and r[2] == "loc/zh-CN" and r[3] for r in rows) else "disc"
 
 
 def original_available(game, cache=None):
@@ -117,7 +125,9 @@ def original_available(game, cache=None):
 # table: the manifest, new and old, and whether a loc/zh-CN layer is on disk,
 # to the Chinese text's answer at a player's start). `selftest` checks this
 # mirror against them on manifests written as text: builds, layer names and
-# made-up hashes only.
+# made-up hashes only. The two rows of source-less loc/zh-CN slots are what
+# cache_manifest.cpp should answer and today does not for the older manifest
+# (cache_kind's docstring).
 KIND_ROWS = (
     # what, install_kind written (None: an old manifest), source build, a loc/zh-CN asset row, the layer on disk,
     # cache_kind, original_available
@@ -131,6 +141,9 @@ KIND_ROWS = (
     ("a PSP-only install", "disc", "psp-jp", False, False, "disc", False),
     ("the same, old manifest", None, "psp-jp", False, False, "disc", False),
     ("the recorded kind wins over the rows", "disc", "psx-us", True, False, "disc", False),
+    # a disc-built cache's own loc/zh-CN rows: the slots, with no source (an older manifest has nothing else)
+    ("a disc-built install, its source-less loc/zh-CN slot rows", "disc", "psx-us", "slot", False, "disc", False),
+    ("the same, old manifest", None, "psx-us", "slot", False, "disc", False),
     ("a disc-built cache with a loc/zh-CN layer on disk", "disc", "psx-us", False, True, "disc", True),
 )
 
@@ -155,7 +168,9 @@ def selftest():
                         text += 'install_kind = "%s"\n' % kind
                     text += '\n[[source]]\nbuild = "%s"\npath = "x"\n\n[cache]\nassets = [\n' % build
                     text += '  ["A.DAT", 0, "base", "%s:chunk", "h"],\n' % build
-                    if zh_row:
+                    if zh_row == "slot":
+                        text += '  ["A.DAT", 1, "loc/zh-CN", "", ""],\n'
+                    elif zh_row:
                         text += '  ["A.DAT", 1, "loc/zh-CN", "pc-zh:chunk", "h"],\n'
                     text += "]\n"
                     with open(os.path.join(cache, "manifest.toml"), "w", encoding="utf-8", newline="\n") as fh:
