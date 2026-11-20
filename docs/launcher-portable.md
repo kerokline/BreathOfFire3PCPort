@@ -3,7 +3,7 @@
 **Status:** IN PROGRESS (2026-11-20: stage P0 is in `main`, the Linux
 round's group C7; stage P1, the frame, stage P2, the settings pages, and
 stage P3, Controls, are built on the local branch `launcher/p1-frame`,
-sections 9 to 11, with D427 for the owner; stages P4 to P6 are not started. Sections 1 to 8 are the staging of 2026-11-19, measured
+sections 9 to 11; stages P4 to P6 are not started. Sections 1 to 8 are the staging of 2026-11-19, measured
 at `main` `8cd45199`.)
 An estimate and a staging for the owner's question "a launcher that works on
 either Windows or Linux". It is tier 3 of [`linux-round.md`](linux-round.md)
@@ -560,19 +560,25 @@ key), **and one key differs: Ctrl+Pause (Break, E0 46)**, which SDL reports
 as Pause, so the drawn capture stores Pause's number 0x45 where the Win32
 one stores 0xC6. 329 checks, 0 failed.
 
-**D427, for the owner.** Both captures store Pause as 0x45 and NumLock as
-0xC5: the drawn one keeps the Win32 numbers, since D427 is open and only
-proposes the swap. What the game then reads, from the code: a game button
-reads the key bytes in DirectInput's numbering (`key_sdl.h`
-`FillKeyState`), where Pause is 0xC5 and NumLock 0x45, so a game button
-bound to Pause in either launcher is worked by NumLock, and the reverse; a
-function key reads the key message (`FnKeyOfMessage`, and
-`FnMessageBitsOfDik` off Windows), which gives Pause 0x45 and NumLock 0xC5,
-so a function key bound to Pause works with Pause. The choices: keep both
-as they are (the function keys right, the game buttons crossed); swap at
-the capture as D427 proposes (the game buttons right, and the function keys
-then crossed unless `FnKeyOfMessage` swaps too); or store per page. Each
-says what an ini that holds one of the two already means.
+**D427, fixed (the owner, 2026-11-20: "fix both").** As this stage was
+built, both captures stored Pause as 0x45 and NumLock as 0xC5, the way
+Windows sends them, so a game button bound to Pause was worked by NumLock
+while a function key bound to Pause worked with Pause. Now a stored number
+is DirectInput's for every key: the Win32 capture and the function keys'
+reader cross the pair through one function (`FnKeyOfScan`), and the drawn
+capture stores DirectInput's number from SDL's scancode. DIV-0240's
+amendment says what an older ini's lines mean. Where the paragraphs of this
+section say the pair is crossed or that Ctrl+Pause stores 0x45, read them
+as of before the fix: Ctrl+Pause now stores 0xC5 in the drawn capture.
+After it: `capture_tests` 329 checks and `key_tests` 133,780, 0 failed; the
+game's self-tests end 0; `ui_compare.py` 64 cases, 64 equal with both
+launchers rebuilt.
+
+**The comparison tool wants the machine left alone.** With the owner at the
+machine, 2 of 64 cases came out unequal once, each with a box toggled that
+the case did not name, and both were equal on three more runs. The tool
+now sets a Win32 check box and tells its page, where it played a mouse
+press; a case that differs is run again before it is believed.
 
 **Through the drawn launcher with no window** (`--check`, the owner's
 `bof3x.ini` copied; the script steps `bind-key`, `bind-pad` and `red` are

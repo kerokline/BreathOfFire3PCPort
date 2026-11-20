@@ -36,9 +36,7 @@
 //                                  player pressed it: <name> is the key's name as the cells show it
 //                                  (input/bindings.h KeyName: Z, Numpad8, RShift, F6, 0x5C for an unnamed
 //                                  one), which names the physical key DirectInput gives that number
-//                                  (input/key_sdl.h) - all 159 keys have one. "Pause" is the Pause key,
-//                                  which the capture stores as the Win32 one does, as NumLock's number
-//                                  (D427). #<n>: SDL's scancode n, a key with no name too
+//                                  (input/key_sdl.h) - all 159 keys have one. #<n>: SDL's scancode n, a key with no name too
 //   bind-pad <name>                the capture gets a pad input: its label as the cells show it
 //                                  ("South (A / Cross)", "LB / L1") or its name in the files (south, lb)
 //   red <widget>=<0 or 1>          the widget was drawn in the last frame, with red text (1) or not (0)

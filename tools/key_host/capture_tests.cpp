@@ -62,7 +62,7 @@ struct Answer {
 Answer Win32Take(int scan, bool extended, bool fn) {
     if (scan == 0x01) return {ui::CaptureTake::kCancel, -1};
     if (fn && ((scan == 0x44 && !extended) || scan == 0x38)) return {ui::CaptureTake::kRefused, -1};
-    if (scan != 0) return {ui::CaptureTake::kKey, scan | (extended ? 0x80 : 0)};
+    if (scan != 0) return {ui::CaptureTake::kKey, in::FnKeyOfScan(scan | (extended ? 0x80 : 0))};
     return {ui::CaptureTake::kNothing, -1};
 }
 
@@ -102,7 +102,7 @@ struct Expected {
     const char* why;
 };
 constexpr Expected kExpected[] = {
-    {0xC6, "Ctrl+Pause (Break, E0 46): SDL reports it as Pause, so the drawn capture stores Pause's number (0x45, D427); "
+    {0xC6, "Ctrl+Pause (Break, E0 46): SDL reports it as Pause, so the drawn capture stores Pause's number (0xC5); "
            "the Win32 capture stores 0xC6"},
 };
 
@@ -178,9 +178,11 @@ void TestEveryPair() {
     std::printf("bind-key: %d of the %d keys named by KeyName, each read back to its number\n", named, n);
 }
 
-// D427: Pause and NumLock, each path and what the game reads.
+// D427, fixed 2026-11-20: Pause and NumLock, each path and what the game reads. The stored number is
+// DirectInput's in both captures, the game button's key byte is that number, and a function key's
+// message reads as it on Windows and off it.
 void TestD427() {
-    std::printf("\nD427, Pause and NumLock (VK_PAUSE 0x13 comes as scan 0x45 plain, VK_NUMLOCK 0x90 as 0x45 extended):\n");
+    std::printf("\nD427 (fixed), Pause and NumLock (VK_PAUSE 0x13 comes as scan 0x45 plain, VK_NUMLOCK 0x90 as 0x45 extended):\n");
     struct Key {
         const char* name;
         int scan;
@@ -205,14 +207,14 @@ void TestD427() {
         const int fn_sdl = in::FnKeyOfMessage(k.vk, in::FnMessageBitsOfDik(k.dik) | 1);
         std::printf("  %-7s  Win32 capture %s; drawn capture %s\n", k.name, Describe(w).c_str(), Describe(d).c_str());
         std::printf("           the game, a game button: the key byte 0x%02X goes down (%s); a binding of 0x%02X (%s) "
-                    "is worked by the other key\n",
+                    "is worked by this key\n",
                     byte, in::KeyName(byte).c_str(), w.number, in::KeyName(w.number).c_str());
         std::printf("           the game, a function key: the key message reads as 0x%02X on Windows, 0x%02X off it "
                     "(%s): a function key bound by the capture works with this key\n",
                     fn_windows, fn_sdl, in::KeyName(fn_windows).c_str());
         Check(w == d, "the two captures store one number", w.number, d.number);
         Check(byte == k.dik, "the key byte is DirectInput's number", byte, k.dik);
-        Check(byte != w.number, "D427: the game button's byte is not the stored number", byte, w.number);
+        Check(byte == w.number, "D427: the game button's byte is the stored number", byte, w.number);
         Check(fn_windows == w.number && fn_sdl == w.number, "a function key's message reads as the stored number",
               fn_windows, fn_sdl);
     }

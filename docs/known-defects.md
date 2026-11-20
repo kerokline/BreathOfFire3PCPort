@@ -11415,7 +11415,7 @@ pass that draws presents the waiting frame when `Gpu_PutDispEnv` did not.
 The same run: none of 1,927 walks drawn without a clear, where 172 of 1,921
 were.
 
-## D427 — The launcher's key capture stores Pause as NumLock's number and NumLock as Pause's (ours, the launcher; read 2026-11-18; open)
+## D427 — The launcher's key capture stores Pause as NumLock's number and NumLock as Pause's (ours, the launcher; read 2026-11-18; fixed 2026-11-20)
 
 **Seen:** not seen in play. Read on 2026-11-18 by the Linux round's group R5
 ([`linux-round.md`](linux-round.md), "Wave 2 as run"), while it made the
@@ -11440,9 +11440,16 @@ binding made on that page works with the key that was pressed.
 **Whose:** ours, the launcher's capture (DIV-0050's pages). It predates the
 Linux round.
 
-**Status:** open. Proposed: the capture maps 0x45 to 0xC5 and 0xC5 to 0x45
-before it stores; `tools/key_host`'s `kCaptureDiffers` lists the pair. A
-fix must say what happens to an ini that already holds one of the two.
+**Status:** fixed 2026-11-20 (the owner: "fix both"; DIV-0240's amendment
+of that day). The capture stores DirectInput's number for the pair, in the
+Win32 launcher and in the drawn one, and the function keys' reader
+(`FnKeyOfMessage`) crosses the pair the same way (`FnKeyOfScan`,
+`input/function_keys.h`), so a game button and a function key bound to
+Pause are both worked by Pause. An ini made before: a `key.` line keeps its
+meaning (its name was always the key the game read); a `fkey.` line that
+names Pause or NumLock was made with the other key and now takes the key it
+names. `tools/key_host`'s two tests hold it; `kCaptureDiffers` lists
+Ctrl+Pause alone. Not done: the two keys pressed on a keyboard.
 
 ## D428 — The save editor did not see a running game on SDL's window (ours, the launcher and the window; read 2026-11-18; fixed)
 

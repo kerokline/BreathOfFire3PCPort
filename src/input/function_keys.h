@@ -80,12 +80,23 @@ std::string FnFormat(const FnBindings& b, const char* sep);
 // -> that key's number; "none" -> -1; anything else -> -2.
 int FnRubyKey(const std::string& lower);
 
-// A key message's key number, as the launcher's capture would store the key:
+// A key's stored number from what a Windows key message carries for it: the
+// scan code with the extended flag as bit 7. That is DirectInput's number of
+// the key (key_sdl.h's numbering, which the game's key bytes use) for every
+// key but one pair, both of scan code 0x45: Windows sends Pause as 0x45 plain
+// and NumLock as 0x45 extended, where DirectInput numbers Pause 0xC5 and
+// NumLock 0x45. This crosses the pair, so a stored number is DirectInput's
+// for every key (D427, fixed 2026-11-20: until then the launcher's capture
+// stored the pair as Windows sends it, and a game button bound to Pause was
+// worked by NumLock). The launcher's capture and FnKeyOfMessage both use it.
+int FnKeyOfScan(int scan_and_extended);
+
+// A key message's key number, as the launcher's capture stores the key:
 // `vk` and `lparam` as a WM_KEYDOWN carries them. F1..F12 by their virtual-key
 // numbers alone (0x70..0x7B: before this table the game compared nothing
 // else, and an input recipe's key carries no scan code); any other key by the
-// scan code in bits 16..23 and the extended flag in bit 24 (scan | 0x80), as
-// the capture's WH_KEYBOARD hook reads the same lParam. -1 when there is no
+// scan code in bits 16..23 and the extended flag in bit 24 (scan | 0x80)
+// through FnKeyOfScan, as the capture's WH_KEYBOARD hook reads the same lParam. -1 when there is no
 // scan code (a recipe's key that is not an F key), or when the scan code is
 // an F key's but the virtual key is not (a key some layout or tool remaps).
 int FnKeyOfMessage(unsigned vk, std::int32_t lparam);
@@ -95,8 +106,8 @@ int FnKeyOfMessage(unsigned vk, std::int32_t lparam);
 // extended flag - with the one pair DirectInput numbers otherwise, both of the
 // key 0x45: NumLock (DIK 0x45) comes as 0x45 extended and Pause (DIK 0xC5) as
 // 0x45 plain. For the SDL window off Windows, so its key messages read as
-// Windows' do (FnKeyOfMessage gives Pause 0x45 and NumLock 0xC5 there, as the
-// capture stores them). 0 for 0 or a number above 0xFF.
+// Windows' do (FnKeyOfMessage then gives Pause 0xC5 and NumLock 0x45, the
+// numbers the capture stores). 0 for 0 or a number above 0xFF.
 std::int32_t FnMessageBitsOfDik(int dik);
 
 // The action `key` starts: the first in kFnOrder that holds it, or -1 (none,

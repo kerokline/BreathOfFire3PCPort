@@ -1271,7 +1271,9 @@ LRESULT CALLBACK CaptureKeyHook(int code, WPARAM wp, LPARAM lp) {
         }
         if (scan != 0) {
             g_capture->kind = Captured::kKey;
-            g_capture->value = scan | (extended ? 0x80 : 0);
+            // D427: the stored number is DirectInput's, Pause and NumLock crossed from
+            // how Windows sends them (input/function_keys.h FnKeyOfScan).
+            g_capture->value = input::FnKeyOfScan(scan | (extended ? 0x80 : 0));
             EndDialog(g_capture->dlg, 1);
             return 1;
         }

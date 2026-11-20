@@ -50,6 +50,11 @@ int DirectInputFromCapture(int c) {
     return c;
 }
 
+// What the launcher's capture stores for c: DirectInput's number (the capture
+// crosses Pause and NumLock from how Windows sends them, input/function_keys.h
+// FnKeyOfScan; D427, fixed 2026-11-20).
+int CaptureStores(int c) { return DirectInputFromCapture(c); }
+
 // The keys whose number in the game (DirectInput's, and now SDL's through the
 // table) is not what the launcher's capture stores for the same key.
 struct Differs {
@@ -58,8 +63,6 @@ struct Differs {
     const char* key;
 };
 constexpr Differs kCaptureDiffers[] = {
-    {0x45, 0xC5, "Pause: the capture stores 0x45, which the game reads as NumLock"},
-    {0xC5, 0x45, "NumLock: the capture stores 0xC5, which the game reads as Pause"},
     {0xC6, 0xC5, "Ctrl+Pause (Break, E0 46): SDL reports it as Pause; DirectInput gave 0xC6"},
 };
 
@@ -83,7 +86,7 @@ void TestAgainstSdlWindows() {
         if (c != 0xC6) Check(ours == di, "ours is not DirectInput's number", c, ours);
         const Differs* d = CaptureDiffers(c);
         if (d) Check(ours == d->ours, "a listed capture difference is not as listed", c, ours);
-        else Check(ours == c, "ours is not the capture's number and the key is not listed", c, ours);
+        else Check(ours == CaptureStores(c), "ours is not the capture's number and the key is not listed", c, ours);
     }
     std::printf("SDL's Windows table: %d codes with a scancode (Pause at 0xC6), each with DirectInput's number\n", known);
     for (const Differs& d : kCaptureDiffers)

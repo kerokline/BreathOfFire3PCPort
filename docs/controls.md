@@ -466,9 +466,11 @@ Capcom's text and its translations (DIV-0038), left as they are.
   every other key by the scan code and extended flag of the lParam - what the
   capture's keyboard hook reads from the same lParam. Off Windows the SDL
   window builds those lParam bits from `key_sdl.h`'s number
-  (`FnMessageBitsOfDik`), so a key reads the same there. One pair reads
-  as the capture stores it, not as DirectInput numbers it: Pause is 0x45 and
-  NumLock 0xC5 (the capture's swap, R5's note; not changed here).
+  (`FnMessageBitsOfDik`), so a key reads the same there. Windows sends one
+  pair the other way round from DirectInput's numbers (Pause as 0x45 plain,
+  NumLock as 0x45 extended): the capture and this reader cross it through
+  `FnKeyOfScan`, so Pause is 0xC5 and NumLock 0x45 everywhere (D427, fixed
+  2026-11-20; until then the pair was stored as Windows sends it).
 - **Double bindings are allowed.** A key that is also a game button's key
   does both when pressed: the action through `WinGame_Key`, the button
   through the key bytes. Two actions on one key: the first in the old order

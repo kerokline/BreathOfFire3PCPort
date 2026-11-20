@@ -120,7 +120,7 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      --game <game folder> --ini <a copy of a bof3x.ini> --out <dir>`, 64 cases equal (it shows the Win32 window for a
      moment in each case and never sends Play). A page is checked with no screen by `build/bof3x-launcher-ui.exe --check
      --ini IN --save OUT --script "open settings; set wide=1; press Back; press Exit"`. Next there: the owner's eye on
-     the pages, a hand on the window, a real key and pad on the capture, and D427's choice (section 11); then P4
+     the pages, a hand on the window, a real key and pad on the capture (Pause and NumLock after D427's fix); then P4
      (Sources and Mods) and P5 (the Jukebox and the save editor) as groups side by side, each page one `page_*.cpp` over `src/launcher/ui/pages.h`, with its rows added
      to `ui_compare.py`. Two rules the gates taught: no widget call named as an engine accessor is (`At`), and a colour
      as red, green and blue, never one hexadecimal number. An unattended run of it without `--check` that the start can

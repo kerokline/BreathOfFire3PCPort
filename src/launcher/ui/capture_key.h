@@ -3,10 +3,10 @@
 // It is config_dialog.cpp's CaptureKeyHook, with SDL's scancode in place of
 // the keyboard hook's scan code and extended flag:
 //
-//   the key's number is its DirectInput number (input/key_sdl.h), but Pause
-//   and NumLock: the Win32 capture stores Pause as 0x45 and NumLock as 0xC5,
-//   the other way round from DirectInput (docs/known-defects.md D427, open),
-//   and this capture stores what the Win32 one stores until the owner decides;
+//   the key's number is its DirectInput number (input/key_sdl.h), Pause and
+//   NumLock too: the Win32 capture crosses the pair from how Windows sends
+//   them (input/function_keys.h FnKeyOfScan; docs/known-defects.md D427,
+//   fixed 2026-11-20), so both captures store DirectInput's numbers;
 //   Escape cancels; a Function keys cell refuses F10 and either Alt, which
 //   the game's window never gives to its key handler (WM_SYSKEYDOWN).
 //
@@ -26,9 +26,5 @@ enum class CaptureTake {
 
 // `function_keys`: a Function keys cell asked. `number` is set for kKey only.
 CaptureTake CaptureTakeKey(int scancode, bool function_keys, int* number);
-
-// The number the Win32 capture stores for a key DirectInput numbers `dik`:
-// `dik`, with Pause (0xC5) and NumLock (0x45) crossed (D427).
-int CaptureNumberOfDik(int dik);
 
 }  // namespace bof3x::ui

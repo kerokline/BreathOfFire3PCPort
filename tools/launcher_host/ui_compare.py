@@ -26,7 +26,10 @@ then Back and Exit - which saves the settings and starts nothing - and compares 
 
 The method of the Win32 side is dialog_test.py's (find_item, the WM_GETTEXT read, the windows of
 one PID), copied here rather than imported: importing dialog_test.py makes a temporary folder at
-import time. Needs a desktop session. Reads the install (--home, --game) and never writes there:
+import time. Needs a desktop session, and it wants the machine left alone while it runs: the Win32
+window shows and can take a person's click or key (seen 2026-11-20, twice in 64 cases with the
+owner at the machine: a box the case did not name was toggled). A case that differs is run again
+before it is believed: a real difference repeats. Reads the install (--home, --game) and never writes there:
 it writes only the launcher copy's bof3x.ini (removed at the end) and --out.
 """
 import sys
@@ -59,6 +62,7 @@ u.GetDlgCtrlID.argtypes = [W.HWND]
 
 WM_SETTEXT, WM_GETTEXT, WM_COMMAND, WM_HSCROLL, WM_CLOSE = 0x000C, 0x000D, 0x0111, 0x0114, 0x0010
 BM_GETCHECK, BM_CLICK, CB_SETCURSEL, CB_GETCURSEL, CB_GETCOUNT = 0xF0, 0xF5, 0x14E, 0x147, 0x146
+BM_SETCHECK = 0xF1
 TBM_GETPOS, TBM_SETPOS, TBM_GETRANGEMAX = 0x400, 0x405, 0x402
 BN_CLICKED, CBN_SELCHANGE, SB_ENDSCROLL = 0, 1, 8
 GWL_STYLE, WS_VISIBLE, BS_TYPEMASK = -16, 0x10000000, 0xF
@@ -405,7 +409,14 @@ class Win32Run:
             self.command(h, CBN_SELCHANGE)
         elif kind == "Button":
             if bool(u.SendMessageW(h, BM_GETCHECK, 0, 0)) != bool(value):
-                u.SendMessageW(h, BM_CLICK, 0, 0)   # an auto check box: toggled, BN_CLICKED sent
+                style = u.GetWindowLongW(h, GWL_STYLE) & BS_TYPEMASK
+                if style in (BS_CHECKBOX, BS_AUTOCHECKBOX):
+                    # Set and told, not clicked: BM_CLICK plays a mouse press, which the mouse of a
+                    # person at the machine can disturb (seen 2026-11-20: another box toggled).
+                    u.SendMessageW(h, BM_SETCHECK, 1 if value else 0, 0)
+                    self.command(h, BN_CLICKED)
+                else:
+                    u.SendMessageW(h, BM_CLICK, 0, 0)   # a radio button: pushed, its group's others let go
         elif kind == "Edit":
             b = ctypes.create_unicode_buffer(value)
             u.SendMessageW(h, WM_SETTEXT, 0, ctypes.cast(b, ctypes.c_void_p).value)   # sends EN_CHANGE

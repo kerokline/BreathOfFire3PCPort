@@ -13,9 +13,10 @@ section 11; the same local branch as the two paragraphs below).** The three Cont
 from SDL's key event through `input/key_sdl.h`, the pad shared with Dear ImGui's navigation. A host test
 (`tools/key_host/capture_tests.cpp`) walks every code a key can send: the 159 keys SDL knows store the same number in both
 launchers; Ctrl+Pause is the one key that differs (the Win32 capture stores its own number, SDL calls it Pause).
-`ui_compare.py` is 64 cases, 64 equal. **D427 is carried, not decided:** the drawn capture stores Pause and NumLock
-crossed as the Win32 one does, so a game button bound to Pause is worked by NumLock, and a function key bound to Pause
-works with Pause; the choice is the owner's. **Owed:** a real key and a real pad on the capture; stages P4 to P6.
+`ui_compare.py` is 64 cases, 64 equal. **D427 is fixed** (the owner's call that day; DIV-0240 amended): a stored key
+number is DirectInput's for every key, in both launchers' captures and in the function keys' reader, so a game button
+and a function key bound to Pause are both worked by Pause. **Owed:** a real key and a real pad on the capture, Pause
+and NumLock pressed on a keyboard; stages P4 to P6.
 
 **The drawn launcher's settings pages, 2026-11-20 (stage P2 of [`launcher-portable.md`](launcher-portable.md), its
 section 10; the same local branch as the paragraph below).** Every settings page is written from the Win32 page's fill

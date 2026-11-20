@@ -29,8 +29,8 @@
 // The capture is shown in place of the tabs' page (frame.cpp), as the Win32
 // launcher shows a window of its own over them. Its keys come from ui.h's
 // capture (CaptureKey: SDL's scancode, taken before the widgets' navigation
-// sees it) and are made a cell's number by capture_key.h, which keeps the
-// Win32 capture's numbers (D427); its pad input comes from CapturePad
+// sees it) and are made a cell's number by capture_key.h, which gives
+// DirectInput's numbers, as the Win32 capture (D427, fixed); its pad input comes from CapturePad
 // (input/pad_sdl.cpp, as the Win32 capture reads it).
 #include "launcher/ui/pages.h"
 
