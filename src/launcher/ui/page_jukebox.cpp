@@ -96,7 +96,7 @@ int SongNumber(const wchar_t* name, bool* once) {
     // lstrcmpiW(rest, L".DAT"): ASCII case not counted
     const wchar_t* dat = L".DAT";
     for (; *rest && *dat; ++rest, ++dat)
-        if (std::towupper(*rest) != *dat) return -1;
+        if ((*rest >= L'a' && *rest <= L'z' ? *rest - L'a' + L'A' : *rest) != *dat) return -1;
     if (*rest || *dat) return -1;
     return (name[0] - L'0') * 100 + (name[1] - L'0') * 10 + (name[2] - L'0');
 }
