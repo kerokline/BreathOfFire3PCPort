@@ -114,6 +114,8 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      nothing on Linux reads `bof3x.ini`, the seam starts no process, the movie's picture is a `Fatal` off Windows, LB8 did
      not run, and no Windows 64-bit state-hash reference is recorded. **A launcher for both systems** is estimated in
      [`launcher-portable.md`](launcher-portable.md) (IDEAS I69); its stage P0 is the round's group C7.
+   - **`BOF3.exe` out of the player's run is staged, not launched (2026-11-19):** [`exe-retire-round.md`](exe-retire-round.md), IDEAS
+     I70; seven groups, five calls for the owner; proposed between the Linux round's wave A and wave B.
    - **The Linux round's next units** are frost's, on his fork ([`linux-round.md`](linux-round.md) 4 and 6; "Waiting on
      someone else"). Here: the renderer's remainder ([`platform-layers-plan.md`](platform-layers-plan.md) 2.2) and the
      second backend (IDEAS I63) gate tier 2, and the API is the owner's call 1 of `linux-round.md` 6. Tier 1's rows 5, 7
