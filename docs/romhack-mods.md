@@ -374,3 +374,69 @@ original's keeps 496: one slot the hack changed falls back to the PC's own
 text on this install kind. Which one is not looked up. The enemy tables were
 not built for this install kind here; they are base chunks from the disc
 either way.
+
+## 9. The readme's claims against the 1.4 patch (2026-11-21)
+
+**Status:** MEASURED 2026-11-21, the US 1.1 track against the 1.4-patched
+track (`D:\bof3x-runs\us10\v11`, `D:\bof3x-runs\de14\out\de14_track1.bin`).
+Scripts and their output stayed in the session's scratch folder: they print
+game bytes. Counts, names, areas and addresses only here.
+
+**Method.** Every catalogued table read from both discs
+(`tools/tables.py dump --disc`) and compared field by field, with the battle
+overlay's tables read 8 bytes on (BATTLE 15 grew by 8, section 2.1). The
+enemy sections (`0x800E4000`) compared by field: a 72-byte head of eight
+9-byte formations, then eight `0x88`-byte records (`records.h` `EnemyData`,
+less the port's four name bytes). Each edit run of BATTLE 3 and 15, GAME 0,
+COMMU 00..05, SISYOU and SHOP tested for "the same instruction with an
+address 8 (or the section's own shift) on"; what is left is listed below.
+The owner's play on `game\` (the mod's layers and behaviours on) where noted.
+
+| Readme line | In the patch | The mod has it as |
+|---|---|---|
+| Faster levels, stats spread | yes: 620 `exp_table` rows (EXP and gains), three starting records | cells |
+| Spell damage | yes: 38 `power` cells; and 62 `ap_cost` cells the readme does not name | cells |
+| Breath tiers | yes: eight breath abilities change `ability_effect_index` slot | cells |
+| Stat downs on bosses | **partly**: one resistance class byte lowered on six enemies, the status byte cleared on two; no rate table (`status_resist`, `psi_affinity`, `status_resist_20` equal at the shift) and no code. Whether the six are bosses was not looked up | enemy tables |
+| No battles on one master's map | yes, and without a condition: area 3's eight formations are emptied, area 12's seven of eight | enemy tables |
+| No battles in two more places | **not found**: no other area's formations are emptied; `encounter_areas`, `encounter_slot_chance`, `event_battles` equal | - |
+| A warp for one member | yes ([`town-warp.md`](town-warp.md) 7). 1.4 teaches it when character record 4 holds ability `0x40`, not at the level the readme gives. Its help message is unchanged on the patched disc: the ability is the one an item uses, and it shows that item's line (the owner saw this in play) | `TownWarp` |
+| Ally everywhere | yes; 1.4 keeps the refusal in five areas | `AllyAnywhere` |
+| Two enemies met more often, and together | yes: area 146's three formation weights made equal, and a fourth formation with both | enemy tables |
+| Two masters easier | yes: area 68's count (code and its text), area 91's item test | `EasierMasters` |
+| Masters from the camp menu | yes | `CampMasters` |
+| Three swords hit twice | yes: the three `attack` cells lowered; BATTLE 3's two jumps into a cave turn their plain attack into ability `0x77`, cost 0. **Confirmed in play (the owner):** every attack with one of them runs as that skill, under its name. The second hit is that skill's own, so DIV-0216's open point (c), where the second hit comes from, is closed. The skill's slot change applies to its ordinary users too | cells, `DoubleHitSwords` |
+| Faerie village faster | **not in the patch as a village change**. The village ages by `Game_BattleCount` against its stamps (`commu_sim.cpp`; the owner: a growth step takes ten to twenty battles). The count's one writer is the same bytes on both discs (US `0x801973E0`, the battle case of the field mode: the address `0x8014502C`, plus one). The simulation's overlay, COMMU00 section 0 (20 references to that address), has two edit runs in all, a pad byte put in and one taken out after a table; COMMU04 is the same file; COMMU01 and 02 have pad bytes, COMMU05 the plural word (DIV-0220). None of the hack's new code in GAME addresses the village's words. So neither fewer battles a step nor more counted a battle. A guess, not measured: the line may be what the author meant by the play clock's change (`ShortSkillLockout`, DIV-0221), the one code change no readme line names; on this game it shortens two skill lockouts and the village does not read those countdowns | - |
+| A level skill for one member | yes: record 2, one row | cells |
+| Smoke at level 12, 128 steps | yes: record 0's row, the ability renamed. A member past that level gets it by `LevelSkillCatchUp` (Select on the abilities top menu), not at once | cells, `SmokeSkill` |
+| Drop rates | yes: 17 drop-row bytes on enemies of the late areas | enemy tables |
+| A town shop's stock | **not in the patch**: `shop_records` 0..39 equal; the item tables equal but one name; the four ingredient ids nowhere together in the new bytes, and in no new instruction; the only changed shop function is `CampMasters`'. Every record holds at most 11 pairs, and 14 shops are full. **Seen in play (the owner):** the town's item seller lists 11 items, none new; the weapon seller 9 | - |
+| Difficulty after the volcano | yes: stats, HP and EXP in about 45 areas from area 35 on | enemy tables |
+| Examine always learns | **not found**: the roll (`0x800A7544`) has no edit, the edits near it are relinks, the odds table (PC `0x64F0FC`) and every `skill_class` are equal. DIV-0226 is our own switch and needs no mod | - |
+
+Twelve lines whole, two in part, four not found. "Not found" is an absence
+in the bytes compared; a route through code that was not read stays possible.
+
+**Not in the readme.** Nine item and ability names changed; one shield's
+`equip_mask` opened to every member; one spear's element removed and its
+price cut; one weapon's attack raised; one member's healing skills moved to
+later levels and two members' top spells moved or removed; the fishing
+spot's length lines reworded with larger numbers (area 30's text). The
+owner's reading (2026-11-21): the author took in the *Better Descriptions*
+hack without naming it. What supports it: with both mods on, all 13 table
+bytes of `mod-descriptions` equal what `mod-definitive` had laid (the
+start's `0 of them differ from what was there`), and its three `help_msg`
+cells are among this patch's; all 47 files of its text layer are files this
+patch's text layer also changes. 44 of those 47 files are not the same
+bytes, so the texts were not compared message by message. The renamed item
+is the name the other hack's second patch file is called after, which puts
+in doubt `data/mods/known.toml`'s reading of that file as "for revision
+1.0": both US revisions hold the release's name. Not settled.
+
+**The description's two byte counts** ([`mods.md`](mods.md) 11.5) are not
+missing changes. The 149 bytes are the author's code and tables in the empty
+shop records, which `CampMasters` and `TownWarp` stand in for (D415). The 43
+are padding ([`disc-patch-round.md`](disc-patch-round.md) 5e); they are not
+the US 1.0 disc's bytes either (717 small same-length runs of the overlays:
+1.0 equals 1.1 on every one). One cell the mod does carry is of the same
+kind: `event_op_lengths` record 15, a pad byte in a slot no reader takes.

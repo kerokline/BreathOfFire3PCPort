@@ -456,7 +456,8 @@ mod's `missing`.
 
 | `report.toml` `[not_carried]` key | What | The Mods tab's `lacks` part |
 |---|---|---|
-| `zero_record_bytes`, `zero_records` | bytes the patch writes into records of a table file that the install's own table leaves **all zero**, where the filled record is outside the table's field bounds | `N bytes that the patch writes into M empty records of a table (they are not table numbers)` |
+| `table_bytes` | bytes the patch changes outside every table that is a file, where the install's image is not of a class a layer may write (a PC-built image keeps its own bytes there). For the Definitive Edition these are padding ([`disc-patch-round.md`](disc-patch-round.md) 5e) | `N bytes outside the tables of the game, which this install keeps as they are` |
+| `zero_record_bytes`, `zero_records` | bytes the patch writes into records of a table file that the install's own table leaves **all zero**, where the filled record is outside the table's field bounds | `N bytes of the patch's own program or tables in M empty records of a table (they do not change the numbers of the game)` |
 | `skipped_bytes` | bytes of the records `skip` names | `N bytes of table records that the mod skips` |
 | `outside_files`, `outside_bytes` | EMIs the patched disc holds in sectors its directory does not list (and where the original does not hold the same bytes) | `N files that the disc's directory does not list` |
 | `outside_sectors` | such sectors that are no EMI | `N other sectors that the disc's directory does not list` |
