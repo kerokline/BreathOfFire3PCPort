@@ -24,7 +24,8 @@ void Crash_Start(void* dll_module);
 // then passed on. `what` names it as the system does: "exception 0x80000003"
 // on Windows (a vectored handler, last in the chain), "signal 5 (SIGTRAP,
 // code 1)" on POSIX (a SIGTRAP handler; passed on, the process ends as
-// SIGTRAP's default disposition ends it). False if it cannot be armed.
+// SIGTRAP's default disposition ends it, or after the exe host's step 23 as
+// Fatal ends it, below). False if it cannot be armed.
 using BreakFn = void (*)(const char* what, std::uintptr_t ip, std::uintptr_t sp, std::uint32_t flags);
 bool Crash_WatchBreaks(BreakFn on_break);
 
