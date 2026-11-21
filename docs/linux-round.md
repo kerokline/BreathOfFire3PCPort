@@ -1924,7 +1924,9 @@ made that way. No headless X server was needed (none is installed:
    unset ("DXVK_WSI_DRIVER environment variable unset", then
    `D3D11CreateDeviceAndSwapChain` 0x80004005 - what B2b met too). The
    renderer sets it to `SDL3` before the device when the player has not set
-   it (`render_d3d11.cpp` `MakeDevice`, Linux only).
+   it (`render_d3d11.cpp` `MakeDevice`, Linux only): the game sets it, not
+   the player and not the launcher, since the game alone knows its window is
+   SDL3's.
 3. **DXVK's logs.** DXVK writes `bof3x_d3d11.log` and `bof3x_dxgi.log` into
    the working folder, which is the game's: one run left
    `<main checkout>/bof3/bof3x_d3d11.log` (09:33; not removed by this unit,
@@ -1950,6 +1952,15 @@ made that way. No headless X server was needed (none is installed:
    the Breath of Fire III disc.", `Game_WinMain returned 1`) - measured. So
    what the start needs on Linux is B2c's case fold for `CAPCOM.AVI`;
    nothing in the disc probe changes, on either system.
+6. **The shim's surfaces above 4 GB** (met by B2c in a battle,
+   `quick_combat` about frame 406: `PutObject ... lies above 4 GB`, on the
+   base too). The DirectDraw shim took a surface and its pixels from the C
+   runtime's `calloc`, which on Linux maps large and late blocks above 4 GB;
+   the game keeps both in 32-bit words. Off Windows they now come from
+   `Crt_calloc` / `Crt_free`, whose blocks are R10's arena below 4 GB
+   (`render_shim.cpp` `LowAlloc` / `LowFree`); Windows keeps its `calloc`.
+   The frame's own buffers (vertices, commands, the snapshot arena) stay on
+   the C runtime's heap: no game word holds them.
 
 Also fixed on the way: `Game_WinMain(0x0x400000, ...)` in the step-24 log
 line (`%p` prints its own `0x` with glibc); an `HRESULT` printed as
