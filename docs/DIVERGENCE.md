@@ -16214,7 +16214,10 @@ designed in rather than bolted on.
   holding one of the swords pays nothing. (c) Where the second hit comes from
   is in none of this code: it is data the mod carries (ability 0x77's effect
   cell, `ability_effect_index`, becomes slot 39) or the row-0 animation's
-  script. Unverified until played.
+  script. **Played (the owner, 2026-11-21, `game\`, the mod on):** every
+  attack with one of the three swords runs as ability 0x77, under that
+  skill's name, and hits twice: the second hit is the skill's own
+  ([`romhack-mods.md`](romhack-mods.md) 9).
 - **Rationale:** the romhack mod's code change (issue 216, the disc-patch
   round): a mod's data rides on layers, its code changes become behaviours
   of ours, off unless the mod's `needs` asks ([`mods.md`](mods.md) 11).

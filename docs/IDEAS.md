@@ -112,6 +112,8 @@ rule ([`README.md`](README.md)) here too.
 | I68 | The music staging buffer against the tick: its refill is by wall time, so its pages differ run to run in the state hash, and more often with an in-between present in the wait loop | audio / tools | built (the tool) | 2026-11-14: `statehash.py` sets the buffer's 17 whole pages aside as timing pages; the WAV A/B and the owner's ear still open |
 | I69 | One launcher for Windows and Linux from one source: the settings model off Windows first (a launcher with no window for the native Linux build), then the windows drawn on SDL3 | platform / launcher | MEDIUM | staged 2026-11-19 ([`launcher-portable.md`](launcher-portable.md)); stage P0 built as group C7 of the Linux round; stages P1 (the frame), P2 (the settings pages), P3 (Controls and the bind capture) and P4 (Sources and Mods) of `bof3x-launcher-ui`, Dear ImGui on SDL3, built 2026-11-20 on `launcher/p1-frame` (its sections 9 to 12; 66 comparison cases against the Win32 dialog equal; D427 fixed with it; an install made through it by script on Windows and in the WSL), and P5 (the Jukebox, its samples equal to the Win32 player's, and the save editor, its files equal to the Win32 editor's; section 13), on `launcher/drawn` (pull request 267); P6, the cutover, built 2026-11-20 on the local branch `launcher/p6-cutover` (section 14; the owner's call 3: "no need to keep both"): the drawn launcher is `bof3x-launcher` on Windows and Linux, the Win32 dialogs are gone, the release carries the notices; owed: a hand on the window, the release on a clean machine, Windows Defender's verdict |
 | I70 | `BOF3.exe` out of the player's run: after an install is made, the launcher, the engine and the save editor open it no more; it stays a source for the importer and the host of the developer's hosted build | platform / install | HIGH | built 2026-11-19 on the local branch `exe-retire/round`, not merged ([`exe-retire-round.md`](exe-retire-round.md) "As run"; DIV-0241, DIV-0242); the routes and X7 not run |
+| I71 | A Cheats slider for the faerie village's speed: 0 to 10 times the battles the village counts between its steps, the battle count itself left alone | game behaviour | HIGH | open 2026-11-21 |
+| I72 | The Parch sellers stock the Shisu minigame's ingredients when the no-fail minigames box is on | game behaviour | MEDIUM | open 2026-11-21 |
 
 ---
 
@@ -2712,3 +2714,53 @@ The staging is [`exe-retire-round.md`](exe-retire-round.md): fifteen places read
 
 ### Outcome
 _(2026-11-19) built on the local branch `exe-retire/round`, not merged to `main`, not pushed: X1 to X6 ([`exe-retire-round.md`](exe-retire-round.md) "As run"; DIV-0241, DIV-0242, DIV-0212, DIV-0100 and DIV-0102 amended, D432). A player's start reads no `BOF3.exe`; the save editor's entrance list and party table on a disc-built install came with it. Not run: the ten state-hash routes, X7 (the proof that nothing opens the file), the Sources page's window, the save editor's window. Not played._
+
+## I71 — Faerie development speed: a Cheats slider
+
+**Ask (2026-11-21, the owner):** "a slider to add to the cheats area - 'Fairy Development Speed' 0-10, where the number is a multiplier against the combat count change (0 would be 'no development', 10 would be 10 times faster)"; written up "for later".
+**Kind:** game behaviour (a cheat of ours, for any install). **Feasibility:** HIGH: every reader is in source of ours.   **Gated on:** nobody.
+
+Where it came from: the Definitive Edition's readme says the village progresses much faster, and the 1.4 patch holds no such change ([`romhack-mods.md`](romhack-mods.md) 9). This is our own switch, as DIV-0226 is for that readme's Examine line; it needs no mod.
+
+### What already exists
+- The village's clock is `Game_BattleCount` (`0x904134`, plus one a battle, one writer: the battle case of `GameMode_Field`, `src/game/core/transition.cpp`). A village step asks for the battles since a saved stamp: `Game_BattleCount - stamp` against a threshold, or divided by one. About 25 such reads, all in `src/game/community/` (`commu_sim.cpp` 18, `commu_tail.cpp` 4, `commu_board.cpp` 3, counted by `grep` 2026-11-21).
+- The Cheats page and its ini keys ([`cheats.md`](cheats.md)), `cheat.exp` among them as a number a player sets.
+- The count's other readers, which this must not move: effect kind `0x65` (a multiple of 5), `FieldTrigger02` (the count shown in a message), and `title.cpp`'s item stamp. The master's test in area 50 reads its own byte (`0x9045FB`, to 30, cleared by a rest), not this count.
+
+### What is missing
+- One helper for "battles since a stamp" that every village read goes through, giving the difference times the slider. 1 is the release and the default; 0 gives 0 always, so nothing develops; 10 makes a step of 20 battles one of 2. Not a change to `Game_BattleCount`, and nothing new in the save: the stamps stay in real battles.
+- Two places that are not a difference from a stamp. `Field_AfterBattleTally` (`src/game/field/field_6.cpp`) adds one a battle to `Rest4a_ClockA` toward a story flag's threshold (20, 40 or 60 less a bias, at least 5): it would add the slider's number. And `Rest4a_StampLevelLit` is pushed up by one a battle while a building has no resident, to hold its clock still: under a multiplier that must stay a full hold.
+- A choice to record in the ledger entry: a change of the slider in a game already under way rescales the wait in progress (15 battles held at 1 read as 150 at 10, so several steps can come at one visit).
+- The control ("Faerie development speed", 0 to 10), its ini key and environment name, the line in `cheats.md`, a `DIVERGENCE.md` entry (Extension, off by default at 1), and the community fuzz groups run with the slider at 1 (no difference) and at another value.
+
+### First concrete step
+Read each of the 25 sites and sort them: a plain difference, a quotient that then moves its stamp (the remainder must not be lost or counted twice), or one of the two counters above. The helper's form follows from the quotient sites.
+
+### Outcome
+_(2026-11-21) open; written up at the owner's word, nothing built._
+
+## I72 — The Shisu ingredients in Parch's shops, under the no-fail minigames box
+
+**Ask (2026-11-21, the owner):** "I think we also had an idea to update the parch shop as part of the 'no fail minigames' checkbox, so lets add that idea too." No earlier note of it was found in this file (searched for the town's and the minigame's names, 2026-11-21); this is its first record.
+**Kind:** game behaviour (a cheat of ours, for any install). **Feasibility:** MEDIUM: one unknown, which shop record each Parch seller reads.   **Gated on:** the owner's choice among the three forms below.
+
+Where it came from: the Definitive Edition's readme says a town's store sells most of the minigame's ingredients, and the 1.4 patch holds no such change ([`romhack-mods.md`](romhack-mods.md) 9; the owner saw none in play). The no-fail box (`cheat.no_fail`, DIV-0188, [`cheats.md`](cheats.md) 7) already gives the Shisu minigame its best prize; ingredients on sale in the town take the fetching out of it too.
+
+### What already exists
+- `Shop_Records` (`0x658930`, [`tables.toml`](../tables.toml) `shop_records`): 23 bytes a shop, a count and at most 11 (category, item) pairs; the shop number is the touched object's `+0x1C` (`ShopMode_Begin`, `src/game/shop/shop_mode.cpp`). Measured on the US disc 2026-11-21: 40 records stocked, 14 of them full, 10 all zero, and no record lists any of the four ingredients.
+- The four ingredients are consumables with ids of their own; three of them have a price of 0 in the item table (measured the same day). The values stay on the player's disc, not here (rule 1).
+- The owner's play (2026-11-21, area 130): the town's item seller lists 11 items, so it is full; its weapon seller lists 9.
+- `Cheats_MinigameNoFail()` and the box on the Cheats page.
+
+### What is missing
+- Which records the two sellers read (the object's `+0x1C` in area 130 and its neighbours; a `peek` at `0x929EC3` with a shop open settles it).
+- A form, the owner's to pick: (a) with the box on, the item seller's list is the ingredients in place of four of its own items; (b) the two free slots of the weapon seller take two, which is not "most"; (c) a list of our own built at `ShopMode_Begin` for that shop number, the record left alone - the only form that can hold the seller's 11 and four more, and it needs the shop screen checked for a list past 11 rows (not read).
+- A price for the three that cost 0, or the choice to sell them for nothing.
+- Whether a list of four item ids in our source is within the owner's rule on game data in code (ids, not Capcom's table values; a choice of ours, as a shop's stock would be).
+- A `DIVERGENCE.md` entry or DIV-0188 amended, and a line in `cheats.md`.
+
+### First concrete step
+The `peek` above with each Parch seller open, then the owner's pick of (a), (b) or (c).
+
+### Outcome
+_(2026-11-21) open; written up at the owner's word, nothing built._
