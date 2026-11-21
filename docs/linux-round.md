@@ -1881,6 +1881,117 @@ mapped where the system puts them.
 
 **Not run:** steps 21 to 25 (B2a's); a window; DXVK at run time.
 
+### B2a as run (2026-11-21, branch `linux/lcB-b2a`, from `3080284c`)
+
+Unit B2a: the picture and the movies. Steps 21 to 25 of
+`exe_host_posix.cpp` ran for the first time, the logo movie and the
+game's frames reached the window through DXVK-native on llvmpipe, and the
+game ran from the start to the attract demo (area 4) under SDL's
+`offscreen` driver. Game runs went through `./bof3x-launcher --game
+<main checkout>/bof3 --no-config` with `BOF3X_EXEFILE=1`, under the round's
+lock; the WSL's audio went to `SDL_AUDIO_DRIVER=dummy` after the first two
+runs (those two played through WSLg's "RDP Sink").
+
+**DXVK and the `offscreen` driver: a surface, yes.** SDL3's `offscreen`
+driver gives DXVK-native a Vulkan surface through `VK_EXT_headless_surface`
+(llvmpipe has it, `vulkaninfo`); the swap chain is made, presents, and the
+game runs without a window on the screen. Every frame comparison below was
+made that way. No headless X server was needed (none is installed:
+`Xvfb`, `weston` absent).
+
+**What the start needed, in the order met.**
+
+1. **The movie's picture** (`replacing-mci.md` section 9; the owner's call of
+   2026-11-19). Off Windows `fmv_play::native::Draw` was a `Fatal`. Now
+   `render::PresentMovie` (`render_d3d11.h`, Linux only) brings the
+   device and swap chain up on the game's SDL window at the first movie
+   frame - with the present shader, its two samplers and its blend state
+   only - and draws each frame: the client cleared black, the frame into
+   DIV-0035's rectangle, a whole multiple by the point sampler (pixel for
+   pixel), a fit by a mip chain and the linear sampler (an average, where
+   Windows' GDI uses HALFTONE). `InitD3d11` from `Display_Setup` then
+   keeps that device and swap chain (the window must be the same one,
+   else a `Fatal`), releases the movie's objects and makes the rest as on
+   Windows. **The start order on Windows is unchanged** (call 1 of wave
+   B): Windows draws its movies with GDI before `Display_Setup` as before;
+   the call site in `Game_WinMain` is the same on both systems, and the
+   renderer comes up before the movie on Linux because the movie's first
+   frame asks for it. **Which movie a Linux start plays:** `CAPCOM.AVI`
+   alone (`DIV-0202 the start plays CAPCOM.AVI alone: on`), 112 frames,
+   Cinepak, drawn by the renderer's device (`render: Direct3D 11 feature
+   level 0xB000 on the window 640 x 480, brought up for the movies`).
+2. **`DXVK_WSI_DRIVER`.** DXVK-native makes no DXGI factory while it is
+   unset ("DXVK_WSI_DRIVER environment variable unset", then
+   `D3D11CreateDeviceAndSwapChain` 0x80004005 - what B2b met too). The
+   renderer sets it to `SDL3` before the device when the player has not set
+   it (`render_d3d11.cpp` `MakeDevice`, Linux only).
+3. **DXVK's logs.** DXVK writes `bof3x_d3d11.log` and `bof3x_dxgi.log` into
+   the working folder, which is the game's: one run left
+   `<main checkout>/bof3/bof3x_d3d11.log` (09:33; not removed by this unit,
+   the folder is read only to it). The renderer now sets `DXVK_LOG_PATH` to
+   the program's folder when it is unset, so the player finds them beside
+   `bof3x` and `bof3x.log`.
+4. **A RECT's `LONG` in the render shim** (`render_shim.cpp`). The DirectDraw
+   shim's `Surface_Blt`, `Surface_BltFast`, `Surface_Lock`,
+   `Viewport_Clear` and their helpers read the game's RECTs as `long`,
+   which is 64 bits on Linux: every rectangle came apart, every Blt into a
+   texture was refused, and every texture stayed zero - the game drew its
+   lists (the frame hashes were there) onto a black picture. Now
+   `Coord = std::int32_t`. Found by `BOF3X_FRAMEHASH` against the Windows
+   64-bit run (the hashes differed; a texture dump showed 0 alpha, 0
+   colour); after the fix every frame hash matches. `width_census.py` had
+   counted these sites as `long` without telling a RECT from a `long`
+   result.
+5. **The disc check.** On `<main checkout>/bof3` (under `/mnt/c`, which folds
+   case) the probe's local test opens `CAPCOM.AVI` and the start goes on:
+   nothing else is needed. On the case-sensitive copy `~/bof3x-runs/lcB/bof3`
+   the local test fails (`capcom.avi`), every drive letter answers "no
+   root", and the start ends at the missing-disc message ("Please insert
+   the Breath of Fire III disc.", `Game_WinMain returned 1`) - measured. So
+   what the start needs on Linux is B2c's case fold for `CAPCOM.AVI`;
+   nothing in the disc probe changes, on either system.
+
+Also fixed on the way: `Game_WinMain(0x0x400000, ...)` in the step-24 log
+line (`%p` prints its own `0x` with glibc); an `HRESULT` printed as
+`0xFFFFFFFF80004005` (a negative 32-bit value widened to a 64-bit `long`;
+`render_d3d11.cpp`, `satpixie.cpp`).
+
+**The frames, measured.** The recipe: no save, no input, `wait 1500`, with
+14 shots added by `tools/recipe_shots.py --from 100 --every 100` (frames
+100 to 1400 of the boot, the title and the attract's first area), point
+filter, the window 640 x 480 (scale 2), `BOF3X_FRAMEHASH=1`. The Linux run
+under `offscreen`; the Windows 64-bit run of the same build (the mixed copy:
+the 32-bit `bof3x-launcher-dev.exe` beside the 64-bit `bof3x.exe` and
+`bof3x.dll`, `--host exe`).
+
+| Check | Result |
+|---|---|
+| The frame hashes (every walk of the lists, textures by content) | 1,182 ticks in both logs, **0 differ** |
+| Shots f00100, f00200, f00300, f01400 | identical, pixel for pixel |
+| Shots f00400 .. f01300 | differ by at most 2 in a channel: f00400 (a fade) 53,094 of 307,200 pixels, f00500 .. f01300 (the title's blended "PRESS START BUTTON") 1,980 to 2,292 pixels, all in that line. The draw lists are the same (the hashes); the difference is the two devices' blending arithmetic (llvmpipe against the Windows machine's GPU), not the game |
+| The logo movie, 640 x 480 window (k = 1), `offscreen` | 98 of the 112 frames drawn (the presenter draws the frame due; shot writing slows it), **98 identical** to `bof3x-fmvdump`'s decode |
+| The logo movie, 1280 x 960 window (k = 2), a WSLg X11 window (screen free that morning) | 71 drawn, **71 identical**, every 2 x 2 block the decoder's pixel |
+| The logo movie, 960 x 720, `BOF3X_SNAP=0` (a fit) | drawn by the mip chain and linear sampler, no fault; 4 frames drawn of 112 (the first fit frame on llvmpipe took about 7 s); not compared - the fit is not GDI's HALFTONE |
+
+The movie frames are taken by a developer's switch of this unit,
+`BOF3X_FMV_SHOT_DIR` (Linux only): each frame drawn, the whole client as
+presented, written as `AVI_<n>.bmp` before the present.
+
+**The window icon.** `ExeIcon_Frame` ran at `Frame_Counter` 1313 under
+`offscreen`: `SDL_SetWindowIcon failed: That operation is not supported`,
+logged, not fatal (the offscreen driver has no icon). In the WSLg X11
+window the game never reached that tick: the window never had the focus,
+so `App_Active` stayed 0 and the loop waited at frame 1 (seven minutes,
+then killed by its PID). That is the game's rule on both systems (the
+first activation starts the loop; DIV-0033 runs on only after it), not a
+Linux fault; it means a WSLg run needs the window focused once. The icon
+on a real Linux window is **not verified**.
+
+**Not done:** the icon on a window that has the focus; the movie's fit
+compared with anything; the `SDL_VIDEO_DRIVER=wayland` path (this SDL3
+build has no Wayland driver: "wayland not available"); a run on the
+case-sensitive copy past the disc check (B2c's).
+
 ## 5. What stands in for the launcher in tier 2
 
 The launcher is Win32 dialogs: `config_dialog.cpp` 1,861 lines, `config.cpp`
