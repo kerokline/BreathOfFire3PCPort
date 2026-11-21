@@ -641,163 +641,161 @@ site	src/hook/exe_host.cpp	628	call	thread	event	CreateEventW
 site	src/hook/exe_host.cpp	639	call	process	process	GetCurrentProcess
 site	src/hook/exe_host.cpp	639	call	process	process	TerminateProcess
 site	src/hook/exe_host.cpp	649	call	fault	filter	SetUnhandledExceptionFilter
-site	src/hook/exe_icon.cpp	23	include	umbrella	api	windows.h
-site	src/hook/exe_icon.cpp	25	include	process	header	objidl.h
-site	src/hook/exe_icon.cpp	26	include	process	header	wincodec.h
-site	src/hook/exe_icon.cpp	268	type	type_only	type	HICON
-site	src/hook/exe_icon.cpp	269	type	type_only	type	BITMAPV5HEADER
-site	src/hook/exe_icon.cpp	275	const	window	const	BI_BITFIELDS
-site	src/hook/exe_icon.cpp	281	call	window	gdi	GetDC
-site	src/hook/exe_icon.cpp	281	type	type_only	type	HDC
-site	src/hook/exe_icon.cpp	282	call	window	gdi	CreateDIBSection
-site	src/hook/exe_icon.cpp	282	const	window	const	DIB_RGB_COLORS
-site	src/hook/exe_icon.cpp	282	type	type_only	type	BITMAPINFO
-site	src/hook/exe_icon.cpp	282	type	type_only	type	HBITMAP
-site	src/hook/exe_icon.cpp	283	call	window	gdi	ReleaseDC
-site	src/hook/exe_icon.cpp	285	call	process	error	GetLastError
-site	src/hook/exe_icon.cpp	286	call	window	gdi	DeleteObject
-site	src/hook/exe_icon.cpp	298	call	window	gdi	CreateBitmap
-site	src/hook/exe_icon.cpp	298	type	type_only	type	HBITMAP
-site	src/hook/exe_icon.cpp	303	call	window	cursor	CreateIconIndirect
-site	src/hook/exe_icon.cpp	303	type	type_only	type	HICON
-site	src/hook/exe_icon.cpp	304	call	process	error	GetLastError
-site	src/hook/exe_icon.cpp	305	call	window	gdi	DeleteObject
-site	src/hook/exe_icon.cpp	306	call	window	gdi	DeleteObject
-site	src/hook/exe_icon.cpp	333	const	window	const	BI_RGB
-site	src/hook/exe_icon.cpp	357	type	type_only	type	IWICImagingFactory
-site	src/hook/exe_icon.cpp	360	call	process	com	CoInitializeEx
-site	src/hook/exe_icon.cpp	360	const	process	const	COINIT_MULTITHREADED
-site	src/hook/exe_icon.cpp	360	type	type_only	type	HRESULT
-site	src/hook/exe_icon.cpp	361	const	process	const	SUCCEEDED
-site	src/hook/exe_icon.cpp	362	const	process	const	FAILED
-site	src/hook/exe_icon.cpp	366	call	process	com	CoCreateInstance
-site	src/hook/exe_icon.cpp	366	const	process	const	CLSCTX_INPROC_SERVER
-site	src/hook/exe_icon.cpp	366	const	process	const	CLSID_WICImagingFactory
-site	src/hook/exe_icon.cpp	366	type	type_only	type	HRESULT
-site	src/hook/exe_icon.cpp	366	type	type_only	type	IWICImagingFactory
-site	src/hook/exe_icon.cpp	368	const	process	const	FAILED
-site	src/hook/exe_icon.cpp	376	call	process	com	CoUninitialize
-site	src/hook/exe_icon.cpp	378	type	type_only	type	HRESULT
-site	src/hook/exe_icon.cpp	394	type	type_only	type	IStream
-site	src/hook/exe_icon.cpp	398	call	process	com	CreateStreamOnHGlobal
-site	src/hook/exe_icon.cpp	398	type	type_only	type	HRESULT
-site	src/hook/exe_icon.cpp	400	const	input	const	GUID_ContainerFormatPng
-site	src/hook/exe_icon.cpp	400	const	process	const	SUCCEEDED
-site	src/hook/exe_icon.cpp	401	const	process	const	SUCCEEDED
-site	src/hook/exe_icon.cpp	401	const	process	const	WICBitmapEncoderNoCache
-site	src/hook/exe_icon.cpp	402	const	process	const	SUCCEEDED
-site	src/hook/exe_icon.cpp	403	const	process	const	SUCCEEDED
-site	src/hook/exe_icon.cpp	404	const	process	const	SUCCEEDED
-site	src/hook/exe_icon.cpp	405	const	process	const	GUID_WICPixelFormat32bppBGRA
-site	src/hook/exe_icon.cpp	405	const	process	const	WICPixelFormatGUID
-site	src/hook/exe_icon.cpp	406	const	process	const	SUCCEEDED
-site	src/hook/exe_icon.cpp	407	call	process	com	IsEqualGUID
-site	src/hook/exe_icon.cpp	407	const	process	const	E_FAIL
-site	src/hook/exe_icon.cpp	407	const	process	const	GUID_WICPixelFormat32bppBGRA
-site	src/hook/exe_icon.cpp	407	const	process	const	SUCCEEDED
-site	src/hook/exe_icon.cpp	408	const	process	const	SUCCEEDED
-site	src/hook/exe_icon.cpp	409	type	type_only	type	UINT
-site	src/hook/exe_icon.cpp	410	const	process	const	SUCCEEDED
-site	src/hook/exe_icon.cpp	411	const	process	const	SUCCEEDED
-site	src/hook/exe_icon.cpp	413	const	process	const	SUCCEEDED
-site	src/hook/exe_icon.cpp	414	type	type_only	type	HGLOBAL
-site	src/hook/exe_icon.cpp	415	call	process	com	GetHGlobalFromStream
-site	src/hook/exe_icon.cpp	415	const	process	const	SUCCEEDED
-site	src/hook/exe_icon.cpp	416	const	process	const	SUCCEEDED
-site	src/hook/exe_icon.cpp	417	call	memory	heap	GlobalLock
-site	src/hook/exe_icon.cpp	420	call	memory	heap	GlobalUnlock
-site	src/hook/exe_icon.cpp	422	const	process	const	E_FAIL
-site	src/hook/exe_icon.cpp	429	const	process	const	FAILED
-site	src/hook/exe_icon.cpp	430	const	process	const	SUCCEEDED
-site	src/hook/exe_icon.cpp	458	type	type_only	type	HMODULE
-site	src/hook/exe_icon.cpp	459	call	process	module	GetModuleHandleExW
-site	src/hook/exe_icon.cpp	460	type	type_only	type	LPCWSTR
-site	src/hook/exe_icon.cpp	461	const	file	const	MAX_PATH
-site	src/hook/exe_icon.cpp	462	call	process	module	GetModuleFileNameW
-site	src/hook/exe_icon.cpp	462	const	file	const	MAX_PATH
-site	src/hook/exe_icon.cpp	462	type	type_only	type	DWORD
-site	src/hook/exe_icon.cpp	463	const	file	const	MAX_PATH
-site	src/hook/exe_icon.cpp	467	call	file	open	CreateFileW
-site	src/hook/exe_icon.cpp	467	const	file	const	FILE_ATTRIBUTE_NORMAL
-site	src/hook/exe_icon.cpp	467	const	file	const	FILE_SHARE_READ
-site	src/hook/exe_icon.cpp	467	const	file	const	GENERIC_READ
-site	src/hook/exe_icon.cpp	467	const	file	const	OPEN_EXISTING
-site	src/hook/exe_icon.cpp	467	type	type_only	type	HANDLE
-site	src/hook/exe_icon.cpp	468	const	file	const	INVALID_HANDLE_VALUE
-site	src/hook/exe_icon.cpp	469	call	process	error	GetLastError
-site	src/hook/exe_icon.cpp	472	type	type_only	type	LARGE_INTEGER
-site	src/hook/exe_icon.cpp	473	call	file	io	GetFileSizeEx
-site	src/hook/exe_icon.cpp	476	type	type_only	type	DWORD
-site	src/hook/exe_icon.cpp	477	call	file	io	ReadFile
-site	src/hook/exe_icon.cpp	477	type	type_only	type	DWORD
-site	src/hook/exe_icon.cpp	479	call	file	handle	CloseHandle
-site	src/hook/exe_icon.cpp	485	call	file	open	CreateFileW
-site	src/hook/exe_icon.cpp	485	const	file	const	CREATE_ALWAYS
-site	src/hook/exe_icon.cpp	485	const	file	const	FILE_ATTRIBUTE_NORMAL
-site	src/hook/exe_icon.cpp	485	const	file	const	GENERIC_WRITE
-site	src/hook/exe_icon.cpp	485	type	type_only	type	HANDLE
-site	src/hook/exe_icon.cpp	486	const	file	const	INVALID_HANDLE_VALUE
-site	src/hook/exe_icon.cpp	487	call	process	error	GetLastError
-site	src/hook/exe_icon.cpp	490	type	type_only	type	DWORD
-site	src/hook/exe_icon.cpp	491	call	file	io	WriteFile
-site	src/hook/exe_icon.cpp	491	type	type_only	type	DWORD
-site	src/hook/exe_icon.cpp	492	call	file	handle	CloseHandle
-site	src/hook/exe_icon.cpp	527	type	type_only	type	HWND
-site	src/hook/exe_icon.cpp	528	call	window	geometry	GetSystemMetrics
-site	src/hook/exe_icon.cpp	528	call	window	geometry	GetSystemMetrics
-site	src/hook/exe_icon.cpp	528	const	window	const	SM_CXICON
-site	src/hook/exe_icon.cpp	528	const	window	const	SM_CXSMICON
-site	src/hook/exe_icon.cpp	530	type	type_only	type	HICON
-site	src/hook/exe_icon.cpp	531	type	type_only	type	HICON
-site	src/hook/exe_icon.cpp	534	call	window	cursor	DestroyIcon
-site	src/hook/exe_icon.cpp	538	call	window	loop	SendMessageA
-site	src/hook/exe_icon.cpp	538	const	window	const	WM_SETICON
-site	src/hook/exe_icon.cpp	538	type	type_only	type	LPARAM
-site	src/hook/exe_icon.cpp	539	call	window	loop	SendMessageA
-site	src/hook/exe_icon.cpp	539	const	window	const	WM_SETICON
-site	src/hook/exe_icon.cpp	539	type	type_only	type	LPARAM
-site	src/hook/exe_icon.cpp	540	call	window	longptr	SetClassLongPtrA
-site	src/hook/exe_icon.cpp	540	type	type_only	type	LONG_PTR
-site	src/hook/exe_icon.cpp	541	call	window	longptr	SetClassLongPtrA
-site	src/hook/exe_icon.cpp	541	type	type_only	type	LONG_PTR
-site	src/hook/exe_icon.cpp	548	type	type_only	type	UINT
-site	src/hook/exe_icon.cpp	553	type	type_only	type	IWICBitmapDecoder
-site	src/hook/exe_icon.cpp	554	const	file	const	GENERIC_READ
-site	src/hook/exe_icon.cpp	554	type	type_only	type	HRESULT
-site	src/hook/exe_icon.cpp	555	const	process	const	WICDecodeMetadataCacheOnDemand
-site	src/hook/exe_icon.cpp	556	type	type_only	type	UINT
-site	src/hook/exe_icon.cpp	557	const	process	const	SUCCEEDED
-site	src/hook/exe_icon.cpp	558	const	process	const	SUCCEEDED
-site	src/hook/exe_icon.cpp	558	type	type_only	type	UINT
-site	src/hook/exe_icon.cpp	559	type	type_only	type	IWICBitmapFrameDecode
-site	src/hook/exe_icon.cpp	560	type	type_only	type	IWICFormatConverter
-site	src/hook/exe_icon.cpp	563	const	process	const	SUCCEEDED
-site	src/hook/exe_icon.cpp	564	const	process	const	SUCCEEDED
-site	src/hook/exe_icon.cpp	565	const	process	const	SUCCEEDED
-site	src/hook/exe_icon.cpp	566	const	process	const	GUID_WICPixelFormat32bppBGRA
-site	src/hook/exe_icon.cpp	567	const	process	const	WICBitmapDitherTypeNone
-site	src/hook/exe_icon.cpp	567	const	process	const	WICBitmapPaletteTypeCustom
-site	src/hook/exe_icon.cpp	568	const	process	const	SUCCEEDED
-site	src/hook/exe_icon.cpp	570	type	type_only	type	UINT
-site	src/hook/exe_icon.cpp	574	const	process	const	SUCCEEDED
-site	src/hook/exe_icon.cpp	577	const	process	const	FAILED
-site	src/hook/exe_icon.cpp	578	const	process	const	SUCCEEDED
-site	src/hook/exe_icon.cpp	592	const	file	const	MAX_PATH
-site	src/hook/exe_icon.cpp	593	call	process	environment	GetEnvironmentVariableW
-site	src/hook/exe_icon.cpp	593	const	file	const	MAX_PATH
-site	src/hook/exe_icon.cpp	593	type	type_only	type	DWORD
-site	src/hook/exe_icon.cpp	594	const	file	const	MAX_PATH
-site	src/hook/exe_icon.cpp	634	type	type_only	type	HWND
-site	src/hook/exe_icon.cpp	695	call	window	geometry	GetSystemMetrics
-site	src/hook/exe_icon.cpp	695	call	window	geometry	GetSystemMetrics
-site	src/hook/exe_icon.cpp	695	const	window	const	SM_CXICON
-site	src/hook/exe_icon.cpp	695	const	window	const	SM_CXSMICON
-site	src/hook/exe_icon.cpp	696	type	type_only	type	HICON
-site	src/hook/exe_icon.cpp	698	call	window	cursor	DestroyIcon
-site	src/hook/exe_icon.cpp	700	call	window	geometry	GetSystemMetrics
-site	src/hook/exe_icon.cpp	700	call	window	geometry	GetSystemMetrics
-site	src/hook/exe_icon.cpp	700	const	window	const	SM_CXICON
-site	src/hook/exe_icon.cpp	700	const	window	const	SM_CXSMICON
+site	src/hook/exe_icon.cpp	15	include	umbrella	api	windows.h
+site	src/hook/exe_icon.cpp	17	include	process	header	objidl.h
+site	src/hook/exe_icon.cpp	18	include	process	header	wincodec.h
+site	src/hook/exe_icon.cpp	36	type	type_only	type	HICON
+site	src/hook/exe_icon.cpp	37	type	type_only	type	BITMAPV5HEADER
+site	src/hook/exe_icon.cpp	43	const	window	const	BI_BITFIELDS
+site	src/hook/exe_icon.cpp	49	call	window	gdi	GetDC
+site	src/hook/exe_icon.cpp	49	type	type_only	type	HDC
+site	src/hook/exe_icon.cpp	50	call	window	gdi	CreateDIBSection
+site	src/hook/exe_icon.cpp	50	const	window	const	DIB_RGB_COLORS
+site	src/hook/exe_icon.cpp	50	type	type_only	type	BITMAPINFO
+site	src/hook/exe_icon.cpp	50	type	type_only	type	HBITMAP
+site	src/hook/exe_icon.cpp	51	call	window	gdi	ReleaseDC
+site	src/hook/exe_icon.cpp	53	call	process	error	GetLastError
+site	src/hook/exe_icon.cpp	54	call	window	gdi	DeleteObject
+site	src/hook/exe_icon.cpp	66	call	window	gdi	CreateBitmap
+site	src/hook/exe_icon.cpp	66	type	type_only	type	HBITMAP
+site	src/hook/exe_icon.cpp	71	call	window	cursor	CreateIconIndirect
+site	src/hook/exe_icon.cpp	71	type	type_only	type	HICON
+site	src/hook/exe_icon.cpp	72	call	process	error	GetLastError
+site	src/hook/exe_icon.cpp	73	call	window	gdi	DeleteObject
+site	src/hook/exe_icon.cpp	74	call	window	gdi	DeleteObject
+site	src/hook/exe_icon.cpp	82	type	type_only	type	IWICImagingFactory
+site	src/hook/exe_icon.cpp	85	call	process	com	CoInitializeEx
+site	src/hook/exe_icon.cpp	85	const	process	const	COINIT_MULTITHREADED
+site	src/hook/exe_icon.cpp	85	type	type_only	type	HRESULT
+site	src/hook/exe_icon.cpp	86	const	process	const	SUCCEEDED
+site	src/hook/exe_icon.cpp	87	const	process	const	FAILED
+site	src/hook/exe_icon.cpp	91	call	process	com	CoCreateInstance
+site	src/hook/exe_icon.cpp	91	const	process	const	CLSCTX_INPROC_SERVER
+site	src/hook/exe_icon.cpp	91	const	process	const	CLSID_WICImagingFactory
+site	src/hook/exe_icon.cpp	91	type	type_only	type	HRESULT
+site	src/hook/exe_icon.cpp	91	type	type_only	type	IWICImagingFactory
+site	src/hook/exe_icon.cpp	93	const	process	const	FAILED
+site	src/hook/exe_icon.cpp	101	call	process	com	CoUninitialize
+site	src/hook/exe_icon.cpp	103	type	type_only	type	HRESULT
+site	src/hook/exe_icon.cpp	119	type	type_only	type	IStream
+site	src/hook/exe_icon.cpp	123	call	process	com	CreateStreamOnHGlobal
+site	src/hook/exe_icon.cpp	123	type	type_only	type	HRESULT
+site	src/hook/exe_icon.cpp	125	const	input	const	GUID_ContainerFormatPng
+site	src/hook/exe_icon.cpp	125	const	process	const	SUCCEEDED
+site	src/hook/exe_icon.cpp	126	const	process	const	SUCCEEDED
+site	src/hook/exe_icon.cpp	126	const	process	const	WICBitmapEncoderNoCache
+site	src/hook/exe_icon.cpp	127	const	process	const	SUCCEEDED
+site	src/hook/exe_icon.cpp	128	const	process	const	SUCCEEDED
+site	src/hook/exe_icon.cpp	129	const	process	const	SUCCEEDED
+site	src/hook/exe_icon.cpp	130	const	process	const	GUID_WICPixelFormat32bppBGRA
+site	src/hook/exe_icon.cpp	130	const	process	const	WICPixelFormatGUID
+site	src/hook/exe_icon.cpp	131	const	process	const	SUCCEEDED
+site	src/hook/exe_icon.cpp	132	call	process	com	IsEqualGUID
+site	src/hook/exe_icon.cpp	132	const	process	const	E_FAIL
+site	src/hook/exe_icon.cpp	132	const	process	const	GUID_WICPixelFormat32bppBGRA
+site	src/hook/exe_icon.cpp	132	const	process	const	SUCCEEDED
+site	src/hook/exe_icon.cpp	133	const	process	const	SUCCEEDED
+site	src/hook/exe_icon.cpp	134	type	type_only	type	UINT
+site	src/hook/exe_icon.cpp	135	const	process	const	SUCCEEDED
+site	src/hook/exe_icon.cpp	136	const	process	const	SUCCEEDED
+site	src/hook/exe_icon.cpp	138	const	process	const	SUCCEEDED
+site	src/hook/exe_icon.cpp	139	type	type_only	type	HGLOBAL
+site	src/hook/exe_icon.cpp	140	call	process	com	GetHGlobalFromStream
+site	src/hook/exe_icon.cpp	140	const	process	const	SUCCEEDED
+site	src/hook/exe_icon.cpp	141	const	process	const	SUCCEEDED
+site	src/hook/exe_icon.cpp	142	call	memory	heap	GlobalLock
+site	src/hook/exe_icon.cpp	145	call	memory	heap	GlobalUnlock
+site	src/hook/exe_icon.cpp	147	const	process	const	E_FAIL
+site	src/hook/exe_icon.cpp	154	const	process	const	FAILED
+site	src/hook/exe_icon.cpp	155	const	process	const	SUCCEEDED
+site	src/hook/exe_icon.cpp	178	type	type_only	type	HMODULE
+site	src/hook/exe_icon.cpp	179	call	process	module	GetModuleHandleExW
+site	src/hook/exe_icon.cpp	180	type	type_only	type	LPCWSTR
+site	src/hook/exe_icon.cpp	181	const	file	const	MAX_PATH
+site	src/hook/exe_icon.cpp	182	call	process	module	GetModuleFileNameW
+site	src/hook/exe_icon.cpp	182	const	file	const	MAX_PATH
+site	src/hook/exe_icon.cpp	182	type	type_only	type	DWORD
+site	src/hook/exe_icon.cpp	183	const	file	const	MAX_PATH
+site	src/hook/exe_icon.cpp	187	call	file	open	CreateFileW
+site	src/hook/exe_icon.cpp	187	const	file	const	FILE_ATTRIBUTE_NORMAL
+site	src/hook/exe_icon.cpp	187	const	file	const	FILE_SHARE_READ
+site	src/hook/exe_icon.cpp	187	const	file	const	GENERIC_READ
+site	src/hook/exe_icon.cpp	187	const	file	const	OPEN_EXISTING
+site	src/hook/exe_icon.cpp	187	type	type_only	type	HANDLE
+site	src/hook/exe_icon.cpp	188	const	file	const	INVALID_HANDLE_VALUE
+site	src/hook/exe_icon.cpp	189	call	process	error	GetLastError
+site	src/hook/exe_icon.cpp	192	type	type_only	type	LARGE_INTEGER
+site	src/hook/exe_icon.cpp	193	call	file	io	GetFileSizeEx
+site	src/hook/exe_icon.cpp	196	type	type_only	type	DWORD
+site	src/hook/exe_icon.cpp	197	call	file	io	ReadFile
+site	src/hook/exe_icon.cpp	197	type	type_only	type	DWORD
+site	src/hook/exe_icon.cpp	199	call	file	handle	CloseHandle
+site	src/hook/exe_icon.cpp	205	call	file	open	CreateFileW
+site	src/hook/exe_icon.cpp	205	const	file	const	CREATE_ALWAYS
+site	src/hook/exe_icon.cpp	205	const	file	const	FILE_ATTRIBUTE_NORMAL
+site	src/hook/exe_icon.cpp	205	const	file	const	GENERIC_WRITE
+site	src/hook/exe_icon.cpp	205	type	type_only	type	HANDLE
+site	src/hook/exe_icon.cpp	206	const	file	const	INVALID_HANDLE_VALUE
+site	src/hook/exe_icon.cpp	207	call	process	error	GetLastError
+site	src/hook/exe_icon.cpp	210	type	type_only	type	DWORD
+site	src/hook/exe_icon.cpp	211	call	file	io	WriteFile
+site	src/hook/exe_icon.cpp	211	type	type_only	type	DWORD
+site	src/hook/exe_icon.cpp	212	call	file	handle	CloseHandle
+site	src/hook/exe_icon.cpp	217	type	type_only	type	HWND
+site	src/hook/exe_icon.cpp	218	call	window	geometry	GetSystemMetrics
+site	src/hook/exe_icon.cpp	218	call	window	geometry	GetSystemMetrics
+site	src/hook/exe_icon.cpp	218	const	window	const	SM_CXICON
+site	src/hook/exe_icon.cpp	218	const	window	const	SM_CXSMICON
+site	src/hook/exe_icon.cpp	220	type	type_only	type	HICON
+site	src/hook/exe_icon.cpp	221	type	type_only	type	HICON
+site	src/hook/exe_icon.cpp	224	call	window	cursor	DestroyIcon
+site	src/hook/exe_icon.cpp	228	call	window	loop	SendMessageA
+site	src/hook/exe_icon.cpp	228	const	window	const	WM_SETICON
+site	src/hook/exe_icon.cpp	228	type	type_only	type	LPARAM
+site	src/hook/exe_icon.cpp	229	call	window	loop	SendMessageA
+site	src/hook/exe_icon.cpp	229	const	window	const	WM_SETICON
+site	src/hook/exe_icon.cpp	229	type	type_only	type	LPARAM
+site	src/hook/exe_icon.cpp	230	call	window	longptr	SetClassLongPtrA
+site	src/hook/exe_icon.cpp	230	type	type_only	type	LONG_PTR
+site	src/hook/exe_icon.cpp	231	call	window	longptr	SetClassLongPtrA
+site	src/hook/exe_icon.cpp	231	type	type_only	type	LONG_PTR
+site	src/hook/exe_icon.cpp	238	type	type_only	type	IWICBitmapDecoder
+site	src/hook/exe_icon.cpp	239	const	file	const	GENERIC_READ
+site	src/hook/exe_icon.cpp	239	type	type_only	type	HRESULT
+site	src/hook/exe_icon.cpp	240	const	process	const	WICDecodeMetadataCacheOnDemand
+site	src/hook/exe_icon.cpp	241	type	type_only	type	UINT
+site	src/hook/exe_icon.cpp	242	const	process	const	SUCCEEDED
+site	src/hook/exe_icon.cpp	243	const	process	const	SUCCEEDED
+site	src/hook/exe_icon.cpp	243	type	type_only	type	UINT
+site	src/hook/exe_icon.cpp	244	type	type_only	type	IWICBitmapFrameDecode
+site	src/hook/exe_icon.cpp	245	type	type_only	type	IWICFormatConverter
+site	src/hook/exe_icon.cpp	248	const	process	const	SUCCEEDED
+site	src/hook/exe_icon.cpp	249	const	process	const	SUCCEEDED
+site	src/hook/exe_icon.cpp	250	const	process	const	SUCCEEDED
+site	src/hook/exe_icon.cpp	251	const	process	const	GUID_WICPixelFormat32bppBGRA
+site	src/hook/exe_icon.cpp	252	const	process	const	WICBitmapDitherTypeNone
+site	src/hook/exe_icon.cpp	252	const	process	const	WICBitmapPaletteTypeCustom
+site	src/hook/exe_icon.cpp	253	const	process	const	SUCCEEDED
+site	src/hook/exe_icon.cpp	255	type	type_only	type	UINT
+site	src/hook/exe_icon.cpp	259	const	process	const	SUCCEEDED
+site	src/hook/exe_icon.cpp	262	const	process	const	FAILED
+site	src/hook/exe_icon.cpp	263	const	process	const	SUCCEEDED
+site	src/hook/exe_icon.cpp	267	const	file	const	MAX_PATH
+site	src/hook/exe_icon.cpp	268	call	process	environment	GetEnvironmentVariableW
+site	src/hook/exe_icon.cpp	268	const	file	const	MAX_PATH
+site	src/hook/exe_icon.cpp	268	type	type_only	type	DWORD
+site	src/hook/exe_icon.cpp	269	const	file	const	MAX_PATH
+site	src/hook/exe_icon.cpp	280	type	type_only	type	HWND
+site	src/hook/exe_icon.cpp	310	call	window	geometry	GetSystemMetrics
+site	src/hook/exe_icon.cpp	310	call	window	geometry	GetSystemMetrics
+site	src/hook/exe_icon.cpp	310	const	window	const	SM_CXICON
+site	src/hook/exe_icon.cpp	310	const	window	const	SM_CXSMICON
+site	src/hook/exe_icon.cpp	311	type	type_only	type	HICON
+site	src/hook/exe_icon.cpp	313	call	window	cursor	DestroyIcon
+site	src/hook/exe_icon.cpp	315	call	window	geometry	GetSystemMetrics
+site	src/hook/exe_icon.cpp	315	call	window	geometry	GetSystemMetrics
+site	src/hook/exe_icon.cpp	315	const	window	const	SM_CXICON
+site	src/hook/exe_icon.cpp	315	const	window	const	SM_CXSMICON
 site	src/hook/gapwatch.cpp	5	include	umbrella	api	windows.h
 site	src/hook/gapwatch.cpp	27	type	harness-only	type_only/type	DWORD
 site	src/hook/gapwatch.cpp	28	type	harness-only	type_only/type	DWORD
@@ -1407,6 +1405,17 @@ site	src/os/win32/own_stack.cpp	71	call	fiber	fiber	CreateFiberEx
 site	src/os/win32/own_stack.cpp	79	call	fiber	fiber	SwitchToFiber
 site	src/os/win32/own_stack.cpp	83	call	fiber	fiber	ConvertFiberToThread
 site	src/os/win32/path_file.cpp	23	call	crt	file	_wfopen
+site	src/os/win32/placed.cpp	5	include	umbrella	api	windows.h
+site	src/os/win32/placed.cpp	15	call	process	error	SetLastError
+site	src/os/win32/placed.cpp	15	const	process	const	ERROR_NOT_SUPPORTED
+site	src/os/win32/placed.cpp	22	type	type_only	type	MEMORY_BASIC_INFORMATION
+site	src/os/win32/placed.cpp	23	call	memory	virtual	VirtualQuery
+site	src/os/win32/placed.cpp	26	const	memory	const	MEM_FREE
+site	src/os/win32/placed.cpp	27	const	file	const	MAX_PATH
+site	src/os/win32/placed.cpp	28	call	process	module	GetModuleFileNameA
+site	src/os/win32/placed.cpp	28	const	memory	const	MEM_IMAGE
+site	src/os/win32/placed.cpp	28	type	type_only	type	HMODULE
+site	src/os/win32/placed.cpp	29	const	file	const	MAX_PATH
 site	src/os/win32/process.cpp	6	include	umbrella	api	windows.h
 site	src/os/win32/process.cpp	13	call	process	environment	SetEnvironmentVariableA
 site	src/os/win32/process.cpp	14	call	process	environment	SetEnvironmentVariableW
@@ -1902,7 +1911,7 @@ file	src/hook/calltrace.cpp	hook	harness-only	api	fault,file,memory,process,thre
 file	src/hook/crash_win32.cpp	hook	live	api	clock,crt,fault,file,memory,process,thread,type_only,window	118
 file	src/hook/dllmain.cpp	hook	live	api	process,thread,type_only	16
 file	src/hook/exe_host.cpp	hook	live	api	clock,fault,file,memory,process,thread,type_only	103
-file	src/hook/exe_icon.cpp	hook	live	api	file,input,memory,process,type_only,window	157
+file	src/hook/exe_icon.cpp	hook	live	api	file,input,memory,process,type_only,window	155
 file	src/hook/gapwatch.cpp	hook	harness-only	api	clock,fault,file,memory,process,thread,type_only	154
 file	src/hook/host_win32.cpp	hook	live	api	process	3
 file	src/hook/stackwatch_win32.cpp	hook	live	api	clock,fault,file,memory,process,thread,type_only	86
@@ -1923,6 +1932,7 @@ file	src/os/win32/named_event.cpp	os	live	api	file,process,thread,type_only	12
 file	src/os/win32/out_file.cpp	os	live	api	file,process,type_only	19
 file	src/os/win32/own_stack.cpp	os	live	api	fiber,process	10
 file	src/os/win32/path_file.cpp	os	live		crt	1
+file	src/os/win32/placed.cpp	os	live	api	file,memory,process,type_only	11
 file	src/os/win32/process.cpp	os	live	api	file,process,thread,type_only	79
 file	src/os/win32/running.cpp	os	live	api	dialog,file,process,thread,type_only,window	23
 file	src/os/win32/stream.cpp	os	live		crt	3
@@ -1934,30 +1944,30 @@ file	src/os/win32/window_key.cpp	os	live	api	type_only,window	8
 file	src/render/render_d3d11.cpp	render	live		graphics,process,type_only,window	200
 file	src/render/satpixie.cpp	render	live		graphics,process,type_only	50
 file	src/render/satpixie.h	render	live		graphics	7
-#count	sites	1888
-#count	files_with_a_site	45
+#count	sites	1897
+#count	files_with_a_site	46
 #count	class:clock	11
 #count	class:crt	30
 #count	class:dialog	10
 #count	class:fault	41
 #count	class:fiber	7
-#count	class:file	132
+#count	class:file	134
 #count	class:graphics	227
 #count	class:harness-only	326
 #count	class:input	19
 #count	class:launcher	121
-#count	class:memory	84
-#count	class:process	232
+#count	class:memory	87
+#count	class:process	235
 #count	class:sound	1
 #count	class:thread	71
-#count	class:type_only	367
-#count	class:umbrella	35
-#count	class:window	174
-#count	kind:call	532
-#count	kind:const	679
-#count	kind:include	54
-#count	kind:type	623
-#count	live_sites	1441
+#count	class:type_only	368
+#count	class:umbrella	36
+#count	class:window	173
+#count	kind:call	535
+#count	kind:const	683
+#count	kind:include	55
+#count	kind:type	624
+#count	live_sites	1450
 #count	call_or_keyword_class:clock	14
 #count	call_or_keyword_class:crt	11
 #count	call_or_keyword_class:dialog	1
@@ -1965,8 +1975,8 @@ file	src/render/satpixie.h	render	live		graphics	7
 #count	call_or_keyword_class:fiber	7
 #count	call_or_keyword_class:file	75
 #count	call_or_keyword_class:graphics	3
-#count	call_or_keyword_class:memory	41
-#count	call_or_keyword_class:process	184
+#count	call_or_keyword_class:memory	42
+#count	call_or_keyword_class:process	186
 #count	call_or_keyword_class:thread	95
 #count	call_or_keyword_class:window	91
 #count	files_in:game(root)	1
@@ -1976,5 +1986,5 @@ file	src/render/satpixie.h	render	live		graphics	7
 #count	files_in:game/shop	1
 #count	files_in:hook	9
 #count	files_in:launcher	2
-#count	files_in:os	22
+#count	files_in:os	23
 #count	files_in:render	3

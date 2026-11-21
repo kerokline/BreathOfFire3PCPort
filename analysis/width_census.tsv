@@ -141,12 +141,13 @@ site	src/common/image_base.h	83	uintptr	-	live	std::uintptr_t	-	std::uintptr_t p
 site	src/common/image_base.h	84	asm	other	live	movq %%gs:0x60, %0	movq	asm("movq %%gs:0x60, %0" : "=r"(peb));
 site	src/common/image_base.h	85	uintptr	-	live	std::uintptr_t	-	std::uintptr_t base;
 site	src/common/image_base.h	86	asm	other	live	movq 0x10(%1), %0	movq	asm("movq 0x10(%1), %0" : "=r"(base) : "r"(peb));
-site	src/common/image_base.h	157	uintptr	-	live	std::uintptr_t	-	const auto v = reinterpret_cast<std::uintptr_t>(p);
-site	src/common/image_base.h	159	fmt_place	pointer	live	reinterpret_cast<const void*>(v)	%p	Fatal("%s:%u %s: %p lies above 4 GB, where no word of the game can hold it (docs/x64-build-design.md 2)", file,
-site	src/common/image_base.h	164	narrow	unread	live	p	-	#define Low32(p) (static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)))
-site	src/common/image_base.h	164	uintptr	-	live	std::uintptr_t	-	#define Low32(p) (static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)))
-site	src/common/image_base.h	185	uintptr	-	live	std::uintptr_t	-	if (reinterpret_cast<std::uintptr_t>(p) > 0xFFFFFFFFu)
-site	src/common/image_base.h	186	fmt_place	pointer	live	p	%p	Fatal("%s: a heap block of %u bytes at %p lies above 4 GB, where no word of the game can hold it "
+site	src/common/image_base.h	102	uintptr	-	live	std::uintptr_t	-	extern std::uintptr_t g_ownBase;
+site	src/common/image_base.h	162	uintptr	-	live	std::uintptr_t	-	const auto v = reinterpret_cast<std::uintptr_t>(p);
+site	src/common/image_base.h	164	fmt_place	pointer	live	reinterpret_cast<const void*>(v)	%p	Fatal("%s:%u %s: %p lies above 4 GB, where no word of the game can hold it (docs/x64-build-design.md 2)", file,
+site	src/common/image_base.h	169	narrow	unread	live	p	-	#define Low32(p) (static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)))
+site	src/common/image_base.h	169	uintptr	-	live	std::uintptr_t	-	#define Low32(p) (static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)))
+site	src/common/image_base.h	190	uintptr	-	live	std::uintptr_t	-	if (reinterpret_cast<std::uintptr_t>(p) > 0xFFFFFFFFu)
+site	src/common/image_base.h	191	fmt_place	pointer	live	p	%p	Fatal("%s: a heap block of %u bytes at %p lies above 4 GB, where no word of the game can hold it "
 site	src/common/slot32.h	64	uintptr	-	live	std::uintptr_t	-	BOF3_SLOT_INLINE T* Native() const { return reinterpret_cast<T*>(static_cast<std::uintptr_t>(v)); }
 site	src/common/slot32.h	64	widen	param	live	v	T*	BOF3_SLOT_INLINE T* Native() const { return reinterpret_cast<T*>(static_cast<std::uintptr_t>(v)); }
 site	src/common/slot32.h	89	low32	unread	live	p	Low32	v = Low32(p);
@@ -2254,22 +2255,23 @@ site	src/game/core/transition.cpp	1538	uintptr	-	live	std::uintptr_t	-	mode_flow
 site	src/game/core/transition.cpp	1538	widen	code_place	live	::bof3::Code(kTitleLoadEntry.v)	void*	mode_flow::g.task_create(1, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kTitleLoadEntry.v))));
 site	src/game/core/transition.cpp	1592	low32	object_ours	live	&mode_flow::g_area_track_fallback	Low32	Low32(&mode_flow::g_area_track_fallback), was, is, 4);
 site	src/game/core/transition.cpp	1598	low32	object_ours	live	&mode_rest::g_event_keeps_music	Low32	bof3::PatchBytes(" ", Low32(&mode_rest::g_event_keeps_music),
-site	src/game/crt_rest.cpp	75	low32	func_ours	live	ret	Low32	const auto at = Low32(ret);
-site	src/game/crt_rest.cpp	76	low32	object_ours	live	&__ImageBase	Low32	const auto dll = Low32(&__ImageBase);
-site	src/game/crt_rest.cpp	78	fmt_place	pointer	live	static_cast<unsigned>(::bof3::VaOf(at))	%08X	std::snprintf(out, cap, "VA 0x%08X", static_cast<unsigned>(::bof3::VaOf(at)));
-site	src/game/crt_rest.cpp	86	fmt_place	word	live	Low32(fmt)	%08X	bof3::Fatal("Crt_sprintf: \"%s\" (at 0x%08X) has the conversion \"%.*s\", which no format of the game uses and "
-site	src/game/crt_rest.cpp	88	low32	image_local	live	fmt	Low32	fmt, Low32(fmt), static_cast<int>(len), spec,
-site	src/game/crt_rest.cpp	382	long	l	live	long	-	static_cast<unsigned>(kArenaBytes >> 20), static_cast<unsigned long long>(arena->Base()),
-site	src/game/crt_rest.cpp	383	long	l	live	long	-	static_cast<unsigned long long>(arena->Base() + arena->Reserved()));
-site	src/game/crt_rest.cpp	393	long	l	live	long	-	[[noreturn]] void ArenaFull(const char* call, unsigned long long bytes) {
-site	src/game/crt_rest.cpp	397	long	l	live	long	-	static_cast<unsigned long long>(a->InUse()), static_cast<unsigned long long>(a->End()));
-site	src/game/crt_rest.cpp	397	long	l	live	long	-	static_cast<unsigned long long>(a->InUse()), static_cast<unsigned long long>(a->End()));
-site	src/game/crt_rest.cpp	413	long	l	live	long	-	const unsigned long long bytes = static_cast<unsigned long long>(count) * size;
-site	src/game/crt_rest.cpp	413	long	l	live	long	-	const unsigned long long bytes = static_cast<unsigned long long>(count) * size;
-site	src/game/crt_rest.cpp	425	fmt_place	pointer	live	ptr	%p	if (!a->Free(ptr)) bof3::Fatal("Crt_free(%p): inside the heap arena (BOF3X_ARENA) but not a live block (freed twice?)", ptr);
-site	src/game/crt_rest.cpp	432	fmt_place	pointer	live	block	%p	if (!a->SizeOf(block, &bytes)) bof3::Fatal("crt_rest::BlockBytes(%p): inside the heap arena but not a live block", block);
-site	src/game/crt_rest.cpp	436	fmt_place	pointer	live	block	%p	bof3::Fatal("crt_rest::BlockBytes(%p): a block outside the heap arena, and this system's C runtime has no exact "
-site	src/game/crt_rest.cpp	543	low32	crt	live	Crt_GetPtd	Low32	const auto get_ptd = Low32(Crt_GetPtd);
+site	src/game/crt_rest.cpp	79	low32	func_ours	live	ret	Low32	const auto at = Low32(ret);
+site	src/game/crt_rest.cpp	81	low32	object_ours	live	&__ImageBase	Low32	const auto dll = Low32(&__ImageBase);
+site	src/game/crt_rest.cpp	83	low32	unread	live	reinterpret_cast<const void*>(::bof3::image::g_ownBase)	Low32	const auto dll = Low32(reinterpret_cast<const void*>(::bof3::image::g_ownBase));
+site	src/game/crt_rest.cpp	86	fmt_place	pointer	live	static_cast<unsigned>(::bof3::VaOf(at))	%08X	std::snprintf(out, cap, "VA 0x%08X", static_cast<unsigned>(::bof3::VaOf(at)));
+site	src/game/crt_rest.cpp	98	fmt_place	word	live	Low32(fmt)	%08X	bof3::Fatal("Crt_sprintf: \"%s\" (at 0x%08X) has the conversion \"%.*s\", which no format of the game uses and "
+site	src/game/crt_rest.cpp	100	low32	image_local	live	fmt	Low32	fmt, Low32(fmt), static_cast<int>(len), spec,
+site	src/game/crt_rest.cpp	394	long	l	live	long	-	static_cast<unsigned>(kArenaBytes >> 20), static_cast<unsigned long long>(arena->Base()),
+site	src/game/crt_rest.cpp	395	long	l	live	long	-	static_cast<unsigned long long>(arena->Base() + arena->Reserved()));
+site	src/game/crt_rest.cpp	405	long	l	live	long	-	[[noreturn]] void ArenaFull(const char* call, unsigned long long bytes) {
+site	src/game/crt_rest.cpp	409	long	l	live	long	-	static_cast<unsigned long long>(a->InUse()), static_cast<unsigned long long>(a->End()));
+site	src/game/crt_rest.cpp	409	long	l	live	long	-	static_cast<unsigned long long>(a->InUse()), static_cast<unsigned long long>(a->End()));
+site	src/game/crt_rest.cpp	425	long	l	live	long	-	const unsigned long long bytes = static_cast<unsigned long long>(count) * size;
+site	src/game/crt_rest.cpp	425	long	l	live	long	-	const unsigned long long bytes = static_cast<unsigned long long>(count) * size;
+site	src/game/crt_rest.cpp	437	fmt_place	pointer	live	ptr	%p	if (!a->Free(ptr)) bof3::Fatal("Crt_free(%p): inside the heap arena (BOF3X_ARENA) but not a live block (freed twice?)", ptr);
+site	src/game/crt_rest.cpp	444	fmt_place	pointer	live	block	%p	if (!a->SizeOf(block, &bytes)) bof3::Fatal("crt_rest::BlockBytes(%p): inside the heap arena but not a live block", block);
+site	src/game/crt_rest.cpp	448	fmt_place	pointer	live	block	%p	bof3::Fatal("crt_rest::BlockBytes(%p): a block outside the heap arena, and this system's C runtime has no exact "
+site	src/game/crt_rest.cpp	555	low32	crt	live	Crt_GetPtd	Low32	const auto get_ptd = Low32(Crt_GetPtd);
 site	src/game/crt_rest_fuzz.cpp	54	fmt_place	word	fuzz	(unsigned)ours	%08X	bof3::Log("shadow crt_rest self-test MISMATCH: %s, round %u: original %08X, ours %08X", what, round,
 site	src/game/crt_rest_fuzz.cpp	54	fmt_place	word	fuzz	(unsigned)theirs	%08X	bof3::Log("shadow crt_rest self-test MISMATCH: %s, round %u: original %08X, ours %08X", what, round,
 site	src/game/crt_rest_fuzz.cpp	123	narrow	crt	fuzz	Crt_GetPtd	-	const auto get_ptd = static_cast<U>(reinterpret_cast<std::uintptr_t>(Crt_GetPtd));
@@ -8557,9 +8559,87 @@ site	src/hook/exe_host.cpp	542	narrow	windows	live	info->ExceptionRecord->Except
 site	src/hook/exe_host.cpp	542	uintptr	-	live	std::uintptr_t	-	static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(info->ExceptionRecord->ExceptionAddress)));
 site	src/hook/exe_host.cpp	608	fmt_place	pointer	live	hinstance	%p	Log("Engine_Main: hinstance %p, show %d, on thread %lu", hinstance, show, GetCurrentThreadId());
 site	src/hook/exe_host.cpp	651	fmt_place	pointer	live	hinstance	%p	Log("Engine_Main: Game_WinMain(0x%p, null, \"%s\", %d) on the main thread", hinstance, line, show);
-site	src/hook/exe_icon.cpp	61	widen	img_place	live	::bof3::Img(menu_windows::at::kIconRects) + kIcon * 4	const std::uint8_t*	const auto* p = reinterpret_cast<const std::uint8_t*>(
-site	src/hook/exe_icon.cpp	62	uintptr	-	live	std::uintptr_t	-	static_cast<std::uintptr_t>(::bof3::Img(menu_windows::at::kIconRects) + kIcon * 4));
-site	src/hook/exe_icon.cpp	380	long	ul	live	unsigned long	-	wsprintfA(t, " ", static_cast<unsigned long>(hr));
+site	src/hook/exe_host_posix.cpp	63	width_if	asm_pair	live	-	#if !defined(__x86_64__)	#if !defined(__x86_64__)
+site	src/hook/exe_host_posix.cpp	70	uintptr	-	live	std::uintptr_t	-	std::uintptr_t g_ownBase = 0;
+site	src/hook/exe_host_posix.cpp	77	uintptr	-	live	std::uintptr_t	-	void* At(std::uint32_t place) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(place)); }
+site	src/hook/exe_host_posix.cpp	77	widen	param	live	place	void*	void* At(std::uint32_t place) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(place)); }
+site	src/hook/exe_host_posix.cpp	110	uintptr	-	live	std::uintptr_t	-	void* AtU(std::uintptr_t a) { return reinterpret_cast<void*>(a); }
+site	src/hook/exe_host_posix.cpp	126	long	l	live	long	-	const unsigned long long v = std::strtoull(text, &end, 0);
+site	src/hook/exe_host_posix.cpp	181	uintptr	-	live	std::uintptr_t	-	[[noreturn]] void RefuseRange(const char* what, std::uintptr_t lo, std::uintptr_t hi, int error) {
+site	src/hook/exe_host_posix.cpp	181	uintptr	-	live	std::uintptr_t	-	[[noreturn]] void RefuseRange(const char* what, std::uintptr_t lo, std::uintptr_t hi, int error) {
+site	src/hook/exe_host_posix.cpp	184	long	l	live	long	-	static_cast<unsigned long long>(lo), static_cast<unsigned long long>(hi), error, std::strerror(error),
+site	src/hook/exe_host_posix.cpp	184	long	l	live	long	-	static_cast<unsigned long long>(lo), static_cast<unsigned long long>(hi), error, std::strerror(error),
+site	src/hook/exe_host_posix.cpp	217	uintptr	-	live	std::uintptr_t	-	std::uintptr_t r_hi = m.base + m.size;
+site	src/hook/exe_host_posix.cpp	222	fmt_place	word	live	(unsigned)best_at	%08X	Log("fence: the largest free run below 16 MB at main is 0x%X bytes at 0x%08X (the image takes 0x%X)", (unsigned)best,
+site	src/hook/exe_host_posix.cpp	235	fmt_place	word	live	(unsigned)(ImageBase() + kSpan)	%08X	Log("fence: the image's span 0x%08X..0x%08X reserved by the start-up before any initialiser, .game and .pool "
+site	src/hook/exe_host_posix.cpp	235	fmt_place	word	live	(unsigned)ImageBase()	%08X	Log("fence: the image's span 0x%08X..0x%08X reserved by the start-up before any initialiser, .game and .pool "
+site	src/hook/exe_host_posix.cpp	236	fmt_place	word	live	(unsigned)(ImageBase() + kSpan)	%08X	"read-write in it; the main thread's stack 0x%08X..0x%08X, its guard page under it (docs/linux-round.md, "
+site	src/hook/exe_host_posix.cpp	236	fmt_place	word	live	(unsigned)ImageBase()	%08X	"read-write in it; the main thread's stack 0x%08X..0x%08X, its guard page under it (docs/linux-round.md, "
+site	src/hook/exe_host_posix.cpp	240	fmt_place	word	live	(unsigned)kImageBase	%08X	Log("fence: the image at its linked base 0x%08X; nothing to fence", (unsigned)kImageBase);
+site	src/hook/exe_host_posix.cpp	244	fmt_place	word	live	(unsigned)(kImageBase + kSpan)	%08X	Log("fence: the image at 0x%08X, moved from 0x%08X: the linked span 0x%08X..0x%08X reserved no-access whole, "
+site	src/hook/exe_host_posix.cpp	244	fmt_place	word	live	(unsigned)ImageBase()	%08X	Log("fence: the image at 0x%08X, moved from 0x%08X: the linked span 0x%08X..0x%08X reserved no-access whole, "
+site	src/hook/exe_host_posix.cpp	244	fmt_place	word	live	(unsigned)kImageBase	%08X	Log("fence: the image at 0x%08X, moved from 0x%08X: the linked span 0x%08X..0x%08X reserved no-access whole, "
+site	src/hook/exe_host_posix.cpp	244	fmt_place	word	live	(unsigned)kImageBase	%08X	Log("fence: the image at 0x%08X, moved from 0x%08X: the linked span 0x%08X..0x%08X reserved no-access whole, "
+site	src/hook/exe_host_posix.cpp	257	fmt_place	word	live	(unsigned)a	%08X	if (!os::MemQuery(At(a), &m)) Fatal("layout: MemQuery(0x%08X) failed, errno %u", (unsigned)a, os::LastError());
+site	src/hook/exe_host_posix.cpp	261	fmt_place	word	live	(unsigned)(a - Img(va) + va)	%08X	Fatal("layout: %s at 0x%08X (VA 0x%08X) is not the start-up's %s mapping (state %u, r%u w%u x%u, private %u)",
+site	src/hook/exe_host_posix.cpp	261	fmt_place	word	live	(unsigned)a	%08X	Fatal("layout: %s at 0x%08X (VA 0x%08X) is not the start-up's %s mapping (state %u, r%u w%u x%u, private %u)",
+site	src/hook/exe_host_posix.cpp	264	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t next = m.base + m.size;
+site	src/hook/exe_host_posix.cpp	265	fmt_place	word	live	(unsigned)a	%08X	if (next <= a) Fatal("layout: MemQuery(0x%08X) answered an empty run", (unsigned)a);
+site	src/hook/exe_host_posix.cpp	274	fmt_place	word	live	(unsigned)kGameVa	%08X	Log("layout: .stub 0x%08X +0x%X no access, .game 0x%08X +0x%X RW, .pool 0x%08X +0x%X RW, as exe_layout.h (VAs; the "
+site	src/hook/exe_host_posix.cpp	274	fmt_place	word	live	(unsigned)kPoolVa	%08X	Log("layout: .stub 0x%08X +0x%X no access, .game 0x%08X +0x%X RW, .pool 0x%08X +0x%X RW, as exe_layout.h (VAs; the "
+site	src/hook/exe_host_posix.cpp	274	fmt_place	word	live	(unsigned)kStubVa	%08X	Log("layout: .stub 0x%08X +0x%X no access, .game 0x%08X +0x%X RW, .pool 0x%08X +0x%X RW, as exe_layout.h (VAs; the "
+site	src/hook/exe_host_posix.cpp	275	fmt_place	word	live	(unsigned)kStubVa	%08X	"image at 0x%08X, an anonymous mapping of the start-up's)",
+site	src/hook/exe_host_posix.cpp	290	fmt_place	word	live	(unsigned)a	%08X	if (!os::MemQuery(At(a), &m)) Fatal("stub: MemQuery(0x%08X) failed, errno %u", (unsigned)a, os::LastError());
+site	src/hook/exe_host_posix.cpp	291	fmt_place	word	live	(unsigned)a	%08X	if (m.readable || m.writable || m.executable) Fatal("stub: 0x%08X is still accessible after the change", (unsigned)a);
+site	src/hook/exe_host_posix.cpp	294	fmt_place	word	live	(unsigned)(kStubVa + kStubSize)	%08X	Log("stub: .stub 0x%08X..0x%08X (VA 0x%08X..0x%08X) is no-access: the trap for a code value that is not bound",
+site	src/hook/exe_host_posix.cpp	294	fmt_place	word	live	(unsigned)Img(kStubVa + kStubSize)	%08X	Log("stub: .stub 0x%08X..0x%08X (VA 0x%08X..0x%08X) is no-access: the trap for a code value that is not bound",
+site	src/hook/exe_host_posix.cpp	294	fmt_place	word	live	(unsigned)Img(kStubVa)	%08X	Log("stub: .stub 0x%08X..0x%08X (VA 0x%08X..0x%08X) is no-access: the trap for a code value that is not bound",
+site	src/hook/exe_host_posix.cpp	294	fmt_place	word	live	(unsigned)kStubVa	%08X	Log("stub: .stub 0x%08X..0x%08X (VA 0x%08X..0x%08X) is no-access: the trap for a code value that is not bound",
+site	src/hook/exe_host_posix.cpp	349	fmt_place	word	live	(unsigned)(kGameVa + i)	%08X	if (game[i]) Fatal("data: .game is not zero at VA 0x%08X before the copy", (unsigned)(kGameVa + i));
+site	src/hook/exe_host_posix.cpp	361	fmt_place	word	live	(unsigned)a	%08X	if (*static_cast<const std::uint8_t*>(Place(a))) Fatal("data: .bss is not zero at VA 0x%08X after the copy", (unsigned)a);
+site	src/hook/exe_host_posix.cpp	362	fmt_place	word	live	(unsigned)kDataVa	%08X	Log("data: .rdata 0x%08X + 0x%X bytes the engine's (none from the file), .data 0x%08X + 0x%X bytes from %s; .bss "
+site	src/hook/exe_host_posix.cpp	362	fmt_place	word	live	(unsigned)kRdataVa	%08X	Log("data: .rdata 0x%08X + 0x%X bytes the engine's (none from the file), .data 0x%08X + 0x%X bytes from %s; .bss "
+site	src/hook/exe_host_posix.cpp	363	fmt_place	word	live	(unsigned)kDataVa	%08X	"zero 0x%08X..0x%08X (virtual end 0x%08X)",
+site	src/hook/exe_host_posix.cpp	363	fmt_place	word	live	(unsigned)kRdataBytes	%08X	"zero 0x%08X..0x%08X (virtual end 0x%08X)",
+site	src/hook/exe_host_posix.cpp	363	fmt_place	word	live	(unsigned)kRdataVa	%08X	"zero 0x%08X..0x%08X (virtual end 0x%08X)",
+site	src/hook/exe_host_posix.cpp	388	fmt_place	word	live	(unsigned)r.pc	%08X	Fatal("rebase: the run 0x%08X x%u lies outside .data's file bytes", (unsigned)r.pc, (unsigned)r.words);
+site	src/hook/exe_host_posix.cpp	394	fmt_place	word	live	(unsigned)v	%08X	Fatal("rebase: the %s pointer word at VA 0x%08X holds 0x%08X, outside 0x%08X..0x%08X: not the pointer "
+site	src/hook/exe_host_posix.cpp	394	fmt_place	word	live	(unsigned)va	%08X	Fatal("rebase: the %s pointer word at VA 0x%08X holds 0x%08X, outside 0x%08X..0x%08X: not the pointer "
+site	src/hook/exe_host_posix.cpp	394	fmt_place	word	live	(unsigned)want.hi	%08X	Fatal("rebase: the %s pointer word at VA 0x%08X holds 0x%08X, outside 0x%08X..0x%08X: not the pointer "
+site	src/hook/exe_host_posix.cpp	394	fmt_place	word	live	(unsigned)want.lo	%08X	Fatal("rebase: the %s pointer word at VA 0x%08X holds 0x%08X, outside 0x%08X..0x%08X: not the pointer "
+site	src/hook/exe_host_posix.cpp	412	fmt_place	word	live	words[rebase::kData]	%08X	"their linked ranges; the data words moved by 0x%X (the image at 0x%08X); the code words bound, %u to their places "
+site	src/hook/exe_host_posix.cpp	431	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t kCurrentProcess = ~static_cast<std::uintptr_t>(0);
+site	src/hook/exe_host_posix.cpp	431	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t kCurrentProcess = ~static_cast<std::uintptr_t>(0);
+site	src/hook/exe_host_posix.cpp	437	long	l	live	long	-	long SlotDirectSoundCreate(const void*, void**, void*) {
+site	src/hook/exe_host_posix.cpp	447	fmt_place	pointer	live	(unsigned)slot	%08X	Fatal("GDI32's %s was called through its import slot 0x%08X, but this system has no GDI and the renderer hands out "
+site	src/hook/exe_host_posix.cpp	516	uintptr	-	live	std::uintptr_t	-	if (reinterpret_cast<std::uintptr_t>(process) != kCurrentProcess)
+site	src/hook/exe_host_posix.cpp	517	fmt_place	pointer	live	process	%p	Fatal("TerminateProcess through its import slot of a process that is not this one (%p)", process);
+site	src/hook/exe_host_posix.cpp	549	uintptr	-	live	std::uintptr_t	-	SDL_Window* parent = hwnd ? SDL_GetWindowFromID(static_cast<SDL_WindowID>(reinterpret_cast<std::uintptr_t>(hwnd))) : nullptr;
+site	src/hook/exe_host_posix.cpp	597	uintptr	-	live	std::uintptr_t	-	if (now != thunk[i] || target != reinterpret_cast<std::uintptr_t>(s.ours))
+site	src/hook/exe_host_posix.cpp	598	fmt_place	pointer	live	(unsigned)s.at	%08X	Fatal("slots: 0x%08X does not read back as the thunk 0x%08X of our %s!%s", (unsigned)s.at, (unsigned)thunk[i], s.dll,
+site	src/hook/exe_host_posix.cpp	598	fmt_place	word	live	(unsigned)thunk[i]	%08X	Fatal("slots: 0x%08X does not read back as the thunk 0x%08X of our %s!%s", (unsigned)s.at, (unsigned)thunk[i], s.dll,
+site	src/hook/exe_host_posix.cpp	604	uintptr	-	live	std::uintptr_t	-	const std::uint32_t through = reinterpret_cast<std::uint32_t(*)()>(static_cast<std::uintptr_t>(tick_word))();
+site	src/hook/exe_host_posix.cpp	608	fmt_place	word	live	(unsigned)thunk[0]	%08X	Log("slots: %u import slots bound to 14-byte thunks at 0x%08X.. of functions of ours (no system library holds "
+site	src/hook/exe_host_posix.cpp	619	asm	cw	live	fnstcw %0	fnstcw	asm volatile("fnstcw %0" : "=m"(before));
+site	src/hook/exe_host_posix.cpp	620	asm	cw	live	fldcw %0	fldcw	asm volatile("fldcw %0" : : "m"(cw));
+site	src/hook/exe_host_posix.cpp	621	asm	cw	live	fnstcw %0	fnstcw	asm volatile("fnstcw %0" : "=m"(after));
+site	src/hook/exe_host_posix.cpp	622	asm	cw	live	stmxcsr %0	stmxcsr	asm volatile("stmxcsr %0" : "=m"(mxcsr));
+site	src/hook/exe_host_posix.cpp	625	fmt_place	word	live	before	%08X	"Capcom's start-up left it); MXCSR 0x%08X, not set", before, after, mxcsr);
+site	src/hook/exe_host_posix.cpp	695	ptr_overlay	unread	live	p	Run	Run& run = *static_cast<Run*>(p);
+site	src/hook/exe_host_posix.cpp	712	fmt_place	pointer	live	hinstance	%p	Log("Engine_Main: hinstance %p, show %d, on thread %u, its stack 0x%llX..0x%llX (the placed stack, row 3)", hinstance,
+site	src/hook/exe_host_posix.cpp	713	long	l	live	long	-	show, os::ThreadId(), static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(stack.limit)),
+site	src/hook/exe_host_posix.cpp	713	uintptr	-	live	std::uintptr_t	-	show, os::ThreadId(), static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(stack.limit)),
+site	src/hook/exe_host_posix.cpp	714	long	l	live	long	-	static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(stack.base)));
+site	src/hook/exe_host_posix.cpp	714	uintptr	-	live	std::uintptr_t	-	static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(stack.base)));
+site	src/hook/exe_host_posix.cpp	762	fmt_place	pointer	live	hinstance	%p	Log("Engine_Main: Game_WinMain(0x%p, null, \"%s\", %d) on the main thread", hinstance, line, show);
+site	src/hook/exe_host_posix.cpp	786	long	l	live	long	-	Log(" ", os::ProcessId(), static_cast<unsigned long long>(self.base),
+site	src/hook/exe_host_posix.cpp	787	long	l	live	long	-	static_cast<unsigned long long>(self.base + self.extent));
+site	src/hook/exe_host_posix.cpp	802	fmt_place	word	live	(unsigned)kStackHi	%08X	Fatal("start-up: the switch onto the main thread's placed stack 0x%08X..0x%08X failed, errno %u", (unsigned)kStackLo,
+site	src/hook/exe_host_posix.cpp	802	fmt_place	word	live	(unsigned)kStackLo	%08X	Fatal("start-up: the switch onto the main thread's placed stack 0x%08X..0x%08X failed, errno %u", (unsigned)kStackLo,
+site	src/hook/exe_icon.cpp	105	long	ul	live	unsigned long	-	wsprintfA(t, " ", static_cast<unsigned long>(hr));
+site	src/hook/exe_icon_picture.cpp	232	widen	img_place	live	::bof3::Img(menu_windows::at::kIconRects) + kIcon * 4	const std::uint8_t*	const auto* p = reinterpret_cast<const std::uint8_t*>(
+site	src/hook/exe_icon_picture.cpp	233	uintptr	-	live	std::uintptr_t	-	static_cast<std::uintptr_t>(::bof3::Img(menu_windows::at::kIconRects) + kIcon * 4));
+site	src/hook/exe_icon_sdl.cpp	251	uintptr	-	live	std::uintptr_t	-	const auto id = static_cast<SDL_WindowID>(reinterpret_cast<std::uintptr_t>(hwnd));
 site	src/hook/exe_image.cpp	596	uintptr	-	live	std::uintptr_t	-	auto* live = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(Img(va)));
 site	src/hook/exe_image.cpp	596	widen	other	live	Img(va)	unsigned char*	auto* live = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(Img(va)));
 site	src/hook/exe_image.cpp	1380	uintptr	-	live	std::uintptr_t	-	const auto* live = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(Img(im.va)));
@@ -9147,17 +9227,22 @@ site	src/os/memory.h	58	uintptr	-	live	std::uintptr_t	-	std::uintptr_t base = 0;
 site	src/os/memory.h	59	uintptr	-	live	std::uintptr_t	-	std::uintptr_t alloc_base = 0;
 site	src/os/module.h	27	uintptr	-	live	std::uintptr_t	-	std::uintptr_t lo = 0, hi = 0;
 site	src/os/module.h	33	uintptr	-	live	std::uintptr_t	-	std::uintptr_t base = 0;
+site	src/os/placed.h	41	uintptr	-	live	std::uintptr_t	-	std::string MemHolders(std::uintptr_t lo, std::uintptr_t hi);
+site	src/os/placed.h	41	uintptr	-	live	std::uintptr_t	-	std::string MemHolders(std::uintptr_t lo, std::uintptr_t hi);
 site	src/os/posix/env.cpp	44	uintptr	-	live	std::uintptr_t	-	bool ModulePath(const void* inside, std::string* utf8, std::uintptr_t* base) {
 site	src/os/posix/env.cpp	48	uintptr	-	live	std::uintptr_t	-	if (base) *base = reinterpret_cast<std::uintptr_t>(info.dli_fbase);
 site	src/os/posix/event.cpp	45	uintptr	-	live	std::uintptr_t	-	const auto at = reinterpret_cast<std::uintptr_t>(e), lo = reinterpret_cast<std::uintptr_t>(g_pool);
 site	src/os/posix/event.cpp	45	uintptr	-	live	std::uintptr_t	-	const auto at = reinterpret_cast<std::uintptr_t>(e), lo = reinterpret_cast<std::uintptr_t>(g_pool);
 site	src/os/posix/event.cpp	47	ptr_overlay	unread	live	e	Object	Object* o = static_cast<Object*>(e);
-site	src/os/posix/memory.cpp	94	uintptr	-	live	std::uintptr_t	-	const auto addr = reinterpret_cast<std::uintptr_t>(at);
-site	src/os/posix/memory.cpp	95	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t page = PageSize();
-site	src/os/posix/memory.cpp	96	uintptr	-	live	std::uintptr_t	-	std::uintptr_t prev_end = 0;
-site	src/os/posix/memory.cpp	100	long	l	live	long	-	unsigned long long lo = 0, hi = 0, off = 0, inode = 0;
-site	src/os/posix/memory.cpp	122	uintptr	-	live	std::uintptr_t	-	out->base = std::max<std::uintptr_t>(prev_end, addr & ~(page - 1));
-site	src/os/posix/memory.cpp	132	uintptr	-	live	std::uintptr_t	-	out->base = std::max<std::uintptr_t>(prev_end, addr & ~(page - 1));
+site	src/os/posix/memory.cpp	80	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t page = PageSize();
+site	src/os/posix/memory.cpp	81	uintptr	-	live	std::uintptr_t	-	const auto a = reinterpret_cast<std::uintptr_t>(at);
+site	src/os/posix/memory.cpp	82	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t first = a & ~(page - 1), end = (a + size + page - 1) & ~(page - 1);
+site	src/os/posix/memory.cpp	113	uintptr	-	live	std::uintptr_t	-	const auto addr = reinterpret_cast<std::uintptr_t>(at);
+site	src/os/posix/memory.cpp	114	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t page = PageSize();
+site	src/os/posix/memory.cpp	115	uintptr	-	live	std::uintptr_t	-	std::uintptr_t prev_end = 0;
+site	src/os/posix/memory.cpp	119	long	l	live	long	-	unsigned long long lo = 0, hi = 0, off = 0, inode = 0;
+site	src/os/posix/memory.cpp	141	uintptr	-	live	std::uintptr_t	-	out->base = std::max<std::uintptr_t>(prev_end, addr & ~(page - 1));
+site	src/os/posix/memory.cpp	151	uintptr	-	live	std::uintptr_t	-	out->base = std::max<std::uintptr_t>(prev_end, addr & ~(page - 1));
 site	src/os/posix/module.cpp	16	uintptr	-	live	std::uintptr_t	-	std::uintptr_t at;
 site	src/os/posix/module.cpp	22	ptr_overlay	unread	live	data	Search	auto* s = static_cast<Search*>(data);
 site	src/os/posix/module.cpp	24	uintptr	-	live	std::uintptr_t	-	std::uintptr_t lo = ~std::uintptr_t{0}, hi = 0;
@@ -9170,8 +9255,12 @@ site	src/os/posix/own_stack.cpp	27	width_if	asm_pair	live	-	#if !defined(__i386_
 site	src/os/posix/own_stack.cpp	54	asm	cw	live	fldcw %0	fldcw	if (s->spec->callers_x87) __asm__ volatile("fldcw %0" : : "m"(s->cw));
 site	src/os/posix/own_stack.cpp	64	long	l	live	long	-	const long page = sysconf(_SC_PAGESIZE);
 site	src/os/posix/own_stack.cpp	133	asm	cw	live	fnstcw %0	fnstcw	if (spec_.callers_x87) __asm__ volatile("fnstcw %0" : "=m"(s->cw));
-site	src/os/posix/thread.cpp	50	uintptr	-	live	std::uintptr_t	-	bool SampleThread(SampledThread*, void (*)(void*, std::uintptr_t, std::uintptr_t), void*) noexcept {
-site	src/os/posix/thread.cpp	50	uintptr	-	live	std::uintptr_t	-	bool SampleThread(SampledThread*, void (*)(void*, std::uintptr_t, std::uintptr_t), void*) noexcept {
+site	src/os/posix/placed.cpp	18	width_if	asm_pair	live	-	#if !defined(__i386__) && !defined(__x86_64__)	#if !defined(__i386__) && !defined(__x86_64__)
+site	src/os/posix/placed.cpp	75	uintptr	-	live	std::uintptr_t	-	std::string MemHolders(std::uintptr_t lo, std::uintptr_t hi) {
+site	src/os/posix/placed.cpp	75	uintptr	-	live	std::uintptr_t	-	std::string MemHolders(std::uintptr_t lo, std::uintptr_t hi) {
+site	src/os/posix/placed.cpp	81	long	l	live	long	-	unsigned long long a = 0, b = 0;
+site	src/os/posix/thread.cpp	52	uintptr	-	live	std::uintptr_t	-	bool SampleThread(SampledThread*, void (*)(void*, std::uintptr_t, std::uintptr_t), void*) noexcept {
+site	src/os/posix/thread.cpp	52	uintptr	-	live	std::uintptr_t	-	bool SampleThread(SampledThread*, void (*)(void*, std::uintptr_t, std::uintptr_t), void*) noexcept {
 site	src/os/posix/thread_start.cpp	21	ptr_overlay	unread	live	p	Start	Start* s = static_cast<Start*>(p);
 site	src/os/posix/thread_start.cpp	49	ptr_overlay	unread	live	t	Start	bool ThreadEnded(Thread t) { return t && static_cast<Start*>(t)->ended.load(std::memory_order_acquire); }
 site	src/os/sampler.h	35	uintptr	-	live	std::uintptr_t	-	bool SampleThread(SampledThread* t, void (*read)(void* ctx, std::uintptr_t ip, std::uintptr_t sp), void* ctx) noexcept;
@@ -9186,6 +9275,13 @@ site	src/os/win32/memory.cpp	55	uintptr	-	live	std::uintptr_t	-	out->alloc_base 
 site	src/os/win32/module.cpp	16	uintptr	-	live	std::uintptr_t	-	const auto base = reinterpret_cast<std::uintptr_t>(m);
 site	src/os/win32/own_stack.cpp	29	asm	cw	live	fldcw %0	fldcw	if (s->spec->callers_x87) __asm__ volatile("fldcw %0" : : "m"(s->cw));
 site	src/os/win32/own_stack.cpp	74	asm	cw	live	fnstcw %0	fnstcw	if (spec_.callers_x87) __asm__ volatile("fnstcw %0" : "=m"(s->cw));
+site	src/os/win32/placed.cpp	19	uintptr	-	live	std::uintptr_t	-	std::string MemHolders(std::uintptr_t lo, std::uintptr_t hi) {
+site	src/os/win32/placed.cpp	19	uintptr	-	live	std::uintptr_t	-	std::string MemHolders(std::uintptr_t lo, std::uintptr_t hi) {
+site	src/os/win32/placed.cpp	21	uintptr	-	live	std::uintptr_t	-	for (std::uintptr_t a = lo; a < hi;) {
+site	src/os/win32/placed.cpp	24	uintptr	-	live	std::uintptr_t	-	const auto r_lo = reinterpret_cast<std::uintptr_t>(m.BaseAddress);
+site	src/os/win32/placed.cpp	25	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t r_hi = r_lo + m.RegionSize;
+site	src/os/win32/placed.cpp	31	long	l	live	long	-	static_cast<unsigned long long>(r_lo), static_cast<unsigned long long>(r_hi), m.State, m.Type,
+site	src/os/win32/placed.cpp	31	long	l	live	long	-	static_cast<unsigned long long>(r_lo), static_cast<unsigned long long>(r_hi), m.State, m.Type,
 site	src/os/win32/thread.cpp	41	uintptr	-	live	std::uintptr_t	-	bool SampleThread(SampledThread* t, void (*read)(void* ctx, std::uintptr_t ip, std::uintptr_t sp), void* ctx) noexcept {
 site	src/os/win32/thread.cpp	41	uintptr	-	live	std::uintptr_t	-	bool SampleThread(SampledThread* t, void (*read)(void* ctx, std::uintptr_t ip, std::uintptr_t sp), void* ctx) noexcept {
 site	src/os/win32/thread.cpp	52	width_if	logic	live	-	#if defined(__x86_64__)	#if defined(__x86_64__)
@@ -11290,7 +11386,7 @@ file	src/common/image_base.h	live	asm	other	2
 file	src/common/image_base.h	live	fmt_place	pointer	2
 file	src/common/image_base.h	live	fs_read	asm	1
 file	src/common/image_base.h	live	narrow	unread	1
-file	src/common/image_base.h	live	uintptr	-	5
+file	src/common/image_base.h	live	uintptr	-	6
 file	src/common/image_base.h	live	width_if	logic	1
 file	src/common/slot32.h	live	low32	unread	1
 file	src/common/slot32.h	live	uintptr	-	1
@@ -12272,6 +12368,7 @@ file	src/game/crt_rest.cpp	live	low32	crt	1
 file	src/game/crt_rest.cpp	live	low32	func_ours	1
 file	src/game/crt_rest.cpp	live	low32	image_local	1
 file	src/game/crt_rest.cpp	live	low32	object_ours	1
+file	src/game/crt_rest.cpp	live	low32	unread	1
 file	src/game/crt_rest_fuzz.cpp	fuzz	fmt_place	word	2
 file	src/game/crt_rest_fuzz.cpp	fuzz	narrow	crt	1
 file	src/game/crt_rest_fuzz.cpp	fuzz	narrow	unread	1
@@ -15108,9 +15205,18 @@ file	src/hook/exe_host.cpp	live	uintptr	-	6
 file	src/hook/exe_host.cpp	live	valloc_addr	-	1
 file	src/hook/exe_host.cpp	live	widen	param	2
 file	src/hook/exe_host.cpp	live	width_if	logic	2
+file	src/hook/exe_host_posix.cpp	live	asm	cw	4
+file	src/hook/exe_host_posix.cpp	live	fmt_place	pointer	5
+file	src/hook/exe_host_posix.cpp	live	fmt_place	word	42
+file	src/hook/exe_host_posix.cpp	live	long	l	8
+file	src/hook/exe_host_posix.cpp	live	ptr_overlay	unread	1
+file	src/hook/exe_host_posix.cpp	live	uintptr	-	15
+file	src/hook/exe_host_posix.cpp	live	widen	param	1
+file	src/hook/exe_host_posix.cpp	live	width_if	asm_pair	1
 file	src/hook/exe_icon.cpp	live	long	ul	1
-file	src/hook/exe_icon.cpp	live	uintptr	-	1
-file	src/hook/exe_icon.cpp	live	widen	img_place	1
+file	src/hook/exe_icon_picture.cpp	live	uintptr	-	1
+file	src/hook/exe_icon_picture.cpp	live	widen	img_place	1
+file	src/hook/exe_icon_sdl.cpp	live	uintptr	-	1
 file	src/hook/exe_image.cpp	live	uintptr	-	2
 file	src/hook/exe_image.cpp	live	widen	other	2
 file	src/hook/exe_own.cpp	live	uintptr	-	1
@@ -15221,17 +15327,21 @@ file	src/os/heap_arena.cpp	live	widen	other	1
 file	src/os/heap_arena.cpp	live	widen	param	1
 file	src/os/memory.h	live	uintptr	-	2
 file	src/os/module.h	live	uintptr	-	2
+file	src/os/placed.h	live	uintptr	-	2
 file	src/os/posix/env.cpp	live	uintptr	-	2
 file	src/os/posix/event.cpp	live	ptr_overlay	unread	1
 file	src/os/posix/event.cpp	live	uintptr	-	2
 file	src/os/posix/memory.cpp	live	long	l	1
-file	src/os/posix/memory.cpp	live	uintptr	-	5
+file	src/os/posix/memory.cpp	live	uintptr	-	8
 file	src/os/posix/module.cpp	live	ptr_overlay	unread	1
 file	src/os/posix/module.cpp	live	uintptr	-	6
 file	src/os/posix/named_event.cpp	live	long	l	1
 file	src/os/posix/own_stack.cpp	live	asm	cw	2
 file	src/os/posix/own_stack.cpp	live	long	l	1
 file	src/os/posix/own_stack.cpp	live	width_if	asm_pair	1
+file	src/os/posix/placed.cpp	live	long	l	1
+file	src/os/posix/placed.cpp	live	uintptr	-	2
+file	src/os/posix/placed.cpp	live	width_if	asm_pair	1
 file	src/os/posix/thread.cpp	live	uintptr	-	2
 file	src/os/posix/thread_start.cpp	live	ptr_overlay	unread	2
 file	src/os/sampler.h	live	uintptr	-	2
@@ -15240,6 +15350,8 @@ file	src/os/win32/memory.cpp	live	uintptr	-	2
 file	src/os/win32/memory.cpp	live	valloc_addr	-	3
 file	src/os/win32/module.cpp	live	uintptr	-	1
 file	src/os/win32/own_stack.cpp	live	asm	cw	2
+file	src/os/win32/placed.cpp	live	long	l	2
+file	src/os/win32/placed.cpp	live	uintptr	-	5
 file	src/os/win32/thread.cpp	live	uintptr	-	2
 file	src/os/win32/thread.cpp	live	width_if	logic	1
 file	src/os/win32/thread_start.cpp	live	ptr_overlay	unread	2
@@ -15275,8 +15387,8 @@ file	symbols.toml	live	ptr_member	ours_render	11
 file	symbols.toml	live	ptr_member	windows_function	14
 file	symbols.toml	live	ptr_member	windows_handle	3
 file	symbols.toml	live	ptr_member	windows_object	10
-#count sites	11261
-#count sites_live	7790
+#count sites	11357
+#count sites_live	7886
 #count sites_fuzz	3471
 #count fuzz_files	250
 #count narrow	357
@@ -15343,9 +15455,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count narrow_call_windows	11
 #count narrow_call_windows_live	5
 #count narrow_call_windows_live_files	2
-#count widen	1347
-#count widen_live	1037
-#count widen_live_files	487
+#count widen	1348
+#count widen_live	1038
+#count widen_live_files	488
 #count widen_fuzz	310
 #count widen_fuzz_files	147
 #count widen_code_place	26
@@ -15357,15 +15469,15 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count widen_other	209
 #count widen_other_live	195
 #count widen_other_live_files	116
-#count widen_param	643
-#count widen_param_live	361
-#count widen_param_live_files	163
+#count widen_param	644
+#count widen_param_live	362
+#count widen_param_live_files	164
 #count widen_word_read	373
 #count widen_word_read_live	364
 #count widen_word_read_live_files	295
-#count long	2360
-#count long_live	2359
-#count long_live_files	50
+#count long	2371
+#count long_live	2370
+#count long_live_files	53
 #count long_fuzz	1
 #count long_fuzz_files	1
 #count long_ctype:long	42
@@ -15377,20 +15489,20 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count long_ctype:unsigned long *	1
 #count long_ctype:unsigned long *_live	1
 #count long_ctype:unsigned long *_live_files	1
-#count long_l	354
-#count long_l_live	353
-#count long_l_live_files	38
+#count long_l	365
+#count long_l_live	364
+#count long_l_live_files	41
 #count long_ul	217
 #count long_ul_live	217
 #count long_ul_live_files	28
-#count asm	324
-#count asm_live	203
-#count asm_live_files	81
+#count asm	328
+#count asm_live	207
+#count asm_live_files	82
 #count asm_fuzz	121
 #count asm_fuzz_files	64
-#count asm_cw	73
-#count asm_cw_live	28
-#count asm_cw_live_files	14
+#count asm_cw	77
+#count asm_cw_live	32
+#count asm_cw_live_files	15
 #count asm_fs	27
 #count asm_fs_live	1
 #count asm_fs_live_files	1
@@ -15451,28 +15563,28 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count sizeof_ptr_-	15
 #count sizeof_ptr_-_live	15
 #count sizeof_ptr_-_live_files	8
-#count uintptr	1935
-#count uintptr_live	1269
-#count uintptr_live_files	519
+#count uintptr	1964
+#count uintptr_live	1298
+#count uintptr_live_files	524
 #count uintptr_fuzz	666
 #count uintptr_fuzz_files	249
-#count uintptr_-	1935
-#count uintptr_-_live	1269
-#count uintptr_-_live_files	519
-#count fmt_place	493
-#count fmt_place_live	423
-#count fmt_place_live_files	71
+#count uintptr_-	1964
+#count uintptr_-_live	1298
+#count uintptr_-_live_files	524
+#count fmt_place	540
+#count fmt_place_live	470
+#count fmt_place_live_files	72
 #count fmt_place_fuzz	70
 #count fmt_place_fuzz_files	35
 #count fmt_place_narrowed	24
 #count fmt_place_narrowed_live	17
 #count fmt_place_narrowed_live_files	8
-#count fmt_place_pointer	115
-#count fmt_place_pointer_live	100
-#count fmt_place_pointer_live_files	32
-#count fmt_place_word	354
-#count fmt_place_word_live	306
-#count fmt_place_word_live_files	57
+#count fmt_place_pointer	120
+#count fmt_place_pointer_live	105
+#count fmt_place_pointer_live_files	33
+#count fmt_place_word	396
+#count fmt_place_word_live	348
+#count fmt_place_word_live_files	58
 #count import_slot	14
 #count import_slot_live	14
 #count import_slot_live_files	1
@@ -15513,8 +15625,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count ptr_member_windows_object	10
 #count ptr_member_windows_object_live	10
 #count ptr_member_windows_object_live_files	1
-#count low32	733
-#count low32_live	725
+#count low32	734
+#count low32_live	726
 #count low32_live_files	469
 #count low32_fuzz	8
 #count low32_fuzz_files	1
@@ -15539,9 +15651,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count low32_pool	18
 #count low32_pool_live	18
 #count low32_pool_live_files	14
-#count low32_unread	24
-#count low32_unread_live	24
-#count low32_unread_live_files	13
+#count low32_unread	25
+#count low32_unread_live	25
+#count low32_unread_live_files	14
 #count low32_windows	5
 #count low32_windows_live	5
 #count low32_windows_live_files	3
@@ -15559,9 +15671,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count handle_array_slot_i686	1
 #count handle_array_slot_i686_live	1
 #count handle_array_slot_i686_live_files	1
-#count ptr_overlay	39
-#count ptr_overlay_live	39
-#count ptr_overlay_live_files	11
+#count ptr_overlay	40
+#count ptr_overlay_live	40
+#count ptr_overlay_live_files	12
 #count ptr_overlay_fuzz	0
 #count ptr_overlay_fuzz_files	0
 #count ptr_overlay_crt	2
@@ -15579,23 +15691,23 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count ptr_overlay_object_ours	1
 #count ptr_overlay_object_ours_live	1
 #count ptr_overlay_object_ours_live_files	1
-#count ptr_overlay_unread	26
-#count ptr_overlay_unread_live	26
-#count ptr_overlay_unread_live_files	8
-#count width_if	48
-#count width_if_live	48
-#count width_if_live_files	24
+#count ptr_overlay_unread	27
+#count ptr_overlay_unread_live	27
+#count ptr_overlay_unread_live_files	9
+#count width_if	50
+#count width_if_live	50
+#count width_if_live_files	26
 #count width_if_fuzz	0
 #count width_if_fuzz_files	0
-#count width_if_asm_pair	16
-#count width_if_asm_pair_live	16
-#count width_if_asm_pair_live_files	10
+#count width_if_asm_pair	18
+#count width_if_asm_pair_live	18
+#count width_if_asm_pair_live_files	12
 #count width_if_logic	32
 #count width_if_logic_live	32
 #count width_if_logic_live_files	15
 #count asm_live_x87_only_files	42
 #count widen_live_fnptr	472
-#count long_src	571
+#count long_src	582
 #count long_src_game	46
 #count long_src_game_ul	1
 #count long_ctype	1789
@@ -15613,8 +15725,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count img_place_Code	625
 #count img_place_Code_fuzz	6
 #count img_place_Code_live	619
-#count img_place_Img	16021
+#count img_place_Img	16031
 #count img_place_Img_fuzz	1070
-#count img_place_Img_live	14951
+#count img_place_Img_live	14961
 #count img_place_VaOf	106
 #count img_place_VaOf_live	106
