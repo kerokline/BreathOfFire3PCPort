@@ -63,12 +63,14 @@ struct Callees {
     void* (__cdecl* open)(const char* path, const char* mode);                // Crt_fopen
     char* (__cdecl* gets)(char* buf, int n, void* stream);                    // Crt_fgets
     int (__cdecl* to_int)(const char* s);                                        // Crt_atoi
-    int (__cdecl* scan_pair)(const char* s, const char* fmt, void* a, void* b);   // Crt_sscanf, as Cfg_Load calls it
+    // Crt_sscanf and Crt_sprintf below: no __cdecl, as their variadic definitions (System V on
+    // Linux, where __cdecl is ms_abi; the same code on Windows).
+    int (*scan_pair)(const char* s, const char* fmt, void* a, void* b);   // Crt_sscanf, as Cfg_Load calls it
     int (__cdecl* close)(void* stream);                                       // Crt_fclose
     void (__cdecl* set_key_table)(const void* table);                          // Cfg_SetKeyTable (ours)
     void (__cdecl* default_keys)();                                            // Cfg_SetDefaultKeys (this module)
     // Disc_Probe's
-    int (__cdecl* format)(char* dst, const char* fmt, const char* a, const char* b);   // Crt_sprintf, as called
+    int (*format)(char* dst, const char* fmt, const char* a, const char* b);   // Crt_sprintf, as called (no __cdecl: above)
     U drive_type_slot;   // where GetDriveTypeA is read from, once a call: the import slot 0x5C4088
     // Game_Init's
     void (__cdecl* init_geom)();                                               // Gte_InitGeom

@@ -1128,7 +1128,7 @@ const Callees kOriginals = {
     As<void (__cdecl*)(int, int, int, int, int, int)>(Menu_DrawBox),
     As<void (__cdecl*)(int, int, int, int)>(Menu_DrawItemIcon),
     As<const unsigned char* (__cdecl*)(int, int, int, int, const unsigned char*)>(Text_DrawAt),
-    As<int (__cdecl*)(char*, const char*, unsigned)>(Crt_sprintf),
+    As<int (*)(char*, const char*, unsigned)>(Crt_sprintf),
     As<void (__cdecl*)(int, int, int, const unsigned char*)>(Text_DrawFont8),
     reinterpret_cast<const unsigned char* (__cdecl*)(int, int, unsigned, unsigned, const unsigned char*)>(
         static_cast<std::uintptr_t>(::bof3::Code(kTinyFont.v))),
