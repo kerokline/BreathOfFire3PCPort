@@ -2015,6 +2015,23 @@ run so far leaves `/dev/shm/sem.bof3x_unattended_<pid>` (eight after this
 unit's runs); the next process with that number unlinks it before it makes
 its own, so they do not collide, but they pile up until a reboot.
 
+**Measured.**
+
+| Check | Result |
+|---|---|
+| `os_tests`, the fold's block (`TestCaseFold`) and the close (`TestNamedEventClose`) | WSL, g++ 15 by the brief's line and the CMake build: 596 checks, 0 failed (8 walks; each name in each case, a missing name, a folder of another case, two names that differ in case alone, a walk's pattern, an absolute name, `..`, the cache walked again after a file was made, `errno` kept, the line once); Windows i686 643 to 644 and x86_64 647, 0 failed (the fold gives the name back; the system folds) - one i686 run failed the auto-reset event's two-waiter check (`os_tests.cpp:1114`, not this unit's) while a build ran beside it, and passed twice after |
+| `config_tests` (WSL) | 4,400 checks, 0 failures (`save_tests` fails to compile under g++ as at the base) |
+| The Linux link | no undefined name |
+| The ELF's self-test through the Linux launcher | `/mnt/c` install (`BOF3X_EXEFILE=1`): 10,394 lines, 0 FATAL, `done` (one more than B1's: the empty slot file's line); the ext4 copy with `BOF3X_CASECHECK=1`: 10,395, the same, no `CASECHECK` line |
+| `linux_tree.py --check` (WSL) | 837 files, 837 compile, 0 do not, 11 Windows-only |
+| `codegen_same.py --by-function` against `3080284c` | the engine: 32-bit 18 symbols, 64-bit 5, every one in `snapshot.cpp` or `quick_menu.cpp` (the 32-bit rest are their exception tables renumbered); the seam library (`build*/src/os`, which the tool's default root does not read): the five new functions and nothing changed (32-bit: `file.cpp`'s exception tables renumbered) |
+| `os_census.py --check` | 1,898 sites: one new, `CloseHandle` in `win32/named_event.cpp`; `--boundary` ok |
+| The other censuses | `data_census --strict`, `reloc_census`, `reloc_bare`, `width_census`, `ledger_check`, `ledger_switches`, `tu_census --strict`, `retire_shells --strict`: ok |
+
+**Not run:** the quicksave made and loaded on Linux in a game (the route
+stops before F6, above); the `combat` route's first minute to its end and
+on a disc-built install; a Windows run with `BOF3X_CASECHECK=1` (wave A's).
+
 ## 5. What stands in for the launcher in tier 2
 
 The launcher is Win32 dialogs: `config_dialog.cpp` 1,861 lines, `config.cpp`
