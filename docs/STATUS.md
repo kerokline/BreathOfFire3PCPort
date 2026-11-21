@@ -86,8 +86,9 @@ developer's switch to read it. Measured by each group ([`exe-retire-round.md`](e
 builds, the host tests, the censuses, the exe host's self-test with and without the switch, the hosted suite. On 2026-11-20 at `main`
 `e9c1fb41`: the ten state-hash routes on `<main checkout>\bof3`, on an install with no `BOF3.exe` and with a wrong-bytes
 `BOF3.exe` beside the game, each the same as before the round but for known noise pages, and `music_heard.py` on both
-(round doc 9a). **Not run:** the Sources page's window, the save editor's window, the Jukebox's and the save editor's
-drivers on that install. Not played.
+(round doc 9a). The owner checked the Sources page's window, the save editor's window and the Jukebox on a game folder
+with no `BOF3.exe` (2026-11-20). **Not run:** the save editor's window on a disc-built install, the Jukebox's and the save
+editor's drivers. Not played.
 
 **A PlayStation disc needs no ffmpeg, 2026-11-11 (DIV-0214, DIV-0215; merged as PR #228, frost's PR #225 with the review's commits;
 [`psx-media-round.md`](psx-media-round.md)).** The importer copies the logo movie's sectors

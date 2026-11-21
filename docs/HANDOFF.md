@@ -136,8 +136,9 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      **The proofs ran on 2026-11-20 at `main` `e9c1fb41`** (round doc 9a): the ten routes on `<main checkout>\bof3`, on
      an install with no `BOF3.exe` and with a wrong-bytes `BOF3.exe` beside the game, every one the same as before the
      round but for known noise pages; `music_heard.py` on both; the hosted suite, the exe host and the moved base.
-     **Owed:** the Jukebox's and the save editor's drivers on that install; the Sources page's window driven through a
-     set-up in place; the save editor's window on a disc-built install; the owner's play.
+     The owner checked the Sources page's window, the save editor's window and the Jukebox on a game folder with no
+     `BOF3.exe` (2026-11-20: "both are working as expected"). **Owed:** the save editor's window on a disc-built install; the
+     Sources page through a set-up in place; the Jukebox's and the save editor's drivers; the owner's play.
    - **The Linux round's next units** are frost's, on his fork ([`linux-round.md`](linux-round.md) 4 and 6; "Waiting on
      someone else"). Here: the renderer's remainder ([`platform-layers-plan.md`](platform-layers-plan.md) 2.2) and the
      second backend (IDEAS I63) gate tier 2, and the API is the owner's call 1 of `linux-round.md` 6. Tier 1's rows 5, 7

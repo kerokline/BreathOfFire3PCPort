@@ -5,9 +5,10 @@ section 9. **The ten state-hash routes and X7's routes and music ran on
 2026-11-20** at `main` `e9c1fb41` (section 9a): every route the same as
 before the round, on `<main checkout>\bof3` and on an install with no
 `BOF3.exe`, and the same again with a `BOF3.exe` of wrong bytes beside the
-game. **Not run yet** (section 10): the Sources page's window, the save
-editor's window, the Jukebox's and the save editor's drivers on X7's install.
-Not played. Asked by the owner on 2026-11-19: "remove the original exe from any
+game. **The owner's hand, 2026-11-20:** the Sources page's window, the save editor's
+window and the Jukebox on a game folder with no `BOF3.exe` (section 9a).
+**Not run yet** (section 10): the save editor's window on a disc-built
+install, the Jukebox's and the save editor's drivers. Not played. Asked by the owner on 2026-11-19: "remove the original exe from any
 post-install player usage"; the five calls of section 7 answered the same day,
 all as proposed. Staged on the Linux round's wave A merge (`linux/lcA`
 `33de9f1b`); sections 1 to 8 are the staging, with section 8's items answered
@@ -356,6 +357,12 @@ owner's save slots and `BOF3.CFG` were copied into its `game\` from
 | The hosted shadow suite (`BOF3X_SHADOW='*'`) | `done` in 940 s: 922 `MISMATCHES` lines, all 0, 0 FATAL |
 | The exe host and the moved base (`BOF3X_EXEFILE=1`) | `done`, 10,392 log lines each, 0 FATAL |
 
+**The owner's hand, 2026-11-20.** On a game folder with no `BOF3.exe`: "I've
+verified both the sources page window and save editor windows on the no
+bof3.exe game folder - both are working as expected. I've also played songs
+on the jukebox." Whether the Sources page ran a set-up in place there was not
+said.
+
 **A trap paid.** The first X7 pass failed every run in 6 s: `input_run.py`
 looks for a recipe save in its own checkout's `tools\recipe_saves` and beside
 the game folder's parent, and neither holds one for a worktree's runner on an
@@ -365,12 +372,13 @@ in the run's environment fixed it.
 ## 10. Not run yet
 
 - X7's other drivers: the Jukebox's and the save editor's on the install with
-  no `BOF3.exe`.
+  no `BOF3.exe` (the owner's hand covered both windows, section 9a).
 - The Sources page's window driven through a set-up in place (X3 ran the same
-  importer commands from the command line).
-- The save editor's window on a disc-built install and on a PC install with
-  no `BOF3.exe` (`save_editor_drive.py`), and `save_tests` with the owner's
-  fixtures and `--layers` (the coordinator's).
+  importer commands from the command line; the owner opened the page on a
+  folder with no `BOF3.exe`).
+- The save editor's window on a disc-built install (`save_editor_drive.py`),
+  and `save_tests` with the owner's fixtures and `--layers` (the
+  coordinator's).
 - The windowless launcher's program end to end; a live runner
   (`input_run.py`, `attract_run.py`, `abc_run.py`) on `<main checkout>\bof3`
   with its new switch line.
