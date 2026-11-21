@@ -2300,6 +2300,214 @@ its own, so they do not collide, but they pile up until a reboot.
 stops before F6, above); the `combat` route's first minute to its end and
 on a disc-built install; a Windows run with `BOF3X_CASECHECK=1` (wave A's).
 
+### B2d as run (2026-11-21, branch `linux/lcB-b2d`, from `360260c4`)
+
+Unit B2d, alone after B2a..B2c: the routes on Linux - the harness, and what
+the ten state-hash routes find. Every game run below: the ELF through
+`bof3x-launcher` beside it, headless, under the round's lock, on a quiet
+machine (no compiler seen in the WSL or on Windows during any hashed run).
+
+**The harness** (`tools/input_run.py --host linux`, `tools/linux_run.py`).
+
+- **Through the launcher**, by default: `bof3x-launcher --game G
+  --no-config` beside the ELF (or `--launcher`), as the Windows runs'
+  launcher. It returns once the game is up; the game is followed by the pid
+  of its `started ... (pid N)` line (`/proc/<pid>/stat`, not a zombie) and
+  ended by that pid alone. `--direct` keeps C8's start of the ELF itself.
+  From Windows the same runs through `wsl -e` (the launcher's folder as the
+  working folder; the pid asked of the WSL helper's new `alive` operation).
+- **A game folder made for the run** (`--run-game DIR`, default `OUT/game` on
+  Linux; `linux_run.make_run_game`, also the helper's `mkgame`): **links**
+  into `--game` for every folder (`BGM`, `DAT`, `SND`, `CDImage`,
+  `directx7`) and every file the game only reads (`BOF3.exe`, the movies,
+  `DATA.TAG`, the installer's files); **real copies** of what a run writes:
+  the slots `BISLPS0?.DAT` and `BOF3.CFG` (the launcher writes its display
+  lines); the recipe save (`# save NAME`, `tools/recipe_saves/NAME.DAT`,
+  found in this checkout, beside the game, or the main checkout's from a
+  worktree) as slot 0. Not taken: quicksaves, `.recipe_slot0`, `*.TMP`,
+  DXVK's logs. The source (`~/bof3x-runs/lcB/bof3`) is never written; a
+  folder is removed again only when it carries the marker the function
+  writes. The other slots stay `--game`'s, because the Windows references
+  had the owner's slots beside the swapped slot 0, and a route that opens
+  the load menu reads every slot's header into `.data` (the slots of
+  `<main checkout>/bof3` and of the copy: the same bytes, unchanged since
+  2026-10-28). The slot-0 swap and its lock are not needed: the folder is
+  the run's. With the save in place for the whole run, every route is as
+  `--slot0-hold` (C0 held it on `shop` alone; the other nine never read
+  slot 0 after its load).
+- **Headless**, by default (`--window` keeps the caller's display):
+  `SDL_VIDEO_DRIVER=offscreen` and `SDL_AUDIO_DRIVER=dummy` unless the
+  caller set them, and no `DISPLAY` or `WAYLAND_DISPLAY` in the game's
+  environment (through the WSL: `env -u`). SDL3's dummy audio device takes
+  the stream a buffer at a time at the device's rate and plays it nowhere:
+  the mixer, the cursors, the ring's notifications and `Music_Pump` run as
+  with a device. `music_heard.py` on Linux runs with `BOF3X_MUSIC_LOG=1`:
+  `whelpBoss` pass, 164 ring lines, 6 tracks; `cutsceneAndNue` pass, 116
+  lines, 5 tracks - the counts of C0's 64-bit Windows runs.
+- **`BOF3X_EXEFILE=1`** by the Windows runners' rule (a PC folder holding
+  `BOF3.exe`, no cache named): the references read `.data` from the file.
+- **The settings of the references, and what is not the same.** C0's
+  environment (`BOF3X_OPT=none`, `BOF3X_LAYERING=0`, the skip list, no other
+  `BOF3X_` variable, no `BOF3X_LANG`: the launcher's language with no ini,
+  `original`), `input_run.py`'s additions (New Game's two screens off,
+  `BOF3X_SHOT_WAIT`, `BOF3X_SHOT_DIR`, `BOF3X_PRESENT=clean`, the recipe),
+  the launcher's defaults with no ini (`preset recommended, language
+  original` in both logs; windowed 640 x 480, scale 2, linear present, as
+  C0's log). Not the same, by the host: the desktop (Windows 3440 x 1440,
+  SDL's offscreen driver a fixed 1024 x 768), the sound device (Windows' 441
+  frames a buffer, SDL's dummy 1024), the GPU (llvmpipe), the install's
+  file system (ext4, the case fold), the slot 0 swap (none here).
+- **A Fatal's message box cannot hold a run.** `BOF3X_CRASH_TEST=60`,
+  headless, through the launcher, the run folder of `combat`: the game's
+  environment has neither display variable (read from
+  `/proc/<pid>/environ`); `CRASH 0: signal 11`, `FATAL: a signal nobody
+  handled`, and the process gone 60.1 s after the launcher returned, with
+  nothing killing it. Three routes that met a fault on the first pass
+  (below) ended the same way, the harness reporting `end: FATAL`.
+- Windows' path through `input_run.py` is the same: the 64-bit exe host of
+  this branch's build, C0's conditions, `shop` with `--slot0-hold` -
+  **identical to `cn_shop_c0x64` on all 3,137 ticks**, and the owner's slot 0
+  back, byte for byte.
+
+**The first finding: a Linux hash file compares with a Windows one as
+built.** The header's image place (`0x400000`), its fold (none), the extent,
+the skip list's hash (`2C491AB2`, 173 ranges) and the flags (our pointers by
+what they name, the battle message words, bound code words as their VAs)
+are the references'. Our image is an ELF at `0x10000000`: the census reads
+its `PT_LOAD` segments through `os::ModuleImage`, and the bound code places
+are `bind.cpp`'s at `0x7C400000..` on both systems. Two Linux runs of a
+route are identical on every tick (seven routes run twice; `whelpBoss` with
+and without `BOF3X_MUSIC_LOG`).
+
+**What the routes found, and fixed** (each a defect of the Linux build;
+the same code on Windows unless said):
+
+1. **`Window_DispatchKind`'s handlers** (`menu_list.cpp`; the
+   `move_script::Word` fault B2c met). The dispatcher calls the three gauge
+   handlers through a type of eight `std::uint32_t`; the handlers take eight
+   pointers. At 64 bits the 7th and 8th arguments lie on the stack (the 5th
+   to the 8th on Win64): a 32-bit word stored into an 8-byte slot leaves its
+   high half as it was, and the handler read `step` as
+   `0x00402FD8'0093BA04` (B2c's `r11`; `movsx esi, word [r11]` at
+   `Window_HpGaugeTrack`, by `addr2line` on B2c's ELF). It depends on what
+   the slot held before, which is why B2a's run of the same route did not
+   meet it. Now the words go out as `std::uintptr_t`, zero-extended. Win64
+   had the same latent read (it passed because the stale high halves there
+   were zero); its code changed (below), its behaviour not.
+2. **`Crt_sprintf` and `Crt_sscanf` through `__cdecl` types**
+   (`map_field_objects_callees.h`, `shell_callees.h`, their fills in
+   `area_map.cpp` and `magic_080.cpp`). On Linux `__cdecl` is `ms_abi` and
+   the two variadic functions are System V (LB0: no convention for a
+   `...`): three types still said `__cdecl`, so the caller put (buffer,
+   format, value) in `rcx`, `rdx`, `r8` and the callee read `rdi`, `rsi`,
+   `rdx`. `field_menu`, `menu_screens` and `worldMapAndAreaTransition`
+   faulted in `Crt_sprintf` reading `0x41` (the member status's level).
+   A census of the class (a script of this unit's, over every typed function
+   pointer whose comment names its target in `symbols.gen.h`: 897 types)
+   found these three and no other; types filled by an unnamed cast are not
+   covered by it.
+3. **The DirectSound layer's LONGs** (`sound_sdl.cpp`, `wav_dump.cpp`):
+   below, the width list.
+
+**The ten routes on the final build** (`dedc9245`'s ELF, tag `t3`, against
+`<main checkout>/analysis/statehash/cn_<route>_c0x64.sh`):
+
+| Route | End | Seconds | `diff` against `_c0x64` |
+|---|---|---:|---|
+| `field_menu` | recipe done, frame 1454 | 57 | the three desktop pages |
+| `menu_screens` | done, 1770 | 67 | the three desktop pages |
+| `combat` | done, 2620 | 95 | the three desktop pages |
+| `shop` | done, 3157 | 114 | the three desktop pages; 8 pages at ticks 2713..2756 |
+| `dragonTransform` | done, 4329 | 152 | the three desktop pages |
+| `cutsceneAndNue` | done, 7421 | 256 | the three desktop pages |
+| `whelpBoss` | done, 13181 | 448 | the three desktop pages |
+| `worldMapAndAreaTransition` | done, 2143 | 80 | the three desktop pages; `0x6C3000` from 1098 |
+| `caughFish` | done, 3889 | 138 | the three desktop pages; `0x6C3000` from 395 |
+| `masterAndManillo` | done, 5519 | 192 | the three desktop pages; `0x6C3000` from 324 |
+
+Each run: 0 FATAL, no `CRASH` line, within its recipe's time (the seconds
+are the launcher to the recipe's end; the start to the game's loop takes
+about 45 s here, not B2c's two minutes, the game folder on ext4).
+
+- **The three desktop pages** (`0x6C9000`, `0x7C9000`, `0x939000`, every
+  tick): raw dumps of `shop` at tick 2712 on both systems (Windows: the
+  64-bit run above with `BOF3X_STATEHASH_DUMP`) differ outside the skip list
+  in three ranges alone - `0x6C9F40` and `0x7C9F44` (the desktop's
+  `VERTRES` and `HORZRES` of `Display_Setup`, `display-setup.md` 2.1) and
+  `0x939A30..0x939A35` (`Desktop_Height`, `Desktop_Width`): 1440 / 3440 on
+  the Windows machine, 768 / 1024 from SDL's offscreen driver. A property of
+  the host's screen: two Windows machines with different desktops differ
+  there too.
+- **`0x6C3000`** (Direct3D's state): the Windows references disagree with
+  each other on it on these three routes; `check` with `_c0x32` as the
+  second reference counts it as noise and reports the three desktop pages
+  alone. Two Linux runs agree on it.
+- **`shop`'s window 2713..2756** (`0x66C000`, `0x7E0000`, `0x903000`,
+  `0x929000`, `0x7DE000`, `0x7E1000`, `0x803000`, `0x7CA000`; the pages
+  `state-hash.md` section 6 names for DIV-0201, "the mode transition after
+  the inn's jingle comes a frame apart"): the dumps at 2713 show Linux's
+  transition begun (`Transition_Busy` and `ModeFlow_TransitionKind` 1, the
+  ordering-table heads moved) where Windows' has not; at 2720 the two are
+  equal again but for the desktop; at 2740 the message box is a step apart
+  (`Msgbox_StepCount` 3 / 4, the pen 0x52 / 0x5E); from 2757 equal to the
+  end. The jingle (`SND\OYASUMI.DAT`) opens at frame 2513 on both; its end
+  is read from the sound device's cursor, which SDL's stream advances a
+  device buffer at a time. With the dummy device at 441 frames a buffer
+  (`SDL_AUDIO_DEVICE_SAMPLE_FRAMES=441`, Windows' size) the window starts a
+  tick later (2714..2759): the device's clock, not the game.
+
+**For the coordinator (nothing of this changed here):** the desktop words
+`0x6C9F40 4`, `0x7C9F44 4`, `0x939A30 8` are the host's and no system's
+defect; if the hash should not see them, that is a skip-list change and new
+Windows references. Short of that, the gate reads them as this table does.
+The `shop` window is the sound device's clock (DIV-0201's class) and cannot
+be skipped (game state follows from it); it is the same on every Linux run.
+
+**The width sites** (task 2's search: `width_census.py --list long`, 2,349
+rows, 1,789 of them `symbols.toml` ctypes that `gen_symbols.py` already
+writes as fixed-width; the source rows read one by one, and a scan of every
+function of 7 or more parameters with an 8-byte one on the stack):
+
+| Site | What | Done |
+|---|---|---|
+| `sound_sdl.cpp` `BufGetVolume`, `BufGetPan` (`long*`) | the game's out-local is `std::int32_t` (`sound_sp.cpp:118`): 8 bytes written into 4 | `std::int32_t*` |
+| `sound_sdl.cpp` `BufSetVolume`, `BufSetPan` (`long`) | the caller's `std::int32_t` arrives zero-extended: -600 read as 4,294,966,696 and refused, every level and pan lost | `std::int32_t` |
+| `sound_sdl.cpp` `Position` (`unsigned long offset`) | `music.cpp:503`'s `std::uint32_t` offset and its padding read as one 8-byte number: a notify offset past the buffer, refused | `std::uint32_t` |
+| `sound_sdl.cpp` `Buffer::volume/pan`, `Gain`, `kVolumeMin..`, the self-test's `MGetLong`, `MLong` | the model of the two above | `std::int32_t` |
+| `wav_dump.cpp` `HookSetVolume`, `HookSetPan`, `Buffer::volume/pan`, `Gain` | the same LONGs through the dump's hooks | `std::int32_t` |
+| `menu_list.cpp` `Window_DispatchKind` | eight words to eight pointers, two on the stack | `std::uintptr_t` |
+| HRESULT results as `long` (`sound_sdl.cpp`, `render_shim.cpp`, `wav_dump.cpp`, `bind.cpp` `DirectSoundThunk`, `exe_host_posix.cpp` `SlotDirectSoundCreate`) and `AddRef` / `Release` as `unsigned long` | the caller reads the low 32 bits of the register: the same value | left |
+| `render_shim.cpp` RECTs | B2a's `Coord` | (B2a) |
+| `wav_dump.cpp` `Buffer::bytes/frequency/lock_offset` (`unsigned long`) | the dump's own model, filled from `std::uint32_t` | left |
+| `input_script.cpp` `InputScript_RecordKey(unsigned, long)`; `statehash.cpp` `StateHash_SetImageBase(unsigned long)`; `strto32.h`'s `strtol` locals; `crash*.cpp`, `exe_host_posix.cpp`, `stallwatch.cpp` print casts | called directly with the declared type, or a print | left |
+| `stackwatch.h` `StackWatch_AtSetStackBase(unsigned long)`; `gapwatch.cpp`, `write_watch.cpp`, `calltrace.cpp` | Windows only (`linux_tree.py`'s `WINDOWS_ONLY`, the stack watch refused on Linux) | left |
+| `gte.cpp` `Gte_RotTransPers3/4`, `Gte_RotAverage3/4`; `sound_sdl.cpp` `BufLock` (pointers on the stack) | every caller's type spells the same pointers | left |
+
+**Windows** (`codegen_same.py --by-function` against `linux/lcB`'s builds of
+`360260c4`): 32-bit, 15 symbols - the eight renamed methods (`long` to
+`int` in the mangled name, the bodies the same hash) and the seven that name
+them; 64-bit, 26 - those, `Window_DispatchKind` (the zero-extended words),
+and the line numbers `Low32` takes (`__builtin_LINE`), moved by this unit's
+comments in `menu_list.cpp`, `sound_sdl.cpp` and `wav_dump.cpp`. The callee
+types and the two casts changed no code in either preset.
+
+**The gate line.** Both Windows presets build (no warning in a line this unit
+touched); the censuses pass but `width_census --check`, which names this
+unit's 12 changed lines (`sound_sdl.cpp` 6, `wav_dump.cpp` 4,
+`menu_list.cpp` 2) and is not regenerated here; `linux_tree.py --check` (in
+the WSL): 837 files compile, 0 wait. In the WSL: the Linux preset links with
+no undefined name; `os_tests` 596 checks, 0 failed; `config_tests` 4,400, 0
+failures; the ELF's self-test through the launcher (`BOF3X_EXEFILE=1`,
+offscreen): 10,394 lines, 0 FATAL, `self-test only: done`. On Windows,
+under the lock: the hosted shadow suite (32-bit) 922 `MISMATCHES` lines,
+every one 0, 0 FATAL, `done` (32,190 lines); the exe host (`BOF3X_EXEFILE=1`)
+10,393 lines, 0 FATAL, `done`.
+
+**Not done:** the routes on a disc-built install; a window (WSLg) run; the
+`shop` window bisected below the sound device's clock (one hypothesis
+tested, the buffer size); the general census of calling-convention
+mismatches for pointer types filled by unnamed casts.
+
 ## 5. What stands in for the launcher in tier 2
 
 The launcher is Win32 dialogs: `config_dialog.cpp` 1,861 lines, `config.cpp`
