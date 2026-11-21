@@ -2027,6 +2027,7 @@ its own, so they do not collide, but they pile up until a reboot.
 | `codegen_same.py --by-function` against `3080284c` | the engine: 32-bit 18 symbols, 64-bit 5, every one in `snapshot.cpp` or `quick_menu.cpp` (the 32-bit rest are their exception tables renumbered); the seam library (`build*/src/os`, which the tool's default root does not read): the five new functions and nothing changed (32-bit: `file.cpp`'s exception tables renumbered) |
 | `os_census.py --check` | 1,898 sites: one new, `CloseHandle` in `win32/named_event.cpp`; `--boundary` ok |
 | The other censuses | `data_census --strict`, `reloc_census`, `reloc_bare`, `width_census`, `ledger_check`, `ledger_switches`, `tu_census --strict`, `retire_shells --strict`: ok |
+| The hosted shadow suite (32-bit), the exe host, the moved base (Windows, under the lock) | 922 `MISMATCHES` lines, every count 0, 0 FATAL, `done` (32,190 lines); the exe host and the moved base (`BOF3X_EXEFILE=1`): 10,393 lines each, 0 FATAL, `done` - one more than B1's, the empty slot file's line, which the hosted suite shows too |
 
 **Not run:** the quicksave made and loaded on Linux in a game (the route
 stops before F6, above); the `combat` route's first minute to its end and
