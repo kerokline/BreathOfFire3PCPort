@@ -111,12 +111,17 @@ void* AtU(std::uintptr_t a) { return reinterpret_cast<void*>(a); }
 
 // The image's base: BOF3X_IMAGEBASE when it names a base the 16 MB window
 // holds at a 64 KB boundary, else 0x400000 - and a BOF3X_IMAGEBASE that is
-// not a base SetHost refuses with its own sentence at step 2.
-std::uint32_t BaseAsked(bool* asked) {
-    char text[32];
-    const std::uint32_t n = os::GetEnv("BOF3X_IMAGEBASE", text, sizeof text);
-    *asked = n > 0;
-    if (n == 0 || n >= sizeof text) return kImageBase;
+// not a base SetHost refuses with its own sentence at step 2. Read from the
+// environment block the loader hands the .preinit_array entry, not through
+// getenv: the C library's environment pointer is not set yet that early
+// (measured: os::GetEnv answered "unset" there with the variable set).
+std::uint32_t BaseAsked(char** envp, bool* asked) {
+    static const char kName[] = "BOF3X_IMAGEBASE=";
+    const char* text = nullptr;
+    for (char** e = envp; e && *e && !text; ++e)
+        if (std::strncmp(*e, kName, sizeof kName - 1) == 0) text = *e + sizeof kName - 1;
+    *asked = text != nullptr;
+    if (!text || !*text) return kImageBase;
     char* end = nullptr;
     const unsigned long long v = std::strtoull(text, &end, 0);
     if (!end || *end || v < 0x10000 || v % 0x10000 || v + kSpan > 0x1000000) return kImageBase;
@@ -129,9 +134,9 @@ std::uint32_t BaseAsked(bool* asked) {
 // before any namespace-scope table that places an address is built, and the
 // fixed ranges are made before anything else can map there. Only system
 // calls and the variable's store: no allocation, no C++ library object.
-void PreInit(int, char**, char**) {
+void PreInit(int, char**, char** envp) {
     Reserved& r = g_reserved;
-    r.base = BaseAsked(&r.base_asked);
+    r.base = BaseAsked(envp, &r.base_asked);
     SetImageBase(r.base);
     // Row 1: the span reserved, no access; .game and .pool committed in it.
     if (os::MemReserve(AtU(r.base), kSpan)) {
@@ -415,7 +420,7 @@ void Rebase() {
 // What src/ calls through BOF3.exe's import slots (exe_host.cpp kSlots): no
 // system library of this one holds any of them, so each slot gets a function
 // of ours with the Windows function's meaning on this system. Declared
-// __stdcall as their callers' pointer types are (on x86-64 the system's one
+// as their callers' pointer types are (on x86-64 the system's one
 // convention either way). Each slot holds a 14-byte thunk's place below 4 GB
 // (Bind_ImportThunk), as on 64-bit Windows.
 
@@ -429,7 +434,7 @@ const std::uintptr_t kCurrentProcess = ~static_cast<std::uintptr_t>(0);   // Get
 // this slot straight after, on this build whatever BOF3X_OFF says
 // (sound_sdl.cpp: the 64-bit build has no DirectSound path). Reached, this
 // would be a call no system can answer.
-long __stdcall SlotDirectSoundCreate(const void*, void**, void*) {
+long SlotDirectSoundCreate(const void*, void**, void*) {
     Fatal("DirectSoundCreate was called through its import slot 0x5C4014, which SoundSdl_Start binds to SDL3's output: "
           "this system has no DirectSound");
 }
@@ -442,26 +447,26 @@ long __stdcall SlotDirectSoundCreate(const void*, void**, void*) {
     Fatal("GDI32's %s was called through its import slot 0x%08X, but this system has no GDI and the renderer hands out "
           "no device context (render_shim.cpp's GetDC refuses)", name, (unsigned)slot);
 }
-std::uint32_t __stdcall SlotSetTextColor(void*, std::uint32_t) { NoGdi("SetTextColor", 0x5C4020); }
-int __stdcall SlotSetBkMode(void*, int) { NoGdi("SetBkMode", 0x5C4024); }
-int __stdcall SlotTextOutA(void*, int, int, const char*, int) { NoGdi("TextOutA", 0x5C4028); }
+std::uint32_t SlotSetTextColor(void*, std::uint32_t) { NoGdi("SetTextColor", 0x5C4020); }
+int SlotSetBkMode(void*, int) { NoGdi("SetBkMode", 0x5C4024); }
+int SlotTextOutA(void*, int, int, const char*, int) { NoGdi("TextOutA", 0x5C4028); }
 
 // GetTickCount: milliseconds since the system started, its low 32 bits
 // (os::TickMs32, the monotonic clock; DIV-0022's GameClock_Inject puts the
 // game's own clock over the slot after this, as on Windows).
-std::uint32_t __stdcall SlotGetTickCount() { return os::TickMs32(); }
+std::uint32_t SlotGetTickCount() { return os::TickMs32(); }
 
 // CreateEventA, CloseHandle, MsgWaitForMultipleObjects: the music's two
 // position notifications (music.cpp, sound_callees.h). The handle is an
 // os::Event, the object sound_sdl.cpp's mixer sets (os/event.h).
-void* __stdcall SlotCreateEventA(void* attributes, int manual, int initial, const char* name) {
+void* SlotCreateEventA(void* attributes, int manual, int initial, const char* name) {
     if (attributes || name)
         Fatal("CreateEventA through its import slot with %s: only an unnamed event with no attributes is served here",
               name ? "a name" : "security attributes");
     return os::EventCreate(manual != 0, initial != 0);
 }
 
-int __stdcall SlotCloseHandle(void* handle) {
+int SlotCloseHandle(void* handle) {
     if (!handle) return 0;
     os::EventClose(handle);
     return 1;
@@ -472,7 +477,7 @@ int __stdcall SlotCloseHandle(void* handle) {
 // thread message queue exists here, so the "input in the queue" answer
 // (WAIT_OBJECT_0 + count) never comes: the window's events are SDL's,
 // pumped by the frame loop. Waiting for all at once is not served.
-unsigned __stdcall SlotMsgWaitForMultipleObjects(unsigned count, void* const* handles, int all, unsigned ms, unsigned) {
+unsigned SlotMsgWaitForMultipleObjects(unsigned count, void* const* handles, int all, unsigned ms, unsigned) {
     if (all) Fatal("MsgWaitForMultipleObjects through its import slot with bWaitAll: not served here");
     if (count == 0 || count > 64 || !handles) return kWaitFailed;
     const std::uint64_t deadline = os::TickMs64() + ms;
@@ -494,11 +499,11 @@ unsigned __stdcall SlotMsgWaitForMultipleObjects(unsigned count, void* const* ha
 // GetDriveTypeA: Disc_Probe (file.cpp) asks it of "C:\" .. "L:\" when the
 // local movie does not open. This system has no drive letters: every such
 // root is DRIVE_NO_ROOT_DIR, so no drive is a CD-ROM drive.
-unsigned __stdcall SlotGetDriveTypeA(const char*) { return kDriveNoRootDir; }
+unsigned SlotGetDriveTypeA(const char*) { return kDriveNoRootDir; }
 
 // ExitProcess: the log closed and the process ended with the code, the other
 // threads not waited for (Windows ends them before the detach).
-void __stdcall SlotExitProcess(std::uint32_t code) {
+void SlotExitProcess(std::uint32_t code) {
     Log("exit: ExitProcess(%u) through its import slot", (unsigned)code);
     LogClose();
     std::fflush(nullptr);
@@ -507,7 +512,7 @@ void __stdcall SlotExitProcess(std::uint32_t code) {
 
 // TerminateProcess: of this process (GetCurrentProcess()'s pseudo handle),
 // at once with the code; no other process's handle exists here.
-int __stdcall SlotTerminateProcess(void* process, std::uint32_t code) {
+int SlotTerminateProcess(void* process, std::uint32_t code) {
     if (reinterpret_cast<std::uintptr_t>(process) != kCurrentProcess)
         Fatal("TerminateProcess through its import slot of a process that is not this one (%p)", process);
     LogClose();
@@ -516,14 +521,14 @@ int __stdcall SlotTerminateProcess(void* process, std::uint32_t code) {
 
 // PostQuitMessage: the thread's quit message, put in the window's queue
 // (game_window.cpp Pump hands Got::Quit to the loop as WM_QUIT).
-void __stdcall SlotPostQuitMessage(int code) { game_window::Post({game_window::Got::Quit, code, 0}); }
+void SlotPostQuitMessage(int code) { game_window::Post({game_window::Got::Quit, code, 0}); }
 
 // IntersectRect: USER32's, exactly - right and bottom exclusive, an empty
 // rectangle intersects nothing, and no intersection empties the result.
 struct Rect32 {
     std::int32_t left, top, right, bottom;
 };
-int __stdcall SlotIntersectRect(Rect32* out, const Rect32* a, const Rect32* b) {
+int SlotIntersectRect(Rect32* out, const Rect32* a, const Rect32* b) {
     const Rect32 r{a->left > b->left ? a->left : b->left, a->top > b->top ? a->top : b->top,
                    a->right < b->right ? a->right : b->right, a->bottom < b->bottom ? a->bottom : b->bottom};
     if (r.left >= r.right || r.top >= r.bottom) {
@@ -538,7 +543,7 @@ int __stdcall SlotIntersectRect(Rect32* out, const Rect32* a, const Rect32* b) {
 // its one button OK; IDOK when read, 0 (MessageBoxA's failure) when no box
 // could be shown. The game asks for MB_OK boxes alone; another button set
 // has no answer here to give.
-int __stdcall SlotMessageBoxA(void* hwnd, const char* text, const char* caption, unsigned type) {
+int SlotMessageBoxA(void* hwnd, const char* text, const char* caption, unsigned type) {
     if (type & kMbTypeMask) Fatal("MessageBoxA through its import slot with buttons 0x%X: only MB_OK is served here", type & kMbTypeMask);
     Log("MessageBoxA: \"%s\": %s", caption ? caption : "", text ? text : "");
     SDL_Window* parent = hwnd ? SDL_GetWindowFromID(static_cast<SDL_WindowID>(reinterpret_cast<std::uintptr_t>(hwnd))) : nullptr;
@@ -596,7 +601,7 @@ void BindSlots() {
     std::uint32_t tick_word = 0;
     std::memcpy(&tick_word, Place(Imp_GetTickCount_addr), 4);
     const std::uint32_t before = os::TickMs32();
-    const std::uint32_t through = reinterpret_cast<std::uint32_t(__stdcall*)()>(static_cast<std::uintptr_t>(tick_word))();
+    const std::uint32_t through = reinterpret_cast<std::uint32_t(*)()>(static_cast<std::uintptr_t>(tick_word))();
     const std::uint32_t after = os::TickMs32();
     if (through < before || through > after)
         Fatal("slots: GetTickCount through 0x5C407C's thunk answered %u, outside %u..%u", through, before, after);

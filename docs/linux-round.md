@@ -1802,7 +1802,7 @@ mappings of `/proc/self/maps` that hold it. The ELF itself is linked at
 | # | Range | Size | Protection | Made by, when |
 |---|---|---|---|---|
 | 1 | The image's span, `base`..`base + 0x587000` (`0x400000`..`0x987000` at the player's base; `0xA00000`..`0xF87000` moved): Capcom's sections' extents, `exe_layout.h` | `0x587000` | reserved, no access, in one mapping; then inside it: | `exe_host_posix.cpp`'s `.preinit_array` entry (step 1), before any library's or our own initialiser runs; checked and logged at steps 8 to 10 |
-| 1a | the header page, `base`..`base + 0x1000` | `0x1000` | no access (Windows: the PE header; nothing reads it on Linux) | as row 1 |
+| 1a | the header page, `base`..`base + 0x1000` | `0x1000` | read-only, holding the PE header's first fields as `bof3x.exe`'s (the two signatures, the machine, `e_lfanew`, the timestamp); the rest zero. *Changed in the coding:* the table said "no access, nothing reads it"; the first run faulted reading it - `bind.cpp`'s `Mode` tells the exe host by the header's timestamp at the first `Code()` of an initialiser | as row 1 |
 | 1b | `.stub`, VA `0x401000`..`0x5C4000` | `0x1C3000` | no access: the trap (step 10 reads it back). Never writable on Linux: nothing writes it on Windows either | as row 1 |
 | 1c | `.game`, VA `0x5C4000`..`0x93F000` (`.rdata`, `.data`, `.bss` to Capcom's `.rsrc` end) | `0x37B000` | read-write, zero (step 11 asserts it) | as row 1 |
 | 1d | `.pool`, VA `0x93F000`..`0x987000`: DIV-0062's 2,048 draw items | `0x48000` | read-write, zero but for `draw_pool_room.h`'s stamp at its start, which `make_exe.py` writes into the file on Windows | as row 1 |
@@ -1819,6 +1819,67 @@ for a block it maps; the users R10 listed (`render_shim.cpp`'s `Alloc`,
 `Low32`'s `Fatal` when they meet a high block. The program's own stacks
 (`os::OwnStack`: the present's, the quicksave's, the MP3 decoder's) are
 mapped where the system puts them.
+
+**What was built.**
+
+- **SDL3 shared off Windows** (`CMakeLists.txt`, `BOF3X_SDL`; Windows keeps
+  `SDL3::SDL3-static`). `bof3x` and `bof3x-launcher` carry RUNPATH
+  `$ORIGIN`; the build copies `libSDL3.so.0`, `libdxvk_d3d11.so.0` and
+  `libdxvk_dxgi.so.0` beside them under their sonames
+  (`cmake/linux_target.cmake`). `ldd bof3x`: one `libSDL3.so.0`, the one
+  beside it, and DXVK's two from the same folder; DXVK's `LoadLibraryA` of
+  `libSDL3.so.0` resolves to the object already loaded by that soname (not
+  watched at run time: the self-test makes no DXVK device).
+- **The seven names.** `crt_rest.cpp`'s `__ImageBase` reader takes the
+  start-up's `image::g_ownBase` off Windows (the `image_base.h:158` of the
+  staging's table was `Low32`'s template body, where that one use was
+  instantiated). `GapWatch_Pause` / `GapWatch_Tick` were already in
+  `windows_only.cpp`, which no list held: `tools/linux_probe/linux_tree.py`
+  has a `LINUX_ONLY` table now (`exe_host_posix.cpp`, `windows_only.cpp`,
+  `exe_icon_sdl.cpp`, `render_window_sdl.cpp`) that `--cmake-list` appends.
+  `SwapChainWindow` / `WindowClientSize`: `render_window_sdl.cpp`, the
+  `SDL_Window*` itself and `SDL_GetWindowSizeInPixels` (DXVK's `fromHwnd` is
+  a cast; its own `getWindowSize` asks the same call). `ExeIcon_Frame` and
+  `ExeIcon_SelfTest`: `exe_icon_sdl.cpp`, SDL surfaces and SDL's PNG coder,
+  over `exe_icon_picture.cpp`, the picture code moved out of `exe_icon.cpp`.
+  `main`: `src/hook/exe_host_posix.cpp`.
+- **The start-up.** The reservations of the table above in a
+  `.preinit_array` entry, which also calls `SetImageBase`; it reads
+  `BOF3X_IMAGEBASE` from the environment block the loader passes it,
+  because `getenv` answered "unset" that early (measured). `main` opens the
+  log, calls `SetHost`, and moves the main thread onto the stack of row 3
+  with the new seam call `os::RunOnPlacedStack` (`src/os/placed.h`;
+  `getcontext` / `swapcontext` on POSIX, `CurrentStack` answering the range;
+  refused on Windows) to run steps 3 to 25. Step 13's fourteen slots hold
+  thunks of functions of ours: `GetTickCount` the monotonic clock;
+  `CreateEventA`, `CloseHandle`, `MsgWaitForMultipleObjects` over
+  `os/event.h`; `IntersectRect` USER32's rule; `GetDriveTypeA` "no root"
+  (no drive letters); `PostQuitMessage` the window queue's `Got::Quit`;
+  `MessageBoxA` SDL's message box; `ExitProcess`, `TerminateProcess` the
+  process's end; `DirectSoundCreate` and GDI32's three a `Fatal` (step 14
+  rebinds the first; the renderer hands out no device context for the
+  others). Step 17 by `os/named_event.h`. Step 23 is `crash_posix.cpp`'s:
+  its report, then the signal's own end, where Windows ends with code 3.
+- **Found on the way.** `os::MemProtect` / `MemRestore` on POSIX passed an
+  address that was not page-aligned to `mprotect` (EINVAL at the second
+  import thunk); they take whole pages now, as `VirtualProtect` does.
+
+**Measured.**
+
+| Check | Result |
+|---|---|
+| The Linux link (WSL, clang 21.1.8, GNU ld) | no undefined name; the brief's configure in a clean folder, everything fetched and DXVK-native built by the external project: the same |
+| `size bof3x` | text 11,761,344, data 14,032, bss 28,120,785; the ELF spans `0x10000000`..`0x1260E438`, clear of `0x400000`..`0x10000000` |
+| Step 1's order | without the `.preinit_array` entry (`SetImageBase` called first thing in `main`) the ELF stops before `main`: `FATAL: ImageBase() read before the start-up set it`; with it, every run below |
+| `os_tests` | WSL (cmake, and g++ 15 by the brief's line): 558 checks, 0 failed; Windows i686 634, x86_64 638, 0 failed |
+| `config_tests` (WSL) | 4,400 checks, 0 failures (the host build's `save_tests` target fails to compile under g++, the same at `e9c1fb41`) |
+| The ELF's self-test through the Linux launcher, the PC install | `BOF3X_EXEFILE=1`: 10,393 log lines, 0 FATAL, `self-test only: done`; `BOF3X_CACHE=analysis/cache/pc-plus-us` (the player's half): 10,400 lines, the same. Without either the launcher refuses ("no game data"), as it does on Windows: `<main checkout>/bof3` has no cache |
+| The moved base on Linux (`BOF3X_IMAGEBASE=0xA00000`, the ELF started directly: the Linux launcher refuses a moved base) | 10,392 lines, 0 FATAL; the image at `0xA00000`..`0xF87000`, the linked span fenced whole, the arena at `0xF0000000` |
+| The icon's self-test on Linux (`analysis/icon/vram_load.bin`, `whelp_centre.ico`) | 69,696 pixels identical; against a wrong reference, the Fatal |
+| Windows: both presets; `codegen_same.py --by-function` against `27ff3802` | 32-bit: 52 symbols differ, all `exe_icon*`; 64-bit: those and 3 in `crt_rest.cpp`, the line numbers `Low32` takes for its message (`__builtin_LINE`) |
+| The hosted shadow suite (32-bit), the exe host, the moved base | 922 `MISMATCHES` lines, every one 0, 0 FATAL, `done`; the exe host and the moved base (`BOF3X_EXEFILE=1`): 10,392 lines each, 0 FATAL |
+
+**Not run:** steps 21 to 25 (B2a's); a window; DXVK at run time.
 
 ## 5. What stands in for the launcher in tier 2
 
