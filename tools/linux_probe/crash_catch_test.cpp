@@ -1,30 +1,39 @@
-// The Linux crash catcher proven without the game (docs/linux-round.md LB7):
-// this program arms src/hook/crash_posix.cpp as the engine would, faults on
-// purpose in the way its argument names, and leaves the report in
-// crash_catch_test.log beside itself, for tools/crash_report.py --log.
+// The Linux crash catcher proven without the game (docs/linux-round.md LB7,
+// "B2b as run"): this program arms src/hook/crash_posix.cpp as the engine
+// would, faults on purpose in the way its argument names, and leaves the
+// report in crash_catch_test.log beside itself, for tools/crash_report.py --log.
 //
 //   tools/linux_probe/crash_catch_test.sh <gen> <out>     (builds it with g++ and runs every mode)
-//   <out>/crash_catch_test read|write|exec|bus|fpe|ill|abort|trap|selftest
+//   <out>/crash_catch_test <mode>
 //
 // <gen> holds bof3/symbols.gen.h (tools/gen_symbols.py, as tools/linux_probe/
-// linux_tree.py makes it). Each mode ends the process the way the fault would have
-// without the catcher: by its signal.
+// linux_tree.py makes it). The modes:
 //
-// The doubles below stand in for the engine's start-up, which a Linux build
-// does not have yet (stage LC): Capcom's code range (host.cpp), the bind
-// table (bind.cpp), the state hash (statehash.cpp). And ImageBase() reads the
-// image's base from the Windows PEB through gs:0x60 (common/image_base.h):
-// this program gives itself a gs block whose PEB says 0x400000, as a Windows
-// process at the linked base would. The image itself is not mapped, so the
-// report's reads of the game's words find nothing, as after a crash that took
-// them.
+//   read write exec bus fpe ill abort trap selftest
+//       each fault before the exe host's step 23: the process ends the way
+//       the fault would have without the catcher, by its signal.
+//   overflow
+//       the main thread moved onto a placed stack with a no-access guard page
+//       under it (os::RunOnPlacedStack, as exe_host_posix.cpp's row 3), the
+//       catcher armed there (as step 16), then a recursion with no end: the
+//       report from the alternate stack, its line naming the guard page, and
+//       the end by SIGSEGV.
+//   unhandled, overflow_unhandled, trap_unhandled
+//       read, overflow and trap after Crash_EndUnhandledAsFatal (step 23):
+//       the CRASH lines (for the trap, the exittrace line), then Fatal's line
+//       "a signal nobody handled" and exit code 3.
+//
+// The doubles below stand in for the engine's start-up: the image's base
+// (host.cpp SetImageBase; the start-up's variable off Windows, image_base.h),
+// the ELF's own base (exe_host_posix.cpp step 5), Capcom's code range
+// (host.cpp), the bind table (bind.cpp), the state hash (statehash.cpp). The
+// image itself is not mapped, so the report's reads of the game's words find
+// nothing, as after a crash that took them.
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE 1
 #endif
-#include <asm/prctl.h>
 #include <fcntl.h>
 #include <sys/mman.h>
-#include <sys/syscall.h>
 #include <unistd.h>
 
 #include <chrono>
@@ -35,10 +44,17 @@
 #include <string>
 #include <thread>
 
+#include "common/image_base.h"
 #include "hook/crash.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 namespace bof3 {
+namespace image {
+std::uint32_t g_runBase = 0x400000;   // the player's base, as SetImageBase leaves it
+std::uintptr_t g_ownBase = 0;         // main() sets it: the program's own base, as step 5 does
+[[noreturn]] void ImageBaseUnset() { Fatal("ImageBase() read before the start-up set it"); }
+}  // namespace image
 std::uint32_t CodeLo() { return 0x401000; }
 std::uint32_t CodeHi() { return 0x5C4000; }
 bool Bind_Active() { return false; }
@@ -50,9 +66,6 @@ void StateHash_Flush() {}
 }  // namespace bof3
 
 namespace {
-
-std::uintptr_t g_peb[8];
-std::uintptr_t g_gs[16];
 
 [[gnu::noinline]] void Read() {
     volatile int* nowhere = reinterpret_cast<int*>(0x10);
@@ -90,32 +103,72 @@ void OnBreak(const char* what, std::uintptr_t ip, std::uintptr_t sp, std::uint32
     bof3::LogFlush();
 }
 
+// A recursion the compiler cannot make a loop: each frame keeps a buffer it
+// reads after the call.
+[[gnu::noinline]] int Deeper(int depth) {
+    volatile char frame[512];
+    frame[0] = static_cast<char>(depth);
+    const int below = depth < 0x7FFFFFFF ? Deeper(depth + 1) : 0;   // never 0x7FFFFFFF: the guard comes first
+    return below + frame[0];
+}
+
+// The placed stack's size: the game's (exe_host_posix.cpp kStackLo..kStackHi),
+// a guard page under it. Mapped where the system puts it; the place does not
+// matter to the catcher, only the guard does.
+constexpr std::size_t kStack = 0x100000, kGuard = 0x1000;
+
+struct Placed {
+    bool unhandled;
+};
+
+void OnPlacedStack(void* p) {
+    const Placed& run = *static_cast<const Placed*>(p);
+    const bof3::os::StackRange s = bof3::os::CurrentStack();
+    bof3::Log("crash_catch_test: on the placed stack 0x%llX..0x%llX",
+              static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(s.limit)),
+              static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(s.base)));
+    bof3::Crash_Start(reinterpret_cast<void*>(&OnPlacedStack));
+    if (run.unhandled) bof3::Crash_EndUnhandledAsFatal();
+    std::printf("%d\n", Deeper(0));
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
     if (argc != 2) {
-        std::fprintf(stderr, "usage: %s read|write|exec|bus|fpe|ill|abort|trap|selftest\n", argv[0]);
+        std::fprintf(stderr, "usage: %s read|write|exec|bus|fpe|ill|abort|trap|selftest|overflow|unhandled|"
+                             "overflow_unhandled|trap_unhandled\n", argv[0]);
         return 2;
     }
-    g_peb[2] = 0x400000;   // PEB +0x10: ImageBaseAddress
-    g_gs[0x60 / 8] = reinterpret_cast<std::uintptr_t>(g_peb);
-    if (syscall(SYS_arch_prctl, ARCH_SET_GS, g_gs) != 0) {   // before any thread: a new thread keeps its maker's gs
-        std::perror("arch_prctl");
-        return 2;
-    }
+    bof3::os::ModuleImageInfo self;
+    if (!bof3::os::ModuleImage(reinterpret_cast<const void*>(&main), &self)) return 2;
+    bof3::image::g_ownBase = self.base;
     const std::string mode = argv[1];
     if (mode == "selftest") setenv("BOF3X_CRASH_TEST", "1", 1);
+    // Fatal's message is the player's; this test reads the log.
+    setenv("BOF3X_SELFTEST_ONLY", "1", 1);
     bof3::LogOpen(reinterpret_cast<void*>(&main));
     bof3::Log("crash_catch_test: mode %s", argv[1]);
+    if (mode == "overflow" || mode == "overflow_unhandled") {
+        char* const m = static_cast<char*>(
+            mmap(nullptr, kStack + kGuard, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
+        if (m == MAP_FAILED || mprotect(m, kGuard, PROT_NONE) != 0) return 2;
+        Placed run{mode == "overflow_unhandled"};
+        if (!bof3::os::RunOnPlacedStack(m + kGuard, m + kGuard + kStack, &OnPlacedStack, &run)) return 2;
+        bof3::Log("crash_catch_test: survived the overflow (a failure)");
+        bof3::LogClose();
+        return 1;
+    }
     bof3::Crash_Start(reinterpret_cast<void*>(&main));
-    if (mode == "read") Read();
+    if (mode == "unhandled" || mode == "trap_unhandled") bof3::Crash_EndUnhandledAsFatal();
+    if (mode == "read" || mode == "unhandled") Read();
     else if (mode == "write") WriteReadOnly();
     else if (mode == "exec") ExecuteData();
     else if (mode == "bus") Bus();
     else if (mode == "fpe") DivideByZero();
     else if (mode == "ill") asm volatile("ud2");
     else if (mode == "abort") std::abort();
-    else if (mode == "trap") {
+    else if (mode == "trap" || mode == "trap_unhandled") {
         if (!bof3::Crash_WatchBreaks(OnBreak)) return 3;
         asm volatile("int3");
     } else if (mode == "selftest") {

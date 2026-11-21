@@ -753,11 +753,12 @@ void EngineMain(void* p) {
     draw_order::Start();
     write_watch::Start();
     stp_census::Start();
-    // 23. An exception nobody handled: crash_posix.cpp's handler, armed at
-    // step 16, writes the CRASH lines and passes the signal on to the
-    // disposition it found, which ends the process by the signal (Windows'
-    // filter ends it as Fatal does, code 3; the report is the same).
-    Log("Engine_Main: an unhandled fault ends the process by its signal after crash_posix.cpp's report (step 23)");
+    // 23. An exception nobody handled ends the process as Fatal does, code 3,
+    // as Windows' filter ends it: crash_posix.cpp's handler, armed at step 16,
+    // writes the CRASH lines, then its reporter calls Fatal. Before this step
+    // a fault ends by its signal, as one before the filter ends by its
+    // exception on Windows.
+    Crash_EndUnhandledAsFatal();
     char* const line = PastProgramName(run.line.c_str());   // 24
     Log("Engine_Main: Game_WinMain(0x%p, null, \"%s\", %d) on the main thread", hinstance, line, show);
     run.code = ::Game_WinMain(hinstance, nullptr, line, show);   // 25
