@@ -69,15 +69,27 @@ constexpr unsigned kMaxWidth = 8;
 
 // Crt_sprintf's caller, for the refusal: a return into the image as its VA
 // (symbols.toml's frame), else into our DLL as bof3x.dll+offset (__ImageBase,
-// the DLL's own base).
+// the DLL's own base). Off Windows there is no PE linker's __ImageBase: the
+// engine is the ELF itself, whose base the start-up records
+// (image::g_ownBase, exe_host_posix.cpp step 5), and the text says bof3x+.
+#if defined(_WIN32)
 extern "C" char __ImageBase;
+#endif
 const char* CallerText(const void* ret, char* out, std::size_t cap) {
     const auto at = Low32(ret);
+#if defined(_WIN32)
     const auto dll = Low32(&__ImageBase);
+#else
+    const auto dll = Low32(reinterpret_cast<const void*>(::bof3::image::g_ownBase));
+#endif
     if (at - ::bof3::ImageBase() < 0x58F000u)
         std::snprintf(out, cap, "VA 0x%08X", static_cast<unsigned>(::bof3::VaOf(at)));
     else
+#if defined(_WIN32)
         std::snprintf(out, cap, "bof3x.dll+0x%X", static_cast<unsigned>(at - dll));
+#else
+        std::snprintf(out, cap, "bof3x+0x%X", static_cast<unsigned>(at - dll));
+#endif
     return out;
 }
 

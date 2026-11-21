@@ -1997,6 +1997,75 @@ void TestRunning() {
                 game, games, windows < 0 ? "not asked (no window classes here)" : windows ? "yes" : "no");
 }
 
+// os/placed.h (wave B, B1): the calling thread on a stack the caller mapped,
+// and what holds a range. POSIX: the run is on the range, CurrentStack answers
+// it there and the thread's own after, an own stack run from it answers its
+// own range and then the placed one again, a second placed run from inside is
+// refused, the function's result comes back; a fixed reservation over a held
+// range is refused, and MemHolders names the holder. Windows: the run is
+// refused (ERROR_NOT_SUPPORTED) and nothing runs; MemHolders names a block.
+struct PlacedSeen {
+    os::StackRange during{}, inner{}, after_inner{};
+    std::uintptr_t local = 0;
+    bool nested_refused = false;
+    int runs = 0;
+};
+
+void PlacedInner(void* p) {
+    auto* s = static_cast<PlacedSeen*>(p);
+    s->inner = os::CurrentStack();
+}
+
+void PlacedBody(void* p) {
+    auto* s = static_cast<PlacedSeen*>(p);
+    ++s->runs;
+    volatile int here = 0;
+    s->local = reinterpret_cast<std::uintptr_t>(&here);
+    s->during = os::CurrentStack();
+    static os::OwnStack inner(os::OwnStackSpec{0x10000, 0x40000, false, false});
+    inner.Run(&PlacedInner, s);
+    s->after_inner = os::CurrentStack();
+    s->nested_refused = !os::RunOnPlacedStack(s->during.limit, s->during.base, &PlacedBody, s);
+}
+
+void TestPlacedStack() {
+    constexpr std::size_t kBytes = 0x40000;
+    void* const block = os::MemAlloc(nullptr, kBytes, os::Prot::ReadWrite);
+    CHECK(block != nullptr);
+    if (!block) return;
+    const auto lo = reinterpret_cast<std::uintptr_t>(block), hi = lo + kBytes;
+    const std::string held = os::MemHolders(lo, hi);
+    CHECK(!held.empty());
+    PlacedSeen seen;
+    const bool ran = os::RunOnPlacedStack(block, reinterpret_cast<void*>(hi), &PlacedBody, &seen);
+#ifdef _WIN32
+    CHECK(!ran && os::LastError() == ERROR_NOT_SUPPORTED);
+    CHECK(seen.runs == 0);
+    std::printf("placed: refused on Windows, nothing run; MemHolders names the block: %s\n", held.c_str());
+#else
+    CHECK(ran);
+    CHECK(seen.runs == 1);
+    CHECK(seen.local >= lo && seen.local < hi);
+    CHECK(seen.during.limit == block && seen.during.base == reinterpret_cast<void*>(hi));
+    CHECK(seen.inner.base != seen.during.base && seen.inner.limit != nullptr);   // the own stack's own range
+    CHECK(seen.after_inner.limit == block && seen.after_inner.base == reinterpret_cast<void*>(hi));
+    CHECK(seen.nested_refused);
+    const os::StackRange after = os::CurrentStack();
+    CHECK(after.base != reinterpret_cast<void*>(hi));
+    // A fixed reservation over the held block is refused (no-replace), and the
+    // block is what holds it.
+    CHECK(os::MemReserve(block, 0x1000) == nullptr);
+    char lo_text[32];
+    std::snprintf(lo_text, sizeof lo_text, "%llx-", static_cast<unsigned long long>(lo));
+    CHECK(held.find(lo_text) != std::string::npos);
+    std::printf("placed: a run on 0x%llx..0x%llx, CurrentStack there and after, an own stack inside, a nested run "
+                "refused; MemHolders: %s\n",
+                static_cast<unsigned long long>(lo), static_cast<unsigned long long>(hi), held.c_str());
+#endif
+    CHECK(os::MemRelease(block, kBytes));
+    CHECK(os::MemHolders(lo, hi).empty());   // given back: nothing holds it
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -2021,6 +2090,7 @@ int main(int argc, char** argv) {
     TestCaseCheck();
     TestProcess();
     TestRunning();
+    TestPlacedStack();
     std::printf("os_tests: %d checks, %d failed\n", g_checks, g_fail);
     return g_fail ? 1 : 0;
 }
