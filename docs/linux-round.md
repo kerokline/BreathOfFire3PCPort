@@ -10,8 +10,11 @@ The launcher's pages, a real GPU, the pad, the sound by ear and a Steam Deck
 are not tested. Tier 2 is staged and waits for the owner's word and the calls
 in section 6. **2026-11-19:** stage LB is done and on `main` (PRs #259, #261,
 #262, #264): every source file compiles for x86-64 Linux and nothing links.
-Stages LC and LD are staged as one round of fourteen groups in three waves,
-not launched: section 4, "Stages LC and LD, staged as one round".)
+Stages LC and LD are staged as one round of fourteen groups in three waves:
+section 4, "Stages LC and LD, staged as one round". **Wave A is on `main`**
+(PR #265, 2026-11-19). **2026-11-20:** the link measured natively in the
+WSL is 7 names short; wave B is staged as four units, not launched: section
+4, "Wave B, staged".)
 
 Issue #215 asks for the game on Linux and the Steam Deck. This file stages
 two answers, the cheap one first:
@@ -1672,6 +1675,104 @@ pkgconf, glslang, and the headers of X11, Wayland, ALSA, PulseAudio,
 PipeWire and Vulkan are installed, so wave B can configure and build there
 natively. `vulkaninfo` offers one device, `llvmpipe`; section 2a drew at
 about 22 frames a second on it at 3440 x 1440 under Proton.
+
+### Wave B, staged (2026-11-20; not launched)
+
+**Staged, not started.** It launches at the owner's word and after the
+calls at the end of this section. Base: `main` `e9c1fb41` (wave A, PR #265;
+the drawn launcher's cutover, PR #267).
+
+**What changed since the staging of 2026-11-19:**
+
+- **C7's Linux half is done by another round.** [`launcher-portable.md`](launcher-portable.md)
+  P0 to P6 put `bof3x-launcher` on Linux: it builds in the WSL
+  (`cmake --preset linux-x86_64 -DSDL_X11_XTEST=OFF`, target
+  `bof3x_launcher`), reads `bof3x.ini`, and takes the Windows launcher's
+  command line. Not seen: it starting a real game, since there was no game
+  ELF. Wave B's runs go through it (C8's finding: a run that starts the ELF
+  directly has not the launcher's layer).
+- **The link, measured natively** (the WSL, clang 21.1.8 with GNU `ld.bfd`,
+  which takes `-Ttext-segment=0x10000000`; a copy of `e9c1fb41` under
+  `~/src/bof3x-lcB-measure`, `cmake --preset linux-x86_64
+  -DSDL_X11_XTEST=OFF && cmake --build build-linux-x86_64 -- -k 0`): every
+  object compiles, DXVK-native's two libraries build at the pinned commit
+  and link, and **the link is 7 names short**, each with the lines that
+  want it:
+
+  | Name | Wanted by | Unit |
+  |---|---|---|
+  | `main` | the C runtime's `_start` | B1 |
+  | `__ImageBase` | `image_base.h:158`, `:159`; `crt_rest.cpp:80` | B1 |
+  | `bof3::GapWatch_Pause()` | `input_script.cpp:641`, `:653`, `:1094` | B1 |
+  | `bof3::GapWatch_Tick()` | `input_script.cpp:643`, `:663`, `:1096` | B1 |
+  | `bof3::ExeIcon_Frame(void*)` | `magic_080.cpp:871` | B1 (B2a makes it whole) |
+  | `render::SwapChainWindow(void*)` | `render_d3d11.cpp:916`, `:942` | B1 |
+  | `render::WindowClientSize(void*, unsigned*, unsigned*)` | `render_d3d11.cpp:841`, `:952` | B1 |
+
+  Wave A's cross measure gave 14; the other seven are written (C2) or
+  resolved by DXVK's libraries (`D3D11CreateDeviceAndSwapChain`).
+  `__ImageBase` is still wanted although C2 gave `ImageBase()` a variable
+  off Windows: two more readers name the PE linker's symbol directly.
+- **SDL3 is still static** (`CMakeLists.txt:137..138`, the cache of the
+  measure: `SDL_SHARED=OFF`). C1's finding stands: DXVK opens
+  `libSDL3.so.0` by name, so a static SDL3 gives two copies. B1 makes it
+  shared off Windows.
+
+**Shape.** Wave B finds its work by running, so its first unit runs alone;
+three units then run side by side, each on files of its own; the gate is
+the coordinator's. Workers are the `worker` agent type, in worktrees, and
+build in the WSL's own file system (`~/src/bof3x-lcB-<unit>`; a build under
+`/mnt/c` is slow). The round's branch is `linux/lcB`.
+
+| Unit | Groups | What it does | Proof before the hand-back |
+|---|---|---|---|
+| **B1, the link and the start-up** (alone, first) | C1's end, C2, C3 | SDL3 shared off Windows, `$ORIGIN` as RUNPATH, `libSDL3.so.0` and DXVK's two libraries copied beside the ELF. The seven names: `__ImageBase`'s two readers to the start-up's variable; the gap watch's two entries in `windows_only.cpp` (the watch is Windows only; with its switch unset they do what Windows does with it unset, and the switch is already a `Fatal` there); `SwapChainWindow` and `WindowClientSize` over SDL's window; `ExeIcon_Frame` over SDL (the picture code made portable, or the icon left out and said). Then `exe_host_posix.cpp`'s `main` coding `exe_host_steps.h`'s 25 steps in order, after C3 writes the reservations' order as a table in this file: the image at `0x400000` (or the moved base), `.stub` no-access, the task stacks, the arena, the draw pool, each refused by name when its range is taken | Both Windows presets' objects unchanged but for the files changed (`codegen_same.py --by-function`); the Linux link with no undefined name; `BOF3X_SELFTEST_ONLY=1` on the ELF through the Linux launcher to `self-test only: done`, 0 FATAL; `os_tests` and `config_tests` in the WSL; the Windows gate line |
+| **B2a, the picture and the movies** | C5 | The renderer through DXVK-native on SDL's window to the title; the renderer brought up before the movies (the owner's call 2 of 2026-11-19), on both systems if call 1 below says so; the movie's picture off Windows; the window icon whole | A frame by `BOF3X_SHOT_DIR` on Linux (llvmpipe) against the Windows 64-bit frame of the same tick, point filter, pixel for pixel; the logo movie's frames against the decoder's dump; on Windows the ten routes if the start order changed there |
+| **B2b, faults** | C6 | `crash_posix.cpp` in a real run (`BOF3X_CRASH_TEST`), its report read by `tools/crash_report.py`; the stack watch's refusal kept and said (call 2) | `tools/linux_probe/crash_catch_test.sh`; a `CRASH n:` report from the ELF |
+| **B2c, paths and saves** | C4's Linux half | The POSIX fold for the names the player's files bring, relative names in the game folder alone (the owner's call 3 of 2026-11-19; the dozen Capcom names wave A listed); D431's open item settled one way, the seam's rule kept | A quicksave made and loaded on Linux; `os_tests` for the fold; the routes' first minute on the PC install and on a disc-built one |
+| **B3, the gate** (the coordinator's) | LC's gate | The ten routes on the ELF through the Linux launcher against C0's `_c0x64` references; `music_heard.py` on `whelpBoss` and `cutsceneAndNue`; a quicksave made on Linux and loaded on Windows, and the other way; on Windows the ten routes against `_c0x32` | `statehash.py diff` with the 64-bit round's allowance; the three routes that differ on `0x6C3000` between two Windows runs are read the same way here |
+
+**What may run beside what.** B1 touches the start-up, the build and the
+render window's two functions; nothing starts beside it. B2a, B2b and B2c
+share no file but `src/os/posix` (B2b's signal code, B2c's fold): each adds
+its own file there and one line to `os.h`. Merged into `linux/lcB` one at a
+time, `--no-ff`, each built and its proof run again after the merge.
+
+**The gate line, from B1 on.** The Windows line of wave A's brief (both
+presets, the censuses, `linux_tree.py --check`, `os_tests` three ways, the
+hosted shadow suite under the lock), and in the WSL: the Linux preset links
+with no undefined name; `os_tests` and `config_tests`; the ELF's
+`BOF3X_SELFTEST_ONLY=1` to `self-test only: done`, 0 FATAL. B2a, B2b and B2c
+add the route each names.
+
+**Not measured for this staging:** whether a window of the game's in the
+WSL shows on the owner's screen (WSLg opens one at `DISPLAY=:0`, as the
+launcher's did) and whether SDL's `offscreen` driver gives DXVK a Vulkan
+surface, which would let runs leave the screen alone; whether llvmpipe is
+fast enough for a route to end in its recipe's time (2a drew at about 22
+frames a second at 3440 x 1440, and a route's window is 640 x 480); the
+ELF's size once linked whole; anything at run time.
+
+**For the owner, before a launch:**
+
+1. **The start order on Windows.** The renderer comes up before the movies
+   on Linux (call 2 of 2026-11-19). Proposed: the same order on Windows, so
+   both systems run one path; that is a ledger entry and the owner's look at
+   the three movies on Windows after B2a. The other way keeps Windows as it
+   is and gives Linux its own order.
+2. **The stack watch on Linux.** Proposed: keep `BOF3X_STACKWATCH=1` a
+   refusal there and say so in the switch's line of the ledger. It is a
+   developer's switch; a guard page of our own for the main stack is work
+   no player sees.
+3. **SDL3 shared on Linux alone.** Proposed: yes; Windows stays static. The
+   tarball (call 5 of section 6) then holds three libraries beside the ELF.
+4. **The owner's screen.** Proposed: B1 needs no window (the self-test
+   ends before one opens). From B2a on, game runs in the WSL use SDL's
+   `offscreen` driver if it serves DXVK; if it does not, they open a WSLg
+   window, and they run when the owner is away or says the screen is free.
+5. **Where the gate runs.** Proposed: here, on llvmpipe. If a route cannot
+   end in time on it, the gate moves to frost's machine and the record says
+   so.
 
 ## 5. What stands in for the launcher in tier 2
 
