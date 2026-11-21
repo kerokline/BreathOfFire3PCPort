@@ -17,116 +17,105 @@ site	src/audio/mp3.cpp	442	long	l	live	long	-	const long long file_size = static
 site	src/audio/mp3.cpp	593	long	ul	live	unsigned long	-	files, static_cast<unsigned long>(bof3::os::TickMs32() - t0), same, max_abs, worst_rms, tsv_path);
 site	src/audio/mp3.cpp	628	long	ul	live	unsigned long	-	if (t >= sizeof tsv) bof3::Fatal(" ", static_cast<unsigned long>(t));
 site	src/audio/seq.cpp	168	long	l	live	long	-	song_.number, score_.resolution, bpm, static_cast<unsigned long long>(q));
-site	src/audio/sound_sdl.cpp	90	long	l	live	long	-	constexpr long kOk = 0;
-site	src/audio/sound_sdl.cpp	91	long	l	live	long	-	constexpr long kNoInterface = static_cast<long>(0x80004002u);
-site	src/audio/sound_sdl.cpp	91	long	l	live	long	-	constexpr long kNoInterface = static_cast<long>(0x80004002u);
-site	src/audio/sound_sdl.cpp	92	long	l	live	long	-	constexpr long kNoAggregation = static_cast<long>(0x80040110u);
-site	src/audio/sound_sdl.cpp	92	long	l	live	long	-	constexpr long kNoAggregation = static_cast<long>(0x80040110u);
-site	src/audio/sound_sdl.cpp	93	long	l	live	long	-	constexpr long kInvalidParam = static_cast<long>(0x80070057u);
-site	src/audio/sound_sdl.cpp	93	long	l	live	long	-	constexpr long kInvalidParam = static_cast<long>(0x80070057u);
-site	src/audio/sound_sdl.cpp	94	long	l	live	long	-	constexpr long kInvalidCall = static_cast<long>(0x88780032u);
-site	src/audio/sound_sdl.cpp	94	long	l	live	long	-	constexpr long kInvalidCall = static_cast<long>(0x88780032u);
-site	src/audio/sound_sdl.cpp	95	long	l	live	long	-	constexpr long kNoDriver = static_cast<long>(0x88780078u);
-site	src/audio/sound_sdl.cpp	95	long	l	live	long	-	constexpr long kNoDriver = static_cast<long>(0x88780078u);
-site	src/audio/sound_sdl.cpp	96	long	l	live	long	-	constexpr long kAlreadyInitialized = static_cast<long>(0x88780082u);
-site	src/audio/sound_sdl.cpp	96	long	l	live	long	-	constexpr long kAlreadyInitialized = static_cast<long>(0x88780082u);
-site	src/audio/sound_sdl.cpp	102	long	l	live	long	-	constexpr long kVolumeMin = -10000, kVolumeMax = 0, kPanLeft = -10000, kPanRight = 10000;
-site	src/audio/sound_sdl.cpp	120	uintptr	-	live	std::uintptr_t	-	T* Widen(std::uint32_t place) { return reinterpret_cast<T*>(static_cast<std::uintptr_t>(place)); }
-site	src/audio/sound_sdl.cpp	120	widen	param	live	place	T*	T* Widen(std::uint32_t place) { return reinterpret_cast<T*>(static_cast<std::uintptr_t>(place)); }
-site	src/audio/sound_sdl.cpp	136	low32	unread	live	object	Low32	const std::uint32_t word = Low32(object);
-site	src/audio/sound_sdl.cpp	198	long	l	live	long	-	long volume, pan;
-site	src/audio/sound_sdl.cpp	236	ptr_overlay	unread	live	p	Buffer	Buffer* Self(void* p) { return static_cast<Buffer*>(p); }
-site	src/audio/sound_sdl.cpp	238	ptr_overlay	unread	live	static_cast<unsigned char*>(p) - offsetof(Buffer, notify_vtable)	Buffer	return reinterpret_cast<Buffer*>(static_cast<unsigned char*>(p) - offsetof(Buffer, notify_vtable));
-site	src/audio/sound_sdl.cpp	244	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t at = reinterpret_cast<std::uintptr_t>(b), lo = reinterpret_cast<std::uintptr_t>(g_pool);
-site	src/audio/sound_sdl.cpp	244	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t at = reinterpret_cast<std::uintptr_t>(b), lo = reinterpret_cast<std::uintptr_t>(g_pool);
-site	src/audio/sound_sdl.cpp	244	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t at = reinterpret_cast<std::uintptr_t>(b), lo = reinterpret_cast<std::uintptr_t>(g_pool);
-site	src/audio/sound_sdl.cpp	246	fmt_place	pointer	live	static_cast<const void*>(b)	%p	Fatal("sound_sdl: %s on %p, which is no buffer of ours", method, static_cast<const void*>(b));
-site	src/audio/sound_sdl.cpp	247	fmt_place	pointer	live	static_cast<const void*>(b)	%p	if (!b->live) Fatal("sound_sdl: %s on buffer %p after its last Release", method, static_cast<const void*>(b));
-site	src/audio/sound_sdl.cpp	250	fmt_place	pointer	live	d	%p	if (d != &g_device) Fatal("sound_sdl: %s on %p, which is not our device", method, d);
-site	src/audio/sound_sdl.cpp	261	long	l	live	long	-	float Gain(long hundredths) {
-site	src/audio/sound_sdl.cpp	307	fmt_place	pointer	live	static_cast<void*>(b)	%p	Log("sound_sdl buffer %p first mixed at device frame %llu, from its frame %u of %u (%u Hz)", static_cast<void*>(b),
-site	src/audio/sound_sdl.cpp	308	long	l	live	long	-	static_cast<unsigned long long>(g_frames_out), static_cast<unsigned>(b->pos >> 32), total, EffectiveRate(b));
-site	src/audio/sound_sdl.cpp	426	long	l	live	long	-	long __stdcall DevQueryInterface(void* self, const void*, void**) {
-site	src/audio/sound_sdl.cpp	430	long	ul	live	unsigned long	-	unsigned long __stdcall DevAddRef(void* self) {
-site	src/audio/sound_sdl.cpp	435	long	ul	live	unsigned long	-	unsigned long __stdcall DevRelease(void* self) {
-site	src/audio/sound_sdl.cpp	445	long	l	live	long	-	g_made, g_live_max, g_live, static_cast<unsigned long long>(g_frames_out),
-site	src/audio/sound_sdl.cpp	476	long	l	live	long	-	long __stdcall DevCreateSoundBuffer(void* self, const void* desc, void** out, void* outer) {
-site	src/audio/sound_sdl.cpp	522	long	l	live	long	-	long __stdcall DevGetCaps(void* self, void*) {
-site	src/audio/sound_sdl.cpp	526	long	l	live	long	-	long __stdcall DevDuplicateSoundBuffer(void* self, void*, void**) {
-site	src/audio/sound_sdl.cpp	530	long	l	live	long	-	long __stdcall DevSetCooperativeLevel(void* self, void* hwnd, std::uint32_t level) {
-site	src/audio/sound_sdl.cpp	542	long	l	live	long	-	long __stdcall DevCompact(void* self) {
-site	src/audio/sound_sdl.cpp	546	long	l	live	long	-	long __stdcall DevGetSpeakerConfig(void* self, std::uint32_t*) {
-site	src/audio/sound_sdl.cpp	550	long	l	live	long	-	long __stdcall DevSetSpeakerConfig(void* self, std::uint32_t) {
-site	src/audio/sound_sdl.cpp	554	long	l	live	long	-	long __stdcall DevInitialize(void* self, const void*) {
-site	src/audio/sound_sdl.cpp	561	long	l	live	long	-	long __stdcall Create(const void* guid, void** out, void* outer) {
-site	src/audio/sound_sdl.cpp	583	long	l	live	long	-	long __stdcall BufQueryInterface(void* self, const void* iid, void** out) {
-site	src/audio/sound_sdl.cpp	605	long	ul	live	unsigned long	-	unsigned long __stdcall BufAddRef(void* self) {
-site	src/audio/sound_sdl.cpp	611	long	ul	live	unsigned long	-	unsigned long __stdcall BufRelease(void* self) {
-site	src/audio/sound_sdl.cpp	619	long	l	live	long	-	long __stdcall BufGetCaps(void* self, void* caps) {
-site	src/audio/sound_sdl.cpp	628	long	l	live	long	-	long __stdcall BufGetCurrentPosition(void* self, std::uint32_t* play, std::uint32_t* write) {
-site	src/audio/sound_sdl.cpp	642	long	l	live	long	-	long __stdcall BufGetFormat(void* self, void* format, std::uint32_t size, std::uint32_t* written) {
-site	src/audio/sound_sdl.cpp	656	long	l	live	long	-	long __stdcall BufGetVolume(void* self, long* v) {
-site	src/audio/sound_sdl.cpp	656	long	l	live	long	-	long __stdcall BufGetVolume(void* self, long* v) {
-site	src/audio/sound_sdl.cpp	664	long	l	live	long	-	long __stdcall BufGetPan(void* self, long* v) {
-site	src/audio/sound_sdl.cpp	664	long	l	live	long	-	long __stdcall BufGetPan(void* self, long* v) {
-site	src/audio/sound_sdl.cpp	672	long	l	live	long	-	long __stdcall BufGetFrequency(void* self, std::uint32_t* v) {
-site	src/audio/sound_sdl.cpp	680	long	l	live	long	-	long __stdcall BufGetStatus(void* self, std::uint32_t* s) {
-site	src/audio/sound_sdl.cpp	688	long	l	live	long	-	long __stdcall BufInitialize(void* self, void*, const void*) {
-site	src/audio/sound_sdl.cpp	693	long	l	live	long	-	long __stdcall BufLock(void* self, std::uint32_t offset, std::uint32_t bytes, void** first, std::uint32_t* first_bytes,
-site	src/audio/sound_sdl.cpp	713	long	l	live	long	-	long __stdcall BufPlay(void* self, std::uint32_t, std::uint32_t, std::uint32_t flags) {
-site	src/audio/sound_sdl.cpp	726	fmt_place	pointer	live	static_cast<void*>(b)	%p	Log("sound_sdl buffer %p Play at device frame %llu, from its frame %u of %u (%u Hz%s)", static_cast<void*>(b),
-site	src/audio/sound_sdl.cpp	727	long	l	live	long	-	static_cast<unsigned long long>(g_frames_out), static_cast<unsigned>(b->pos >> 32), FramesOf(b), EffectiveRate(b),
-site	src/audio/sound_sdl.cpp	736	long	l	live	long	-	long __stdcall BufSetCurrentPosition(void* self, std::uint32_t bytes) {
-site	src/audio/sound_sdl.cpp	745	long	l	live	long	-	long __stdcall BufSetFormat(void* self, const void* format) {
-site	src/audio/sound_sdl.cpp	761	long	l	live	long	-	long __stdcall BufSetVolume(void* self, long v) {
-site	src/audio/sound_sdl.cpp	761	long	l	live	long	-	long __stdcall BufSetVolume(void* self, long v) {
-site	src/audio/sound_sdl.cpp	770	long	l	live	long	-	long __stdcall BufSetPan(void* self, long v) {
-site	src/audio/sound_sdl.cpp	770	long	l	live	long	-	long __stdcall BufSetPan(void* self, long v) {
-site	src/audio/sound_sdl.cpp	779	long	l	live	long	-	long __stdcall BufSetFrequency(void* self, std::uint32_t v) {
-site	src/audio/sound_sdl.cpp	789	long	l	live	long	-	long __stdcall BufStop(void* self) {
-site	src/audio/sound_sdl.cpp	796	long	l	live	long	-	long __stdcall BufUnlock(void* self, void* first, std::uint32_t first_bytes, void* second, std::uint32_t second_bytes) {
-site	src/audio/sound_sdl.cpp	806	long	l	live	long	-	long __stdcall BufRestore(void* self) {
-site	src/audio/sound_sdl.cpp	814	long	l	live	long	-	long __stdcall NotQueryInterface(void* self, const void* iid, void** out) {
-site	src/audio/sound_sdl.cpp	819	long	ul	live	unsigned long	-	unsigned long __stdcall NotAddRef(void* self) {
-site	src/audio/sound_sdl.cpp	824	long	ul	live	unsigned long	-	unsigned long __stdcall NotRelease(void* self) {
-site	src/audio/sound_sdl.cpp	832	long	ul	live	unsigned long	-	unsigned long offset;
-site	src/audio/sound_sdl.cpp	835	long	l	live	long	-	long __stdcall NotSetNotificationPositions(void* self, std::uint32_t count, const Position* positions) {
-site	src/audio/sound_sdl.cpp	935	long	l	live	long	-	using MCall = long(__stdcall*)(void*);
-site	src/audio/sound_sdl.cpp	936	long	l	live	long	-	using MStatus = long(__stdcall*)(void*, std::uint32_t*);
-site	src/audio/sound_sdl.cpp	937	long	l	live	long	-	using MGetLong = long(__stdcall*)(void*, long*);
-site	src/audio/sound_sdl.cpp	937	long	l	live	long	-	using MGetLong = long(__stdcall*)(void*, long*);
-site	src/audio/sound_sdl.cpp	938	long	l	live	long	-	using MPosition = long(__stdcall*)(void*, std::uint32_t*, std::uint32_t*);
-site	src/audio/sound_sdl.cpp	939	long	l	live	long	-	using MValue = long(__stdcall*)(void*, std::uint32_t);
-site	src/audio/sound_sdl.cpp	940	long	l	live	long	-	using MLong = long(__stdcall*)(void*, long);
-site	src/audio/sound_sdl.cpp	940	long	l	live	long	-	using MLong = long(__stdcall*)(void*, long);
-site	src/audio/sound_sdl.cpp	941	long	l	live	long	-	using MPlay = long(__stdcall*)(void*, std::uint32_t, std::uint32_t, std::uint32_t);
-site	src/audio/sound_sdl.cpp	942	long	l	live	long	-	using MLock = long(__stdcall*)(void*, std::uint32_t, std::uint32_t, void**, std::uint32_t*, void**, std::uint32_t*, std::uint32_t);
-site	src/audio/sound_sdl.cpp	943	long	l	live	long	-	using MUnlock = long(__stdcall*)(void*, void*, std::uint32_t, void*, std::uint32_t);
-site	src/audio/sound_sdl.cpp	944	long	l	live	long	-	using MCreate = long(__stdcall*)(void*, const void*, void**, void*);
-site	src/audio/sound_sdl.cpp	945	long	l	live	long	-	using MQuery = long(__stdcall*)(void*, const void*, void**);
-site	src/audio/sound_sdl.cpp	946	long	l	live	long	-	using MPositions = long(__stdcall*)(void*, std::uint32_t, const Position*);
-site	src/audio/sound_sdl.cpp	947	long	l	live	long	-	using MFormat = long(__stdcall*)(void*, const void*);
-site	src/audio/sound_sdl.cpp	948	long	l	live	long	-	using MCooperate = long(__stdcall*)(void*, void*, std::uint32_t);
-site	src/audio/sound_sdl.cpp	976	fmt_place	word	live	kIidNotifyVa	%08X	"the game's IID_IDirectSoundNotify at 0x%08X is not the one QueryInterface answers", kIidNotifyVa);
-site	src/audio/sound_sdl.cpp	982	low32	object_ours	live	&g_device	Low32	SDL_CHECK(slot_words[0] == Low32(&g_device) && slot_words[1] == 0xCAFEF00Du, " ");
-site	src/audio/sound_sdl.cpp	1000	long	l	live	long	-	SDL_CHECK(Method<long(__stdcall*)(void*, void*, std::uint32_t, std::uint32_t*)>(primary, 0x14)(primary, back, kFormatSize, &written) == kOk &&
-site	src/audio/sound_sdl.cpp	1017	low32	unread	live	fmt_mono	Low32	const TestDesc sdesc = MakeDesc(0x180E2, 800, Low32(fmt_mono));
-site	src/audio/sound_sdl.cpp	1078	long	l	live	long	-	long got = 1;
-site	src/audio/sound_sdl.cpp	1114	low32	unread	live	fmt_ring	Low32	const TestDesc rdesc = MakeDesc(0x181E0, 4000, Low32(fmt_ring));
-site	src/audio/sound_sdl.cpp	1155	low32	unread	live	fmt_8	Low32	const TestDesc d8 = MakeDesc(0x180E2, 4, Low32(fmt_8));
-site	src/audio/sound_sdl.cpp	1166	low32	unread	live	fmt_mono	Low32	const TestDesc dl = MakeDesc(0x180E2, 8, Low32(fmt_mono));
-site	src/audio/sound_sdl.cpp	1236	sizeof_ptr	-	live	sizeof(void*)	-	static_assert(sizeof(Position) == 2 * sizeof(void*), " ");
-site	src/audio/sound_sdl.cpp	1251	low32	func_ours	live	&Create	Low32	const std::uint32_t create = Low32(&Create);
-site	src/audio/sound_sdl.cpp	1255	fmt_place	word	live	(unsigned)kSlotVa	%08X	if (before == 0) Fatal("sound_sdl: the import slot 0x%08X is empty: SoundSdl_Start before it is bound", (unsigned)kSlotVa);
-site	src/audio/sound_sdl.cpp	1257	sizeof_ptr	-	live	sizeof(void*)	-	if (!g_on && sizeof(void*) == 8) {
-site	src/audio/sound_sdl.cpp	1264	fmt_place	word	live	(unsigned)kSlotVa	%08X	if (!os::MemProtect(slot, 4, os::Prot::ReadWrite, &old)) Fatal("sound_sdl: MemProtect(0x%08X) failed, error %lu", (unsigned)kSlotVa, (unsigned long)os::LastErro
-site	src/audio/sound_sdl.cpp	1264	long	ul	live	unsigned long	-	if (!os::MemProtect(slot, 4, os::Prot::ReadWrite, &old)) Fatal(" ", (unsigned)kSlotVa, (unsigned long)os::LastError());
-site	src/audio/sound_sdl.cpp	1271	fmt_place	word	live	(unsigned)kSlotVa	%08X	if (g_on && after != create) Fatal("sound_sdl: the import slot 0x%08X reads 0x%08X after the patch, not our Create 0x%08X", (unsigned)kSlotVa, after, create);
-site	src/audio/sound_sdl.cpp	1271	fmt_place	word	live	after	%08X	if (g_on && after != create) Fatal("sound_sdl: the import slot 0x%08X reads 0x%08X after the patch, not our Create 0x%08X", (unsigned)kSlotVa, after, create);
-site	src/audio/sound_sdl.cpp	1271	fmt_place	word	live	create	%08X	if (g_on && after != create) Fatal("sound_sdl: the import slot 0x%08X reads 0x%08X after the patch, not our Create 0x%08X", (unsigned)kSlotVa, after, create);
-site	src/audio/sound_sdl.cpp	1272	fmt_place	word	live	(unsigned)kSlotVa	%08X	if (!g_on && after != before) Fatal("sound_sdl: the import slot 0x%08X changed under a switch that is off", (unsigned)kSlotVa);
-site	src/audio/sound_sdl.cpp	1273	fmt_place	word	live	(unsigned)kSlotVa	%08X	Log("DIV-0201 sound output: %s (the DirectSoundCreate slot 0x%08X holds 0x%08X; SDL %d.%d.%d)",
-site	src/audio/sound_sdl.cpp	1273	fmt_place	word	live	after	%08X	Log("DIV-0201 sound output: %s (the DirectSoundCreate slot 0x%08X holds 0x%08X; SDL %d.%d.%d)",
+site	src/audio/sound_sdl.cpp	95	long	l	live	long	-	constexpr long kOk = 0;
+site	src/audio/sound_sdl.cpp	96	long	l	live	long	-	constexpr long kNoInterface = static_cast<long>(0x80004002u);
+site	src/audio/sound_sdl.cpp	96	long	l	live	long	-	constexpr long kNoInterface = static_cast<long>(0x80004002u);
+site	src/audio/sound_sdl.cpp	97	long	l	live	long	-	constexpr long kNoAggregation = static_cast<long>(0x80040110u);
+site	src/audio/sound_sdl.cpp	97	long	l	live	long	-	constexpr long kNoAggregation = static_cast<long>(0x80040110u);
+site	src/audio/sound_sdl.cpp	98	long	l	live	long	-	constexpr long kInvalidParam = static_cast<long>(0x80070057u);
+site	src/audio/sound_sdl.cpp	98	long	l	live	long	-	constexpr long kInvalidParam = static_cast<long>(0x80070057u);
+site	src/audio/sound_sdl.cpp	99	long	l	live	long	-	constexpr long kInvalidCall = static_cast<long>(0x88780032u);
+site	src/audio/sound_sdl.cpp	99	long	l	live	long	-	constexpr long kInvalidCall = static_cast<long>(0x88780032u);
+site	src/audio/sound_sdl.cpp	100	long	l	live	long	-	constexpr long kNoDriver = static_cast<long>(0x88780078u);
+site	src/audio/sound_sdl.cpp	100	long	l	live	long	-	constexpr long kNoDriver = static_cast<long>(0x88780078u);
+site	src/audio/sound_sdl.cpp	101	long	l	live	long	-	constexpr long kAlreadyInitialized = static_cast<long>(0x88780082u);
+site	src/audio/sound_sdl.cpp	101	long	l	live	long	-	constexpr long kAlreadyInitialized = static_cast<long>(0x88780082u);
+site	src/audio/sound_sdl.cpp	125	uintptr	-	live	std::uintptr_t	-	T* Widen(std::uint32_t place) { return reinterpret_cast<T*>(static_cast<std::uintptr_t>(place)); }
+site	src/audio/sound_sdl.cpp	125	widen	param	live	place	T*	T* Widen(std::uint32_t place) { return reinterpret_cast<T*>(static_cast<std::uintptr_t>(place)); }
+site	src/audio/sound_sdl.cpp	141	low32	unread	live	object	Low32	const std::uint32_t word = Low32(object);
+site	src/audio/sound_sdl.cpp	241	ptr_overlay	unread	live	p	Buffer	Buffer* Self(void* p) { return static_cast<Buffer*>(p); }
+site	src/audio/sound_sdl.cpp	243	ptr_overlay	unread	live	static_cast<unsigned char*>(p) - offsetof(Buffer, notify_vtable)	Buffer	return reinterpret_cast<Buffer*>(static_cast<unsigned char*>(p) - offsetof(Buffer, notify_vtable));
+site	src/audio/sound_sdl.cpp	249	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t at = reinterpret_cast<std::uintptr_t>(b), lo = reinterpret_cast<std::uintptr_t>(g_pool);
+site	src/audio/sound_sdl.cpp	249	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t at = reinterpret_cast<std::uintptr_t>(b), lo = reinterpret_cast<std::uintptr_t>(g_pool);
+site	src/audio/sound_sdl.cpp	249	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t at = reinterpret_cast<std::uintptr_t>(b), lo = reinterpret_cast<std::uintptr_t>(g_pool);
+site	src/audio/sound_sdl.cpp	251	fmt_place	pointer	live	static_cast<const void*>(b)	%p	Fatal("sound_sdl: %s on %p, which is no buffer of ours", method, static_cast<const void*>(b));
+site	src/audio/sound_sdl.cpp	252	fmt_place	pointer	live	static_cast<const void*>(b)	%p	if (!b->live) Fatal("sound_sdl: %s on buffer %p after its last Release", method, static_cast<const void*>(b));
+site	src/audio/sound_sdl.cpp	255	fmt_place	pointer	live	d	%p	if (d != &g_device) Fatal("sound_sdl: %s on %p, which is not our device", method, d);
+site	src/audio/sound_sdl.cpp	312	fmt_place	pointer	live	static_cast<void*>(b)	%p	Log("sound_sdl buffer %p first mixed at device frame %llu, from its frame %u of %u (%u Hz)", static_cast<void*>(b),
+site	src/audio/sound_sdl.cpp	313	long	l	live	long	-	static_cast<unsigned long long>(g_frames_out), static_cast<unsigned>(b->pos >> 32), total, EffectiveRate(b));
+site	src/audio/sound_sdl.cpp	431	long	l	live	long	-	long __stdcall DevQueryInterface(void* self, const void*, void**) {
+site	src/audio/sound_sdl.cpp	435	long	ul	live	unsigned long	-	unsigned long __stdcall DevAddRef(void* self) {
+site	src/audio/sound_sdl.cpp	440	long	ul	live	unsigned long	-	unsigned long __stdcall DevRelease(void* self) {
+site	src/audio/sound_sdl.cpp	450	long	l	live	long	-	g_made, g_live_max, g_live, static_cast<unsigned long long>(g_frames_out),
+site	src/audio/sound_sdl.cpp	481	long	l	live	long	-	long __stdcall DevCreateSoundBuffer(void* self, const void* desc, void** out, void* outer) {
+site	src/audio/sound_sdl.cpp	527	long	l	live	long	-	long __stdcall DevGetCaps(void* self, void*) {
+site	src/audio/sound_sdl.cpp	531	long	l	live	long	-	long __stdcall DevDuplicateSoundBuffer(void* self, void*, void**) {
+site	src/audio/sound_sdl.cpp	535	long	l	live	long	-	long __stdcall DevSetCooperativeLevel(void* self, void* hwnd, std::uint32_t level) {
+site	src/audio/sound_sdl.cpp	547	long	l	live	long	-	long __stdcall DevCompact(void* self) {
+site	src/audio/sound_sdl.cpp	551	long	l	live	long	-	long __stdcall DevGetSpeakerConfig(void* self, std::uint32_t*) {
+site	src/audio/sound_sdl.cpp	555	long	l	live	long	-	long __stdcall DevSetSpeakerConfig(void* self, std::uint32_t) {
+site	src/audio/sound_sdl.cpp	559	long	l	live	long	-	long __stdcall DevInitialize(void* self, const void*) {
+site	src/audio/sound_sdl.cpp	566	long	l	live	long	-	long __stdcall Create(const void* guid, void** out, void* outer) {
+site	src/audio/sound_sdl.cpp	588	long	l	live	long	-	long __stdcall BufQueryInterface(void* self, const void* iid, void** out) {
+site	src/audio/sound_sdl.cpp	610	long	ul	live	unsigned long	-	unsigned long __stdcall BufAddRef(void* self) {
+site	src/audio/sound_sdl.cpp	616	long	ul	live	unsigned long	-	unsigned long __stdcall BufRelease(void* self) {
+site	src/audio/sound_sdl.cpp	624	long	l	live	long	-	long __stdcall BufGetCaps(void* self, void* caps) {
+site	src/audio/sound_sdl.cpp	633	long	l	live	long	-	long __stdcall BufGetCurrentPosition(void* self, std::uint32_t* play, std::uint32_t* write) {
+site	src/audio/sound_sdl.cpp	647	long	l	live	long	-	long __stdcall BufGetFormat(void* self, void* format, std::uint32_t size, std::uint32_t* written) {
+site	src/audio/sound_sdl.cpp	661	long	l	live	long	-	long __stdcall BufGetVolume(void* self, std::int32_t* v) {
+site	src/audio/sound_sdl.cpp	669	long	l	live	long	-	long __stdcall BufGetPan(void* self, std::int32_t* v) {
+site	src/audio/sound_sdl.cpp	677	long	l	live	long	-	long __stdcall BufGetFrequency(void* self, std::uint32_t* v) {
+site	src/audio/sound_sdl.cpp	685	long	l	live	long	-	long __stdcall BufGetStatus(void* self, std::uint32_t* s) {
+site	src/audio/sound_sdl.cpp	693	long	l	live	long	-	long __stdcall BufInitialize(void* self, void*, const void*) {
+site	src/audio/sound_sdl.cpp	698	long	l	live	long	-	long __stdcall BufLock(void* self, std::uint32_t offset, std::uint32_t bytes, void** first, std::uint32_t* first_bytes,
+site	src/audio/sound_sdl.cpp	718	long	l	live	long	-	long __stdcall BufPlay(void* self, std::uint32_t, std::uint32_t, std::uint32_t flags) {
+site	src/audio/sound_sdl.cpp	731	fmt_place	pointer	live	static_cast<void*>(b)	%p	Log("sound_sdl buffer %p Play at device frame %llu, from its frame %u of %u (%u Hz%s)", static_cast<void*>(b),
+site	src/audio/sound_sdl.cpp	732	long	l	live	long	-	static_cast<unsigned long long>(g_frames_out), static_cast<unsigned>(b->pos >> 32), FramesOf(b), EffectiveRate(b),
+site	src/audio/sound_sdl.cpp	741	long	l	live	long	-	long __stdcall BufSetCurrentPosition(void* self, std::uint32_t bytes) {
+site	src/audio/sound_sdl.cpp	750	long	l	live	long	-	long __stdcall BufSetFormat(void* self, const void* format) {
+site	src/audio/sound_sdl.cpp	766	long	l	live	long	-	long __stdcall BufSetVolume(void* self, std::int32_t v) {
+site	src/audio/sound_sdl.cpp	775	long	l	live	long	-	long __stdcall BufSetPan(void* self, std::int32_t v) {
+site	src/audio/sound_sdl.cpp	784	long	l	live	long	-	long __stdcall BufSetFrequency(void* self, std::uint32_t v) {
+site	src/audio/sound_sdl.cpp	794	long	l	live	long	-	long __stdcall BufStop(void* self) {
+site	src/audio/sound_sdl.cpp	801	long	l	live	long	-	long __stdcall BufUnlock(void* self, void* first, std::uint32_t first_bytes, void* second, std::uint32_t second_bytes) {
+site	src/audio/sound_sdl.cpp	811	long	l	live	long	-	long __stdcall BufRestore(void* self) {
+site	src/audio/sound_sdl.cpp	819	long	l	live	long	-	long __stdcall NotQueryInterface(void* self, const void* iid, void** out) {
+site	src/audio/sound_sdl.cpp	824	long	ul	live	unsigned long	-	unsigned long __stdcall NotAddRef(void* self) {
+site	src/audio/sound_sdl.cpp	829	long	ul	live	unsigned long	-	unsigned long __stdcall NotRelease(void* self) {
+site	src/audio/sound_sdl.cpp	842	long	l	live	long	-	long __stdcall NotSetNotificationPositions(void* self, std::uint32_t count, const Position* positions) {
+site	src/audio/sound_sdl.cpp	942	long	l	live	long	-	using MCall = long(__stdcall*)(void*);
+site	src/audio/sound_sdl.cpp	943	long	l	live	long	-	using MStatus = long(__stdcall*)(void*, std::uint32_t*);
+site	src/audio/sound_sdl.cpp	944	long	l	live	long	-	using MGetLong = long(__stdcall*)(void*, std::int32_t*);
+site	src/audio/sound_sdl.cpp	945	long	l	live	long	-	using MPosition = long(__stdcall*)(void*, std::uint32_t*, std::uint32_t*);
+site	src/audio/sound_sdl.cpp	946	long	l	live	long	-	using MValue = long(__stdcall*)(void*, std::uint32_t);
+site	src/audio/sound_sdl.cpp	947	long	l	live	long	-	using MLong = long(__stdcall*)(void*, std::int32_t);
+site	src/audio/sound_sdl.cpp	948	long	l	live	long	-	using MPlay = long(__stdcall*)(void*, std::uint32_t, std::uint32_t, std::uint32_t);
+site	src/audio/sound_sdl.cpp	949	long	l	live	long	-	using MLock = long(__stdcall*)(void*, std::uint32_t, std::uint32_t, void**, std::uint32_t*, void**, std::uint32_t*, std::uint32_t);
+site	src/audio/sound_sdl.cpp	950	long	l	live	long	-	using MUnlock = long(__stdcall*)(void*, void*, std::uint32_t, void*, std::uint32_t);
+site	src/audio/sound_sdl.cpp	951	long	l	live	long	-	using MCreate = long(__stdcall*)(void*, const void*, void**, void*);
+site	src/audio/sound_sdl.cpp	952	long	l	live	long	-	using MQuery = long(__stdcall*)(void*, const void*, void**);
+site	src/audio/sound_sdl.cpp	953	long	l	live	long	-	using MPositions = long(__stdcall*)(void*, std::uint32_t, const Position*);
+site	src/audio/sound_sdl.cpp	954	long	l	live	long	-	using MFormat = long(__stdcall*)(void*, const void*);
+site	src/audio/sound_sdl.cpp	955	long	l	live	long	-	using MCooperate = long(__stdcall*)(void*, void*, std::uint32_t);
+site	src/audio/sound_sdl.cpp	983	fmt_place	word	live	kIidNotifyVa	%08X	"the game's IID_IDirectSoundNotify at 0x%08X is not the one QueryInterface answers", kIidNotifyVa);
+site	src/audio/sound_sdl.cpp	989	low32	object_ours	live	&g_device	Low32	SDL_CHECK(slot_words[0] == Low32(&g_device) && slot_words[1] == 0xCAFEF00Du, " ");
+site	src/audio/sound_sdl.cpp	1007	long	l	live	long	-	SDL_CHECK(Method<long(__stdcall*)(void*, void*, std::uint32_t, std::uint32_t*)>(primary, 0x14)(primary, back, kFormatSize, &written) == kOk &&
+site	src/audio/sound_sdl.cpp	1024	low32	unread	live	fmt_mono	Low32	const TestDesc sdesc = MakeDesc(0x180E2, 800, Low32(fmt_mono));
+site	src/audio/sound_sdl.cpp	1121	low32	unread	live	fmt_ring	Low32	const TestDesc rdesc = MakeDesc(0x181E0, 4000, Low32(fmt_ring));
+site	src/audio/sound_sdl.cpp	1162	low32	unread	live	fmt_8	Low32	const TestDesc d8 = MakeDesc(0x180E2, 4, Low32(fmt_8));
+site	src/audio/sound_sdl.cpp	1173	low32	unread	live	fmt_mono	Low32	const TestDesc dl = MakeDesc(0x180E2, 8, Low32(fmt_mono));
+site	src/audio/sound_sdl.cpp	1243	sizeof_ptr	-	live	sizeof(void*)	-	static_assert(sizeof(Position) == 2 * sizeof(void*), " ");
+site	src/audio/sound_sdl.cpp	1258	low32	func_ours	live	&Create	Low32	const std::uint32_t create = Low32(&Create);
+site	src/audio/sound_sdl.cpp	1262	fmt_place	word	live	(unsigned)kSlotVa	%08X	if (before == 0) Fatal("sound_sdl: the import slot 0x%08X is empty: SoundSdl_Start before it is bound", (unsigned)kSlotVa);
+site	src/audio/sound_sdl.cpp	1264	sizeof_ptr	-	live	sizeof(void*)	-	if (!g_on && sizeof(void*) == 8) {
+site	src/audio/sound_sdl.cpp	1271	fmt_place	word	live	(unsigned)kSlotVa	%08X	if (!os::MemProtect(slot, 4, os::Prot::ReadWrite, &old)) Fatal("sound_sdl: MemProtect(0x%08X) failed, error %lu", (unsigned)kSlotVa, (unsigned long)os::LastErro
+site	src/audio/sound_sdl.cpp	1271	long	ul	live	unsigned long	-	if (!os::MemProtect(slot, 4, os::Prot::ReadWrite, &old)) Fatal(" ", (unsigned)kSlotVa, (unsigned long)os::LastError());
+site	src/audio/sound_sdl.cpp	1278	fmt_place	word	live	(unsigned)kSlotVa	%08X	if (g_on && after != create) Fatal("sound_sdl: the import slot 0x%08X reads 0x%08X after the patch, not our Create 0x%08X", (unsigned)kSlotVa, after, create);
+site	src/audio/sound_sdl.cpp	1278	fmt_place	word	live	after	%08X	if (g_on && after != create) Fatal("sound_sdl: the import slot 0x%08X reads 0x%08X after the patch, not our Create 0x%08X", (unsigned)kSlotVa, after, create);
+site	src/audio/sound_sdl.cpp	1278	fmt_place	word	live	create	%08X	if (g_on && after != create) Fatal("sound_sdl: the import slot 0x%08X reads 0x%08X after the patch, not our Create 0x%08X", (unsigned)kSlotVa, after, create);
+site	src/audio/sound_sdl.cpp	1279	fmt_place	word	live	(unsigned)kSlotVa	%08X	if (!g_on && after != before) Fatal("sound_sdl: the import slot 0x%08X changed under a switch that is off", (unsigned)kSlotVa);
+site	src/audio/sound_sdl.cpp	1280	fmt_place	word	live	(unsigned)kSlotVa	%08X	Log("DIV-0201 sound output: %s (the DirectSoundCreate slot 0x%08X holds 0x%08X; SDL %d.%d.%d)",
+site	src/audio/sound_sdl.cpp	1280	fmt_place	word	live	after	%08X	Log("DIV-0201 sound output: %s (the DirectSoundCreate slot 0x%08X holds 0x%08X; SDL %d.%d.%d)",
 site	src/common/asm_name.h	20	asm	other	live	(empty)	-	#define BOF3_ASM_NAME(name) __asm__(BOF3_SYM(name))
 site	src/common/file_token.cpp	21	uintptr	-	live	std::uintptr_t	-	const auto p = reinterpret_cast<std::uintptr_t>(token);
 site	src/common/file_token.cpp	22	uintptr	-	live	std::uintptr_t	-	const auto lo = reinterpret_cast<std::uintptr_t>(&g_streams[0]);
@@ -6377,13 +6366,21 @@ site	src/game/menu/menu_list.cpp	851	narrow_call	image_local	live	w + 0xC	Addr	b
 site	src/game/menu/menu_list.cpp	851	narrow_call	image_local	live	w + 0xE	Addr	battle_win_states::g.dispatch_kind(Addr(w + 0xC), Addr(m + 0xA2), Addr(w + 0x1E), Addr(w + 0x16), Addr(m + 0x9A), Addr(w + 0xE),
 site	src/game/menu/menu_list.cpp	852	narrow_call	image_local	live	w + 0x1A	Addr	Addr(w + 0x1A), Addr(w + 9));
 site	src/game/menu/menu_list.cpp	852	narrow_call	image_local	live	w + 9	Addr	Addr(w + 0x1A), Addr(w + 9));
-site	src/game/menu/menu_list.cpp	987	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(::bof3::CodePlace(handler)))(a0, a1, a2, a3, a4, a5, a6, a7);
-site	src/game/menu/menu_list.cpp	987	widen	code_place	live	::bof3::CodePlace(handler)	Handler [fn]	return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(::bof3::CodePlace(handler)))(a0, a1, a2, a3, a4, a5, a6, a7);
-site	src/game/menu/menu_list.cpp	2519	narrow_call	image_local	live	r	Key	SH_CALL(Menu_DrawButtonRow)(static_cast<int>((Key(r) & 0xFFFF0000u) | rv::As<records::WindowRecord>(r)->x), rv::As<records::WindowRecord>(r)->y, r[0xA], r[0xB],
-site	src/game/menu/menu_list.cpp	2806	low32	object_ours	live	&battle_e7::g_cursor_box_signed	Low32	bof3::PatchBytes(" ", Low32(&battle_e7::g_cursor_box_signed),
-site	src/game/menu/menu_list.cpp	2820	low32	object_ours	live	&g_title_centre	Low32	Low32(&g_title_centre),
-site	src/game/menu/menu_list.cpp	2834	low32	object_ours	live	&g_banner_centre	Low32	Low32(&g_banner_centre),
-site	src/game/menu/menu_list.cpp	2848	low32	object_ours	live	&g_exp_layout_us	Low32	Low32(&g_exp_layout_us),
+site	src/game/menu/menu_list.cpp	990	uintptr	-	live	std::uintptr_t	-	using Handler = unsigned (__cdecl*)(std::uintptr_t, std::uintptr_t, std::uintptr_t, std::uintptr_t, std::uintptr_t,
+site	src/game/menu/menu_list.cpp	990	uintptr	-	live	std::uintptr_t	-	using Handler = unsigned (__cdecl*)(std::uintptr_t, std::uintptr_t, std::uintptr_t, std::uintptr_t, std::uintptr_t,
+site	src/game/menu/menu_list.cpp	990	uintptr	-	live	std::uintptr_t	-	using Handler = unsigned (__cdecl*)(std::uintptr_t, std::uintptr_t, std::uintptr_t, std::uintptr_t, std::uintptr_t,
+site	src/game/menu/menu_list.cpp	990	uintptr	-	live	std::uintptr_t	-	using Handler = unsigned (__cdecl*)(std::uintptr_t, std::uintptr_t, std::uintptr_t, std::uintptr_t, std::uintptr_t,
+site	src/game/menu/menu_list.cpp	990	uintptr	-	live	std::uintptr_t	-	using Handler = unsigned (__cdecl*)(std::uintptr_t, std::uintptr_t, std::uintptr_t, std::uintptr_t, std::uintptr_t,
+site	src/game/menu/menu_list.cpp	991	uintptr	-	live	std::uintptr_t	-	std::uintptr_t, std::uintptr_t, std::uintptr_t);
+site	src/game/menu/menu_list.cpp	991	uintptr	-	live	std::uintptr_t	-	std::uintptr_t, std::uintptr_t, std::uintptr_t);
+site	src/game/menu/menu_list.cpp	991	uintptr	-	live	std::uintptr_t	-	std::uintptr_t, std::uintptr_t, std::uintptr_t);
+site	src/game/menu/menu_list.cpp	992	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(::bof3::CodePlace(handler)))(a0, a1, a2, a3, a4, a5, a6, a7);
+site	src/game/menu/menu_list.cpp	992	widen	code_place	live	::bof3::CodePlace(handler)	Handler [fn]	return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(::bof3::CodePlace(handler)))(a0, a1, a2, a3, a4, a5, a6, a7);
+site	src/game/menu/menu_list.cpp	2524	narrow_call	image_local	live	r	Key	SH_CALL(Menu_DrawButtonRow)(static_cast<int>((Key(r) & 0xFFFF0000u) | rv::As<records::WindowRecord>(r)->x), rv::As<records::WindowRecord>(r)->y, r[0xA], r[0xB],
+site	src/game/menu/menu_list.cpp	2811	low32	object_ours	live	&battle_e7::g_cursor_box_signed	Low32	bof3::PatchBytes(" ", Low32(&battle_e7::g_cursor_box_signed),
+site	src/game/menu/menu_list.cpp	2825	low32	object_ours	live	&g_title_centre	Low32	Low32(&g_title_centre),
+site	src/game/menu/menu_list.cpp	2839	low32	object_ours	live	&g_banner_centre	Low32	Low32(&g_banner_centre),
+site	src/game/menu/menu_list.cpp	2853	low32	object_ours	live	&g_exp_layout_us	Low32	Low32(&g_exp_layout_us),
 site	src/game/menu/menu_lists_fuzz.cpp	34	narrow	helper_def	fuzz	p	-	std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/menu/menu_lists_fuzz.cpp	34	uintptr	-	fuzz	std::uintptr_t	-	std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/menu/menu_lists_fuzz.cpp	35	narrow_call	image_local	fuzz	p	Address	void SetPtr(std::uint32_t address, const void* p) { SetLong(At(address), static_cast<std::int32_t>(Address(p))); }
@@ -9071,11 +9068,9 @@ site	src/hook/wav_dump.cpp	96	long	ul	live	unsigned long	-	constexpr unsigned lo
 site	src/hook/wav_dump.cpp	97	long	ul	live	unsigned long	-	constexpr unsigned long kPlayLooping = 0x01;
 site	src/hook/wav_dump.cpp	125	long	ul	live	unsigned long	-	unsigned long bytes = 0;
 site	src/hook/wav_dump.cpp	131	long	ul	live	unsigned long	-	unsigned long frequency = 0;
-site	src/hook/wav_dump.cpp	132	long	l	live	long	-	long volume = 0, pan = 0;
 site	src/hook/wav_dump.cpp	135	long	ul	live	unsigned long	-	unsigned long lock_offset = 0;
 site	src/hook/wav_dump.cpp	160	long	l	live	long	-	long (__stdcall* g_real_create)(const void*, void**, void*) = nullptr;
 site	src/hook/wav_dump.cpp	183	fmt_place	pointer	live	static_cast<void*>(vt)	%p	Fatal("wav: a DirectSound buffer call through vtable %p, which the dump never hooked", static_cast<void*>(vt));
-site	src/hook/wav_dump.cpp	192	long	l	live	long	-	double Gain(long hundredths) { return hundredths <= -10000 ? 0.0 : std::pow(10.0, static_cast<double>(hundredths) / 2000.0); }
 site	src/hook/wav_dump.cpp	219	fmt_place	pointer	live	b.object	%p	Log("wav stream %p ran dry at Frame_Counter %u (%llu samples so far): silence until the "
 site	src/hook/wav_dump.cpp	221	long	l	live	long	-	static_cast<unsigned long long>(g_underrun_samples));
 site	src/hook/wav_dump.cpp	349	long	ul	live	unsigned long	-	Fatal(" ", Utf8Path(g_path.c_str()).text, static_cast<unsigned long>(bof3::os::LastError()));
@@ -9104,60 +9099,56 @@ site	src/hook/wav_dump.cpp	517	long	l	live	long	-	const long r = As<long (__stdc
 site	src/hook/wav_dump.cpp	517	long	l	live	long	-	const long r = As<long (__stdcall*)(void*, std::uint32_t)>(v.set_position)(self, position);
 site	src/hook/wav_dump.cpp	520	fmt_place	pointer	live	self	%p	Fatal("wav: SetCurrentPosition(%lu) on the stream %p is not modelled (the game never asked for it until now)",
 site	src/hook/wav_dump.cpp	521	long	ul	live	unsigned long	-	static_cast<unsigned long>(position), self);
-site	src/hook/wav_dump.cpp	527	long	l	live	long	-	long __stdcall HookSetVolume(void* self, long volume) {
-site	src/hook/wav_dump.cpp	527	long	l	live	long	-	long __stdcall HookSetVolume(void* self, long volume) {
-site	src/hook/wav_dump.cpp	531	long	l	live	long	-	const long r = As<long (__stdcall*)(void*, long)>(v.set_volume)(self, volume);
-site	src/hook/wav_dump.cpp	531	long	l	live	long	-	const long r = As<long (__stdcall*)(void*, long)>(v.set_volume)(self, volume);
-site	src/hook/wav_dump.cpp	531	long	l	live	long	-	const long r = As<long (__stdcall*)(void*, long)>(v.set_volume)(self, volume);
-site	src/hook/wav_dump.cpp	536	long	l	live	long	-	long __stdcall HookSetPan(void* self, long pan) {
-site	src/hook/wav_dump.cpp	536	long	l	live	long	-	long __stdcall HookSetPan(void* self, long pan) {
-site	src/hook/wav_dump.cpp	540	long	l	live	long	-	const long r = As<long (__stdcall*)(void*, long)>(v.set_pan)(self, pan);
-site	src/hook/wav_dump.cpp	540	long	l	live	long	-	const long r = As<long (__stdcall*)(void*, long)>(v.set_pan)(self, pan);
-site	src/hook/wav_dump.cpp	540	long	l	live	long	-	const long r = As<long (__stdcall*)(void*, long)>(v.set_pan)(self, pan);
-site	src/hook/wav_dump.cpp	545	long	l	live	long	-	long __stdcall HookSetFrequency(void* self, std::uint32_t frequency) {
-site	src/hook/wav_dump.cpp	549	long	l	live	long	-	const long r = As<long (__stdcall*)(void*, std::uint32_t)>(v.set_frequency)(self, frequency);
-site	src/hook/wav_dump.cpp	549	long	l	live	long	-	const long r = As<long (__stdcall*)(void*, std::uint32_t)>(v.set_frequency)(self, frequency);
-site	src/hook/wav_dump.cpp	556	sizeof_ptr	-	live	sizeof(void*)	-	if (!os::MemProtect(slot, sizeof(void*), os::Prot::ReadWriteExec, &old))
-site	src/hook/wav_dump.cpp	557	fmt_place	pointer	live	static_cast<void*>(slot)	%p	Fatal("wav: MemProtect(%p) failed, error %lu", static_cast<void*>(slot), (unsigned long)os::LastError());
-site	src/hook/wav_dump.cpp	557	long	ul	live	unsigned long	-	Fatal(" ", static_cast<void*>(slot), (unsigned long)os::LastError());
-site	src/hook/wav_dump.cpp	559	sizeof_ptr	-	live	sizeof(void*)	-	os::MemRestore(slot, sizeof(void*), old);
-site	src/hook/wav_dump.cpp	566	low32	unread	live	to	Low32	const std::uint32_t word = Low32(to);
-site	src/hook/wav_dump.cpp	569	fmt_place	pointer	live	static_cast<void*>(slot)	%p	Fatal("wav: MemProtect(%p) failed, error %lu", static_cast<void*>(slot), (unsigned long)os::LastError());
-site	src/hook/wav_dump.cpp	569	long	ul	live	unsigned long	-	Fatal(" ", static_cast<void*>(slot), (unsigned long)os::LastError());
-site	src/hook/wav_dump.cpp	591	fmt_place	pointer	live	static_cast<void*>(vt)	%p	Log("wav hooked the DirectSound buffer vtable %p (%u so far)", static_cast<void*>(vt),
-site	src/hook/wav_dump.cpp	600	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<void*>(static_cast<std::uintptr_t>(word));
-site	src/hook/wav_dump.cpp	600	widen	param	live	word	void*	return reinterpret_cast<void*>(static_cast<std::uintptr_t>(word));
-site	src/hook/wav_dump.cpp	603	long	l	live	long	-	long __stdcall HookCreateBuffer(void* device, const BufferDesc* desc, void** out, void* outer) {
-site	src/hook/wav_dump.cpp	604	long	l	live	long	-	const long r = As<long (__stdcall*)(void*, const BufferDesc*, void**, void*)>(g_device_originals[0])(device, desc, out, outer);
-site	src/hook/wav_dump.cpp	604	long	l	live	long	-	const long r = As<long (__stdcall*)(void*, const BufferDesc*, void**, void*)>(g_device_originals[0])(device, desc, out, outer);
-site	src/hook/wav_dump.cpp	608	fmt_place	pointer	live	made	%p	Log("wav the primary buffer %p: not mixed from (%s mixes the secondaries into it)", made,
-site	src/hook/wav_dump.cpp	614	uintptr	-	live	std::uintptr_t	-	const WaveFormat* const f = reinterpret_cast<const WaveFormat*>(static_cast<std::uintptr_t>(desc->format));
-site	src/hook/wav_dump.cpp	614	widen	param	live	desc->format	const WaveFormat*	const WaveFormat* const f = reinterpret_cast<const WaveFormat*>(static_cast<std::uintptr_t>(desc->format));
-site	src/hook/wav_dump.cpp	633	fmt_place	pointer	live	made	%p	Log("wav stream %p: %lu bytes, %lu Hz %u-bit %u channel(s), flags 0x%lX (queued in write order)", made,
-site	src/hook/wav_dump.cpp	634	long	ul	live	unsigned long	-	static_cast<unsigned long>(desc->bytes), static_cast<unsigned long>(f->nSamplesPerSec), b->bits, b->channels,
-site	src/hook/wav_dump.cpp	634	long	ul	live	unsigned long	-	static_cast<unsigned long>(desc->bytes), static_cast<unsigned long>(f->nSamplesPerSec), b->bits, b->channels,
-site	src/hook/wav_dump.cpp	635	long	ul	live	unsigned long	-	static_cast<unsigned long>(desc->flags));
-site	src/hook/wav_dump.cpp	641	long	l	live	long	-	long __stdcall HookDuplicate(void* device, void* original, void** out) {
-site	src/hook/wav_dump.cpp	642	long	l	live	long	-	const long r = As<long (__stdcall*)(void*, void*, void**)>(g_device_originals[1])(device, original, out);
-site	src/hook/wav_dump.cpp	642	long	l	live	long	-	const long r = As<long (__stdcall*)(void*, void*, void**)>(g_device_originals[1])(device, original, out);
-site	src/hook/wav_dump.cpp	647	long	l	live	long	-	long __stdcall HookDirectSoundCreate(const void* guid, void** out, void* outer) {
-site	src/hook/wav_dump.cpp	648	long	l	live	long	-	const long r = g_real_create(guid, out, outer);
-site	src/hook/wav_dump.cpp	650	long	ul	live	unsigned long	-	Log(" ", static_cast<unsigned long>(r));
-site	src/hook/wav_dump.cpp	655	fmt_place	pointer	live	static_cast<void*>(g_device_vtable)	%p	if (g_device_vtable && g_device_vtable != vt) Fatal("wav: a second DirectSound device class (%p, then %p)", static_cast<void*>(g_device_vtable), static_cast<voi
-site	src/hook/wav_dump.cpp	655	fmt_place	pointer	live	static_cast<void*>(vt)	%p	if (g_device_vtable && g_device_vtable != vt) Fatal("wav: a second DirectSound device class (%p, then %p)", static_cast<void*>(g_device_vtable), static_cast<voi
-site	src/hook/wav_dump.cpp	663	fmt_place	pointer	live	device	%p	Log("wav DirectSoundCreate: device %p, vtable %p hooked", device, static_cast<void*>(vt));
-site	src/hook/wav_dump.cpp	663	fmt_place	pointer	live	static_cast<void*>(vt)	%p	Log("wav DirectSoundCreate: device %p, vtable %p hooked", device, static_cast<void*>(vt));
-site	src/hook/wav_dump.cpp	684	long	ul	live	unsigned long	-	if (n >= os::kMaxPath) Fatal(" ", static_cast<unsigned long>(n));
-site	src/hook/wav_dump.cpp	728	uintptr	-	live	std::uintptr_t	-	void** const slot = reinterpret_cast<void**>(static_cast<std::uintptr_t>(Img(Imp_DirectSoundCreate_addr)));
-site	src/hook/wav_dump.cpp	728	widen	other	live	Img(Imp_DirectSoundCreate_addr)	void**	void** const slot = reinterpret_cast<void**>(static_cast<std::uintptr_t>(Img(Imp_DirectSoundCreate_addr)));
-site	src/hook/wav_dump.cpp	739	fmt_place	pointer	live	held	%p	Fatal("wav: the import slot 0x%08X holds %p, neither DSOUND.dll's DirectSoundCreate %p nor the SDL3 layer's Create",
-site	src/hook/wav_dump.cpp	739	fmt_place	pointer	live	real	%p	Fatal("wav: the import slot 0x%08X holds %p, neither DSOUND.dll's DirectSoundCreate %p nor the SDL3 layer's Create",
-site	src/hook/wav_dump.cpp	739	fmt_place	word	live	static_cast<unsigned>(Imp_DirectSoundCreate_addr)	%08X	Fatal("wav: the import slot 0x%08X holds %p, neither DSOUND.dll's DirectSoundCreate %p nor the SDL3 layer's Create",
-site	src/hook/wav_dump.cpp	743	long	l	live	long	-	g_real_create = reinterpret_cast<long (__stdcall*)(const void*, void**, void*)>(held);
-site	src/hook/wav_dump.cpp	746	fmt_place	word	live	static_cast<unsigned>(Imp_DirectSoundCreate_addr)	%08X	Log("wav BOF3X_WAV_DIR %s, label %s: DirectSoundCreate's slot 0x%08X hooked in front of %s; a logic frame is %.4f ms "
-site	src/hook/wav_dump.cpp	774	long	l	live	long	-	Utf8Path(g_path.c_str()).text, g_next_frame - g_first_frame, static_cast<unsigned long long>(g_data_bytes / 4),
-site	src/hook/wav_dump.cpp	776	long	l	live	long	-	static_cast<unsigned long long>(g_underrun_samples), static_cast<unsigned long long>(g_max_lead), g_plays);
-site	src/hook/wav_dump.cpp	776	long	l	live	long	-	static_cast<unsigned long long>(g_underrun_samples), static_cast<unsigned long long>(g_max_lead), g_plays);
+site	src/hook/wav_dump.cpp	529	long	l	live	long	-	long __stdcall HookSetVolume(void* self, std::int32_t volume) {
+site	src/hook/wav_dump.cpp	533	long	l	live	long	-	const long r = As<long (__stdcall*)(void*, std::int32_t)>(v.set_volume)(self, volume);
+site	src/hook/wav_dump.cpp	533	long	l	live	long	-	const long r = As<long (__stdcall*)(void*, std::int32_t)>(v.set_volume)(self, volume);
+site	src/hook/wav_dump.cpp	538	long	l	live	long	-	long __stdcall HookSetPan(void* self, std::int32_t pan) {
+site	src/hook/wav_dump.cpp	542	long	l	live	long	-	const long r = As<long (__stdcall*)(void*, std::int32_t)>(v.set_pan)(self, pan);
+site	src/hook/wav_dump.cpp	542	long	l	live	long	-	const long r = As<long (__stdcall*)(void*, std::int32_t)>(v.set_pan)(self, pan);
+site	src/hook/wav_dump.cpp	547	long	l	live	long	-	long __stdcall HookSetFrequency(void* self, std::uint32_t frequency) {
+site	src/hook/wav_dump.cpp	551	long	l	live	long	-	const long r = As<long (__stdcall*)(void*, std::uint32_t)>(v.set_frequency)(self, frequency);
+site	src/hook/wav_dump.cpp	551	long	l	live	long	-	const long r = As<long (__stdcall*)(void*, std::uint32_t)>(v.set_frequency)(self, frequency);
+site	src/hook/wav_dump.cpp	558	sizeof_ptr	-	live	sizeof(void*)	-	if (!os::MemProtect(slot, sizeof(void*), os::Prot::ReadWriteExec, &old))
+site	src/hook/wav_dump.cpp	559	fmt_place	pointer	live	static_cast<void*>(slot)	%p	Fatal("wav: MemProtect(%p) failed, error %lu", static_cast<void*>(slot), (unsigned long)os::LastError());
+site	src/hook/wav_dump.cpp	559	long	ul	live	unsigned long	-	Fatal(" ", static_cast<void*>(slot), (unsigned long)os::LastError());
+site	src/hook/wav_dump.cpp	561	sizeof_ptr	-	live	sizeof(void*)	-	os::MemRestore(slot, sizeof(void*), old);
+site	src/hook/wav_dump.cpp	568	low32	unread	live	to	Low32	const std::uint32_t word = Low32(to);
+site	src/hook/wav_dump.cpp	571	fmt_place	pointer	live	static_cast<void*>(slot)	%p	Fatal("wav: MemProtect(%p) failed, error %lu", static_cast<void*>(slot), (unsigned long)os::LastError());
+site	src/hook/wav_dump.cpp	571	long	ul	live	unsigned long	-	Fatal(" ", static_cast<void*>(slot), (unsigned long)os::LastError());
+site	src/hook/wav_dump.cpp	593	fmt_place	pointer	live	static_cast<void*>(vt)	%p	Log("wav hooked the DirectSound buffer vtable %p (%u so far)", static_cast<void*>(vt),
+site	src/hook/wav_dump.cpp	602	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<void*>(static_cast<std::uintptr_t>(word));
+site	src/hook/wav_dump.cpp	602	widen	param	live	word	void*	return reinterpret_cast<void*>(static_cast<std::uintptr_t>(word));
+site	src/hook/wav_dump.cpp	605	long	l	live	long	-	long __stdcall HookCreateBuffer(void* device, const BufferDesc* desc, void** out, void* outer) {
+site	src/hook/wav_dump.cpp	606	long	l	live	long	-	const long r = As<long (__stdcall*)(void*, const BufferDesc*, void**, void*)>(g_device_originals[0])(device, desc, out, outer);
+site	src/hook/wav_dump.cpp	606	long	l	live	long	-	const long r = As<long (__stdcall*)(void*, const BufferDesc*, void**, void*)>(g_device_originals[0])(device, desc, out, outer);
+site	src/hook/wav_dump.cpp	610	fmt_place	pointer	live	made	%p	Log("wav the primary buffer %p: not mixed from (%s mixes the secondaries into it)", made,
+site	src/hook/wav_dump.cpp	616	uintptr	-	live	std::uintptr_t	-	const WaveFormat* const f = reinterpret_cast<const WaveFormat*>(static_cast<std::uintptr_t>(desc->format));
+site	src/hook/wav_dump.cpp	616	widen	param	live	desc->format	const WaveFormat*	const WaveFormat* const f = reinterpret_cast<const WaveFormat*>(static_cast<std::uintptr_t>(desc->format));
+site	src/hook/wav_dump.cpp	635	fmt_place	pointer	live	made	%p	Log("wav stream %p: %lu bytes, %lu Hz %u-bit %u channel(s), flags 0x%lX (queued in write order)", made,
+site	src/hook/wav_dump.cpp	636	long	ul	live	unsigned long	-	static_cast<unsigned long>(desc->bytes), static_cast<unsigned long>(f->nSamplesPerSec), b->bits, b->channels,
+site	src/hook/wav_dump.cpp	636	long	ul	live	unsigned long	-	static_cast<unsigned long>(desc->bytes), static_cast<unsigned long>(f->nSamplesPerSec), b->bits, b->channels,
+site	src/hook/wav_dump.cpp	637	long	ul	live	unsigned long	-	static_cast<unsigned long>(desc->flags));
+site	src/hook/wav_dump.cpp	643	long	l	live	long	-	long __stdcall HookDuplicate(void* device, void* original, void** out) {
+site	src/hook/wav_dump.cpp	644	long	l	live	long	-	const long r = As<long (__stdcall*)(void*, void*, void**)>(g_device_originals[1])(device, original, out);
+site	src/hook/wav_dump.cpp	644	long	l	live	long	-	const long r = As<long (__stdcall*)(void*, void*, void**)>(g_device_originals[1])(device, original, out);
+site	src/hook/wav_dump.cpp	649	long	l	live	long	-	long __stdcall HookDirectSoundCreate(const void* guid, void** out, void* outer) {
+site	src/hook/wav_dump.cpp	650	long	l	live	long	-	const long r = g_real_create(guid, out, outer);
+site	src/hook/wav_dump.cpp	652	long	ul	live	unsigned long	-	Log(" ", static_cast<unsigned long>(r));
+site	src/hook/wav_dump.cpp	657	fmt_place	pointer	live	static_cast<void*>(g_device_vtable)	%p	if (g_device_vtable && g_device_vtable != vt) Fatal("wav: a second DirectSound device class (%p, then %p)", static_cast<void*>(g_device_vtable), static_cast<voi
+site	src/hook/wav_dump.cpp	657	fmt_place	pointer	live	static_cast<void*>(vt)	%p	if (g_device_vtable && g_device_vtable != vt) Fatal("wav: a second DirectSound device class (%p, then %p)", static_cast<void*>(g_device_vtable), static_cast<voi
+site	src/hook/wav_dump.cpp	665	fmt_place	pointer	live	device	%p	Log("wav DirectSoundCreate: device %p, vtable %p hooked", device, static_cast<void*>(vt));
+site	src/hook/wav_dump.cpp	665	fmt_place	pointer	live	static_cast<void*>(vt)	%p	Log("wav DirectSoundCreate: device %p, vtable %p hooked", device, static_cast<void*>(vt));
+site	src/hook/wav_dump.cpp	686	long	ul	live	unsigned long	-	if (n >= os::kMaxPath) Fatal(" ", static_cast<unsigned long>(n));
+site	src/hook/wav_dump.cpp	730	uintptr	-	live	std::uintptr_t	-	void** const slot = reinterpret_cast<void**>(static_cast<std::uintptr_t>(Img(Imp_DirectSoundCreate_addr)));
+site	src/hook/wav_dump.cpp	730	widen	other	live	Img(Imp_DirectSoundCreate_addr)	void**	void** const slot = reinterpret_cast<void**>(static_cast<std::uintptr_t>(Img(Imp_DirectSoundCreate_addr)));
+site	src/hook/wav_dump.cpp	741	fmt_place	pointer	live	held	%p	Fatal("wav: the import slot 0x%08X holds %p, neither DSOUND.dll's DirectSoundCreate %p nor the SDL3 layer's Create",
+site	src/hook/wav_dump.cpp	741	fmt_place	pointer	live	real	%p	Fatal("wav: the import slot 0x%08X holds %p, neither DSOUND.dll's DirectSoundCreate %p nor the SDL3 layer's Create",
+site	src/hook/wav_dump.cpp	741	fmt_place	word	live	static_cast<unsigned>(Imp_DirectSoundCreate_addr)	%08X	Fatal("wav: the import slot 0x%08X holds %p, neither DSOUND.dll's DirectSoundCreate %p nor the SDL3 layer's Create",
+site	src/hook/wav_dump.cpp	745	long	l	live	long	-	g_real_create = reinterpret_cast<long (__stdcall*)(const void*, void**, void*)>(held);
+site	src/hook/wav_dump.cpp	748	fmt_place	word	live	static_cast<unsigned>(Imp_DirectSoundCreate_addr)	%08X	Log("wav BOF3X_WAV_DIR %s, label %s: DirectSoundCreate's slot 0x%08X hooked in front of %s; a logic frame is %.4f ms "
+site	src/hook/wav_dump.cpp	776	long	l	live	long	-	Utf8Path(g_path.c_str()).text, g_next_frame - g_first_frame, static_cast<unsigned long long>(g_data_bytes / 4),
+site	src/hook/wav_dump.cpp	778	long	l	live	long	-	static_cast<unsigned long long>(g_underrun_samples), static_cast<unsigned long long>(g_max_lead), g_plays);
+site	src/hook/wav_dump.cpp	778	long	l	live	long	-	static_cast<unsigned long long>(g_underrun_samples), static_cast<unsigned long long>(g_max_lead), g_plays);
 site	src/hook/write_watch.cpp	30	uintptr	-	live	std::uintptr_t	-	std::uintptr_t ip;
 site	src/hook/write_watch.cpp	44	uintptr	-	live	std::uintptr_t	-	std::uintptr_t g_dll_lo = 0, g_dll_hi = 0;
 site	src/hook/write_watch.cpp	47	uintptr	-	live	std::uintptr_t	-	return *reinterpret_cast<const volatile std::uint32_t*>(static_cast<std::uintptr_t>(place));
@@ -11366,8 +11357,8 @@ file	src/audio/mp3.cpp	live	widen	param	3
 file	src/audio/seq.cpp	live	long	l	1
 file	src/audio/sound_sdl.cpp	live	fmt_place	pointer	5
 file	src/audio/sound_sdl.cpp	live	fmt_place	word	9
-file	src/audio/sound_sdl.cpp	live	long	l	72
-file	src/audio/sound_sdl.cpp	live	long	ul	8
+file	src/audio/sound_sdl.cpp	live	long	l	62
+file	src/audio/sound_sdl.cpp	live	long	ul	7
 file	src/audio/sound_sdl.cpp	live	low32	func_ours	1
 file	src/audio/sound_sdl.cpp	live	low32	object_ours	1
 file	src/audio/sound_sdl.cpp	live	low32	unread	5
@@ -14419,7 +14410,7 @@ file	src/game/menu/menu_list.cpp	live	low32	helper_def	2
 file	src/game/menu/menu_list.cpp	live	low32	image	1
 file	src/game/menu/menu_list.cpp	live	low32	object_ours	4
 file	src/game/menu/menu_list.cpp	live	narrow_call	image_local	25
-file	src/game/menu/menu_list.cpp	live	uintptr	-	14
+file	src/game/menu/menu_list.cpp	live	uintptr	-	22
 file	src/game/menu/menu_list.cpp	live	widen	code_place	2
 file	src/game/menu/menu_list.cpp	live	widen	img_place	5
 file	src/game/menu/menu_list.cpp	live	widen	other	4
@@ -15290,7 +15281,7 @@ file	src/hook/stp_census.cpp	live	uintptr	-	1
 file	src/hook/stp_census.cpp	live	widen	param	1
 file	src/hook/wav_dump.cpp	live	fmt_place	pointer	18
 file	src/hook/wav_dump.cpp	live	fmt_place	word	2
-file	src/hook/wav_dump.cpp	live	long	l	45
+file	src/hook/wav_dump.cpp	live	long	l	39
 file	src/hook/wav_dump.cpp	live	long	ul	18
 file	src/hook/wav_dump.cpp	live	low32	unread	1
 file	src/hook/wav_dump.cpp	live	sizeof_ptr	-	2
@@ -15387,8 +15378,8 @@ file	symbols.toml	live	ptr_member	ours_render	11
 file	symbols.toml	live	ptr_member	windows_function	14
 file	symbols.toml	live	ptr_member	windows_handle	3
 file	symbols.toml	live	ptr_member	windows_object	10
-#count sites	11354
-#count sites_live	7883
+#count sites	11345
+#count sites_live	7874
 #count sites_fuzz	3471
 #count fuzz_files	250
 #count narrow	357
@@ -15475,8 +15466,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count widen_word_read	373
 #count widen_word_read_live	364
 #count widen_word_read_live_files	295
-#count long	2349
-#count long_live	2348
+#count long	2332
+#count long_live	2331
 #count long_live_files	53
 #count long_fuzz	1
 #count long_fuzz_files	1
@@ -15489,11 +15480,11 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count long_ctype:unsigned long *	1
 #count long_ctype:unsigned long *_live	1
 #count long_ctype:unsigned long *_live_files	1
-#count long_l	340
-#count long_l_live	339
+#count long_l	324
+#count long_l_live	323
 #count long_l_live_files	41
-#count long_ul	220
-#count long_ul_live	220
+#count long_ul	219
+#count long_ul_live	219
 #count long_ul_live_files	28
 #count asm	328
 #count asm_live	207
@@ -15563,13 +15554,13 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count sizeof_ptr_-	17
 #count sizeof_ptr_-_live	17
 #count sizeof_ptr_-_live_files	9
-#count uintptr	1975
-#count uintptr_live	1309
+#count uintptr	1983
+#count uintptr_live	1317
 #count uintptr_live_files	524
 #count uintptr_fuzz	666
 #count uintptr_fuzz_files	249
-#count uintptr_-	1975
-#count uintptr_-_live	1309
+#count uintptr_-	1983
+#count uintptr_-_live	1317
 #count uintptr_-_live_files	524
 #count fmt_place	545
 #count fmt_place_live	475
@@ -15707,7 +15698,7 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count width_if_logic_live_files	15
 #count asm_live_x87_only_files	42
 #count widen_live_fnptr	472
-#count long_src	560
+#count long_src	543
 #count long_src_game	46
 #count long_src_game_ul	1
 #count long_ctype	1789
@@ -15716,9 +15707,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count callconv_CALLBACK_live	7
 #count callconv_WINAPI	11
 #count callconv_WINAPI_live	11
-#count callconv___cdecl	16384
+#count callconv___cdecl	16378
 #count callconv___cdecl_fuzz	2014
-#count callconv___cdecl_live	14370
+#count callconv___cdecl_live	14364
 #count callconv___stdcall	366
 #count callconv___stdcall_fuzz	96
 #count callconv___stdcall_live	270
