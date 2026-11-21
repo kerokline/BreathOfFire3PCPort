@@ -56,7 +56,29 @@ constexpr U kFxFillColor = 0x50;
 constexpr U kPfRgb = 0x40;
 
 void* Alloc(U bytes) { return std::calloc(1, bytes); }
-void Free(void* p) { std::free(p); }
+
+// A surface and its pixels: the game holds both in 32-bit words (PutObject,
+// FillDesc's lpSurface), so they must lie below 4 GB. Windows: the C
+// runtime's heap, which lies there (the 32-bit process; the 64-bit build's
+// bottom-up heap, x64-build-design.md 2 and 5) - as before. Elsewhere the C
+// runtime maps large and late blocks above 4 GB (measured on Linux: a battle's
+// surface, PutObject's Low32 Fatal), so they come from the game's chokepoint,
+// whose blocks are R10's arena below 4 GB (docs/linux-round.md, "R10 as run");
+// Crt_free hands a block that is not the arena's to free().
+void* LowAlloc(U bytes) {
+#ifdef _WIN32
+    return std::calloc(1, bytes);
+#else
+    return Crt_calloc(1, bytes);
+#endif
+}
+void LowFree(void* p) {
+#ifdef _WIN32
+    std::free(p);
+#else
+    Crt_free(p);
+#endif
+}
 
 U Long(const void* p) {
     U v;
@@ -583,7 +605,7 @@ unsigned long __stdcall Surface_Release(void* self) {
         // slot out again before then.
         s->snapshot_held = true;
     }
-    Free(s->pixels);
+    LowFree(s->pixels);
     s->pixels = nullptr;
     s->refs = 0;
     // Left in the registry with `gpu` for render_d3d11 to release; the slot is
@@ -1152,7 +1174,7 @@ Surface* MakeSurface(U width, U height, U bpp, U caps, U caps2, bool primary, bo
     }
     if (!s) {
         if (g_n_surfaces >= kMaxSurfaces) bof3::Fatal("render: more than %u surfaces", kMaxSurfaces);
-        s = static_cast<Surface*>(Alloc(sizeof(Surface)));
+        s = static_cast<Surface*>(LowAlloc(sizeof(Surface)));
         if (!s) return nullptr;
         g_surfaces[g_n_surfaces++] = s;
     }
@@ -1181,7 +1203,7 @@ Surface* MakeSurface(U width, U height, U bpp, U caps, U caps2, bool primary, bo
         s->pf_bmask = 0x0000FF;
     }
     if (!primary) {
-        s->pixels = static_cast<unsigned char*>(Alloc(s->pitch * height));
+        s->pixels = static_cast<unsigned char*>(LowAlloc(s->pitch * height));
         if (!s->pixels) {
             s->refs = 0;
             return nullptr;
@@ -1194,9 +1216,9 @@ bool ResizeSurface(Surface* s, U width, U height) {
     if (!s->is_primary && !s->is_back) bof3::Fatal("render: ResizeSurface of a texture surface");
     const U pitch = ((width * (s->bpp / 8)) + 15) & ~15u;
     if (s->pixels) {
-        unsigned char* pixels = static_cast<unsigned char*>(Alloc(pitch * height));
+        unsigned char* pixels = static_cast<unsigned char*>(LowAlloc(pitch * height));
         if (!pixels) return false;
-        Free(s->pixels);
+        LowFree(s->pixels);
         s->pixels = pixels;
     }
     s->width = width;
