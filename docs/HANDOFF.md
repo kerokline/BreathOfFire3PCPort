@@ -131,13 +131,13 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      widget call named as an engine accessor is (`At`), and a colour as red, green and blue, never one hexadecimal
      number. A refusal of the start shows a modal message box only when no script can wait for it: never under
      `--check`, `--no-config`, a self-test, or a redirected stdout and stderr (section 14).
-   - **`BOF3.exe` out of the player's run: groups X1 to X6 built on the local branch `exe-retire/round` (2026-11-19), not
-     merged to `main`, not pushed:** [`exe-retire-round.md`](exe-retire-round.md) "As run", IDEAS I70, DIV-0241, DIV-0242,
+   - **`BOF3.exe` out of the player's run: merged (PR #266, 2026-11-20):** [`exe-retire-round.md`](exe-retire-round.md) "As run", IDEAS I70, DIV-0241, DIV-0242,
      DIV-0212 amended, D432. A player's start reads no `BOF3.exe`; a PC folder with no image is set up in place first.
-     **Owed before a PR:** the ten state-hash routes on `<main checkout>\bof3` under `BOF3X_EXEFILE=1`, then X7 (a harness
-     install with no `BOF3.exe`, the routes, `music_heard.py`, the Jukebox's and the save editor's drivers, the same with a
-     wrong `BOF3.exe` beside the game); the Sources page's window driven through a set-up in place; the save editor's
-     window on a disc-built install. None has run.
+     **The proofs ran on 2026-11-20 at `main` `e9c1fb41`** (round doc 9a): the ten routes on `<main checkout>\bof3`, on
+     an install with no `BOF3.exe` and with a wrong-bytes `BOF3.exe` beside the game, every one the same as before the
+     round but for known noise pages; `music_heard.py` on both; the hosted suite, the exe host and the moved base.
+     **Owed:** the Jukebox's and the save editor's drivers on that install; the Sources page's window driven through a
+     set-up in place; the save editor's window on a disc-built install; the owner's play.
    - **The Linux round's next units** are frost's, on his fork ([`linux-round.md`](linux-round.md) 4 and 6; "Waiting on
      someone else"). Here: the renderer's remainder ([`platform-layers-plan.md`](platform-layers-plan.md) 2.2) and the
      second backend (IDEAS I63) gate tier 2, and the API is the owner's call 1 of `linux-round.md` 6. Tier 1's rows 5, 7

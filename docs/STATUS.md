@@ -74,8 +74,7 @@ and pad drivers as before; `bof3x.dll` is 2.5 MB larger for it, and its self-tes
 **Owed: the owner's look** (the captures, and a font for the banner and the text that may ship); stages P2 to P6. Not
 run: a hand on the window, a scaled display, the message box and the pickers, a Deck. The document's section 9 is the record.
 
-**`BOF3.exe` out of the player's run, 2026-11-19 (the exe-retire round, IDEAS I70; on the local branch `exe-retire/round`,
-not merged to `main`, not pushed).** Asked by the owner the same day: "remove the original exe from any post-install player
+**`BOF3.exe` out of the player's run, 2026-11-19 (the exe-retire round, IDEAS I70; merged as PR #266, 2026-11-20).** Asked by the owner the same day: "remove the original exe from any post-install player
 usage". After an install is made, nothing a player runs opens `BOF3.exe` (DIV-0242): `.data` is the cache's image on every
 install kind, hashed as mapped against the manifest's `[exe] sha256` (1.8 to 2.1 ms); the install's kind is the cache's
 `[build] install_kind`; new installs hold no `BOF3.exe` in `game\`; the save editor reads the image and gains the party
@@ -84,8 +83,11 @@ place before its first start, its saves left where they are (DIV-0241). DIV-0212
 importer's `verify` and the developer's runs; the presets no longer read the file), DIV-0100 and DIV-0102 amended, D432
 fixed. The importer still reads the file as a source, the hosted build runs inside it, and `BOF3X_EXEFILE=1` is the
 developer's switch to read it. Measured by each group ([`exe-retire-round.md`](exe-retire-round.md), "As run"): both
-builds, the host tests, the censuses, the exe host's self-test with and without the switch, the hosted suite. **Not run:**
-the ten state-hash routes, the round's final proof (X7), the Sources page's window and the save editor's window. Not played.
+builds, the host tests, the censuses, the exe host's self-test with and without the switch, the hosted suite. On 2026-11-20 at `main`
+`e9c1fb41`: the ten state-hash routes on `<main checkout>\bof3`, on an install with no `BOF3.exe` and with a wrong-bytes
+`BOF3.exe` beside the game, each the same as before the round but for known noise pages, and `music_heard.py` on both
+(round doc 9a). **Not run:** the Sources page's window, the save editor's window, the Jukebox's and the save editor's
+drivers on that install. Not played.
 
 **A PlayStation disc needs no ffmpeg, 2026-11-11 (DIV-0214, DIV-0215; merged as PR #228, frost's PR #225 with the review's commits;
 [`psx-media-round.md`](psx-media-round.md)).** The importer copies the logo movie's sectors
