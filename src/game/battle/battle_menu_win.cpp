@@ -55,6 +55,9 @@
 #include "input/sigma.h"
 #include "video/movie.h"
 #include "os/os.h"
+#ifndef _WIN32
+#include "render/render_d3d11.h"   // the movies' picture off Windows (native::Draw)
+#endif
 
 namespace {
 
@@ -1065,10 +1068,38 @@ namespace {
 
 }  // namespace
 
-void Draw(const Picture&, bool) {
-    bof3::Fatal("fmv: the movie's picture has no way to the screen on this system yet. The owner's call is open: the "
-                "renderer's device brought up before the movies, or SDL's own surface on the window until "
-                "Display_Setup (docs/replacing-mci.md section 9). Until then a movie stops the game here");
+// The picture by the renderer's device, which comes up for the first movie
+// frame on this system (the owner's call of 2026-11-19; docs/replacing-mci.md
+// section 9): render::PresentMovie clears the client to black and draws the
+// frame into DIV-0035's rectangle - whole multiples pixel for pixel, a fit
+// averaged - so `border` is every draw's here. BOF3X_FMV_SHOT_DIR, a
+// developer's switch: each frame drawn is also written there as
+// AVI_<frame>.bmp or STR_<frame>.bmp (the whole client, frame 1 the first), for
+// tools/fmv_compare.py's reading against bof3x-fmvdump.
+void Draw(const Picture& p, bool) {
+    static bool asked = false;
+    static char shot_dir[512];
+    if (!asked) {
+        asked = true;
+        const std::uint32_t n = bof3::os::GetEnv("BOF3X_FMV_SHOT_DIR", shot_dir, sizeof shot_dir);
+        if (n >= sizeof shot_dir) bof3::Fatal("BOF3X_FMV_SHOT_DIR: longer than %u bytes", (unsigned)sizeof shot_dir - 1);
+        if (n) bof3::Log("fmv: each movie frame drawn is written to %s (BOF3X_FMV_SHOT_DIR)", shot_dir);
+    }
+    char shot[768];
+    if (shot_dir[0])
+        std::snprintf(shot, sizeof shot, "%s/%s_%04u.bmp", shot_dir, p.movie->Container(), p.movie->FramesDecoded());
+    render::MoviePicture m = {};
+    m.window = game_window::RendererWindow(p.window);
+    m.pixels = p.movie->Frame();
+    m.width = p.movie->Width();
+    m.height = p.movie->Height();
+    m.left = p.dest.left;
+    m.top = p.dest.top;
+    m.dest_w = p.dest.width;
+    m.dest_h = p.dest.height;
+    m.whole = p.whole;
+    m.shot = shot_dir[0] ? shot : nullptr;
+    if (!render::PresentMovie(m)) bof3::Log("fmv: the frame's shot %s was not written", shot);
 }
 
 std::intptr_t Subclass(void*) { Refuse("movie procedure"); }

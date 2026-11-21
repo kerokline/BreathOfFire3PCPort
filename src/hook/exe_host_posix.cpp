@@ -759,7 +759,7 @@ void EngineMain(void* p) {
     // filter ends it as Fatal does, code 3; the report is the same).
     Log("Engine_Main: an unhandled fault ends the process by its signal after crash_posix.cpp's report (step 23)");
     char* const line = PastProgramName(run.line.c_str());   // 24
-    Log("Engine_Main: Game_WinMain(0x%p, null, \"%s\", %d) on the main thread", hinstance, line, show);
+    Log("Engine_Main: Game_WinMain(%p, null, \"%s\", %d) on the main thread", hinstance, line, show);
     run.code = ::Game_WinMain(hinstance, nullptr, line, show);   // 25
     GapWatch_Flush();
     Log("Engine_Main: Game_WinMain returned %d, the exit code", run.code);
