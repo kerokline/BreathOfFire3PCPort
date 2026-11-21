@@ -1881,6 +1881,133 @@ mapped where the system puts them.
 
 **Not run:** steps 21 to 25 (B2a's); a window; DXVK at run time.
 
+### B2b as run (2026-11-21, branch `linux/lcB-b2b`, from `3080284c`)
+
+Unit B2b, faults, beside B2a and B2c. Files: `src/hook/crash_posix.cpp`,
+`src/hook/stackwatch_posix.cpp`, `tools/crash_report.py`,
+`tools/linux_probe/crash_catch_test.{cpp,sh}`, a new
+`tools/linux_probe/fault_preload.c`; and outside the unit's list, one
+declaration in `src/hook/crash.h` (under `#if !defined(_WIN32)`) and step
+23's lines in `src/hook/exe_host_posix.cpp` (B1's file; the change is the
+step itself, below).
+
+**How a fault ends on Linux: as on Windows, code 3, from step 23 on.**
+B1's catcher ended an unhandled fault by the signal (exit 139 for
+SIGSEGV), where Windows' exe host ends it with Fatal's code 3
+(`exe_host.cpp` `Unhandled`, set at step 23). Decided: Linux ends as
+Windows does. The reasons:
+
+- The work order says so: `exe_host_steps.h` step 23, "an exception nobody
+  handled ends the process as Fatal does, code 3", Linux column
+  "crash_posix.cpp's handler's end".
+- A player is told: Fatal's message ("a signal nobody handled ... see the
+  CRASH lines above") where the window otherwise vanishes. *Found:* on
+  this base it reaches stderr and the log only - nothing defines
+  `BOF3X_OS_SDL`, which `src/os/posix/dialog.cpp` needs for SDL's message
+  box, so no `Fatal` of the Linux build shows a box (measured: windowed
+  runs under WSLg, Wayland and `SDL_VIDEO_DRIVER=x11` alike, ended with
+  code 3 within 2 s, no box to click). The line is the build's
+  (`CMakeLists.txt`, off Windows: `BOF3X_OS_SDL` on the targets that link
+  SDL's video); with it, SDL on Wayland still needs `zenity` or `kdialog`
+  for a box (neither is installed here).
+- What reads the end: `start.cpp` waits for the game only under
+  `BOF3X_SELFTEST_ONLY` and prints its code (on POSIX 128 + the signal for
+  a signal's end, `os/process.h`); `tools/abc_run.py` takes any code but 0
+  as a failure and prints the log's `FATAL` lines; `input_run.py` prints
+  the code; `crash_report.py` reads the log and no code. None needs 139,
+  and the `FATAL` line plus code 3 are the one rule both systems now give.
+- The cost: the core file the signal's default would write (none by
+  default here: `core_pattern` is `core`, `ulimit -c` 0). A developer who
+  wants the process at the fault runs the ELF under a debugger, which
+  stops at the signal before the catcher.
+
+How (`crash_posix.cpp`): `Crash_EndUnhandledAsFatal` (declared in
+`crash.h` off Windows) is step 23 in `exe_host_posix.cpp`, in place of
+B1's log line. After it, a fault whose old disposition is the default or
+ignored is reported as before, then the reporter thread calls `Fatal`
+(its line, the state hash's flush, its message unless the run is a
+self-test, `_exit(3)`); the faulting thread waits without a bound once the
+report is written (the message waits for the player), and ends the
+process with `_exit(3)` itself if the report is not written in 20 s. A
+fault an earlier handler takes is passed to it as before; a second fault
+while the first one's `Fatal` runs waits for that end; a fault on the
+reporter's own thread is passed on (it would wait for itself). Before step
+23 a fault ends by its signal, as one before the filter ends by its
+exception on Windows. The exit trace's SIGTRAP handler ends the same way
+after step 23 (Windows' filter takes an unhandled breakpoint too).
+
+**The stack overflow.** The main thread runs on B1's placed stack
+`0x60000..0x160000` with the guard page `0x5F000..0x60000` under it, and
+`Crash_Start` (step 16) runs there, so the alternate stack
+(`sigaltstack`, 64 KB) is that thread's. An overflow faults on the guard
+page; the handler runs on the alternate stack; the report gains a line
+`CRASH n: a stack overflow - the access is to the guard page ... under
+thread N's stack ...` (the armed thread's stack is read by
+`os::CurrentStack` at `Crash_Start`, never in the handler). Windows names
+an overflow by its code `0xC00000FD`; this line is its Linux counterpart.
+The stack scan finds no words in an overflow: the stack pointer itself
+lies on the guard page, and the portable scan stops at the first word it
+cannot read (`crash.cpp`, unchanged; a scan from the guard's top is a
+change to a file Windows compiles, left).
+
+**Where an address lies** (`crash_posix.cpp` `Where`): in the game's image
+(`0x400000`, or the moved base, to the pool's end) as `the game's image, VA
+0x...` - the image is anonymous memory here, no loaded object; in the
+engine as `bof3x+0x...` from `image::g_ownBase`, as `crt_rest.cpp`'s
+messages give it; anything else (libc, SDL, DXVK) by `dladdr`.
+
+**The reader** (`crash_report.py --log`): a Linux report's engine is the
+name its stack lines carry (`  (bof3x)`); the ELF beside the log (or
+`--elf`) names those words and the fault's address by `llvm-addr2line` or
+`addr2line` (the ELF is linked at a fixed address; a position-independent
+one is said and left unnamed). Measured in the WSL and on Windows
+(`llvm-addr2line` of the toolchain, the ELF read through
+`\\wsl.localhost`): the same names.
+
+**The stack watch** (the owner's call 2): `BOF3X_STACKWATCH=1` stays a
+`Fatal` on Linux; its message now says why - a developer's switch that
+measures how far Windows grows the main stack (the TEB's words, the moving
+guard page, `VirtualQuery`); here the stack is mapped whole with a fixed
+guard page, so nothing grows, and an overflow is the crash report's. No
+ledger entry names the switch today. The line for the coordinator to
+place: *`BOF3X_STACKWATCH=1` (developer): Windows only; on Linux a Fatal
+that says why (the owner's call 2 of wave B, 2026-11-20), the main stack
+being placed whole with a fixed guard page there.*
+
+**Measured.**
+
+| Check | Result |
+|---|---|
+| `crash_catch_test.sh` (WSL, g++ 15) | 13 modes, each end checked: `read`, `write`, `exec`, `selftest`, `overflow` by signal 11; `bus` 7; `fpe` 8; `ill` 4; `abort` 6; `trap` 5; `unhandled`, `overflow_unhandled`, `trap_unhandled` exit 3 with one `FATAL: a signal nobody handled`; both overflows with the guard page's line. The test's doubles were stale (a PEB at `gs:0x60` for `ImageBase()`): they are the start-up's variables now |
+| The ELF, through the launcher, before step 23 (`BOF3X_EXEFILE=1 BOF3X_SELFTEST_ONLY=1 BOF3X_CRASH_TEST=0`, offscreen, the PC install) | `CRASH 0: signal 11 (SIGSEGV, code 1) at 0x...100701F6 (bof3x+0x701F6)`, the crash test's thread; the catcher armed on thread 1010's stack `0x60000..0x160000`; the launcher: `game process exit code 139`. `crash_report.py`: the fault named `bof3::(anonymous namespace)::SelfTest(unsigned long) (crash_posix.cpp:296)` |
+| The ELF past step 23 | `BOF3X_CRASH_TEST=<seconds>` cannot reach it on this base: the game is past step 23 for well under a second before the renderer stops it (`FATAL: render: D3D11CreateDeviceAndSwapChain failed, HRESULT 0x80004005`, offscreen and in a WSLg window alike, B2a's files), and the switch counts whole seconds from step 16. So `fault_preload.c`: an `LD_PRELOAD` library of the test's own, standing in for `SDL_CreateWindow`, which `Game_WinMain` calls first on the main thread, faults there (the game unchanged, no window made) |
+| - a read of `0x10` there (offscreen, launcher, an install of links to the PC install without its movies) | the report on the main thread, `rsp 0x15FB10` on the placed stack; `FATAL: a signal nobody handled: 11 (SIGSEGV, code 1) ...`; the same game started directly with the environment the launcher gave it: **exit 3**. `crash_report.py`: every stack word named, `game_window::Create(bool) (game_window.cpp:413)`, `Game_WinMain (magic_080.cpp:704)`, ... `EngineMain(void*) (exe_host_posix.cpp:764)`, `os::(anonymous namespace)::Entry() (placed.cpp:42)` |
+| - a recursion with no end there | `writing 0x5FE50`, `rsp 0x5FE50`; `CRASH 0: a stack overflow - the access is to the guard page 0x5F000..0x60000 under thread 4530's stack 0x60000..0x160000`; the `FATAL` line; direct: **exit 3**. The handler ran on the alternate stack with the main stack spent |
+| - the same in a WSLg window (09:56, the screen free), Wayland and `SDL_VIDEO_DRIVER=x11` | the report and the `FATAL` line, then the end within 2 s with no box: see the finding above |
+| `BOF3X_STACKWATCH=1` on the ELF (self-test, launcher) | `FATAL: BOF3X_STACKWATCH=1 is refused on Linux (the owner's call 2 of wave B, 2026-11-20): ...`; the launcher: `game process exit code 3` |
+| WSL gates | the Linux preset links, no undefined name, no warning in a file touched; `os_tests` (the brief's g++ line) 558 checks, 0 failed; `config_tests` 4,400 checks, 0 failures; the ELF's self-test through the launcher (`BOF3X_EXEFILE=1`): 10,393 lines, 0 FATAL, `self-test only: done` |
+| Windows: both presets | build, no warning; the one file a Windows build compiles that this unit changed is `crash.h` (comments and a declaration under `#if !defined(_WIN32)`); `codegen_same.py --by-function`, the objects with `3080284c`'s `crash.h` against this branch's: i686 29,430 function definitions, x86_64 20,896, **0 differ** each. So the hosted suite was not run (no Windows object differs) |
+| The censuses | `os_census.py`, then `--check --boundary`: ok (8 files wait for 1 later unit); `linux_tree.py --check` (in the WSL, `--sdl` and `--dxvk` at `~/src/b1deps`): 836 files compile, 0 wait; `data_census --strict`, `reloc_census --check`, `reloc_bare --check`, `ledger_check` (242 entries, 0 errors), `ledger_switches --check`, `tu_census --check --strict`, `retire_shells --check --strict`: ok. `width_census --check`: 27 new sites, every one in `crash_posix.cpp` (the new `uintptr_t` and `long` of the armed stack's range and its log lines) - expected for new sites, not regenerated here |
+
+**The install for the runs past step 23.** The launcher's game folder must
+not be the owner's install for a run that writes, and the movies stop the
+game on this base (B2a's `Draw`): `~/src/b2b-game` holds links to
+`<main checkout>/bof3`'s folders and large files, copies of its small ones
+(the saves, `BOF3.CFG`), no movies, and an empty `CAPCOM.AVI` of ours - the
+disc probe (`magic_080.cpp`, DIV-0100) asks for the name, and a movie that
+does not open is skipped as the original skips it. On ext4 the probe's
+names need their case (`CAPCOM.AVI`, `BOF3.EXE`): B2c's fold is not on this
+base; `/mnt/c` folds case itself, which is why runs on `<main checkout>/bof3`
+never showed it. DXVK writes `bof3x_d3d11.log` into the game folder unless
+`DXVK_LOG_LEVEL=none` (B2a's runs on `<main checkout>/bof3` leave it there).
+
+**For the coordinator's gate:** with B2a's renderer up, the switch itself
+past step 23 is `BOF3X_EXEFILE=1 BOF3X_CRASH_TEST=10 ./bof3x-launcher --game
+<install> --no-config` (a window, or offscreen if B2a's surface allows);
+pass: the `CRASH 0` lines, `FATAL: a signal nobody handled: 11 (SIGSEGV,
+code 1)`, and `tools/crash_report.py --log build-linux-x86_64/bof3x.log`
+naming the fault `SelfTest`.
+
 ## 5. What stands in for the launcher in tier 2
 
 The launcher is Win32 dialogs: `config_dialog.cpp` 1,861 lines, `config.cpp`

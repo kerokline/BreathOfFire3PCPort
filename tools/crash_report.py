@@ -31,9 +31,11 @@ A dump is game-derived: it holds the game's code and data. Keep it local
 The log's `CRASH n:` lines (src/hook/crash.cpp) are the report where there is
 no dump - on Linux, whose catcher writes none (src/hook/crash_posix.cpp) - and
 beside one on Windows: each report's lines are printed with the fault's
-address and every stack word named as above, by the VA the line gives.
+address and every stack word named as above, by the VA the line gives. On a
+Linux report the engine is the ELF beside the log (or --elf), and an address
+the report tags as the engine's is named by addr2line from its symbols.
 """
-import argparse, bisect, glob, json, os, re, struct, sys, tomllib
+import argparse, bisect, glob, json, os, re, shutil, struct, subprocess, sys, tomllib
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -180,11 +182,56 @@ def exe_bytes(a, n, _cache={}):
 
 
 CRASH_LINE = re.compile(r'^CRASH (\d+): (.*)$')
+ENGINE_AT = re.compile(r'\(([^()\s]+)\+0x[0-9A-Fa-f]+\)')   # the fault line's "(bof3x+0x...)"
+ENGINE_TAG = re.compile(r'\s\s\(([^()\s]+)\)')                # a stack line's "  (bof3x)"
 
 
-def read_log(path, name):
+class ElfNames:
+    """Addresses in the Linux engine, the ELF beside its log (src/hook/log.cpp
+    LogOpen: bof3x -> bof3x.log), named by addr2line (llvm-addr2line, the
+    toolchain's on Windows; addr2line in the WSL). The ELF is linked at a fixed
+    address (-Ttext-segment, docs/linux-round.md LA2), so a CRASH line's
+    address is the ELF's own; a position-independent one is said and left
+    unnamed (said only for an ELF named by --elf: one found by the report's
+    name may be a library). Empty where there is no ELF or no addr2line."""
+
+    def __init__(self, elf, quiet=False):
+        self.elf, self.tool, self.cache = None, None, {}
+        if not elf or not os.path.isfile(elf):
+            if elf and not quiet:
+                print(f'{elf}: no such file; its addresses are not named')
+            return
+        with open(elf, 'rb') as f:
+            head = f.read(18)
+        if head[:4] != b'\x7fELF':
+            return
+        if struct.unpack_from('<H', head, 16)[0] != 2:              # e_type: ET_EXEC
+            if not quiet:
+                print(f'{elf}: position-independent; its addresses are not named')
+            return
+        self.tool = next((t for t in ('llvm-addr2line', 'addr2line') if shutil.which(t)), None)
+        if not self.tool:
+            print(f'{elf}: no llvm-addr2line or addr2line on PATH; its addresses are not named')
+            return
+        self.elf = elf
+
+    def name(self, addrs):
+        want = [a for a in addrs if a not in self.cache]
+        if self.elf and want:
+            r = subprocess.run([self.tool, '-f', '-C', '-e', self.elf] + [f'0x{a:X}' for a in want],
+                               capture_output=True, text=True)
+            out = r.stdout.splitlines()
+            for i, a in enumerate(want):
+                fn, at = (out[2 * i:2 * i + 2] + ['??', '??'])[:2]
+                at = re.sub(r' \(discriminator \d+\)$', '', at)
+                self.cache[a] = None if fn == '??' else f'{fn} ({os.path.basename(at)})' if at != '??:0' else fn
+        return {a: self.cache.get(a) for a in addrs}
+
+
+def read_log(path, name, elf=None):
     """Each report's CRASH lines, the fault's address and the stack words named
-    by the VA the line gives (" (VA 0x...)" where the image moved)."""
+    by the VA the line gives (" (VA 0x...)" where the image moved); on a Linux
+    report, the addresses in the engine's ELF by its symbols (ElfNames)."""
     reports, order = {}, []
     with open(path, encoding='utf-8', errors='replace') as f:
         for line in f:
@@ -198,19 +245,41 @@ def read_log(path, name):
             reports[n].append(m.group(2))
     if not order:
         sys.exit(f'{path}: no CRASH lines')
+    # A Linux report: the engine's name from its lines, its ELF beside the log.
+    # A stack line's tag is the engine's own name (crash.cpp EngineTag); the
+    # fault line names whatever module holds the address (the C library, SDL),
+    # so it is the engine's only when no stack line says otherwise and that
+    # name is a fixed-address ELF beside the log.
+    texts = [t for n in order for t in reports[n]]
+    tags = [m.group(1) for t in texts if t.startswith('stack ') for m in [ENGINE_TAG.search(t)] if m]
+    faults = [m.group(1) for t in texts if t.startswith('signal ') for m in [ENGINE_AT.search(t)] if m]
+    engine = tags[0] if tags else faults[0] if faults else None
+    explicit = elf is not None
+    if not explicit and engine:
+        elf = os.path.join(os.path.dirname(os.path.abspath(path)), engine)
+    elf_names = ElfNames(elf, quiet=not explicit) if engine or explicit else ElfNames(None)
     for n in order:
         print(f'{path}: report {n}')
+        rows = []
         for text in reports[n]:
-            label = None
+            label, own = None, None
             if text.startswith(('exception ', 'signal ')):
                 at = re.search(r' at 0x([0-9A-Fa-f]+)(?: \(VA 0x([0-9A-Fa-f]+)\))?', text)
                 if at:
                     label = name(int(at.group(2) or at.group(1), 16))
+                    if not label and engine and f'({engine}+0x' in text:
+                        own = int(at.group(1), 16)
             elif text.startswith('stack '):
                 sm = re.match(r'stack \+0x[0-9A-Fa-f]+\s+0x([0-9A-Fa-f]+)(.*)', text)
                 if sm:
                     moved = re.search(r'\(VA 0x([0-9A-Fa-f]+)\)', sm.group(2))
                     label = name(int(moved.group(1) if moved else sm.group(1), 16))
+                    if not label and engine and f'  ({engine})' in sm.group(2):
+                        own = int(sm.group(1), 16)
+            rows.append((text, label, own))
+        named = elf_names.name([own for _, _, own in rows if own is not None])
+        for text, label, own in rows:
+            label = label or (named.get(own) if own is not None else None)
             print('  ' + text + (f'   <- {label}' if label else ''))
     return 0
 
@@ -227,9 +296,11 @@ def main():
     ap.add_argument('--u32', nargs='+', metavar='ADDR')
     ap.add_argument('--stack', type=lambda x: int(x, 0), default=0x2000, help='bytes of stack to scan')
     ap.add_argument('--log', metavar='LOG', help="a log's CRASH lines in place of a dump")
+    ap.add_argument('--elf', metavar='ELF', help="with --log: the Linux engine's ELF (default: beside the log, by the "
+                                                 "name the report gives)")
     a = ap.parse_args()
     if a.log:
-        return read_log(a.log, Names())
+        return read_log(a.log, Names(), a.elf)
     path = a.dump
     if not path:
         found = sorted(glob.glob(os.path.join(ROOT, 'build', 'bof3x.crash-*.dmp')), key=os.path.getmtime)
