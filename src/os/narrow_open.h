@@ -9,8 +9,9 @@
 // (os/case_check.h) on a name that opened. POSIX: fopen on Path's form of the
 // name, so the game's backslash reads as a separator there as everywhere else
 // in the seam (Path also gives the case check its look before the open).
-// The case of a name is NOT folded here (docs/linux-round.md, LB8: a name is
-// fixed at its source; the fold for the player's own files is wave B's).
+// The case of a name is not folded here: on POSIX Path folds a relative name
+// inside the game folder (os/case_fold.h, for the player's own files); a name
+// the engine builds is fixed at its source (docs/linux-round.md, LB8).
 // Part of the operating-system seam (docs/linux-round.md, LB1): what the C++20
 // standard library cannot do, behind one header per service, with a backend per
 // system in win32/ and posix/. No Windows or POSIX type appears in a header, and

@@ -65,6 +65,10 @@ void CaseCheckNarrow(const char* narrow) noexcept;
 void CaseCheckMatch(const char* where, const std::filesystem::path::string_type& pattern,
                     const std::filesystem::path::string_type& found) noexcept;
 
+// A line of the case fold's (os/case_fold.h) on this channel: once each, kept
+// until the sink is set. Does nothing when the switch is off.
+void CaseCheckSay(const char* line) noexcept;
+
 // The backend's: the last part of `existing` as its folder stores it. False
 // when it is not there, or for a root. For the check and its tests.
 bool StoredSpelling(const std::filesystem::path& existing, std::filesystem::path::string_type* stored) noexcept;

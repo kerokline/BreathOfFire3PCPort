@@ -1974,6 +1974,140 @@ place: *`BOF3X_STACKWATCH=1` (developer): Windows only; on Linux a Fatal
 that says why (the owner's call 2 of wave B, 2026-11-20), the main stack
 being placed whole with a fixed guard page there.*
 
+### B2c as run (2026-11-21, branch `linux/lcB-b2c`, from `3080284c`)
+
+Unit B2c: paths and saves, beside B2a and B2b. Every game run below used
+the PC install on the WSL's own disk (ext4, which looks at case):
+`~/bof3x-runs/lcB/bof3`, read only, or a copy of it of B2c's where a run
+writes. `/mnt/c` folds case by itself, so nothing there proves a fold.
+
+**The fold** (the owner's call 3 of 2026-11-19). `src/os/case_fold.h`, its
+POSIX half `src/os/posix/case_fold.cpp`, and a Windows half that gives the
+name back as asked (Windows' filesystems fold already). `os::Path` on POSIX
+calls it for every narrow name it converts, after the case check has looked
+at the name as asked; so the game's `Crt_fopen`, the `ifstream`s on
+`os::Path`, `IsFile`, `WalkDirectory` and `FindFirst` all take it. The rule:
+
+- Only a relative name (the game folder is the working folder, which
+  `bof3x-launcher` starts the game in) with no `..` part. An absolute name -
+  the cache, the home, a `BOF3X_` path, the temporary folder - is never
+  folded.
+- The exact name first (`lstat`): when it is there it is the name, whatever
+  else the folder holds. Otherwise one walk per part from the game folder
+  down: a part the folder holds exactly is kept, else the entry equal to it
+  but for ASCII case; a part with none, or with `*` or `?` (a walk's
+  pattern, which the walk matches without case itself), ends the fold and it
+  and the rest stay as asked, so a file made in a folder of another case
+  lands in that folder.
+- **Two names that differ in case alone** (`OYASUMI.DAT` and `Oyasumi.DAT`
+  in one folder, which no Windows folder can hold): the exact one when asked
+  exactly, else the first in byte order - which is the entry `WalkDirectory`
+  hands first (upper-cased order, ties by the bytes), so an open and a walk
+  take the same file on every run whatever order the filesystem lists in. In
+  ASCII the upper case comes first: `OYASUMI.DAT`.
+- Each folder's listing is cached and walked again when the folder's device,
+  inode, change or modify time is not what it was (a quicksave renamed into
+  it). Measured: the 1,261 names of the install that are not in upper case,
+  asked in upper case, open, with 4 walks (the game folder, `SND`, `BGM`,
+  `DAT`).
+- Under `BOF3X_CASECHECK=1` a folded name gives one line, once:
+  `CASEFOLD asked <name> opened <name as the disk holds it>`, beside the
+  check's own `CASECHECK asked ... found ...`. With the switch off the fold
+  says nothing (the case check's channel reaches the log only under the
+  switch, `hook/log.cpp:141`) and costs one `lstat` of a relative name.
+
+**The failure before the fold and the pass after** (a full start of the ELF
+through the Linux launcher, `BOF3X_EXEFILE=1`, `SDL_VIDEO_DRIVER=offscreen`,
+`BOF3X_CASECHECK=1`, a copy of the PC install on ext4):
+
+| Build | What the log says | Where it stops |
+|---|---|---|
+| `3080284c` | `CASECHECK asked CAPCOM.AVI found capcom.avi`, then `Game_WinMain returned 1` | The first name that fails is `CAPCOM.AVI`, the disc probe's local test (`Disc_Probe`, `file.cpp:40`): no local movie, no CD-ROM drive (`GetDriveTypeA`'s slot answers "no root"), so "Please insert the Breath of Fire III disc." and exit code 1 |
+| the branch | `CASECHECK asked CAPCOM.AVI found capcom.avi`, `CASEFOLD asked CAPCOM.AVI opened capcom.avi`; the window (offscreen), `DIV-0035 CAPCOM.AVI into the window`, Cinepak 640 x 480, 112 frames | The probe passes; the movie's first frame stops at `battle_menu_win.cpp:1069`'s Fatal (the movie's picture off Windows: B2a's) |
+
+The names of wave A's list, asked in Capcom's case through the branch's
+seam on the coordinator's copy: `CAPCOM.AVI` to `capcom.avi`, `LOGOS.AVI`
+to `logos.avi`, `SND\OYASUMI.DAT` to `SND/Oyasumi.DAT`, `BGM\000.DAT` to
+`BGM/000.dat`, and the `SND` streams `004_00`, `Akuryou`, `Dragon`,
+`Gaan01`, `Item01`, `Mimi01`, `Nakama02`, `Sippai01`, `Win` - each opens.
+
+**Past the movie.** With the movie unreadable (a test copy whose
+`capcom.avi` is a folder: the probe opens it, the movie's read refuses, and
+`Fmv_Play` skips it as for a missing file) and `DXVK_WSI_DRIVER=SDL3`, the
+ELF reaches `Display_Setup` (DXVK 3.1.1 on llvmpipe, a swap chain from SDL's
+offscreen driver: five images, mailbox), the loop and the title (`FIRST.DAT`,
+`DEMO.DAT`, the title's music) and runs until ended. Without
+`DXVK_WSI_DRIVER` DXVK makes no factory (`D3D11CreateDevice: Failed to
+create a DXGI factory`): B2a's. `quick_combat.txt` (combat's first 900
+frames, F6 at 900, F7 at 1200) from the `combat` save in slot 0, en-US from
+`analysis/cache/pc-plus-us`: the save loads (`save loaded slot 0
+(BISLPS00.DAT)`), the battle starts, and the run stops before frame 900,
+so no quicksave was made on Linux:
+
+| Run | Ends |
+|---|---|
+| the branch, 1 | frame 471: `CRASH 0: signal 11` at `move_script::Word` (`move_script_bytes.h:27`), reading through `r11 = 0x00402FD8_0093BA04` - two 32-bit words read as one 64-bit pointer; area 0x1D, mode 5 |
+| the branch, 2 | frame 406: `FATAL: render_shim.cpp:534 PutObject: 0x7ed28c06df30 lies above 4 GB` |
+| `3080284c` (a copy with `CAPCOM.AVI` a folder in upper case, so the base's probe passes) | the same `PutObject` Fatal |
+
+Both are outside this unit's files (the renderer's objects above 4 GB;
+a pointer of two halves in a battle's move script, which a 64-bit Windows
+run does not meet). The start also takes about two minutes from the
+launcher to the game's loop on this machine.
+
+**Where a Linux run puts things** (the files written, listed after the
+runs): the game's saves `BISLPS0x.DAT` and the quicksaves `BISLPS1x.DAT` in
+the game folder, the working folder, as on Windows; `bof3x.log` and
+`bof3x.window` beside the ELF (`LogOpen`: the module's path with `.log`);
+DXVK's own `bof3x_d3d11.log` and `bof3x_dxgi.log` in the game folder - the
+working folder, DXVK's default when `DXVK_LOG_PATH` is unset - **which a
+read-only install refuses and a player's install collects**: the
+launcher's or B2a's to set (`DXVK_LOG_PATH`, or `DXVK_LOG_LEVEL=none`).
+`bof3x.ini` is the launcher's home (its own folder, or `BOF3X_HOME`); with
+`--no-config` nothing is written there. The coordinator's copy was not
+written by any run.
+
+**The backslash in the save list's lines.** `/tmp/bof3x_qm_a_N\BISLPS??.DAT`
+was built by `quick_menu.cpp`'s `ListsSelfTest` (`"%sbof3x_qm_a_%u\\"`),
+then read through the seam, which takes a backslash for a separator
+(`os::Path`); so no file of that name was ever made (`find /tmp
+~/bof3x-runs/lcB -name '*\*'`: none, before the change and after). The two
+folders now end in the system's separator, as the temporary folder's name
+does: the same bytes on Windows, a slash on Linux, and the self-test's
+seven `save list   /tmp/bof3x_qm_a_N/BISLPS??.DAT` lines read so. The one
+backslash left in a Linux self-test's log is `DIV-0086: optional layer 1,
+DAT\area4-walls.*.DAT`, a relative pattern the engine builds in Capcom's
+form (`"DAT\\%s"`) and passes to the walk, which reads it through the seam:
+not a file's name.
+
+**D431's open item.** Read again, the gap is not the one D431 records: the
+next F6 does not refuse. After a crash between the third way's claim and
+its rename at step `k -> k+1`, the slots above `k+1` have each moved up, `k`
+is where it was and `k+1` is the empty claim; the next rotation moves the
+empty file up as a slot (`k+1 -> k+2`, its target vacated by the step
+above), then `k -> k+1`, and F6 succeeds - with a file of zero bytes in the
+history, which the quick list shows empty and F7 refuses ("not a save
+file"). The fix keeps the seam's rule ("an empty file at the target is a
+file: refused too") and is made where a slot's meaning is known:
+`snapshot.cpp`'s `Rotate` removes a slot file of zero bytes when its step
+comes, as a gap, with a log line (`quicksave   BISLPS15.DAT was empty ...:
+removed, a gap`). No build writes one: `WriteNewest` writes the temporary
+file whole and renames it. A new self-test case builds the crash's state
+(10..14 in place, an empty 15, 16..1F one up, the crashed take in
+`BISLPS10.TMP`) and checks that the next F6 leaves every quicksave one up,
+16 a gap, 10 the new one and no file of zero bytes. On Windows the same
+code runs; only a zero-byte `BISLPS1x.DAT` a person put there is now
+removed by F6 where it was moved up the history.
+
+**The unattended marker.** `os::CloseNamedEvent` (`os/named_event.h`, both
+backends: `CloseHandle`; `sem_close` and `sem_unlink`) gives a named
+event's name back, with a test (the name gone from `/dev/shm`, made again).
+Nothing calls it yet: `exe_host_posix.cpp` (step 17) keeps the marker's
+pointer nowhere, and a run ends by `_Exit`, `Fatal` or a signal. Each Linux
+run so far leaves `/dev/shm/sem.bof3x_unattended_<pid>` (eight after this
+unit's runs); the next process with that number unlinks it before it makes
+its own, so they do not collide, but they pile up until a reboot.
+
 **Measured.**
 
 | Check | Result |
@@ -2007,6 +2141,20 @@ past step 23 is `BOF3X_EXEFILE=1 BOF3X_CRASH_TEST=10 ./bof3x-launcher --game
 pass: the `CRASH 0` lines, `FATAL: a signal nobody handled: 11 (SIGSEGV,
 code 1)`, and `tools/crash_report.py --log build-linux-x86_64/bof3x.log`
 naming the fault `SelfTest`.
+
+| `os_tests`, the fold's block (`TestCaseFold`) and the close (`TestNamedEventClose`) | WSL, g++ 15 by the brief's line and the CMake build: 596 checks, 0 failed (8 walks; each name in each case, a missing name, a folder of another case, two names that differ in case alone, a walk's pattern, an absolute name, `..`, the cache walked again after a file was made, `errno` kept, the line once); Windows i686 643 to 644 and x86_64 647, 0 failed (the fold gives the name back; the system folds) - one i686 run failed the auto-reset event's two-waiter check (`os_tests.cpp:1114`, not this unit's) while a build ran beside it, and passed twice after |
+| `config_tests` (WSL) | 4,400 checks, 0 failures (`save_tests` fails to compile under g++ as at the base) |
+| The Linux link | no undefined name |
+| The ELF's self-test through the Linux launcher | `/mnt/c` install (`BOF3X_EXEFILE=1`): 10,394 lines, 0 FATAL, `done` (one more than B1's: the empty slot file's line); the ext4 copy with `BOF3X_CASECHECK=1`: 10,395, the same, no `CASECHECK` line |
+| `linux_tree.py --check` (WSL) | 837 files, 837 compile, 0 do not, 11 Windows-only |
+| `codegen_same.py --by-function` against `3080284c` | the engine: 32-bit 18 symbols, 64-bit 5, every one in `snapshot.cpp` or `quick_menu.cpp` (the 32-bit rest are their exception tables renumbered); the seam library (`build*/src/os`, which the tool's default root does not read): the five new functions and nothing changed (32-bit: `file.cpp`'s exception tables renumbered) |
+| `os_census.py --check` | 1,898 sites: one new, `CloseHandle` in `win32/named_event.cpp`; `--boundary` ok |
+| The other censuses | `data_census --strict`, `reloc_census`, `reloc_bare`, `width_census`, `ledger_check`, `ledger_switches`, `tu_census --strict`, `retire_shells --strict`: ok |
+| The hosted shadow suite (32-bit), the exe host, the moved base (Windows, under the lock) | 922 `MISMATCHES` lines, every count 0, 0 FATAL, `done` (32,190 lines); the exe host and the moved base (`BOF3X_EXEFILE=1`): 10,393 lines each, 0 FATAL, `done` - one more than B1's, the empty slot file's line, which the hosted suite shows too |
+
+**Not run:** the quicksave made and loaded on Linux in a game (the route
+stops before F6, above); the `combat` route's first minute to its end and
+on a disc-built install; a Windows run with `BOF3X_CASECHECK=1` (wave A's).
 
 ## 5. What stands in for the launcher in tier 2
 
