@@ -12,9 +12,10 @@
 # rule is tools/linux_probe/linux_tree.py's (--cmake-list), and so is the
 # table it reads (WINDOWS_ONLY, SKIP): the build and the probe cannot drift.
 #
-# Until wave B the link does not complete: the start-up (`main`, C2's) and
-# the system calls behind the Windows-only files are not written. `bof3x_compile`
-# builds every object and links nothing, as on Windows.
+# Since wave B (B1) the link completes with no undefined name: the start-up's
+# `main` is src/hook/exe_host_posix.cpp, and the files the Windows list never
+# holds are linux_tree.py's LINUX_ONLY. `bof3x_compile` builds every object
+# and links nothing, as on Windows.
 
 # --- the source list ----------------------------------------------------------
 set(_linux_in "${CMAKE_BINARY_DIR}/gen/linux_sources_windows.txt")
@@ -88,7 +89,39 @@ check_linker_flag(CXX "-Wl,--error-limit=0" BOF3X_LINK_ERROR_LIMIT)
 if(BOF3X_LINK_ERROR_LIMIT)
   target_link_options(bof3x PRIVATE -Wl,--error-limit=0)
 endif()
-target_link_libraries(bof3x PRIVATE bof3x_media bof3x_dxvk_headers SDL3::SDL3-static bof3x_os ${BOF3X_DXVK_LIBRARIES})
+target_link_libraries(bof3x PRIVATE bof3x_media bof3x_dxvk_headers ${BOF3X_SDL} bof3x_os ${BOF3X_DXVK_LIBRARIES})
+
+# --- the three libraries beside the ELF (wave B, B1; the owner's call 3 of
+# 2026-11-20) -------------------------------------------------------------------
+# SDL3 is shared off Windows (CMakeLists.txt, BOF3X_SDL): DXVK-native opens
+# "libSDL3.so.0" by name, so the ELF and DXVK must find one file. Both are
+# found beside the ELF: RUNPATH $ORIGIN (the ELF's NEEDED names are the
+# libraries' sonames - libSDL3.so.0, libdxvk_d3d11.so.0, libdxvk_dxgi.so.0 -
+# and DXVK's dlopen of libSDL3.so.0 finds the copy the ELF has loaded
+# already, by its soname). The build copies each library under its soname
+# into the build folder, beside bof3x and bof3x-launcher, which is the
+# tarball's layout (call 5 of section 6).
+set_target_properties(bof3x PROPERTIES BUILD_RPATH "\$ORIGIN" INSTALL_RPATH "\$ORIGIN"
+                      BUILD_WITH_INSTALL_RPATH ON)
+# RUNPATH, not the older RPATH: LD_LIBRARY_PATH may still override it.
+check_linker_flag(CXX "-Wl,--enable-new-dtags" BOF3X_LINK_NEW_DTAGS)
+if(BOF3X_LINK_NEW_DTAGS)
+  target_link_options(bof3x PRIVATE -Wl,--enable-new-dtags)
+endif()
+add_custom_command(TARGET bof3x POST_BUILD
+  COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:SDL3::SDL3-shared>"
+          "$<TARGET_FILE_DIR:bof3x>/$<TARGET_SONAME_FILE_NAME:SDL3::SDL3-shared>"
+  COMMENT "Copying libSDL3.so.0 beside bof3x"
+  VERBATIM)
+foreach(_lib ${BOF3X_DXVK_LIBRARIES})
+  # An imported library: its file, and its soname (libdxvk_<x>.so.0), read
+  # from the file by the copy step's own name.
+  add_custom_command(TARGET bof3x POST_BUILD
+    COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:${_lib}>"
+            "$<TARGET_FILE_DIR:bof3x>/$<TARGET_FILE_NAME:${_lib}>.0"
+    COMMENT "Copying $<TARGET_FILE_NAME:${_lib}>.0 beside bof3x"
+    VERBATIM)
+endforeach()
 
 # --- the launcher, bof3x-launcher (docs/launcher-portable.md, stages P1 to P6) ---
 # The same sources as on Windows (BOF3X_LAUNCHER_SOURCES, CMakeLists.txt),
@@ -100,7 +133,13 @@ target_include_directories(bof3x_launcher PRIVATE src third_party "${_gen_dir}")
 target_compile_options(bof3x_launcher PRIVATE ${BOF3X_LINUX_COMPILE_OPTIONS})
 set_target_properties(bof3x_launcher PROPERTIES POSITION_INDEPENDENT_CODE OFF OUTPUT_NAME "bof3x-launcher")
 target_link_options(bof3x_launcher PRIVATE -no-pie)
-target_link_libraries(bof3x_launcher PRIVATE bof3x_imgui SDL3::SDL3-static bof3x_os)
+target_link_libraries(bof3x_launcher PRIVATE bof3x_imgui ${BOF3X_SDL} bof3x_os)
+# RUNPATH $ORIGIN, as bof3x's: the launcher finds the libSDL3.so.0 beside it.
+set_target_properties(bof3x_launcher PROPERTIES BUILD_RPATH "\$ORIGIN" INSTALL_RPATH "\$ORIGIN"
+                      BUILD_WITH_INSTALL_RPATH ON)
+if(BOF3X_LINK_NEW_DTAGS)
+  target_link_options(bof3x_launcher PRIVATE -Wl,--enable-new-dtags)
+endif()
 # The Jukebox's names beside it (stage P5), as CMakeLists.txt copies them for
 # the Windows launcher: edit data/music-names.tsv, not the copy.
 add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/music-names.tsv"
@@ -119,4 +158,4 @@ add_dependencies(bof3x_launcher bof3x_save_names)
 
 # --- every object, no link (as CMakeLists.txt's bof3x_compile on Windows) --------
 add_custom_target(bof3x_compile
-  DEPENDS $<TARGET_OBJECTS:bof3x> $<TARGET_OBJECTS:bof3x_media> $<TARGET_OBJECTS:bof3x_os> $<TARGET_OBJECTS:SDL3-static>)
+  DEPENDS $<TARGET_OBJECTS:bof3x> $<TARGET_OBJECTS:bof3x_media> $<TARGET_OBJECTS:bof3x_os> $<TARGET_OBJECTS:SDL3-shared>)
