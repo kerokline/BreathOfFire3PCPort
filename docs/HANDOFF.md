@@ -143,8 +143,8 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      frost takes it up when he has time. Built natively in the WSL, the link of `main` `e9c1fb41` is 7 names short
      (`main`, `__ImageBase`, the gap watch's two entries, `ExeIcon_Frame`, the render window's two functions); DXVK-native
      builds and links there. Four units: B1 alone (the link and the start-up to the ELF's self-test), then B2a (the
-     picture and the movies), B2b (faults) and B2c (paths and saves) side by side, then B3, LC's gate. Five calls for the
-     owner before a launch, in that section. The brief is `analysis/linux_lcB_brief.md` in the main checkout (not
+     picture and the movies), B2b (faults) and B2c (paths and saves) side by side, then B3, LC's gate. The owner answered
+     all five calls on 2026-11-20 (in that section) and holds the launch until the owner's word. The brief is `analysis/linux_lcB_brief.md` in the main checkout (not
      tracked). The second backend no longer gates tier 2 (call 1 of section 6 chose DXVK-native). Tier 1's rows 5, 7
      and 9 to 12 are still to run on frost's Linux machine (2c).
    - **The romhack's behaviours** ([`disc-patch-round.md`](disc-patch-round.md) 6a to 6d; PRs #232, #233, #239): ten built,

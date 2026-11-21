@@ -1771,6 +1771,8 @@ ELF's size once linked whole; anything at run time.
    **Decided (the owner, 2026-11-20): as proposed.**
 3. **SDL3 shared on Linux alone.** Proposed: yes; Windows stays static. The
    tarball (call 5 of section 6) then holds three libraries beside the ELF.
+   **Decided (the owner, 2026-11-20): as proposed** - the Linux build ships
+   its own `libSDL3.so.0`; Windows is unchanged.
 4. **The owner's screen.** Proposed: B1 needs no window (the self-test
    ends before one opens). From B2a on, game runs in the WSL use SDL's
    `offscreen` driver if it serves DXVK; if it does not, they open a WSLg
@@ -1779,8 +1781,9 @@ ELF's size once linked whole; anything at run time.
 5. **Where the gate runs.** Proposed: here, on llvmpipe. If a route cannot
    end in time on it, the gate moves to frost's machine and the record says
    so.
-   **Decided (the owner, 2026-11-20): as proposed.** Call 3 is open: the
-   owner asked what it means for the release.
+   **Decided (the owner, 2026-11-20): as proposed.** With call 3 answered,
+   every call is settled; the launch waits for the owner's word ("hold off
+   on beginning", 2026-11-20).
 
 ## 5. What stands in for the launcher in tier 2
 
