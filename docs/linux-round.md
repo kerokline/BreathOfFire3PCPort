@@ -13,8 +13,12 @@ in section 6. **2026-11-19:** stage LB is done and on `main` (PRs #259, #261,
 Stages LC and LD are staged as one round of fourteen groups in three waves:
 section 4, "Stages LC and LD, staged as one round". **Wave A is on `main`**
 (PR #265, 2026-11-19). **2026-11-20:** the link measured natively in the
-WSL is 7 names short; wave B is staged as four units, not launched: section
-4, "Wave B, staged".)
+WSL is 7 names short; wave B is staged as four units: section 4, "Wave B,
+staged". **2026-11-21:** wave B ran on the branch `linux/lcB` (not on
+`main`, not pushed): the game links as a Linux ELF, starts through the Linux
+launcher and ends the ten state-hash routes headless in the WSL, on a
+software Vulkan device. No picture was looked at on a screen, nothing ran on
+a GPU, and the gate's Windows half is owed: section 4, "Wave B as run".)
 
 Issue #215 asks for the game on Linux and the Steam Deck. This file stages
 two answers, the cheap one first:
@@ -1676,10 +1680,11 @@ PipeWire and Vulkan are installed, so wave B can configure and build there
 natively. `vulkaninfo` offers one device, `llvmpipe`; section 2a drew at
 about 22 frames a second on it at 3440 x 1440 under Proton.
 
-### Wave B, staged (2026-11-20; not launched)
+### Wave B, staged (2026-11-20; launched 2026-11-21)
 
-**Staged, not started.** It launches at the owner's word and after the
-calls at the end of this section. Base: `main` `e9c1fb41` (wave A, PR #265;
+**Launched 2026-11-21 at the owner's word; what ran is in "B1 as run" to
+"Wave B as run" below.** As staged: it launches at the owner's word and
+after the calls at the end of this section. Base: `main` `e9c1fb41` (wave A, PR #265;
 the drawn launcher's cutover, PR #267).
 
 **What changed since the staging of 2026-11-19:**
@@ -2507,6 +2512,111 @@ every one 0, 0 FATAL, `done` (32,190 lines); the exe host (`BOF3X_EXEFILE=1`)
 `shop` window bisected below the sound device's clock (one hypothesis
 tested, the buffer size); the general census of calling-convention
 mismatches for pointer types filled by unnamed casts.
+
+### Wave B as run (2026-11-21, branch `linux/lcB`, from `main` `ffb2c892`; not pushed)
+
+**The units.** B1, then B2a, B2b and B2c side by side, as staged; then a
+fifth unit the staging did not have, **B2d**, because the first routes on the
+ELF faulted and no unit owned the routes' harness or the width defects under
+them. Each was a worker's branch in its own worktree, merged `--no-ff` one
+at a time, built for Linux and for both Windows presets after the merge, and
+its proof run again there. Their sections are above. The coordinator's own
+commits: the censuses after B1, after the B2 units and after B2d; `Fatal`'s
+message box on Linux (`BOF3X_OS_SDL` was not defined for the seam, B2b's
+finding); the unattended marker's name given back at each orderly end (no
+`bof3x_unattended` name is left under `/dev/shm`); the ledger's and the
+defect list's lines below.
+
+**The gate (B3), on the merged branch** (the ELF of `3fa64b51`'s tree, md5
+`a27f931a...`; WSL Ubuntu, llvmpipe, SDL's `offscreen` driver and `dummy`
+audio device, no `DISPLAY` and no `WAYLAND_DISPLAY`; through
+`bof3x-launcher`; the game folder a copy of the PC install on ext4, each run
+in a folder of links made by `tools/input_run.py --host linux`; C0's
+settings, `BOF3X_OPT=none BOF3X_LAYERING=0` and the skip list). Scripts:
+`C:/Users/kerok/bof3x-runs/lcB/coord/` (`route.sh`, `b3_all.sh`,
+`b3_rest.sh`); hash files and logs: `~/bof3x-runs/lcB/b3/out/` in the WSL.
+
+| Route | Seconds | Ticks compared | `diff` against `_c0x64` | `check` with `_c0x32` as second reference |
+|---|---:|---:|---|---|
+| `field_menu` | 57 | 1,409 | the 3 desktop pages | the same 3 |
+| `menu_screens` | 67 | 1,729 | the 3 desktop pages | the same 3 |
+| `combat` | 95 | 2,561 | the 3 desktop pages | the same 3 |
+| `shop` | 113 | 3,137 | the 3 desktop pages, and 8 pages within ticks 2713..2756 | the same 11 |
+| `dragonTransform` | 153 | 4,289 | the 3 desktop pages | the same 3 |
+| `cutsceneAndNue` | 256 | 7,396 | the 3 desktop pages | the same 3 |
+| `whelpBoss` | 448 | 13,163 | the 3 desktop pages | the same 3 |
+| `worldMapAndAreaTransition` | 80 | 2,113 | the 3 desktop pages, and `0x6C3000` from tick 1098 | the 3 desktop pages |
+| `caughFish` | 137 | 3,841 | the 3 desktop pages, and `0x6C3000` from tick 395 | the 3 desktop pages |
+| `masterAndManillo` | 192 | 5,505 | the 3 desktop pages, and `0x6C3000` | the 3 desktop pages |
+
+Every run: the recipe's end reached, 0 `FATAL`, no `CRASH` line, no compiler
+seen beside it. This is B2d's table again, page for page, on the merged
+build. **How the differing pages are read** (B2d measured each, "B2d as
+run"):
+- **The 3 desktop pages** (`0x6C9000`, `0x7C9000`, `0x939000`, every tick):
+  the desktop's size, 3440 x 1440 on the Windows machine and 1024 x 768 on
+  SDL's offscreen driver; no other byte outside the skip list differs in
+  B2d's raw dumps. The host's, not a defect. The hash still sees them: to
+  hide them is a skip-list change and new Windows references, which was not
+  done.
+- **`0x6C3000`** on three routes: the two Windows references disagree there
+  themselves (the staging's allowance); `check` drops it.
+- **`shop`, ticks 2713..2756**: the mode transition after the inn's jingle
+  starts a tick apart, and the two runs are equal again from 2757 to the
+  end. The jingle's end is read through the sound device's cursor
+  (DIV-0201's class); with the dummy device at Windows' buffer size the
+  window moves by a tick. The same on every Linux run. **This is a
+  difference the gate does not explain away**: game state follows from it
+  for 44 ticks, and it is accepted here as the device's clock, on B2d's one
+  test.
+
+| Check | Result |
+|---|---|
+| `music_heard.py`, `whelpBoss` | pass: 164 ring lines, 6 tracks, heard advanced on every playing stretch (C0's counts) |
+| `music_heard.py`, `cutsceneAndNue` | pass: 116 ring lines, 5 tracks |
+| `quick_combat` (F6 at frame 900, F7 at 1200) with `BOF3X_CASECHECK=1` | the route's end reached, 0 `FATAL`; `F6 at Frame_Counter 901: BISLPS10.DAT, 4786341 bytes`, `F7 BISLPS10.DAT restored at Frame_Counter 1201: back to Frame_Counter 901`; the one fold of the run: `CASECHECK asked CAPCOM.AVI found capcom.avi` |
+| A fault past step 23 (`BOF3X_EXEFILE=1 BOF3X_CRASH_TEST=60`, headless) | `CRASH 0: signal 11 (SIGSEGV, code 1)`, `FATAL: a signal nobody handled: 11`, the game gone by itself 60 s after the launcher returned; `crash_report.py` names `SelfTest (crash_posix.cpp:296)`. The exit code was not read (the Linux launcher has returned by then); B2b measured 3 on a direct start |
+| The ELF's self-test through the launcher, each merge | 10,394 lines, 0 `FATAL`, `self-test only: done` |
+| The censuses on the merged branch | `os_census --check` and `--boundary`, `width_census --check`, `reloc_census --check`, `reloc_bare --check`, `data_census --strict`, `ledger_check` (242 entries, 0 errors), `ledger_switches --check`, `tu_census --check --strict`, `retire_shells --check --strict`: ok, after the three census files were made again |
+| Windows, both presets | build on every merge. The hosted shadow suite (32-bit; 922 `MISMATCHES` lines, every one 0) and the exe host's self-test ran in B2d's worktree on the tree the last merge has, byte for byte (`git diff` of the merge against B2d's tip is empty); they were not run again after it |
+
+**Owed: the gate's Windows half.** The staging's B3 also names the ten
+routes on Windows against `_c0x32`, and a quicksave made on each system
+loaded on the other. None of that ran: a Windows run opens the game's window
+and needs the machine hands-off, and from the afternoon the machine showed
+live input (the owner's word covered the morning). What exists: B2d's one
+Windows route, `shop` on the 64-bit build, identical to `_c0x64` on all
+3,137 ticks; and the Linux-made quicksave of `quick_combat`, kept at
+`~/bof3x-runs/lcB/b3/out/keep/` for the Windows load. **LC's gate is
+therefore not closed.**
+
+**The records.** DIV-0094 and DIV-0238 are amended for the Linux build (the
+ELF and its three libraries, a fault's end, the files' case, DXVK's logs,
+the stack watch refused under call 2; the movie drawn by the renderer). No
+new ledger entry: nothing changes for a Windows player. D433 is the width
+and call-shape defects B2a and B2d met; D431's open item is closed by B2c.
+`BOF3X_FMV_SHOT_DIR` (B2a) is a developer's switch for a movie frame's
+capture, recorded in "B2a as run".
+
+**Not verified, and open:**
+- No picture of the Linux build was seen by a person. B2a compared frames by
+  hash offscreen; blended pixels differ from the Windows GPU's by at most 2
+  in one channel.
+- Nothing ran on a GPU or on a real desktop: the WSLg window never took
+  focus, so the loop waited at frame 1 there. The window's icon, the
+  message box (Wayland wants `zenity` or `kdialog` for it), sound through a
+  real device, and speed are unseen. Frost's machine, or a tester's.
+- The PC install alone: no disc-built install ran on Linux.
+- `Window_DispatchKind`'s stale stack words (D433) were latent on 64-bit
+  Windows too; fixed, and only `shop` ran there after the fix.
+- B2d's search for a wrong calling convention did not cover pointer types
+  filled by an unnamed cast.
+- `exe_host_posix.cpp` repeats the portable parts of `exe_host.cpp`.
+  `exe_host_steps.h`'s step 2 text disagrees with `bind.cpp`, which reads
+  the PE header. The Linux launcher's log says `(bof3x.exe)`. `save_tests`
+  does not compile under g++ (the same at `e9c1fb41`). An overflow's report
+  has no stack words.
+- An empty folder `C:\c` was left by one of B2b's runs.
 
 ## 5. What stands in for the launcher in tier 2
 
