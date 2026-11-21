@@ -926,6 +926,20 @@ void MakeDevice(const Options& options) {
         } else {
             bof3::Log("render: DXVK_WSI_DRIVER=%s, as set", wsi);
         }
+        // DXVK writes bof3x_d3d11.log and bof3x_dxgi.log into the working
+        // folder, which is the game's (measured: one in the install), where
+        // nothing of ours may write. Beside the program and bof3x.log
+        // instead, unless the player chose a folder.
+        char where[16];
+        std::string self;
+        if (bof3::os::GetEnv("DXVK_LOG_PATH", where, sizeof where) == 0 && bof3::os::ExecutablePath(&self)) {
+            const std::size_t slash = self.rfind('/');
+            if (slash != std::string::npos) {
+                const std::string dir = self.substr(0, slash);
+                if (!bof3::os::SetEnv("DXVK_LOG_PATH", dir.c_str())) bof3::Fatal("render: DXVK_LOG_PATH could not be set");
+                bof3::Log("render: DXVK_LOG_PATH=%s (unset: DXVK's logs beside the program, not in the game's folder)", dir.c_str());
+            }
+        }
     }
 #endif
     DXGI_SWAP_CHAIN_DESC sd = {};
