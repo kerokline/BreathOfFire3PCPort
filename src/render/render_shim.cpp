@@ -27,7 +27,11 @@ namespace {
 
 // --- helpers -------------------------------------------------------------------
 
-using Rect = long[4];   // left, top, right, bottom
+// A RECT's LONG: 32 bits on every system the game runs on (the game's RECTs are
+// Win32's), where a C++ long is 64 bits on Linux - read as `long`, every
+// rectangle a Blt or BltFast was handed came apart there and was refused.
+using Coord = std::int32_t;
+using Rect = Coord[4];   // left, top, right, bottom
 
 constexpr U kDdOk = 0;
 constexpr U kInvalidParams = 0x80070057u;  // DDERR_INVALIDPARAMS
@@ -52,7 +56,29 @@ constexpr U kFxFillColor = 0x50;
 constexpr U kPfRgb = 0x40;
 
 void* Alloc(U bytes) { return std::calloc(1, bytes); }
-void Free(void* p) { std::free(p); }
+
+// A surface and its pixels: the game holds both in 32-bit words (PutObject,
+// FillDesc's lpSurface), so they must lie below 4 GB. Windows: the C
+// runtime's heap, which lies there (the 32-bit process; the 64-bit build's
+// bottom-up heap, x64-build-design.md 2 and 5) - as before. Elsewhere the C
+// runtime maps large and late blocks above 4 GB (measured on Linux: a battle's
+// surface, PutObject's Low32 Fatal), so they come from the game's chokepoint,
+// whose blocks are R10's arena below 4 GB (docs/linux-round.md, "R10 as run");
+// Crt_free hands a block that is not the arena's to free().
+void* LowAlloc(U bytes) {
+#ifdef _WIN32
+    return std::calloc(1, bytes);
+#else
+    return Crt_calloc(1, bytes);
+#endif
+}
+void LowFree(void* p) {
+#ifdef _WIN32
+    std::free(p);
+#else
+    Crt_free(p);
+#endif
+}
 
 U Long(const void* p) {
     U v;
@@ -207,7 +233,7 @@ void WriteRaw(Surface* s, U x, U y, U raw) {
     std::memcpy(row + x * 2, &v, 2);
 }
 
-void RectOf(const long* r, const Surface* s, long* out) {
+void RectOf(const Coord* r, const Surface* s, Coord* out) {
     if (r) {
         out[0] = r[0];
         out[1] = r[1];
@@ -216,32 +242,32 @@ void RectOf(const long* r, const Surface* s, long* out) {
     } else {
         out[0] = 0;
         out[1] = 0;
-        out[2] = static_cast<long>(s->width);
-        out[3] = static_cast<long>(s->height);
+        out[2] = static_cast<Coord>(s->width);
+        out[3] = static_cast<Coord>(s->height);
     }
 }
-bool RectInside(const long* r, const Surface* s) {
-    return r[0] >= 0 && r[1] >= 0 && r[2] <= static_cast<long>(s->width) && r[3] <= static_cast<long>(s->height) &&
+bool RectInside(const Coord* r, const Surface* s) {
+    return r[0] >= 0 && r[1] >= 0 && r[2] <= static_cast<Coord>(s->width) && r[3] <= static_cast<Coord>(s->height) &&
            r[0] <= r[2] && r[1] <= r[3];
 }
 
-void FillRect(Surface* s, const long* r, U raw) {
-    for (long y = r[1]; y < r[3]; ++y)
-        for (long x = r[0]; x < r[2]; ++x) WriteRaw(s, static_cast<U>(x), static_cast<U>(y), raw);
+void FillRect(Surface* s, const Coord* r, U raw) {
+    for (Coord y = r[1]; y < r[3]; ++y)
+        for (Coord x = r[0]; x < r[2]; ++x) WriteRaw(s, static_cast<U>(x), static_cast<U>(y), raw);
 }
 
 // Copies src's rectangle onto dst's, stretching by nearest neighbour when the
 // sizes differ, converting the depth when the surfaces differ, and skipping
 // src's keyed texels when `key_src`.
-void CopyRect(Surface* dst, const long* dr, const Surface* src, const long* sr, bool key_src) {
-    const long dw = dr[2] - dr[0], dh = dr[3] - dr[1];
-    const long sw = sr[2] - sr[0], sh = sr[3] - sr[1];
+void CopyRect(Surface* dst, const Coord* dr, const Surface* src, const Coord* sr, bool key_src) {
+    const Coord dw = dr[2] - dr[0], dh = dr[3] - dr[1];
+    const Coord sw = sr[2] - sr[0], sh = sr[3] - sr[1];
     if (dw <= 0 || dh <= 0 || sw <= 0 || sh <= 0) return;
     const bool same = dst->bpp == src->bpp;
-    for (long y = 0; y < dh; ++y) {
-        const long sy = sr[1] + (dh == sh ? y : y * sh / dh);
-        for (long x = 0; x < dw; ++x) {
-            const long sx = sr[0] + (dw == sw ? x : x * sw / dw);
+    for (Coord y = 0; y < dh; ++y) {
+        const Coord sy = sr[1] + (dh == sh ? y : y * sh / dh);
+        for (Coord x = 0; x < dw; ++x) {
+            const Coord sx = sr[0] + (dw == sw ? x : x * sw / dw);
             if (same) {
                 const U raw = RawPixel(src, static_cast<U>(sx), static_cast<U>(sy));
                 if (key_src && src->has_color_key && raw == src->color_key) continue;
@@ -579,7 +605,7 @@ unsigned long __stdcall Surface_Release(void* self) {
         // slot out again before then.
         s->snapshot_held = true;
     }
-    Free(s->pixels);
+    LowFree(s->pixels);
     s->pixels = nullptr;
     s->refs = 0;
     // Left in the registry with `gpu` for render_d3d11 to release; the slot is
@@ -587,7 +613,7 @@ unsigned long __stdcall Surface_Release(void* self) {
     return 0;
 }
 
-long __stdcall Surface_Blt(void* self, const long* dst_rect, void* src_surface, const long* src_rect, U flags, void* fx) {
+long __stdcall Surface_Blt(void* self, const Coord* dst_rect, void* src_surface, const Coord* src_rect, U flags, void* fx) {
     auto* dst = static_cast<Surface*>(self);
     if (dst->is_primary) {
         // The present: the back buffer onto the primary.
@@ -606,7 +632,7 @@ long __stdcall Surface_Blt(void* self, const long* dst_rect, void* src_surface, 
             AppendCommand(c);
             return kDdOk;
         }
-        long r[4];
+        Coord r[4];
         RectOf(dst_rect, dst, r);
         if (!RectInside(r, dst)) return static_cast<long>(kInvalidParams);
         BeforeWrite(dst);
@@ -620,7 +646,7 @@ long __stdcall Surface_Blt(void* self, const long* dst_rect, void* src_surface, 
         bof3::Fatal("render: a Blt reads the %s surface back - not built (docs/render-backend.md)",
                     src->is_primary ? "primary" : "back");
     if (dst->is_back) bof3::Fatal("render: a Blt onto the back buffer from a surface - not built");
-    long dr[4], sr[4];
+    Coord dr[4], sr[4];
     RectOf(dst_rect, dst, dr);
     RectOf(src_rect, src, sr);
     if (!RectInside(dr, dst) || !RectInside(sr, src)) return static_cast<long>(kInvalidParams);
@@ -629,17 +655,17 @@ long __stdcall Surface_Blt(void* self, const long* dst_rect, void* src_surface, 
     return kDdOk;
 }
 
-long __stdcall Surface_BltFast(void* self, U x, U y, void* src_surface, const long* src_rect, U trans) {
+long __stdcall Surface_BltFast(void* self, U x, U y, void* src_surface, const Coord* src_rect, U trans) {
     auto* dst = static_cast<Surface*>(self);
     auto* src = static_cast<Surface*>(src_surface);
     if (!src || !IsSurface(src)) return static_cast<long>(kInvalidParams);
     RequireLive(src, "a BltFast");
     if (dst->is_primary || dst->is_back || src->is_primary || src->is_back)
         bof3::Fatal("render: BltFast touching the primary or back buffer - not built");
-    long sr[4];
+    Coord sr[4];
     RectOf(src_rect, src, sr);
-    long dr[4] = {static_cast<long>(x), static_cast<long>(y), static_cast<long>(x) + (sr[2] - sr[0]),
-                  static_cast<long>(y) + (sr[3] - sr[1])};
+    Coord dr[4] = {static_cast<Coord>(x), static_cast<Coord>(y), static_cast<Coord>(x) + (sr[2] - sr[0]),
+                  static_cast<Coord>(y) + (sr[3] - sr[1])};
     if (!RectInside(dr, dst) || !RectInside(sr, src)) return static_cast<long>(kInvalidParams);
     BeforeWrite(dst);
     CopyRect(dst, dr, src, sr, (trans & 1) != 0);   // DDBLTFAST_SRCCOLORKEY
@@ -681,7 +707,7 @@ long __stdcall Surface_GetSurfaceDesc(void* self, void* desc) {
 long __stdcall Surface_IsLost(void*) { return kDdOk; }
 long __stdcall Surface_Restore(void*) { return kDdOk; }
 
-long __stdcall Surface_Lock(void* self, const long* rect, void* desc, U, void*) {
+long __stdcall Surface_Lock(void* self, const Coord* rect, void* desc, U, void*) {
     auto* s = static_cast<Surface*>(self);
     if (!desc || Long(desc) != kDescBytes) return static_cast<long>(kInvalidParams);
     if (s->is_primary || s->is_back) bof3::Fatal("render: Lock of the %s surface - not built", s->is_primary ? "primary" : "back");
@@ -736,7 +762,7 @@ long __stdcall Texture_Load(void* self, void* from) {
     if (!from || !IsTexture(from)) return static_cast<long>(kInvalidParams);
     auto* src = SurfaceOfTexture(from);
     RequireLive(src, "a texture Load");
-    long dr[4], sr[4];
+    Coord dr[4], sr[4];
     RectOf(nullptr, dst, dr);
     RectOf(nullptr, src, sr);
     BeforeWrite(dst);
@@ -1014,7 +1040,7 @@ long __stdcall Viewport_SetBackground(void*, U handle) {
     if (handle != kMaterialHandle) bof3::Fatal("render: SetBackground with handle %u", handle);
     return kDdOk;
 }
-long __stdcall Viewport_Clear(void*, U count, const long* rects, U flags) {
+long __stdcall Viewport_Clear(void*, U count, const Coord* rects, U flags) {
     if (!(flags & 1)) return kDdOk;   // D3DCLEAR_TARGET
     if (count != 1 || !rects) bof3::Fatal("render: Clear of %u rectangles - not built", count);
     // The one rectangle is not read: the clear covers the whole target (RunFrame).
@@ -1148,7 +1174,7 @@ Surface* MakeSurface(U width, U height, U bpp, U caps, U caps2, bool primary, bo
     }
     if (!s) {
         if (g_n_surfaces >= kMaxSurfaces) bof3::Fatal("render: more than %u surfaces", kMaxSurfaces);
-        s = static_cast<Surface*>(Alloc(sizeof(Surface)));
+        s = static_cast<Surface*>(LowAlloc(sizeof(Surface)));
         if (!s) return nullptr;
         g_surfaces[g_n_surfaces++] = s;
     }
@@ -1177,7 +1203,7 @@ Surface* MakeSurface(U width, U height, U bpp, U caps, U caps2, bool primary, bo
         s->pf_bmask = 0x0000FF;
     }
     if (!primary) {
-        s->pixels = static_cast<unsigned char*>(Alloc(s->pitch * height));
+        s->pixels = static_cast<unsigned char*>(LowAlloc(s->pitch * height));
         if (!s->pixels) {
             s->refs = 0;
             return nullptr;
@@ -1190,9 +1216,9 @@ bool ResizeSurface(Surface* s, U width, U height) {
     if (!s->is_primary && !s->is_back) bof3::Fatal("render: ResizeSurface of a texture surface");
     const U pitch = ((width * (s->bpp / 8)) + 15) & ~15u;
     if (s->pixels) {
-        unsigned char* pixels = static_cast<unsigned char*>(Alloc(pitch * height));
+        unsigned char* pixels = static_cast<unsigned char*>(LowAlloc(pitch * height));
         if (!pixels) return false;
-        Free(s->pixels);
+        LowFree(s->pixels);
         s->pixels = pixels;
     }
     s->width = width;

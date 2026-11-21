@@ -56,4 +56,27 @@ void SetRescaleHook(void (*hook)(U k));
 // file cannot be written; the reason is logged.
 bool SaveFrame(const wchar_t* path);
 
+#ifndef _WIN32
+// The movies' picture on a system with no GDI (docs/replacing-mci.md
+// section 9; the owner's call of 2026-11-19: the renderer comes up before
+// the movies there). fmv_play.cpp's native::Draw calls it with each frame it
+// draws. The first call makes the device and the swap chain on `window` (the
+// renderer's window, game_window::RendererWindow); InitD3d11 later keeps
+// them and makes the rest. Windows draws its movies with GDI and has no such
+// call.
+struct MoviePicture {
+    void* window;              // the renderer's window
+    const void* pixels;        // the decoder's frame: B, G, R, X bytes a pixel, rows top-down, width * 4 bytes each
+    U width, height;
+    int left, top, dest_w, dest_h;   // DIV-0035's rectangle in the client
+    bool whole;                // DIV-0042: a whole multiple - each pixel repeated (point); else a fit, averaged (mips, linear)
+    const char* shot;          // non-null: the picture presented is also written here as a 24-bit BMP, the whole client
+};
+
+// The client cleared to black, the frame drawn into the rectangle, the
+// present. Fatal when the device cannot be made; false, with the reason
+// logged, when a shot asked for cannot be written.
+bool PresentMovie(const MoviePicture& picture);
+#endif
+
 }  // namespace render
