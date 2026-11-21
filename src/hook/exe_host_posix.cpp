@@ -501,10 +501,21 @@ unsigned SlotMsgWaitForMultipleObjects(unsigned count, void* const* handles, int
 // root is DRIVE_NO_ROOT_DIR, so no drive is a CD-ROM drive.
 unsigned SlotGetDriveTypeA(const char*) { return kDriveNoRootDir; }
 
+// Step 17's marker, kept so that an orderly end gives its name back: on this
+// system the name is a semaphore under /dev/shm that outlives the process
+// until it is unlinked (os::CloseNamedEvent). A Fatal or a signal still leaves
+// it; the next process with that number unlinks it before it makes its own.
+os::NamedEvent* g_unattendedMarker = nullptr;
+void CloseUnattendedMarker() {
+    if (g_unattendedMarker) os::CloseNamedEvent(g_unattendedMarker);
+    g_unattendedMarker = nullptr;
+}
+
 // ExitProcess: the log closed and the process ended with the code, the other
 // threads not waited for (Windows ends them before the detach).
 void SlotExitProcess(std::uint32_t code) {
     Log("exit: ExitProcess(%u) through its import slot", (unsigned)code);
+    CloseUnattendedMarker();
     LogClose();
     std::fflush(nullptr);
     std::_Exit(static_cast<int>(code));
@@ -515,6 +526,7 @@ void SlotExitProcess(std::uint32_t code) {
 int SlotTerminateProcess(void* process, std::uint32_t code) {
     if (reinterpret_cast<std::uintptr_t>(process) != kCurrentProcess)
         Fatal("TerminateProcess through its import slot of a process that is not this one (%p)", process);
+    CloseUnattendedMarker();
     LogClose();
     std::_Exit(static_cast<int>(code));
 }
@@ -731,7 +743,8 @@ void EngineMain(void* p) {
     if (EnvSet("BOF3X_INPUT") || EnvSet("BOF3X_SELFTEST_ONLY")) {
         char name[64];
         std::snprintf(name, sizeof name, "bof3x_unattended_%u", os::ProcessId());
-        if (!os::CreateNamedEvent(name)) Log("unattended: the marker %s could not be made (errno %u)", name, os::LastError());
+        g_unattendedMarker = os::CreateNamedEvent(name);
+        if (!g_unattendedMarker) Log("unattended: the marker %s could not be made (errno %u)", name, os::LastError());
     }
     StateHash_SetImageBase(ImageBase());   // 18
     StateHash_BeforeInjects(module);
@@ -741,6 +754,7 @@ void EngineMain(void* p) {
     if (EnvSet("BOF3X_SELFTEST_ONLY")) {   // 20
         ExeIcon_SelfTest();   // DIV-0095: only with BOF3X_ICON_VRAM (exe_icon_sdl.cpp)
         Log("self-test only: done, ending the process");
+        CloseUnattendedMarker();
         LogClose();
         std::fflush(nullptr);
         std::_Exit(0);
@@ -805,6 +819,7 @@ int main(int argc, char** argv) {
     // 25's end: as ExitProcess - the log closed, the process ended with the
     // code, the other threads (SDL's, DXVK's, the log writer) not joined and
     // no static destructor run under them.
+    CloseUnattendedMarker();
     LogClose();
     std::fflush(nullptr);
     std::_Exit(run.code);

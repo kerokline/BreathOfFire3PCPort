@@ -986,31 +986,31 @@ site	src/game/battle/battle_menu_states_fuzz.cpp	67	narrow_call	image_local	fuzz
 site	src/game/battle/battle_menu_states_fuzz.cpp	68	narrow_call	object_ours	fuzz	g_cmd	Address	const std::uint32_t cmd = Address(g_cmd);
 site	src/game/battle/battle_menu_states_fuzz.cpp	170	uintptr	-	fuzz	std::uintptr_t	-	return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(Hash()));
 site	src/game/battle/battle_menu_states_fuzz.cpp	170	widen	other	fuzz	Hash()	const unsigned char*	return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(Hash()));
-site	src/game/battle/battle_menu_win.cpp	81	uintptr	-	live	std::uintptr_t	-	unsigned char* AtBattleDraw(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/battle/battle_menu_win.cpp	81	widen	param	live	address	unsigned char*	unsigned char* AtBattleDraw(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/battle/battle_menu_win.cpp	83	low32	image_local	live	p	Low32	battle_draw::U Addr(const void* p) { return Low32(p); }
-site	src/game/battle/battle_menu_win.cpp	138	uintptr	-	live	std::uintptr_t	-	return AtMenuDrawHelpers(*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr))));
-site	src/game/battle/battle_menu_win.cpp	138	widen	img_place	live	::bof3::Img(BattleWinStates_Current_addr)	volatile std::uint32_t*	return AtMenuDrawHelpers(*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr))));
-site	src/game/battle/battle_menu_win.cpp	150	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<menu_draw_helpers::U>(LongMenuDrawHelpers(AtMenuDrawHelpers(table + index * 4)))))();
-site	src/game/battle/battle_menu_win.cpp	150	widen	other	live	static_cast<menu_draw_helpers::U>(LongMenuDrawHelpers(AtMenuDrawHelpers(table + index * 4)))	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<menu_draw_helpers::U>(LongMenuDrawHelpers(AtMenuDrawHelpers(table + index * 4)))))();
-site	src/game/battle/battle_menu_win.cpp	190	low32	helper_def	live	p	Low32	U Key(const void* p) { return Low32(p); }
-site	src/game/battle/battle_menu_win.cpp	194	uintptr	-	live	std::uintptr_t	-	unsigned char* RecRest2h() { return AtRest2h(*reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)))); }
-site	src/game/battle/battle_menu_win.cpp	194	widen	img_place	live	::bof3::Img(BattleWinStates_Current_addr)	volatile U*	unsigned char* RecRest2h() { return AtRest2h(*reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)))); }
-site	src/game/battle/battle_menu_win.cpp	212	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2h(table + 4 * index)))();
-site	src/game/battle/battle_menu_win.cpp	212	widen	other	live	LRest2h(table + 4 * index)	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2h(table + 4 * index)))();
-site	src/game/battle/battle_menu_win.cpp	258	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(
-site	src/game/battle/battle_menu_win.cpp	258	widen	other	live	*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)))	unsigned char*	return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(
-site	src/game/battle/battle_menu_win.cpp	259	uintptr	-	live	std::uintptr_t	-	*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)))));
-site	src/game/battle/battle_menu_win.cpp	259	widen	img_place	live	::bof3::Img(BattleWinStates_Current_addr)	volatile std::uint32_t*	*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)))));
-site	src/game/battle/battle_menu_win.cpp	307	narrow_call	image_local	live	w	Key	static_cast<U>(LongRest2h(w + 0x20)), w[0xD], Key(w));
-site	src/game/battle/battle_menu_win.cpp	540	uintptr	-	live	std::uintptr_t	-	BH_CALL(Equip_PreviewSet)(member, reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(set)), marks,
-site	src/game/battle/battle_menu_win.cpp	540	widen	param	live	set	const unsigned char*	BH_CALL(Equip_PreviewSet)(member, reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(set)), marks,
-site	src/game/battle/battle_menu_win.cpp	772	low32	image_local	live	record	Low32	BattleWinStates_Current = static_cast<std::int32_t>(Low32(record));
-site	src/game/battle/battle_menu_win.cpp	849	low32	object_ours	live	&g_equip_labels_row	Low32	bof3::PatchBytes(" ", Low32(&g_equip_labels_row),
-site	src/game/battle/battle_menu_win.cpp	929	long	l	live	long	-	const long long n = static_cast<long long>(f.tellg());
-site	src/game/battle/battle_menu_win.cpp	929	long	l	live	long	-	const long long n = static_cast<long long>(f.tellg());
-site	src/game/battle/battle_menu_win.cpp	937	long	l	live	long	-	std::snprintf(why, why_n, " ", static_cast<long long>(n));
-site	src/game/battle/battle_menu_win.cpp	1271	low32	object_ours	live	&mode_flow::g_reset_full	Low32	bof3::PatchBytes(" ", Low32(&mode_flow::g_reset_full), &was, &is, 1);
+site	src/game/battle/battle_menu_win.cpp	84	uintptr	-	live	std::uintptr_t	-	unsigned char* AtBattleDraw(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/battle/battle_menu_win.cpp	84	widen	param	live	address	unsigned char*	unsigned char* AtBattleDraw(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/battle/battle_menu_win.cpp	86	low32	image_local	live	p	Low32	battle_draw::U Addr(const void* p) { return Low32(p); }
+site	src/game/battle/battle_menu_win.cpp	141	uintptr	-	live	std::uintptr_t	-	return AtMenuDrawHelpers(*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr))));
+site	src/game/battle/battle_menu_win.cpp	141	widen	img_place	live	::bof3::Img(BattleWinStates_Current_addr)	volatile std::uint32_t*	return AtMenuDrawHelpers(*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr))));
+site	src/game/battle/battle_menu_win.cpp	153	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<menu_draw_helpers::U>(LongMenuDrawHelpers(AtMenuDrawHelpers(table + index * 4)))))();
+site	src/game/battle/battle_menu_win.cpp	153	widen	other	live	static_cast<menu_draw_helpers::U>(LongMenuDrawHelpers(AtMenuDrawHelpers(table + index * 4)))	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<menu_draw_helpers::U>(LongMenuDrawHelpers(AtMenuDrawHelpers(table + index * 4)))))();
+site	src/game/battle/battle_menu_win.cpp	193	low32	helper_def	live	p	Low32	U Key(const void* p) { return Low32(p); }
+site	src/game/battle/battle_menu_win.cpp	197	uintptr	-	live	std::uintptr_t	-	unsigned char* RecRest2h() { return AtRest2h(*reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)))); }
+site	src/game/battle/battle_menu_win.cpp	197	widen	img_place	live	::bof3::Img(BattleWinStates_Current_addr)	volatile U*	unsigned char* RecRest2h() { return AtRest2h(*reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)))); }
+site	src/game/battle/battle_menu_win.cpp	215	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2h(table + 4 * index)))();
+site	src/game/battle/battle_menu_win.cpp	215	widen	other	live	LRest2h(table + 4 * index)	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2h(table + 4 * index)))();
+site	src/game/battle/battle_menu_win.cpp	261	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(
+site	src/game/battle/battle_menu_win.cpp	261	widen	other	live	*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)))	unsigned char*	return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(
+site	src/game/battle/battle_menu_win.cpp	262	uintptr	-	live	std::uintptr_t	-	*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)))));
+site	src/game/battle/battle_menu_win.cpp	262	widen	img_place	live	::bof3::Img(BattleWinStates_Current_addr)	volatile std::uint32_t*	*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)))));
+site	src/game/battle/battle_menu_win.cpp	310	narrow_call	image_local	live	w	Key	static_cast<U>(LongRest2h(w + 0x20)), w[0xD], Key(w));
+site	src/game/battle/battle_menu_win.cpp	543	uintptr	-	live	std::uintptr_t	-	BH_CALL(Equip_PreviewSet)(member, reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(set)), marks,
+site	src/game/battle/battle_menu_win.cpp	543	widen	param	live	set	const unsigned char*	BH_CALL(Equip_PreviewSet)(member, reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(set)), marks,
+site	src/game/battle/battle_menu_win.cpp	775	low32	image_local	live	record	Low32	BattleWinStates_Current = static_cast<std::int32_t>(Low32(record));
+site	src/game/battle/battle_menu_win.cpp	852	low32	object_ours	live	&g_equip_labels_row	Low32	bof3::PatchBytes(" ", Low32(&g_equip_labels_row),
+site	src/game/battle/battle_menu_win.cpp	932	long	l	live	long	-	const long long n = static_cast<long long>(f.tellg());
+site	src/game/battle/battle_menu_win.cpp	932	long	l	live	long	-	const long long n = static_cast<long long>(f.tellg());
+site	src/game/battle/battle_menu_win.cpp	940	long	l	live	long	-	std::snprintf(why, why_n, " ", static_cast<long long>(n));
+site	src/game/battle/battle_menu_win.cpp	1302	low32	object_ours	live	&mode_flow::g_reset_full	Low32	bof3::PatchBytes(" ", Low32(&mode_flow::g_reset_full), &was, &is, 1);
 site	src/game/battle/battle_misc.cpp	52	uintptr	-	live	std::uintptr_t	-	template <typename T> T* Fn(U address) { return reinterpret_cast<T*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/battle/battle_misc.cpp	52	widen	param	live	address	T*	template <typename T> T* Fn(U address) { return reinterpret_cast<T*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/battle/battle_misc.cpp	64	uintptr	-	live	std::uintptr_t	-	unsigned char* AtBattleMisc(battle_misc::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
@@ -8349,27 +8349,53 @@ site	src/hook/crash.cpp	192	long	l	live	long	-	Log(" ", n, (unsigned long)off, s
 site	src/hook/crash.cpp	192	long	ul	live	unsigned long	-	Log(" ", n, (unsigned long)off, static_cast<unsigned long long>(v),
 site	src/hook/crash.cpp	195	long	ul	live	unsigned long	-	Log(" ", n, (unsigned long)off, (unsigned long)v,
 site	src/hook/crash.cpp	195	long	ul	live	unsigned long	-	Log(" ", n, (unsigned long)off, (unsigned long)v,
-site	src/hook/crash.h	27	uintptr	-	live	std::uintptr_t	-	using BreakFn = void (*)(const char* what, std::uintptr_t ip, std::uintptr_t sp, std::uint32_t flags);
-site	src/hook/crash.h	27	uintptr	-	live	std::uintptr_t	-	using BreakFn = void (*)(const char* what, std::uintptr_t ip, std::uintptr_t sp, std::uint32_t flags);
-site	src/hook/crash_posix.cpp	83	width_if	logic	live	Fill	#if defined(__x86_64__)	#if defined(__x86_64__)
-site	src/hook/crash_posix.cpp	89	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t err = g[REG_ERR], trap = g[REG_TRAPNO];
-site	src/hook/crash_posix.cpp	94	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t err = g[REG_ERR], trap = g[REG_TRAPNO];
-site	src/hook/crash_posix.cpp	104	uintptr	-	live	std::uintptr_t	-	f.access_at = reinterpret_cast<std::uintptr_t>(si->si_addr);
-site	src/hook/crash_posix.cpp	152	long	l	live	long	-	const long n = g_fault.number;
-site	src/hook/crash_posix.cpp	170	uintptr	-	live	std::uintptr_t	-	std::uintptr_t inside, lo, hi;
-site	src/hook/crash_posix.cpp	174	uintptr	-	live	std::uintptr_t	-	std::uintptr_t lo = UINTPTR_MAX, hi = 0;
-site	src/hook/crash_posix.cpp	178	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t a = info->dlpi_addr + p.p_vaddr;
-site	src/hook/crash_posix.cpp	191	long	ul	live	unsigned long	-	void SelfTest(unsigned long seconds) {
-site	src/hook/crash_posix.cpp	210	width_if	logic	live	OnTrap	#if defined(__x86_64__)	#if defined(__x86_64__)
-site	src/hook/crash_posix.cpp	211	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t ip = g[REG_RIP], sp = g[REG_RSP];
-site	src/hook/crash_posix.cpp	213	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t ip = g[REG_EIP], sp = g[REG_ESP];
-site	src/hook/crash_posix.cpp	249	uintptr	-	live	std::uintptr_t	-	bool Peek(std::uintptr_t addr, void* out, size_t n) {
-site	src/hook/crash_posix.cpp	258	uintptr	-	live	std::uintptr_t	-	void Where(std::uintptr_t addr, char* out, size_t cap) {
-site	src/hook/crash_posix.cpp	263	long	ul	live	unsigned long	-	(unsigned long)(addr - reinterpret_cast<std::uintptr_t>(info.dli_fbase)));
-site	src/hook/crash_posix.cpp	263	uintptr	-	live	std::uintptr_t	-	(unsigned long)(addr - reinterpret_cast<std::uintptr_t>(info.dli_fbase)));
-site	src/hook/crash_posix.cpp	281	uintptr	-	live	std::uintptr_t	-	Extent engine{reinterpret_cast<std::uintptr_t>(dll_module), 0, 0};
-site	src/hook/crash_posix.cpp	282	fmt_place	pointer	live	dll_module	%p	if (!dl_iterate_phdr(FindExtent, &engine)) Fatal("crash reporter: no loaded object holds %p", dll_module);
-site	src/hook/crash_posix.cpp	305	long	ul	live	unsigned long	-	const unsigned long seconds = std::strtoul(num, nullptr, 10);
+site	src/hook/crash.h	29	uintptr	-	live	std::uintptr_t	-	using BreakFn = void (*)(const char* what, std::uintptr_t ip, std::uintptr_t sp, std::uint32_t flags);
+site	src/hook/crash.h	29	uintptr	-	live	std::uintptr_t	-	using BreakFn = void (*)(const char* what, std::uintptr_t ip, std::uintptr_t sp, std::uint32_t flags);
+site	src/hook/crash_posix.cpp	90	uintptr	-	live	std::uintptr_t	-	std::uintptr_t g_engine_lo = 0, g_engine_hi = 0;
+site	src/hook/crash_posix.cpp	91	uintptr	-	live	std::uintptr_t	-	std::uintptr_t g_image_lo = 0, g_image_hi = 0;
+site	src/hook/crash_posix.cpp	107	uintptr	-	live	std::uintptr_t	-	std::uintptr_t g_armed_stack_lo = 0, g_armed_stack_hi = 0;
+site	src/hook/crash_posix.cpp	108	uintptr	-	live	std::uintptr_t	-	constexpr std::uintptr_t kPage = 0x1000;
+site	src/hook/crash_posix.cpp	147	width_if	logic	live	Fill	#if defined(__x86_64__)	#if defined(__x86_64__)
+site	src/hook/crash_posix.cpp	153	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t err = g[REG_ERR], trap = g[REG_TRAPNO];
+site	src/hook/crash_posix.cpp	158	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t err = g[REG_ERR], trap = g[REG_TRAPNO];
+site	src/hook/crash_posix.cpp	168	uintptr	-	live	std::uintptr_t	-	f.access_at = reinterpret_cast<std::uintptr_t>(si->si_addr);
+site	src/hook/crash_posix.cpp	236	long	l	live	long	-	const long n = f.number;
+site	src/hook/crash_posix.cpp	244	long	l	live	long	-	n, static_cast<unsigned long long>(g_armed_stack_lo - kPage), static_cast<unsigned long long>(g_armed_stack_lo),
+site	src/hook/crash_posix.cpp	244	long	l	live	long	-	n, static_cast<unsigned long long>(g_armed_stack_lo - kPage), static_cast<unsigned long long>(g_armed_stack_lo),
+site	src/hook/crash_posix.cpp	245	long	l	live	long	-	(unsigned long)f.thread, static_cast<unsigned long long>(g_armed_stack_lo),
+site	src/hook/crash_posix.cpp	245	long	ul	live	unsigned long	-	(unsigned long)f.thread, static_cast<unsigned long long>(g_armed_stack_lo),
+site	src/hook/crash_posix.cpp	246	long	l	live	long	-	static_cast<unsigned long long>(g_armed_stack_hi));
+site	src/hook/crash_posix.cpp	264	sizeof_ptr	-	live	sizeof(std::uintptr_t)	-	Name(static_cast<int>(g_fault.code)), g_fault.sub_code, static_cast<int>(2 * sizeof(std::uintptr_t)),
+site	src/hook/crash_posix.cpp	264	uintptr	-	live	std::uintptr_t	-	Name(static_cast<int>(g_fault.code)), g_fault.sub_code, static_cast<int>(2 * sizeof(std::uintptr_t)),
+site	src/hook/crash_posix.cpp	265	long	l	live	long	-	static_cast<unsigned long long>(g_fault.addr));
+site	src/hook/crash_posix.cpp	271	uintptr	-	live	std::uintptr_t	-	std::uintptr_t inside, lo, hi;
+site	src/hook/crash_posix.cpp	275	uintptr	-	live	std::uintptr_t	-	std::uintptr_t lo = UINTPTR_MAX, hi = 0;
+site	src/hook/crash_posix.cpp	279	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t a = info->dlpi_addr + p.p_vaddr;
+site	src/hook/crash_posix.cpp	292	long	ul	live	unsigned long	-	void SelfTest(unsigned long seconds) {
+site	src/hook/crash_posix.cpp	311	width_if	logic	live	OnTrap	#if defined(__x86_64__)	#if defined(__x86_64__)
+site	src/hook/crash_posix.cpp	312	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t ip = g[REG_RIP], sp = g[REG_RSP];
+site	src/hook/crash_posix.cpp	314	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t ip = g[REG_EIP], sp = g[REG_ESP];
+site	src/hook/crash_posix.cpp	334	width_if	logic	live	if	#if defined(__x86_64__)	#if defined(__x86_64__)
+site	src/hook/crash_posix.cpp	335	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t ip = g[REG_RIP];
+site	src/hook/crash_posix.cpp	337	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t ip = g[REG_EIP];
+site	src/hook/crash_posix.cpp	340	long	l	live	long	-	static_cast<int>(2 * sizeof(std::uintptr_t)), static_cast<unsigned long long>(ip));
+site	src/hook/crash_posix.cpp	340	sizeof_ptr	-	live	sizeof(std::uintptr_t)	-	static_cast<int>(2 * sizeof(std::uintptr_t)), static_cast<unsigned long long>(ip));
+site	src/hook/crash_posix.cpp	340	uintptr	-	live	std::uintptr_t	-	static_cast<int>(2 * sizeof(std::uintptr_t)), static_cast<unsigned long long>(ip));
+site	src/hook/crash_posix.cpp	369	uintptr	-	live	std::uintptr_t	-	bool Peek(std::uintptr_t addr, void* out, size_t n) {
+site	src/hook/crash_posix.cpp	383	uintptr	-	live	std::uintptr_t	-	void Where(std::uintptr_t addr, char* out, size_t cap) {
+site	src/hook/crash_posix.cpp	385	fmt_place	word	live	(unsigned)(static_cast<std::uint32_t>(addr) - ImageBase() + image::kBase)	%08X	std::snprintf(out, cap, "the game's image, VA 0x%08X",
+site	src/hook/crash_posix.cpp	390	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t base = image::g_ownBase ? image::g_ownBase : g_engine_lo;
+site	src/hook/crash_posix.cpp	391	long	ul	live	unsigned long	-	std::snprintf(out, cap, " ", g_engine, (unsigned long)(addr - base));
+site	src/hook/crash_posix.cpp	398	long	ul	live	unsigned long	-	(unsigned long)(addr - reinterpret_cast<std::uintptr_t>(info.dli_fbase)));
+site	src/hook/crash_posix.cpp	398	uintptr	-	live	std::uintptr_t	-	(unsigned long)(addr - reinterpret_cast<std::uintptr_t>(info.dli_fbase)));
+site	src/hook/crash_posix.cpp	416	uintptr	-	live	std::uintptr_t	-	Extent engine{reinterpret_cast<std::uintptr_t>(dll_module), 0, 0};
+site	src/hook/crash_posix.cpp	417	fmt_place	pointer	live	dll_module	%p	if (!dl_iterate_phdr(FindExtent, &engine)) Fatal("crash reporter: no loaded object holds %p", dll_module);
+site	src/hook/crash_posix.cpp	425	uintptr	-	live	std::uintptr_t	-	g_armed_stack_lo = reinterpret_cast<std::uintptr_t>(stack.limit);
+site	src/hook/crash_posix.cpp	426	uintptr	-	live	std::uintptr_t	-	g_armed_stack_hi = reinterpret_cast<std::uintptr_t>(stack.base);
+site	src/hook/crash_posix.cpp	444	long	l	live	long	-	(unsigned long)g_armed_tid, static_cast<unsigned long long>(g_armed_stack_lo),
+site	src/hook/crash_posix.cpp	444	long	ul	live	unsigned long	-	(unsigned long)g_armed_tid, static_cast<unsigned long long>(g_armed_stack_lo),
+site	src/hook/crash_posix.cpp	445	long	l	live	long	-	static_cast<unsigned long long>(g_armed_stack_hi));
+site	src/hook/crash_posix.cpp	449	long	ul	live	unsigned long	-	const unsigned long seconds = std::strtoul(num, nullptr, 10);
 site	src/hook/crash_report.h	20	long	l	live	long	-	long number = 0;
 site	src/hook/crash_report.h	24	uintptr	-	live	std::uintptr_t	-	std::uintptr_t addr = 0;
 site	src/hook/crash_report.h	27	uintptr	-	live	std::uintptr_t	-	std::uintptr_t access_raw = 0;
@@ -8612,30 +8638,30 @@ site	src/hook/exe_host_posix.cpp	431	uintptr	-	live	std::uintptr_t	-	const std::
 site	src/hook/exe_host_posix.cpp	431	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t kCurrentProcess = ~static_cast<std::uintptr_t>(0);
 site	src/hook/exe_host_posix.cpp	437	long	l	live	long	-	long SlotDirectSoundCreate(const void*, void**, void*) {
 site	src/hook/exe_host_posix.cpp	447	fmt_place	pointer	live	(unsigned)slot	%08X	Fatal("GDI32's %s was called through its import slot 0x%08X, but this system has no GDI and the renderer hands out "
-site	src/hook/exe_host_posix.cpp	516	uintptr	-	live	std::uintptr_t	-	if (reinterpret_cast<std::uintptr_t>(process) != kCurrentProcess)
-site	src/hook/exe_host_posix.cpp	517	fmt_place	pointer	live	process	%p	Fatal("TerminateProcess through its import slot of a process that is not this one (%p)", process);
-site	src/hook/exe_host_posix.cpp	549	uintptr	-	live	std::uintptr_t	-	SDL_Window* parent = hwnd ? SDL_GetWindowFromID(static_cast<SDL_WindowID>(reinterpret_cast<std::uintptr_t>(hwnd))) : nullptr;
-site	src/hook/exe_host_posix.cpp	597	uintptr	-	live	std::uintptr_t	-	if (now != thunk[i] || target != reinterpret_cast<std::uintptr_t>(s.ours))
-site	src/hook/exe_host_posix.cpp	598	fmt_place	pointer	live	(unsigned)s.at	%08X	Fatal("slots: 0x%08X does not read back as the thunk 0x%08X of our %s!%s", (unsigned)s.at, (unsigned)thunk[i], s.dll,
-site	src/hook/exe_host_posix.cpp	598	fmt_place	word	live	(unsigned)thunk[i]	%08X	Fatal("slots: 0x%08X does not read back as the thunk 0x%08X of our %s!%s", (unsigned)s.at, (unsigned)thunk[i], s.dll,
-site	src/hook/exe_host_posix.cpp	604	uintptr	-	live	std::uintptr_t	-	const std::uint32_t through = reinterpret_cast<std::uint32_t(*)()>(static_cast<std::uintptr_t>(tick_word))();
-site	src/hook/exe_host_posix.cpp	608	fmt_place	word	live	(unsigned)thunk[0]	%08X	Log("slots: %u import slots bound to 14-byte thunks at 0x%08X.. of functions of ours (no system library holds "
-site	src/hook/exe_host_posix.cpp	619	asm	cw	live	fnstcw %0	fnstcw	asm volatile("fnstcw %0" : "=m"(before));
-site	src/hook/exe_host_posix.cpp	620	asm	cw	live	fldcw %0	fldcw	asm volatile("fldcw %0" : : "m"(cw));
-site	src/hook/exe_host_posix.cpp	621	asm	cw	live	fnstcw %0	fnstcw	asm volatile("fnstcw %0" : "=m"(after));
-site	src/hook/exe_host_posix.cpp	622	asm	cw	live	stmxcsr %0	stmxcsr	asm volatile("stmxcsr %0" : "=m"(mxcsr));
-site	src/hook/exe_host_posix.cpp	625	fmt_place	word	live	before	%08X	"Capcom's start-up left it); MXCSR 0x%08X, not set", before, after, mxcsr);
-site	src/hook/exe_host_posix.cpp	695	ptr_overlay	unread	live	p	Run	Run& run = *static_cast<Run*>(p);
-site	src/hook/exe_host_posix.cpp	712	fmt_place	pointer	live	hinstance	%p	Log("Engine_Main: hinstance %p, show %d, on thread %u, its stack 0x%llX..0x%llX (the placed stack, row 3)", hinstance,
-site	src/hook/exe_host_posix.cpp	713	long	l	live	long	-	show, os::ThreadId(), static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(stack.limit)),
-site	src/hook/exe_host_posix.cpp	713	uintptr	-	live	std::uintptr_t	-	show, os::ThreadId(), static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(stack.limit)),
-site	src/hook/exe_host_posix.cpp	714	long	l	live	long	-	static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(stack.base)));
-site	src/hook/exe_host_posix.cpp	714	uintptr	-	live	std::uintptr_t	-	static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(stack.base)));
-site	src/hook/exe_host_posix.cpp	762	fmt_place	pointer	live	hinstance	%p	Log("Engine_Main: Game_WinMain(0x%p, null, \"%s\", %d) on the main thread", hinstance, line, show);
-site	src/hook/exe_host_posix.cpp	786	long	l	live	long	-	Log(" ", os::ProcessId(), static_cast<unsigned long long>(self.base),
-site	src/hook/exe_host_posix.cpp	787	long	l	live	long	-	static_cast<unsigned long long>(self.base + self.extent));
-site	src/hook/exe_host_posix.cpp	802	fmt_place	word	live	(unsigned)kStackHi	%08X	Fatal("start-up: the switch onto the main thread's placed stack 0x%08X..0x%08X failed, errno %u", (unsigned)kStackLo,
-site	src/hook/exe_host_posix.cpp	802	fmt_place	word	live	(unsigned)kStackLo	%08X	Fatal("start-up: the switch onto the main thread's placed stack 0x%08X..0x%08X failed, errno %u", (unsigned)kStackLo,
+site	src/hook/exe_host_posix.cpp	527	uintptr	-	live	std::uintptr_t	-	if (reinterpret_cast<std::uintptr_t>(process) != kCurrentProcess)
+site	src/hook/exe_host_posix.cpp	528	fmt_place	pointer	live	process	%p	Fatal("TerminateProcess through its import slot of a process that is not this one (%p)", process);
+site	src/hook/exe_host_posix.cpp	561	uintptr	-	live	std::uintptr_t	-	SDL_Window* parent = hwnd ? SDL_GetWindowFromID(static_cast<SDL_WindowID>(reinterpret_cast<std::uintptr_t>(hwnd))) : nullptr;
+site	src/hook/exe_host_posix.cpp	609	uintptr	-	live	std::uintptr_t	-	if (now != thunk[i] || target != reinterpret_cast<std::uintptr_t>(s.ours))
+site	src/hook/exe_host_posix.cpp	610	fmt_place	pointer	live	(unsigned)s.at	%08X	Fatal("slots: 0x%08X does not read back as the thunk 0x%08X of our %s!%s", (unsigned)s.at, (unsigned)thunk[i], s.dll,
+site	src/hook/exe_host_posix.cpp	610	fmt_place	word	live	(unsigned)thunk[i]	%08X	Fatal("slots: 0x%08X does not read back as the thunk 0x%08X of our %s!%s", (unsigned)s.at, (unsigned)thunk[i], s.dll,
+site	src/hook/exe_host_posix.cpp	616	uintptr	-	live	std::uintptr_t	-	const std::uint32_t through = reinterpret_cast<std::uint32_t(*)()>(static_cast<std::uintptr_t>(tick_word))();
+site	src/hook/exe_host_posix.cpp	620	fmt_place	word	live	(unsigned)thunk[0]	%08X	Log("slots: %u import slots bound to 14-byte thunks at 0x%08X.. of functions of ours (no system library holds "
+site	src/hook/exe_host_posix.cpp	631	asm	cw	live	fnstcw %0	fnstcw	asm volatile("fnstcw %0" : "=m"(before));
+site	src/hook/exe_host_posix.cpp	632	asm	cw	live	fldcw %0	fldcw	asm volatile("fldcw %0" : : "m"(cw));
+site	src/hook/exe_host_posix.cpp	633	asm	cw	live	fnstcw %0	fnstcw	asm volatile("fnstcw %0" : "=m"(after));
+site	src/hook/exe_host_posix.cpp	634	asm	cw	live	stmxcsr %0	stmxcsr	asm volatile("stmxcsr %0" : "=m"(mxcsr));
+site	src/hook/exe_host_posix.cpp	637	fmt_place	word	live	before	%08X	"Capcom's start-up left it); MXCSR 0x%08X, not set", before, after, mxcsr);
+site	src/hook/exe_host_posix.cpp	707	ptr_overlay	unread	live	p	Run	Run& run = *static_cast<Run*>(p);
+site	src/hook/exe_host_posix.cpp	724	fmt_place	pointer	live	hinstance	%p	Log("Engine_Main: hinstance %p, show %d, on thread %u, its stack 0x%llX..0x%llX (the placed stack, row 3)", hinstance,
+site	src/hook/exe_host_posix.cpp	725	long	l	live	long	-	show, os::ThreadId(), static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(stack.limit)),
+site	src/hook/exe_host_posix.cpp	725	uintptr	-	live	std::uintptr_t	-	show, os::ThreadId(), static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(stack.limit)),
+site	src/hook/exe_host_posix.cpp	726	long	l	live	long	-	static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(stack.base)));
+site	src/hook/exe_host_posix.cpp	726	uintptr	-	live	std::uintptr_t	-	static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(stack.base)));
+site	src/hook/exe_host_posix.cpp	777	fmt_place	pointer	live	hinstance	%p	Log("Engine_Main: Game_WinMain(%p, null, \"%s\", %d) on the main thread", hinstance, line, show);
+site	src/hook/exe_host_posix.cpp	801	long	l	live	long	-	Log(" ", os::ProcessId(), static_cast<unsigned long long>(self.base),
+site	src/hook/exe_host_posix.cpp	802	long	l	live	long	-	static_cast<unsigned long long>(self.base + self.extent));
+site	src/hook/exe_host_posix.cpp	817	fmt_place	word	live	(unsigned)kStackHi	%08X	Fatal("start-up: the switch onto the main thread's placed stack 0x%08X..0x%08X failed, errno %u", (unsigned)kStackLo,
+site	src/hook/exe_host_posix.cpp	817	fmt_place	word	live	(unsigned)kStackLo	%08X	Fatal("start-up: the switch onto the main thread's placed stack 0x%08X..0x%08X failed, errno %u", (unsigned)kStackLo,
 site	src/hook/exe_icon.cpp	105	long	ul	live	unsigned long	-	wsprintfA(t, " ", static_cast<unsigned long>(hr));
 site	src/hook/exe_icon_picture.cpp	232	widen	img_place	live	::bof3::Img(menu_windows::at::kIconRects) + kIcon * 4	const std::uint8_t*	const auto* p = reinterpret_cast<const std::uint8_t*>(
 site	src/hook/exe_icon_picture.cpp	233	uintptr	-	live	std::uintptr_t	-	static_cast<std::uintptr_t>(::bof3::Img(menu_windows::at::kIconRects) + kIcon * 4));
@@ -8783,52 +8809,52 @@ site	src/hook/snapshot.cpp	455	fmt_place	word	live	h.pool_base	%08X	Printf("span
 site	src/hook/snapshot.cpp	455	fmt_place	word	live	h.span_base	%08X	Printf("span 0x%08X+0x%X, pool 0x%08X+0x%X; here 0x%08X+0x%X, 0x%08X+0x%X", h.span_base, h.span_bytes,
 site	src/hook/snapshot.cpp	459	fmt_place	word	live	arena_top	%08X	Printf("the task stacks hung from 0x%08X (0x%X bytes), here from 0x%08X: a quicksave is this process's",
 site	src/hook/snapshot.cpp	459	fmt_place	word	live	h.arena_top	%08X	Printf("the task stacks hung from 0x%08X (0x%X bytes), here from 0x%08X: a quicksave is this process's",
-site	src/hook/snapshot.cpp	587	long	ul	live	unsigned long	-	static_cast<unsigned long>(bof3::os::LastError()));
-site	src/hook/snapshot.cpp	597	long	ul	live	unsigned long	-	why = Printf(" ", PathText(path).c_str(), static_cast<unsigned long>(bof3::os::LastError()));
-site	src/hook/snapshot.cpp	604	long	ul	live	unsigned long	-	const unsigned long error = bof3::os::LastError();
-site	src/hook/snapshot.cpp	631	long	ul	live	unsigned long	-	static_cast<unsigned long>(bof3::os::LastError()));
-site	src/hook/snapshot.cpp	692	long	ul	live	unsigned long	-	if (r != os::OwnStackResult::Done) Fatal(" ", os::OwnStackFailure(r), static_cast<unsigned long>(bof3::os::LastError()));
-site	src/hook/snapshot.cpp	720	fmt_place	word	live	File_Slots_addr	%08X	Log("quicksave F6 at Frame_Counter %u refused: a file is open in File_Slots (0x%08X) between frames",
-site	src/hook/snapshot.cpp	736	fmt_place	word	live	h->pool_base	%08X	Log("quicksave F6 at Frame_Counter %u: BISLPS10.DAT, %u bytes (save half 0x%X, span 0x%08X+0x%X, pool 0x%08X+0x%X, "
-site	src/hook/snapshot.cpp	736	fmt_place	word	live	h->span_base	%08X	Log("quicksave F6 at Frame_Counter %u: BISLPS10.DAT, %u bytes (save half 0x%X, span 0x%08X+0x%X, pool 0x%08X+0x%X, "
-site	src/hook/snapshot.cpp	737	fmt_place	word	live	h->frame_counter	%08X	"task arena 0x%08X-0x%X, %u participants; .rdata fnv %08X)",
-site	src/hook/snapshot.cpp	737	fmt_place	word	live	h->span_base	%08X	"task arena 0x%08X-0x%X, %u participants; .rdata fnv %08X)",
-site	src/hook/snapshot.cpp	761	fmt_place	word	live	top	%08X	Log("quicksave F7 %s refused: the task arena 0x%08X-0x%X is not committed", SlotName(slot).c_str(), top,
-site	src/hook/snapshot.cpp	768	fmt_place	word	live	p.header.rdata_fnv	%08X	Log("quicksave F7 %s: .rdata fnv %08X now, %08X at the take - written in play, and not copied (the census's "
-site	src/hook/snapshot.cpp	768	fmt_place	word	live	rdata	%08X	Log("quicksave F7 %s: .rdata fnv %08X now, %08X at the take - written in play, and not copied (the census's "
-site	src/hook/snapshot.cpp	920	narrow_call	object_ours	live	arena_block.data()	Va	const U top = (Va(arena_block.data()) + kArenaBytes + kPage - 1) & ~(kPage - 1);
-site	src/hook/snapshot.cpp	921	narrow_call	object_ours	live	arena_block.data()	Va	if (top - kArenaBytes < Va(arena_block.data())) Fatal(" ");
-site	src/hook/snapshot.cpp	926	narrow_call	image	live	&Task_StackTop	Va	WriteRange(Va(&Task_StackTop), reinterpret_cast<const unsigned char*>(&t), 4);
-site	src/hook/snapshot.cpp	978	fmt_place	pointer	live	span.image.base + at	%08X	Log("shadow snapshot: span byte 0x%08X is 0x%02X after the restore, 0x%02X at the take", span.image.base + at,
-site	src/hook/snapshot.cpp	1116	long	ul	live	unsigned long	-	const fs::path dir = temp / Printf(" ", static_cast<unsigned long>(bof3::os::ProcessId()));
-site	src/hook/snapshot.cpp	1126	fmt_place	pointer	live	span.image.base	%08X	Log("shadow snapshot: self-test passed - span 0x%08X+0x%X and pool 0x%08X+0x%X copied, scribbled and restored equal; "
-site	src/hook/snapshot.cpp	1126	fmt_place	pointer	live	span.pool.base	%08X	Log("shadow snapshot: self-test passed - span 0x%08X+0x%X and pool 0x%08X+0x%X copied, scribbled and restored equal; "
-site	src/hook/snapshot.cpp	1198	narrow_call	image	live	&Frame_Deadline	Va	const U names[] = {Va(&Task_SchedulerEsp), Va(&Game_Hwnd), Va(&Game_HInstance), Va(&Frame_Deadline),
-site	src/hook/snapshot.cpp	1198	narrow_call	image	live	&Game_HInstance	Va	const U names[] = {Va(&Task_SchedulerEsp), Va(&Game_Hwnd), Va(&Game_HInstance), Va(&Frame_Deadline),
-site	src/hook/snapshot.cpp	1198	narrow_call	image	live	&Game_Hwnd	Va	const U names[] = {Va(&Task_SchedulerEsp), Va(&Game_Hwnd), Va(&Game_HInstance), Va(&Frame_Deadline),
-site	src/hook/snapshot.cpp	1198	narrow_call	image	live	&Task_SchedulerEsp	Va	const U names[] = {Va(&Task_SchedulerEsp), Va(&Game_Hwnd), Va(&Game_HInstance), Va(&Frame_Deadline),
-site	src/hook/snapshot.cpp	1199	narrow_call	image	live	&App_Active	Va	Va(&Fps_Shown), Va(&App_Active), Va(&Cfg_Fullscreen), Va(&Cfg_RenderMode),
-site	src/hook/snapshot.cpp	1199	narrow_call	image	live	&Cfg_Fullscreen	Va	Va(&Fps_Shown), Va(&App_Active), Va(&Cfg_Fullscreen), Va(&Cfg_RenderMode),
-site	src/hook/snapshot.cpp	1199	narrow_call	image	live	&Cfg_RenderMode	Va	Va(&Fps_Shown), Va(&App_Active), Va(&Cfg_Fullscreen), Va(&Cfg_RenderMode),
-site	src/hook/snapshot.cpp	1199	narrow_call	image	live	&Fps_Shown	Va	Va(&Fps_Shown), Va(&App_Active), Va(&Cfg_Fullscreen), Va(&Cfg_RenderMode),
-site	src/hook/snapshot.cpp	1200	narrow_call	image	live	&DInput_Object	Va	Va(Key_Table), Va(&DInput_Object), Va(&Font_GlyphData), Va(Gfx_WindowRect),
-site	src/hook/snapshot.cpp	1200	narrow_call	image	live	&Font_GlyphData	Va	Va(Key_Table), Va(&DInput_Object), Va(&Font_GlyphData), Va(Gfx_WindowRect),
-site	src/hook/snapshot.cpp	1200	narrow_call	image	live	Gfx_WindowRect	Va	Va(Key_Table), Va(&DInput_Object), Va(&Font_GlyphData), Va(Gfx_WindowRect),
-site	src/hook/snapshot.cpp	1200	narrow_call	image	live	Key_Table	Va	Va(Key_Table), Va(&DInput_Object), Va(&Font_GlyphData), Va(Gfx_WindowRect),
-site	src/hook/snapshot.cpp	1201	narrow_call	image	live	&Dd_DirectDraw	Va	Va(Gfx_ClutRows), Va(D3d_DeviceDesc), Va(&Dd_DirectDraw), Va(&Dd_StageSurface),
-site	src/hook/snapshot.cpp	1201	narrow_call	image	live	&Dd_StageSurface	Va	Va(Gfx_ClutRows), Va(D3d_DeviceDesc), Va(&Dd_DirectDraw), Va(&Dd_StageSurface),
-site	src/hook/snapshot.cpp	1201	narrow_call	image	live	D3d_DeviceDesc	Va	Va(Gfx_ClutRows), Va(D3d_DeviceDesc), Va(&Dd_DirectDraw), Va(&Dd_StageSurface),
-site	src/hook/snapshot.cpp	1201	narrow_call	image	live	Gfx_ClutRows	Va	Va(Gfx_ClutRows), Va(D3d_DeviceDesc), Va(&Dd_DirectDraw), Va(&Dd_StageSurface),
-site	src/hook/snapshot.cpp	1202	narrow_call	image	live	&D3d_Device	Va	Va(&D3d_Device)};
-site	src/hook/snapshot.cpp	1206	fmt_place	pointer	live	kKept[i].at	%08X	Fatal("snapshot: kKept's %s is 0x%08X, symbols.toml's at 0x%08X (VA 0x%08X)", kKept[i].name, kKept[i].at,
-site	src/hook/snapshot.cpp	1206	fmt_place	pointer	live	names[i] - Img(kKept[i].at) + kKept[i].at	%08X	Fatal("snapshot: kKept's %s is 0x%08X, symbols.toml's at 0x%08X (VA 0x%08X)", kKept[i].name, kKept[i].at,
-site	src/hook/snapshot.cpp	1206	fmt_place	word	live	names[i]	%08X	Fatal("snapshot: kKept's %s is 0x%08X, symbols.toml's at 0x%08X (VA 0x%08X)", kKept[i].name, kKept[i].at,
+site	src/hook/snapshot.cpp	611	long	ul	live	unsigned long	-	static_cast<unsigned long>(bof3::os::LastError()));
+site	src/hook/snapshot.cpp	621	long	ul	live	unsigned long	-	why = Printf(" ", PathText(path).c_str(), static_cast<unsigned long>(bof3::os::LastError()));
+site	src/hook/snapshot.cpp	628	long	ul	live	unsigned long	-	const unsigned long error = bof3::os::LastError();
+site	src/hook/snapshot.cpp	655	long	ul	live	unsigned long	-	static_cast<unsigned long>(bof3::os::LastError()));
+site	src/hook/snapshot.cpp	716	long	ul	live	unsigned long	-	if (r != os::OwnStackResult::Done) Fatal(" ", os::OwnStackFailure(r), static_cast<unsigned long>(bof3::os::LastError()));
+site	src/hook/snapshot.cpp	744	fmt_place	word	live	File_Slots_addr	%08X	Log("quicksave F6 at Frame_Counter %u refused: a file is open in File_Slots (0x%08X) between frames",
+site	src/hook/snapshot.cpp	760	fmt_place	word	live	h->pool_base	%08X	Log("quicksave F6 at Frame_Counter %u: BISLPS10.DAT, %u bytes (save half 0x%X, span 0x%08X+0x%X, pool 0x%08X+0x%X, "
+site	src/hook/snapshot.cpp	760	fmt_place	word	live	h->span_base	%08X	Log("quicksave F6 at Frame_Counter %u: BISLPS10.DAT, %u bytes (save half 0x%X, span 0x%08X+0x%X, pool 0x%08X+0x%X, "
+site	src/hook/snapshot.cpp	761	fmt_place	word	live	h->frame_counter	%08X	"task arena 0x%08X-0x%X, %u participants; .rdata fnv %08X)",
+site	src/hook/snapshot.cpp	761	fmt_place	word	live	h->span_base	%08X	"task arena 0x%08X-0x%X, %u participants; .rdata fnv %08X)",
+site	src/hook/snapshot.cpp	785	fmt_place	word	live	top	%08X	Log("quicksave F7 %s refused: the task arena 0x%08X-0x%X is not committed", SlotName(slot).c_str(), top,
+site	src/hook/snapshot.cpp	792	fmt_place	word	live	p.header.rdata_fnv	%08X	Log("quicksave F7 %s: .rdata fnv %08X now, %08X at the take - written in play, and not copied (the census's "
+site	src/hook/snapshot.cpp	792	fmt_place	word	live	rdata	%08X	Log("quicksave F7 %s: .rdata fnv %08X now, %08X at the take - written in play, and not copied (the census's "
+site	src/hook/snapshot.cpp	944	narrow_call	object_ours	live	arena_block.data()	Va	const U top = (Va(arena_block.data()) + kArenaBytes + kPage - 1) & ~(kPage - 1);
+site	src/hook/snapshot.cpp	945	narrow_call	object_ours	live	arena_block.data()	Va	if (top - kArenaBytes < Va(arena_block.data())) Fatal(" ");
+site	src/hook/snapshot.cpp	950	narrow_call	image	live	&Task_StackTop	Va	WriteRange(Va(&Task_StackTop), reinterpret_cast<const unsigned char*>(&t), 4);
+site	src/hook/snapshot.cpp	1002	fmt_place	pointer	live	span.image.base + at	%08X	Log("shadow snapshot: span byte 0x%08X is 0x%02X after the restore, 0x%02X at the take", span.image.base + at,
+site	src/hook/snapshot.cpp	1160	long	ul	live	unsigned long	-	const fs::path dir = temp / Printf(" ", static_cast<unsigned long>(bof3::os::ProcessId()));
+site	src/hook/snapshot.cpp	1170	fmt_place	pointer	live	span.image.base	%08X	Log("shadow snapshot: self-test passed - span 0x%08X+0x%X and pool 0x%08X+0x%X copied, scribbled and restored equal; "
+site	src/hook/snapshot.cpp	1170	fmt_place	pointer	live	span.pool.base	%08X	Log("shadow snapshot: self-test passed - span 0x%08X+0x%X and pool 0x%08X+0x%X copied, scribbled and restored equal; "
+site	src/hook/snapshot.cpp	1242	narrow_call	image	live	&Frame_Deadline	Va	const U names[] = {Va(&Task_SchedulerEsp), Va(&Game_Hwnd), Va(&Game_HInstance), Va(&Frame_Deadline),
+site	src/hook/snapshot.cpp	1242	narrow_call	image	live	&Game_HInstance	Va	const U names[] = {Va(&Task_SchedulerEsp), Va(&Game_Hwnd), Va(&Game_HInstance), Va(&Frame_Deadline),
+site	src/hook/snapshot.cpp	1242	narrow_call	image	live	&Game_Hwnd	Va	const U names[] = {Va(&Task_SchedulerEsp), Va(&Game_Hwnd), Va(&Game_HInstance), Va(&Frame_Deadline),
+site	src/hook/snapshot.cpp	1242	narrow_call	image	live	&Task_SchedulerEsp	Va	const U names[] = {Va(&Task_SchedulerEsp), Va(&Game_Hwnd), Va(&Game_HInstance), Va(&Frame_Deadline),
+site	src/hook/snapshot.cpp	1243	narrow_call	image	live	&App_Active	Va	Va(&Fps_Shown), Va(&App_Active), Va(&Cfg_Fullscreen), Va(&Cfg_RenderMode),
+site	src/hook/snapshot.cpp	1243	narrow_call	image	live	&Cfg_Fullscreen	Va	Va(&Fps_Shown), Va(&App_Active), Va(&Cfg_Fullscreen), Va(&Cfg_RenderMode),
+site	src/hook/snapshot.cpp	1243	narrow_call	image	live	&Cfg_RenderMode	Va	Va(&Fps_Shown), Va(&App_Active), Va(&Cfg_Fullscreen), Va(&Cfg_RenderMode),
+site	src/hook/snapshot.cpp	1243	narrow_call	image	live	&Fps_Shown	Va	Va(&Fps_Shown), Va(&App_Active), Va(&Cfg_Fullscreen), Va(&Cfg_RenderMode),
+site	src/hook/snapshot.cpp	1244	narrow_call	image	live	&DInput_Object	Va	Va(Key_Table), Va(&DInput_Object), Va(&Font_GlyphData), Va(Gfx_WindowRect),
+site	src/hook/snapshot.cpp	1244	narrow_call	image	live	&Font_GlyphData	Va	Va(Key_Table), Va(&DInput_Object), Va(&Font_GlyphData), Va(Gfx_WindowRect),
+site	src/hook/snapshot.cpp	1244	narrow_call	image	live	Gfx_WindowRect	Va	Va(Key_Table), Va(&DInput_Object), Va(&Font_GlyphData), Va(Gfx_WindowRect),
+site	src/hook/snapshot.cpp	1244	narrow_call	image	live	Key_Table	Va	Va(Key_Table), Va(&DInput_Object), Va(&Font_GlyphData), Va(Gfx_WindowRect),
+site	src/hook/snapshot.cpp	1245	narrow_call	image	live	&Dd_DirectDraw	Va	Va(Gfx_ClutRows), Va(D3d_DeviceDesc), Va(&Dd_DirectDraw), Va(&Dd_StageSurface),
+site	src/hook/snapshot.cpp	1245	narrow_call	image	live	&Dd_StageSurface	Va	Va(Gfx_ClutRows), Va(D3d_DeviceDesc), Va(&Dd_DirectDraw), Va(&Dd_StageSurface),
+site	src/hook/snapshot.cpp	1245	narrow_call	image	live	D3d_DeviceDesc	Va	Va(Gfx_ClutRows), Va(D3d_DeviceDesc), Va(&Dd_DirectDraw), Va(&Dd_StageSurface),
+site	src/hook/snapshot.cpp	1245	narrow_call	image	live	Gfx_ClutRows	Va	Va(Gfx_ClutRows), Va(D3d_DeviceDesc), Va(&Dd_DirectDraw), Va(&Dd_StageSurface),
+site	src/hook/snapshot.cpp	1246	narrow_call	image	live	&D3d_Device	Va	Va(&D3d_Device)};
+site	src/hook/snapshot.cpp	1250	fmt_place	pointer	live	kKept[i].at	%08X	Fatal("snapshot: kKept's %s is 0x%08X, symbols.toml's at 0x%08X (VA 0x%08X)", kKept[i].name, kKept[i].at,
+site	src/hook/snapshot.cpp	1250	fmt_place	pointer	live	names[i] - Img(kKept[i].at) + kKept[i].at	%08X	Fatal("snapshot: kKept's %s is 0x%08X, symbols.toml's at 0x%08X (VA 0x%08X)", kKept[i].name, kKept[i].at,
+site	src/hook/snapshot.cpp	1250	fmt_place	word	live	names[i]	%08X	Fatal("snapshot: kKept's %s is 0x%08X, symbols.toml's at 0x%08X (VA 0x%08X)", kKept[i].name, kKept[i].at,
 site	src/hook/stackwatch.h	23	long	ul	live	unsigned long	-	void __cdecl StackWatch_AtSetStackBase(unsigned long arrival_esp);
-site	src/hook/stackwatch_posix.cpp	28	asm	cw	live	fnstcw %0	fnstcw	asm volatile("fnstcw %0" : "=m"(cw));
-site	src/hook/stackwatch_posix.cpp	29	asm	cw	live	stmxcsr %0	stmxcsr	asm volatile("stmxcsr %0" : "=m"(mxcsr));
-site	src/hook/stackwatch_posix.cpp	30	fmt_place	word	live	mxcsr	%08X	Log("fpu: thread %lu at start-up: x87 control word 0x%04X, MXCSR 0x%08X", (unsigned long)os::ThreadId(), cw, mxcsr);
-site	src/hook/stackwatch_posix.cpp	30	long	ul	live	unsigned long	-	Log(" ", (unsigned long)os::ThreadId(), cw, mxcsr);
-site	src/hook/stackwatch_posix.cpp	44	long	ul	live	unsigned long	-	extern " " void __cdecl StackWatch_AtSetStackBase(unsigned long) {
+site	src/hook/stackwatch_posix.cpp	32	asm	cw	live	fnstcw %0	fnstcw	asm volatile("fnstcw %0" : "=m"(cw));
+site	src/hook/stackwatch_posix.cpp	33	asm	cw	live	stmxcsr %0	stmxcsr	asm volatile("stmxcsr %0" : "=m"(mxcsr));
+site	src/hook/stackwatch_posix.cpp	34	fmt_place	word	live	mxcsr	%08X	Log("fpu: thread %lu at start-up: x87 control word 0x%04X, MXCSR 0x%08X", (unsigned long)os::ThreadId(), cw, mxcsr);
+site	src/hook/stackwatch_posix.cpp	34	long	ul	live	unsigned long	-	Log(" ", (unsigned long)os::ThreadId(), cw, mxcsr);
+site	src/hook/stackwatch_posix.cpp	52	long	ul	live	unsigned long	-	extern " " void __cdecl StackWatch_AtSetStackBase(unsigned long) {
 site	src/hook/stackwatch_win32.cpp	61	width_if	logic	live	Task_SetStackBase	#if defined(__i386__)	#if defined(__i386__)
 site	src/hook/stackwatch_win32.cpp	62	uintptr	-	live	std::uintptr_t	-	constexpr std::uintptr_t kTebStackBase = 0x04, kTebStackLimit = 0x08, kTebDeallocationStack = 0xE0C;
 site	src/hook/stackwatch_win32.cpp	64	uintptr	-	live	std::uintptr_t	-	constexpr std::uintptr_t kTebStackBase = 0x08, kTebStackLimit = 0x10, kTebDeallocationStack = 0x1478;
@@ -9250,7 +9276,7 @@ site	src/os/posix/module.cpp	24	uintptr	-	live	std::uintptr_t	-	std::uintptr_t l
 site	src/os/posix/module.cpp	28	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t a = info->dlpi_addr + p.p_vaddr, b = a + p.p_memsz;
 site	src/os/posix/module.cpp	36	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t page = 0x1000;
 site	src/os/posix/module.cpp	57	uintptr	-	live	std::uintptr_t	-	Search s{reinterpret_cast<std::uintptr_t>(inside), out, false};
-site	src/os/posix/named_event.cpp	59	long	l	live	long	-	until.tv_nsec += static_cast<long>(ms % 1000) * 1000000L;
+site	src/os/posix/named_event.cpp	67	long	l	live	long	-	until.tv_nsec += static_cast<long>(ms % 1000) * 1000000L;
 site	src/os/posix/own_stack.cpp	27	width_if	asm_pair	live	-	#if !defined(__i386__) && !defined(__x86_64__)	#if !defined(__i386__) && !defined(__x86_64__)
 site	src/os/posix/own_stack.cpp	54	asm	cw	live	fldcw %0	fldcw	if (s->spec->callers_x87) __asm__ volatile("fldcw %0" : : "m"(s->cw));
 site	src/os/posix/own_stack.cpp	64	long	l	live	long	-	const long page = sysconf(_SC_PAGESIZE);
@@ -9318,144 +9344,115 @@ site	src/render/gfx_snapshot.cpp	444	fmt_place	word	live	n.symbol	%08X	if (i == 
 site	src/render/gfx_snapshot.cpp	446	narrow_call	image	live	&D3d_ShadeModeCache	Va	if (Va(&D3d_ShadeModeCache) != ::bof3::Img(0x6C3A44)) Fatal(" ");
 site	src/render/render_d3d11.cpp	135	asm	cw	live	fnstcw %0	fnstcw	FpuGuard() { __asm__ volatile("fnstcw %0" : "=m"(cw_)); }
 site	src/render/render_d3d11.cpp	136	asm	cw	live	fldcw %0	fldcw	~FpuGuard() { __asm__ volatile("fldcw %0" : : "m"(cw_)); }
-site	src/render/render_d3d11.cpp	145	long	ul	live	unsigned long	-	if (FAILED(hr)) bof3::Fatal(" ", what, static_cast<unsigned long>(hr));
-site	src/render/render_d3d11.cpp	555	ptr_overlay	unread	live	s->gpu	GpuTexture	auto* g = static_cast<GpuTexture*>(s->gpu);
-site	src/render/render_d3d11.cpp	566	ptr_overlay	heap	live	std::calloc(1, sizeof(GpuTexture))	GpuTexture	g = static_cast<GpuTexture*>(std::calloc(1, sizeof(GpuTexture)));
-site	src/render/render_d3d11.cpp	929	long	ul	live	unsigned long	-	bof3::Log(" ", static_cast<unsigned long>(hr));
-site	src/render/render_d3d11.cpp	1216	ptr_overlay	unread	live	s->gpu	GpuTexture	auto* g = static_cast<GpuTexture*>(s->gpu);
-site	src/render/render_shim.cpp	30	long	l	live	long	-	using Rect = long[4];
-site	src/render/render_shim.cpp	81	long	l	live	long	-	template <int kObject, int kSlot> long __stdcall Unsupported(void*) {
-site	src/render/render_shim.cpp	116	ptr_overlay	unread	live	Bytes(texture) - offsetof(Surface, texture_vtable)	Surface	return reinterpret_cast<Surface*>(Bytes(texture) - offsetof(Surface, texture_vtable));
-site	src/render/render_shim.cpp	210	long	l	live	long	-	void RectOf(const long* r, const Surface* s, long* out) {
-site	src/render/render_shim.cpp	210	long	l	live	long	-	void RectOf(const long* r, const Surface* s, long* out) {
-site	src/render/render_shim.cpp	219	long	l	live	long	-	out[2] = static_cast<long>(s->width);
-site	src/render/render_shim.cpp	220	long	l	live	long	-	out[3] = static_cast<long>(s->height);
-site	src/render/render_shim.cpp	223	long	l	live	long	-	bool RectInside(const long* r, const Surface* s) {
-site	src/render/render_shim.cpp	224	long	l	live	long	-	return r[0] >= 0 && r[1] >= 0 && r[2] <= static_cast<long>(s->width) && r[3] <= static_cast<long>(s->height) &&
-site	src/render/render_shim.cpp	224	long	l	live	long	-	return r[0] >= 0 && r[1] >= 0 && r[2] <= static_cast<long>(s->width) && r[3] <= static_cast<long>(s->height) &&
-site	src/render/render_shim.cpp	228	long	l	live	long	-	void FillRect(Surface* s, const long* r, U raw) {
-site	src/render/render_shim.cpp	229	long	l	live	long	-	for (long y = r[1]; y < r[3]; ++y)
-site	src/render/render_shim.cpp	230	long	l	live	long	-	for (long x = r[0]; x < r[2]; ++x) WriteRaw(s, static_cast<U>(x), static_cast<U>(y), raw);
-site	src/render/render_shim.cpp	236	long	l	live	long	-	void CopyRect(Surface* dst, const long* dr, const Surface* src, const long* sr, bool key_src) {
-site	src/render/render_shim.cpp	236	long	l	live	long	-	void CopyRect(Surface* dst, const long* dr, const Surface* src, const long* sr, bool key_src) {
-site	src/render/render_shim.cpp	237	long	l	live	long	-	const long dw = dr[2] - dr[0], dh = dr[3] - dr[1];
-site	src/render/render_shim.cpp	238	long	l	live	long	-	const long sw = sr[2] - sr[0], sh = sr[3] - sr[1];
-site	src/render/render_shim.cpp	241	long	l	live	long	-	for (long y = 0; y < dh; ++y) {
-site	src/render/render_shim.cpp	242	long	l	live	long	-	const long sy = sr[1] + (dh == sh ? y : y * sh / dh);
-site	src/render/render_shim.cpp	243	long	l	live	long	-	for (long x = 0; x < dw; ++x) {
-site	src/render/render_shim.cpp	244	long	l	live	long	-	const long sx = sr[0] + (dw == sw ? x : x * sw / dw);
-site	src/render/render_shim.cpp	264	ptr_overlay	object_ours	live	g_frame.arena + g_frame.arena_used	TexVersion	auto* v = reinterpret_cast<TexVersion*>(g_frame.arena + g_frame.arena_used);
-site	src/render/render_shim.cpp	291	long	ul	live	unsigned long	-	using ReleaseFn = unsigned long(__stdcall*)(void*);
-site	src/render/render_shim.cpp	325	long	l	live	long	-	unsigned long long h = 0xCBF29CE484222325ull;
-site	src/render/render_shim.cpp	336	long	l	live	long	-	unsigned long long TextureHash(const TexVersion* v) {
-site	src/render/render_shim.cpp	358	long	l	live	long	-	static unsigned long long seen_hash[kSeen];
-site	src/render/render_shim.cpp	407	long	l	live	long	-	unsigned long long th;
-site	src/render/render_shim.cpp	424	fmt_place	word	live	static_cast<U>(f.h >> 32)	%08X	bof3::Log("framehash drawn at Frame_Counter %u: %u commands, %u vertices, %u textures, %08X%08X (%u clears)", tag,
-site	src/render/render_shim.cpp	424	fmt_place	word	live	static_cast<U>(f.h)	%08X	bof3::Log("framehash drawn at Frame_Counter %u: %u commands, %u vertices, %u textures, %08X%08X (%u clears)", tag,
-site	src/render/render_shim.cpp	534	low32	unread	live	object	Low32	const std::uint32_t word = Low32(object);
-site	src/render/render_shim.cpp	540	long	l	live	long	-	long __stdcall Surface_QueryInterface(void* self, const void* iid, void** out) {
-site	src/render/render_shim.cpp	549	ptr_overlay	unread	live	self	Surface	auto* s = static_cast<Surface*>(self);
-site	src/render/render_shim.cpp	550	long	l	live	long	-	if (!out) return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	562	long	l	live	long	-	return static_cast<long>(kNoInterface);
-site	src/render/render_shim.cpp	565	long	ul	live	unsigned long	-	unsigned long __stdcall Surface_AddRef(void* self) { return ++static_cast<Surface*>(self)->refs; }
-site	src/render/render_shim.cpp	565	ptr_overlay	unread	live	self	Surface	unsigned long __stdcall Surface_AddRef(void* self) { return ++static_cast<Surface*>(self)->refs; }
-site	src/render/render_shim.cpp	567	long	ul	live	unsigned long	-	unsigned long __stdcall Surface_Release(void* self) {
-site	src/render/render_shim.cpp	568	ptr_overlay	unread	live	self	Surface	auto* s = static_cast<Surface*>(self);
-site	src/render/render_shim.cpp	590	long	l	live	long	-	long __stdcall Surface_Blt(void* self, const long* dst_rect, void* src_surface, const long* src_rect, U flags, void* fx) {
-site	src/render/render_shim.cpp	590	long	l	live	long	-	long __stdcall Surface_Blt(void* self, const long* dst_rect, void* src_surface, const long* src_rect, U flags, void* fx) {
-site	src/render/render_shim.cpp	590	long	l	live	long	-	long __stdcall Surface_Blt(void* self, const long* dst_rect, void* src_surface, const long* src_rect, U flags, void* fx) {
-site	src/render/render_shim.cpp	591	ptr_overlay	unread	live	self	Surface	auto* dst = static_cast<Surface*>(self);
-site	src/render/render_shim.cpp	598	long	l	live	long	-	if (!fx) return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	609	long	l	live	long	-	long r[4];
-site	src/render/render_shim.cpp	611	long	l	live	long	-	if (!RectInside(r, dst)) return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	616	ptr_overlay	unread	live	src_surface	Surface	auto* src = static_cast<Surface*>(src_surface);
-site	src/render/render_shim.cpp	617	long	l	live	long	-	if (!src || !IsSurface(src)) return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	623	long	l	live	long	-	long dr[4], sr[4];
-site	src/render/render_shim.cpp	626	long	l	live	long	-	if (!RectInside(dr, dst) || !RectInside(sr, src)) return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	632	long	l	live	long	-	long __stdcall Surface_BltFast(void* self, U x, U y, void* src_surface, const long* src_rect, U trans) {
-site	src/render/render_shim.cpp	632	long	l	live	long	-	long __stdcall Surface_BltFast(void* self, U x, U y, void* src_surface, const long* src_rect, U trans) {
-site	src/render/render_shim.cpp	633	ptr_overlay	unread	live	self	Surface	auto* dst = static_cast<Surface*>(self);
-site	src/render/render_shim.cpp	634	ptr_overlay	unread	live	src_surface	Surface	auto* src = static_cast<Surface*>(src_surface);
-site	src/render/render_shim.cpp	635	long	l	live	long	-	if (!src || !IsSurface(src)) return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	639	long	l	live	long	-	long sr[4];
-site	src/render/render_shim.cpp	641	long	l	live	long	-	long dr[4] = {static_cast<long>(x), static_cast<long>(y), static_cast<long>(x) + (sr[2] - sr[0]),
-site	src/render/render_shim.cpp	641	long	l	live	long	-	long dr[4] = {static_cast<long>(x), static_cast<long>(y), static_cast<long>(x) + (sr[2] - sr[0]),
-site	src/render/render_shim.cpp	641	long	l	live	long	-	long dr[4] = {static_cast<long>(x), static_cast<long>(y), static_cast<long>(x) + (sr[2] - sr[0]),
-site	src/render/render_shim.cpp	641	long	l	live	long	-	long dr[4] = {static_cast<long>(x), static_cast<long>(y), static_cast<long>(x) + (sr[2] - sr[0]),
-site	src/render/render_shim.cpp	642	long	l	live	long	-	static_cast<long>(y) + (sr[3] - sr[1])};
-site	src/render/render_shim.cpp	643	long	l	live	long	-	if (!RectInside(dr, dst) || !RectInside(sr, src)) return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	649	long	l	live	long	-	long __stdcall Surface_Flip(void* self, void*, U) {
-site	src/render/render_shim.cpp	650	ptr_overlay	unread	live	self	Surface	auto* s = static_cast<Surface*>(self);
-site	src/render/render_shim.cpp	651	long	l	live	long	-	if (!s->is_primary) return static_cast<long>(kUnsupported);
-site	src/render/render_shim.cpp	662	low32	unread	live	s->pixels	Low32	if (with_surface) PutLong(d + kDescSurface, Low32(s->pixels));
-site	src/render/render_shim.cpp	675	long	l	live	long	-	long __stdcall Surface_GetSurfaceDesc(void* self, void* desc) {
-site	src/render/render_shim.cpp	676	long	l	live	long	-	if (!desc || Long(desc) != kDescBytes) return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	677	ptr_overlay	unread	live	self	Surface	FillDesc(static_cast<Surface*>(self), Bytes(desc), false);
-site	src/render/render_shim.cpp	681	long	l	live	long	-	long __stdcall Surface_IsLost(void*) { return kDdOk; }
-site	src/render/render_shim.cpp	682	long	l	live	long	-	long __stdcall Surface_Restore(void*) { return kDdOk; }
-site	src/render/render_shim.cpp	684	long	l	live	long	-	long __stdcall Surface_Lock(void* self, const long* rect, void* desc, U, void*) {
-site	src/render/render_shim.cpp	684	long	l	live	long	-	long __stdcall Surface_Lock(void* self, const long* rect, void* desc, U, void*) {
-site	src/render/render_shim.cpp	685	ptr_overlay	unread	live	self	Surface	auto* s = static_cast<Surface*>(self);
-site	src/render/render_shim.cpp	686	long	l	live	long	-	if (!desc || Long(desc) != kDescBytes) return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	688	long	l	live	long	-	if (s->locked) return static_cast<long>(kSurfaceBusy);
-site	src/render/render_shim.cpp	696	long	l	live	long	-	long __stdcall Surface_Unlock(void* self, const void*) {
-site	src/render/render_shim.cpp	697	ptr_overlay	unread	live	self	Surface	auto* s = static_cast<Surface*>(self);
-site	src/render/render_shim.cpp	698	long	l	live	long	-	if (!s->locked) return static_cast<long>(kNotLocked);
-site	src/render/render_shim.cpp	703	long	l	live	long	-	long __stdcall Surface_SetColorKey(void* self, U flags, const U* key) {
-site	src/render/render_shim.cpp	704	ptr_overlay	unread	live	self	Surface	auto* s = static_cast<Surface*>(self);
-site	src/render/render_shim.cpp	705	long	l	live	long	-	if (flags != 8) return static_cast<long>(kUnsupported);
-site	src/render/render_shim.cpp	721	long	l	live	long	-	long __stdcall Texture_QueryInterface(void* self, const void* iid, void** out) {
-site	src/render/render_shim.cpp	724	long	ul	live	unsigned long	-	unsigned long __stdcall Texture_AddRef(void* self) { return Surface_AddRef(SurfaceOfTexture(self)); }
-site	src/render/render_shim.cpp	725	long	ul	live	unsigned long	-	unsigned long __stdcall Texture_Release(void* self) { return Surface_Release(SurfaceOfTexture(self)); }
-site	src/render/render_shim.cpp	726	long	l	live	long	-	long __stdcall Texture_GetHandle(void* self, void*, U* handle) {
-site	src/render/render_shim.cpp	727	long	l	live	long	-	if (!handle) return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	730	low32	unread	live	self	Low32	*handle = Low32(self);
-site	src/render/render_shim.cpp	733	long	l	live	long	-	long __stdcall Texture_PaletteChanged(void*, U, U) { return kDdOk; }
-site	src/render/render_shim.cpp	734	long	l	live	long	-	long __stdcall Texture_Load(void* self, void* from) {
-site	src/render/render_shim.cpp	736	long	l	live	long	-	if (!from || !IsTexture(from)) return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	739	long	l	live	long	-	long dr[4], sr[4];
-site	src/render/render_shim.cpp	749	long	l	live	long	-	long __stdcall Dd_QueryInterface(void*, const void*, void** out) {
-site	src/render/render_shim.cpp	751	long	l	live	long	-	return static_cast<long>(kNoInterface);
-site	src/render/render_shim.cpp	753	long	ul	live	unsigned long	-	unsigned long __stdcall Dd_AddRef(void*) { return 1; }
-site	src/render/render_shim.cpp	754	long	ul	live	unsigned long	-	unsigned long __stdcall Dd_Release(void*) { return 1; }
-site	src/render/render_shim.cpp	756	long	l	live	long	-	long __stdcall Dd_CreateSurface(void*, const void* desc, Surface** out, void*) {
-site	src/render/render_shim.cpp	757	long	l	live	long	-	if (!desc || !out || Long(desc) != kDescBytes) return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	760	long	l	live	long	-	if (!(flags & kSdWidth) || !(flags & kSdHeight)) return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	764	long	l	live	long	-	if (Long(pf + kPfSize) != 0x20) return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	776	long	l	live	long	-	if (!s) return static_cast<long>(0x8007000Eu);
-site	src/render/render_shim.cpp	788	long	l	live	long	-	long __stdcall Device_QueryInterface(void*, const void*, void** out) {
-site	src/render/render_shim.cpp	790	long	l	live	long	-	return static_cast<long>(kNoInterface);
-site	src/render/render_shim.cpp	792	long	ul	live	unsigned long	-	unsigned long __stdcall Device_AddRef(void*) { return 1; }
-site	src/render/render_shim.cpp	793	long	ul	live	unsigned long	-	unsigned long __stdcall Device_Release(void*) { return 1; }
-site	src/render/render_shim.cpp	794	long	l	live	long	-	long __stdcall Device_BeginScene(void*) { return kDdOk; }
-site	src/render/render_shim.cpp	795	long	l	live	long	-	long __stdcall Device_EndScene(void*) { return kDdOk; }
-site	src/render/render_shim.cpp	806	long	l	live	long	-	long __stdcall Device_SetRenderState(void*, U state, U value) {
-site	src/render/render_shim.cpp	856	long	l	live	long	-	long __stdcall Device_DrawPrimitive(void*, U type, U fvf, const void* vertices, U count, U) {
-site	src/render/render_shim.cpp	858	long	l	live	long	-	if (!vertices || count == 0) return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	874	fmt_place	word	live	in[k].x	%08X	bof3::Log("drawlog: v%u x %g y %g z %g rhw %g diffuse %08X specular %08X uv %g %g", k, in[k].x, in[k].y, in[k].z, in[k].rhw, in[k].diffuse, in[k].specular, in[k
-site	src/render/render_shim.cpp	874	fmt_place	word	live	in[k].y	%08X	bof3::Log("drawlog: v%u x %g y %g z %g rhw %g diffuse %08X specular %08X uv %g %g", k, in[k].x, in[k].y, in[k].z, in[k].rhw, in[k].diffuse, in[k].specular, in[k
-site	src/render/render_shim.cpp	968	long	l	live	long	-	long __stdcall Device_SetTexture(void*, U stage, void* texture) {
-site	src/render/render_shim.cpp	978	fmt_place	word	live	Low32(texture)	%08X	if (logged++ < 8) bof3::Log("render: SetTexture(0, 0x%08X) is not a texture - refused", Low32(texture));
-site	src/render/render_shim.cpp	978	low32	unread	live	texture	Low32	if (logged++ < 8) bof3::Log(" ", Low32(texture));
-site	src/render/render_shim.cpp	980	long	l	live	long	-	return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	986	long	l	live	long	-	long __stdcall Device_SetTextureStageState(void*, U stage, U type, U value) {
-site	src/render/render_shim.cpp	1007	long	l	live	long	-	long __stdcall Viewport_QueryInterface(void*, const void*, void** out) {
-site	src/render/render_shim.cpp	1009	long	l	live	long	-	return static_cast<long>(kNoInterface);
-site	src/render/render_shim.cpp	1011	long	ul	live	unsigned long	-	unsigned long __stdcall Viewport_AddRef(void*) { return 1; }
-site	src/render/render_shim.cpp	1012	long	ul	live	unsigned long	-	unsigned long __stdcall Viewport_Release(void*) { return 1; }
-site	src/render/render_shim.cpp	1013	long	l	live	long	-	long __stdcall Viewport_SetBackground(void*, U handle) {
-site	src/render/render_shim.cpp	1017	long	l	live	long	-	long __stdcall Viewport_Clear(void*, U count, const long* rects, U flags) {
-site	src/render/render_shim.cpp	1017	long	l	live	long	-	long __stdcall Viewport_Clear(void*, U count, const long* rects, U flags) {
-site	src/render/render_shim.cpp	1030	long	l	live	long	-	long __stdcall Material_QueryInterface(void*, const void*, void** out) {
-site	src/render/render_shim.cpp	1032	long	l	live	long	-	return static_cast<long>(kNoInterface);
-site	src/render/render_shim.cpp	1034	long	ul	live	unsigned long	-	unsigned long __stdcall Material_AddRef(void*) { return 1; }
-site	src/render/render_shim.cpp	1035	long	ul	live	unsigned long	-	unsigned long __stdcall Material_Release(void*) { return 1; }
-site	src/render/render_shim.cpp	1036	long	l	live	long	-	long __stdcall Material_SetMaterial(void*, const void* material) {
-site	src/render/render_shim.cpp	1037	long	l	live	long	-	if (!material || Long(material) != 0x50) return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	1048	long	l	live	long	-	long __stdcall Material_GetHandle(void*, void*, U* handle) {
-site	src/render/render_shim.cpp	1049	long	l	live	long	-	if (!handle) return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	1151	ptr_overlay	unread	live	Alloc(sizeof(Surface))	Surface	s = static_cast<Surface*>(Alloc(sizeof(Surface)));
-site	src/render/satpixie.cpp	242	long	ul	live	unsigned long	-	if (FAILED(hr)) bof3::Fatal(" ", what, static_cast<unsigned long>(hr));
+site	src/render/render_d3d11.cpp	147	long	ul	live	unsigned long	-	if (FAILED(hr)) bof3::Fatal(" ", what, static_cast<unsigned long>(static_cast<std::uint32_t>(hr)));
+site	src/render/render_d3d11.cpp	557	ptr_overlay	unread	live	s->gpu	GpuTexture	auto* g = static_cast<GpuTexture*>(s->gpu);
+site	src/render/render_d3d11.cpp	568	ptr_overlay	heap	live	std::calloc(1, sizeof(GpuTexture))	GpuTexture	g = static_cast<GpuTexture*>(std::calloc(1, sizeof(GpuTexture)));
+site	src/render/render_d3d11.cpp	968	long	ul	live	unsigned long	-	bof3::Log(" ", static_cast<unsigned long>(static_cast<std::uint32_t>(hr)));
+site	src/render/render_d3d11.cpp	1012	fmt_place	pointer	live	g_opt.hwnd	%p	bof3::Fatal("render: the set-up's window %p is not the one the movies' device was made on (%p)", options.hwnd,
+site	src/render/render_d3d11.cpp	1012	fmt_place	pointer	live	options.hwnd	%p	bof3::Fatal("render: the set-up's window %p is not the one the movies' device was made on (%p)", options.hwnd,
+site	src/render/render_d3d11.cpp	1358	fmt_place	pointer	live	g_opt.hwnd	%p	bof3::Fatal("render: a movie on window %p, the device's is %p", m.window, g_opt.hwnd);
+site	src/render/render_d3d11.cpp	1358	fmt_place	pointer	live	m.window	%p	bof3::Fatal("render: a movie on window %p, the device's is %p", m.window, g_opt.hwnd);
+site	src/render/render_d3d11.cpp	1422	ptr_overlay	unread	live	s->gpu	GpuTexture	auto* g = static_cast<GpuTexture*>(s->gpu);
+site	src/render/render_shim.cpp	107	long	l	live	long	-	template <int kObject, int kSlot> long __stdcall Unsupported(void*) {
+site	src/render/render_shim.cpp	142	ptr_overlay	unread	live	Bytes(texture) - offsetof(Surface, texture_vtable)	Surface	return reinterpret_cast<Surface*>(Bytes(texture) - offsetof(Surface, texture_vtable));
+site	src/render/render_shim.cpp	290	ptr_overlay	object_ours	live	g_frame.arena + g_frame.arena_used	TexVersion	auto* v = reinterpret_cast<TexVersion*>(g_frame.arena + g_frame.arena_used);
+site	src/render/render_shim.cpp	317	long	ul	live	unsigned long	-	using ReleaseFn = unsigned long(__stdcall*)(void*);
+site	src/render/render_shim.cpp	351	long	l	live	long	-	unsigned long long h = 0xCBF29CE484222325ull;
+site	src/render/render_shim.cpp	362	long	l	live	long	-	unsigned long long TextureHash(const TexVersion* v) {
+site	src/render/render_shim.cpp	384	long	l	live	long	-	static unsigned long long seen_hash[kSeen];
+site	src/render/render_shim.cpp	433	long	l	live	long	-	unsigned long long th;
+site	src/render/render_shim.cpp	450	fmt_place	word	live	static_cast<U>(f.h >> 32)	%08X	bof3::Log("framehash drawn at Frame_Counter %u: %u commands, %u vertices, %u textures, %08X%08X (%u clears)", tag,
+site	src/render/render_shim.cpp	450	fmt_place	word	live	static_cast<U>(f.h)	%08X	bof3::Log("framehash drawn at Frame_Counter %u: %u commands, %u vertices, %u textures, %08X%08X (%u clears)", tag,
+site	src/render/render_shim.cpp	560	low32	unread	live	object	Low32	const std::uint32_t word = Low32(object);
+site	src/render/render_shim.cpp	566	long	l	live	long	-	long __stdcall Surface_QueryInterface(void* self, const void* iid, void** out) {
+site	src/render/render_shim.cpp	575	ptr_overlay	unread	live	self	Surface	auto* s = static_cast<Surface*>(self);
+site	src/render/render_shim.cpp	576	long	l	live	long	-	if (!out) return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	588	long	l	live	long	-	return static_cast<long>(kNoInterface);
+site	src/render/render_shim.cpp	591	long	ul	live	unsigned long	-	unsigned long __stdcall Surface_AddRef(void* self) { return ++static_cast<Surface*>(self)->refs; }
+site	src/render/render_shim.cpp	591	ptr_overlay	unread	live	self	Surface	unsigned long __stdcall Surface_AddRef(void* self) { return ++static_cast<Surface*>(self)->refs; }
+site	src/render/render_shim.cpp	593	long	ul	live	unsigned long	-	unsigned long __stdcall Surface_Release(void* self) {
+site	src/render/render_shim.cpp	594	ptr_overlay	unread	live	self	Surface	auto* s = static_cast<Surface*>(self);
+site	src/render/render_shim.cpp	616	long	l	live	long	-	long __stdcall Surface_Blt(void* self, const Coord* dst_rect, void* src_surface, const Coord* src_rect, U flags, void* fx) {
+site	src/render/render_shim.cpp	617	ptr_overlay	unread	live	self	Surface	auto* dst = static_cast<Surface*>(self);
+site	src/render/render_shim.cpp	624	long	l	live	long	-	if (!fx) return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	637	long	l	live	long	-	if (!RectInside(r, dst)) return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	642	ptr_overlay	unread	live	src_surface	Surface	auto* src = static_cast<Surface*>(src_surface);
+site	src/render/render_shim.cpp	643	long	l	live	long	-	if (!src || !IsSurface(src)) return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	652	long	l	live	long	-	if (!RectInside(dr, dst) || !RectInside(sr, src)) return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	658	long	l	live	long	-	long __stdcall Surface_BltFast(void* self, U x, U y, void* src_surface, const Coord* src_rect, U trans) {
+site	src/render/render_shim.cpp	659	ptr_overlay	unread	live	self	Surface	auto* dst = static_cast<Surface*>(self);
+site	src/render/render_shim.cpp	660	ptr_overlay	unread	live	src_surface	Surface	auto* src = static_cast<Surface*>(src_surface);
+site	src/render/render_shim.cpp	661	long	l	live	long	-	if (!src || !IsSurface(src)) return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	669	long	l	live	long	-	if (!RectInside(dr, dst) || !RectInside(sr, src)) return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	675	long	l	live	long	-	long __stdcall Surface_Flip(void* self, void*, U) {
+site	src/render/render_shim.cpp	676	ptr_overlay	unread	live	self	Surface	auto* s = static_cast<Surface*>(self);
+site	src/render/render_shim.cpp	677	long	l	live	long	-	if (!s->is_primary) return static_cast<long>(kUnsupported);
+site	src/render/render_shim.cpp	688	low32	unread	live	s->pixels	Low32	if (with_surface) PutLong(d + kDescSurface, Low32(s->pixels));
+site	src/render/render_shim.cpp	701	long	l	live	long	-	long __stdcall Surface_GetSurfaceDesc(void* self, void* desc) {
+site	src/render/render_shim.cpp	702	long	l	live	long	-	if (!desc || Long(desc) != kDescBytes) return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	703	ptr_overlay	unread	live	self	Surface	FillDesc(static_cast<Surface*>(self), Bytes(desc), false);
+site	src/render/render_shim.cpp	707	long	l	live	long	-	long __stdcall Surface_IsLost(void*) { return kDdOk; }
+site	src/render/render_shim.cpp	708	long	l	live	long	-	long __stdcall Surface_Restore(void*) { return kDdOk; }
+site	src/render/render_shim.cpp	710	long	l	live	long	-	long __stdcall Surface_Lock(void* self, const Coord* rect, void* desc, U, void*) {
+site	src/render/render_shim.cpp	711	ptr_overlay	unread	live	self	Surface	auto* s = static_cast<Surface*>(self);
+site	src/render/render_shim.cpp	712	long	l	live	long	-	if (!desc || Long(desc) != kDescBytes) return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	714	long	l	live	long	-	if (s->locked) return static_cast<long>(kSurfaceBusy);
+site	src/render/render_shim.cpp	722	long	l	live	long	-	long __stdcall Surface_Unlock(void* self, const void*) {
+site	src/render/render_shim.cpp	723	ptr_overlay	unread	live	self	Surface	auto* s = static_cast<Surface*>(self);
+site	src/render/render_shim.cpp	724	long	l	live	long	-	if (!s->locked) return static_cast<long>(kNotLocked);
+site	src/render/render_shim.cpp	729	long	l	live	long	-	long __stdcall Surface_SetColorKey(void* self, U flags, const U* key) {
+site	src/render/render_shim.cpp	730	ptr_overlay	unread	live	self	Surface	auto* s = static_cast<Surface*>(self);
+site	src/render/render_shim.cpp	731	long	l	live	long	-	if (flags != 8) return static_cast<long>(kUnsupported);
+site	src/render/render_shim.cpp	747	long	l	live	long	-	long __stdcall Texture_QueryInterface(void* self, const void* iid, void** out) {
+site	src/render/render_shim.cpp	750	long	ul	live	unsigned long	-	unsigned long __stdcall Texture_AddRef(void* self) { return Surface_AddRef(SurfaceOfTexture(self)); }
+site	src/render/render_shim.cpp	751	long	ul	live	unsigned long	-	unsigned long __stdcall Texture_Release(void* self) { return Surface_Release(SurfaceOfTexture(self)); }
+site	src/render/render_shim.cpp	752	long	l	live	long	-	long __stdcall Texture_GetHandle(void* self, void*, U* handle) {
+site	src/render/render_shim.cpp	753	long	l	live	long	-	if (!handle) return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	756	low32	unread	live	self	Low32	*handle = Low32(self);
+site	src/render/render_shim.cpp	759	long	l	live	long	-	long __stdcall Texture_PaletteChanged(void*, U, U) { return kDdOk; }
+site	src/render/render_shim.cpp	760	long	l	live	long	-	long __stdcall Texture_Load(void* self, void* from) {
+site	src/render/render_shim.cpp	762	long	l	live	long	-	if (!from || !IsTexture(from)) return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	775	long	l	live	long	-	long __stdcall Dd_QueryInterface(void*, const void*, void** out) {
+site	src/render/render_shim.cpp	777	long	l	live	long	-	return static_cast<long>(kNoInterface);
+site	src/render/render_shim.cpp	779	long	ul	live	unsigned long	-	unsigned long __stdcall Dd_AddRef(void*) { return 1; }
+site	src/render/render_shim.cpp	780	long	ul	live	unsigned long	-	unsigned long __stdcall Dd_Release(void*) { return 1; }
+site	src/render/render_shim.cpp	782	long	l	live	long	-	long __stdcall Dd_CreateSurface(void*, const void* desc, Surface** out, void*) {
+site	src/render/render_shim.cpp	783	long	l	live	long	-	if (!desc || !out || Long(desc) != kDescBytes) return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	786	long	l	live	long	-	if (!(flags & kSdWidth) || !(flags & kSdHeight)) return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	790	long	l	live	long	-	if (Long(pf + kPfSize) != 0x20) return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	802	long	l	live	long	-	if (!s) return static_cast<long>(0x8007000Eu);
+site	src/render/render_shim.cpp	814	long	l	live	long	-	long __stdcall Device_QueryInterface(void*, const void*, void** out) {
+site	src/render/render_shim.cpp	816	long	l	live	long	-	return static_cast<long>(kNoInterface);
+site	src/render/render_shim.cpp	818	long	ul	live	unsigned long	-	unsigned long __stdcall Device_AddRef(void*) { return 1; }
+site	src/render/render_shim.cpp	819	long	ul	live	unsigned long	-	unsigned long __stdcall Device_Release(void*) { return 1; }
+site	src/render/render_shim.cpp	820	long	l	live	long	-	long __stdcall Device_BeginScene(void*) { return kDdOk; }
+site	src/render/render_shim.cpp	821	long	l	live	long	-	long __stdcall Device_EndScene(void*) { return kDdOk; }
+site	src/render/render_shim.cpp	832	long	l	live	long	-	long __stdcall Device_SetRenderState(void*, U state, U value) {
+site	src/render/render_shim.cpp	882	long	l	live	long	-	long __stdcall Device_DrawPrimitive(void*, U type, U fvf, const void* vertices, U count, U) {
+site	src/render/render_shim.cpp	884	long	l	live	long	-	if (!vertices || count == 0) return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	900	fmt_place	word	live	in[k].x	%08X	bof3::Log("drawlog: v%u x %g y %g z %g rhw %g diffuse %08X specular %08X uv %g %g", k, in[k].x, in[k].y, in[k].z, in[k].rhw, in[k].diffuse, in[k].specular, in[k
+site	src/render/render_shim.cpp	900	fmt_place	word	live	in[k].y	%08X	bof3::Log("drawlog: v%u x %g y %g z %g rhw %g diffuse %08X specular %08X uv %g %g", k, in[k].x, in[k].y, in[k].z, in[k].rhw, in[k].diffuse, in[k].specular, in[k
+site	src/render/render_shim.cpp	994	long	l	live	long	-	long __stdcall Device_SetTexture(void*, U stage, void* texture) {
+site	src/render/render_shim.cpp	1004	fmt_place	word	live	Low32(texture)	%08X	if (logged++ < 8) bof3::Log("render: SetTexture(0, 0x%08X) is not a texture - refused", Low32(texture));
+site	src/render/render_shim.cpp	1004	low32	unread	live	texture	Low32	if (logged++ < 8) bof3::Log(" ", Low32(texture));
+site	src/render/render_shim.cpp	1006	long	l	live	long	-	return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	1012	long	l	live	long	-	long __stdcall Device_SetTextureStageState(void*, U stage, U type, U value) {
+site	src/render/render_shim.cpp	1033	long	l	live	long	-	long __stdcall Viewport_QueryInterface(void*, const void*, void** out) {
+site	src/render/render_shim.cpp	1035	long	l	live	long	-	return static_cast<long>(kNoInterface);
+site	src/render/render_shim.cpp	1037	long	ul	live	unsigned long	-	unsigned long __stdcall Viewport_AddRef(void*) { return 1; }
+site	src/render/render_shim.cpp	1038	long	ul	live	unsigned long	-	unsigned long __stdcall Viewport_Release(void*) { return 1; }
+site	src/render/render_shim.cpp	1039	long	l	live	long	-	long __stdcall Viewport_SetBackground(void*, U handle) {
+site	src/render/render_shim.cpp	1043	long	l	live	long	-	long __stdcall Viewport_Clear(void*, U count, const Coord* rects, U flags) {
+site	src/render/render_shim.cpp	1056	long	l	live	long	-	long __stdcall Material_QueryInterface(void*, const void*, void** out) {
+site	src/render/render_shim.cpp	1058	long	l	live	long	-	return static_cast<long>(kNoInterface);
+site	src/render/render_shim.cpp	1060	long	ul	live	unsigned long	-	unsigned long __stdcall Material_AddRef(void*) { return 1; }
+site	src/render/render_shim.cpp	1061	long	ul	live	unsigned long	-	unsigned long __stdcall Material_Release(void*) { return 1; }
+site	src/render/render_shim.cpp	1062	long	l	live	long	-	long __stdcall Material_SetMaterial(void*, const void* material) {
+site	src/render/render_shim.cpp	1063	long	l	live	long	-	if (!material || Long(material) != 0x50) return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	1074	long	l	live	long	-	long __stdcall Material_GetHandle(void*, void*, U* handle) {
+site	src/render/render_shim.cpp	1075	long	l	live	long	-	if (!handle) return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	1177	ptr_overlay	unread	live	LowAlloc(sizeof(Surface))	Surface	s = static_cast<Surface*>(LowAlloc(sizeof(Surface)));
+site	src/render/satpixie.cpp	242	long	ul	live	unsigned long	-	if (FAILED(hr)) bof3::Fatal(" ", what, static_cast<unsigned long>(static_cast<std::uint32_t>(hr)));
 site	src/video/fmv_dump.cpp	38	long	l	live	long	-	const long size = std::ftell(in);
 site	symbols.toml	607	ptr_member	ours_crt	live	File_Slots	void * [16]	0x7de3e4
 site	symbols.toml	790	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
@@ -15164,10 +15161,12 @@ file	src/hook/crash.cpp	live	uintptr	-	15
 file	src/hook/crash.cpp	live	width_if	logic	5
 file	src/hook/crash.h	live	uintptr	-	2
 file	src/hook/crash_posix.cpp	live	fmt_place	pointer	1
-file	src/hook/crash_posix.cpp	live	long	l	1
-file	src/hook/crash_posix.cpp	live	long	ul	3
-file	src/hook/crash_posix.cpp	live	uintptr	-	12
-file	src/hook/crash_posix.cpp	live	width_if	logic	2
+file	src/hook/crash_posix.cpp	live	fmt_place	word	1
+file	src/hook/crash_posix.cpp	live	long	l	9
+file	src/hook/crash_posix.cpp	live	long	ul	6
+file	src/hook/crash_posix.cpp	live	sizeof_ptr	-	2
+file	src/hook/crash_posix.cpp	live	uintptr	-	23
+file	src/hook/crash_posix.cpp	live	width_if	logic	3
 file	src/hook/crash_report.h	live	long	l	1
 file	src/hook/crash_report.h	live	uintptr	-	11
 file	src/hook/crash_win32.cpp	live	long	l	5
@@ -15364,11 +15363,12 @@ file	src/render/gfx_snapshot.cpp	live	uintptr	-	2
 file	src/render/gfx_snapshot.cpp	live	widen	param	1
 file	src/render/gfx_snapshot.cpp	live	widen	word_read	1
 file	src/render/render_d3d11.cpp	live	asm	cw	2
+file	src/render/render_d3d11.cpp	live	fmt_place	pointer	4
 file	src/render/render_d3d11.cpp	live	long	ul	2
 file	src/render/render_d3d11.cpp	live	ptr_overlay	heap	1
 file	src/render/render_d3d11.cpp	live	ptr_overlay	unread	2
 file	src/render/render_shim.cpp	live	fmt_place	word	5
-file	src/render/render_shim.cpp	live	long	l	95
+file	src/render/render_shim.cpp	live	long	l	62
 file	src/render/render_shim.cpp	live	long	ul	13
 file	src/render/render_shim.cpp	live	low32	unread	4
 file	src/render/render_shim.cpp	live	ptr_overlay	object_ours	1
@@ -15387,8 +15387,8 @@ file	symbols.toml	live	ptr_member	ours_render	11
 file	symbols.toml	live	ptr_member	windows_function	14
 file	symbols.toml	live	ptr_member	windows_handle	3
 file	symbols.toml	live	ptr_member	windows_object	10
-#count sites	11357
-#count sites_live	7886
+#count sites	11354
+#count sites_live	7883
 #count sites_fuzz	3471
 #count fuzz_files	250
 #count narrow	357
@@ -15475,8 +15475,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count widen_word_read	373
 #count widen_word_read_live	364
 #count widen_word_read_live_files	295
-#count long	2371
-#count long_live	2370
+#count long	2349
+#count long_live	2348
 #count long_live_files	53
 #count long_fuzz	1
 #count long_fuzz_files	1
@@ -15489,11 +15489,11 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count long_ctype:unsigned long *	1
 #count long_ctype:unsigned long *_live	1
 #count long_ctype:unsigned long *_live_files	1
-#count long_l	365
-#count long_l_live	364
+#count long_l	340
+#count long_l_live	339
 #count long_l_live_files	41
-#count long_ul	217
-#count long_ul_live	217
+#count long_ul	220
+#count long_ul_live	220
 #count long_ul_live_files	28
 #count asm	328
 #count asm_live	207
@@ -15555,36 +15555,36 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count valloc_addr_-	6
 #count valloc_addr_-_live	6
 #count valloc_addr_-_live_files	3
-#count sizeof_ptr	15
-#count sizeof_ptr_live	15
-#count sizeof_ptr_live_files	8
+#count sizeof_ptr	17
+#count sizeof_ptr_live	17
+#count sizeof_ptr_live_files	9
 #count sizeof_ptr_fuzz	0
 #count sizeof_ptr_fuzz_files	0
-#count sizeof_ptr_-	15
-#count sizeof_ptr_-_live	15
-#count sizeof_ptr_-_live_files	8
-#count uintptr	1964
-#count uintptr_live	1298
+#count sizeof_ptr_-	17
+#count sizeof_ptr_-_live	17
+#count sizeof_ptr_-_live_files	9
+#count uintptr	1975
+#count uintptr_live	1309
 #count uintptr_live_files	524
 #count uintptr_fuzz	666
 #count uintptr_fuzz_files	249
-#count uintptr_-	1964
-#count uintptr_-_live	1298
+#count uintptr_-	1975
+#count uintptr_-_live	1309
 #count uintptr_-_live_files	524
-#count fmt_place	540
-#count fmt_place_live	470
-#count fmt_place_live_files	72
+#count fmt_place	545
+#count fmt_place_live	475
+#count fmt_place_live_files	73
 #count fmt_place_fuzz	70
 #count fmt_place_fuzz_files	35
 #count fmt_place_narrowed	24
 #count fmt_place_narrowed_live	17
 #count fmt_place_narrowed_live_files	8
-#count fmt_place_pointer	120
-#count fmt_place_pointer_live	105
-#count fmt_place_pointer_live_files	33
-#count fmt_place_word	396
-#count fmt_place_word_live	348
-#count fmt_place_word_live_files	58
+#count fmt_place_pointer	124
+#count fmt_place_pointer_live	109
+#count fmt_place_pointer_live_files	34
+#count fmt_place_word	397
+#count fmt_place_word_live	349
+#count fmt_place_word_live_files	59
 #count import_slot	14
 #count import_slot_live	14
 #count import_slot_live_files	1
@@ -15694,20 +15694,20 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count ptr_overlay_unread	27
 #count ptr_overlay_unread_live	27
 #count ptr_overlay_unread_live_files	9
-#count width_if	50
-#count width_if_live	50
+#count width_if	51
+#count width_if_live	51
 #count width_if_live_files	26
 #count width_if_fuzz	0
 #count width_if_fuzz_files	0
 #count width_if_asm_pair	18
 #count width_if_asm_pair_live	18
 #count width_if_asm_pair_live_files	12
-#count width_if_logic	32
-#count width_if_logic_live	32
+#count width_if_logic	33
+#count width_if_logic_live	33
 #count width_if_logic_live_files	15
 #count asm_live_x87_only_files	42
 #count widen_live_fnptr	472
-#count long_src	582
+#count long_src	560
 #count long_src_game	46
 #count long_src_game_ul	1
 #count long_ctype	1789

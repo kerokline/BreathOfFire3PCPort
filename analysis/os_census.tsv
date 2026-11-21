@@ -1372,9 +1372,10 @@ site	src/os/win32/named_event.cpp	27	type	type_only	type	HANDLE
 site	src/os/win32/named_event.cpp	31	call	file	handle	CloseHandle
 site	src/os/win32/named_event.cpp	32	call	process	error	SetLastError
 site	src/os/win32/named_event.cpp	32	const	process	const	ERROR_NOT_ENOUGH_MEMORY
-site	src/os/win32/named_event.cpp	37	call	thread	event	ResetEvent
-site	src/os/win32/named_event.cpp	39	call	thread	event	WaitForSingleObject
-site	src/os/win32/named_event.cpp	39	const	thread	const	WAIT_OBJECT_0
+site	src/os/win32/named_event.cpp	39	call	file	handle	CloseHandle
+site	src/os/win32/named_event.cpp	43	call	thread	event	ResetEvent
+site	src/os/win32/named_event.cpp	45	call	thread	event	WaitForSingleObject
+site	src/os/win32/named_event.cpp	45	const	thread	const	WAIT_OBJECT_0
 site	src/os/win32/out_file.cpp	6	include	umbrella	api	windows.h
 site	src/os/win32/out_file.cpp	11	type	type_only	type	HANDLE
 site	src/os/win32/out_file.cpp	11	type	type_only	type	HANDLE
@@ -1675,171 +1676,193 @@ site	src/render/render_d3d11.cpp	110	type	graphics	type	ID3D11Texture2D
 site	src/render/render_d3d11.cpp	111	type	graphics	type	ID3D11ShaderResourceView
 site	src/render/render_d3d11.cpp	112	type	graphics	type	ID3D11RenderTargetView
 site	src/render/render_d3d11.cpp	144	type	type_only	type	HRESULT
-site	src/render/render_d3d11.cpp	145	const	process	const	FAILED
-site	src/render/render_d3d11.cpp	347	type	graphics	type	ID3DBlob
-site	src/render/render_d3d11.cpp	355	type	graphics	type	ID3DBlob
-site	src/render/render_d3d11.cpp	356	type	graphics	type	ID3DBlob
-site	src/render/render_d3d11.cpp	357	const	graphics	const	D3D_SHADER_MACRO
-site	src/render/render_d3d11.cpp	358	call	graphics	d3d	D3DCompile
-site	src/render/render_d3d11.cpp	358	type	type_only	type	HRESULT
-site	src/render/render_d3d11.cpp	359	const	graphics	const	D3DCOMPILE_OPTIMIZATION_LEVEL3
-site	src/render/render_d3d11.cpp	360	const	process	const	FAILED
-site	src/render/render_d3d11.cpp	374	type	graphics	type	ID3DBlob
-site	src/render/render_d3d11.cpp	381	type	graphics	type	ID3DBlob
-site	src/render/render_d3d11.cpp	399	type	graphics	type	ID3D11Texture2D
-site	src/render/render_d3d11.cpp	400	type	graphics	type	ID3D11Texture2D
-site	src/render/render_d3d11.cpp	409	const	graphics	const	D3D11_TEXTURE2D_DESC
-site	src/render/render_d3d11.cpp	414	const	graphics	const	DXGI_FORMAT_B8G8R8A8_UNORM
-site	src/render/render_d3d11.cpp	416	const	graphics	const	D3D11_USAGE_DEFAULT
-site	src/render/render_d3d11.cpp	417	const	graphics	const	D3D11_BIND_RENDER_TARGET
-site	src/render/render_d3d11.cpp	417	const	graphics	const	D3D11_BIND_SHADER_RESOURCE
-site	src/render/render_d3d11.cpp	427	type	graphics	type	ID3D11SamplerState
-site	src/render/render_d3d11.cpp	428	const	graphics	const	D3D11_SAMPLER_DESC
-site	src/render/render_d3d11.cpp	429	const	graphics	const	D3D11_FILTER_MIN_MAG_MIP_LINEAR
-site	src/render/render_d3d11.cpp	429	const	graphics	const	D3D11_FILTER_MIN_MAG_MIP_POINT
-site	src/render/render_d3d11.cpp	430	const	graphics	const	D3D11_TEXTURE_ADDRESS_CLAMP
-site	src/render/render_d3d11.cpp	430	const	graphics	const	D3D11_TEXTURE_ADDRESS_WRAP
-site	src/render/render_d3d11.cpp	432	const	graphics	const	D3D11_COMPARISON_NEVER
-site	src/render/render_d3d11.cpp	433	const	graphics	const	D3D11_FLOAT32_MAX
-site	src/render/render_d3d11.cpp	434	type	graphics	type	ID3D11SamplerState
-site	src/render/render_d3d11.cpp	439	type	graphics	type	ID3D11BlendState
-site	src/render/render_d3d11.cpp	445	const	graphics	const	D3D11_BLEND_DESC
-site	src/render/render_d3d11.cpp	448	const	graphics	const	D3D11_BLEND
-site	src/render/render_d3d11.cpp	449	const	graphics	const	D3D11_BLEND
-site	src/render/render_d3d11.cpp	450	const	graphics	const	D3D11_BLEND_OP_ADD
-site	src/render/render_d3d11.cpp	451	const	graphics	const	D3D11_BLEND_ONE
-site	src/render/render_d3d11.cpp	452	const	graphics	const	D3D11_BLEND_ZERO
-site	src/render/render_d3d11.cpp	453	const	graphics	const	D3D11_BLEND_OP_ADD
-site	src/render/render_d3d11.cpp	454	const	graphics	const	D3D11_COLOR_WRITE_ENABLE_ALL
-site	src/render/render_d3d11.cpp	455	type	graphics	type	ID3D11BlendState
-site	src/render/render_d3d11.cpp	461	type	graphics	type	ID3D11Buffer
-site	src/render/render_d3d11.cpp	462	const	graphics	const	D3D11_BUFFER_DESC
-site	src/render/render_d3d11.cpp	464	const	graphics	const	D3D11_USAGE_DYNAMIC
-site	src/render/render_d3d11.cpp	465	const	graphics	const	D3D11_BIND_CONSTANT_BUFFER
-site	src/render/render_d3d11.cpp	466	const	graphics	const	D3D11_CPU_ACCESS_WRITE
-site	src/render/render_d3d11.cpp	467	type	graphics	type	ID3D11Buffer
-site	src/render/render_d3d11.cpp	472	type	graphics	type	ID3D11Buffer
-site	src/render/render_d3d11.cpp	473	const	graphics	const	D3D11_MAPPED_SUBRESOURCE
-site	src/render/render_d3d11.cpp	474	const	graphics	const	D3D11_MAP_WRITE_DISCARD
-site	src/render/render_d3d11.cpp	568	const	graphics	const	D3D11_TEXTURE2D_DESC
-site	src/render/render_d3d11.cpp	573	const	graphics	const	DXGI_FORMAT_B8G8R8A8_UNORM
-site	src/render/render_d3d11.cpp	575	const	graphics	const	D3D11_USAGE_DEFAULT
-site	src/render/render_d3d11.cpp	576	const	graphics	const	D3D11_BIND_SHADER_RESOURCE
-site	src/render/render_d3d11.cpp	592	const	graphics	const	D3D11_TEXTURE2D_DESC
-site	src/render/render_d3d11.cpp	597	const	graphics	const	DXGI_FORMAT_R8_UNORM
-site	src/render/render_d3d11.cpp	599	const	graphics	const	D3D11_USAGE_DEFAULT
-site	src/render/render_d3d11.cpp	600	const	graphics	const	D3D11_BIND_SHADER_RESOURCE
-site	src/render/render_d3d11.cpp	657	const	graphics	const	D3D11_TEXTURE2D_DESC
-site	src/render/render_d3d11.cpp	662	const	graphics	const	DXGI_FORMAT_B8G8R8A8_UNORM
-site	src/render/render_d3d11.cpp	664	const	graphics	const	D3D11_USAGE_DEFAULT
-site	src/render/render_d3d11.cpp	665	const	graphics	const	D3D11_BIND_RENDER_TARGET
-site	src/render/render_d3d11.cpp	665	const	graphics	const	D3D11_BIND_SHADER_RESOURCE
-site	src/render/render_d3d11.cpp	674	type	graphics	type	ID3D11ShaderResourceView
-site	src/render/render_d3d11.cpp	686	const	graphics	const	D3D11_BOX
-site	src/render/render_d3d11.cpp	686	type	type_only	type	UINT
-site	src/render/render_d3d11.cpp	686	type	type_only	type	UINT
-site	src/render/render_d3d11.cpp	686	type	type_only	type	UINT
-site	src/render/render_d3d11.cpp	686	type	type_only	type	UINT
-site	src/render/render_d3d11.cpp	687	type	type_only	type	UINT
-site	src/render/render_d3d11.cpp	687	type	type_only	type	UINT
-site	src/render/render_d3d11.cpp	724	type	graphics	type	ID3D11ShaderResourceView
-site	src/render/render_d3d11.cpp	725	type	graphics	type	ID3D11ShaderResourceView
-site	src/render/render_d3d11.cpp	756	type	graphics	type	ID3D11ShaderResourceView
-site	src/render/render_d3d11.cpp	757	type	graphics	type	ID3D11ShaderResourceView
-site	src/render/render_d3d11.cpp	762	type	graphics	type	ID3D11SamplerState
+site	src/render/render_d3d11.cpp	147	const	process	const	FAILED
+site	src/render/render_d3d11.cpp	349	type	graphics	type	ID3DBlob
+site	src/render/render_d3d11.cpp	357	type	graphics	type	ID3DBlob
+site	src/render/render_d3d11.cpp	358	type	graphics	type	ID3DBlob
+site	src/render/render_d3d11.cpp	359	const	graphics	const	D3D_SHADER_MACRO
+site	src/render/render_d3d11.cpp	360	call	graphics	d3d	D3DCompile
+site	src/render/render_d3d11.cpp	360	type	type_only	type	HRESULT
+site	src/render/render_d3d11.cpp	361	const	graphics	const	D3DCOMPILE_OPTIMIZATION_LEVEL3
+site	src/render/render_d3d11.cpp	362	const	process	const	FAILED
+site	src/render/render_d3d11.cpp	376	type	graphics	type	ID3DBlob
+site	src/render/render_d3d11.cpp	383	type	graphics	type	ID3DBlob
+site	src/render/render_d3d11.cpp	401	type	graphics	type	ID3D11Texture2D
+site	src/render/render_d3d11.cpp	402	type	graphics	type	ID3D11Texture2D
+site	src/render/render_d3d11.cpp	411	const	graphics	const	D3D11_TEXTURE2D_DESC
+site	src/render/render_d3d11.cpp	416	const	graphics	const	DXGI_FORMAT_B8G8R8A8_UNORM
+site	src/render/render_d3d11.cpp	418	const	graphics	const	D3D11_USAGE_DEFAULT
+site	src/render/render_d3d11.cpp	419	const	graphics	const	D3D11_BIND_RENDER_TARGET
+site	src/render/render_d3d11.cpp	419	const	graphics	const	D3D11_BIND_SHADER_RESOURCE
+site	src/render/render_d3d11.cpp	429	type	graphics	type	ID3D11SamplerState
+site	src/render/render_d3d11.cpp	430	const	graphics	const	D3D11_SAMPLER_DESC
+site	src/render/render_d3d11.cpp	431	const	graphics	const	D3D11_FILTER_MIN_MAG_MIP_LINEAR
+site	src/render/render_d3d11.cpp	431	const	graphics	const	D3D11_FILTER_MIN_MAG_MIP_POINT
+site	src/render/render_d3d11.cpp	432	const	graphics	const	D3D11_TEXTURE_ADDRESS_CLAMP
+site	src/render/render_d3d11.cpp	432	const	graphics	const	D3D11_TEXTURE_ADDRESS_WRAP
+site	src/render/render_d3d11.cpp	434	const	graphics	const	D3D11_COMPARISON_NEVER
+site	src/render/render_d3d11.cpp	435	const	graphics	const	D3D11_FLOAT32_MAX
+site	src/render/render_d3d11.cpp	436	type	graphics	type	ID3D11SamplerState
+site	src/render/render_d3d11.cpp	441	type	graphics	type	ID3D11BlendState
+site	src/render/render_d3d11.cpp	447	const	graphics	const	D3D11_BLEND_DESC
+site	src/render/render_d3d11.cpp	450	const	graphics	const	D3D11_BLEND
+site	src/render/render_d3d11.cpp	451	const	graphics	const	D3D11_BLEND
+site	src/render/render_d3d11.cpp	452	const	graphics	const	D3D11_BLEND_OP_ADD
+site	src/render/render_d3d11.cpp	453	const	graphics	const	D3D11_BLEND_ONE
+site	src/render/render_d3d11.cpp	454	const	graphics	const	D3D11_BLEND_ZERO
+site	src/render/render_d3d11.cpp	455	const	graphics	const	D3D11_BLEND_OP_ADD
+site	src/render/render_d3d11.cpp	456	const	graphics	const	D3D11_COLOR_WRITE_ENABLE_ALL
+site	src/render/render_d3d11.cpp	457	type	graphics	type	ID3D11BlendState
+site	src/render/render_d3d11.cpp	463	type	graphics	type	ID3D11Buffer
+site	src/render/render_d3d11.cpp	464	const	graphics	const	D3D11_BUFFER_DESC
+site	src/render/render_d3d11.cpp	466	const	graphics	const	D3D11_USAGE_DYNAMIC
+site	src/render/render_d3d11.cpp	467	const	graphics	const	D3D11_BIND_CONSTANT_BUFFER
+site	src/render/render_d3d11.cpp	468	const	graphics	const	D3D11_CPU_ACCESS_WRITE
+site	src/render/render_d3d11.cpp	469	type	graphics	type	ID3D11Buffer
+site	src/render/render_d3d11.cpp	474	type	graphics	type	ID3D11Buffer
+site	src/render/render_d3d11.cpp	475	const	graphics	const	D3D11_MAPPED_SUBRESOURCE
+site	src/render/render_d3d11.cpp	476	const	graphics	const	D3D11_MAP_WRITE_DISCARD
+site	src/render/render_d3d11.cpp	570	const	graphics	const	D3D11_TEXTURE2D_DESC
+site	src/render/render_d3d11.cpp	575	const	graphics	const	DXGI_FORMAT_B8G8R8A8_UNORM
+site	src/render/render_d3d11.cpp	577	const	graphics	const	D3D11_USAGE_DEFAULT
+site	src/render/render_d3d11.cpp	578	const	graphics	const	D3D11_BIND_SHADER_RESOURCE
+site	src/render/render_d3d11.cpp	594	const	graphics	const	D3D11_TEXTURE2D_DESC
+site	src/render/render_d3d11.cpp	599	const	graphics	const	DXGI_FORMAT_R8_UNORM
+site	src/render/render_d3d11.cpp	601	const	graphics	const	D3D11_USAGE_DEFAULT
+site	src/render/render_d3d11.cpp	602	const	graphics	const	D3D11_BIND_SHADER_RESOURCE
+site	src/render/render_d3d11.cpp	659	const	graphics	const	D3D11_TEXTURE2D_DESC
+site	src/render/render_d3d11.cpp	664	const	graphics	const	DXGI_FORMAT_B8G8R8A8_UNORM
+site	src/render/render_d3d11.cpp	666	const	graphics	const	D3D11_USAGE_DEFAULT
+site	src/render/render_d3d11.cpp	667	const	graphics	const	D3D11_BIND_RENDER_TARGET
+site	src/render/render_d3d11.cpp	667	const	graphics	const	D3D11_BIND_SHADER_RESOURCE
+site	src/render/render_d3d11.cpp	676	type	graphics	type	ID3D11ShaderResourceView
+site	src/render/render_d3d11.cpp	688	const	graphics	const	D3D11_BOX
+site	src/render/render_d3d11.cpp	688	type	type_only	type	UINT
+site	src/render/render_d3d11.cpp	688	type	type_only	type	UINT
+site	src/render/render_d3d11.cpp	688	type	type_only	type	UINT
+site	src/render/render_d3d11.cpp	688	type	type_only	type	UINT
+site	src/render/render_d3d11.cpp	689	type	type_only	type	UINT
+site	src/render/render_d3d11.cpp	689	type	type_only	type	UINT
+site	src/render/render_d3d11.cpp	726	type	graphics	type	ID3D11ShaderResourceView
+site	src/render/render_d3d11.cpp	727	type	graphics	type	ID3D11ShaderResourceView
+site	src/render/render_d3d11.cpp	758	type	graphics	type	ID3D11ShaderResourceView
+site	src/render/render_d3d11.cpp	759	type	graphics	type	ID3D11ShaderResourceView
 site	src/render/render_d3d11.cpp	764	type	graphics	type	ID3D11SamplerState
-site	src/render/render_d3d11.cpp	768	const	graphics	const	D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
-site	src/render/render_d3d11.cpp	769	const	graphics	const	D3D11_PRIMITIVE_TOPOLOGY_LINELIST
-site	src/render/render_d3d11.cpp	770	const	graphics	const	D3D11_PRIMITIVE_TOPOLOGY_POINTLIST
-site	src/render/render_d3d11.cpp	778	const	graphics	const	D3D11_MAPPED_SUBRESOURCE
-site	src/render/render_d3d11.cpp	779	const	graphics	const	D3D11_MAP_WRITE_DISCARD
-site	src/render/render_d3d11.cpp	783	type	type_only	type	UINT
-site	src/render/render_d3d11.cpp	791	const	graphics	const	D3D11_VIEWPORT
-site	src/render/render_d3d11.cpp	830	type	graphics	type	ID3D11ShaderResourceView
-site	src/render/render_d3d11.cpp	846	const	graphics	const	DXGI_FORMAT_UNKNOWN
-site	src/render/render_d3d11.cpp	872	const	graphics	const	D3D11_VIEWPORT
-site	src/render/render_d3d11.cpp	882	type	type_only	type	HRESULT
-site	src/render/render_d3d11.cpp	883	const	graphics	const	DXGI_STATUS_OCCLUDED
-site	src/render/render_d3d11.cpp	883	const	process	const	FAILED
-site	src/render/render_d3d11.cpp	887	const	graphics	const	D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP
-site	src/render/render_d3d11.cpp	891	type	graphics	type	ID3D11SamplerState
-site	src/render/render_d3d11.cpp	894	type	graphics	type	ID3D11ShaderResourceView
-site	src/render/render_d3d11.cpp	896	type	type_only	type	HRESULT
-site	src/render/render_d3d11.cpp	897	const	graphics	const	DXGI_STATUS_OCCLUDED
-site	src/render/render_d3d11.cpp	897	const	process	const	FAILED
-site	src/render/render_d3d11.cpp	906	const	graphics	const	DXGI_SWAP_CHAIN_DESC
-site	src/render/render_d3d11.cpp	914	const	graphics	const	DXGI_FORMAT_B8G8R8A8_UNORM
-site	src/render/render_d3d11.cpp	915	const	graphics	const	DXGI_USAGE_RENDER_TARGET_OUTPUT
-site	src/render/render_d3d11.cpp	916	type	type_only	type	HWND
-site	src/render/render_d3d11.cpp	919	const	graphics	const	DXGI_SWAP_EFFECT_DISCARD
-site	src/render/render_d3d11.cpp	919	const	graphics	const	DXGI_SWAP_EFFECT_FLIP_DISCARD
-site	src/render/render_d3d11.cpp	919	const	graphics	const	DXGI_SWAP_EFFECT_SEQUENTIAL
-site	src/render/render_d3d11.cpp	921	const	graphics	const	D3D_FEATURE_LEVEL
-site	src/render/render_d3d11.cpp	921	const	graphics	const	D3D_FEATURE_LEVEL_10_0
-site	src/render/render_d3d11.cpp	921	const	graphics	const	D3D_FEATURE_LEVEL_10_1
-site	src/render/render_d3d11.cpp	921	const	graphics	const	D3D_FEATURE_LEVEL_11_0
-site	src/render/render_d3d11.cpp	922	const	graphics	const	D3D_FEATURE_LEVEL
-site	src/render/render_d3d11.cpp	923	const	graphics	const	D3D11_CREATE_DEVICE_BGRA_SUPPORT
-site	src/render/render_d3d11.cpp	923	type	type_only	type	UINT
-site	src/render/render_d3d11.cpp	924	const	graphics	const	D3D11_CREATE_DEVICE_DEBUG
-site	src/render/render_d3d11.cpp	926	call	graphics	d3d	D3D11CreateDeviceAndSwapChain
-site	src/render/render_d3d11.cpp	926	const	graphics	const	D3D_DRIVER_TYPE_HARDWARE
-site	src/render/render_d3d11.cpp	926	type	type_only	type	HRESULT
-site	src/render/render_d3d11.cpp	927	const	graphics	const	D3D11_SDK_VERSION
-site	src/render/render_d3d11.cpp	928	const	graphics	const	D3D11_CREATE_DEVICE_DEBUG
-site	src/render/render_d3d11.cpp	928	const	process	const	FAILED
-site	src/render/render_d3d11.cpp	930	const	graphics	const	D3D11_CREATE_DEVICE_DEBUG
-site	src/render/render_d3d11.cpp	931	call	graphics	d3d	D3D11CreateDeviceAndSwapChain
-site	src/render/render_d3d11.cpp	931	const	graphics	const	D3D_DRIVER_TYPE_HARDWARE
-site	src/render/render_d3d11.cpp	932	const	graphics	const	D3D11_SDK_VERSION
-site	src/render/render_d3d11.cpp	935	type	graphics	type	IDXGIDevice
-site	src/render/render_d3d11.cpp	936	const	process	const	SUCCEEDED
-site	src/render/render_d3d11.cpp	936	type	graphics	type	IDXGIDevice
-site	src/render/render_d3d11.cpp	937	type	graphics	type	IDXGIAdapter
-site	src/render/render_d3d11.cpp	938	const	process	const	SUCCEEDED
-site	src/render/render_d3d11.cpp	939	type	graphics	type	IDXGIFactory
-site	src/render/render_d3d11.cpp	940	const	process	const	SUCCEEDED
-site	src/render/render_d3d11.cpp	940	type	graphics	type	IDXGIFactory
-site	src/render/render_d3d11.cpp	942	type	type_only	type	HWND
-site	src/render/render_d3d11.cpp	943	const	graphics	const	DXGI_MWA_NO_ALT_ENTER
-site	src/render/render_d3d11.cpp	943	const	graphics	const	DXGI_MWA_NO_WINDOW_CHANGES
-site	src/render/render_d3d11.cpp	974	const	graphics	const	D3D11_BLEND_DESC
-site	src/render/render_d3d11.cpp	976	const	graphics	const	D3D11_BLEND_SRC1_ALPHA
-site	src/render/render_d3d11.cpp	977	const	graphics	const	D3D11_BLEND_SRC1_COLOR
-site	src/render/render_d3d11.cpp	978	const	graphics	const	D3D11_BLEND_OP_ADD
-site	src/render/render_d3d11.cpp	979	const	graphics	const	D3D11_BLEND_ONE
-site	src/render/render_d3d11.cpp	980	const	graphics	const	D3D11_BLEND_ZERO
-site	src/render/render_d3d11.cpp	981	const	graphics	const	D3D11_BLEND_OP_ADD
-site	src/render/render_d3d11.cpp	982	const	graphics	const	D3D11_COLOR_WRITE_ENABLE_ALL
-site	src/render/render_d3d11.cpp	985	const	graphics	const	D3D11_INPUT_ELEMENT_DESC
-site	src/render/render_d3d11.cpp	986	const	graphics	const	D3D11_INPUT_PER_VERTEX_DATA
-site	src/render/render_d3d11.cpp	986	const	graphics	const	DXGI_FORMAT_R32G32B32A32_FLOAT
-site	src/render/render_d3d11.cpp	987	const	graphics	const	D3D11_INPUT_PER_VERTEX_DATA
-site	src/render/render_d3d11.cpp	987	const	graphics	const	DXGI_FORMAT_B8G8R8A8_UNORM
-site	src/render/render_d3d11.cpp	988	const	graphics	const	D3D11_INPUT_PER_VERTEX_DATA
-site	src/render/render_d3d11.cpp	988	const	graphics	const	DXGI_FORMAT_B8G8R8A8_UNORM
-site	src/render/render_d3d11.cpp	989	const	graphics	const	D3D11_INPUT_PER_VERTEX_DATA
-site	src/render/render_d3d11.cpp	989	const	graphics	const	DXGI_FORMAT_R32G32_FLOAT
-site	src/render/render_d3d11.cpp	1003	const	graphics	const	D3D11_BUFFER_DESC
-site	src/render/render_d3d11.cpp	1005	const	graphics	const	D3D11_USAGE_DYNAMIC
-site	src/render/render_d3d11.cpp	1006	const	graphics	const	D3D11_BIND_VERTEX_BUFFER
-site	src/render/render_d3d11.cpp	1007	const	graphics	const	D3D11_CPU_ACCESS_WRITE
-site	src/render/render_d3d11.cpp	1015	const	graphics	const	D3D11_RASTERIZER_DESC
-site	src/render/render_d3d11.cpp	1016	const	graphics	const	D3D11_FILL_SOLID
-site	src/render/render_d3d11.cpp	1017	const	graphics	const	D3D11_CULL_NONE
-site	src/render/render_d3d11.cpp	1020	const	graphics	const	D3D11_BLEND_DESC
-site	src/render/render_d3d11.cpp	1021	const	graphics	const	D3D11_COLOR_WRITE_ENABLE_ALL
-site	src/render/render_d3d11.cpp	1148	const	graphics	const	D3D11_TEXTURE2D_DESC
-site	src/render/render_d3d11.cpp	1150	const	graphics	const	D3D11_USAGE_STAGING
-site	src/render/render_d3d11.cpp	1152	const	graphics	const	D3D11_CPU_ACCESS_READ
-site	src/render/render_d3d11.cpp	1154	type	graphics	type	ID3D11Texture2D
-site	src/render/render_d3d11.cpp	1155	const	process	const	FAILED
-site	src/render/render_d3d11.cpp	1160	const	graphics	const	D3D11_MAPPED_SUBRESOURCE
-site	src/render/render_d3d11.cpp	1161	const	graphics	const	D3D11_MAP_READ
-site	src/render/render_d3d11.cpp	1161	const	process	const	FAILED
-site	src/render/render_d3d11.cpp	1246	type	type_only	type	RECT
-site	src/render/render_d3d11.cpp	1247	call	window	geometry	GetClientRect
-site	src/render/render_d3d11.cpp	1247	type	type_only	type	HWND
+site	src/render/render_d3d11.cpp	766	type	graphics	type	ID3D11SamplerState
+site	src/render/render_d3d11.cpp	770	const	graphics	const	D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
+site	src/render/render_d3d11.cpp	771	const	graphics	const	D3D11_PRIMITIVE_TOPOLOGY_LINELIST
+site	src/render/render_d3d11.cpp	772	const	graphics	const	D3D11_PRIMITIVE_TOPOLOGY_POINTLIST
+site	src/render/render_d3d11.cpp	780	const	graphics	const	D3D11_MAPPED_SUBRESOURCE
+site	src/render/render_d3d11.cpp	781	const	graphics	const	D3D11_MAP_WRITE_DISCARD
+site	src/render/render_d3d11.cpp	785	type	type_only	type	UINT
+site	src/render/render_d3d11.cpp	793	const	graphics	const	D3D11_VIEWPORT
+site	src/render/render_d3d11.cpp	832	type	graphics	type	ID3D11ShaderResourceView
+site	src/render/render_d3d11.cpp	849	const	graphics	const	DXGI_FORMAT_UNKNOWN
+site	src/render/render_d3d11.cpp	881	const	graphics	const	D3D11_VIEWPORT
+site	src/render/render_d3d11.cpp	891	type	type_only	type	HRESULT
+site	src/render/render_d3d11.cpp	892	const	graphics	const	DXGI_STATUS_OCCLUDED
+site	src/render/render_d3d11.cpp	892	const	process	const	FAILED
+site	src/render/render_d3d11.cpp	896	const	graphics	const	D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP
+site	src/render/render_d3d11.cpp	900	type	graphics	type	ID3D11SamplerState
+site	src/render/render_d3d11.cpp	903	type	graphics	type	ID3D11ShaderResourceView
+site	src/render/render_d3d11.cpp	905	type	type_only	type	HRESULT
+site	src/render/render_d3d11.cpp	906	const	graphics	const	DXGI_STATUS_OCCLUDED
+site	src/render/render_d3d11.cpp	906	const	process	const	FAILED
+site	src/render/render_d3d11.cpp	912	const	graphics	const	D3D_FEATURE_LEVEL
+site	src/render/render_d3d11.cpp	945	const	graphics	const	DXGI_SWAP_CHAIN_DESC
+site	src/render/render_d3d11.cpp	953	const	graphics	const	DXGI_FORMAT_B8G8R8A8_UNORM
+site	src/render/render_d3d11.cpp	954	const	graphics	const	DXGI_USAGE_RENDER_TARGET_OUTPUT
+site	src/render/render_d3d11.cpp	955	type	type_only	type	HWND
+site	src/render/render_d3d11.cpp	958	const	graphics	const	DXGI_SWAP_EFFECT_DISCARD
+site	src/render/render_d3d11.cpp	958	const	graphics	const	DXGI_SWAP_EFFECT_FLIP_DISCARD
+site	src/render/render_d3d11.cpp	958	const	graphics	const	DXGI_SWAP_EFFECT_SEQUENTIAL
+site	src/render/render_d3d11.cpp	960	const	graphics	const	D3D_FEATURE_LEVEL
+site	src/render/render_d3d11.cpp	960	const	graphics	const	D3D_FEATURE_LEVEL_10_0
+site	src/render/render_d3d11.cpp	960	const	graphics	const	D3D_FEATURE_LEVEL_10_1
+site	src/render/render_d3d11.cpp	960	const	graphics	const	D3D_FEATURE_LEVEL_11_0
+site	src/render/render_d3d11.cpp	961	const	graphics	const	D3D_FEATURE_LEVEL
+site	src/render/render_d3d11.cpp	962	const	graphics	const	D3D11_CREATE_DEVICE_BGRA_SUPPORT
+site	src/render/render_d3d11.cpp	962	type	type_only	type	UINT
+site	src/render/render_d3d11.cpp	963	const	graphics	const	D3D11_CREATE_DEVICE_DEBUG
+site	src/render/render_d3d11.cpp	965	call	graphics	d3d	D3D11CreateDeviceAndSwapChain
+site	src/render/render_d3d11.cpp	965	const	graphics	const	D3D_DRIVER_TYPE_HARDWARE
+site	src/render/render_d3d11.cpp	965	type	type_only	type	HRESULT
+site	src/render/render_d3d11.cpp	966	const	graphics	const	D3D11_SDK_VERSION
+site	src/render/render_d3d11.cpp	967	const	graphics	const	D3D11_CREATE_DEVICE_DEBUG
+site	src/render/render_d3d11.cpp	967	const	process	const	FAILED
+site	src/render/render_d3d11.cpp	969	const	graphics	const	D3D11_CREATE_DEVICE_DEBUG
+site	src/render/render_d3d11.cpp	970	call	graphics	d3d	D3D11CreateDeviceAndSwapChain
+site	src/render/render_d3d11.cpp	970	const	graphics	const	D3D_DRIVER_TYPE_HARDWARE
+site	src/render/render_d3d11.cpp	971	const	graphics	const	D3D11_SDK_VERSION
+site	src/render/render_d3d11.cpp	975	type	graphics	type	IDXGIDevice
+site	src/render/render_d3d11.cpp	976	const	process	const	SUCCEEDED
+site	src/render/render_d3d11.cpp	976	type	graphics	type	IDXGIDevice
+site	src/render/render_d3d11.cpp	977	type	graphics	type	IDXGIAdapter
+site	src/render/render_d3d11.cpp	978	const	process	const	SUCCEEDED
+site	src/render/render_d3d11.cpp	979	type	graphics	type	IDXGIFactory
+site	src/render/render_d3d11.cpp	980	const	process	const	SUCCEEDED
+site	src/render/render_d3d11.cpp	980	type	graphics	type	IDXGIFactory
+site	src/render/render_d3d11.cpp	982	type	type_only	type	HWND
+site	src/render/render_d3d11.cpp	983	const	graphics	const	DXGI_MWA_NO_ALT_ENTER
+site	src/render/render_d3d11.cpp	983	const	graphics	const	DXGI_MWA_NO_WINDOW_CHANGES
+site	src/render/render_d3d11.cpp	999	type	graphics	type	ID3D11Texture2D
+site	src/render/render_d3d11.cpp	1000	type	graphics	type	ID3D11ShaderResourceView
+site	src/render/render_d3d11.cpp	1055	const	graphics	const	D3D11_BLEND_DESC
+site	src/render/render_d3d11.cpp	1057	const	graphics	const	D3D11_BLEND_SRC1_ALPHA
+site	src/render/render_d3d11.cpp	1058	const	graphics	const	D3D11_BLEND_SRC1_COLOR
+site	src/render/render_d3d11.cpp	1059	const	graphics	const	D3D11_BLEND_OP_ADD
+site	src/render/render_d3d11.cpp	1060	const	graphics	const	D3D11_BLEND_ONE
+site	src/render/render_d3d11.cpp	1061	const	graphics	const	D3D11_BLEND_ZERO
+site	src/render/render_d3d11.cpp	1062	const	graphics	const	D3D11_BLEND_OP_ADD
+site	src/render/render_d3d11.cpp	1063	const	graphics	const	D3D11_COLOR_WRITE_ENABLE_ALL
+site	src/render/render_d3d11.cpp	1066	const	graphics	const	D3D11_INPUT_ELEMENT_DESC
+site	src/render/render_d3d11.cpp	1067	const	graphics	const	D3D11_INPUT_PER_VERTEX_DATA
+site	src/render/render_d3d11.cpp	1067	const	graphics	const	DXGI_FORMAT_R32G32B32A32_FLOAT
+site	src/render/render_d3d11.cpp	1068	const	graphics	const	D3D11_INPUT_PER_VERTEX_DATA
+site	src/render/render_d3d11.cpp	1068	const	graphics	const	DXGI_FORMAT_B8G8R8A8_UNORM
+site	src/render/render_d3d11.cpp	1069	const	graphics	const	D3D11_INPUT_PER_VERTEX_DATA
+site	src/render/render_d3d11.cpp	1069	const	graphics	const	DXGI_FORMAT_B8G8R8A8_UNORM
+site	src/render/render_d3d11.cpp	1070	const	graphics	const	D3D11_INPUT_PER_VERTEX_DATA
+site	src/render/render_d3d11.cpp	1070	const	graphics	const	DXGI_FORMAT_R32G32_FLOAT
+site	src/render/render_d3d11.cpp	1084	const	graphics	const	D3D11_BUFFER_DESC
+site	src/render/render_d3d11.cpp	1086	const	graphics	const	D3D11_USAGE_DYNAMIC
+site	src/render/render_d3d11.cpp	1087	const	graphics	const	D3D11_BIND_VERTEX_BUFFER
+site	src/render/render_d3d11.cpp	1088	const	graphics	const	D3D11_CPU_ACCESS_WRITE
+site	src/render/render_d3d11.cpp	1096	const	graphics	const	D3D11_RASTERIZER_DESC
+site	src/render/render_d3d11.cpp	1097	const	graphics	const	D3D11_FILL_SOLID
+site	src/render/render_d3d11.cpp	1098	const	graphics	const	D3D11_CULL_NONE
+site	src/render/render_d3d11.cpp	1101	const	graphics	const	D3D11_BLEND_DESC
+site	src/render/render_d3d11.cpp	1102	const	graphics	const	D3D11_COLOR_WRITE_ENABLE_ALL
+site	src/render/render_d3d11.cpp	1238	type	graphics	type	ID3D11Texture2D
+site	src/render/render_d3d11.cpp	1239	const	graphics	const	D3D11_TEXTURE2D_DESC
+site	src/render/render_d3d11.cpp	1241	const	graphics	const	D3D11_USAGE_STAGING
+site	src/render/render_d3d11.cpp	1243	const	graphics	const	D3D11_CPU_ACCESS_READ
+site	src/render/render_d3d11.cpp	1245	type	graphics	type	ID3D11Texture2D
+site	src/render/render_d3d11.cpp	1246	const	process	const	FAILED
+site	src/render/render_d3d11.cpp	1251	const	graphics	const	D3D11_MAPPED_SUBRESOURCE
+site	src/render/render_d3d11.cpp	1252	const	graphics	const	D3D11_MAP_READ
+site	src/render/render_d3d11.cpp	1252	const	process	const	FAILED
+site	src/render/render_d3d11.cpp	1304	const	graphics	const	D3D11_TEXTURE2D_DESC
+site	src/render/render_d3d11.cpp	1310	const	graphics	const	D3D11_TEXTURE2D_DESC
+site	src/render/render_d3d11.cpp	1315	const	graphics	const	DXGI_FORMAT_B8G8R8A8_UNORM
+site	src/render/render_d3d11.cpp	1317	const	graphics	const	D3D11_USAGE_DEFAULT
+site	src/render/render_d3d11.cpp	1318	const	graphics	const	D3D11_BIND_RENDER_TARGET
+site	src/render/render_d3d11.cpp	1318	const	graphics	const	D3D11_BIND_SHADER_RESOURCE
+site	src/render/render_d3d11.cpp	1319	const	graphics	const	D3D11_RESOURCE_MISC_GENERATE_MIPS
+site	src/render/render_d3d11.cpp	1350	const	graphics	const	D3D11_BLEND_DESC
+site	src/render/render_d3d11.cpp	1351	const	graphics	const	D3D11_COLOR_WRITE_ENABLE_ALL
+site	src/render/render_d3d11.cpp	1365	const	graphics	const	D3D11_VIEWPORT
+site	src/render/render_d3d11.cpp	1372	const	graphics	const	D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP
+site	src/render/render_d3d11.cpp	1376	type	graphics	type	ID3D11SamplerState
+site	src/render/render_d3d11.cpp	1379	type	graphics	type	ID3D11ShaderResourceView
+site	src/render/render_d3d11.cpp	1383	type	graphics	type	ID3D11Texture2D
+site	src/render/render_d3d11.cpp	1384	type	graphics	type	ID3D11Texture2D
+site	src/render/render_d3d11.cpp	1388	type	type_only	type	HRESULT
+site	src/render/render_d3d11.cpp	1389	const	graphics	const	DXGI_STATUS_OCCLUDED
+site	src/render/render_d3d11.cpp	1389	const	process	const	FAILED
+site	src/render/render_d3d11.cpp	1452	type	type_only	type	RECT
+site	src/render/render_d3d11.cpp	1453	call	window	geometry	GetClientRect
+site	src/render/render_d3d11.cpp	1453	type	type_only	type	HWND
 site	src/render/satpixie.cpp	225	type	graphics	type	ID3D11VertexShader
 site	src/render/satpixie.cpp	226	type	graphics	type	ID3D11PixelShader
 site	src/render/satpixie.cpp	227	type	graphics	type	ID3D11PixelShader
@@ -1928,7 +1951,7 @@ file	src/os/win32/find.cpp	os	live	api	crt,process,type_only	25
 file	src/os/win32/heap.cpp	os	live		crt	2
 file	src/os/win32/memory.cpp	os	live	api	memory,process,type_only	52
 file	src/os/win32/module.cpp	os	live	api	process,type_only	8
-file	src/os/win32/named_event.cpp	os	live	api	file,process,thread,type_only	12
+file	src/os/win32/named_event.cpp	os	live	api	file,process,thread,type_only	13
 file	src/os/win32/out_file.cpp	os	live	api	file,process,type_only	19
 file	src/os/win32/own_stack.cpp	os	live	api	fiber,process	10
 file	src/os/win32/path_file.cpp	os	live		crt	1
@@ -1941,39 +1964,39 @@ file	src/os/win32/thread_start.cpp	os	live	api	process,thread,type_only	9
 file	src/os/win32/wide_file.cpp	os	live	api	file,type_only	59
 file	src/os/win32/wide_text.cpp	os	live	api	dialog,process,type_only	13
 file	src/os/win32/window_key.cpp	os	live	api	type_only,window	8
-file	src/render/render_d3d11.cpp	render	live		graphics,process,type_only,window	200
+file	src/render/render_d3d11.cpp	render	live		graphics,process,type_only,window	222
 file	src/render/satpixie.cpp	render	live		graphics,process,type_only	50
 file	src/render/satpixie.h	render	live		graphics	7
-#count	sites	1897
+#count	sites	1920
 #count	files_with_a_site	46
 #count	class:clock	11
 #count	class:crt	30
 #count	class:dialog	10
 #count	class:fault	41
 #count	class:fiber	7
-#count	class:file	134
-#count	class:graphics	227
+#count	class:file	135
+#count	class:graphics	247
 #count	class:harness-only	326
 #count	class:input	19
 #count	class:launcher	121
 #count	class:memory	87
-#count	class:process	235
+#count	class:process	236
 #count	class:sound	1
 #count	class:thread	71
-#count	class:type_only	368
+#count	class:type_only	369
 #count	class:umbrella	36
 #count	class:window	173
-#count	kind:call	535
-#count	kind:const	683
+#count	kind:call	536
+#count	kind:const	697
 #count	kind:include	55
-#count	kind:type	624
-#count	live_sites	1450
+#count	kind:type	632
+#count	live_sites	1473
 #count	call_or_keyword_class:clock	14
 #count	call_or_keyword_class:crt	11
 #count	call_or_keyword_class:dialog	1
 #count	call_or_keyword_class:fault	10
 #count	call_or_keyword_class:fiber	7
-#count	call_or_keyword_class:file	75
+#count	call_or_keyword_class:file	76
 #count	call_or_keyword_class:graphics	3
 #count	call_or_keyword_class:memory	42
 #count	call_or_keyword_class:process	186

@@ -2768,62 +2768,62 @@ site	src/game/battle/battle_loss.cpp	157	abs_call	via=BH_AT	at::kEnemiesClear	0x
 site	src/game/battle/battle_loss.cpp	213	base_offset	-	0x904AA0	0x904aa0	data	game	battle	base_helper	-	-	BBattleE1(::bof3::Img(0x904AA0)) = 0;
 site	src/game/battle/battle_loss.cpp	218	abs_call	via=BH_AT	at::kEnemiesClear	0x494e70	code	game	battle	call	BattleEnemy_ClearStates	-	BH_AT(void (__cdecl*)(), at::kEnemiesClear.v)();
 site	src/game/battle/battle_loss.cpp	221	code_const	gen_func	bof3::addr::Boot_Task	0x496b60	code	game	battle	base_helper	Boot_Task	-	BH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
-site	src/game/battle/battle_menu_win.cpp	228	at_global	-	rest_2h::at::kMemberMap	0x66972c	data	game	battle	base_helper	Character_IndexById	-	U RecordOf(U id) { return BRest2h(::bof3::Img(rest_2h::at::kMemberMap.v) + (id & 0xFF)); }
-site	src/game/battle/battle_menu_win.cpp	230	at_global	-	rest_2h::at::kPrintBuf	0x904ba0	data	game	battle	base_helper	-	-	char* PrintBuf() { return reinterpret_cast<char*>(AtRest2h(::bof3::Img(rest_2h::at::kPrintBuf.v))); }
-site	src/game/battle/battle_menu_win.cpp	305	at_global	-	rest_2h::at::kBattleParty	0x904065	data	game	battle	base_helper	Cond_Flags+0xd5	-	const U member = RecordOf(BRest2h(::bof3::Img(rest_2h::at::kBattleParty.v) + w[0xC]));
-site	src/game/battle/battle_menu_win.cpp	337	module_const	-	kInventory	0x656b00	data	game	battle	base_helper	Inventory_IdLists	include	battle_draw::U items = LongBattleDraw(AtBattleDraw(::bof3::Img(kInventory.v) + category * 4)) + top;
-site	src/game/battle/battle_menu_win.cpp	338	module_const	-	kCounts	0x656b14	data	game	battle	base_helper	Inventory_CountLists	include	battle_draw::U counts = LongBattleDraw(AtBattleDraw(::bof3::Img(kCounts.v) + category * 4)) + top;
-site	src/game/battle/battle_menu_win.cpp	346	module_const	-	kBattleParty	0x904065	data	game	battle	base_helper	Cond_Flags+0xd5	include	const unsigned member = Byte(::bof3::Img(kMemberRecord.v) + Byte(::bof3::Img(kBattleParty.v) + BattleActorCopies_ItemActor));
-site	src/game/battle/battle_menu_win.cpp	346	module_const	-	kMemberRecord	0x66972c	data	game	battle	base_helper	Character_IndexById	include	const unsigned member = Byte(::bof3::Img(kMemberRecord.v) + Byte(::bof3::Img(kBattleParty.v) + BattleActorCopies_ItemActor));
-site	src/game/battle/battle_menu_win.cpp	373	module_const	-	kItemLabels	0x66b58c	data	game	battle	base_helper	-	include	const unsigned char* const label = AtBattleDraw(LongBattleDraw(AtBattleDraw(::bof3::Img(kItemLabels.v) + w[0xA] * 4u)));
-site	src/game/battle/battle_menu_win.cpp	383	module_const	-	kFmt3d3d	0x6639c8	data	game	battle	base_helper	-	include	battle_draw::g.sprintf_(reinterpret_cast<char*>(AtBattleDraw(::bof3::Img(kPrintBuf.v))), reinterpret_cast<const char*>(AtBattleDraw(::bof3::Img(kFmt3d3d.v))), h
-site	src/game/battle/battle_menu_win.cpp	383	module_const	-	kPrintBuf	0x904ba0	data	game	battle	base_helper	-	include	battle_draw::g.sprintf_(reinterpret_cast<char*>(AtBattleDraw(::bof3::Img(kPrintBuf.v))), reinterpret_cast<const char*>(AtBattleDraw(::bof3::Img(kFmt3d3d.v))), h
-site	src/game/battle/battle_menu_win.cpp	385	module_const	-	kPrintBuf	0x904ba0	data	game	battle	base_helper	-	include	battle_draw::g.font8(static_cast<battle_draw::U>(window_rec->x) + 0x55, static_cast<battle_draw::U>(window_rec->y) + 0x7A, grey, AtBattleDraw(::bof3::Img(kPrint
-site	src/game/battle/battle_menu_win.cpp	387	module_const	-	kTitleBit1Off	0x66b4b0	data	game	battle	base_helper	-	include	battle_draw::g.pieces(static_cast<battle_draw::U>(window_rec->x), static_cast<battle_draw::U>(window_rec->y), AtBattleDraw((w[0x10] & 2) ? ::bof3::Img(kTitleBit
-site	src/game/battle/battle_menu_win.cpp	387	module_const	-	kTitleBit1On	0x66b4c8	data	game	battle	base_helper	-	include	battle_draw::g.pieces(static_cast<battle_draw::U>(window_rec->x), static_cast<battle_draw::U>(window_rec->y), AtBattleDraw((w[0x10] & 2) ? ::bof3::Img(kTitleBit
-site	src/game/battle/battle_menu_win.cpp	388	module_const	-	kTitleBit0Off	0x66b4bc	data	game	battle	base_helper	-	include	battle_draw::g.pieces(static_cast<battle_draw::U>(window_rec->x), static_cast<battle_draw::U>(window_rec->y), AtBattleDraw((w[0x10] & 1) ? ::bof3::Img(kTitleBit
-site	src/game/battle/battle_menu_win.cpp	388	module_const	-	kTitleBit0On	0x66b4d4	data	game	battle	base_helper	-	include	battle_draw::g.pieces(static_cast<battle_draw::U>(window_rec->x), static_cast<battle_draw::U>(window_rec->y), AtBattleDraw((w[0x10] & 1) ? ::bof3::Img(kTitleBit
-site	src/game/battle/battle_menu_win.cpp	403	module_const	-	kInventory	0x656b00	data	game	battle	base_helper	Inventory_IdLists	include	battle_draw::g.scroll_bar(AtBattleDraw(LongBattleDraw(AtBattleDraw(::bof3::Img(kInventory.v) + w[0xA] * 4u))), w[0xB], static_cast<battle_draw::U>(window_rec->x
-site	src/game/battle/battle_menu_win.cpp	446	module_const	-	kSkillRecords	0x65c4c8	data	game	battle	base_helper	Ability_Records	include	const unsigned char* const record = AtBattleDraw(::bof3::Img(kSkillRecords.v) + AtBattleDraw(ids)[0] * 0x18u);
-site	src/game/battle/battle_menu_win.cpp	462	module_const	-	kSkillLabels	0x66b5a0	data	game	battle	base_helper	-	include	AtBattleDraw(WordBattleDraw(w + 0x14) != 0 ? BattleDraw_SkillLabelAlt : LongBattleDraw(AtBattleDraw(::bof3::Img(kSkillLabels.v) + w[0xB] * 4u)));
-site	src/game/battle/battle_menu_win.cpp	467	module_const	-	kTitleBit1Off	0x66b4b0	data	game	battle	base_helper	-	include	battle_draw::g.pieces(static_cast<battle_draw::U>(window_rec->x), static_cast<battle_draw::U>(window_rec->y), AtBattleDraw((w[9] & 2) ? ::bof3::Img(kTitleBit1On
-site	src/game/battle/battle_menu_win.cpp	467	module_const	-	kTitleBit1On	0x66b4c8	data	game	battle	base_helper	-	include	battle_draw::g.pieces(static_cast<battle_draw::U>(window_rec->x), static_cast<battle_draw::U>(window_rec->y), AtBattleDraw((w[9] & 2) ? ::bof3::Img(kTitleBit1On
-site	src/game/battle/battle_menu_win.cpp	468	module_const	-	kTitleBit0Off	0x66b4bc	data	game	battle	base_helper	-	include	battle_draw::g.pieces(static_cast<battle_draw::U>(window_rec->x), static_cast<battle_draw::U>(window_rec->y), AtBattleDraw((w[9] & 1) ? ::bof3::Img(kTitleBit0On
-site	src/game/battle/battle_menu_win.cpp	468	module_const	-	kTitleBit0On	0x66b4d4	data	game	battle	base_helper	-	include	battle_draw::g.pieces(static_cast<battle_draw::U>(window_rec->x), static_cast<battle_draw::U>(window_rec->y), AtBattleDraw((w[9] & 1) ? ::bof3::Img(kTitleBit0On
-site	src/game/battle/battle_menu_win.cpp	530	at_global	-	battle_e7::at::kStatLabels	0x66a0f8	data	game	battle	base_helper	-	-	BH_CALL(Text_DrawAt)(xi + 5, yi + label_y + 13 * static_cast<int>(k), 0, 4, Text(::bof3::Img(battle_e7::at::kStatLabels[k])));
-site	src/game/battle/battle_menu_win.cpp	534	at_global	-	battle_e7::at::kFmtStat	0x64e324	data	game	battle	base_helper	-	-	BH_CALL(Crt_sprintf)(Buf(::bof3::Img(battle_e7::at::kPrintBuf.v)), Str(::bof3::Img(battle_e7::at::kFmtStat.v)), W(ch + kStats[k]));
-site	src/game/battle/battle_menu_win.cpp	534	at_global	-	battle_e7::at::kPrintBuf	0x904ba0	data	game	battle	base_helper	-	-	BH_CALL(Crt_sprintf)(Buf(::bof3::Img(battle_e7::at::kPrintBuf.v)), Str(::bof3::Img(battle_e7::at::kFmtStat.v)), W(ch + kStats[k]));
-site	src/game/battle/battle_menu_win.cpp	535	at_global	-	battle_e7::at::kPrintBuf	0x904ba0	data	game	battle	base_helper	-	-	BH_CALL(Text_DrawFont8)(xi + 0x31, yi + 0x1C + 13 * static_cast<int>(k), 0, Text(::bof3::Img(battle_e7::at::kPrintBuf.v)));
-site	src/game/battle/battle_menu_win.cpp	550	abs_call	via=BH_AT	battle_e7::at::kDrawBar	0x59db70	code	game	battle	call	BattleEquipWin_DrawBar	-	BH_AT(BarFn, battle_e7::at::kDrawBar.v)(x + 0x51, static_cast<U>(by), colour, 0x1C, clut, 0x80);
-site	src/game/battle/battle_menu_win.cpp	551	at_global	-	battle_e7::at::kFmtStat	0x64e324	data	game	battle	base_helper	-	-	BH_CALL(Crt_sprintf)(Buf(::bof3::Img(battle_e7::at::kPrintBuf.v)), Str(::bof3::Img(battle_e7::at::kFmtStat.v)), static_cast<unsigned>(values[k]));
-site	src/game/battle/battle_menu_win.cpp	551	at_global	-	battle_e7::at::kPrintBuf	0x904ba0	data	game	battle	base_helper	-	-	BH_CALL(Crt_sprintf)(Buf(::bof3::Img(battle_e7::at::kPrintBuf.v)), Str(::bof3::Img(battle_e7::at::kFmtStat.v)), static_cast<unsigned>(values[k]));
-site	src/game/battle/battle_menu_win.cpp	552	at_global	-	battle_e7::at::kPrintBuf	0x904ba0	data	game	battle	base_helper	-	-	BH_CALL(Text_DrawFont8)(xi + 0x59, by, static_cast<int>(marks[k]), Text(::bof3::Img(battle_e7::at::kPrintBuf.v)));
-site	src/game/battle/battle_menu_win.cpp	561	at_global	-	battle_e7::at::kEquipCategories	0x66b5bc	data	game	battle	base_helper	-	-	const unsigned category = BBattleE7(::bof3::Img(battle_e7::at::kEquipCategories.v) + r);
-site	src/game/battle/battle_menu_win.cpp	566	at_global	-	battle_e7::at::kPartyOrder	0x904065	data	game	battle	base_helper	Cond_Flags+0xd5	-	const unsigned slot = BBattleE7(::bof3::Img(battle_e7::at::kPartyOrder.v) + static_cast<std::uint32_t>(BattleActorCopies_ItemActor));
-site	src/game/battle/battle_menu_win.cpp	575	at_global	-	battle_e7::at::kEquipIcons	0x66b5b4	data	game	battle	base_helper	-	-	BH_CALL(Menu_DrawIcon8)(xi + 6, icon_y, BBattleE7(::bof3::Img(battle_e7::at::kEquipIcons.v) + r), 1);
-site	src/game/battle/battle_menu_win.cpp	584	at_global	-	battle_e7::at::kEquipIcons	0x66b5b4	data	game	battle	base_helper	-	-	BH_CALL(Menu_DrawIcon8)(xi + 6, icon_y, BBattleE7(::bof3::Img(battle_e7::at::kEquipIcons.v) + r), colour == 7 ? 1 : 0);
-site	src/game/battle/battle_menu_win.cpp	594	at_global	-	battle_e7::at::kEquipPieces	0x66b508	data	game	battle	base_helper	-	-	BH_CALL(Menu_DrawPieces)(xi, yi, Text(::bof3::Img(battle_e7::at::kEquipPieces.v)), 1);
-site	src/game/battle/battle_menu_win.cpp	657	at_global	-	rest_2h::at::kIdLists	0x656b00	data	game	battle	base_helper	Inventory_IdLists	-	const unsigned char* ids = AtRest2h(LRest2h(::bof3::Img(rest_2h::at::kIdLists.v) + 4 * cat));
-site	src/game/battle/battle_menu_win.cpp	658	at_global	-	rest_2h::at::kCountLists	0x656b14	data	game	battle	base_helper	Inventory_CountLists	-	const unsigned char* counts = AtRest2h(LRest2h(::bof3::Img(rest_2h::at::kCountLists.v) + 4 * cat));
-site	src/game/battle/battle_menu_win.cpp	662	at_global	-	rest_2h::at::kBattleParty	0x904065	data	game	battle	base_helper	Cond_Flags+0xd5	-	const U member = RecordOf(BRest2h(::bof3::Img(rest_2h::at::kBattleParty.v) + w[0xC]));
-site	src/game/battle/battle_menu_win.cpp	669	at_global	-	rest_2h::at::kUseIds	0x6be0c4	data	game	battle	base_helper	-	-	BRest2h(::bof3::Img(rest_2h::at::kUseIds.v) + n) = *ids;
-site	src/game/battle/battle_menu_win.cpp	670	at_global	-	rest_2h::at::kUseCounts	0x6be144	data	game	battle	base_helper	-	-	BRest2h(::bof3::Img(rest_2h::at::kUseCounts.v) + n) = *counts;
-site	src/game/battle/battle_menu_win.cpp	674	at_global	-	rest_2h::at::kUseCounts	0x6be144	data	game	battle	base_helper	-	-	std::memset(AtRest2h(::bof3::Img(rest_2h::at::kUseCounts.v) + n), 0, 0x80u - n);
-site	src/game/battle/battle_menu_win.cpp	675	at_global	-	rest_2h::at::kUseIds	0x6be0c4	data	game	battle	base_helper	-	-	std::memset(AtRest2h(::bof3::Img(rest_2h::at::kUseIds.v) + n), 0, 0x80u - n);
-site	src/game/battle/battle_menu_win.cpp	677	at_global	-	rest_2h::at::kUseIds	0x6be0c4	data	game	battle	base_helper	-	-	w[0xD] = BRest2h(::bof3::Img(rest_2h::at::kUseIds.v) + w[0xB]);
-site	src/game/battle/battle_menu_win.cpp	683	at_global	-	rest_2h::at::kUseIds	0x6be0c4	data	game	battle	base_helper	-	-	const U row_ids = ::bof3::Img(rest_2h::at::kUseIds.v) + top;
-site	src/game/battle/battle_menu_win.cpp	684	at_global	-	rest_2h::at::kUseCounts	0x6be144	data	game	battle	base_helper	-	-	const U row_counts = ::bof3::Img(rest_2h::at::kUseCounts.v) + top;
-site	src/game/battle/battle_menu_win.cpp	699	at_global	-	rest_2h::at::kUseTitles	0x66b5c4	data	game	battle	base_helper	-	-	const unsigned char* const title = AtRest2h(LRest2h(::bof3::Img(rest_2h::at::kUseTitles.v) + 4 * title_cat));
-site	src/game/battle/battle_menu_win.cpp	703	at_global	-	rest_2h::at::kFmtCount	0x6639c8	data	game	battle	base_helper	-	-	SH_CALL(Crt_sprintf)(PrintBuf(), FormatRest2h(::bof3::Img(rest_2h::at::kFmtCount.v)), static_cast<unsigned>(n), 0x80u);
-site	src/game/battle/battle_menu_win.cpp	704	at_global	-	rest_2h::at::kPrintBuf	0x904ba0	data	game	battle	base_helper	-	-	SH_CALL(Text_DrawFont8)(XRest2h(w) + 0x55, YRest2h(w) + 0x7A, 0, TextRest2h(::bof3::Img(rest_2h::at::kPrintBuf.v)));
-site	src/game/battle/battle_menu_win.cpp	705	at_global	-	rest_2h::at::kUsePiecesA	0x66b4b0	data	game	battle	base_helper	-	-	Pieces(XRest2h(w), YRest2h(w), ::bof3::Img(rest_2h::at::kUsePiecesA.v));
-site	src/game/battle/battle_menu_win.cpp	706	at_global	-	rest_2h::at::kUsePiecesB	0x66b4bc	data	game	battle	base_helper	-	-	Pieces(XRest2h(w), YRest2h(w), ::bof3::Img(rest_2h::at::kUsePiecesB.v));
-site	src/game/battle/battle_menu_win.cpp	719	at_global	-	rest_2h::at::kUseIds	0x6be0c4	data	game	battle	base_helper	-	-	SH_CALL(Menu_DrawScrollBar)(AtRest2h(::bof3::Img(rest_2h::at::kUseIds.v)), w[0xA], XRest2h(w) + 0x90, YRest2h(w) + 0x18, 7, 0x80, 0x5C);
-site	src/game/battle/battle_menu_win.cpp	734	at_global	-	rest_2h::at::kVerbPiecesOff	0x66b4f8	data	game	battle	base_helper	-	-	SH_CALL(Menu_DrawPieces)(x, y, TextRest2h(s == 0 ? ::bof3::Img(rest_2h::at::kVerbPiecesOn.v) : ::bof3::Img(rest_2h::at::kVerbPiecesOff.v)), 1);
-site	src/game/battle/battle_menu_win.cpp	734	at_global	-	rest_2h::at::kVerbPiecesOn	0x66b500	data	game	battle	base_helper	-	-	SH_CALL(Menu_DrawPieces)(x, y, TextRest2h(s == 0 ? ::bof3::Img(rest_2h::at::kVerbPiecesOn.v) : ::bof3::Img(rest_2h::at::kVerbPiecesOff.v)), 1);
-site	src/game/battle/battle_menu_win.cpp	739	at_global	-	rest_2h::at::kVerbPiecesOff	0x66b4f8	data	game	battle	base_helper	-	-	SH_CALL(Menu_DrawPieces)(x2, y, TextRest2h(s == 1 ? ::bof3::Img(rest_2h::at::kVerbPiecesOn.v) : ::bof3::Img(rest_2h::at::kVerbPiecesOff.v)), 1);
-site	src/game/battle/battle_menu_win.cpp	739	at_global	-	rest_2h::at::kVerbPiecesOn	0x66b500	data	game	battle	base_helper	-	-	SH_CALL(Menu_DrawPieces)(x2, y, TextRest2h(s == 1 ? ::bof3::Img(rest_2h::at::kVerbPiecesOn.v) : ::bof3::Img(rest_2h::at::kVerbPiecesOff.v)), 1);
-site	src/game/battle/battle_menu_win.cpp	765	at_global	-	window_task::at::kRecordsEnd	0x803478	data	game	battle	base_helper	-	-	for (std::uint32_t a = ::bof3::Img(WindowRecords_addr); a < ::bof3::Img(window_task::at::kRecordsEnd.v); a += 0x24) {
+site	src/game/battle/battle_menu_win.cpp	231	at_global	-	rest_2h::at::kMemberMap	0x66972c	data	game	battle	base_helper	Character_IndexById	-	U RecordOf(U id) { return BRest2h(::bof3::Img(rest_2h::at::kMemberMap.v) + (id & 0xFF)); }
+site	src/game/battle/battle_menu_win.cpp	233	at_global	-	rest_2h::at::kPrintBuf	0x904ba0	data	game	battle	base_helper	-	-	char* PrintBuf() { return reinterpret_cast<char*>(AtRest2h(::bof3::Img(rest_2h::at::kPrintBuf.v))); }
+site	src/game/battle/battle_menu_win.cpp	308	at_global	-	rest_2h::at::kBattleParty	0x904065	data	game	battle	base_helper	Cond_Flags+0xd5	-	const U member = RecordOf(BRest2h(::bof3::Img(rest_2h::at::kBattleParty.v) + w[0xC]));
+site	src/game/battle/battle_menu_win.cpp	340	module_const	-	kInventory	0x656b00	data	game	battle	base_helper	Inventory_IdLists	include	battle_draw::U items = LongBattleDraw(AtBattleDraw(::bof3::Img(kInventory.v) + category * 4)) + top;
+site	src/game/battle/battle_menu_win.cpp	341	module_const	-	kCounts	0x656b14	data	game	battle	base_helper	Inventory_CountLists	include	battle_draw::U counts = LongBattleDraw(AtBattleDraw(::bof3::Img(kCounts.v) + category * 4)) + top;
+site	src/game/battle/battle_menu_win.cpp	349	module_const	-	kBattleParty	0x904065	data	game	battle	base_helper	Cond_Flags+0xd5	include	const unsigned member = Byte(::bof3::Img(kMemberRecord.v) + Byte(::bof3::Img(kBattleParty.v) + BattleActorCopies_ItemActor));
+site	src/game/battle/battle_menu_win.cpp	349	module_const	-	kMemberRecord	0x66972c	data	game	battle	base_helper	Character_IndexById	include	const unsigned member = Byte(::bof3::Img(kMemberRecord.v) + Byte(::bof3::Img(kBattleParty.v) + BattleActorCopies_ItemActor));
+site	src/game/battle/battle_menu_win.cpp	376	module_const	-	kItemLabels	0x66b58c	data	game	battle	base_helper	-	include	const unsigned char* const label = AtBattleDraw(LongBattleDraw(AtBattleDraw(::bof3::Img(kItemLabels.v) + w[0xA] * 4u)));
+site	src/game/battle/battle_menu_win.cpp	386	module_const	-	kFmt3d3d	0x6639c8	data	game	battle	base_helper	-	include	battle_draw::g.sprintf_(reinterpret_cast<char*>(AtBattleDraw(::bof3::Img(kPrintBuf.v))), reinterpret_cast<const char*>(AtBattleDraw(::bof3::Img(kFmt3d3d.v))), h
+site	src/game/battle/battle_menu_win.cpp	386	module_const	-	kPrintBuf	0x904ba0	data	game	battle	base_helper	-	include	battle_draw::g.sprintf_(reinterpret_cast<char*>(AtBattleDraw(::bof3::Img(kPrintBuf.v))), reinterpret_cast<const char*>(AtBattleDraw(::bof3::Img(kFmt3d3d.v))), h
+site	src/game/battle/battle_menu_win.cpp	388	module_const	-	kPrintBuf	0x904ba0	data	game	battle	base_helper	-	include	battle_draw::g.font8(static_cast<battle_draw::U>(window_rec->x) + 0x55, static_cast<battle_draw::U>(window_rec->y) + 0x7A, grey, AtBattleDraw(::bof3::Img(kPrint
+site	src/game/battle/battle_menu_win.cpp	390	module_const	-	kTitleBit1Off	0x66b4b0	data	game	battle	base_helper	-	include	battle_draw::g.pieces(static_cast<battle_draw::U>(window_rec->x), static_cast<battle_draw::U>(window_rec->y), AtBattleDraw((w[0x10] & 2) ? ::bof3::Img(kTitleBit
+site	src/game/battle/battle_menu_win.cpp	390	module_const	-	kTitleBit1On	0x66b4c8	data	game	battle	base_helper	-	include	battle_draw::g.pieces(static_cast<battle_draw::U>(window_rec->x), static_cast<battle_draw::U>(window_rec->y), AtBattleDraw((w[0x10] & 2) ? ::bof3::Img(kTitleBit
+site	src/game/battle/battle_menu_win.cpp	391	module_const	-	kTitleBit0Off	0x66b4bc	data	game	battle	base_helper	-	include	battle_draw::g.pieces(static_cast<battle_draw::U>(window_rec->x), static_cast<battle_draw::U>(window_rec->y), AtBattleDraw((w[0x10] & 1) ? ::bof3::Img(kTitleBit
+site	src/game/battle/battle_menu_win.cpp	391	module_const	-	kTitleBit0On	0x66b4d4	data	game	battle	base_helper	-	include	battle_draw::g.pieces(static_cast<battle_draw::U>(window_rec->x), static_cast<battle_draw::U>(window_rec->y), AtBattleDraw((w[0x10] & 1) ? ::bof3::Img(kTitleBit
+site	src/game/battle/battle_menu_win.cpp	406	module_const	-	kInventory	0x656b00	data	game	battle	base_helper	Inventory_IdLists	include	battle_draw::g.scroll_bar(AtBattleDraw(LongBattleDraw(AtBattleDraw(::bof3::Img(kInventory.v) + w[0xA] * 4u))), w[0xB], static_cast<battle_draw::U>(window_rec->x
+site	src/game/battle/battle_menu_win.cpp	449	module_const	-	kSkillRecords	0x65c4c8	data	game	battle	base_helper	Ability_Records	include	const unsigned char* const record = AtBattleDraw(::bof3::Img(kSkillRecords.v) + AtBattleDraw(ids)[0] * 0x18u);
+site	src/game/battle/battle_menu_win.cpp	465	module_const	-	kSkillLabels	0x66b5a0	data	game	battle	base_helper	-	include	AtBattleDraw(WordBattleDraw(w + 0x14) != 0 ? BattleDraw_SkillLabelAlt : LongBattleDraw(AtBattleDraw(::bof3::Img(kSkillLabels.v) + w[0xB] * 4u)));
+site	src/game/battle/battle_menu_win.cpp	470	module_const	-	kTitleBit1Off	0x66b4b0	data	game	battle	base_helper	-	include	battle_draw::g.pieces(static_cast<battle_draw::U>(window_rec->x), static_cast<battle_draw::U>(window_rec->y), AtBattleDraw((w[9] & 2) ? ::bof3::Img(kTitleBit1On
+site	src/game/battle/battle_menu_win.cpp	470	module_const	-	kTitleBit1On	0x66b4c8	data	game	battle	base_helper	-	include	battle_draw::g.pieces(static_cast<battle_draw::U>(window_rec->x), static_cast<battle_draw::U>(window_rec->y), AtBattleDraw((w[9] & 2) ? ::bof3::Img(kTitleBit1On
+site	src/game/battle/battle_menu_win.cpp	471	module_const	-	kTitleBit0Off	0x66b4bc	data	game	battle	base_helper	-	include	battle_draw::g.pieces(static_cast<battle_draw::U>(window_rec->x), static_cast<battle_draw::U>(window_rec->y), AtBattleDraw((w[9] & 1) ? ::bof3::Img(kTitleBit0On
+site	src/game/battle/battle_menu_win.cpp	471	module_const	-	kTitleBit0On	0x66b4d4	data	game	battle	base_helper	-	include	battle_draw::g.pieces(static_cast<battle_draw::U>(window_rec->x), static_cast<battle_draw::U>(window_rec->y), AtBattleDraw((w[9] & 1) ? ::bof3::Img(kTitleBit0On
+site	src/game/battle/battle_menu_win.cpp	533	at_global	-	battle_e7::at::kStatLabels	0x66a0f8	data	game	battle	base_helper	-	-	BH_CALL(Text_DrawAt)(xi + 5, yi + label_y + 13 * static_cast<int>(k), 0, 4, Text(::bof3::Img(battle_e7::at::kStatLabels[k])));
+site	src/game/battle/battle_menu_win.cpp	537	at_global	-	battle_e7::at::kFmtStat	0x64e324	data	game	battle	base_helper	-	-	BH_CALL(Crt_sprintf)(Buf(::bof3::Img(battle_e7::at::kPrintBuf.v)), Str(::bof3::Img(battle_e7::at::kFmtStat.v)), W(ch + kStats[k]));
+site	src/game/battle/battle_menu_win.cpp	537	at_global	-	battle_e7::at::kPrintBuf	0x904ba0	data	game	battle	base_helper	-	-	BH_CALL(Crt_sprintf)(Buf(::bof3::Img(battle_e7::at::kPrintBuf.v)), Str(::bof3::Img(battle_e7::at::kFmtStat.v)), W(ch + kStats[k]));
+site	src/game/battle/battle_menu_win.cpp	538	at_global	-	battle_e7::at::kPrintBuf	0x904ba0	data	game	battle	base_helper	-	-	BH_CALL(Text_DrawFont8)(xi + 0x31, yi + 0x1C + 13 * static_cast<int>(k), 0, Text(::bof3::Img(battle_e7::at::kPrintBuf.v)));
+site	src/game/battle/battle_menu_win.cpp	553	abs_call	via=BH_AT	battle_e7::at::kDrawBar	0x59db70	code	game	battle	call	BattleEquipWin_DrawBar	-	BH_AT(BarFn, battle_e7::at::kDrawBar.v)(x + 0x51, static_cast<U>(by), colour, 0x1C, clut, 0x80);
+site	src/game/battle/battle_menu_win.cpp	554	at_global	-	battle_e7::at::kFmtStat	0x64e324	data	game	battle	base_helper	-	-	BH_CALL(Crt_sprintf)(Buf(::bof3::Img(battle_e7::at::kPrintBuf.v)), Str(::bof3::Img(battle_e7::at::kFmtStat.v)), static_cast<unsigned>(values[k]));
+site	src/game/battle/battle_menu_win.cpp	554	at_global	-	battle_e7::at::kPrintBuf	0x904ba0	data	game	battle	base_helper	-	-	BH_CALL(Crt_sprintf)(Buf(::bof3::Img(battle_e7::at::kPrintBuf.v)), Str(::bof3::Img(battle_e7::at::kFmtStat.v)), static_cast<unsigned>(values[k]));
+site	src/game/battle/battle_menu_win.cpp	555	at_global	-	battle_e7::at::kPrintBuf	0x904ba0	data	game	battle	base_helper	-	-	BH_CALL(Text_DrawFont8)(xi + 0x59, by, static_cast<int>(marks[k]), Text(::bof3::Img(battle_e7::at::kPrintBuf.v)));
+site	src/game/battle/battle_menu_win.cpp	564	at_global	-	battle_e7::at::kEquipCategories	0x66b5bc	data	game	battle	base_helper	-	-	const unsigned category = BBattleE7(::bof3::Img(battle_e7::at::kEquipCategories.v) + r);
+site	src/game/battle/battle_menu_win.cpp	569	at_global	-	battle_e7::at::kPartyOrder	0x904065	data	game	battle	base_helper	Cond_Flags+0xd5	-	const unsigned slot = BBattleE7(::bof3::Img(battle_e7::at::kPartyOrder.v) + static_cast<std::uint32_t>(BattleActorCopies_ItemActor));
+site	src/game/battle/battle_menu_win.cpp	578	at_global	-	battle_e7::at::kEquipIcons	0x66b5b4	data	game	battle	base_helper	-	-	BH_CALL(Menu_DrawIcon8)(xi + 6, icon_y, BBattleE7(::bof3::Img(battle_e7::at::kEquipIcons.v) + r), 1);
+site	src/game/battle/battle_menu_win.cpp	587	at_global	-	battle_e7::at::kEquipIcons	0x66b5b4	data	game	battle	base_helper	-	-	BH_CALL(Menu_DrawIcon8)(xi + 6, icon_y, BBattleE7(::bof3::Img(battle_e7::at::kEquipIcons.v) + r), colour == 7 ? 1 : 0);
+site	src/game/battle/battle_menu_win.cpp	597	at_global	-	battle_e7::at::kEquipPieces	0x66b508	data	game	battle	base_helper	-	-	BH_CALL(Menu_DrawPieces)(xi, yi, Text(::bof3::Img(battle_e7::at::kEquipPieces.v)), 1);
+site	src/game/battle/battle_menu_win.cpp	660	at_global	-	rest_2h::at::kIdLists	0x656b00	data	game	battle	base_helper	Inventory_IdLists	-	const unsigned char* ids = AtRest2h(LRest2h(::bof3::Img(rest_2h::at::kIdLists.v) + 4 * cat));
+site	src/game/battle/battle_menu_win.cpp	661	at_global	-	rest_2h::at::kCountLists	0x656b14	data	game	battle	base_helper	Inventory_CountLists	-	const unsigned char* counts = AtRest2h(LRest2h(::bof3::Img(rest_2h::at::kCountLists.v) + 4 * cat));
+site	src/game/battle/battle_menu_win.cpp	665	at_global	-	rest_2h::at::kBattleParty	0x904065	data	game	battle	base_helper	Cond_Flags+0xd5	-	const U member = RecordOf(BRest2h(::bof3::Img(rest_2h::at::kBattleParty.v) + w[0xC]));
+site	src/game/battle/battle_menu_win.cpp	672	at_global	-	rest_2h::at::kUseIds	0x6be0c4	data	game	battle	base_helper	-	-	BRest2h(::bof3::Img(rest_2h::at::kUseIds.v) + n) = *ids;
+site	src/game/battle/battle_menu_win.cpp	673	at_global	-	rest_2h::at::kUseCounts	0x6be144	data	game	battle	base_helper	-	-	BRest2h(::bof3::Img(rest_2h::at::kUseCounts.v) + n) = *counts;
+site	src/game/battle/battle_menu_win.cpp	677	at_global	-	rest_2h::at::kUseCounts	0x6be144	data	game	battle	base_helper	-	-	std::memset(AtRest2h(::bof3::Img(rest_2h::at::kUseCounts.v) + n), 0, 0x80u - n);
+site	src/game/battle/battle_menu_win.cpp	678	at_global	-	rest_2h::at::kUseIds	0x6be0c4	data	game	battle	base_helper	-	-	std::memset(AtRest2h(::bof3::Img(rest_2h::at::kUseIds.v) + n), 0, 0x80u - n);
+site	src/game/battle/battle_menu_win.cpp	680	at_global	-	rest_2h::at::kUseIds	0x6be0c4	data	game	battle	base_helper	-	-	w[0xD] = BRest2h(::bof3::Img(rest_2h::at::kUseIds.v) + w[0xB]);
+site	src/game/battle/battle_menu_win.cpp	686	at_global	-	rest_2h::at::kUseIds	0x6be0c4	data	game	battle	base_helper	-	-	const U row_ids = ::bof3::Img(rest_2h::at::kUseIds.v) + top;
+site	src/game/battle/battle_menu_win.cpp	687	at_global	-	rest_2h::at::kUseCounts	0x6be144	data	game	battle	base_helper	-	-	const U row_counts = ::bof3::Img(rest_2h::at::kUseCounts.v) + top;
+site	src/game/battle/battle_menu_win.cpp	702	at_global	-	rest_2h::at::kUseTitles	0x66b5c4	data	game	battle	base_helper	-	-	const unsigned char* const title = AtRest2h(LRest2h(::bof3::Img(rest_2h::at::kUseTitles.v) + 4 * title_cat));
+site	src/game/battle/battle_menu_win.cpp	706	at_global	-	rest_2h::at::kFmtCount	0x6639c8	data	game	battle	base_helper	-	-	SH_CALL(Crt_sprintf)(PrintBuf(), FormatRest2h(::bof3::Img(rest_2h::at::kFmtCount.v)), static_cast<unsigned>(n), 0x80u);
+site	src/game/battle/battle_menu_win.cpp	707	at_global	-	rest_2h::at::kPrintBuf	0x904ba0	data	game	battle	base_helper	-	-	SH_CALL(Text_DrawFont8)(XRest2h(w) + 0x55, YRest2h(w) + 0x7A, 0, TextRest2h(::bof3::Img(rest_2h::at::kPrintBuf.v)));
+site	src/game/battle/battle_menu_win.cpp	708	at_global	-	rest_2h::at::kUsePiecesA	0x66b4b0	data	game	battle	base_helper	-	-	Pieces(XRest2h(w), YRest2h(w), ::bof3::Img(rest_2h::at::kUsePiecesA.v));
+site	src/game/battle/battle_menu_win.cpp	709	at_global	-	rest_2h::at::kUsePiecesB	0x66b4bc	data	game	battle	base_helper	-	-	Pieces(XRest2h(w), YRest2h(w), ::bof3::Img(rest_2h::at::kUsePiecesB.v));
+site	src/game/battle/battle_menu_win.cpp	722	at_global	-	rest_2h::at::kUseIds	0x6be0c4	data	game	battle	base_helper	-	-	SH_CALL(Menu_DrawScrollBar)(AtRest2h(::bof3::Img(rest_2h::at::kUseIds.v)), w[0xA], XRest2h(w) + 0x90, YRest2h(w) + 0x18, 7, 0x80, 0x5C);
+site	src/game/battle/battle_menu_win.cpp	737	at_global	-	rest_2h::at::kVerbPiecesOff	0x66b4f8	data	game	battle	base_helper	-	-	SH_CALL(Menu_DrawPieces)(x, y, TextRest2h(s == 0 ? ::bof3::Img(rest_2h::at::kVerbPiecesOn.v) : ::bof3::Img(rest_2h::at::kVerbPiecesOff.v)), 1);
+site	src/game/battle/battle_menu_win.cpp	737	at_global	-	rest_2h::at::kVerbPiecesOn	0x66b500	data	game	battle	base_helper	-	-	SH_CALL(Menu_DrawPieces)(x, y, TextRest2h(s == 0 ? ::bof3::Img(rest_2h::at::kVerbPiecesOn.v) : ::bof3::Img(rest_2h::at::kVerbPiecesOff.v)), 1);
+site	src/game/battle/battle_menu_win.cpp	742	at_global	-	rest_2h::at::kVerbPiecesOff	0x66b4f8	data	game	battle	base_helper	-	-	SH_CALL(Menu_DrawPieces)(x2, y, TextRest2h(s == 1 ? ::bof3::Img(rest_2h::at::kVerbPiecesOn.v) : ::bof3::Img(rest_2h::at::kVerbPiecesOff.v)), 1);
+site	src/game/battle/battle_menu_win.cpp	742	at_global	-	rest_2h::at::kVerbPiecesOn	0x66b500	data	game	battle	base_helper	-	-	SH_CALL(Menu_DrawPieces)(x2, y, TextRest2h(s == 1 ? ::bof3::Img(rest_2h::at::kVerbPiecesOn.v) : ::bof3::Img(rest_2h::at::kVerbPiecesOff.v)), 1);
+site	src/game/battle/battle_menu_win.cpp	768	at_global	-	window_task::at::kRecordsEnd	0x803478	data	game	battle	base_helper	-	-	for (std::uint32_t a = ::bof3::Img(WindowRecords_addr); a < ::bof3::Img(window_task::at::kRecordsEnd.v); a += 0x24) {
 site	src/game/battle/battle_obj.cpp	66	at_global	-	battle_e3::at::kAbility	0x904b80	data	game	battle	base_helper	-	-	unsigned AbilityId() { return move_script::Word(move_script::At(::bof3::Img(battle_e3::at::kAbility.v))); }
 site	src/game/battle/battle_obj.cpp	70	at_global	-	battle_e3::at::kAbilityWord4	0x65c4dc	data	game	battle	base_helper	-	-	unsigned AbilityWord4() { return move_script::Word(move_script::At(::bof3::Img(battle_e3::at::kAbilityWord4.v) + AbilityId() * battle_e3::at::kAbilityStride)); 
 site	src/game/battle/battle_obj.cpp	113	at_global	-	battle_e3::at::kPartyCount	0x904ab0	data	game	battle	base_helper	-	-	const unsigned n = B(::bof3::Img(battle_e3::at::kPartyCount.v));
@@ -18950,8 +18950,9 @@ site	src/hook/calltrace.cpp	431	code_const	gen_func	addr::Task_RunAll	0x5a98a0	c
 site	src/hook/crash.cpp	44	addr_eq	!=	image::kBase	0x400000	base	platform	hook	-	-	-	if (a >= g_image_lo && a < g_image_hi && ImageBase() != image::kBase)
 site	src/hook/crash.cpp	45	image_meta	-	image::kBase	0x400000	base	platform	hook	-	-	-	std::snprintf(out, cap, " ", (unsigned)(a - ImageBase() + image::kBase));
 site	src/hook/crash.cpp	133	image_meta	-	image::kBase	0x400000	base	platform	hook	-	-	-	const std::uint32_t va32 = static_cast<std::uint32_t>(at) - ImageBase() + image::kBase;
-site	src/hook/crash_posix.cpp	285	module_const	-	exe_layout::kImageBase	0x400000	base	platform	hook	base_helper	-	include	crash::SetRanges(engine.lo, engine.hi, Img(exe_layout::kImageBase), Img(exe_layout::kPoolVa + exe_layout::kPoolSize));
-site	src/hook/crash_posix.cpp	285	module_const	-	exe_layout::kPoolVa	0x93f000	end	platform	hook	base_helper	-	include	crash::SetRanges(engine.lo, engine.hi, Img(exe_layout::kImageBase), Img(exe_layout::kPoolVa + exe_layout::kPoolSize));
+site	src/hook/crash_posix.cpp	386	image_meta	-	image::kBase	0x400000	base	platform	hook	-	-	-	(unsigned)(static_cast<std::uint32_t>(addr) - ImageBase() + image::kBase));
+site	src/hook/crash_posix.cpp	421	module_const	-	exe_layout::kImageBase	0x400000	base	platform	hook	base_helper	-	include	g_image_lo = Img(exe_layout::kImageBase), g_image_hi = Img(exe_layout::kPoolVa + exe_layout::kPoolSize);
+site	src/hook/crash_posix.cpp	421	module_const	-	exe_layout::kPoolVa	0x93f000	end	platform	hook	base_helper	-	include	g_image_lo = Img(exe_layout::kImageBase), g_image_hi = Img(exe_layout::kPoolVa + exe_layout::kPoolSize);
 site	src/hook/detour.cpp	262	range_cmp	>=	image::kBase	0x400000	base	platform	hook	-	-	-	const bool linked = address >= image::kBase && address < exe_layout::kOwnVa;
 site	src/hook/detour.cpp	337	range_cmp	<	image::kBase	0x400000	base	platform	hook	-	-	-	if (callee_va < image::kBase || callee_va >= image::kBase + image::kSizeOfImage)
 site	src/hook/detour.cpp	337	range_cmp	>=	image::kBase	0x400000	base	platform	hook	-	-	-	if (callee_va < image::kBase || callee_va >= image::kBase + image::kSizeOfImage)
@@ -19093,21 +19094,21 @@ site	src/hook/exe_host_posix.cpp	387	range_cmp	>	kDataVa	0x5da000	data	platform	
 site	src/hook/exe_host_posix.cpp	450	raw_literal	-	0x5C4020	0x5c4020	data	platform	hook	call	PsxRest_ImportSetTextColor	symbol	std::uint32_t SlotSetTextColor(void*, std::uint32_t) { NoGdi(" ", 0x5C4020); }
 site	src/hook/exe_host_posix.cpp	451	raw_literal	-	0x5C4024	0x5c4024	data	platform	hook	call	PsxRest_ImportSetBkMode	symbol	int SlotSetBkMode(void*, int) { NoGdi(" ", 0x5C4024); }
 site	src/hook/exe_host_posix.cpp	452	raw_literal	-	0x5C4028	0x5c4028	data	platform	hook	call	PsxRest_ImportTextOutA	symbol	int SlotTextOutA(void*, int, int, const char*, int) { NoGdi(" ", 0x5C4028); }
-site	src/hook/exe_host_posix.cpp	565	raw_literal	-	0x5C4014	0x5c4014	data	platform	hook	init	Imp_DirectSoundCreate	symbol	{0x5C4014, " ", " ", reinterpret_cast<const void*>(&SlotDirectSoundCreate)},
-site	src/hook/exe_host_posix.cpp	566	raw_literal	-	0x5C4020	0x5c4020	data	platform	hook	init	PsxRest_ImportSetTextColor	symbol	{0x5C4020, " ", " ", reinterpret_cast<const void*>(&SlotSetTextColor)},
-site	src/hook/exe_host_posix.cpp	567	raw_literal	-	0x5C4024	0x5c4024	data	platform	hook	init	PsxRest_ImportSetBkMode	symbol	{0x5C4024, " ", " ", reinterpret_cast<const void*>(&SlotSetBkMode)},
-site	src/hook/exe_host_posix.cpp	568	raw_literal	-	0x5C4028	0x5c4028	data	platform	hook	init	PsxRest_ImportTextOutA	symbol	{0x5C4028, " ", " ", reinterpret_cast<const void*>(&SlotTextOutA)},
-site	src/hook/exe_host_posix.cpp	569	raw_literal	-	0x5C407C	0x5c407c	data	platform	hook	init	Imp_GetTickCount	symbol	{0x5C407C, " ", " ", reinterpret_cast<const void*>(&SlotGetTickCount)},
-site	src/hook/exe_host_posix.cpp	570	raw_literal	-	0x5C4080	0x5c4080	data	platform	hook	init	Sound_ImportCreateEvent	symbol	{0x5C4080, " ", " ", reinterpret_cast<const void*>(&SlotCreateEventA)},
-site	src/hook/exe_host_posix.cpp	571	raw_literal	-	0x5C4084	0x5c4084	data	platform	hook	init	Sound_ImportCloseHandle	symbol	{0x5C4084, " ", " ", reinterpret_cast<const void*>(&SlotCloseHandle)},
-site	src/hook/exe_host_posix.cpp	572	raw_literal	-	0x5C4088	0x5c4088	data	platform	hook	init	Shell_ImportGetDriveType	symbol	{0x5C4088, " ", " ", reinterpret_cast<const void*>(&SlotGetDriveTypeA)},
-site	src/hook/exe_host_posix.cpp	573	raw_literal	-	0x5C40B8	0x5c40b8	data	platform	hook	init	Imp_ExitProcess	symbol	{0x5C40B8, " ", " ", reinterpret_cast<const void*>(&SlotExitProcess)},
-site	src/hook/exe_host_posix.cpp	574	raw_literal	-	0x5C4114	0x5c4114	data	platform	hook	init	Imp_TerminateProcess	symbol	{0x5C4114, " ", " ", reinterpret_cast<const void*>(&SlotTerminateProcess)},
-site	src/hook/exe_host_posix.cpp	575	raw_literal	-	0x5C4158	0x5c4158	data	platform	hook	init	Imp_PostQuitMessage	symbol	{0x5C4158, " ", " ", reinterpret_cast<const void*>(&SlotPostQuitMessage)},
-site	src/hook/exe_host_posix.cpp	576	raw_literal	-	0x5C4164	0x5c4164	data	platform	hook	init	Sound_ImportMsgWait	symbol	{0x5C4164, " ", " ", reinterpret_cast<const void*>(&SlotMsgWaitForMultipleObjects)},
-site	src/hook/exe_host_posix.cpp	577	raw_literal	-	0x5C4168	0x5c4168	data	platform	hook	init	-	-	{0x5C4168, " ", " ", reinterpret_cast<const void*>(&SlotIntersectRect)},
-site	src/hook/exe_host_posix.cpp	578	raw_literal	-	0x5C4174	0x5c4174	data	platform	hook	init	PsxRest_ImportMessageBoxA	symbol	{0x5C4174, " ", " ", reinterpret_cast<const void*>(&SlotMessageBoxA)},
-site	src/hook/exe_host_posix.cpp	794	code_const	module	kSpan	0x587000	code	platform	hook	init	-	file	SetHost(HostFound{HostKind::Exe, g_reserved.base, kTimestamp, kSpan});
+site	src/hook/exe_host_posix.cpp	577	raw_literal	-	0x5C4014	0x5c4014	data	platform	hook	init	Imp_DirectSoundCreate	symbol	{0x5C4014, " ", " ", reinterpret_cast<const void*>(&SlotDirectSoundCreate)},
+site	src/hook/exe_host_posix.cpp	578	raw_literal	-	0x5C4020	0x5c4020	data	platform	hook	init	PsxRest_ImportSetTextColor	symbol	{0x5C4020, " ", " ", reinterpret_cast<const void*>(&SlotSetTextColor)},
+site	src/hook/exe_host_posix.cpp	579	raw_literal	-	0x5C4024	0x5c4024	data	platform	hook	init	PsxRest_ImportSetBkMode	symbol	{0x5C4024, " ", " ", reinterpret_cast<const void*>(&SlotSetBkMode)},
+site	src/hook/exe_host_posix.cpp	580	raw_literal	-	0x5C4028	0x5c4028	data	platform	hook	init	PsxRest_ImportTextOutA	symbol	{0x5C4028, " ", " ", reinterpret_cast<const void*>(&SlotTextOutA)},
+site	src/hook/exe_host_posix.cpp	581	raw_literal	-	0x5C407C	0x5c407c	data	platform	hook	init	Imp_GetTickCount	symbol	{0x5C407C, " ", " ", reinterpret_cast<const void*>(&SlotGetTickCount)},
+site	src/hook/exe_host_posix.cpp	582	raw_literal	-	0x5C4080	0x5c4080	data	platform	hook	init	Sound_ImportCreateEvent	symbol	{0x5C4080, " ", " ", reinterpret_cast<const void*>(&SlotCreateEventA)},
+site	src/hook/exe_host_posix.cpp	583	raw_literal	-	0x5C4084	0x5c4084	data	platform	hook	init	Sound_ImportCloseHandle	symbol	{0x5C4084, " ", " ", reinterpret_cast<const void*>(&SlotCloseHandle)},
+site	src/hook/exe_host_posix.cpp	584	raw_literal	-	0x5C4088	0x5c4088	data	platform	hook	init	Shell_ImportGetDriveType	symbol	{0x5C4088, " ", " ", reinterpret_cast<const void*>(&SlotGetDriveTypeA)},
+site	src/hook/exe_host_posix.cpp	585	raw_literal	-	0x5C40B8	0x5c40b8	data	platform	hook	init	Imp_ExitProcess	symbol	{0x5C40B8, " ", " ", reinterpret_cast<const void*>(&SlotExitProcess)},
+site	src/hook/exe_host_posix.cpp	586	raw_literal	-	0x5C4114	0x5c4114	data	platform	hook	init	Imp_TerminateProcess	symbol	{0x5C4114, " ", " ", reinterpret_cast<const void*>(&SlotTerminateProcess)},
+site	src/hook/exe_host_posix.cpp	587	raw_literal	-	0x5C4158	0x5c4158	data	platform	hook	init	Imp_PostQuitMessage	symbol	{0x5C4158, " ", " ", reinterpret_cast<const void*>(&SlotPostQuitMessage)},
+site	src/hook/exe_host_posix.cpp	588	raw_literal	-	0x5C4164	0x5c4164	data	platform	hook	init	Sound_ImportMsgWait	symbol	{0x5C4164, " ", " ", reinterpret_cast<const void*>(&SlotMsgWaitForMultipleObjects)},
+site	src/hook/exe_host_posix.cpp	589	raw_literal	-	0x5C4168	0x5c4168	data	platform	hook	init	-	-	{0x5C4168, " ", " ", reinterpret_cast<const void*>(&SlotIntersectRect)},
+site	src/hook/exe_host_posix.cpp	590	raw_literal	-	0x5C4174	0x5c4174	data	platform	hook	init	PsxRest_ImportMessageBoxA	symbol	{0x5C4174, " ", " ", reinterpret_cast<const void*>(&SlotMessageBoxA)},
+site	src/hook/exe_host_posix.cpp	809	code_const	module	kSpan	0x587000	code	platform	hook	init	-	file	SetHost(HostFound{HostKind::Exe, g_reserved.base, kTimestamp, kSpan});
 site	src/hook/exe_icon_picture.cpp	233	at_global	-	menu_windows::at::kIconRects	0x66367c	data	platform	hook	base_helper	-	-	static_cast<std::uintptr_t>(::bof3::Img(menu_windows::at::kIconRects) + kIcon * 4));
 site	src/hook/exe_image.cpp	97	raw_literal	-	0x653910	0x653910	data	platform	hook	-	WorldMap_Records	symbol	const std::uint32_t at = 0x653910 + 0x1C * k + 0x18;
 site	src/hook/exe_image.cpp	106	raw_literal	-	0x669868	0x669868	data	platform	hook	-	-	-	out.push_back({0x669868, 0x669883, " ",
@@ -27727,6 +27728,7 @@ file	src/hook/crash.cpp	platform	hook	accessor	1
 file	src/hook/crash.cpp	platform	hook	accessor_addr	3
 file	src/hook/crash.cpp	platform	hook	addr_eq	1
 file	src/hook/crash.cpp	platform	hook	image_meta	2
+file	src/hook/crash_posix.cpp	platform	hook	image_meta	1
 file	src/hook/crash_posix.cpp	platform	hook	module_const	2
 file	src/hook/detour.cpp	platform	hook	range_cmp	3
 file	src/hook/draw_order.cpp	platform	hook	accessor	11
@@ -27825,9 +27827,9 @@ file	src/launcher/ui/main.cpp	launcher	launcher	addr_eq	1
 file	src/render/gfx_snapshot.cpp	platform	render	accessor	30
 file	src/render/gfx_snapshot.cpp	platform	render	base_offset	22
 file	src/render/render_shim.cpp	platform	render	accessor	7
-#count sites	125900
+#count sites	125901
 #count sites_game	57265
-#count sites_platform	736
+#count sites_platform	737
 #count sites_hosted	302
 #count sites_fuzz	67580
 #count sites_launcher	17
@@ -27921,9 +27923,9 @@ file	src/render/render_shim.cpp	platform	render	accessor	7
 #count class_inject_hosted	0
 #count class_inject_fuzz	0
 #count class_inject_launcher	0
-#count class_image_meta	15
+#count class_image_meta	16
 #count class_image_meta_game	2
-#count class_image_meta_platform	13
+#count class_image_meta_platform	14
 #count class_image_meta_hosted	0
 #count class_image_meta_fuzz	0
 #count class_image_meta_launcher	0

@@ -75,6 +75,11 @@ add_library(bof3x_media STATIC ${_linux_media})
 target_include_directories(bof3x_media PRIVATE src)
 target_compile_options(bof3x_media PRIVATE ${BOF3X_LINUX_COMPILE_OPTIONS})
 target_compile_options(bof3x_os PRIVATE ${BOF3X_LINUX_COMPILE_OPTIONS})
+# The seam's message box (os/dialog.h) is SDL3's where the build links SDL's
+# video: both programs that take bof3x_os here do. Without this a Fatal on
+# Linux wrote to stderr and the log alone (B2b's finding, wave B).
+target_compile_definitions(bof3x_os PRIVATE BOF3X_OS_SDL)
+target_link_libraries(bof3x_os PRIVATE ${BOF3X_SDL})
 
 # --- bof3x, the ELF ---------------------------------------------------------------
 add_executable(bof3x ${BOF3X_LINUX_SOURCES})
