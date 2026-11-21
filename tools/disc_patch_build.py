@@ -1913,7 +1913,8 @@ def read_report(mod_folder):
         if num(n, "sound_sections"):
             lack.append(count(num(n, "sound_sections"), "sound section"))
         if num(n, "table_bytes"):
-            lack.append(count(num(n, "table_bytes"), "byte") + " of table numbers")
+            lack.append(count(num(n, "table_bytes"), "byte")
+                        + " outside the tables of the game, which this install keeps as they are")
         if num(n, "pointer_bytes"):
             lack.append(count(num(n, "pointer_bytes"), "byte") + " of pointers")
         if num(n, "length_changes"):
@@ -1921,7 +1922,8 @@ def read_report(mod_folder):
         if num(n, "other_sections"):
             lack.append(count(num(n, "other_sections"), "other section"))
         if num(n, "zero_record_bytes"):
-            lack.append("%s that the patch writes into %s of a table (they are not table numbers)"
+            lack.append("%s of the patch's own program or tables in %s of a table (they do not change the numbers "
+                        "of the game)"
                         % (count(num(n, "zero_record_bytes"), "byte"), count(num(n, "zero_records"), "empty record")))
         if num(n, "skipped_bytes"):
             lack.append(count(num(n, "skipped_bytes"), "byte") + " of table records that the mod skips")
@@ -2324,13 +2326,15 @@ def selftest():
         expect(read_report(rd) == ("This build of the mod has these changes: 1 enemy table.", None),
                "report: nothing left out, no second sentence")
         write_report(rd, "w", {"enemy_tables": 1},
-                     {"zero_record_bytes": 149, "zero_records": 10, "skipped_bytes": 2, "outside_files": 15,
-                      "outside_bytes": 67 * SECTOR, "outside_sectors": 1})
+                     {"table_bytes": 43, "zero_record_bytes": 149, "zero_records": 10, "skipped_bytes": 2,
+                      "outside_files": 15, "outside_bytes": 67 * SECTOR, "outside_sectors": 1})
         expect(read_report(rd)[1] ==
-               "It does not have these changes of the patch: 149 bytes that the patch writes into 10 empty records of "
-               "a table (they are not table numbers), 2 bytes of table records that the mod "
+               "It does not have these changes of the patch: 43 bytes outside the tables of the game, which this "
+               "install keeps as they are, 149 bytes of the patch's own program or tables in 10 empty records of "
+               "a table (they do not change the numbers of the game), 2 bytes of table records that the mod "
                "skips, 15 files that the disc's directory does not list, 1 other sector that the disc's directory does "
-               "not list.", "report: the empty records, the skip and the files outside the directory, as a sentence")
+               "not list.", "report: the bytes outside the tables, the empty records, the skip and the files outside "
+               "the directory, as a sentence")
         with open(os.path.join(rd, REPORT), "w") as f:
             f.write('[carried]\nenemy_tables = "many"\n[not_carried]\n')
         expect(read_report(rd) == (None, None), "report: a file this tool did not write says nothing")
