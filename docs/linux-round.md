@@ -1785,6 +1785,41 @@ ELF's size once linked whole; anything at run time.
    every call is settled; the launch waits for the owner's word ("hold off
    on beginning", 2026-11-20).
 
+### B1 as run (2026-11-21, branch `linux/lcB-b1`, from `27ff3802`)
+
+Launched at the owner's word of 2026-11-21. Unit B1 alone: the link and
+the start-up.
+
+**The reservations' order, written before the code** (task 3; group C3's
+table, which C2's `main` codes to). Every range below 4 GB that the Linux
+ELF needs at a fixed place, or needs below 4 GB, in the order it is made.
+Each is made with no-replace semantics (`os::MemReserve` / `os::MemAlloc`
+with an address: `MAP_FIXED_NOREPLACE`, the result checked against the
+address asked); a refusal is a `Fatal` that names the range and the
+mappings of `/proc/self/maps` that hold it. The ELF itself is linked at
+`0x10000000` (`-Ttext-segment`, stage LA2) and is the kernel's to map.
+
+| # | Range | Size | Protection | Made by, when |
+|---|---|---|---|---|
+| 1 | The image's span, `base`..`base + 0x587000` (`0x400000`..`0x987000` at the player's base; `0xA00000`..`0xF87000` moved): Capcom's sections' extents, `exe_layout.h` | `0x587000` | reserved, no access, in one mapping; then inside it: | `exe_host_posix.cpp`'s `.preinit_array` entry (step 1), before any library's or our own initialiser runs; checked and logged at steps 8 to 10 |
+| 1a | the header page, `base`..`base + 0x1000` | `0x1000` | no access (Windows: the PE header; nothing reads it on Linux) | as row 1 |
+| 1b | `.stub`, VA `0x401000`..`0x5C4000` | `0x1C3000` | no access: the trap (step 10 reads it back). Never writable on Linux: nothing writes it on Windows either | as row 1 |
+| 1c | `.game`, VA `0x5C4000`..`0x93F000` (`.rdata`, `.data`, `.bss` to Capcom's `.rsrc` end) | `0x37B000` | read-write, zero (step 11 asserts it) | as row 1 |
+| 1d | `.pool`, VA `0x93F000`..`0x987000`: DIV-0062's 2,048 draw items | `0x48000` | read-write, zero but for `draw_pool_room.h`'s stamp at its start, which `make_exe.py` writes into the file on Windows | as row 1 |
+| 2 | Only at a moved base: the linked span `0x400000`..`0x987000`, the fence (`exe_host.cpp` `Fence`) | `0x587000` | reserved, no access | as row 1 |
+| 3 | The main thread's stack at its Windows place, `0x60000`..`0x160000` (x64-build-design.md 7.1: the task slices lie on it, their saved stack pointers are 32-bit words), with a guard page `0x5F000`..`0x60000` under it | `0x100000` + `0x1000` | read-write; the guard no access | as row 1; `main` moves the main thread onto it (`os::RunOnPlacedStack`) before step 3, so every step from `Engine_Main`'s entry on runs there, as on Windows |
+| 4 | The bind table of code places, `(top << 24) \| 0x400000`..`(top << 24) \| 0x5C5000` (`0x7C400000`.. first), the last page the import slots' 14-byte thunks | `0x1C5000` | read-write while built, then read-execute | `bind.cpp` `BuildTable`, at the first `Code()` - a namespace-scope initialiser, after row 1; it tries the top bytes `0x7C`, `0x70`, `0x7E`, `0x7B`, `0x7D`, then any `0x20`..`0x7F`, and stops only when none can be had (its own rule, unchanged) |
+| 5 | The arena (R10, the default where the C runtime has no exact size), the highest free run of `[2 GB, 4 GB)` that holds it (`0xF0000000`.. expected, as the 64-bit Windows build measured) | `0x10000000` (256 MB) | reserved, committed read-write 64 KB at a time | `heap_arena.cpp` `LowArena::Open`, at the first `Crt_malloc`; then `[64 KB, 2 GB)` if no run above 2 GB holds it |
+| 6 | The draw pool | - | - | row 1d: `DrawPool_Reserve` (step 18, `InjectAll`) finds the stamp there, as on Windows |
+
+Not in the table, and why: the C runtime's own heap (`std::malloc`,
+`new`) lies after the ELF's `.bss` while it grows by `brk` and above 4 GB
+for a block it maps; the users R10 listed (`render_shim.cpp`'s `Alloc`,
+`music_seq.cpp`'s `TestMalloc`, `mp3.cpp`'s `new Decoder`) are found by
+`Low32`'s `Fatal` when they meet a high block. The program's own stacks
+(`os::OwnStack`: the present's, the quicksave's, the MP3 decoder's) are
+mapped where the system puts them.
+
 ## 5. What stands in for the launcher in tier 2
 
 The launcher is Win32 dialogs: `config_dialog.cpp` 1,861 lines, `config.cpp`
