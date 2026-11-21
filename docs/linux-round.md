@@ -1760,19 +1760,27 @@ ELF's size once linked whole; anything at run time.
    both systems run one path; that is a ledger entry and the owner's look at
    the three movies on Windows after B2a. The other way keeps Windows as it
    is and gives Linux its own order.
+   **Answered (the owner, 2026-11-20): no call needed.** Only the Capcom
+   movie is kept; the two PC-only movies are both ignored, so the order of
+   the movies does not matter. B2a confirms which movie a start plays on
+   Linux and what draws it, and changes no order on Windows.
 2. **The stack watch on Linux.** Proposed: keep `BOF3X_STACKWATCH=1` a
    refusal there and say so in the switch's line of the ledger. It is a
    developer's switch; a guard page of our own for the main stack is work
    no player sees.
+   **Decided (the owner, 2026-11-20): as proposed.**
 3. **SDL3 shared on Linux alone.** Proposed: yes; Windows stays static. The
    tarball (call 5 of section 6) then holds three libraries beside the ELF.
 4. **The owner's screen.** Proposed: B1 needs no window (the self-test
    ends before one opens). From B2a on, game runs in the WSL use SDL's
    `offscreen` driver if it serves DXVK; if it does not, they open a WSLg
    window, and they run when the owner is away or says the screen is free.
+   **Decided (the owner, 2026-11-20): as proposed.**
 5. **Where the gate runs.** Proposed: here, on llvmpipe. If a route cannot
    end in time on it, the gate moves to frost's machine and the record says
    so.
+   **Decided (the owner, 2026-11-20): as proposed.** Call 3 is open: the
+   owner asked what it means for the release.
 
 ## 5. What stands in for the launcher in tier 2
 
