@@ -1960,7 +1960,12 @@ made that way. No headless X server was needed (none is installed:
    `Crt_calloc` / `Crt_free`, whose blocks are R10's arena below 4 GB
    (`render_shim.cpp` `LowAlloc` / `LowFree`); Windows keeps its `calloc`.
    The frame's own buffers (vertices, commands, the snapshot arena) stay on
-   the C runtime's heap: no game word holds them.
+   the C runtime's heap: no game word holds them. Measured after the fix,
+   B2c's settings (`pc-plus-us` cache, en-US, `BOF3X_OPT=none`,
+   `BOF3X_LAYERING=0`, `offscreen`): `quick_combat` to its end, recipe frame
+   2920, the F6 quicksave at `Frame_Counter` 901 and its F7 restore at 1201,
+   0 FATAL, no CRASH line. The `move_script::Word` fault B2c met did not
+   show in this run.
 
 Also fixed on the way: `Game_WinMain(0x0x400000, ...)` in the step-24 log
 line (`%p` prints its own `0x` with glibc); an `HRESULT` printed as
@@ -1997,6 +2002,19 @@ then killed by its PID). That is the game's rule on both systems (the
 first activation starts the loop; DIV-0033 runs on only after it), not a
 Linux fault; it means a WSLg run needs the window focused once. The icon
 on a real Linux window is **not verified**.
+
+**The gate line.**
+
+| Check | Result |
+|---|---|
+| Both Windows presets | build; no warning in a touched file. `codegen_same.py --by-function` against `3080284c`: 32-bit 32 symbols differ, all in `render_shim.cpp` and `render_d3d11.cpp`; 64-bit 33, those two files and 3 in `battle_menu_win.cpp` (the line numbers `Low32` takes, `__builtin_LINE`, moved by the Linux half's lines). The two render files: the RECT parameters' new mangled names (`PKl` to `PKi`, the same code), `MakeDevice` / `WindowBuffers` / `SaveTexture` split out of their callers, `g_level` |
+| `os_census --check --boundary`; `linux_tree.py --check` (in the WSL, `--dxvk` DXVK's `include/native`, `--sdl` SDL3's `include`) | ok; ok, 836 files compile, 0 wait |
+| `data_census --strict`, `reloc_census --check`, `reloc_bare --check`, `ledger_check`, `ledger_switches --check`, `tu_census --check --strict`, `retire_shells --check --strict` | ok |
+| `width_census --check` | fails on this unit's 12 sites alone: the step-24 `%p`, the three `HRESULT` prints (`unsigned long` of the 32-bit word), four `%p` in the renderer's two new Fatals, the four COM functions whose `long` result line changed text (`Surface_Blt`, `Surface_BltFast`, `Surface_Lock`, `Viewport_Clear`) |
+| The hosted shadow suite (32-bit), the exe host, the moved base | 922 `MISMATCHES` lines, every one 0, 0 FATAL, `done` (32,189 lines); exe host 10,392 lines, moved base 10,392, 0 FATAL each |
+| The Linux link | no undefined name |
+| `os_tests` (g++ 15), `config_tests` (WSL) | 558 checks, 0 failed; 4,400, 0 failures |
+| The ELF's self-test through the launcher | 10,393 lines, 0 FATAL, `self-test only: done` |
 
 **Not done:** the icon on a window that has the focus; the movie's fit
 compared with anything; the `SDL_VIDEO_DRIVER=wayland` path (this SDL3
