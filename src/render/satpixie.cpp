@@ -239,7 +239,7 @@ unsigned g_flip;   // which of blur1A / blur1B is this frame's
 U g_w, g_h;
 
 void Check(HRESULT hr, const char* what) {
-    if (FAILED(hr)) bof3::Fatal("render: SatPixie %s failed, HRESULT 0x%08lX", what, static_cast<unsigned long>(hr));
+    if (FAILED(hr)) bof3::Fatal("render: SatPixie %s failed, HRESULT 0x%08lX", what, static_cast<unsigned long>(static_cast<std::uint32_t>(hr)));   // 32 bits: a long is 64 on Linux
 }
 
 // The shaders are the build's bytecode (shaders_compiled.h, made from kShader
