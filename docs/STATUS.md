@@ -1,6 +1,6 @@
 # Status
 
-**Status:** IN PROGRESS (2026-11-16: `main` is `df083903`, the PR #255 merge, no PR open; `v0.1.0-beta.1` was published on 2026-11-08 from `44fd3204`; everything merged since - PRs #213 to #255 - is unreleased; in flight: the state-hash pairs' re-record, begun 2026-11-16 and paused, [`HANDOFF.md`](HANDOFF.md) item 00)
+**Status:** IN PROGRESS (2026-11-20: `main` is `e9c1fb41`, the PR #267 merge; `v0.1.0-beta.1` was published on 2026-11-08 from `44fd3204`; everything merged since - PRs #213 to #267 - is unreleased; the state-hash pairs `orig5` are current, [`state-hash.md`](state-hash.md) 6)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
@@ -9,8 +9,7 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 ## Where we are
 
 **The cutover: the drawn launcher is `bof3x-launcher`, 2026-11-20 (stage P6 of
-[`launcher-portable.md`](launcher-portable.md), its section 14; local branch `launcher/p6-cutover`, cut from
-`launcher/drawn`, not pushed).** The owner's call 3: "no need to keep both". `bof3x-launcher` is the drawn launcher on
+[`launcher-portable.md`](launcher-portable.md), its section 14; merged as PR #267, 2026-11-20).** The owner's call 3: "no need to keep both". `bof3x-launcher` is the drawn launcher on
 Windows at both widths and on Linux, and the Win32 dialogs are gone, with the four `ctypes` drivers and
 `tools/jukebox_host` (11,469 lines removed in all). It takes the Win32 launcher's command line and start as they were;
 `--set` and `--list` came from the launcher with no window, which went too. The hosted build and a moved image go to
@@ -26,56 +25,52 @@ bindings with Pause and NumLock, the pickers and questions, an install through t
 save); the release started on a clean machine and Windows Defender's verdict on the new executable.
 
 **The drawn launcher's Jukebox and save editor, 2026-11-20 (stage P5 of [`launcher-portable.md`](launcher-portable.md),
-its section 13; the same local branch as the paragraphs below).** With them every window of the Win32 launcher is in the
+its section 13; merged as PR #267, 2026-11-20).** With them every window of the Win32 launcher is in the
 drawn one. The Jukebox plays through SDL's audio stream: its samples equal the Win32 player's byte for byte for seven
 songs of different kinds (`tools/jukebox_host`), and one song's on Linux. The save editor is over the unchanged format
 core: `save_editor_check.py` says the Win32 driver's 33 checks again and 64 more with no window (97, 0 failures), and
 the files both editors write from one input are the same byte for byte. "A game is running" is asked of the seam
-(`os/running.h`), the game unchanged. `ui_compare.py` is 66 cases, 66 equal. **Owed before stage P6, the cutover:** a
-hand on the window, sound heard, the pickers and questions seen on a screen - none of it done by anybody yet.
+(`os/running.h`), the game unchanged. `ui_compare.py` is 66 cases, 66 equal. What is owed of it is
+the cutover's paragraph above.
 
 **The drawn launcher's Sources and Mods pages, 2026-11-20 (stage P4 of [`launcher-portable.md`](launcher-portable.md),
-its section 12; the same local branch as the paragraphs below).** The Sources page, the Mods tab's Data page and the
+its section 12; merged as PR #267, 2026-11-20).** The Sources page, the Mods tab's Data page and the
 start's flows that need them: a first run opens the Sources page, an install of an older release asks for the rebuild,
 Data's Sources... button, and the settings read again after a build. The importer and `tools/mods.py` run through the
 seam's process call, their lines read on a thread. **The proof:** an install built from the US disc through the page by
 script, on Windows and in the WSL, has a cache manifest that differs from the importer's own build in the build time
 alone. `ui_compare.py` is 66 cases, 66 equal. A drawn launcher on Linux can now make an install and start the game with
 no text file. One change in the seam: a child's arguments are quoted by the C runtime's rules (a folder `D:\` arrived
-as `D:"` before); the game's self-tests end 0 after it. **Owed:** a hand on the pages, the pickers and the question
-seen on a screen (none was shown), one install made through it by the owner; stages P5 and P6.
+as `D:"` before); the game's self-tests end 0 after it. What is owed of it is the cutover's paragraph above.
 
 **The drawn launcher's Controls pages, 2026-11-20 (stage P3 of [`launcher-portable.md`](launcher-portable.md), its
-section 11; the same local branch as the two paragraphs below).** The three Controls pages and the bind capture: a key
+section 11; merged as PR #267, 2026-11-20).** The three Controls pages and the bind capture: a key
 from SDL's key event through `input/key_sdl.h`, the pad shared with Dear ImGui's navigation. A host test
 (`tools/key_host/capture_tests.cpp`) walks every code a key can send: the 159 keys SDL knows store the same number in both
 launchers; Ctrl+Pause is the one key that differs (the Win32 capture stores its own number, SDL calls it Pause).
 `ui_compare.py` is 64 cases, 64 equal. **D427 is fixed** (the owner's call that day; DIV-0240 amended): a stored key
 number is DirectInput's for every key, in both launchers' captures and in the function keys' reader, so a game button
-and a function key bound to Pause are both worked by Pause. **Owed:** a real key and a real pad on the capture, Pause
-and NumLock pressed on a keyboard; stages P4 to P6.
+and a function key bound to Pause are both worked by Pause. What is owed of it is the cutover's paragraph above.
 
 **The drawn launcher's settings pages, 2026-11-20 (stage P2 of [`launcher-portable.md`](launcher-portable.md), its
-section 10; the same local branch as the paragraph below).** Every settings page is written from the Win32 page's fill
+section 10; merged as PR #267, 2026-11-20).** Every settings page is written from the Win32 page's fill
 and read-back code: Settings, Preset, the three suites, the cheats, the solo character, Extras, New Game, Music, the
 cache folder, SatPixie's options. The window saves as the Win32 one does. `tools/launcher_host/ui_compare.py` makes the
 same choices in both launchers and compares the settings files: 48 cases, 48 equal byte for byte, on the owner's
 install read and not written. The banner is TeX Gyre Pagella, built in ([`THIRD_PARTY.md`](THIRD_PARTY.md) section 7; the
-owner's choice), the same on both systems. **Owed:** the owner's eye on the pages, a hand on the window; stages P3 to P6.
+owner's choice), the same on both systems. What is owed of it is the cutover's paragraph above.
 
-**The drawn launcher's frame, 2026-11-20 (stage P1 of [`launcher-portable.md`](launcher-portable.md), IDEAS I69; on the local
-branch `launcher/p1-frame`, not merged to `main`, not pushed).** Asked by the owner that morning. A second executable,
+**The drawn launcher's frame, 2026-11-20 (stage P1 of [`launcher-portable.md`](launcher-portable.md), IDEAS I69; merged as PR #267, 2026-11-20).** Asked by the owner that morning. A second executable,
 `bof3x-launcher-ui`, drawn by Dear ImGui `v1.92.9b` on SDL3's renderer ([`THIRD_PARTY.md`](THIRD_PARTY.md) section 6): the
 title page, Configure's tabs and rows, Play through stage P0's start, and a sample page of every widget for the look. The
 pages are written against `src/launcher/ui/ui.h`, which names no library. It builds and runs at both Windows widths and
 in the WSL; a page is captured and its keyboard and pad checked with no screen (`--capture`, `--keys`). SDL's 2D renderer
 (Direct3D 11 on Windows, 0.4 ms a frame where the software one cost 12 to 44) and file dialog are now built, with SDL's audio
 and pad drivers as before; `bof3x.dll` is 2.5 MB larger for it, and its self-tests and a two-minute attract run pass.
-**Owed: the owner's look** (the captures, and a font for the banner and the text that may ship); stages P2 to P6. Not
-run: a hand on the window, a scaled display, the message box and the pickers, a Deck. The document's section 9 is the record.
+The banner's font is the owner's choice (stage P2). Not run: a scaled display, a Deck. The document's section 9 is the
+record.
 
-**`BOF3.exe` out of the player's run, 2026-11-19 (the exe-retire round, IDEAS I70; on the local branch `exe-retire/round`,
-not merged to `main`, not pushed).** Asked by the owner the same day: "remove the original exe from any post-install player
+**`BOF3.exe` out of the player's run, 2026-11-19 (the exe-retire round, IDEAS I70; merged as PR #266, 2026-11-20).** Asked by the owner the same day: "remove the original exe from any post-install player
 usage". After an install is made, nothing a player runs opens `BOF3.exe` (DIV-0242): `.data` is the cache's image on every
 install kind, hashed as mapped against the manifest's `[exe] sha256` (1.8 to 2.1 ms); the install's kind is the cache's
 `[build] install_kind`; new installs hold no `BOF3.exe` in `game\`; the save editor reads the image and gains the party
@@ -84,8 +79,12 @@ place before its first start, its saves left where they are (DIV-0241). DIV-0212
 importer's `verify` and the developer's runs; the presets no longer read the file), DIV-0100 and DIV-0102 amended, D432
 fixed. The importer still reads the file as a source, the hosted build runs inside it, and `BOF3X_EXEFILE=1` is the
 developer's switch to read it. Measured by each group ([`exe-retire-round.md`](exe-retire-round.md), "As run"): both
-builds, the host tests, the censuses, the exe host's self-test with and without the switch, the hosted suite. **Not run:**
-the ten state-hash routes, the round's final proof (X7), the Sources page's window and the save editor's window. Not played.
+builds, the host tests, the censuses, the exe host's self-test with and without the switch, the hosted suite. On 2026-11-20 at `main`
+`e9c1fb41`: the ten state-hash routes on `<main checkout>\bof3`, on an install with no `BOF3.exe` and with a wrong-bytes
+`BOF3.exe` beside the game, each the same as before the round but for known noise pages, and `music_heard.py` on both
+(round doc 9a). The owner checked the Sources page's window, the save editor's window and the Jukebox on a game folder
+with no `BOF3.exe` (2026-11-20). **Not run:** the save editor's window on a disc-built install, the Jukebox's and the save
+editor's drivers. Not played.
 
 **A PlayStation disc needs no ffmpeg, 2026-11-11 (DIV-0214, DIV-0215; merged as PR #228, frost's PR #225 with the review's commits;
 [`psx-media-round.md`](psx-media-round.md)).** The importer copies the logo movie's sectors
@@ -95,7 +94,20 @@ against ffmpeg's decode and `tools/xa.py`, both widths, and under Proton on a Li
 where `main` also draws with nothing added to the prefix ([`linux-round.md`](linux-round.md) 2c). The PC
 movie's repair and the PSP's sound and movie still take the player's ffmpeg.
 
-**Merged since the beta, 2026-11-08..15, one line each (none of it released):**
+**Merged since the beta, 2026-11-08..20, one line each (none of it released):**
+
+- **PR #267 (2026-11-20):** the drawn launcher replaces the Win32 dialogs, one launcher for Windows and Linux (stages P1 to P6, above).
+- **PR #266 (2026-11-20):** `BOF3.exe` out of the player's run (above; DIV-0241, DIV-0242).
+- **PR #265 (2026-11-20):** the Linux round's stage LC, wave A: the launcher's model off Windows, the OS seam's last Windows-only names, paths and case, the Linux target, the exe host's start-up as steps ([`linux-round.md`](linux-round.md), "Wave A as run"). No behaviour change on Windows.
+- **PR #264 (2026-11-19):** the review of the Linux round's PRs (below; D428..D431).
+- **PR #263 (2026-11-19):** the launcher's Function keys page, each function action bound to any key and a pad input (DIV-0240).
+- **PR #262 (2026-11-19):** the Linux round's wave 2: every source file compiles for x86-64 Linux; the window and the keyboard on SDL3.
+- **PR #261 (2026-11-18):** the Linux round's wave 1: 794 of 806 files compile for x86-64 Linux.
+- **PR #260 (2026-11-18):** docs only, the state-hash route pairs recorded again as `orig5` ([`state-hash.md`](state-hash.md) 6).
+- **PR #259 (2026-11-18):** the Linux round's unit LB0 (below).
+- **PR #258 (2026-11-17):** SatPixie's scan lines roll the same under smooth motion (DIV-0230 amended); a 19th wide-staging row (area 28).
+- **PR #257 (2026-11-16):** late frames: the waiting frame is presented (DIV-0237, D426); no in-between after one; smooth motion's statistics and motion checker.
+- **PR #256 (2026-11-16):** docs only, the owner's word of 2026-11-16 and a staleness pass.
 
 - **PRs #252, #254 and #255 (2026-11-15):** smooth motion's faults from the owner's play at 21:9, presentation only, within DIV-0230 ([`frame-interpolation.md`](frame-interpolation.md) section 6, items 10, 13 to 15, 17 and 18). PR #252: a scaled sprite keeps its look, a changed cel carries the motion its kept draw was shown with, a surface votes by its looks drawn once (`tools/interp_holes.py`). PR #254: SatPixie's trail fades by the whole knob on every picture, so it is as strong as with the in-between off and lasts half as long (DIV-0230 amended; seen by the owner in play). PR #255: a figure whose cel changed box and texture is paired by its place in the list (route `pathCouple`: 13 of 94 in-betweens apart before, none of 96 after). Item 18 is open: after a late frame both builds show holes in the sea. No ten-route state-hash proof is recorded for the three.
 - **PR #253 (2026-11-15):** the sea bridge's far end at 21:9 (DIV-0041 amended) - under the wide picture the deck's slope runs on past the original's rows (`BOF3X_BRIDGE_ROWS`) and the cloud strips go behind the map layers. `bridgeWalk`: narrow identical on 34 captures, 21:9 differs at the far end only; `BOF3X_SHADOW='*'` narrow and at 21:9 exit 0.

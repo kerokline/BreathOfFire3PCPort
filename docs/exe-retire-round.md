@@ -1,10 +1,14 @@
 # `BOF3.exe` out of the player's run: staging
 
-**Status:** BUILT (2026-11-19, the local branch `exe-retire/round`, not merged
-to `main`, not pushed): groups X1 to X6 ran the same day, section 9. **Not run
-yet** (section 10): the ten state-hash routes, X7 (the proof that nothing
-opens the file), the Sources page's window, the save editor's window. Not
-played. Asked by the owner on 2026-11-19: "remove the original exe from any
+**Status:** MERGED (PR #266, 2026-11-20): groups X1 to X6 ran on 2026-11-19,
+section 9. **The ten state-hash routes and X7's routes and music ran on
+2026-11-20** at `main` `e9c1fb41` (section 9a): every route the same as
+before the round, on `<main checkout>\bof3` and on an install with no
+`BOF3.exe`, and the same again with a `BOF3.exe` of wrong bytes beside the
+game. **The owner's hand, 2026-11-20:** the Sources page's window, the save editor's
+window and the Jukebox on a game folder with no `BOF3.exe` (section 9a).
+**Not run yet** (section 10): the save editor's window on a disc-built
+install, the Jukebox's and the save editor's drivers. Not played. Asked by the owner on 2026-11-19: "remove the original exe from any
 post-install player usage"; the five calls of section 7 answered the same day,
 all as proposed. Staged on the Linux round's wave A merge (`linux/lcA`
 `33de9f1b`); sections 1 to 8 are the staging, with section 8's items answered
@@ -329,19 +333,52 @@ round.
   (only pids and timings differ). The hosted suite (`--host bof3`, `BOF3X_SHADOW='*'`) on `<main checkout>\bof3`: `self-test only: done` in 993 s, 922 `MISMATCHES` lines, all 0, 0 FATAL (X3's run's log holds 922 such lines too; the 927 of the briefs was not found in it).
 - **Not run by X6:** the 64-bit self-test, the ten routes, X7, any window.
 
+## 9a. The proofs as run (2026-11-20, `main` `e9c1fb41`)
+
+The tree of `main` after PR #266 and PR #267 (the launcher round), built in
+the `launcher-p1` worktree at `2af4f4ea` (its tree is `e9c1fb41`'s). One game
+at a time on a quiet, hands-off machine; no run saw a compiler. The chain is
+`D:\bof3x-runs\exeretire\coord\proofs1120b.py` (the round's `proofs.py` with
+the build, the output folder and the order changed), its log
+`proofs1120b.out` and the first part's `proofs1120.out` beside it; the hash
+files are `analysis/statehash/cn_<route>_xr`, `_xr7` and `_xr7w`.
+
+X7's install is the one the coordinator made on 2026-11-19 with the merged
+importer from the PC source (`coord\x7home`: no `BOF3.exe` in `game\`). The
+owner's save slots and `BOF3.CFG` were copied into its `game\` from
+`<main checkout>\bof3` first, so the save list reads what the references read.
+
+| Step | Result |
+|---|---|
+| The ten routes on `<main checkout>\bof3` (`_xr`; the runner sets `BOF3X_EXEFILE=1`) | All ten end `done`, rc 0. Against the runs of ours before the round (`m1116`; `lcA` the same): seven identical on every tick; `worldMapAndAreaTransition`, `caughFish` and `masterAndManillo` differ on `0x6C3000` alone (`D3d_BackMaterialHandle`, run-to-run noise: two runs of one build differ on it); `combat` on `0x7E1000` at its last tick, 2,621, alone (a late frame's page, recorded in `d56-encounter-bounds.md` and `wide-ring.md`; identical to `lcA`) |
+| The ten routes on X7's install (`_xr7`) | All ten end `done`; every log says `BOF3.exe is not opened` and that the image is the one the manifest records. Against `_xr`: seven identical on every tick, the same three on `0x6C3000` alone |
+| The ten routes with a `BOF3.exe` of our own bytes in X7's `game\` (`_xr7w`) | All ten end `done`, `BOF3.exe is not opened`. Against `_xr7`: seven identical, the same three on `0x6C3000` alone. So nothing read the file |
+| `music_heard.py`, `whelpBoss` and `cutsceneAndNue` | Pass on both installs: 164 ring lines and 6 tracks, 116 and 5, the same on each |
+| The hosted shadow suite (`BOF3X_SHADOW='*'`) | `done` in 940 s: 922 `MISMATCHES` lines, all 0, 0 FATAL |
+| The exe host and the moved base (`BOF3X_EXEFILE=1`) | `done`, 10,392 log lines each, 0 FATAL |
+
+**The owner's hand, 2026-11-20.** On a game folder with no `BOF3.exe`: "I've
+verified both the sources page window and save editor windows on the no
+bof3.exe game folder - both are working as expected. I've also played songs
+on the jukebox." Whether the Sources page ran a set-up in place there was not
+said.
+
+**A trap paid.** The first X7 pass failed every run in 6 s: `input_run.py`
+looks for a recipe save in its own checkout's `tools\recipe_saves` and beside
+the game folder's parent, and neither holds one for a worktree's runner on an
+install under `D:\`. `BOF3X_RECIPE_SAVES=<main checkout>\tools\recipe_saves`
+in the run's environment fixed it.
+
 ## 10. Not run yet
 
-- The ten state-hash routes on `<main checkout>\bof3` under
-  `BOF3X_EXEFILE=1` (the references' conditions), then on an install with no
-  `BOF3.exe`.
-- X7: a harness install made from the PC source by the new importer, the
-  routes, `music_heard.py`, the Jukebox's and the save editor's drivers on
-  it; then the same with a `BOF3.exe` of wrong bytes put into `game\`.
+- X7's other drivers: the Jukebox's and the save editor's on the install with
+  no `BOF3.exe` (the owner's hand covered both windows, section 9a).
 - The Sources page's window driven through a set-up in place (X3 ran the same
-  importer commands from the command line).
-- The save editor's window on a disc-built install and on a PC install with
-  no `BOF3.exe` (`save_editor_drive.py`), and `save_tests` with the owner's
-  fixtures and `--layers` (the coordinator's).
+  importer commands from the command line; the owner opened the page on a
+  folder with no `BOF3.exe`).
+- The save editor's window on a disc-built install (`save_editor_drive.py`),
+  and `save_tests` with the owner's fixtures and `--layers` (the
+  coordinator's).
 - The windowless launcher's program end to end; a live runner
   (`input_run.py`, `attract_run.py`, `abc_run.py`) on `<main checkout>\bof3`
   with its new switch line.

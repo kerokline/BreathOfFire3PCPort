@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-11-16: `main` is `df083903`, the PR #255 merge, and no PR is open; `v0.1.0-beta.1` was published on 2026-11-08 from `44fd3204`, the PR #212 merge; merged since the beta: PRs #213, #214, #217..#222, #224 and #227..#247 and #248..#255 ([`STATUS.md`](STATUS.md) has a line each), none of it released; in flight is the state-hash pairs' re-record, paused (item 00, the beta.2 bullet); the item numbers below were not renumbered by this pass)
+**Status:** IN PROGRESS (2026-11-20: `main` is `e9c1fb41`, the PR #267 merge; `v0.1.0-beta.1` was published on 2026-11-08 from `44fd3204`, the PR #212 merge; merged since the beta: PRs #213, #214, #217..#222, #224 and #227..#267 ([`STATUS.md`](STATUS.md) has a line each), none of it released; the item numbers below were not renumbered by this pass)
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
 than restating it**.
@@ -14,7 +14,7 @@ the investigation docs; anything durable moves to `STATUS.md`.
 ## Where things stand in one paragraph
 
 **10,088 functions are ours in the exe host, 10,087 in a hosted run** (the game's own code is all ours since PR #43; the count was last recorded at `a7c7a9e5`, [`STATUS.md`](STATUS.md) "Where we are"; not measured again at `ce75c996`).
-**`origin/main` is `df083903`** (PR #255, 2026-11-15). **`v0.1.0-beta.1` is published** (2026-11-08, the tag at `44fd3204`, the PR #212 merge; `v0.1.0-alpha.6` stayed a draft and was deleted that day, its tag kept). **Since the beta, `main` took** the World Map Heal fix (PR #213, DIV-0208), the source-layout round's stages B0 to D with the cleanup round (PRs #214, #217), the save editor and its reference (PRs #218, #221, #222; DIV-0209..0211), the Proton fixes (PR #219, D411, D412), romhacks as mods (PRs #220, #227; issue #216), the image-layer round and its measurements (PRs #224, #231; DIV-0212, DIV-0213), the PSX media round (PR #228, DIV-0214, DIV-0215), the Linux native groundwork (PR #229), a docs truth pass (PR #230), the romhack's ten behaviours (PRs #232, #233; DIV-0216..0225) and its version 1.4 (PR #239), the learn cheat (PR #234, DIV-0226), the save slot's EXP bar (PR #235, DIV-0227), the owner's answers of 2026-11-12 (PR #236), the New Game and solo-character rounds' staging docs (PRs #237, #238), the solo-character mode (PR #240, DIV-0228, DIV-0229; issue #223), a romhack's patch added by itself, from its author's archive and under European English (PRs #241, #242, #244), the story watcher and the records' names (PR #243), smooth motion (PRs #245, #246; DIV-0230) the New Game round (PR #247, DIV-0231..0236), the cleanup and D420's fix (PRs #248, #249), a PPF applied to the data track alone (PR #250), the wide picture's model sprites, area 90 and the sea bridge's far end (PRs #251, #253; DIV-0041 amended, D425) and smooth motion's faults from the owner's play (PRs #252, #254, #255) - none of it is in a release (item 00). Before the beta, since the reading-row round (PR #106) it took the faster
+**`origin/main` is `e9c1fb41`** (PR #267, 2026-11-20). **`v0.1.0-beta.1` is published** (2026-11-08, the tag at `44fd3204`, the PR #212 merge; `v0.1.0-alpha.6` stayed a draft and was deleted that day, its tag kept). **Since the beta, `main` took** the World Map Heal fix (PR #213, DIV-0208), the source-layout round's stages B0 to D with the cleanup round (PRs #214, #217), the save editor and its reference (PRs #218, #221, #222; DIV-0209..0211), the Proton fixes (PR #219, D411, D412), romhacks as mods (PRs #220, #227; issue #216), the image-layer round and its measurements (PRs #224, #231; DIV-0212, DIV-0213), the PSX media round (PR #228, DIV-0214, DIV-0215), the Linux native groundwork (PR #229), a docs truth pass (PR #230), the romhack's ten behaviours (PRs #232, #233; DIV-0216..0225) and its version 1.4 (PR #239), the learn cheat (PR #234, DIV-0226), the save slot's EXP bar (PR #235, DIV-0227), the owner's answers of 2026-11-12 (PR #236), the New Game and solo-character rounds' staging docs (PRs #237, #238), the solo-character mode (PR #240, DIV-0228, DIV-0229; issue #223), a romhack's patch added by itself, from its author's archive and under European English (PRs #241, #242, #244), the story watcher and the records' names (PR #243), smooth motion (PRs #245, #246; DIV-0230) the New Game round (PR #247, DIV-0231..0236), the cleanup and D420's fix (PRs #248, #249), a PPF applied to the data track alone (PR #250), the wide picture's model sprites, area 90 and the sea bridge's far end (PRs #251, #253; DIV-0041 amended, D425) and smooth motion's faults from the owner's play (PRs #252, #254, #255) - none of it is in a release (item 00). Before the beta, since the reading-row round (PR #106) it took the faster
 text, the bit-15 round, the PlayStation verdict pass and twin-diff, fix wave 1023, the sound-layer round, the
 issue fixes of 2026-10-24..26, build-difference prevention (the data diff and the every-door sweep), the spell
 sweep and its fix wave, the two staged rounds, the away day (PR #158), D42's dial (PR #159), the boss sweep (PR #161), the ledger-fields round (PRs #162, #164), D397 and issue #163
@@ -23,7 +23,7 @@ issues 177..179 (PRs #181, #182), the 64-bit build round (PRs #183, #187, #207, 
 last), DIV-0202 (PR #186), issue #185 (PR #188), issues 184 and 189 (PR #193), issue #191 (PR #194), the desert
 faerie entrance DIV-0204 (PR #202) and the ending scenes (PR #209)
 ([`STATUS.md`](STATUS.md) lists them with their PRs). Every round branch the earlier versions of this file called
-local or unpushed is merged; the local branches with commits not in `main` are listed under "In flight". **No PR is open** (2026-11-16).
+local or unpushed is merged; the local branches with commits not in `main` are listed under "In flight". **No PR is open** but this records PR, `docs/exe-retire-proofs` (2026-11-20).
 Owed throughout:
 the owner's play, eye and ear ([`owner-review.md`](owner-review.md), item 13). Layers built before DIV-0148 carry
 no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fishing tag 3: rebuild a language
@@ -66,8 +66,9 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      as `cn_<route>_orig5` / `_orig5b`** (2026-11-16 and 2026-11-18, a build of `main` `df083903`; item 15,
      [`state-hash.md`](state-hash.md) 6): every pair agrees with itself on every tick, ours at that build
      (`_m1116`) differs only by ledgered changes, and a hosted run of ours with those changes off is identical to
-     the pair on all ten routes. Not done: a run of ours at the tip after `df083903` (PRs #256 to #258) against
-     the pairs.
+     the pair on all ten routes. A run of ours at `main` `e9c1fb41` (2026-11-20, the exe-retire round's proofs,
+     [`exe-retire-round.md`](exe-retire-round.md) 9a): identical to `_m1116` on every tick but for the noise pages
+     `0x6C3000` and combat's last-tick `0x7E1000`, so the pairs' reading still holds.
    - **The New Game round is merged** (item 18; PR #247, 2026-11-15). The owner saw it right under English and Japanese (2026-11-16). Owed: the rest of the play list
      ([`owner-review.md`](owner-review.md), section "2026-11-14, the New Game round") and what the PR lists as not run.
    - **The solo-character mode is merged** (PR #240, 2026-11-13; IDEAS I56, issue #223 closed;
@@ -100,21 +101,19 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      ("Wave 1 as run"). **The ten state-hash routes ran on the merged branch on 2026-11-18:** seven identical to
      `m1116` on every tick, three differ on the one page `0x6C3000`, which two runs of the same build also differ on.
      The hosted shadow suite (922 lines of 0), the exe host and the moved base passed there the same day.
-     **LB0 and wave 1 are on `main` (PRs #259 and #261, merged 2026-11-18).** Not known to have run:
-     `music_heard.py` to its end, a game with `BOF3X_ARENA=1`. Wave 2 (R5, R6, R7, R9) is not launched: it needs
-     the owner's eye. Call 1 is answered (the owner, 2026-11-18): wave 2 runs here too, and frost takes the round
-     over when he is ready. Call 3 is answered (the owner, 2026-11-18):
-     no release with both paths. The read passes ran ([`linux-round.md`](linux-round.md), "Wave 2's read passes") and
-     the wave's brief is drafted, not launched: `analysis/linux_wave2_brief.md` in the main checkout (not tracked). The pad is on SDL3 already (DIV-0050), so R5 is the keyboard alone, and it goes
-     to SDL3 with no launcher option.
+     **LB0 and wave 1 are on `main` (PRs #259 and #261, merged 2026-11-18).** Not known to have run: a game with `BOF3X_ARENA=1` (`music_heard.py`
+     passed on two routes on 2026-11-20, [`exe-retire-round.md`](exe-retire-round.md) 9a). **Wave 2 ran and is on
+     `main`** (PR #262; the review, PR #264): every source file compiles for x86-64 Linux, and the keyboard is on SDL3
+     with no launcher option. Call 1 is answered (the owner, 2026-11-18): frost takes the round over when he is ready.
+     Call 3 is answered (the owner, 2026-11-18): no release with both paths.
    - **Stages LC and LD are staged as one round, not launched (2026-11-19, branch `docs/linux-lc-staging`):** fourteen groups in
      three waves ([`linux-round.md`](linux-round.md), "Stages LC and LD, staged as one round"), five calls for the owner before a
-     launch. Wave 2 ran and is on `main` (PR #262; the review, PR #264), so the lines above that say it is not launched are
-     stale, and so is the second backend as tier 2's gate in the line below (call 1 chose DXVK-native). Found for the staging:
+     launch; **wave A is on `main`** (PR #265, 2026-11-20; [`linux-round.md`](linux-round.md), "Wave A as run").
+     Call 1 chose DXVK-native, so the second backend is no longer tier 2's gate. Found for the staging:
      nothing on Linux reads `bof3x.ini`, the seam starts no process, the movie's picture is a `Fatal` off Windows, LB8 did
      not run, and no Windows 64-bit state-hash reference is recorded. **A launcher for both systems** is estimated in
      [`launcher-portable.md`](launcher-portable.md) (IDEAS I69); its stage P0 is the round's group C7. **Its stages P1 to P6 are built
-     (2026-11-20, branch `launcher/drawn`, pull request 267, a draft; P6 on the local branch `launcher/p6-cutover`):
+     (2026-11-20, merged as PR #267 the same day):
      the drawn launcher, Dear ImGui on SDL3 - the title page, Configure, every settings page, the Controls pages and the
      bind capture, the Sources and Mods pages, the Jukebox and the save editor, its sections 9 to 13 - and since P6, the
      cutover (section 14; the owner's call 3: "no need to keep both"), it is `bof3x-launcher` on Windows at both widths
@@ -122,25 +121,27 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      (`--game`, `BOF3_GAME_DIR`, `--config`, `--no-config`, `--host`, `--`, and `--set`/`--list`); the hosted build and
      a moved image go to `bof3x-launcher-dev.exe`, the developer launcher, Win32 and 32-bit with no window. A page is
      checked with no screen by `build/bof3x-launcher.exe --check --ini IN --save OUT --script "open settings; set wide=1;
-     press Back; press Exit"`. Next there: the owner's eye on the pages, a hand on the window, a real key and pad on the
-     capture (Pause and NumLock after D427's fix); the owner's one install made through the Sources page, the pickers
-     and the questions seen on a screen, and the Jukebox heard; the release's zips and tarball started on clean machines
-     and Windows Defender's verdict on the new executable (section 14, "Not run"). The checks with no window:
+     press Back; press Exit"`. **The owner's hand, 2026-11-20:** every toggle in place, the Jukebox heard, and the Sources
+     page and the save editor opened on a game folder with no `BOF3.exe`. Next there: a real key and pad on the capture
+     (Pause and NumLock after D427's fix); one install made through the Sources page, the pickers and the questions
+     seen on a screen, the save editor used on a save; the release's zips and tarball started on clean machines and
+     Windows Defender's verdict on the new executable (section 14, "Not run"). The checks with no window:
      `tools/launcher_host/save_editor_check.py` (97 checks; copies of saves only), `tools/key_host`, and `--check`
      scripts (`SDL_AUDIODRIVER=dummy`; a check's Jukebox is silent whatever it says). Two rules the gates taught: no
      widget call named as an engine accessor is (`At`), and a colour as red, green and blue, never one hexadecimal
      number. A refusal of the start shows a modal message box only when no script can wait for it: never under
      `--check`, `--no-config`, a self-test, or a redirected stdout and stderr (section 14).
-   - **`BOF3.exe` out of the player's run: groups X1 to X6 built on the local branch `exe-retire/round` (2026-11-19), not
-     merged to `main`, not pushed:** [`exe-retire-round.md`](exe-retire-round.md) "As run", IDEAS I70, DIV-0241, DIV-0242,
+   - **`BOF3.exe` out of the player's run: merged (PR #266, 2026-11-20):** [`exe-retire-round.md`](exe-retire-round.md) "As run", IDEAS I70, DIV-0241, DIV-0242,
      DIV-0212 amended, D432. A player's start reads no `BOF3.exe`; a PC folder with no image is set up in place first.
-     **Owed before a PR:** the ten state-hash routes on `<main checkout>\bof3` under `BOF3X_EXEFILE=1`, then X7 (a harness
-     install with no `BOF3.exe`, the routes, `music_heard.py`, the Jukebox's and the save editor's drivers, the same with a
-     wrong `BOF3.exe` beside the game); the Sources page's window driven through a set-up in place; the save editor's
-     window on a disc-built install. None has run.
+     **The proofs ran on 2026-11-20 at `main` `e9c1fb41`** (round doc 9a): the ten routes on `<main checkout>\bof3`, on
+     an install with no `BOF3.exe` and with a wrong-bytes `BOF3.exe` beside the game, every one the same as before the
+     round but for known noise pages; `music_heard.py` on both; the hosted suite, the exe host and the moved base.
+     The owner checked the Sources page's window, the save editor's window and the Jukebox on a game folder with no
+     `BOF3.exe` (2026-11-20: "both are working as expected"). **Owed:** the save editor's window on a disc-built install; the
+     Sources page through a set-up in place; the Jukebox's and the save editor's drivers; the owner's play.
    - **The Linux round's next units** are frost's, on his fork ([`linux-round.md`](linux-round.md) 4 and 6; "Waiting on
-     someone else"). Here: the renderer's remainder ([`platform-layers-plan.md`](platform-layers-plan.md) 2.2) and the
-     second backend (IDEAS I63) gate tier 2, and the API is the owner's call 1 of `linux-round.md` 6. Tier 1's rows 5, 7
+     someone else"). Here: the renderer's remainder ([`platform-layers-plan.md`](platform-layers-plan.md) 2.2) gates tier 2;
+     call 1 of `linux-round.md` 6 chose DXVK-native. Tier 1's rows 5, 7
      and 9 to 12 are still to run on frost's Linux machine (2c).
    - **The romhack's behaviours** ([`disc-patch-round.md`](disc-patch-round.md) 6a to 6d; PRs #232, #233, #239): ten built,
      eight proven with the game, **all ten played by the owner on 2026-11-12** under version 1.0 (`main` `db9619da` from
