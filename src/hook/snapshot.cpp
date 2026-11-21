@@ -570,6 +570,21 @@ os::MoveResult SystemMove(const fs::path& from, const fs::path& to) { return os:
 // present under some name, nothing half-moved. A rename never replaces: a
 // file at the target (one made there since the step above moved it) stops
 // the rotation, never lost.
+//
+// A slot file of zero bytes is no quicksave - none is ever written so:
+// WriteNewest writes the temporary file whole and renames it - and it is what
+// a crash inside os::MoveFileKeep's third way leaves at a step's target (its
+// exclusive create done, the rename over it not; os/file_move.h). The seam
+// refuses such a file as it refuses any file at a target (its own rule:
+// "an empty file at the target is a file"); the rotation, which knows what a
+// slot holds, removes it as a gap when its step comes, so it is neither moved
+// up the history as an empty slot nor in the way of a later step (D431's
+// open item, docs/linux-round.md "B2c as run").
+bool EmptySlotFile(const fs::path& path) {
+    std::error_code ec;
+    return fs::is_regular_file(path, ec) && fs::file_size(path, ec) == 0 && !ec;
+}
+
 bool Rotate(const fs::path& dir, std::string& why, MoveFn move = &SystemMove) {
     const fs::path top = SlotPath(dir, kLastSlot);
     std::error_code ec;
@@ -580,6 +595,15 @@ bool Rotate(const fs::path& dir, std::string& why, MoveFn move = &SystemMove) {
     for (unsigned slot = kLastSlot - 1; slot + 1 > kFirstSlot; --slot) {
         const fs::path from = SlotPath(dir, slot);
         if (!Exists(from)) continue;
+        if (EmptySlotFile(from)) {
+            if (!fs::remove(from, ec)) {
+                why = Printf("%s is empty and could not be deleted (error %d)", SlotName(slot).c_str(), ec.value());
+                return false;
+            }
+            Log("quicksave   %s was empty (no quicksave is; a crash in a rotation's rename leaves one): removed, a gap",
+                SlotName(slot).c_str());
+            continue;
+        }
         const os::MoveResult moved = move(from, SlotPath(dir, slot + 1));
         if (moved != os::MoveResult::Moved) {
             why = Printf("%s could not be renamed to %s (%s, error %lu)", SlotName(slot).c_str(), SlotName(slot + 1).c_str(),
@@ -1106,6 +1130,26 @@ void SelfTestRotation(const fs::path& dir) {
               HoldsText(SlotPath(dir, 0x10), SlotName(0x10)) && !Exists(dir / "BISLPS10.TMP");
     Check(stopped, "a rename that fails stops the rotation with a refusal, every file present, the rival kept, no new 10");
     if (!ok) Log("shadow      snapshot: the refusal read \"%s\"", why.c_str());
+
+    // What a crash inside MoveFileKeep's third way leaves (D431): the step
+    // 14 -> 15 had made its claim, an empty 15, when the process ended - the
+    // steps above it done (16..1F each one up, the old 1F gone), 10..14 where
+    // they were, the crashed F6's take still under BISLPS10.TMP. The next F6
+    // rotates whole: the empty file is removed as a gap (not moved up to 16
+    // as an empty slot), every quicksave moves up one, 10 is the new take,
+    // and no file of zero bytes is left.
+    ClearDir(dir);
+    for (unsigned s = kFirstSlot; s <= 0x14; ++s) WriteAll(SlotPath(dir, s), Text(SlotName(s)), why);
+    std::ofstream(SlotPath(dir, 0x15), std::ios::binary).close();   // the claim: a file of zero bytes
+    for (unsigned s = 0x16; s <= kLastSlot; ++s) WriteAll(SlotPath(dir, s), Text(SlotName(s - 1)), why);
+    WriteAll(dir / "BISLPS10.TMP", Text("crashed"), why);
+    ok = WriteNewest(dir, Text("new"), why);
+    bool crashed = ok && HoldsText(SlotPath(dir, kFirstSlot), "new") && !Exists(SlotPath(dir, 0x16)) &&
+                   !Exists(dir / "BISLPS10.TMP");
+    for (unsigned s = kFirstSlot + 1; s <= 0x15; ++s) crashed = crashed && HoldsText(SlotPath(dir, s), SlotName(s - 1));
+    for (unsigned s = 0x17; s <= kLastSlot; ++s) crashed = crashed && HoldsText(SlotPath(dir, s), SlotName(s - 2));
+    for (unsigned s = kFirstSlot; s <= kLastSlot; ++s) crashed = crashed && !EmptySlotFile(SlotPath(dir, s));
+    Check(crashed, "an empty slot file a crash left: removed as a gap, the rest moved up one, 10 the new one");
     ClearDir(dir);
 }
 
@@ -1126,7 +1170,7 @@ void SelfTest() {
     Log("shadow      snapshot: self-test passed - span 0x%08X+0x%X and pool 0x%08X+0x%X copied, scribbled and restored equal; "
         "a missing participant either side, a participant's check, another language, another build, DLL base, arena top "
         "and a truncated file refused; an empty slot; the "
-        "rotation over sixteen files, a gapped set and a failed rename",
+        "rotation over sixteen files, a gapped set, a failed rename and an empty slot file a crash left",
         span.image.base, span.image.bytes, span.pool.base, span.pool.bytes);
 }
 

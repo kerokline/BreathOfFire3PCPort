@@ -6,6 +6,7 @@
 #pragma once
 
 #include "os/case_check.h"
+#include "os/case_fold.h"
 #include "os/clock.h"
 #include "os/dialog.h"
 #include "os/env.h"
