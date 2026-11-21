@@ -48,16 +48,39 @@ being random. 2026-09-30 cost a day and a withdrawn ledger entry (DIV-0067).
 One game at a time, too: two runs share build/bof3x.log and build/bof3x.dll.
 Exit status 0 when the recipe finished, 1 when it FAILED or timed out.
 
---host linux --elf PATH runs the Linux build instead (tools/linux_run.py):
-the ELF itself, directly on Linux or through `wsl -e` from Windows, with the
-same variables and the same output files, every Windows path among them
-written as the WSL sees it. No window is found, raised or grabbed: the game
-writes its frames (BOF3X_SHOT_DIR, kept as BMPs where Python has no PIL), a
-frozen shot is released through the semaphore /bof3x_shot_<pid>, the log is
-the ELF's path with .log, and the game's stdout is OUT/_game_output.txt. The
-launcher is not in the run - its ini and its defaults do not reach the game -
-so the run gets only the variables set here. On Linux this mode is the only
-one, and a recipe save (slot 0) needs Windows' recipe_saves.py: --no-save.
+--host linux --elf PATH runs the Linux build instead (tools/linux_run.py),
+directly on Linux or through `wsl -e` from Windows, with the same variables
+and the same output files, every Windows path among them written as the WSL
+sees it. No window is found, raised or grabbed: the game writes its frames
+(BOF3X_SHOT_DIR, kept as BMPs where Python has no PIL), a frozen shot is
+released through the semaphore /bof3x_shot_<pid>, the log is the ELF's path
+with .log, and the launcher's and the game's stdout is OUT/_game_output.txt.
+
+    python3 tools/input_run.py tools/recipes/combat.txt --host linux --elf L/bof3x \\
+        --out OUT --game ~/bof3x-runs/lcB/bof3 --env BOF3X_STATEHASH=OUT/combat.sh
+
+- **Through the launcher** (the default): bof3x-launcher beside the ELF (or
+  --launcher) starts it with --game and --no-config, as the Windows runs'
+  launcher does, so the run has the launcher's layer: its defaults with no
+  ini, BOF3.CFG, the preset and language lines, BOF3X_LAUNCHER. It returns
+  once the game is up; the game is followed by the pid it prints.
+  --direct starts the ELF itself instead (no launcher: only the variables set
+  here reach the game, and BOF3X_LAUNCHER=1 is set as the launcher would).
+- **A game folder made for the run** (--run-game DIR, default OUT/game on
+  Linux): links into --game for what the game only reads, real copies of
+  the slot files and BOF3.CFG, and the recipe save (`# save NAME`) as slot 0
+  (linux_run.make_run_game). --game is never written, and no slot swap or
+  lock is needed: the folder is the run's own. The other slots are --game's,
+  as they were beside the swapped slot 0 of a Windows run on that install
+  (a route that opens the load menu reads every slot's header into .data).
+  --run-game none runs on --game itself (then a recipe save needs --no-save).
+- **Headless** (the default; --window keeps the caller's display): SDL's
+  offscreen video driver and dummy audio driver unless the caller set them,
+  and no DISPLAY or WAYLAND_DISPLAY for the game, so a Fatal's message box
+  has no screen to open on and the run ends with the game.
+- **BOF3X_EXEFILE=1** is set, and said, when the install holds BOF3.exe, no
+  cache is named and the caller did not set it: the Windows runners' rule
+  (attract_run.developer_exefile).
 """
 import argparse, os, re, subprocess, sys, threading, time
 
@@ -248,8 +271,17 @@ def main():
                     help='BOF3X_SPEED: N logic frames per frame of wall time (1..64). The recipe is frame-indexed, '
                          'so it replays the same; shots are still drawn. Late frames are not drawn, so do not '
                          'watch it')
-    ap.add_argument('--launcher', default=os.path.join(bof3x_home.launcher_dir(), 'bof3x-launcher.exe'),
-                    help='another copy of the launcher, with its own bof3x.ini, bof3x.dll and bof3x.log beside it')
+    ap.add_argument('--launcher', default=None,
+                    help='another copy of the launcher, with its own bof3x.ini, bof3x.dll and bof3x.log beside it; '
+                         '--host linux: bof3x-launcher beside the ELF unless named')
+    ap.add_argument('--direct', action='store_true',
+                    help='--host linux: start the ELF itself, not through bof3x-launcher (no ini, no defaults)')
+    ap.add_argument('--run-game', default=None, metavar='DIR',
+                    help='--host linux: the game folder made for the run from --game (default OUT/game on Linux; '
+                         '"none": run on --game itself)')
+    ap.add_argument('--window', action='store_true',
+                    help='--host linux: keep the display (DISPLAY, WAYLAND_DISPLAY, SDL\'s drivers) as the caller '
+                         'has it; by default the game runs headless (offscreen, dummy audio, no display)')
     ap.add_argument('--no-front', action='store_true',
                     help='leave the window where it is: the game writes its own frames (BOF3X_SHOT_DIR) and keeps '
                          'running unfocused (DIV-0033), so nothing needs it on top')
@@ -285,7 +317,15 @@ def main():
     if linux:
         a.elf_here = linux_run.local_path(a.elf)
         LOG = linux_run.log_of(a.elf)
+        if a.direct:
+            a.launcher = None
+        elif a.launcher is None:   # beside the ELF, as the Windows launcher is beside bof3x.exe
+            a.launcher = (a.elf.rsplit('/', 1)[0] + '/bof3x-launcher' if a.elf.startswith('/') else
+                          os.path.join(os.path.dirname(os.path.abspath(a.elf)), 'bof3x-launcher'))
+        a.game_for_run = a.game
     else:
+        if a.launcher is None:
+            a.launcher = os.path.join(bof3x_home.launcher_dir(), 'bof3x-launcher.exe')
         LOG = os.path.join(os.path.dirname(os.path.abspath(a.launcher)), 'bof3x.log')
 
     recipe = os.path.abspath(a.recipe)
@@ -333,17 +373,27 @@ def main():
               'new game: nothing added to BOF3X_OFF (listed already, or a build without the screens)')
     run_game = run_linux if linux else run
     if linux:
-        env['BOF3X_LAUNCHER'] = '1'   # as the launcher sets it for bof3x.exe (src/launcher/launcher.cpp)
+        if a.direct:
+            env['BOF3X_LAUNCHER'] = '1'   # as the launcher sets it for bof3x.exe (src/launcher/launcher.cpp)
         a.env_keys = tuple(kv.partition('=')[0] for kv in a.env)
+        linux_exefile(env, linux_run.local_path(a.game) if a.game.startswith('/') else a.game)
+        save = None if a.no_save else linux_save(a.save, recipe, a.game)
+        run_dir = a.run_game or (None if linux_run.ON_WINDOWS else os.path.join(os.path.abspath(a.out), 'game'))
+        if run_dir and run_dir != 'none':
+            a.game_for_run = make_game(a, run_dir, save)
+        elif save:
+            sys.exit('a recipe save on --host linux goes into a game folder made for the run: --run-game DIR '
+                     '(or --no-save when --game\'s slot 0 already holds it)')
+        else:
+            print('slot 0: left alone (no `# save NAME` header)' if not a.no_save else 'slot 0: left alone (--no-save)')
+        status = run_game(a, env, None)
+        print(f'end: {status}')
+        sys.exit(0 if status == 'done' else 1)
 
     # The save the recipe loads goes into slot 0 for the run and the owner's
     # slot 0 comes back after it (recipe_saves.py; docs/input-script.md 1a).
     if recipe_saves is None:
-        # not Windows: recipe_saves.py cannot be imported here (kernel32 at its top)
-        if not a.no_save and (a.save or recipe_has_save(recipe)):
-            sys.exit('a recipe save needs tools/recipe_saves.py, which runs on Windows only: run this from Windows '
-                     '(the game still runs in the WSL), or pass --no-save when slot 0 already holds the save')
-        save = None
+        sys.exit('the Windows hosts need Windows')
     else:
         save = None if a.no_save else (recipe_saves.save_path(a.save, a.game) if a.save
                                        else recipe_saves.recipe_save(recipe, a.game))
@@ -365,8 +415,73 @@ def recipe_has_save(recipe):
 
 
 def linux_game(a, env):
-    return linux_run.LinuxGame(a.elf, a.game, env, os.path.join(a.out, '_game_output.txt'),
-                               keys=getattr(a, 'env_keys', ()))
+    return linux_run.LinuxGame(a.elf, getattr(a, 'game_for_run', a.game), env, os.path.join(a.out, '_game_output.txt'),
+                               keys=getattr(a, 'env_keys', ()), launcher=a.launcher, headless=not a.window)
+
+
+def linux_save(name, recipe, game):
+    """--host linux: the recipe save's file (recipe_saves.save_path's rule,
+    which cannot be imported off Windows), None when the recipe names none.
+    Looked for in BOF3X_RECIPE_SAVES, this checkout's tools/recipe_saves,
+    the one beside --game, and - from a worktree - the main checkout's."""
+    if name is None:
+        with open(recipe, encoding='utf-8', errors='replace') as f:
+            for line in f:
+                m = re.match(r'^#\s*save\s+(\S+)\s*$', line)
+                if m:
+                    name = m[1]
+                    break
+    if name is None:
+        return None
+    if not name.upper().endswith('.DAT'):
+        name += '.DAT'
+    dirs = [os.environ.get('BOF3X_RECIPE_SAVES'), os.path.join(ROOT, 'tools', 'recipe_saves'),
+            os.path.join(os.path.dirname(os.path.abspath(game)), 'tools', 'recipe_saves')]
+    parts = os.path.abspath(ROOT).replace('\\', '/').split('/.claude/worktrees/')
+    if len(parts) == 2:
+        dirs.append(os.path.join(parts[0], 'tools', 'recipe_saves'))
+    for d in dirs:
+        if d and os.path.isfile(os.path.join(d, name)):
+            return os.path.join(d, name)
+    sys.exit(f'no recipe save {name} in {", ".join(d for d in dirs if d)}')
+
+
+def linux_exefile(env, game):
+    """attract_run.developer_exefile's rule for --host linux: a PC folder with
+    no cache named reads .data from its BOF3.exe under BOF3X_EXEFILE=1 (the
+    launcher refuses such a folder otherwise), as the Windows references ran."""
+    if 'BOF3X_EXEFILE' in env or env.get('BOF3X_CACHE') or env.get('BOF3X_EXEIMAGE'):
+        return
+    try:
+        held = any(n.upper() == 'BOF3.EXE' for n in os.listdir(game))
+    except OSError:
+        return
+    if held:
+        env['BOF3X_EXEFILE'] = '1'
+        print(f'  BOF3X_EXEFILE=1: {game} holds BOF3.exe and no cache is named, so the game reads .data from it '
+              f'(a developer\'s run, docs/exe-retire-round.md)')
+
+
+def make_game(a, run_dir, save):
+    """The game folder made for the run (linux_run.make_run_game), here or
+    through the WSL's helper; its path as the game is given it."""
+    if linux_run.ON_WINDOWS:
+        helper = linux_run.LinuxGame(a.elf, a.game, {}, os.devnull)
+        got = helper._ask('mkgame', linux_run.to_linux(a.game), linux_run.to_linux(run_dir),
+                          linux_run.to_linux(save) if save else None)
+        helper.close()
+        if not got:
+            sys.exit(f'the WSL could not make the run\'s game folder {run_dir}')
+        links, copies = got
+        where = linux_run.to_linux(run_dir)
+    else:
+        try:
+            links, copies = linux_run.make_run_game(a.game, run_dir, save)
+        except (OSError, ValueError) as e:
+            sys.exit(f'the run\'s game folder: {e}')
+        where = os.path.abspath(run_dir)
+    print(f'game folder for the run: {where}, from {a.game} - links: {", ".join(links)}; copies: {", ".join(copies)}')
+    return where
 
 
 def frame_png(path):
@@ -408,7 +523,9 @@ def run_linux(a, env, slot0):
         sys.exit(f'{LOG} cannot be removed: a game of this build is still running')
     language_tags.refuse_retired_run(a.elf_here, env)
     game = linux_game(a, env)
-    print(f'  host: linux ({"the WSL, through wsl -e" if game.wsl else "directly"}), {a.elf}')
+    print(f'  host: linux ({"the WSL, through wsl -e" if game.wsl else "directly"}), {a.elf}'
+          f'{f", through {a.launcher}" if a.launcher else ", the ELF itself (--direct)"}'
+          f'{"" if a.window else ", headless (" + ", ".join(f"{k}={game.env[k]}" for k in linux_run.HEADLESS_SET) + ", no DISPLAY or WAYLAND_DISPLAY)"}')
     game.start()
     print(f'  started {a.elf} (pid {game.pid}{" in the WSL" if game.wsl else ""}); its output: '
           f'{shown(game.output)}')
@@ -459,7 +576,7 @@ def run_linux(a, env, slot0):
             game.unlink(f'bof3x_shot_{game.pid}')    # an ended game leaves its semaphore
         game.close()
         code = game.exit_code()
-        print(f'game: {"ended by this run" if game.ended_by_us else f"exit code {code}"}')
+        print(f'game: {"ended by this run" if game.ended_by_us else "exited (the launcher started it: its code is not seen here)" if game.launcher else f"exit code {code}"}')
         if log_run_time:
             log_run_time('input_run', os.path.splitext(os.path.basename(a.recipe))[0], started,
                          status or 'interrupted', env, a.elf, frames)

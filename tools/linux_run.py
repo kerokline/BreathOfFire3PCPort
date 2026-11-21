@@ -86,6 +86,22 @@ DRIVE = re.compile(r'^([A-Za-z]):[\\/](.*)$', re.S)
 WSL_UNC = re.compile(r'^[\\/]{2}(?:wsl\.localhost|wsl\$)[\\/][^\\/]+(?:[\\/](.*))?$', re.I | re.S)
 PID_LINE = re.compile(r'^linux_run: pid (\d+)\s*$', re.M)
 SH = 'cd "$1" || exit 125; shift; echo "linux_run: pid $$"; exec env "$@"'
+# The same with no display for the game (headless): the WSL's own environment
+# carries WSLg's DISPLAY and WAYLAND_DISPLAY, which `env "$@"` would keep.
+SH_HEADLESS = 'cd "$1" || exit 125; shift; echo "linux_run: pid $$"; exec env -u DISPLAY -u WAYLAND_DISPLAY "$@"'
+# bof3x-launcher's line once the game has started (src/launcher/start.cpp).
+LAUNCHED = re.compile(r'bof3x-launcher: started .* \(pid (\d+)\)')
+# A headless run (the default of the harness on Linux): no window, no sound
+# from the speakers, and no display a Fatal's message box could open on.
+# SDL3's offscreen video driver gives DXVK-native a Vulkan surface
+# (VK_EXT_headless_surface, docs/linux-round.md B2a); its dummy audio driver
+# opens a device that takes the stream at the device's rate and plays it
+# nowhere - SDL's audio thread still pulls the mix a buffer at a time, so the
+# game's sound code (sound_sdl.cpp's cursors, the ring's notifications,
+# Music_Pump) runs as with a device.
+HEADLESS_SET = {'SDL_VIDEO_DRIVER': 'offscreen', 'SDL_AUDIO_DRIVER': 'dummy'}
+HEADLESS_UNSET = ('DISPLAY', 'WAYLAND_DISPLAY')
+RUN_GAME_MARK = '.bof3x_run_game'   # names a folder make_run_game built, which it may remove again
 
 _mount_root = None
 
@@ -169,27 +185,58 @@ class LinuxGame:
     Linux (whole) or the one it is chosen from through the WSL (passed_env);
     `output` names the file its stdout and stderr go to (the pid line first,
     through the WSL); `keys` are names outside PASSED_PREFIXES that cross too.
-    Acts on its own process only, by pid - never on another by name."""
+    Acts on its own process only, by pid - never on another by name.
 
-    def __init__(self, elf, game, env, output, args=(), keys=()):
+    `launcher`: bof3x-launcher beside the ELF, which starts the game - the
+    run then has the launcher's layer (its defaults with no ini, BOF3.CFG,
+    the language and preset lines, BOF3X_LAUNCHER) as a player's start and a
+    Windows reference run have it. The Linux launcher returns as soon as the
+    game has started and prints its pid (`bof3x-launcher: started ... (pid
+    N)`); the game is then followed by that pid alone. Its exit code is not
+    the harness's to read (the game is not its child): exit_code() is None.
+
+    `headless` (the default): HEADLESS_SET unless the caller set the name,
+    and no DISPLAY or WAYLAND_DISPLAY in the game's environment, so no
+    window and no message box can reach a screen."""
+
+    def __init__(self, elf, game, env, output, args=(), keys=(), launcher=None, headless=True):
         self.wsl = ON_WINDOWS
         self.elf = elf if (self.wsl and elf.startswith('/')) else os.path.abspath(elf)
-        self.game, self.env, self.output = os.path.abspath(game), dict(env), output
-        self.args, self.keys = list(args), tuple(keys)
+        self.game = game if (self.wsl and game.startswith('/')) else os.path.abspath(game)
+        self.env, self.output = dict(env), output
+        if launcher and not (self.wsl and launcher.startswith('/')):
+            launcher = os.path.abspath(launcher)
+        self.args, self.keys, self.launcher, self.headless = list(args), tuple(keys), launcher, headless
+        if headless:
+            for k, v in HEADLESS_SET.items():
+                self.env.setdefault(k, v)
+            for k in HEADLESS_UNSET:
+                self.env.pop(k, None)
         self.proc, self.pid, self.ended_by_us, self._srv = None, None, False, None
 
     def command(self):
+        if self.launcher:
+            folder = self.launcher.rsplit('/', 1)[0] if self.launcher.startswith('/') else os.path.dirname(self.launcher)
+            tail = [self.launcher if not self.wsl else to_linux(self.launcher), '--game',
+                    to_linux(self.game) if self.wsl else self.game, '--no-config'] + self.args
+            if not self.wsl:
+                return tail
+            env = passed_env(self.env, self.keys)
+            return (['wsl', '-e', 'sh', '-c', SH_HEADLESS if self.headless else SH, 'linux_run', to_linux(folder)] +
+                    [f'{k}={v}' for k, v in sorted(env.items())] + tail)
         if not self.wsl:
             return [self.elf] + self.args
         env = passed_env(self.env, self.keys)
-        return (['wsl', '-e', 'sh', '-c', SH, 'linux_run', to_linux(self.game)] +
+        return (['wsl', '-e', 'sh', '-c', SH_HEADLESS if self.headless else SH, 'linux_run', to_linux(self.game)] +
                 [f'{k}={v}' for k, v in sorted(env.items())] + [to_linux(self.elf)] + self.args)
 
     def start(self):
         if not (self.wsl and self.elf.startswith('/')) and not os.path.isfile(self.elf):
             sys.exit(f'no Linux build at {self.elf} (--elf)')
-        if not os.path.isdir(self.game):
+        if not (self.wsl and self.game.startswith('/')) and not os.path.isdir(self.game):
             sys.exit(f'no game folder {self.game}')
+        if self.launcher and not (self.wsl and self.launcher.startswith('/')) and not os.path.isfile(self.launcher):
+            sys.exit(f'no launcher at {self.launcher} (--launcher)')
         cmd = self.command()
         if self.wsl:
             self._helper()   # up before the first frozen shot asks for it
@@ -197,8 +244,11 @@ class LinuxGame:
             if self.wsl:
                 self.proc = subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=out, stderr=subprocess.STDOUT)
             else:
-                self.proc = subprocess.Popen(cmd, cwd=self.game, env=self.env, stdin=subprocess.DEVNULL,
+                cwd = os.path.dirname(self.launcher) if self.launcher else self.game
+                self.proc = subprocess.Popen(cmd, cwd=cwd, env=self.env, stdin=subprocess.DEVNULL,
                                              stdout=out, stderr=subprocess.STDOUT)
+        if self.launcher:
+            return self._launched()
         if not self.wsl:
             self.pid = self.proc.pid
             return self.pid
@@ -219,15 +269,42 @@ class LinuxGame:
         sys.exit(f'the WSL did not start the game (exit {code}; output in {self.output})' if code is not None else
                  f'the WSL gave no pid line in 120 s (output in {self.output})')
 
+    def _launched(self, seconds=600):
+        """The launcher's run: wait for it to return (it does once the game is
+        up), then the game's pid from its line. A launcher that stops without
+        the line - its own refusal, a self-test it waited for - ends the run."""
+        try:
+            code = self.proc.wait(seconds)
+        except subprocess.TimeoutExpired:
+            sys.exit(f'the launcher did not return in {seconds} s (output in {self.output})')
+        with open(self.output, 'rb') as f:
+            m = LAUNCHED.search(f.read(1 << 20).decode('utf-8', 'replace'))
+        if not m:
+            sys.exit(f'the launcher started no game (exit {code}; output in {self.output})')
+        self.pid = int(m[1])
+        self.launcher_code = code
+        return self.pid
+
     def alive(self):
-        """While the game runs: through the WSL, wsl.exe lives as long as the process it started."""
+        """While the game runs: through the WSL, wsl.exe lives as long as the
+        process it started; a game the launcher started, by its pid."""
+        if self.launcher:
+            return self.pid is not None and bool(self._ask('alive', self.pid))
         return self.proc is not None and self.proc.poll() is None
 
     def exit_code(self):
+        if self.launcher:
+            return None
         return None if self.proc is None else self.proc.poll()
 
     def wait(self, seconds):
-        """Wait up to `seconds` for the game to exit by itself. Its exit code, or None."""
+        """Wait up to `seconds` for the game to exit by itself. Its exit code,
+        or None (always None for a game the launcher started)."""
+        if self.launcher:
+            t0 = time.time()
+            while self.alive() and time.time() - t0 < seconds:
+                time.sleep(0.2)
+            return None
         try:
             return self.proc.wait(seconds)
         except subprocess.TimeoutExpired:
@@ -282,6 +359,12 @@ class LinuxGame:
         if not self.alive():
             return
         self.ended_by_us = True
+        if self.launcher:
+            self._ask('kill', self.pid)
+            t0 = time.time()
+            while self.alive() and time.time() - t0 < wait:
+                time.sleep(0.1)
+            return
         if self.wsl:
             self._ask('kill', self.pid)
         else:
@@ -316,6 +399,63 @@ def kill(pid):
         return True
     except OSError:
         return False
+
+
+def alive(pid):
+    """True while the process runs: it exists and is not a zombie (a game
+    whose launcher has gone is reaped by init; one still a child of ours
+    would wait as a zombie)."""
+    try:
+        with open(f'/proc/{int(pid)}/stat', 'rb') as f:
+            stat = f.read().decode('ascii', 'replace')
+    except OSError:
+        return False
+    return stat[stat.rfind(')') + 2:][:1] not in ('Z', 'X', '')
+
+
+def make_run_game(src, dst, save=None):
+    """A game folder for one run, made from the install `src`, which is only
+    read: every folder and every file the game only reads a symbolic link
+    into `src`; the files a run writes real copies - the saves BISLPS0?.DAT
+    (a route that saves writes one; slot 0 is `save` when given, the recipe
+    save, else src's) and BOF3.CFG (the launcher writes its display lines).
+    Not taken: the quicksaves BISLPS1?.* and the temporary files (a run makes
+    its own), `.recipe_slot0` (the Windows harness's swap), DXVK's logs.
+    `dst` must not exist, or be a folder this function made (RUN_GAME_MARK),
+    which is removed first - never anything else. Returns (links, copies)."""
+    import shutil
+    src, dst = os.path.abspath(src), os.path.abspath(dst)
+    if not os.path.isdir(src):
+        raise ValueError(f'no install {src}')
+    if os.path.lexists(dst):
+        if not os.path.isfile(os.path.join(dst, RUN_GAME_MARK)):
+            raise ValueError(f'{dst} exists and is not a run folder of the harness: not removed')
+        shutil.rmtree(dst)
+    os.makedirs(dst)
+    open(os.path.join(dst, RUN_GAME_MARK), 'w').close()
+    links, copies = [], []
+    for name in sorted(os.listdir(src)):
+        up = name.upper()
+        at, to = os.path.join(src, name), os.path.join(dst, name)
+        if name == '.recipe_slot0' or up.startswith('BOF3X_') and up.endswith('.LOG'):
+            continue
+        if re.fullmatch(r'BISLPS1[0-9A-F]\.(DAT|TMP)|.*\.TMP', up):
+            continue
+        if re.fullmatch(r'BISLPS0[0-9A-F]\.DAT', up) or up == 'BOF3.CFG':
+            if up == 'BISLPS00.DAT' and save:
+                continue
+            shutil.copyfile(at, to)
+            os.chmod(to, 0o644)
+            copies.append(name)
+            continue
+        os.symlink(at, to)
+        links.append(name)
+    if save:
+        to = os.path.join(dst, 'BISLPS00.DAT')
+        shutil.copyfile(save, to)
+        os.chmod(to, 0o644)
+        copies.append('BISLPS00.DAT (' + os.path.basename(save) + ')')
+    return links, copies
 
 
 def serve():
@@ -416,7 +556,8 @@ def selftest():
     return 1 if bad else 0
 
 
-OPS = {'post': sem_post, 'unlink': sem_unlink, 'busy': pids_of, 'kill': kill}
+OPS = {'post': sem_post, 'unlink': sem_unlink, 'busy': pids_of, 'kill': kill, 'alive': alive,
+       'mkgame': lambda src, dst, save=None: make_run_game(src, dst, save)}
 
 
 def main():

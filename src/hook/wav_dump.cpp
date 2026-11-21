@@ -129,7 +129,7 @@ struct Buffer {
     double pos = 0.0;                 // a static buffer's cursor, in its frames; a stream's fraction
     bool playing = false, looping = false;
     unsigned long frequency = 0;      // 0: the format's
-    long volume = 0, pan = 0;         // hundredths of a decibel
+    std::int32_t volume = 0, pan = 0; // hundredths of a decibel: LONGs, 32 bits (8 would be `long` on Linux)
     // The last successful Lock: the offset its first region starts at.
     void* lock_first = nullptr;
     unsigned long lock_offset = 0;
@@ -189,7 +189,7 @@ Buffer* Find(void* object) {
     return nullptr;
 }
 
-double Gain(long hundredths) { return hundredths <= -10000 ? 0.0 : std::pow(10.0, static_cast<double>(hundredths) / 2000.0); }
+double Gain(std::int32_t hundredths) { return hundredths <= -10000 ? 0.0 : std::pow(10.0, static_cast<double>(hundredths) / 2000.0); }
 
 // One sample of channel `c` of frame `i` of `bytes`, as a float in -1..1.
 float Sample(const Buffer& b, const std::uint8_t* frames, std::size_t i, unsigned c) {
@@ -445,8 +445,8 @@ unsigned long __stdcall HookRelease(void* self) {
 }
 
 // The methods' DWORD words are std::uint32_t, as the SDL3 layer's own
-// methods spell them (sound_sdl.cpp); a LONG and an HRESULT are `long`, as
-// there.
+// methods spell them (sound_sdl.cpp); a LONG is std::int32_t and an HRESULT
+// `long`, as there (the caller reads a result's low 32 bits).
 long __stdcall HookLock(void* self, std::uint32_t offset, std::uint32_t bytes, void** first, std::uint32_t* first_bytes,
                         void** second, std::uint32_t* second_bytes, std::uint32_t flags) {
     const VTable& v = Originals(self);
@@ -524,20 +524,22 @@ long __stdcall HookSetPosition(void* self, std::uint32_t position) {
     return r;
 }
 
-long __stdcall HookSetVolume(void* self, long volume) {
+// The level and the pan are the game's 32-bit LONGs: as `long` on Linux a
+// negative one arrived zero-extended (sound_sdl.cpp's width note).
+long __stdcall HookSetVolume(void* self, std::int32_t volume) {
     Guard g;
     AdvanceNow();
     const VTable& v = Originals(self);
-    const long r = As<long (__stdcall*)(void*, long)>(v.set_volume)(self, volume);
+    const long r = As<long (__stdcall*)(void*, std::int32_t)>(v.set_volume)(self, volume);
     if (Buffer* const b = Find(self); b && r == 0) b->volume = volume;
     return r;
 }
 
-long __stdcall HookSetPan(void* self, long pan) {
+long __stdcall HookSetPan(void* self, std::int32_t pan) {
     Guard g;
     AdvanceNow();
     const VTable& v = Originals(self);
-    const long r = As<long (__stdcall*)(void*, long)>(v.set_pan)(self, pan);
+    const long r = As<long (__stdcall*)(void*, std::int32_t)>(v.set_pan)(self, pan);
     if (Buffer* const b = Find(self); b && r == 0) b->pan = pan;
     return r;
 }
