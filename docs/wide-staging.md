@@ -679,7 +679,7 @@ in the band after the scene began is hidden as before.
 13 frames of walking, through 200 frames of a scene, a second draw in a
 frame, across the gap and one frame past it, the counter going back, the
 counter's wrap, 40 stretches of 9 free frames, and the slots
-(`wide_staging self-test: 89000 checks, 0 mismatches`, hosted, at 21:9 and
+(`wide_staging self-test: 89001 checks, 0 mismatches`, hosted, at 21:9 and
 narrow). The route
 again on the build with the rule: the census has no `hidden` row for
 object 0; frames 378..447 are `parked-scene`, drawn.
