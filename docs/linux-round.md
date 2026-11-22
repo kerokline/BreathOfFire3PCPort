@@ -2648,6 +2648,121 @@ capture, recorded in "B2a as run".
   has no stack words.
 - An empty folder `C:\c` was left by one of B2b's runs.
 
+### D1 as run (2026-11-22, branch `linux/lcC-d1`)
+
+Group D1 of wave C: a native CI gate that keeps the Linux build alive. From
+`main` `d56e4097`. Not pushed: **the job has never run on GitHub.**
+
+**What was built.**
+
+- **`build.yml`, a third job `linux-x86_64 (clang)`** on `ubuntu-24.04`. It
+  is a product build, so it sits beside the two Windows builds and uploads
+  its files, as they do; the host unit suites and the repository gates stay
+  `checks.yml`'s. Its steps are one script,
+  `.github/scripts/linux-build.sh` (`deps`, `versions`, `configure`,
+  `build`, `check`, `selftest`, `tree`), so that D2's release and a run by
+  hand do the same thing. In order: the packages (meson, glslang-tools,
+  ccache, and SDL3's headers: X11 with XTest, Wayland and libdecor, ALSA,
+  PulseAudio, PipeWire, udev, D-Bus, DRM/GBM, EGL, Vulkan); the versions;
+  two caches (below); `cmake --preset linux-x86_64`; the build; the ELFs'
+  shape; the checks with no game data; `linux_tree.py --check`; the upload
+  of `bof3x`, `bof3x-launcher`, the three libraries and the two name lists.
+- **The caches.** DXVK-native's libraries, keyed by
+  `cmake/dxvk_native.cmake` and `cmake/dxvk_headers.cmake` (which pin and
+  build them), SDL3's tag (its headers are DXVK's) and the compiler's
+  version line: on a hit the configure passes `BOF3X_DXVK_LIBDIR` and meson
+  does not run; on a miss the external project builds them and a step keeps
+  meson's install folder for the next run. ccache for every other object,
+  restored from the newest entry and saved under the commit.
+- **`check`**: the five files are there; both programs are `EXEC` (non-PIE,
+  stage LA2), carry RUNPATH `$ORIGIN`, need `libSDL3.so.0` (and `bof3x`
+  DXVK's two) and `ldd` finds each in the build folder, nothing "not found";
+  `bof3x`'s first `LOAD` segment is at `0x10000000`. A link that ends has no
+  undefined name: GNU ld fails an executable's link on one.
+- **`selftest`, what needs no game data:** the drawn launcher with no window
+  (`--check`, SDL's `offscreen` video and `dummy` sound, no `--game`, no
+  `--ini`): a picture of the title page, every tab and the sub-tabs of
+  Settings and Controls opened, `report jukebox`, Back, Exit, which saves
+  to `--save`; then `tools/key_host`'s `key_tests` and `capture_tests`
+  against the SDL source the configure fetched.
+- **`checks.yml`'s `os-host`** builds and runs `config_tests` beside
+  `os_tests` (the target alone: `save_tests` does not compile under g++,
+  "Wave B as run"), and runs the header ratchet beside the boundary gate.
+- **The header ratchet of section 3, `os_census.py --headers`.** What
+  existed: `--check` refuses a new Windows header row anywhere, and
+  `--boundary` refuses `windows.h` outside `src/os` and `src/launcher`.
+  Neither sees a POSIX header: the census counts Windows spellings only.
+  Measured: with `#include <unistd.h>` added to `src/game/core/sound.cpp`,
+  `os_census.py --check` said `ok (1920 sites)` and `--boundary` `ok`.
+  `--headers` fails on any operating-system header, Windows' or POSIX's and
+  Linux's, in a file of `src/` outside `src/os` and the harness-only files,
+  unless `HEADERS_WAITING` lists the pair (file, header); the list may only
+  shrink. Today: `ok (32 operating-system includes in 17 files outside
+  src/os, all listed; 7 of them in src/game)`. The seven in `src/game`:
+  `malloc.h` in `core/sound.cpp` and `platform/music.cpp`, `dinput.h` (under
+  `#ifdef _WIN32`) in `platform/d_input.cpp` and `platform/rdata_consts.cpp`,
+  and the two `*_win32.cpp` files of `WINDOWS_ONLY`. The scope is wider than
+  the game folders on purpose: a POSIX header in `src/common` was as
+  invisible as one in `src/game`.
+- Which reading was taken: the brief's "self-test with no game data if one
+  exists". The ELF's own self-test (`BOF3X_SELFTEST_ONLY=1`) maps Capcom's
+  image from `BOF3.exe` or a cache (step 11) and the launcher refuses a
+  start with neither ("no game data", "B1 as run"), so it is not in the job.
+  `save_editor_check.py` copies a player's saves and an install: not in the
+  job either.
+
+**The runner, read and not run.** GitHub's `runner-images`
+`images/ubuntu/Ubuntu2404-Readme.md`, image `20261116.376.1` (read
+2026-11-22): Clang 16.0.6, 17.0.6, 18.1.3; GNU C++ 12.4.0, 13.3.0, 14.2.0;
+CMake 3.31.6; Ninja 1.13.2; pkg-config 1.8.1; Python 3.12.3; no meson and
+no glslang. The tree's floors: `cmake_minimum_required(VERSION 3.25)` and
+preset version 6 (CMake 3.25); DXVK v3.1.1's `meson_version : '>= 0.58'`
+(its `meson.build`); C++20. Ubuntu 24.04's apt has meson 1.3.2 and
+glslang 15.1.0 (measured below), so nothing is downloaded beside apt.
+
+**How it was proven here.** No sudo, so a 24.04 root without one:
+`ubuntu-base-24.04.5-base-amd64.tar.gz` from cdimage.ubuntu.com (sha256
+`e77b6f10...0c86`, checked against its `SHA256SUMS`), entered by user
+namespaces (`unshare -r -m`, then `chroot`) in the WSL under
+`~/src/lcC-d1`, with what the image holds preinstalled put in first: apt's
+`clang-18`, `g++` (13) and `g++-14`, Python 3.12, and Kitware's CMake 3.31.6.
+The tree was copied in from the branch's files (`git ls-files -co`). Then
+the script's steps in the job's order.
+
+| Step | Result |
+|---|---|
+| `versions` | `Ubuntu clang version 18.1.3`, `Selected GCC installation: /usr/lib/gcc/x86_64-linux-gnu/14`, cmake 3.31.6, ninja 1.11.1, meson 1.3.2, glslang 11:15.1.0, Python 3.12.3, ccache 4.9.1 |
+| `deps` | 54 s |
+| `configure`, cold | 38 s; `linux_tree --cmake-list: 794 files for Linux, 12 of the Windows list left out` |
+| `build`, cold (12 cores; DXVK by the external project; ccache 890 misses of 902) | 454 s, rc 0 |
+| `check` | both `EXEC`, RUNPATH `[$ORIGIN]`, the three libraries found beside them; `first LOAD segment at 0x0000000010000000`; `size`: text 12,137,099, data 14,112, bss 28,105,489 |
+| `selftest` | `check (scale 1, renderer software); page -1 sub 0 sheet 0, asked exit, saved the settings`; `saved.ini: 163 lines; title.png: 84052 bytes`; `key_tests` `133780 checks, 0 failed`; `capture_tests` `329 checks, 0 failed` |
+| The second run: the keep step's copy, a fresh build folder, `BOF3X_DXVK_LIBDIR` set (a cache hit), ccache warm | configure 65 s, build 15 s (ccache 902 of 902 hits), no `dxvk-native` folder under `_deps`; `bof3x` and both DXVK libraries `md5sum -c` OK against the first run's; `check` and `selftest` as above |
+| `tree` (`linux_tree.py --check`) | `837 files, 837 compile for x86_64-linux-gnu, 0 do not; 11 Windows-only files left out`, `--check: ok (0 files wait)`, 152 s |
+| `os-host`'s steps, the image's default `c++` (GNU 13.3.0) | `os_tests: 596 checks, 0 failed`; `config_tests` `4455 checks, 0 failures`; `os_census` `--check` ok (1920 sites), `--boundary` ok, `--headers` ok |
+| Negative controls | `--headers` with `<unistd.h>` added to `sound.cpp`: rc 1, `src/game/core/sound.cpp:11: include <unistd.h>`; with `<malloc.h>` taken out of `music.cpp`: rc 1, "listed in HEADERS_WAITING but no longer included". `check` with `libdxvk_dxgi.so.0` taken away: "is missing"; with `bof3x`'s ELF type byte made `DYN`: "is not a non-PIE executable" |
+
+The two workflow files parse (`yaml.safe_load`). On Windows, `os_census.py`
+`--check`, `--boundary` and `--headers` pass. No source or CMake file was
+changed, so the Windows presets were not built again.
+
+**Not verified:**
+- **The job on GitHub, all of it.** Above all: that `clang++` on the image
+  is clang 18 by that name (the readme lists the versions, not the default
+  link; the `versions` step stops with an error if it is not on `PATH`);
+  the time on the image's 4 cores (the cold build took 454 s on 12 here);
+  the two caches' save and restore by `actions/cache`, and the DXVK key's
+  first miss; the artifact's upload (an artifact's zip does not keep the
+  executable bit).
+- The runner's own extras, which the base root lacks (other toolchains and
+  libraries on its paths), and Python 3.13 by `setup-python`: the root had
+  3.12.
+- The launcher check's picture was not looked at; only its size is checked.
+- Nothing here runs the game, a window or DXVK at run time (wave B's
+  limits stand).
+- The build log holds about 9,000 compiler warnings (`grep -c warning:`),
+  the tree's own under `-Wall -Wextra`; the job does not count them.
+
 ### D2 as run (2026-11-22, branch linux/lcC-d2)
 
 Group D2 of wave C: the tarball a Linux player uses, made by
