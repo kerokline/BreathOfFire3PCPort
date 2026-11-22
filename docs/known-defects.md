@@ -11629,9 +11629,11 @@ function itself. After it the self-test and the ten routes end with no
 fault on a US-disc install and on a PSP-only install. `tools/fnptr_census.py`
 (libclang over the Linux build's 868 translation units) compares every
 function-pointer cast with the real callee: on the tree before the fix it
-finds these two sites alone as stack findings, after it none, and lists 45
+finds these two sites alone as stack findings, after it none, and listed 45
 latent ones with their reasons (a word in a register, places below 4 GB,
-the shadow fuzz tables, `al` unset on two variadic calls). It cannot see
+the shadow fuzz tables, `al` unset on two variadic calls). The 20
+word-in-a-register calls were fixed the same day (`73224478`: each table
+type or cast takes the pointer its function takes); 25 stay listed. It cannot see
 function words read at run time (972 sites) - `Window_DispatchKind` was of
 that kind. **Not verified:** 64-bit Windows has the same stack-slot read and
 was never run on a disc-built install's battle, before or after

@@ -3340,11 +3340,17 @@ is not done, and D4 is this section and the status documents.
   pull request's, and the release jobs' is the merge's push to `main`.
 - **Left open, listed for the owner:** `fnptr_census.py --check` is not in
   CI (it needs a configured Linux build and libclang; it was run with
-  libclang 21, and the runner's clang is 18); its 20 register-narrow
-  findings are listed, not fixed; the ELF's self-test is not in CI (it needs
-  game data); a build on `ubuntu-24.04` needs glibc 2.38 or newer; the
-  MinGW DirectX headers' LGPL-2.1+ reading in `THIRD_PARTY.md` section 8 is
-  the owner's to confirm against `LICENSING.md` section 4.
+  libclang 21, and the runner's clang is 18); the ELF's self-test is not in
+  CI (it needs game data); a build on `ubuntu-24.04` needs glibc 2.38 or
+  newer.
+- **After the pull request was opened (#276), the same day:** the PR's
+  first run failed `importer.py check` on the census tool's libclang handle
+  (a module global `build_reuse`'s lint did not know; the tool is now in
+  its exempt list, and `importer.py check` is in the gate). At the owner's
+  word the census's 20 register-narrow calls were fixed (the addition to
+  the banner section above; merged here, both Windows presets build, the
+  gate passes), and the MinGW DirectX headers' licence reading was checked
+  at the source (`THIRD_PARTY.md` section 8).
 
 ## 5. What stands in for the launcher in tier 2
 
