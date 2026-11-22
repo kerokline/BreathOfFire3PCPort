@@ -111,7 +111,11 @@ struct Callees {
     U (__cdecl* update_screen_slot)();          // Sprite_UpdateScreenSlot 0x588F00 (group BG)
     U (__cdecl* init_context)();                // Battle_InitActorContext 0x446BD0 (this module)
     U (__cdecl* copy_n)(U, U, U);               // Str_CopyN 0x5171A0 (this module)
-    U (__cdecl* banner_set)(U, U, U, U, U, U);  // BattleBanner_Set 0x44A6E0 (this module)
+    // BattleBanner_Set 0x44A6E0 (this module). The text is a pointer, as the
+    // function takes it: the 6th argument lies on the stack at 64 bits, where a
+    // 4-byte word leaves the slot's high half as it was (docs/linux-round.md,
+    // "The banner fault and its class").
+    U (__cdecl* banner_set)(U, U, U, U, U, const char*);
     U (__cdecl* banner[5])();                   // the dispatch's table: ret, kind 1, kind 2, ret, ret
 };
 extern const Callees kOriginals;

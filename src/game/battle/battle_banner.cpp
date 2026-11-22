@@ -310,7 +310,7 @@ extern "C" std::uint32_t __cdecl BattleBanner_ShowName(const unsigned char* acto
         for (; k + 4 <= (n & ~3u); k += 4) PutLong(AtBattleMisc(dst + k), LongBattleMisc(AtBattleMisc(src + k)));
         for (battle_misc::U r = 0; r < (n & 3); ++r, ++k) AtBattleMisc(dst + k)[0] = AtBattleMisc(src + k)[0];
     }
-    return battle_misc::g.banner_set(0, 1, 1, 0, 0xFF, ::bof3::Img(kBannerText.v));
+    return battle_misc::g.banner_set(0, 1, 1, 0, 0xFF, reinterpret_cast<const char*>(AtBattleMisc(::bof3::Img(kBannerText.v))));
 }
 
 // original 0x44AA00 (PSX 0x801DEA9C, the same): one of two system lines at
