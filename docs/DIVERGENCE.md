@@ -14269,6 +14269,40 @@ designed in rather than bolted on.
   scored at recipe frame 1,845 to the terms 0x4B, 0x35, 0x64, 0x50 and the
   score 0x76 - unset, the rank 1 and "You got Wisdom Seed!"; with the switch,
   the same terms, the score 0xB4, the rank 5 and "You got Shaman'sRing!".
+- **Amended 2026-11-21 - the shisu's ingredients in Parch's item shop**
+  (IDEAS I72; the owner's call of the day: "replace the first 4 items
+  (vitamin, antidote, eye drops, panacea)"). *Original:* no shop sells any
+  of the four items the shisu takes (`Shisu_Result`'s four ids): of the 40
+  stocked records of `Shop_Records` `0x658930` none lists one (measured on
+  the US disc and on the owner's install, 2026-11-21, `tools/tables.py`).
+  Parch's item seller (area 130) reads record 36, 11 entries, the only
+  stocked record of 11 that opens with the four the owner names.
+  *New:* under the switch, `ShopMode_Begin` `0x57F520` (ours,
+  `src/game/shop/shop_mode.cpp`) writes the four ingredients, category 0,
+  in `Shisu_Result`'s order, over the first four pairs of record 36 when
+  that record opens in area 130 (`Game_AreaNumber`), and writes Capcom's
+  four pairs back when record 36 next opens in any other area; a record 36
+  of fewer than four entries (a table mod's) is left alone. The seller's
+  other seven entries, every other record, the item table and the save are
+  unchanged. The price, the owner's call of the day ("set those 3 to 1z
+  when the minigame cheat is enabled"): three of the four have a base price
+  of 0 in the item table, and the shop already sells that for 1 zenny - the
+  list (`Shop_DrawBuyList`), the detail (`Shop_DrawBuyDetail`) and the
+  purchase (`ShopTrade_BuyList`) all take the price through `Shop_ScalePrice`
+  `0x5830D0`, its "1 in place of 0" - so no price is written and the item
+  table is not touched; `Shop_SellPrice` `0x583100` buys them back for 0, as
+  the original has it. `ShopMode_Inject` is the `Fatal` when `ShopMode_Begin`
+  is left as Capcom's under the switch.
+  *Verification:* 2026-11-21, headless (`BOF3X_SELFTEST_ONLY=1`, a clean copy of
+  the four launcher files under `D:of3x-runs\parch1121\L`, the hosted
+  build): `BOF3X_SHADOW=shop_states` unset - 40,000 rounds over 25
+  functions, 0 mismatches; with `BOF3X_NO_FAIL=1` the same, 0 mismatches
+  (the fuzz does not open record 36 in area 130, so it does not show the
+  change); `BOF3X_NO_FAIL=1 BOF3X_ORIGINAL=ShopMode_Begin`: `FATAL:
+  BOF3X_NO_FAIL=1 needs ShopMode_Begin ours, and it is disabled`. **Not
+  seen live:** no recorded route reaches the seller; the owner's eye on the
+  shop in Parch, with the box on and off, and on another town's item shop
+  after it, is owed.
 - **Rationale:** the owner's call, 2026-10-30: the groundwork for one
   switch that covers every minigame, for a player who wants the story
   without the reflex tests. One guarded branch per minigame, because the
