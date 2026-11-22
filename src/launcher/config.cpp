@@ -295,6 +295,7 @@ void ConfigLoad(const std::string& text, Config& cfg, std::string& error) {
             if (value == "0") cfg.wide = 0;
             else if (value == "1") cfg.wide = 1;
             else if (value == "2") cfg.wide = 2;
+            else if (value == "3") cfg.wide = 3;
         } else if (key == "cheat.exp" || key == "cheat.zenny" || key == "cheat.faerie") {
             char* end = nullptr;
             const long v = std::strtol(value.c_str(), &end, 10);
@@ -483,7 +484,8 @@ std::string ConfigText(const Config& cfg) {
     out += "# 2..8: the first window's size, 320 x 240 times this, until the game saves its own (bof3x.window).\r\n";
     out += "# Empty: the size follows the display's scale (2 at 100 %, 3 at 150 %, 4 at 200 %)\r\n";
     out += "scale=" + (cfg.scale_named ? std::to_string(cfg.scale) : std::string()) + "\r\n";
-    out += "# 1 the 16:9 picture, 426 x 240 | 2 the 21:9 picture, 560 x 240 (DIV-0041) | 0 the original's 320 x 240\r\n";
+    out += "# 1 the 16:9 picture, 426 x 240 | 2 the 21:9 picture, 560 x 240 | 3 the 16:10 picture, 384 x 240\r\n";
+    out += "# (DIV-0041) | 0 the original's 320 x 240\r\n";
     out += "wide=" + std::to_string(cfg.wide) + "\r\n";
     out += "# 1 keeps the game running while its window is not in front (DIV-0033) | 0 the original's freeze\r\n";
     out += std::string("background=") + (cfg.background ? "1" : "0") + "\r\n";
@@ -735,8 +737,8 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, boo
     if (bof3::os::GetEnvW(L"BOF3X_INTERP", existing, 64) == 0 && cfg.interp)
         SetEnvW(L"BOF3X_INTERP", L"1");
 
-    if (bof3::os::GetEnvW(L"BOF3X_WIDE", existing, 64) == 0 && (cfg.wide == 1 || cfg.wide == 2))
-        SetEnvW(L"BOF3X_WIDE", cfg.wide == 2 ? L"2" : L"1");
+    if (bof3::os::GetEnvW(L"BOF3X_WIDE", existing, 64) == 0 && cfg.wide >= 1 && cfg.wide <= 3)
+        SetEnvW(L"BOF3X_WIDE", cfg.wide == 3 ? L"3" : cfg.wide == 2 ? L"2" : L"1");
 
     // D395: whenever the ini named scale=, 2 included; unnamed, the game follows the display
     if (bof3::os::GetEnvW(L"BOF3X_SCALE", existing, 64) == 0 && cfg.scale_named) {

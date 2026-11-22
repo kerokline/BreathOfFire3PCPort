@@ -2625,7 +2625,7 @@ designed in rather than bolted on.
 - **Languages:** any
 - **State:** active
 
-### A 426 x 240 or 560 x 240 picture: the view widened by 53 or 120 columns a side
+### A 384, 426 or 560 x 240 picture: the view widened by 32, 53 or 120 columns a side
 
 - **ID:** DIV-0041
 - **Date:** 2026-09-23
@@ -3452,6 +3452,53 @@ designed in rather than bolted on.
   Seen: the owner's save replayed at 21:9 in a copy of the install, bars
   before and none after (`pillarbox frame ..., area 90 ... (bars on)` is no
   longer logged).
+  **Amended 2026-11-21: a third width, 16:10, 384 x 240.** The owner,
+  2026-11-21: a 16:10 setting, since that is the Steam Deck's screen ratio
+  (1280 x 800). **`BOF3X_WIDE=3` (`wide=3`) is the 16:10 picture, 384 x 240,
+  32 columns a side** (240 x 16 / 10 exactly, `ColumnsForAspect(16, 10)`) -
+  the PSP's count of columns, at the full 240 rows; 42 columns narrower than
+  16:9, 21 a side. Narrow, 16:9 and 21:9 are as they were. **Under 16:10 the
+  game is the 16:9 game, seen through a narrower frame** (the owner, the same
+  day: the same culls and scene walks as 16:9). Two widths are read
+  (`widescreen.h`): the picture's columns, 32, for what is drawn to the
+  picture's edge - the render target and the shift, the fills at (-32, 0)
+  384 x 240, every anchor, the drawn slide bounds, the two sweeps, the battle
+  tile, the backdrop pairs, the pillarbox - and the logic's columns, 16:9's
+  53 (`Widescreen_LogicColumns`, `Widescreen_Cull`), for the terrain cull
+  `[-150, 470]`, the frame pass's ranges `[-252, 572]` and `[-102, 422]`,
+  the cell inset 3 lower a side (and with it the grown ring and the map
+  walk's random split), the x culls of sprites, uprights, quake and effect
+  pieces, the band's sprites, and the wide staging (DIV-0122, DIV-0123),
+  whose rows move as at 16:9, so an actor starts 21 columns farther past the
+  16:10 edge than the picture needs. At 16:9 and 21:9 the two widths are the
+  same number and nothing changed. The 21:9 hide (DIV-0124) stays off, as at
+  16:9. On a 1280 x 800 panel integer scaling gives k = 3 (1152 x 720); with
+  integer scaling off the picture fills the panel. The launcher's box has a
+  fourth entry, "16:10 - 384 x 240 (Steam Deck)", listed last because an
+  entry's index is the ini's value; `input_run.py`, `attract_run.py` and
+  `abc_run.py` take `--wide 3`.
+  Verified 2026-11-21: the hosted self-tests with `BOF3X_WIDE=3
+  BOF3X_SHADOW='*'`, 929 mismatch lines all at 0, exit 0 (the log's
+  `widescreen: 32 columns a side (384 x 240), culls and staging at 53;
+  terrain cull [-150, 470]`, `full-frame fills at (-32, 0) 384 x 240`, `the
+  wide staging on: 25 of 25 rows armed at 53 columns`, the flag split and
+  the band at 53, the faster slide's and the sweeps' checks now at 0, 32, 53
+  and 120 columns). **The state hash, 16:9 against 16:10** (`field_view`,
+  1345 ticks, the same build): two runs at 16:10 identical; against 16:9 two
+  pages differ, constant from tick 0, and the dumps at tick 1000 name the
+  bytes - `Gfx_ScreenRect+0x8` (852 against 768) and `Display_BackPitch`
+  (0xD50 against 0xC00), the picture's size at k = 2, and nothing else the
+  hash reads. The four `field_view` frames at 16:10 are the centre 768
+  columns of the 16:9 frames (68 pixels of each differ, by one level in one
+  channel). `config_tests` 4457 checks, 0 failures (`wide=3` read, written
+  and sent; `wide=4` refused); the launcher with no screen (`set wide=3`,
+  saved, read back). Captures at `--wide 3`, 768 x 480 from the game:
+  `field_view`, `field_menu` (the backdrop across the picture) and
+  `battle_commands` (a battle, its boxes inside the picture).
+  **Not yet seen:** the owner's play, a Steam Deck itself, a scene with
+  staged edge actors at 16:10, and the narrow, 16:9 and 21:9 full self-test
+  suites after this change (at those widths the two widths read are the
+  same number; the change to them is the two checks' one more width).
 - **Switch:** ini:wide=0
 - **Default:** off - `wide=0` is the launcher's default (`src/launcher/config.h`)
 - **Player:** yes
@@ -9948,6 +9995,16 @@ designed in rather than bolted on.
   no exception names, is not drawn. Bit 7 and every field the original writes
   are unchanged; only the primitive is skipped. 16:9 and narrow are
   unchanged.
+  **Amended 2026-11-21 (a sprite the player could already see,
+  [`wide-staging.md`](wide-staging.md) 12):** a candidate drawn through ten
+  frames of free walking in a row (the field's modes, the scene mask clear)
+  is kept - not hidden - from then on, while it goes on being drawn with no
+  more than four frames between two draws in the same area. Until then a
+  plain talk hid a bystander: the owner's innkeeper of area 130, in the
+  21:9 band, went out for the merchant's greeting (mask `02`) and came back
+  when the shop's menu opened (`Game_Mode` 3, not a field scene). The marks
+  are draw-only, read by `HideSite` and the census alone, and stepped by
+  `Frame_Counter`.
 - **Rationale:** the owner's call ([`ultrawide-round.md`](ultrawide-round.md)
   4, layer 2): a simple hide for what is still visible in the 21:9-only part
   of the bands.
@@ -9961,6 +10018,15 @@ designed in rather than bolted on.
   `balioAndSunder_2`'s areas 39 and 41 hidden (283 rows) and the leader never
   ([`ultrawide-census-4.md`](ultrawide-census-4.md) 3). The hash differs from
   the run without it in draw pages only. **Not played by the owner.**
+  The amendment of 2026-11-21: the self-test's section 4a (the marks from 0
+  to 13 frames of walking, through 200 scene frames, across the gap and
+  past it, the counter going back and wrapping; the slots); the owner's
+  route `ultrawideMerchantCull` at 21:9, where the census has object 0
+  `hidden` on recipe frames 378..447 on the build before and on none after
+  ([`wide-staging.md`](wide-staging.md) 12). The owner watched the replay.
+  Not run: the state hash, the census on the routes of census 3 and 4 (a
+  scene's actor that stood in the 21:9 band in free walking before its
+  scene is now drawn through it).
 - **Reversible?** `BOF3X_WIDE_HIDE=0`, or 16:9.
 - **Switch:** env:BOF3X_WIDE_HIDE=0
 - **Default:** on

@@ -219,9 +219,10 @@ def main():
                          '(the bare en/fr/de/ja are retired, DIV-0005)')
     ap.add_argument('--filter', default='linear',
                     help="value for BOF3X_FILTER: \"linear\" (default, the port's own) or \"point\"")
-    ap.add_argument('--wide', choices=('0', '1', '2'), default=None,
+    ap.add_argument('--wide', choices=('0', '1', '2', '3'), default=None,
                     help="BOF3X_WIDE for the run: 0 the original's 320 x 240, 1 the 16:9 picture (426 x 240), "
-                         "2 the 21:9 picture (560 x 240; DIV-0041, docs/ultrawide-frame.md). Unset, the "
+                         "2 the 21:9 picture (560 x 240), 3 the 16:10 picture (384 x 240; DIV-0041, "
+                         "docs/ultrawide-frame.md). Unset, the "
                          "launcher's bof3x.ini decides (wide=), as before")
     ap.add_argument('--no-kill', action='store_true')
     ap.add_argument('--no-front', action='store_true',

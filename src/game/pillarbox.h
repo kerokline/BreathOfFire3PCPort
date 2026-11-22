@@ -1,7 +1,7 @@
 // The narrow areas pillarboxed (DIVERGENCE DIV-0041, the wide-ring round's
 // side group PB, docs/narrow-pillarbox.md).
 //
-// In the wide modes (BOF3X_WIDE=1 426 x 240, =2 560 x 240) an area whose map
+// In the wide modes (BOF3X_WIDE=1 426 x 240, =2 560 x 240, =3 384 x 240) an area whose map
 // is narrower than the picture showed the void past its edge in the bands
 // (docs/ultrawide-culls.md section 5). Two such areas are now framed as a
 // narrower picture on purpose: black bars drawn by us over the bands, the
@@ -41,7 +41,9 @@ constexpr unsigned kRingColumnPx = 32;
 // The columns a side of the picture an area is framed at, from its widest
 // screen row in ring columns: the widest of the port's three pictures (0, the
 // 16:9 columns, the 21:9 columns, each by widescreen_rule::ColumnsForAspect)
-// whose width the row reaches, 0 below them all.
+// whose width the row reaches, 0 below them all. The 16:10 picture (384) is
+// not a frame width: an area is framed at 320, 426 or 560 as before it, and
+// Framed below never gives more than the picture has (32 at 16:10).
 constexpr unsigned FrameColumns(unsigned widest_row) {
     const unsigned px = widest_row * kRingColumnPx;
     const unsigned c219 = widescreen_rule::ColumnsForAspect(21, 9), c169 = widescreen_rule::ColumnsForAspect(16, 9);

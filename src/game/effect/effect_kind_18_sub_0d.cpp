@@ -503,7 +503,7 @@ extern "C" void __cdecl EffectKind18Sub0D_DrawGlow(int column) {
     const std::int32_t depth = SH_CALL(Gte_RotTransPers)(VertexEffect5b(0), reinterpret_cast<std::uint32_t*>(MapView_ScreenXY), &p);
     const unsigned char* const sx = At(::bof3::Img(0x903820));
     const unsigned char* const sy = At(::bof3::Img(0x903824));
-    const float fill = static_cast<float>(Widescreen_Fill());   // DIV-0041 (UC2): x out by the columns
+    const float fill = static_cast<float>(Widescreen_Cull());   // DIV-0041 (UC2): x out by the columns
     if (!(F(::bof3::Img(0x903820)) >= F(at::kCullLeft) - fill)) return;
     if (F(::bof3::Img(0x903820)) > F(at::kCullRight) + fill) return;
     if (!(F(::bof3::Img(0x903824)) >= F(at::kCullTop))) return;

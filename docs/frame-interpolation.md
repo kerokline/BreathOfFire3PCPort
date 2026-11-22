@@ -1,6 +1,6 @@
 # Frame interpolation: one in-between frame (prototype)
 
-**Status:** EXPERIMENTAL (prototype 2026-11-13; item 18 closed and two measures added 2026-11-16; figures paired by the game's own object 2026-11-21, section 6 item 20, on branch `render/interp-ident`; ledgered 2026-11-14 as
+**Status:** EXPERIMENTAL (prototype 2026-11-13; item 18 closed and two measures added 2026-11-16; figures paired by the game's own object 2026-11-21, section 6 item 20, on branch `render/interp-ident`; a list's highlight no longer slides, item 21, 2026-11-21; ledgered 2026-11-14 as
 DIVERGENCE DIV-0230). Off by default; the launcher's Settings page has the
 box "Smooth motion: 60 frames each second (experimental)" (`interp=1` in
 `bof3x.ini`, which goes out as `BOF3X_INTERP=1`). The open items of section 6
@@ -94,6 +94,13 @@ code beside its rule:
    motion the same way (section 6, item 17). It is tried only when every
    rule above and rule 4 gave no pair.
 4. **A lone look-alike** (two or fewer) within a quarter of the cap.
+   **A leap among the still** (2026-11-21, section 6 item 21) is refused
+   by rule 3's pair and by this one: a pair that is not the draw's partner
+   by order, that moves an upright textured draw further than a sixth of
+   the cap, while of the 24 draws before it in the list and of the 24
+   after it some have a partner by order that leaves them still (a quarter
+   of the leap at most) and none has one that goes the leap's way. The
+   draw is shown where frame N has it.
 5. **Rigidity.** A pair is refused when its vertices move differently by
    more than a quarter of the polygon's longest extent (12 px at the least):
    clipped polygons, wrong pairs.
@@ -634,6 +641,58 @@ ear and the WAV A/B stay owed (IDEAS I68).
     a town and on a battle. The worst case not looked for: an object slot
     reused by another figure between two frames pairs the two, held only by
     the cap.
+21. **A list's highlight slid half a row** - *fixed 2026-11-21* (the owner:
+    going up a shop's item list, the bullets jump; buy and sell screens;
+    the route `ultrawideMerchantCull`, `--wide 2`, `BOF3X_FILTER=point`).
+
+    The list draws the row under the hand a second time: a dark copy of
+    its letters and price, then the bullet, the letters and the price
+    again, 2 game px higher. The dark copy's letters and price are surfaces
+    of their own, so each look is drawn once in a frame. When the hand
+    goes to another row, those draws come at that row's place in the list.
+    The decision log of Frame_Counter 687 (`BOF3X_INTERP_DEBUG`): the dark
+    price's four draws and the raised bullet each took the old row's draw,
+    26 target px away - the lone looks voted that step for their surfaces
+    and agreed with it - and were shown 13 px from their row; the letters
+    alone stood, by rule 7's line of letters. At 571 the step went on
+    through "what the draw before it did" into the rows below, which hold
+    look-alikes (prices, letters): 55 draws, six rows of the list, shown
+    half a row down for one in-between. It showed going up more than going
+    down (5 draws at 687; 3 or 4, the price alone, at 897 and 909).
+
+    A first attempt is recorded because it failed: a number for each
+    surface's content, so that a pair across a written surface counts as a
+    pair by shape. The dark letters then took the row's own letters by
+    shape and the raised letters took the old row's; and the dark price is
+    written with the same pixels (two rows at 200Z), so it paired as
+    before. Taken out.
+
+    **The rule** (section 3, under rule 4): a leap among the still.
+    In-betweens of Frame_Counter 560 to 970 of the route (the buy list, the
+    change to the sell list, the sell list) by their unbroken runs shown
+    8 px or more from where the frame has them:
+
+    | | One such draw | 2 to 99 draws | 100 or more (a window sliding) |
+    |---|---|---|---|
+    | before | 50 | 40 | 15 |
+    | after | 49 | 0 | 15 |
+
+    All forty are gone with the rule; three of them were read in the
+    decision log (564, 571, 687), each the highlight. The single draws are the hand
+    (its partner by order), which slides as before; which one of the fifty
+    went was not looked up. Over frames 450 to 1290 the build with the rule
+    has 13 in-betweens of 10 to 99 such draws - windows sliding at 454 to
+    456 and 1274 to 1277, and 999 and 1166 to 1193 in the sell screen, a
+    block going one way with no pair refused, not read further - and 74 of
+    the hand's.
+    The rule refused 628 pairs on 85 in-betweens of the route.
+    On other routes, the same build: combat, frames 500 to 1700, 16 pairs
+    on 10 of 1,151 in-betweens; menu_screens, 300 to 1900, 78 on 11 of
+    1,311. The lines read are letters that took a look-alike letter of
+    another line or window (one 390 px away). **Not read by eye** on those
+    two routes; the state hash not run (the matcher reads the frame list
+    and writes the in-between's vertices only). The owner watched the
+    route's replay on the build with the rule: "that looks good".
 
 Done 2026-11-14: the `DIVERGENCE.md` entry (DIV-0230) and the launcher's
 box. Before it leaves "experimental": the black and shift checkers in `tools/`, the debug

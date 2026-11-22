@@ -210,7 +210,7 @@ const HideException kHideExceptions[] = {
 
 // --- the rule ----------------------------------------------------------------
 
-unsigned g_columns = 0;   // Widescreen_Live() at the arm
+unsigned g_columns = 0;   // Widescreen_LiveLogic() at the arm: the staging goes by the logic's columns (16:9's under 16:10)
 
 unsigned StepsFor(int beyond, unsigned pps10, unsigned top, unsigned c) {
     if (c == 0) return 0;
@@ -648,26 +648,87 @@ namespace {
 // A field object, an extra object or a party member other than the leader
 // (ObjTrio's first member, whose state the scene mask's 0x10 reads); and the
 // exception list's key for it.
-bool Candidate(const unsigned char* sprite, unsigned& field, unsigned& index) {
+// `slot` is its place in g_seen: the 30 objects, the 4 extra, the trio's three.
+constexpr unsigned kSeenSlots = 30 + 4 + 3;
+bool Candidate(const unsigned char* sprite, unsigned& field, unsigned& index, unsigned& slot) {
     const std::uint32_t a = Address(sprite);
     const std::uint32_t objects = Address(rv::Bytes(Sprite_Objects)), extra = Address(rv::Bytes(Sprite_ObjectsExtra)), trio = Address(rv::Bytes(ObjTrio));
     if (a >= objects && a < objects + 30u * 0xA4u && (a - objects) % 0xA4u == 0) {
         field = 0x10;
         index = sprite[0x83];
+        slot = (a - objects) / 0xA4u;
         return true;
     }
     if (a >= extra && a < extra + 4u * 0xA4u && (a - extra) % 0xA4u == 0) {
         field = 0x10;
         index = 0x100;   // no script of its own: no exception can name it
+        slot = 30u + (a - extra) / 0xA4u;
         return true;
     }
     if (a > trio && a < trio + 3u * 0x14Cu && (a - trio) % 0x14Cu == 0) {
         field = 0;
         index = (a - trio) / 0x14Cu;
+        slot = 34u + index;
         return true;
     }
     return false;
 }
+bool Candidate(const unsigned char* sprite, unsigned& field, unsigned& index) {
+    unsigned slot = 0;
+    return Candidate(sprite, field, index, slot);
+}
+
+// A candidate's slot in g_seen; kSeenSlots for what is no candidate.
+unsigned SeenSlot(const unsigned char* sprite) {
+    unsigned field = 0, index = 0, slot = kSeenSlots;
+    return Candidate(sprite, field, index, slot) ? slot : kSeenSlots;
+}
+
+// DIVERGENCE DIV-0124, amended 2026-11-21 (the owner's innkeeper, area 130;
+// docs/wide-staging.md section 12): a sprite the player could already see is
+// not hidden. The hide is for an actor a scene parks or pops where 320
+// columns never showed it. A plain talk also holds the leader (mask 02), so an
+// innkeeper standing in the 21:9 band went out for the merchant's greeting and
+// came back when the shop's menu opened (mode 3, not a field scene).
+//
+// The rule: a candidate drawn through kSeenFrames frames of free walking in a
+// row (a field scene's modes, the scene mask clear) is kept - not hidden -
+// from then on, for as long as it goes on being drawn with no more than
+// kSeenGap frames between two draws and the area is the same. The frames of
+// free walking in a row keep a scene that lets the mask go for a frame or two
+// between two of its parts from making what it hides kept. A menu over the
+// field (the shop) neither gives the mark nor takes it.
+//
+// Draw-only as the hide is: the marks are read by HideSite and the census
+// alone, and are keyed on Frame_Counter, which every logic frame steps, so a
+// run at any BOF3X_SPEED decides the same.
+constexpr unsigned kSeenFrames = 10;
+constexpr std::uint32_t kSeenGap = 4;
+struct Seen {
+    std::uint32_t last;   // Frame_Counter at its last draw through HideSite
+    unsigned char run;    // frames of free walking in a row it was drawn on, to kSeenFrames
+    bool kept;
+};
+// Whether the mark holds at frame `now`, before this frame's draw.
+bool SeenHolds(const Seen& s, std::uint32_t now) { return s.kept && now - s.last <= kSeenGap; }
+// The draw at frame `now`: true when the sprite is kept on it.
+bool SeenDraw(Seen& s, std::uint32_t now, bool free_walk) {
+    if (now - s.last > kSeenGap) s = Seen{};   // not drawn for a while (or the counter went back: a quickload)
+    if (free_walk) {
+        if (now != s.last && s.run < kSeenFrames) ++s.run;
+        s.kept = s.kept || s.run >= kSeenFrames;
+        s.last = now;
+        return true;
+    }
+    if (!s.kept) {
+        s.run = 0;
+        return false;
+    }
+    s.last = now;
+    return true;
+}
+Seen g_seen[kSeenSlots];
+unsigned g_seen_area = ~0u;
 
 bool Excepted(unsigned area, unsigned field, unsigned index) {
     for (const HideException& e : kHideExceptions) {
@@ -677,9 +738,8 @@ bool Excepted(unsigned area, unsigned field, unsigned index) {
     return false;
 }
 
-bool Decide(const unsigned char* sprite) {
-    unsigned field = 0, index = 0;
-    if (!Candidate(sprite, field, index)) return false;
+// The decision without the seen marks: the rule of 2026-10-13.
+bool Decide(const unsigned char* sprite, unsigned field, unsigned index) {
     const unsigned mask = band_census::SceneMask();
     if ((mask & band_census::kSceneMaskBits) == 0) return false;
     if (!FieldScene(Game_Mode, Cond_ByteFA, WorldMap_RecordIndex() & 0xFFu)) return false;   // each caller takes the low byte
@@ -688,11 +748,34 @@ bool Decide(const unsigned char* sprite) {
     return HideDecision(left, right, mask, true, true, Excepted(Game_AreaNumber, field, index));
 }
 
+// Free walking: the field's own modes with nothing holding the leader.
+bool FreeWalk() {
+    return (band_census::SceneMask() & band_census::kSceneMaskBits) == 0 &&
+           FieldScene(Game_Mode, Cond_ByteFA, WorldMap_RecordIndex() & 0xFFu);
+}
+
 }  // namespace
 
-bool HideSite(const unsigned char* sprite) { return Decide(sprite); }
+bool HideSite(const unsigned char* sprite) {
+    unsigned field = 0, index = 0, slot = 0;
+    if (!Candidate(sprite, field, index, slot)) return false;
+    if (g_seen_area != Game_AreaNumber) {   // another area's objects in the same slots
+        for (Seen& s : g_seen) s = Seen{};
+        g_seen_area = Game_AreaNumber;
+    }
+    if (SeenDraw(g_seen[slot], Frame_Counter, FreeWalk())) return false;
+    return Decide(sprite, field, index);
+}
 
-bool WouldHide(const unsigned char* sprite) { return g_hide && Decide(sprite); }
+// The census asks in Sprite_UpdateScreen, before the frame's draw: the mark as
+// the draw will find it.
+bool WouldHide(const unsigned char* sprite) {
+    if (!g_hide) return false;
+    unsigned field = 0, index = 0, slot = 0;
+    if (!Candidate(sprite, field, index, slot)) return false;
+    if (g_seen_area == Game_AreaNumber && SeenHolds(g_seen[slot], Frame_Counter)) return false;
+    return Decide(sprite, field, index);
+}
 
 // --- the self-test and the arm ---------------------------------------------
 
@@ -1073,6 +1156,51 @@ void SelfTest() {
         Check(!Candidate(rv::Bytes(&Sprite_Kind2), field, index), "the kind-2 object is not hidden");
         Check(!Excepted(0, 0x10, 0), "the exception list starts empty");
     }
+    // 4a. The seen marks (DIV-0124's amendment of 2026-11-21): kept after kSeenFrames frames of free
+    //     walking in a row, through a scene and a menu for as long as the draws go on; never from
+    //     fewer frames, from a scene's own frames, or across a gap.
+    {
+        const auto slots = [&](const unsigned char* p, unsigned want, const char* what) {
+            Check(SeenSlot(p) == want, what, static_cast<int>(SeenSlot(p)));
+        };
+        slots(rv::Bytes(Sprite_Objects), 0, "slot: object 0");
+        slots(rv::Bytes(&Sprite_Objects[0x1d]), 29, "slot: object 29");
+        slots(rv::Bytes(Sprite_ObjectsExtra), 30, "slot: extra 0");
+        slots(rv::Bytes(&Sprite_ObjectsExtra[3]), 33, "slot: extra 3");
+        slots(rv::Bytes(&ObjTrio[1]), 35, "slot: member 1");
+        slots(rv::Bytes(&ObjTrio[2]), 36, "slot: member 2");
+        slots(rv::Bytes(ObjTrio), kSeenSlots, "slot: the leader has none");
+        for (std::uint32_t base : {0u, 1000u, 0xFFFFFFF0u}) {   // the counter's wrap included
+            for (unsigned walked = 0; walked <= kSeenFrames + 3; ++walked) {
+                Seen s{};
+                std::uint32_t f = base;
+                for (unsigned i = 0; i < walked; ++i) Check(SeenDraw(s, ++f, true), "free walking is never hidden", static_cast<int>(i));
+                const bool want = walked >= kSeenFrames;
+                Check(SeenHolds(s, f + 1) == want, "the census reads the mark the draw will", static_cast<int>(walked));
+                for (unsigned i = 0; i < 200; ++i)   // the talk, the shop's menu, the talk after it: one answer
+                    Check(SeenDraw(s, ++f, false) == want, "kept through a scene exactly from kSeenFrames", static_cast<int>(walked), static_cast<int>(i));
+                Check(SeenDraw(s, f, false) == want, "a second draw in a frame changes nothing", static_cast<int>(walked));
+                // Draws kSeenGap apart keep it; one frame more loses it.
+                f += kSeenGap;
+                Check(SeenDraw(s, f, false) == want, "kept across kSeenGap frames", static_cast<int>(walked));
+                Check(!SeenHolds(s, f + kSeenGap + 1), "not held past the gap", static_cast<int>(walked));
+                f += kSeenGap + 1;
+                Check(!SeenDraw(s, f, false), "lost past the gap", static_cast<int>(walked));
+                Check(!SeenDraw(s, f - 50, false), "and when the counter goes back", static_cast<int>(walked));
+            }
+            // A scene that lets the mask go for fewer frames than kSeenFrames gives no mark, however often.
+            Seen s{};
+            std::uint32_t f = base;
+            for (unsigned round = 0; round < 40; ++round) {
+                for (unsigned i = 0; i + 1 < kSeenFrames; ++i) SeenDraw(s, ++f, true);
+                Check(!SeenDraw(s, ++f, false), "short stretches of free frames give no mark", static_cast<int>(round));
+            }
+            // The same frame drawn twice counts once.
+            Seen t{};
+            for (unsigned i = 0; i < 100; ++i) SeenDraw(t, base + 5, true);
+            Check(!SeenDraw(t, base + 6, false), "one frame is one frame of walking");
+        }
+    }
     // 5. Case zero's table: each script's two west walks add north, its east walk south; 3 fewer steps a walk.
     {
         for (const CaseZeroScript& cs : kCaseZeroScripts) {
@@ -1099,7 +1227,7 @@ void SelfTest() {
 }
 
 void Arm() {
-    g_columns = Widescreen_Live();
+    g_columns = Widescreen_LiveLogic();
     if (g_columns == 0) return;
     g_log_all = EnvUnsigned("BOF3X_WIDE_STAGING_LOG", 0, 0, 1) != 0;
     // The fastest speed whose frames stay whole: a step is still half a cell.

@@ -507,14 +507,14 @@ S24_EXPORT unsigned char __cdecl Fx105_MoteAlloc(void) {
 // SPRT on ordering slot +0x29, its size from Fx105_MoteSizes, CLUT by +0x27
 // (+0x28 picks the row), tint +0x5D..+0x5F + 0x80, flipped by bit 7 when
 // +0x2A, semi-transparent by +0 bit 5. DIV-0041: the x bounds move out by the
-// fill columns (the PSP's [-96, 416] for 32), so the margin past the wide
+// cull columns (the PSP's [-96, 416] for 32), so the margin past the wide
 // view is the original's 64; the y bounds as they were. Unarmed or narrow,
 // the original's.
 S24_EXPORT void __cdecl Fx105_MoteDraw(void) {
     const unsigned char* sc = Sprite_Current;
     if (sc[0] & 0x40) return;
     const short sx = S16(sc + 0x2E);
-    const int wide = static_cast<int>(Widescreen_Fill());
+    const int wide = static_cast<int>(Widescreen_Cull());
     if (sx > 0x180 + wide || sx < -0x40 - wide) return;
     const short sy = S16(sc + 0x30);
     if (sy > 0x130 || sy < -0x40) return;

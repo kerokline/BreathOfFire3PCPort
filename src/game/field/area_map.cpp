@@ -461,7 +461,7 @@ static void DrawQuads(const unsigned char* record, unsigned b1, unsigned b0) {
         unsigned char* const prim = Gfx_PacketNext;
         Gte_StoreScreenXY(reinterpret_cast<std::uint32_t*>(prim + 8));
         const float sx = Get<float>(prim, 8), sy = Get<float>(prim, 0xC);
-        const float cull = static_cast<float>(Widescreen_Fill());   // DIV-0041: the x cull out by the columns
+        const float cull = static_cast<float>(Widescreen_Cull());   // DIV-0041: the x cull out by the columns
         if (sx > -100.0f - cull && sx < 420.0f + cull && sy > -150.0f && sy < 300.0f) {
             Gpu_SetPolyFT4(prim);
             Gpu_SetShadeTex(prim, 0);
@@ -1941,7 +1941,7 @@ extern "C" void __cdecl MapCell_DrawUprights(const unsigned char* record, unsign
     // DIV-0041: the x cull moved outward by the wide picture's columns (0
     // until every self-test has run, widescreen.h): the margin an upright
     // had beyond the 320 view, kept beyond the 426.
-    const float cull = static_cast<float>(Widescreen_Fill());
+    const float cull = static_cast<float>(Widescreen_Cull());
     if (!(MapView_ScreenXY[0] >= -80.0f - cull)) return;   // fcomp [0x5C4264]; test ah, 1
     if (MapView_ScreenXY[0] > 400.0f + cull) return;       // fcomp [0x5C4260]; test ah, 0x41
     if (!(Float(::bof3::Img(kScreen1) + 4) >= -20.0f)) return;   // fcomp [0x5C422C]; test ah, 1
@@ -2370,7 +2370,7 @@ extern "C" void __cdecl MapCell_DrawAnimated(const unsigned char* record, unsign
     std::int32_t depth = 0;
     const auto p = static_cast<std::int32_t>(
         map_field_objects::g.rtp(Vertex(::bof3::Img(Prim_VertexScratch_addr)), reinterpret_cast<std::uint32_t*>(AtMapFieldObjects(::bof3::Img(MapView_ScreenXY_addr))), &depth));
-    const float cull = static_cast<float>(Widescreen_Fill());   // DIV-0041, as MapCell_DrawUprights
+    const float cull = static_cast<float>(Widescreen_Cull());   // DIV-0041, as MapCell_DrawUprights
     if (!(MapView_ScreenXY[0] >= -60.0f - cull)) return;  // fcomp [0x5C4210]; test ah, 1
     if (MapView_ScreenXY[0] > 380.0f + cull) return;      // fcomp [0x5C420C]; test ah, 0x41
     if (!(MapView_ScreenXY[1] >= -150.0f)) return; // fcomp [0x5C4200]; test ah, 1

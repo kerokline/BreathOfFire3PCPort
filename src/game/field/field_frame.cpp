@@ -445,7 +445,7 @@ struct BandCheck {
 };
 BandCheck BandSelfTest(void* theirs) {
     BandCheck out{};
-    out.columns = Widescreen_Columns();
+    out.columns = Widescreen_LogicColumns();
     if (out.columns == 0) return out;
     out.run = true;
     static State input, their_out, our_out;

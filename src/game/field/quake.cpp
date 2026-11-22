@@ -450,7 +450,7 @@ extern "C" void __cdecl MapCell_DrawTexQuads(const unsigned char* record, unsign
         BH_CALL(Gte_StoreScreenXY)(reinterpret_cast<std::uint32_t*>(prim + 8));
         // DIV-0041 (UC2): the x bounds moved out by the columns; .rdata's
         // floats stay Capcom's (their code reads them too).
-        const float fill = static_cast<float>(Widescreen_Fill());
+        const float fill = static_cast<float>(Widescreen_Cull());
         if (!(F(prim + 8) > F(At(at::kScreenXLo)) - fill)) continue;
         if (!(F(prim + 8) < F(At(at::kScreenXHi)) + fill)) continue;
         if (!(F(prim + 0xC) > F(At(at::kScreenYLo)))) continue;
@@ -593,7 +593,7 @@ extern "C" void __cdecl MapCell_DrawGroundSprite(const unsigned char* record, un
     std::int32_t p = 0;
     unsigned char* const screen = At(::bof3::Img(MapView_ScreenXY_addr));
     const std::int32_t z = BH_AT(Pers, bof3::addr::Gte_RotTransPers)(point, screen, &p);
-    const float fill = static_cast<float>(Widescreen_Fill());   // DIV-0041 (UC2): x out by the columns
+    const float fill = static_cast<float>(Widescreen_Cull());   // DIV-0041 (UC2): x out by the columns
     if (!(F(screen) >= F(At(at::kSpriteXLo)) - fill)) return;
     if (F(screen) > F(At(at::kSpriteXHi)) + fill) return;
     if (!(F(screen + 4) >= F(At(at::kScreenYLo)))) return;

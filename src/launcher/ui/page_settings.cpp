@@ -185,7 +185,7 @@ void SettingsOpen(Pages& p) {
     b.look = cfg.satpixie ? 2 : cfg.filter == Filter::kPoint ? 1 : 0;
     b.display = cfg.display == Display::kWindowed ? 1 : 0;
     b.background = cfg.background;
-    b.wide = cfg.wide == 1 || cfg.wide == 2 ? cfg.wide : 0;   // DIV-0041: the box's entry is the ini's wide=
+    b.wide = cfg.wide >= 1 && cfg.wide <= 3 ? cfg.wide : 0;   // DIV-0041: the box's entry is the ini's wide=
     b.snap = cfg.snap;
     b.interp = cfg.interp;   // DIV-0230
     b.show = cfg.show_launcher;
@@ -208,7 +208,7 @@ void SettingsApply(Pages& p) {
     cfg.snap = b.snap;
     cfg.interp = b.interp;
     cfg.background = b.background;
-    cfg.wide = b.wide == 1 || b.wide == 2 ? b.wide : 0;
+    cfg.wide = b.wide >= 1 && b.wide <= 3 ? b.wide : 0;
     cfg.show_launcher = b.show;
     if (b.ruby_touched) cfg.ruby = b.ruby_pick;   // untouched: ruby= as read
     if (p.preset >= 0 && static_cast<std::size_t>(p.preset) < std::size(kPresets)) cfg.preset = kPresets[p.preset].id;
@@ -279,12 +279,14 @@ void SettingsPage(Pages& p) {
     if (PagesPresetSets(p, "display")) Grey(kPresetGreyReason);
     Combo("display", &b.display, displays);
 
-    // DIV-0041: off, 16:9 or 21:9 (wide= 0, 1, 2; docs/ultrawide-frame.md).
+    // DIV-0041: off, 16:9, 21:9 or 16:10 (wide= 0, 1, 2, 3; docs/ultrawide-frame.md). The entry's index is the
+    // ini's value, so 16:10, added last, is listed last.
     Place(Dx(9), Dy(90 - up));
     Label("Widescreen:");
     Place(Dx(77), Dy(88 - up));
     Size(Dx(186));
-    Combo("wide", &b.wide, {"Off - 4:3, 320 x 240 (original)", "16:9 - 426 x 240", "21:9 - 560 x 240"});
+    Combo("wide", &b.wide, {"Off - 4:3, 320 x 240 (original)", "16:9 - 426 x 240", "21:9 - 560 x 240",
+                             "16:10 - 384 x 240 (Steam Deck)"});
 
     Place(Dx(7), Dy(104 - up));
     Check("Integer scaling (2x, 3x, 4x ...)", &b.snap);

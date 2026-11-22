@@ -950,7 +950,7 @@ render::Options ReadOptions(void* hwnd, bool borderless) {
     o.logical_w = 320;
     o.logical_h = 240;
     o.scale = k;
-    o.pad_x = Widescreen_Columns();   // DIV-0041: the target is (320 + 2 c) k wide (c 53 or 120), the view centred in it
+    o.pad_x = Widescreen_Columns();   // DIV-0041: the target is (320 + 2 c) k wide (c 32, 53 or 120), the view centred in it
     display_setup::g_scale = k;
     o.point_filter = false;
     if (bof3::os::GetEnv("BOF3X_FILTER", text, sizeof text) > 0) {

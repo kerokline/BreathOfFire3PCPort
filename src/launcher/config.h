@@ -228,7 +228,8 @@ struct Config {
     } sp;
     // DIV-0041: the picture's width - 0 the original's 320 x 240, 1 the 16:9
     // picture 426 x 240 (BOF3X_WIDE=1), 2 the 21:9 picture 560 x 240
-    // (BOF3X_WIDE=2; docs/ultrawide-frame.md).
+    // (BOF3X_WIDE=2; docs/ultrawide-frame.md), 3 the 16:10 picture 384 x 240
+    // (BOF3X_WIDE=3, the Steam Deck's panel).
     int wide = 0;
     // DIV-0042: the picture on the window at whole multiples of its size
     // (the default) or stretched to the client's height (BOF3X_SNAP=0).
