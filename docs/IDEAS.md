@@ -2738,7 +2738,7 @@ Read each of the 25 sites and sort them: a plain difference, a quotient that the
 
 ### Outcome
 _(2026-11-21) open; written up at the owner's word, nothing built._
-_(2026-11-21, later) built on the local branch `cheats/faerie-speed`: `cheat.faerie` / `BOF3X_FAERIE`, DIV-0243. The catalog is [`cheats.md`](cheats.md) section 9: fifteen rows, not 25 sites (the rest are writes of a stamp). The two set apart came out differently from the note above: the clearing and building counter adds the slider's number, and the hold of an empty room needs no change at all (one a battle holds the difference at any speed). Found on the way: the two shop levels are added in a byte, which a speed above 1 would wrap within one absence; above 1 the steps stop at the byte. Open: whether the Definitive Edition mod sets a speed of its own. Not played._
+_(2026-11-21, later) built on the local branch `cheats/faerie-speed`: `cheat.faerie` / `BOF3X_FAERIE`, DIV-0243. The catalog is [`cheats.md`](cheats.md) section 9: fifteen rows, not 25 sites (the rest are writes of a stamp). The two set apart came out differently from the note above: the clearing and building counter adds the slider's number, and the hold of an empty room needs no change at all (one a battle holds the difference at any speed). Found on the way: the two shop levels are added in a byte, which a speed above 1 would wrap within one absence; above 1 the steps stop at the byte. The owner's call the same day: the Definitive Edition sets the speed 5 and the learn switch, as the behaviours `FasterFaerieVillage` (DIV-0245) and `ExamineAlwaysLearns` (DIV-0244) in its `needs`. Not played._
 
 ## I72 — The Shisu ingredients in Parch's shops, under the no-fail minigames box
 

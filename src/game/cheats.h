@@ -18,7 +18,8 @@ void Cheats_Inject();
 // The village counts battles (Game_BattleCount, 0x904134) from stamps it
 // keeps of that count. With the speed n each battle since a stamp counts as n
 // village battles; the count and the stamps stay in real battles, so the save
-// is as it was (docs/cheats.md section 9).
+// is as it was (docs/cheats.md section 9). DIV-0245: unset, with the
+// behaviour FasterFaerieVillage on (a mod's), 5.
 std::uint32_t Cheats_FaerieSpeed();
 
 // The village battles since `stamp`: (clock - stamp) x the speed, unsigned as
@@ -37,7 +38,8 @@ std::uint32_t Cheats_FaerieSpan(std::uint32_t span);
 // 1, `q` as it came.
 std::uint32_t Cheats_FaerieSteps(std::uint32_t q, std::uint32_t level);
 
-// DIV-0226: true under BOF3X_LEARN=1. Battle_MemberRollByAction
+// DIV-0226: true under BOF3X_LEARN=1, and (DIV-0244) with the behaviour
+// ExamineAlwaysLearns on (a mod's). Battle_MemberRollByAction
 // (src/game/battle/dragon_cmd.cpp) then answers 1 whenever its other tests
 // pass, whatever Rand gives: a member that watches an enemy learns the skill
 // the enemy uses, if the skill can be learned, the party does not know it

@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 243 entries, DIV-0001..0243, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 245 entries, DIV-0001..0245, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -18479,5 +18479,74 @@ designed in rather than bolted on.
 - **Default:** off - the slider starts at 1
 - **Player:** yes
 - **Toward:** none
+- **Languages:** any
+- **State:** active
+
+### A mod can make an examining member always learn the enemy's skill
+
+- **ID:** DIV-0244
+- **Date:** 2026-11-21
+- **Subsystem:** battle, the learning of an enemy's skill -
+  `Battle_MemberRollByAction` `0x453910` (ours,
+  `src/game/battle/dragon_cmd.cpp`) through `Cheats_LearnAlways`
+  (`src/game/core/cheats.cpp`); the behaviour `ExamineAlwaysLearns`
+  ([`mods.md`](mods.md) 11); `data/mods/known.toml`
+- **Tier:** Extension - another person's design, played only when a mod asks
+  for it
+- **Original behaviour:** as DIV-0226's: a member that watches an enemy
+  learns the skill the enemy uses on a roll by the skill's class.
+- **New behaviour:** with `ExamineAlwaysLearns` on, the game runs as with
+  DIV-0226's switch on (`cheat.learn=1`): the roll answers 1 after its
+  refusals. Nothing else is added; the start's log line names which of the
+  two turned it on. The Definitive Edition's `needs` names it, so the mod on
+  is the box on.
+- **Rationale:** the owner's call, 2026-11-21: the Definitive Edition should
+  set the "always learn skill" toggle. The hack's readme lists "Examine
+  always learning"; the 1.4 patch holds no such change
+  ([`romhack-mods.md`](romhack-mods.md) 9), so the mod asks for our switch.
+- **Also in the PSX version?** No.
+- **Verification:** 2026-11-21, headless (`BOF3X_SELFTEST_ONLY=1`, the 32-bit build of `cheats/faerie-speed` with `main` `158b77e6` merged in, the clean launcher copy of DIV-0243's runs). With no switch set, `BOF3X_SHADOW='*'` exits 0 with every fuzz group at 0 mismatches. `BOF3X_ON=ExamineAlwaysLearns BOF3X_SHADOW=battle_e6` logs `DIV-0226 a member that watches an enemy always learns its skill (DIV-0244, the behaviour ExamineAlwaysLearns)` and differs in 330 of 6,000 rounds, the twelve the log names all `Battle_MemberRollByAction`: the same count as DIV-0226's own run with `BOF3X_LEARN=1`. `tools/mods.py selftest` 0 failures and the launcher's host suite 4,451 checks, 0 failures, with the name in the Definitive Edition's `needs`; `ledger_check.py`, `ledger_registry.py --check`, `ledger_switches.py --check` pass. **Not played**, and not run with the mod itself: a mod added before this change keeps its old `needs` until the patch is added again.
+- **Reversible?** Yes - it is off unless a mod's `needs` or `on=` names it;
+  `BOF3X_OFF=ExamineAlwaysLearns` keeps it off (DIV-0226's box then decides
+  alone).
+- **Switch:** ExamineAlwaysLearns
+- **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
+- **Player:** yes - BOF3X_ON, on=
+- **Toward:** none - no release has it; it is the romhack's readme's
+- **Languages:** any
+- **State:** active
+
+### A mod can run the faerie village at five times its speed
+
+- **ID:** DIV-0245
+- **Date:** 2026-11-21
+- **Subsystem:** the faerie village's speed, DIV-0243
+  (`Cheats_FaerieSpeed`, `src/game/core/cheats.cpp`); the behaviour
+  `FasterFaerieVillage` ([`mods.md`](mods.md) 11); `data/mods/known.toml`;
+  [`cheats.md`](cheats.md) section 9
+- **Tier:** Extension - another person's design, played only when a mod asks
+  for it
+- **Original behaviour:** as DIV-0243's: the village counts each battle
+  once.
+- **New behaviour:** with `FasterFaerieVillage` on and `BOF3X_FAERIE` unset,
+  the village's speed is 5, as DIV-0243's slider at 5. The launcher sends
+  `BOF3X_FAERIE` only when the slider is not 1, so with the mod on the
+  slider at 1 gives 5, and any other number on the slider (0 and 2 to 10)
+  is the player's and wins. `BOF3X_FAERIE=1` set by hand also wins. The
+  Definitive Edition's `needs` names the behaviour.
+- **Rationale:** the owner's call, 2026-11-21: "lets have the definitive
+  edition set the slider to 5". The hack's readme says the village
+  progresses much faster; the 1.4 patch holds no such change
+  ([`romhack-mods.md`](romhack-mods.md) 9), so the number is the owner's,
+  not measured from the hack.
+- **Also in the PSX version?** No.
+- **Verification:** 2026-11-21, headless (`BOF3X_SELFTEST_ONLY=1`, the 32-bit build of `cheats/faerie-speed` with `main` `158b77e6` merged in, the clean launcher copy of DIV-0243's runs). With no switch set, `BOF3X_SHADOW='*'` exits 0 with every fuzz group at 0 mismatches. `BOF3X_ON=FasterFaerieVillage BOF3X_SHADOW=rest_4a` logs `DIV-0243 the faerie village counts each battle 5 times (DIV-0245, the behaviour FasterFaerieVillage)` and differs in 14,166 rounds, the twelve named all village steps. With `BOF3X_FAERIE=1` beside it, `rest_4a` is at 0 mismatches and no DIV-0243 line is logged: the variable wins. With `BOF3X_FAERIE=0` beside it the log says 0 times `(BOF3X_FAERIE)` and `field_e2` differs in 478 rounds, as DIV-0243's run at 0. `tools/mods.py selftest` 0 failures; the launcher's host suite 4,451 checks, 0 failures; Page 3's new sentence seen in a capture with no screen; `ledger_check.py`, `ledger_registry.py --check`, `ledger_switches.py --check`, `reloc_census.py --check`, `data_census.py --strict` pass. **Not played**, and not run with the mod itself: a mod added before this change keeps its old `needs` until the patch is added again.
+- **Reversible?** Yes - it is off unless a mod's `needs` or `on=` names it;
+  `BOF3X_OFF=FasterFaerieVillage` keeps it off, and the slider at a number
+  other than 1 replaces its 5.
+- **Switch:** FasterFaerieVillage
+- **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
+- **Player:** yes - BOF3X_ON, on=
+- **Toward:** none - no release has it; it is the romhack's readme's
 - **Languages:** any
 - **State:** active

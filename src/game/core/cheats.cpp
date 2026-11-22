@@ -5,6 +5,7 @@
 #include <cstdlib>
 
 #include "common/strto32.h"
+#include "hook/behaviour.h"
 #include "hook/code_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -115,6 +116,7 @@ std::uint32_t g_pilfer_mask = 0xFF;
 std::uint32_t g_steal_mask = 0xFF;
 
 constexpr std::int32_t kMultiplierMax = 10;   // the owner, 2026-10-02: 50 was humorously large
+constexpr std::uint32_t kModFaerieSpeed = 5;  // DIV-0245, the owner, 2026-11-21: the Definitive Edition's speed
 
 // 0..10, 1 when unset. A number above 10 is clamped to 10 and logged (an ini
 // saved while the cap was 50 must not lock its owner out); anything that is
@@ -162,11 +164,25 @@ void Cheats_Inject() {
     g_no_fail = Flag("BOF3X_NO_FAIL");
     if (g_no_fail) bof3::Log("DIV-0188    the minigames cannot be failed (BOF3X_NO_FAIL)");
 
-    g_learn = Flag("BOF3X_LEARN");
-    if (g_learn) bof3::Log("DIV-0226    a member that watches an enemy always learns its skill (BOF3X_LEARN)");
+    // DIV-0244: a mod's behaviour ExamineAlwaysLearns turns the same switch on.
+    const bool learn_env = Flag("BOF3X_LEARN");
+    g_learn = learn_env || bof3::BehaviourOn(bof3::behaviours::Id::ExamineAlwaysLearns);
+    if (g_learn)
+        bof3::Log("DIV-0226    a member that watches an enemy always learns its skill (%s)",
+                  learn_env ? "BOF3X_LEARN" : "DIV-0244, the behaviour ExamineAlwaysLearns");
 
+    // DIV-0245: a mod's behaviour FasterFaerieVillage gives the speed
+    // kModFaerieSpeed when BOF3X_FAERIE is unset. The launcher sends the
+    // variable only when the slider is not 1, so the slider at 1 leaves the
+    // speed to the mod and any other number is the player's.
+    char faerie_text[4];
+    const bool faerie_env = bof3::os::GetEnv("BOF3X_FAERIE", faerie_text, sizeof faerie_text) != 0;
     g_faerie = Multiplier("BOF3X_FAERIE");
-    if (g_faerie != 1) bof3::Log("DIV-0243    the faerie village counts each battle %u times (BOF3X_FAERIE)", (std::uint32_t)g_faerie);
+    const bool faerie_mod = !faerie_env && bof3::BehaviourOn(bof3::behaviours::Id::FasterFaerieVillage);
+    if (faerie_mod) g_faerie = kModFaerieSpeed;
+    if (g_faerie != 1)
+        bof3::Log("DIV-0243    the faerie village counts each battle %u times (%s)", (std::uint32_t)g_faerie,
+                  faerie_mod ? "DIV-0245, the behaviour FasterFaerieVillage" : "BOF3X_FAERIE");
 
     bof3::Operand("DIV-0046 Pilfer roll mask", kPilferMaskImm, &g_pilfer_mask, 4);
     bof3::Operand("DIV-0046 Steal roll mask", kStealMaskImm, &g_steal_mask, 4);

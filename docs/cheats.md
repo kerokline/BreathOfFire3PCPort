@@ -581,9 +581,20 @@ progress (15 battles at 1 read as 150 at 10). Battles fought at 0 are
 counted when the slider goes above 0 again; the original's limits on a long
 absence apply then, as after any long absence.
 
-**The Definitive Edition.** Its readme's "faerie village faster" is not in
-the 1.4 patch ([`romhack-mods.md`](romhack-mods.md) 9). This slider is ours
-and works with or without the mod. Whether the mod should set a speed of its
-own when it is on, and which, is the owner's call (not built).
+**The Definitive Edition** (DIV-0244, DIV-0245; the owner's call,
+2026-11-21). Its readme's "faerie village faster" and "Examine always
+learning" are not in the 1.4 patch ([`romhack-mods.md`](romhack-mods.md) 9),
+so the mod asks for our switches through two behaviours in its `needs`
+(`data/mods/known.toml`):
+
+| Behaviour | With the mod on | The player's control |
+|---|---|---|
+| `FasterFaerieVillage` | the village's speed is 5 while `BOF3X_FAERIE` is unset, which is the slider at 1 | the slider at any other number (0, 2 to 10) wins; `off=FasterFaerieVillage` gives the original's 1 |
+| `ExamineAlwaysLearns` | as the learn box on (section 8) | `off=ExamineAlwaysLearns` leaves it to the box |
+
+5 is the owner's number, not one measured from the hack. Page 3 says under
+the slider that a mod can set the speed while the slider is at 1. A mod
+added before this change holds the old list in its `mod.toml`: add the patch
+again to get the two.
 
 **Verification.** 2026-11-21, headless (`BOF3X_SELFTEST_ONLY=1`, a clean copy of the four launcher files under `C:\Users\kerok\bof3x-runs\fs1121`, the 32-bit build of the branch `cheats/faerie-speed` off `main` `03c1b330`). Unset, `BOF3X_SHADOW='*'` exits 0 with every fuzz group at 0 mismatches (`rest_4a` 188,000 rounds, `rest_4b` 360,000, `field_e2` 306,000 among them): at 1 every read is the original's. `BOF3X_FAERIE=10 BOF3X_SHADOW=rest_4a` logs `DIV-0243 the faerie village counts each battle 10 times` and differs in 14,507 rounds; `BOF3X_FAERIE=0` in 16,305; the log names the first twelve of a run, all village steps of the catalog (`CommuSim_Population`, `_Mood`, `_LevelLit`, `_TickKind9`, `_TickKindD`, `CommuPose_Kind8`), and no count by function was taken. `rest_4b` at 10 differs in 4,081 rounds, the twelve named all `CommuTail_TimedGift`; `field_e2` at 10 in 329 and at 0 in 478, the twelve named all `Field_AfterBattleTally`. `BOF3X_FAERIE=11` logs the cap and runs as 10; `BOF3X_FAERIE=x` is `FATAL: BOF3X_FAERIE must be 0..10`; `BOF3X_FAERIE=3 BOF3X_ORIGINAL=CommuSim_Mood` is `FATAL: BOF3X_FAERIE needs CommuSim_Mood ours, and it is disabled`. The launcher's host suite: 4,419 checks, 0 failures (`cheat.faerie` set, saved and read back). Page 3 captured with no screen (`--capture`, `--page game --sub 2 --sheet 2`): the group, the slider at 1 and its sentence draw. `ledger_check.py`, `ledger_registry.py --check`, `ledger_switches.py --check`, `reloc_census.py --check` and `data_census.py --strict` pass. **Not played:** nobody has visited the village with the slider off 1; the fuzz shows that the reads differ, not that the village grows as meant.

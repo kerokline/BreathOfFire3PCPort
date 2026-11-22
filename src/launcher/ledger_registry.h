@@ -71,7 +71,7 @@ struct Entry {
     std::uint8_t languages;        // kLang* bits, or kLangAny
 };
 
-inline constexpr std::size_t kSwitchCount = 235;
+inline constexpr std::size_t kSwitchCount = 237;
 inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "Save_WriteFile", 0, 14},   // DIV-0002
     {SwitchForm::Name, "File_OpenWrite", 0, 14},   // DIV-0003
@@ -308,9 +308,11 @@ inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Env, "env:BOF3X_EXEFILE=1", 4, 13},   // DIV-0241
     {SwitchForm::Env, "env:BOF3X_EXEFILE=1", 4, 13},   // DIV-0242
     {SwitchForm::Ini, "ini:cheat.faerie=1", 4, 12},   // DIV-0243
+    {SwitchForm::Name, "ExamineAlwaysLearns", 0, 19},   // DIV-0244
+    {SwitchForm::Name, "FasterFaerieVillage", 0, 19},   // DIV-0245
 };
 
-inline constexpr std::size_t kEntryCount = 243;
+inline constexpr std::size_t kEntryCount = 245;
 inline constexpr Entry kEntries[kEntryCount] = {
     {1, "Re-encode `capcom.avi` from Indeo 5 to Cinepak",
      Tier::Intent, State::Active, 0, 0, 0, true, Player::Never, 0, kLangAny},
@@ -798,6 +800,10 @@ inline constexpr Entry kEntries[kEntryCount] = {
      Tier::Sensible, State::Active, 0, 233, 1, true, Player::Never, 0, kLangAny},
     {243, "The faerie village's speed: a Cheats slider",
      Tier::Extension, State::Active, 0, 234, 1, false, Player::Yes, 0, kLangAny},
+    {244, "A mod can make an examining member always learn the enemy's skill",
+     Tier::Extension, State::Active, 0, 235, 1, false, Player::Yes, 0, kLangAny},
+    {245, "A mod can run the faerie village at five times its speed",
+     Tier::Extension, State::Active, 0, 236, 1, false, Player::Yes, 0, kLangAny},
 };
 
 // The switches of one entry.
