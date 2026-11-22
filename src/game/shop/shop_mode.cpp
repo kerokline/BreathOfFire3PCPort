@@ -71,9 +71,9 @@ constexpr unsigned char kShisuItems[4] = {0x4D, 0x23, 0x24, 0x56};
 unsigned char g_parch_kept[8];
 bool g_parch_stocked = false;
 
-void ParchShisuStock(shop_states::U shop) {
+// `record` is the shop's record, ShopMode_Begin's ShopStates2_ShopList.
+void ParchShisuStock(shop_states::U shop, unsigned char* record) {
     if (shop != kParchItemShop) return;
-    unsigned char* const record = AtShopStates(::bof3::Img(shop_states::at::kShopRecords.v) + shop_states::at::kShopRecordBytes * shop);
     const bool want = Cheats_MinigameNoFail() && Game_AreaNumber == kParchArea;
     if (want == g_parch_stocked) return;
     if (want) {
@@ -144,8 +144,8 @@ extern "C" void __cdecl ShopMode_Begin(void) {
     FieldS_Step = 0;
     BShopStates(::bof3::Img(shop_states::at::kCount.v)) = 6;
     ShopStates_Clear0A = 0;
-    ParchShisuStock(ScenaSc1_ShopByteB);   // DIV-0188
     ShopStates2_ShopList = ::bof3::Img(shop_states::at::kShopRecords.v) + shop_states::at::kShopRecordBytes * ScenaSc1_ShopByteB;
+    ParchShisuStock(ScenaSc1_ShopByteB, AtShopStates(ShopStates2_ShopList));   // DIV-0188
 }
 
 // original 0x57F5D0 (PSX 0x801D0FF8), ShopMode_States 1 and 4: the way out.
