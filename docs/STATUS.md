@@ -26,7 +26,7 @@ jobs, whose first run is the merge's push to `main` - read that run, and the tar
 to it. **Not done:** no person has seen the Linux picture and nothing ran on a GPU, a real desktop or a sound device
 (group D3, with the tarball: frost's machine or a tester's); the banner fault's twin on 64-bit Windows was never looked
 for, and that build ran no route with the fixes; the PSP install in the WSL had no effects, voices or logo movie (no
-`ffmpeg` there); a build on `ubuntu-24.04` needs glibc 2.38 or newer; the tarball is not code-signed.
+`ffmpeg` there); a build on `ubuntu-24.04` needs glibc 2.38 or newer; the tarball's build attestation (`actions/attest`, its signature; [`releases/README.md`](releases/README.md)) has not run on GitHub.
 
 **The Linux round's wave B, 2026-11-21 (merged as PR #270).** The game links as an
 x86-64 Linux ELF, `bof3x`, beside its own `libSDL3.so.0` and DXVK-native's two libraries, and the Linux `bof3x-launcher`

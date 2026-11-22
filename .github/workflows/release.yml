@@ -21,7 +21,11 @@
 # tools/make_release.py --linux and hands bof3x-<tag>-linux-x86_64.tar.gz to
 # the `release` job as an artifact; that job needs `linux`, so it starts when
 # the tarball is made and puts it on the release with the zips (the draft, or
-# "latest"). Not code-signed: jsign signs Windows files. A Linux failure
+# "latest"). Signed by a build attestation, not by Authenticode: jsign signs
+# Windows files, and Linux has no check of that kind. Job `linux` attests the
+# tarball with actions/attest (a Sigstore signature that says this repository's
+# release workflow built this file at this commit; `gh attestation verify`
+# checks it, docs/releases/README.md "Signing"). A Linux failure
 # blocks the release as a Windows one does (the owner, 2026-11-22): the
 # `release` job is skipped, no draft is made and "latest" keeps the files of
 # the last good run. The cost is time: the zips are built after the Linux
@@ -292,6 +296,13 @@ jobs:
   linux:
     name: ${{ github.ref_type == 'branch' && 'Latest build' || 'Draft release' }} (Linux tarball)
     runs-on: ubuntu-24.04
+    # This job's own permissions (they replace the workflow's): the checkout,
+    # and what actions/attest needs to sign and store the attestation.
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+      artifact-metadata: write
     steps:
       - name: The tag
         run: |
@@ -342,6 +353,18 @@ jobs:
           python tools/make_release.py --linux --version "$VERSION" --build build-linux-x86_64 \
             --out "build/release/bof3x-$TAG-linux-x86_64.tar.gz"
           tar -tvzf "build/release/bof3x-$TAG-linux-x86_64.tar.gz" | awk '$1 ~ /^-rwx/ {print $1, $6}'
+
+      # The tarball's signature (the owner, 2026-11-22): a SLSA build
+      # provenance attestation over the file's sha256, signed with a Sigstore
+      # certificate issued to this workflow run and kept by GitHub for the
+      # repository. A player checks a download with
+      #   gh attestation verify bof3x-<tag>-linux-x86_64.tar.gz --repo <owner>/<repository>
+      # A failure here fails the job, so no release goes out with an unsigned
+      # tarball.
+      - name: Attest the tarball
+        uses: actions/attest@v4
+        with:
+          subject-path: build/release/bof3x-${{ env.TAG }}-linux-x86_64.tar.gz
 
       # A .tar.gz keeps the files' modes inside it; the artifact's own zip
       # only carries it to the next job.

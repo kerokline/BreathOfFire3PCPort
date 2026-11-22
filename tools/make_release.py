@@ -53,7 +53,7 @@ python3 on PATH (src/launcher/ui/tool_run.cpp FindRuntime). Nothing is
 downloaded. The same game-data scan runs on its stage; the modes are set in
 the archive (0755 for the programs and libraries, 0644 for the rest), and the
 ELF's RUNPATH and NEEDED names are read from the file and checked against
-what the folder holds. The tarball is not code-signed.
+what the folder holds. The tarball is not Authenticode-signed; release.yml attests it (docs/releases/README.md).
 """
 import argparse
 import ast

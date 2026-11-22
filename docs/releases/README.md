@@ -144,8 +144,25 @@ need nothing else but glibc and the C++ runtime. It prints the newest glibc
 and libstdc++ versions the binaries need and writes them into `README.txt`:
 **that is the oldest system the tarball runs on**, and it follows the build
 machine (a build on Ubuntu 26.04 needs glibc 2.43, one on 24.04, as the
-release job's, 2.38). The tarball is not
-code-signed.
+release job's, 2.38). The tarball is signed by a build attestation, not by
+Authenticode (below).
+
+**The tarball's signature (2026-11-22, the owner; not yet run on GitHub).**
+Authenticode signs Windows files, and Linux has no check like SmartScreen
+that a signature would satisfy. What a Linux download can have is proof of
+where it was built. Job `linux` of `release.yml` runs `actions/attest` on the
+tarball: a SLSA build provenance attestation over the file's sha256, signed
+with a Sigstore certificate issued to that workflow run, and stored by GitHub
+for the repository. It uses no secret and no key of the owner's. To check a
+download (GitHub's CLI):
+
+```
+gh attestation verify bof3x-<tag>-linux-x86_64.tar.gz --repo kerokline/BreathOfFire3PCPort
+```
+
+It passes only for a file this repository's workflow built, byte for byte.
+The Windows zips are not attested; their binaries carry Authenticode. If the
+attestation step fails, the Linux job fails and there is no release.
 
 **In `release.yml`** (since 2026-11-22, not yet run on GitHub): job `linux`
 builds on `ubuntu-24.04` with `.github/scripts/linux-build.sh` (`deps`,
