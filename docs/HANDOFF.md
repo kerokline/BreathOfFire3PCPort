@@ -139,7 +139,17 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      The owner checked the Sources page's window, the save editor's window and the Jukebox on a game folder with no
      `BOF3.exe` (2026-11-20: "both are working as expected"). **Owed:** the save editor's window on a disc-built install; the
      Sources page through a set-up in place; the Jukebox's and the save editor's drivers; the owner's play.
-   - **The Linux round's wave B ran on 2026-11-21, on the local branch `linux/lcB` (not pushed, no PR)**
+   - **The Linux round's wave C ran on 2026-11-22 (branch `linux/lcC`)** ([`linux-round.md`](linux-round.md), "D1 as run" to
+     "Wave C as run"): a Linux CI job, the Linux release tarball built in `release.yml` (a Linux failure blocks the release),
+     and the banner fault of disc-built installs fixed (D433 amended, `tools/fnptr_census.py`). A US-disc and a PSP-only
+     install end the ten routes headless in the WSL. **Next:** read the first runs of the new jobs on GitHub (the CI job on the
+     pull request, the release jobs on the merge's push to `main`) and fix what the runner shows; group D3, a person's look at
+     the Linux picture on a GPU and a real desktop (frost's machine or a tester's), with the tarball; a 64-bit Windows run of a
+     battle on a disc-built install (the banner fault's twin there, never looked for). **Open, the owner's:** whether to fix
+     the census's 20 register-narrow callers or leave them listed; whether to put `fnptr_census.py --check` in the Linux CI
+     job (it was run with libclang 21; the runner's clang is 18); the MinGW DirectX headers' licence reading
+     (`THIRD_PARTY.md` section 8); `ffmpeg` in the WSL to make the PSP install's effects, voices and logo movie there.
+   - **The Linux round's wave B ran on 2026-11-21 (merged as PR #270)**
      ([`linux-round.md`](linux-round.md), "Wave B as run"): the game is a Linux ELF that starts through the Linux launcher and
      ends the ten state-hash routes headless in the WSL on llvmpipe, each differing page explained; `music_heard.py`, a
      quicksave and its load, and a forced fault pass there. The gate's Windows half ran the same evening: the ten routes equal `_c0x32`,

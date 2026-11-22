@@ -3191,6 +3191,59 @@ Linux build (about 2 minutes on 12 cores; needs `libclang-*.so` and
 - The latent register and `al` cases above were not shown harmless in each
   call site's disassembly; the reason given is the general one.
 
+### Wave C as run (2026-11-22, branch `linux/lcC`, from `main` `d56e4097`)
+
+The coordinator's part: the merges, the disc-built installs, the gate.
+Groups D1 and D2 and the banner unit are above; group D3 (people's checks)
+is not done, and D4 is this section and the status documents.
+
+- **The branch.** `linux/lcC` is `main` `d56e4097` with D2, D1, D2's
+  release jobs and the banner unit merged in that order, and one commit of
+  the coordinator's (`60cbba56`): a Linux failure blocks the release, the
+  owner's call (in "D2 as run").
+- **Disc-built installs on the Linux ELF, headless in the WSL** (llvmpipe,
+  SDL's offscreen video and dummy audio, no `DISPLAY`). Two installs made
+  by the importer under the WSL's Python from disc images copied to ext4: a
+  US PlayStation disc alone (`en-US`) and the European PSP image alone
+  (`en-150`). `setup` rc 0 on both (the PSP one in 58 s); `verify --cache`:
+  741 containers and 0 base problems each. The US one names the known
+  `opt/area4-walls` line. The PSP one has no effects, voices or logo movie:
+  the WSL has no `ffmpeg`, so those were not built and not tested.
+  - **Self-test** through the Linux launcher: US 10,514 log lines, PSP
+    10,488, both 0 `FATAL`, 0 `CRASH`.
+  - **The fault met:** `combat` on the US install, 26 s in, the banner's
+    `Low32` (the unit above). The first runs of the other routes used a
+    trial of the fix; the runs that count are the banner unit's, on the
+    committed fix: the ten state-hash routes on both installs, 20 runs, rc
+    0, 0 `FATAL`, 0 `CRASH`, the recipe's end reached, no compiler seen
+    beside any.
+  - **Repeatability:** with the trial fix, `combat` twice on each install
+    on a quiet machine: `statehash.py diff` identical on all 2,602 compared
+    ticks, both installs.
+  - **Not covered:** the picture and the sound (no person, no GPU, no sound
+    device); a comparison with Windows runs of the same installs (no such
+    references exist); `music_heard.py` on these installs; a disc source
+    through the release tarball; one window of US `shop` (ticks 2848..2902,
+    8 pages, 7 of them the after-jingle pages of B2d's kind) that differs
+    between the banner unit's run and a run made beside a compiler - not
+    bisected.
+- **The gate on the merged tree** (Windows side): `ledger_check` (245
+  entries, 0 errors), `os_census --check` / `--boundary` / `--headers`,
+  `width_census`, `reloc_census`, `reloc_bare`, `data_census --strict`,
+  `ledger_switches`, `tu_census --check --strict`, `retire_shells --check
+  --strict` pass; both Windows presets build; the three workflow files
+  parse. `src/` of the merged tip equals the banner unit's tip, whose Linux
+  build and runs are above. **No workflow of this wave has run on GitHub
+  before the pull request**: the Linux CI job's first real run is the
+  pull request's, and the release jobs' is the merge's push to `main`.
+- **Left open, listed for the owner:** `fnptr_census.py --check` is not in
+  CI (it needs a configured Linux build and libclang; it was run with
+  libclang 21, and the runner's clang is 18); its 20 register-narrow
+  findings are listed, not fixed; the ELF's self-test is not in CI (it needs
+  game data); a build on `ubuntu-24.04` needs glibc 2.38 or newer; the
+  MinGW DirectX headers' LGPL-2.1+ reading in `THIRD_PARTY.md` section 8 is
+  the owner's to confirm against `LICENSING.md` section 4.
+
 ## 5. What stands in for the launcher in tier 2
 
 The launcher is Win32 dialogs: `config_dialog.cpp` 1,861 lines, `config.cpp`
