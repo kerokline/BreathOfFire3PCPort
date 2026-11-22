@@ -17,8 +17,9 @@ WSL is 7 names short; wave B is staged as four units: section 4, "Wave B,
 staged". **2026-11-21:** wave B ran on the branch `linux/lcB` (not on
 `main`, not pushed): the game links as a Linux ELF, starts through the Linux
 launcher and ends the ten state-hash routes headless in the WSL, on a
-software Vulkan device. No picture was looked at on a screen, nothing ran on
-a GPU, and the gate's Windows half is owed: section 4, "Wave B as run".)
+software Vulkan device; the gate's Windows half ran the same evening and
+passed. No picture was looked at on a screen and nothing ran on a GPU:
+section 4, "Wave B as run".)
 
 Issue #215 asks for the game on Linux and the Steam Deck. This file stages
 two answers, the cheap one first:
@@ -2580,15 +2581,44 @@ run"):
 | The censuses on the merged branch | `os_census --check` and `--boundary`, `width_census --check`, `reloc_census --check`, `reloc_bare --check`, `data_census --strict`, `ledger_check` (242 entries, 0 errors), `ledger_switches --check`, `tu_census --check --strict`, `retire_shells --check --strict`: ok, after the three census files were made again |
 | Windows, both presets | build on every merge. The hosted shadow suite (32-bit; 922 `MISMATCHES` lines, every one 0) and the exe host's self-test ran in B2d's worktree on the tree the last merge has, byte for byte (`git diff` of the merge against B2d's tip is empty); they were not run again after it |
 
-**Owed: the gate's Windows half.** The staging's B3 also names the ten
-routes on Windows against `_c0x32`, and a quicksave made on each system
-loaded on the other. None of that ran: a Windows run opens the game's window
-and needs the machine hands-off, and from the afternoon the machine showed
-live input (the owner's word covered the morning). What exists: B2d's one
-Windows route, `shop` on the 64-bit build, identical to `_c0x64` on all
-3,137 ticks; and the Linux-made quicksave of `quick_combat`, kept at
-`~/bof3x-runs/lcB/b3/out/keep/` for the Windows load. **LC's gate is
-therefore not closed.**
+**The gate's Windows half (2026-11-21, 18:49 to 19:36, the merged branch's
+32-bit build, `bof3x.dll` sha256 `948cc82afeb1...`).** The owner's word was
+that the machine was free. Runner `bof3x-runs\lcB\coord\win_gate.py`, C0's
+conditions (`c0.py`), outputs in `bof3x-runs\lcB\coord\win\out`.
+
+| What | Result |
+|---|---|
+| The ten routes on Windows against `cn_<route>_c0x32.sh` | Every route ends with rc 0, 0 `FATAL`, 0 `CRASH`, no compiler beside. `statehash.py diff`: seven identical on every tick (`field_menu` 1,409, `menu_screens` 1,729, `combat` 2,561, `shop` 3,137, `dragonTransform` 4,289, `cutsceneAndNue` 7,425, `whelpBoss` 13,185); `worldMapAndAreaTransition`, `caughFish` and `masterAndManillo` differ on page `0x6C3000` alone, the Direct3D page on which the two references of each of these routes also disagree. `statehash.py check` (against `_c0x32` and `_c0x64`): identical on all ten |
+| A quicksave made and restored on Windows (`quick_combat`, a game folder of the round's own) | `quicksave_check.py inproc`: equal, the 300 ticks after the restore are the 300 after the take |
+| That file loaded by a second Windows process (`quick_combat_cross`) | `quicksave_check.py cross`: equal on 1,664 ticks from the restore. This is the control for the two rows below: the cross recipe loads a file when the build allows it |
+| The Linux-made quicksave on Windows (`quick_combat_cross`) | `quicksave   F7 BISLPS10.DAT refused: another build - made by v0.1.0 (bof3x.dll ad6e260e1d2e...), this is v0.1.0 (948cc82afeb1...); the save half is still a save`. The run goes on to its end: rc 0, 0 `FATAL`, 0 `CRASH`; the file is left as it was (4,786,341 bytes) |
+| The Windows-made quicksave on Linux (headless, `coord/b3_cross.sh`) | `quicksave   F7 BISLPS10.DAT refused: another build - made by v0.1.0 (bof3x.dll 948cc82afeb1...), this is v0.1.0 (ad6e260e1d2e...); the save half is still a save`. rc 0, 0 `FATAL`, 0 `CRASH`; the file is left as it was (4,702,989 bytes) |
+
+**A quicksave does not cross the systems, and that is the design.** The
+staging's B3 asked for a quicksave made on each system to be *loaded* on the
+other. The quicksave's build id holds the hash of the module that made it
+(`snapshot.cpp`, `Parse`: "another build"; [`quicksave.md`](quicksave.md)),
+and the ELF and `bof3x.dll` are two modules, so each refuses the other's
+file, as a 64-bit Windows build refuses a 32-bit one's
+([`x64-build-round.md`](x64-build-round.md)). What the gate can ask, and what
+the two rows show, is that the refusal is clean on both systems: one log
+line that names both builds, no fault, the file untouched, the game playing
+on. The owner agreed on 2026-11-21 that no quicksave crosses the systems.
+The staging's line is wrong on this point; it is left as written.
+
+**Limits of the Windows half.** The harness measured the time since the last
+keyboard or mouse event during every run, and the least was 0 or 1 s in each:
+the pointer was moving, a few pixels about eleven times a second (Synergy,
+the owner's keyboard and mouse sharing, was running; whether it stopped
+during the runs was not measured). No route shows an effect of it. The
+quicksave steps ran on the 32-bit build alone. The 64-bit Windows build ran
+no route after the last merge (B2d's `shop` on it, before the merge, equals
+`_c0x64` on all 3,137 ticks). The save half of a refused quicksave was not
+loaded as a save on the other system.
+
+**LC's gate is closed** on these terms: what a headless run on llvmpipe and
+the Windows routes can show. What needs a person or a GPU is in the list
+below.
 
 **The records.** DIV-0094 and DIV-0238 are amended for the Linux build (the
 ELF and its three libraries, a fault's end, the files' case, DXVK's logs,

@@ -17,9 +17,11 @@ quicksave with its load, the files' case on ext4 and a forced fault's report pas
 unstaged B2d for the routes) and the coordinator's gate: [`linux-round.md`](linux-round.md), "B1 as run" to "Wave B as run".
 Met and fixed on the way: `long` taken for 32 bits in the render shim and the sound backend, stale stack words in
 `Window_DispatchKind` (latent on 64-bit Windows too), and `Crt_sprintf` called through the wrong convention (D433). DIV-0094
-and DIV-0238 are amended; no new ledger entry. **Not done:** the gate's Windows half (the ten routes against `_c0x32`,
-quicksaves exchanged between the systems), so stage LC's gate is open; no person has seen the Linux picture, and nothing ran
-on a GPU or a real desktop.
+and DIV-0238 are amended; no new ledger entry. The gate's Windows half ran the same evening on the 32-bit build: the ten routes equal
+`_c0x32` (three differ on the Direct3D page `0x6C3000` alone, as two Windows runs do), and each system refuses the other's
+quicksave with one log line and plays on - a quicksave is its build's, so none crosses the systems, by design. Stage LC's
+gate is closed on what headless runs can show. **Not done:** no person has seen the Linux picture, and nothing ran on a GPU
+or a real desktop.
 
 **The cutover: the drawn launcher is `bof3x-launcher`, 2026-11-20 (stage P6 of
 [`launcher-portable.md`](launcher-portable.md), its section 14; merged as PR #267, 2026-11-20).** The owner's call 3: "no need to keep both". `bof3x-launcher` is the drawn launcher on

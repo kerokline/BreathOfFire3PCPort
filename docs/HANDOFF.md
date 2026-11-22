@@ -142,9 +142,9 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    - **The Linux round's wave B ran on 2026-11-21, on the local branch `linux/lcB` (not pushed, no PR)**
      ([`linux-round.md`](linux-round.md), "Wave B as run"): the game is a Linux ELF that starts through the Linux launcher and
      ends the ten state-hash routes headless in the WSL on llvmpipe, each differing page explained; `music_heard.py`, a
-     quicksave and its load, and a forced fault pass there. **Owed before LC's gate closes, with the machine hands-off:** on
-     Windows the ten routes against `_c0x32`, and a quicksave made on each system loaded on the other (the Linux one is kept
-     at `~/bof3x-runs/lcB/b3/out/keep/` in the WSL). **Owed by a person:** a look at the Linux picture, on a GPU and a real
+     quicksave and its load, and a forced fault pass there. The gate's Windows half ran the same evening: the ten routes equal `_c0x32`,
+     and each system refuses the other's quicksave cleanly (a quicksave is its build's; none crosses the systems, by
+     design), so LC's gate is closed on what headless runs show. **Owed by a person:** a look at the Linux picture, on a GPU and a real
      desktop (frost's machine or a tester's). D433; DIV-0094 and DIV-0238 amended. As staged
      ([`linux-round.md`](linux-round.md), "Wave B, staged"): wave A is on `main` (PR #265). The owner's call of 2026-11-19: what can be done here is done here,
      frost takes it up when he has time. Built natively in the WSL, the link of `main` `e9c1fb41` is 7 names short
