@@ -19,6 +19,8 @@ StackRange CurrentStack() noexcept {
     // On a stack of the program's own (os/own_stack.h), that stack's range.
     StackRange own;
     if (SwitchedStack(&own)) return own;
+    // On a stack the caller placed (os/placed.h): the Linux start-up's main stack.
+    if (PlacedStack(&own)) return own;
     // Asked once per thread: for the main thread glibc reads /proc/self/maps
     // to answer, and the harnesses ask for every byte they guard.
     thread_local StackRange cached;

@@ -133,7 +133,10 @@ struct Callees {
     void (__cdecl* draw_box)(int, int, int, int, int, int);                    // Menu_DrawBox 0x57CF60
     void (__cdecl* item_icon)(int, int, int, int);                             // Menu_DrawItemIcon 0x573F30
     const unsigned char* (__cdecl* text_at)(int, int, int, int, const unsigned char*);  // Text_DrawAt 0x516B30
-    int (__cdecl* sprintf)(char*, const char*, unsigned);                      // Crt_sprintf 0x5B9380 (Capcom's CRT)
+    // Crt_sprintf 0x5B9380 (Capcom's CRT). No __cdecl: the target is variadic, so System V on
+    // Linux, where __cdecl is ms_abi - a __cdecl type passed (buffer, format, value) in rcx, rdx,
+    // r8 to a function reading rdi, rsi, rdx (the field menu faulted). The same code on Windows.
+    int (*sprintf)(char*, const char*, unsigned);
     void (__cdecl* font8)(int, int, int, const unsigned char*);                // Text_DrawFont8 0x517090
     const unsigned char* (__cdecl* tiny_font)(int, int, unsigned, unsigned, const unsigned char*);  // 0x516E70 (DB)
     U (__cdecl* pieces)(int, int, const unsigned char*, int);                  // Menu_DrawPieces 0x57D910

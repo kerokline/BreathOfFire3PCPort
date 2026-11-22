@@ -71,17 +71,36 @@ bool MemDecommit(void* at, std::size_t size) {
 
 bool MemRelease(void* base, std::size_t size) { return munmap(base, size) == 0; }
 
+// The whole pages [at, at + size) touches, as VirtualProtect takes a range:
+// mprotect wants a page-aligned start (EINVAL otherwise), and a caller that
+// changes one word's page - bind.cpp's import thunks, 16 bytes apart; a
+// slot's 4 bytes - names the word, not the page (wave B, B1: measured, the
+// first thunk past the page's start failed with EINVAL).
+void PageSpan(void* at, std::size_t size, void** lo, std::size_t* bytes) {
+    const std::uintptr_t page = PageSize();
+    const auto a = reinterpret_cast<std::uintptr_t>(at);
+    const std::uintptr_t first = a & ~(page - 1), end = (a + size + page - 1) & ~(page - 1);
+    *lo = reinterpret_cast<void*>(first);
+    *bytes = end - first;
+}
+
 bool MemProtect(void* at, std::size_t size, Prot prot, ProtSave* saved) {
     if (saved) {
         MemInfo m;
         if (!MemQuery(at, &m)) return false;
         saved->native = (m.readable ? PROT_READ : 0) | (m.writable ? PROT_WRITE : 0) | (m.executable ? PROT_EXEC : 0);
     }
-    return mprotect(at, size, NativeProt(prot)) == 0;
+    void* lo;
+    std::size_t bytes;
+    PageSpan(at, size, &lo, &bytes);
+    return mprotect(lo, bytes, NativeProt(prot)) == 0;
 }
 
 bool MemRestore(void* at, std::size_t size, const ProtSave& saved) {
-    return mprotect(at, size, static_cast<int>(saved.native)) == 0;
+    void* lo;
+    std::size_t bytes;
+    PageSpan(at, size, &lo, &bytes);
+    return mprotect(lo, bytes, static_cast<int>(saved.native)) == 0;
 }
 
 void FlushCode(void* at, std::size_t size) {

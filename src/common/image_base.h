@@ -95,6 +95,11 @@ namespace image {
 extern std::uint32_t g_runBase;
 // The Fatal for a read before SetImageBase (host.cpp).
 [[noreturn]] void ImageBaseUnset();
+// The engine's own module's base, the ELF's load address: what the PE
+// linker's __ImageBase is on Windows (the DLL's own base), for a message that
+// names an address of ours as module + offset (crt_rest.cpp). Set once by the
+// start-up (exe_host_posix.cpp, step 5); 0 until then.
+extern std::uintptr_t g_ownBase;
 }  // namespace image
 
 // Once, by the start-up, before anything places an address: a second call

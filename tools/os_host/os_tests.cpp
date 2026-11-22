@@ -1641,6 +1641,160 @@ void TestCaseCheck() {
     fs::remove_all(os::Path(dir.c_str()), ec);
 }
 
+// ---- the case fold (wave B, B2c: os/case_fold.h) -----------------------------------
+// A game folder of its own as the working folder, holding the names of
+// Capcom's data in the spellings of a player's PC disc (SND/Oyasumi.DAT,
+// BGM/000.dat, capcom.avi), and a folder with two names that differ in case
+// alone. Each name is asked in every case through Path, OpenNarrow and
+// WalkDirectory. On POSIX the fold finds the disk's spelling for a relative
+// name only; on Windows the name stays as asked and the system folds.
+void WriteText(const fs::path& p, const char* text) { std::ofstream(p, std::ios::binary) << text; }
+
+std::string ReadNarrow(const char* name) {
+    std::FILE* f = os::OpenNarrow(name, "rb");
+    if (!f) return std::string("(no open)");
+    std::string s;
+    for (int c; (c = std::fgetc(f)) != EOF;) s += static_cast<char>(c);
+    std::fclose(f);
+    return s;
+}
+
+void TestCaseFold() {
+    std::error_code ec;
+    const fs::path game = fs::path(os::Path((Scratch() + "_fold").c_str()));
+    fs::remove_all(game, ec);
+    fs::create_directories(game / "SND", ec);
+    fs::create_directories(game / "BGM", ec);
+    fs::create_directories(game / "Two", ec);
+    WriteText(game / "SND" / "Oyasumi.DAT", "oyasumi");
+    WriteText(game / "BGM" / "000.dat", "bgm000");
+    WriteText(game / "capcom.avi", "movie");
+    WriteText(game / "Two" / "OYASUMI.DAT", "upper");
+    WriteText(game / "Two" / "Oyasumi.DAT", "mixed");
+    const fs::path was = fs::current_path(ec);
+    fs::current_path(game, ec);
+    CHECK(!ec);
+    os::CaseFoldForgetForTest();
+    const std::size_t walks0 = os::CaseFoldWalks();
+#ifdef _WIN32
+    // The system folds: the name as asked, no walk, and the open succeeds.
+    CHECK(os::CaseFold(fs::path(L"snd") / L"oyasumi.dat") == fs::path(L"snd") / L"oyasumi.dat");
+    CHECK(ReadNarrow("snd\\OYASUMI.DAT") == "oyasumi");
+    CHECK(ReadNarrow("CAPCOM.AVI") == "movie");
+    CHECK(os::CaseFoldWalks() == 0 && walks0 == 0);
+    std::printf("case fold: Windows, the name as asked (the system folds)\n");
+#else
+    const auto P = [](const char* n) { return os::Path(n).native(); };
+    // The exact name: itself, and no walk.
+    CHECK(P("SND\\Oyasumi.DAT") == "SND/Oyasumi.DAT");
+    CHECK(os::CaseFoldWalks() == walks0);
+    // A name in each case: Capcom's upper case, lower case, mixed, and the folder's case too.
+    CHECK(P("SND\\OYASUMI.DAT") == "SND/Oyasumi.DAT");
+    CHECK(P("snd\\oyasumi.dat") == "SND/Oyasumi.DAT");
+    CHECK(P("Snd\\oYaSuMi.DaT") == "SND/Oyasumi.DAT");
+    CHECK(P("BGM\\000.DAT") == "BGM/000.dat");
+    CHECK(P("CAPCOM.AVI") == "capcom.avi");
+    CHECK(P(".\\CAPCOM.AVI") == "./capcom.avi");
+    // Through the game's fopen and through the library's own open.
+    CHECK(ReadNarrow("SND\\OYASUMI.DAT") == "oyasumi");
+    CHECK(ReadNarrow("BGM\\000.DAT") == "bgm000");
+    {
+        std::ifstream f(os::Path("CAPCOM.AVI"), std::ios::binary);
+        std::string s;
+        f >> s;
+        CHECK(s == "movie");
+    }
+    CHECK(os::IsFile("bgm\\000.Dat"));
+    // A missing name: not there in any case. The folder's part is folded, the
+    // rest stays as asked (a file made there lands in the folder that is);
+    // a folder that is not there leaves the whole name as asked.
+    CHECK(P("snd\\NOPE.DAT") == "SND/NOPE.DAT");
+    CHECK(P("NODIR\\NOPE.DAT") == "NODIR/NOPE.DAT");
+    CHECK(ReadNarrow("SND\\NOPE.DAT") == "(no open)");
+    // Two names that differ in case alone: the exact one when asked exactly,
+    // else the first in byte order - OYASUMI.DAT before Oyasumi.DAT - which
+    // is the entry WalkDirectory hands first.
+    CHECK(ReadNarrow("Two\\Oyasumi.DAT") == "mixed");
+    CHECK(ReadNarrow("Two\\OYASUMI.DAT") == "upper");
+    CHECK(P("two\\oyasumi.dat") == "Two/OYASUMI.DAT");
+    CHECK(ReadNarrow("two\\oyasumi.dat") == "upper");
+    {
+        std::string first;
+        os::WalkDirectory("Two\\oyasumi.dat", [&](const os::DirEntry& e) {
+            first = e.name;
+            return false;
+        });
+        CHECK(first == "OYASUMI.DAT");
+    }
+    // A walk's pattern: its folder folded, its leaf matched without case by the walk.
+    CHECK(os::WalkDirectory("snd\\*.dat", [](const os::DirEntry& e) { return e.name != "Oyasumi.DAT"; }) == 1);
+    // Never an absolute name, never a name that leaves the game folder.
+    const std::string abs = os::Narrow(game) + "/snd/oyasumi.dat";
+    CHECK(P(abs.c_str()) == abs);
+    CHECK(ReadNarrow(abs.c_str()) == "(no open)");
+    const std::string up = "../" + os::Narrow(game.filename()) + "/snd/oyasumi.dat";
+    CHECK(P(up.c_str()) == up);
+    // The cache: SND was walked once; another name in it walks nothing more,
+    // and a file made in it since is found (the folder changed: walked again).
+    const std::size_t walks1 = os::CaseFoldWalks();
+    CHECK(walks1 > walks0);
+    CHECK(P("SND\\oyasumi.dat") == "SND/Oyasumi.DAT" && P("SND\\nope.dat") == "SND/nope.dat");
+    CHECK(os::CaseFoldWalks() == walks1);
+    WriteText(game / "SND" / "Late.DAT", "late");
+    CHECK(ReadNarrow("SND\\LATE.DAT") == "late");
+    CHECK(os::CaseFoldWalks() == walks1 + 1);
+    // errno is the call's before.
+    errno = EDOM;
+    (void)os::Path("snd\\OYASUMI.DAT");
+    CHECK(errno == EDOM);
+    // The fold's line, under BOF3X_CASECHECK alone, once per name.
+    g_case_lines.clear();
+    os::CaseCheckSink(CaseSinkForTest);
+    os::CaseCheckForTest(true);
+    os::CaseFoldForgetForTest();
+    (void)os::Path("BGM\\000.DAT");
+    (void)os::Path("BGM\\000.DAT");
+    CHECK(CaseLinesWith("CASEFOLD asked BGM/000.DAT opened BGM/000.dat") == 1);
+    os::CaseCheckForTest(false);
+    os::CaseCheckSink(nullptr);
+    os::CaseFoldForgetForTest();
+    (void)os::Path("CAPCOM.AVI");
+    CHECK(CaseLinesWith("CASEFOLD") == 1);
+    std::printf("case fold: %u walks, each name in each case, the first of two in byte order, no absolute name\n",
+                static_cast<unsigned>(os::CaseFoldWalks() - walks0));
+#endif
+    fs::current_path(was, ec);
+    fs::remove_all(game, ec);
+}
+
+// A named event closed gives its name back (B2c: the unattended marker of a
+// Linux run stayed in /dev/shm): it cannot be opened by name after, and the
+// same name is made again.
+void TestNamedEventClose() {
+    const std::string name = "bof3x_os_close_" + std::to_string(os::ProcessId());
+    os::NamedEvent* e = os::CreateNamedEvent(name.c_str());
+    CHECK(e != nullptr);
+#ifdef _WIN32
+    const std::wstring full = os::ToWide(("Local\\" + name).c_str());
+    HANDLE h = OpenEventW(SYNCHRONIZE, FALSE, full.c_str());
+    CHECK(h != nullptr);
+    if (h) CloseHandle(h);
+    os::CloseNamedEvent(e);
+    CHECK(OpenEventW(SYNCHRONIZE, FALSE, full.c_str()) == nullptr);
+#else
+    std::error_code ec;
+    CHECK(fs::exists("/dev/shm/sem." + name, ec));
+    os::CloseNamedEvent(e);
+    CHECK(!fs::exists("/dev/shm/sem." + name, ec));
+    CHECK(sem_open(("/" + name).c_str(), 0) == SEM_FAILED);
+#endif
+    e = os::CreateNamedEvent(name.c_str());
+    CHECK(e != nullptr);
+    os::CloseNamedEvent(e);
+    os::CloseNamedEvent(nullptr);
+    std::printf("named event: closed, its name given back\n");
+}
+
 // ---- the launcher's seam (C7: os/process.h, os/wide_file.h, os/wide_text.h) ------
 // A child started from this program itself, in child mode (C7ChildMain): its
 // exit code, its output read from the pipe (stdout and stderr), a variable
@@ -1997,6 +2151,75 @@ void TestRunning() {
                 game, games, windows < 0 ? "not asked (no window classes here)" : windows ? "yes" : "no");
 }
 
+// os/placed.h (wave B, B1): the calling thread on a stack the caller mapped,
+// and what holds a range. POSIX: the run is on the range, CurrentStack answers
+// it there and the thread's own after, an own stack run from it answers its
+// own range and then the placed one again, a second placed run from inside is
+// refused, the function's result comes back; a fixed reservation over a held
+// range is refused, and MemHolders names the holder. Windows: the run is
+// refused (ERROR_NOT_SUPPORTED) and nothing runs; MemHolders names a block.
+struct PlacedSeen {
+    os::StackRange during{}, inner{}, after_inner{};
+    std::uintptr_t local = 0;
+    bool nested_refused = false;
+    int runs = 0;
+};
+
+void PlacedInner(void* p) {
+    auto* s = static_cast<PlacedSeen*>(p);
+    s->inner = os::CurrentStack();
+}
+
+void PlacedBody(void* p) {
+    auto* s = static_cast<PlacedSeen*>(p);
+    ++s->runs;
+    volatile int here = 0;
+    s->local = reinterpret_cast<std::uintptr_t>(&here);
+    s->during = os::CurrentStack();
+    static os::OwnStack inner(os::OwnStackSpec{0x10000, 0x40000, false, false});
+    inner.Run(&PlacedInner, s);
+    s->after_inner = os::CurrentStack();
+    s->nested_refused = !os::RunOnPlacedStack(s->during.limit, s->during.base, &PlacedBody, s);
+}
+
+void TestPlacedStack() {
+    constexpr std::size_t kBytes = 0x40000;
+    void* const block = os::MemAlloc(nullptr, kBytes, os::Prot::ReadWrite);
+    CHECK(block != nullptr);
+    if (!block) return;
+    const auto lo = reinterpret_cast<std::uintptr_t>(block), hi = lo + kBytes;
+    const std::string held = os::MemHolders(lo, hi);
+    CHECK(!held.empty());
+    PlacedSeen seen;
+    const bool ran = os::RunOnPlacedStack(block, reinterpret_cast<void*>(hi), &PlacedBody, &seen);
+#ifdef _WIN32
+    CHECK(!ran && os::LastError() == ERROR_NOT_SUPPORTED);
+    CHECK(seen.runs == 0);
+    std::printf("placed: refused on Windows, nothing run; MemHolders names the block: %s\n", held.c_str());
+#else
+    CHECK(ran);
+    CHECK(seen.runs == 1);
+    CHECK(seen.local >= lo && seen.local < hi);
+    CHECK(seen.during.limit == block && seen.during.base == reinterpret_cast<void*>(hi));
+    CHECK(seen.inner.base != seen.during.base && seen.inner.limit != nullptr);   // the own stack's own range
+    CHECK(seen.after_inner.limit == block && seen.after_inner.base == reinterpret_cast<void*>(hi));
+    CHECK(seen.nested_refused);
+    const os::StackRange after = os::CurrentStack();
+    CHECK(after.base != reinterpret_cast<void*>(hi));
+    // A fixed reservation over the held block is refused (no-replace), and the
+    // block is what holds it.
+    CHECK(os::MemReserve(block, 0x1000) == nullptr);
+    char lo_text[32];
+    std::snprintf(lo_text, sizeof lo_text, "%llx-", static_cast<unsigned long long>(lo));
+    CHECK(held.find(lo_text) != std::string::npos);
+    std::printf("placed: a run on 0x%llx..0x%llx, CurrentStack there and after, an own stack inside, a nested run "
+                "refused; MemHolders: %s\n",
+                static_cast<unsigned long long>(lo), static_cast<unsigned long long>(hi), held.c_str());
+#endif
+    CHECK(os::MemRelease(block, kBytes));
+    CHECK(os::MemHolders(lo, hi).empty());   // given back: nothing holds it
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -2019,8 +2242,11 @@ int main(int argc, char** argv) {
     TestFileMove();
     TestWindowKey();
     TestCaseCheck();
+    TestCaseFold();
+    TestNamedEventClose();
     TestProcess();
     TestRunning();
+    TestPlacedStack();
     std::printf("os_tests: %d checks, %d failed\n", g_checks, g_fail);
     return g_fail ? 1 : 0;
 }

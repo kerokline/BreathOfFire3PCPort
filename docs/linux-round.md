@@ -10,8 +10,16 @@ The launcher's pages, a real GPU, the pad, the sound by ear and a Steam Deck
 are not tested. Tier 2 is staged and waits for the owner's word and the calls
 in section 6. **2026-11-19:** stage LB is done and on `main` (PRs #259, #261,
 #262, #264): every source file compiles for x86-64 Linux and nothing links.
-Stages LC and LD are staged as one round of fourteen groups in three waves,
-not launched: section 4, "Stages LC and LD, staged as one round".)
+Stages LC and LD are staged as one round of fourteen groups in three waves:
+section 4, "Stages LC and LD, staged as one round". **Wave A is on `main`**
+(PR #265, 2026-11-19). **2026-11-20:** the link measured natively in the
+WSL is 7 names short; wave B is staged as four units: section 4, "Wave B,
+staged". **2026-11-21:** wave B ran on the branch `linux/lcB` (not on
+`main`, not pushed): the game links as a Linux ELF, starts through the Linux
+launcher and ends the ten state-hash routes headless in the WSL, on a
+software Vulkan device; the gate's Windows half ran the same evening and
+passed. No picture was looked at on a screen and nothing ran on a GPU:
+section 4, "Wave B as run".)
 
 Issue #215 asks for the game on Linux and the Steam Deck. This file stages
 two answers, the cheap one first:
@@ -1672,6 +1680,973 @@ pkgconf, glslang, and the headers of X11, Wayland, ALSA, PulseAudio,
 PipeWire and Vulkan are installed, so wave B can configure and build there
 natively. `vulkaninfo` offers one device, `llvmpipe`; section 2a drew at
 about 22 frames a second on it at 3440 x 1440 under Proton.
+
+### Wave B, staged (2026-11-20; launched 2026-11-21)
+
+**Launched 2026-11-21 at the owner's word; what ran is in "B1 as run" to
+"Wave B as run" below.** As staged: it launches at the owner's word and
+after the calls at the end of this section. Base: `main` `e9c1fb41` (wave A, PR #265;
+the drawn launcher's cutover, PR #267).
+
+**What changed since the staging of 2026-11-19:**
+
+- **C7's Linux half is done by another round.** [`launcher-portable.md`](launcher-portable.md)
+  P0 to P6 put `bof3x-launcher` on Linux: it builds in the WSL
+  (`cmake --preset linux-x86_64 -DSDL_X11_XTEST=OFF`, target
+  `bof3x_launcher`), reads `bof3x.ini`, and takes the Windows launcher's
+  command line. Not seen: it starting a real game, since there was no game
+  ELF. Wave B's runs go through it (C8's finding: a run that starts the ELF
+  directly has not the launcher's layer).
+- **The link, measured natively** (the WSL, clang 21.1.8 with GNU `ld.bfd`,
+  which takes `-Ttext-segment=0x10000000`; a copy of `e9c1fb41` under
+  `~/src/bof3x-lcB-measure`, `cmake --preset linux-x86_64
+  -DSDL_X11_XTEST=OFF && cmake --build build-linux-x86_64 -- -k 0`): every
+  object compiles, DXVK-native's two libraries build at the pinned commit
+  and link, and **the link is 7 names short**, each with the lines that
+  want it:
+
+  | Name | Wanted by | Unit |
+  |---|---|---|
+  | `main` | the C runtime's `_start` | B1 |
+  | `__ImageBase` | `image_base.h:158`, `:159`; `crt_rest.cpp:80` | B1 |
+  | `bof3::GapWatch_Pause()` | `input_script.cpp:641`, `:653`, `:1094` | B1 |
+  | `bof3::GapWatch_Tick()` | `input_script.cpp:643`, `:663`, `:1096` | B1 |
+  | `bof3::ExeIcon_Frame(void*)` | `magic_080.cpp:871` | B1 (B2a makes it whole) |
+  | `render::SwapChainWindow(void*)` | `render_d3d11.cpp:916`, `:942` | B1 |
+  | `render::WindowClientSize(void*, unsigned*, unsigned*)` | `render_d3d11.cpp:841`, `:952` | B1 |
+
+  Wave A's cross measure gave 14; the other seven are written (C2) or
+  resolved by DXVK's libraries (`D3D11CreateDeviceAndSwapChain`).
+  `__ImageBase` is still wanted although C2 gave `ImageBase()` a variable
+  off Windows: two more readers name the PE linker's symbol directly.
+- **SDL3 is still static** (`CMakeLists.txt:137..138`, the cache of the
+  measure: `SDL_SHARED=OFF`). C1's finding stands: DXVK opens
+  `libSDL3.so.0` by name, so a static SDL3 gives two copies. B1 makes it
+  shared off Windows.
+
+**Shape.** Wave B finds its work by running, so its first unit runs alone;
+three units then run side by side, each on files of its own; the gate is
+the coordinator's. Workers are the `worker` agent type, in worktrees, and
+build in the WSL's own file system (`~/src/bof3x-lcB-<unit>`; a build under
+`/mnt/c` is slow). The round's branch is `linux/lcB`.
+
+| Unit | Groups | What it does | Proof before the hand-back |
+|---|---|---|---|
+| **B1, the link and the start-up** (alone, first) | C1's end, C2, C3 | SDL3 shared off Windows, `$ORIGIN` as RUNPATH, `libSDL3.so.0` and DXVK's two libraries copied beside the ELF. The seven names: `__ImageBase`'s two readers to the start-up's variable; the gap watch's two entries in `windows_only.cpp` (the watch is Windows only; with its switch unset they do what Windows does with it unset, and the switch is already a `Fatal` there); `SwapChainWindow` and `WindowClientSize` over SDL's window; `ExeIcon_Frame` over SDL (the picture code made portable, or the icon left out and said). Then `exe_host_posix.cpp`'s `main` coding `exe_host_steps.h`'s 25 steps in order, after C3 writes the reservations' order as a table in this file: the image at `0x400000` (or the moved base), `.stub` no-access, the task stacks, the arena, the draw pool, each refused by name when its range is taken | Both Windows presets' objects unchanged but for the files changed (`codegen_same.py --by-function`); the Linux link with no undefined name; `BOF3X_SELFTEST_ONLY=1` on the ELF through the Linux launcher to `self-test only: done`, 0 FATAL; `os_tests` and `config_tests` in the WSL; the Windows gate line |
+| **B2a, the picture and the movies** | C5 | The renderer through DXVK-native on SDL's window to the title; the renderer brought up before the movies (the owner's call 2 of 2026-11-19), on both systems if call 1 below says so; the movie's picture off Windows; the window icon whole | A frame by `BOF3X_SHOT_DIR` on Linux (llvmpipe) against the Windows 64-bit frame of the same tick, point filter, pixel for pixel; the logo movie's frames against the decoder's dump; on Windows the ten routes if the start order changed there |
+| **B2b, faults** | C6 | `crash_posix.cpp` in a real run (`BOF3X_CRASH_TEST`), its report read by `tools/crash_report.py`; the stack watch's refusal kept and said (call 2) | `tools/linux_probe/crash_catch_test.sh`; a `CRASH n:` report from the ELF |
+| **B2c, paths and saves** | C4's Linux half | The POSIX fold for the names the player's files bring, relative names in the game folder alone (the owner's call 3 of 2026-11-19; the dozen Capcom names wave A listed); D431's open item settled one way, the seam's rule kept | A quicksave made and loaded on Linux; `os_tests` for the fold; the routes' first minute on the PC install and on a disc-built one |
+| **B3, the gate** (the coordinator's) | LC's gate | The ten routes on the ELF through the Linux launcher against C0's `_c0x64` references; `music_heard.py` on `whelpBoss` and `cutsceneAndNue`; a quicksave made on Linux and loaded on Windows, and the other way; on Windows the ten routes against `_c0x32` | `statehash.py diff` with the 64-bit round's allowance; the three routes that differ on `0x6C3000` between two Windows runs are read the same way here |
+
+**What may run beside what.** B1 touches the start-up, the build and the
+render window's two functions; nothing starts beside it. B2a, B2b and B2c
+share no file but `src/os/posix` (B2b's signal code, B2c's fold): each adds
+its own file there and one line to `os.h`. Merged into `linux/lcB` one at a
+time, `--no-ff`, each built and its proof run again after the merge.
+
+**The gate line, from B1 on.** The Windows line of wave A's brief (both
+presets, the censuses, `linux_tree.py --check`, `os_tests` three ways, the
+hosted shadow suite under the lock), and in the WSL: the Linux preset links
+with no undefined name; `os_tests` and `config_tests`; the ELF's
+`BOF3X_SELFTEST_ONLY=1` to `self-test only: done`, 0 FATAL. B2a, B2b and B2c
+add the route each names.
+
+**Not measured for this staging:** whether a window of the game's in the
+WSL shows on the owner's screen (WSLg opens one at `DISPLAY=:0`, as the
+launcher's did) and whether SDL's `offscreen` driver gives DXVK a Vulkan
+surface, which would let runs leave the screen alone; whether llvmpipe is
+fast enough for a route to end in its recipe's time (2a drew at about 22
+frames a second at 3440 x 1440, and a route's window is 640 x 480); the
+ELF's size once linked whole; anything at run time.
+
+**For the owner, before a launch:**
+
+1. **The start order on Windows.** The renderer comes up before the movies
+   on Linux (call 2 of 2026-11-19). Proposed: the same order on Windows, so
+   both systems run one path; that is a ledger entry and the owner's look at
+   the three movies on Windows after B2a. The other way keeps Windows as it
+   is and gives Linux its own order.
+   **Answered (the owner, 2026-11-20): no call needed.** Only the Capcom
+   movie is kept; the two PC-only movies are both ignored, so the order of
+   the movies does not matter. B2a confirms which movie a start plays on
+   Linux and what draws it, and changes no order on Windows.
+2. **The stack watch on Linux.** Proposed: keep `BOF3X_STACKWATCH=1` a
+   refusal there and say so in the switch's line of the ledger. It is a
+   developer's switch; a guard page of our own for the main stack is work
+   no player sees.
+   **Decided (the owner, 2026-11-20): as proposed.**
+3. **SDL3 shared on Linux alone.** Proposed: yes; Windows stays static. The
+   tarball (call 5 of section 6) then holds three libraries beside the ELF.
+   **Decided (the owner, 2026-11-20): as proposed** - the Linux build ships
+   its own `libSDL3.so.0`; Windows is unchanged.
+4. **The owner's screen.** Proposed: B1 needs no window (the self-test
+   ends before one opens). From B2a on, game runs in the WSL use SDL's
+   `offscreen` driver if it serves DXVK; if it does not, they open a WSLg
+   window, and they run when the owner is away or says the screen is free.
+   **Decided (the owner, 2026-11-20): as proposed.**
+5. **Where the gate runs.** Proposed: here, on llvmpipe. If a route cannot
+   end in time on it, the gate moves to frost's machine and the record says
+   so.
+   **Decided (the owner, 2026-11-20): as proposed.** With call 3 answered,
+   every call is settled; the launch waits for the owner's word ("hold off
+   on beginning", 2026-11-20).
+
+### B1 as run (2026-11-21, branch `linux/lcB-b1`, from `27ff3802`)
+
+Launched at the owner's word of 2026-11-21. Unit B1 alone: the link and
+the start-up.
+
+**The reservations' order, written before the code** (task 3; group C3's
+table, which C2's `main` codes to). Every range below 4 GB that the Linux
+ELF needs at a fixed place, or needs below 4 GB, in the order it is made.
+Each is made with no-replace semantics (`os::MemReserve` / `os::MemAlloc`
+with an address: `MAP_FIXED_NOREPLACE`, the result checked against the
+address asked); a refusal is a `Fatal` that names the range and the
+mappings of `/proc/self/maps` that hold it. The ELF itself is linked at
+`0x10000000` (`-Ttext-segment`, stage LA2) and is the kernel's to map.
+
+| # | Range | Size | Protection | Made by, when |
+|---|---|---|---|---|
+| 1 | The image's span, `base`..`base + 0x587000` (`0x400000`..`0x987000` at the player's base; `0xA00000`..`0xF87000` moved): Capcom's sections' extents, `exe_layout.h` | `0x587000` | reserved, no access, in one mapping; then inside it: | `exe_host_posix.cpp`'s `.preinit_array` entry (step 1), before any library's or our own initialiser runs; checked and logged at steps 8 to 10 |
+| 1a | the header page, `base`..`base + 0x1000` | `0x1000` | read-only, holding the PE header's first fields as `bof3x.exe`'s (the two signatures, the machine, `e_lfanew`, the timestamp); the rest zero. *Changed in the coding:* the table said "no access, nothing reads it"; the first run faulted reading it - `bind.cpp`'s `Mode` tells the exe host by the header's timestamp at the first `Code()` of an initialiser | as row 1 |
+| 1b | `.stub`, VA `0x401000`..`0x5C4000` | `0x1C3000` | no access: the trap (step 10 reads it back). Never writable on Linux: nothing writes it on Windows either | as row 1 |
+| 1c | `.game`, VA `0x5C4000`..`0x93F000` (`.rdata`, `.data`, `.bss` to Capcom's `.rsrc` end) | `0x37B000` | read-write, zero (step 11 asserts it) | as row 1 |
+| 1d | `.pool`, VA `0x93F000`..`0x987000`: DIV-0062's 2,048 draw items | `0x48000` | read-write, zero but for `draw_pool_room.h`'s stamp at its start, which `make_exe.py` writes into the file on Windows | as row 1 |
+| 2 | Only at a moved base: the linked span `0x400000`..`0x987000`, the fence (`exe_host.cpp` `Fence`) | `0x587000` | reserved, no access | as row 1 |
+| 3 | The main thread's stack at its Windows place, `0x60000`..`0x160000` (x64-build-design.md 7.1: the task slices lie on it, their saved stack pointers are 32-bit words), with a guard page `0x5F000`..`0x60000` under it | `0x100000` + `0x1000` | read-write; the guard no access | as row 1; `main` moves the main thread onto it (`os::RunOnPlacedStack`) before step 3, so every step from `Engine_Main`'s entry on runs there, as on Windows |
+| 4 | The bind table of code places, `(top << 24) \| 0x400000`..`(top << 24) \| 0x5C5000` (`0x7C400000`.. first), the last page the import slots' 14-byte thunks | `0x1C5000` | read-write while built, then read-execute | `bind.cpp` `BuildTable`, at the first `Code()` - a namespace-scope initialiser, after row 1; it tries the top bytes `0x7C`, `0x70`, `0x7E`, `0x7B`, `0x7D`, then any `0x20`..`0x7F`, and stops only when none can be had (its own rule, unchanged) |
+| 5 | The arena (R10, the default where the C runtime has no exact size), the highest free run of `[2 GB, 4 GB)` that holds it (`0xF0000000`.. expected, as the 64-bit Windows build measured) | `0x10000000` (256 MB) | reserved, committed read-write 64 KB at a time | `heap_arena.cpp` `LowArena::Open`, at the first `Crt_malloc`; then `[64 KB, 2 GB)` if no run above 2 GB holds it |
+| 6 | The draw pool | - | - | row 1d: `DrawPool_Reserve` (step 18, `InjectAll`) finds the stamp there, as on Windows |
+
+Not in the table, and why: the C runtime's own heap (`std::malloc`,
+`new`) lies after the ELF's `.bss` while it grows by `brk` and above 4 GB
+for a block it maps; the users R10 listed (`render_shim.cpp`'s `Alloc`,
+`music_seq.cpp`'s `TestMalloc`, `mp3.cpp`'s `new Decoder`) are found by
+`Low32`'s `Fatal` when they meet a high block. The program's own stacks
+(`os::OwnStack`: the present's, the quicksave's, the MP3 decoder's) are
+mapped where the system puts them.
+
+**What was built.**
+
+- **SDL3 shared off Windows** (`CMakeLists.txt`, `BOF3X_SDL`; Windows keeps
+  `SDL3::SDL3-static`). `bof3x` and `bof3x-launcher` carry RUNPATH
+  `$ORIGIN`; the build copies `libSDL3.so.0`, `libdxvk_d3d11.so.0` and
+  `libdxvk_dxgi.so.0` beside them under their sonames
+  (`cmake/linux_target.cmake`). `ldd bof3x`: one `libSDL3.so.0`, the one
+  beside it, and DXVK's two from the same folder; DXVK's `LoadLibraryA` of
+  `libSDL3.so.0` resolves to the object already loaded by that soname (not
+  watched at run time: the self-test makes no DXVK device).
+- **The seven names.** `crt_rest.cpp`'s `__ImageBase` reader takes the
+  start-up's `image::g_ownBase` off Windows (the `image_base.h:158` of the
+  staging's table was `Low32`'s template body, where that one use was
+  instantiated). `GapWatch_Pause` / `GapWatch_Tick` were already in
+  `windows_only.cpp`, which no list held: `tools/linux_probe/linux_tree.py`
+  has a `LINUX_ONLY` table now (`exe_host_posix.cpp`, `windows_only.cpp`,
+  `exe_icon_sdl.cpp`, `render_window_sdl.cpp`) that `--cmake-list` appends.
+  `SwapChainWindow` / `WindowClientSize`: `render_window_sdl.cpp`, the
+  `SDL_Window*` itself and `SDL_GetWindowSizeInPixels` (DXVK's `fromHwnd` is
+  a cast; its own `getWindowSize` asks the same call). `ExeIcon_Frame` and
+  `ExeIcon_SelfTest`: `exe_icon_sdl.cpp`, SDL surfaces and SDL's PNG coder,
+  over `exe_icon_picture.cpp`, the picture code moved out of `exe_icon.cpp`.
+  `main`: `src/hook/exe_host_posix.cpp`.
+- **The start-up.** The reservations of the table above in a
+  `.preinit_array` entry, which also calls `SetImageBase`; it reads
+  `BOF3X_IMAGEBASE` from the environment block the loader passes it,
+  because `getenv` answered "unset" that early (measured). `main` opens the
+  log, calls `SetHost`, and moves the main thread onto the stack of row 3
+  with the new seam call `os::RunOnPlacedStack` (`src/os/placed.h`;
+  `getcontext` / `swapcontext` on POSIX, `CurrentStack` answering the range;
+  refused on Windows) to run steps 3 to 25. Step 13's fourteen slots hold
+  thunks of functions of ours: `GetTickCount` the monotonic clock;
+  `CreateEventA`, `CloseHandle`, `MsgWaitForMultipleObjects` over
+  `os/event.h`; `IntersectRect` USER32's rule; `GetDriveTypeA` "no root"
+  (no drive letters); `PostQuitMessage` the window queue's `Got::Quit`;
+  `MessageBoxA` SDL's message box; `ExitProcess`, `TerminateProcess` the
+  process's end; `DirectSoundCreate` and GDI32's three a `Fatal` (step 14
+  rebinds the first; the renderer hands out no device context for the
+  others). Step 17 by `os/named_event.h`. Step 23 is `crash_posix.cpp`'s:
+  its report, then the signal's own end, where Windows ends with code 3.
+- **Found on the way.** `os::MemProtect` / `MemRestore` on POSIX passed an
+  address that was not page-aligned to `mprotect` (EINVAL at the second
+  import thunk); they take whole pages now, as `VirtualProtect` does.
+
+**Measured.**
+
+| Check | Result |
+|---|---|
+| The Linux link (WSL, clang 21.1.8, GNU ld) | no undefined name; the brief's configure in a clean folder, everything fetched and DXVK-native built by the external project: the same |
+| `size bof3x` | text 11,761,344, data 14,032, bss 28,120,785; the ELF spans `0x10000000`..`0x1260E438`, clear of `0x400000`..`0x10000000` |
+| Step 1's order | without the `.preinit_array` entry (`SetImageBase` called first thing in `main`) the ELF stops before `main`: `FATAL: ImageBase() read before the start-up set it`; with it, every run below |
+| `os_tests` | WSL (cmake, and g++ 15 by the brief's line): 558 checks, 0 failed; Windows i686 634, x86_64 638, 0 failed |
+| `config_tests` (WSL) | 4,400 checks, 0 failures (the host build's `save_tests` target fails to compile under g++, the same at `e9c1fb41`) |
+| The ELF's self-test through the Linux launcher, the PC install | `BOF3X_EXEFILE=1`: 10,393 log lines, 0 FATAL, `self-test only: done`; `BOF3X_CACHE=analysis/cache/pc-plus-us` (the player's half): 10,400 lines, the same. Without either the launcher refuses ("no game data"), as it does on Windows: `<main checkout>/bof3` has no cache |
+| The moved base on Linux (`BOF3X_IMAGEBASE=0xA00000`, the ELF started directly: the Linux launcher refuses a moved base) | 10,392 lines, 0 FATAL; the image at `0xA00000`..`0xF87000`, the linked span fenced whole, the arena at `0xF0000000` |
+| The icon's self-test on Linux (`analysis/icon/vram_load.bin`, `whelp_centre.ico`) | 69,696 pixels identical; against a wrong reference, the Fatal |
+| Windows: both presets; `codegen_same.py --by-function` against `27ff3802` | 32-bit: 52 symbols differ, all `exe_icon*`; 64-bit: those and 3 in `crt_rest.cpp`, the line numbers `Low32` takes for its message (`__builtin_LINE`) |
+| The hosted shadow suite (32-bit), the exe host, the moved base | 922 `MISMATCHES` lines, every one 0, 0 FATAL, `done`; the exe host and the moved base (`BOF3X_EXEFILE=1`): 10,392 lines each, 0 FATAL |
+
+**Not run:** steps 21 to 25 (B2a's); a window; DXVK at run time.
+
+### B2a as run (2026-11-21, branch `linux/lcB-b2a`, from `3080284c`)
+
+Unit B2a: the picture and the movies. Steps 21 to 25 of
+`exe_host_posix.cpp` ran for the first time, the logo movie and the
+game's frames reached the window through DXVK-native on llvmpipe, and the
+game ran from the start to the attract demo (area 4) under SDL's
+`offscreen` driver. Game runs went through `./bof3x-launcher --game
+<main checkout>/bof3 --no-config` with `BOF3X_EXEFILE=1`, under the round's
+lock; the WSL's audio went to `SDL_AUDIO_DRIVER=dummy` after the first two
+runs (those two played through WSLg's "RDP Sink").
+
+**DXVK and the `offscreen` driver: a surface, yes.** SDL3's `offscreen`
+driver gives DXVK-native a Vulkan surface through `VK_EXT_headless_surface`
+(llvmpipe has it, `vulkaninfo`); the swap chain is made, presents, and the
+game runs without a window on the screen. Every frame comparison below was
+made that way. No headless X server was needed (none is installed:
+`Xvfb`, `weston` absent).
+
+**What the start needed, in the order met.**
+
+1. **The movie's picture** (`replacing-mci.md` section 9; the owner's call of
+   2026-11-19). Off Windows `fmv_play::native::Draw` was a `Fatal`. Now
+   `render::PresentMovie` (`render_d3d11.h`, Linux only) brings the
+   device and swap chain up on the game's SDL window at the first movie
+   frame - with the present shader, its two samplers and its blend state
+   only - and draws each frame: the client cleared black, the frame into
+   DIV-0035's rectangle, a whole multiple by the point sampler (pixel for
+   pixel), a fit by a mip chain and the linear sampler (an average, where
+   Windows' GDI uses HALFTONE). `InitD3d11` from `Display_Setup` then
+   keeps that device and swap chain (the window must be the same one,
+   else a `Fatal`), releases the movie's objects and makes the rest as on
+   Windows. **The start order on Windows is unchanged** (call 1 of wave
+   B): Windows draws its movies with GDI before `Display_Setup` as before;
+   the call site in `Game_WinMain` is the same on both systems, and the
+   renderer comes up before the movie on Linux because the movie's first
+   frame asks for it. **Which movie a Linux start plays:** `CAPCOM.AVI`
+   alone (`DIV-0202 the start plays CAPCOM.AVI alone: on`), 112 frames,
+   Cinepak, drawn by the renderer's device (`render: Direct3D 11 feature
+   level 0xB000 on the window 640 x 480, brought up for the movies`).
+2. **`DXVK_WSI_DRIVER`.** DXVK-native makes no DXGI factory while it is
+   unset ("DXVK_WSI_DRIVER environment variable unset", then
+   `D3D11CreateDeviceAndSwapChain` 0x80004005 - what B2b met too). The
+   renderer sets it to `SDL3` before the device when the player has not set
+   it (`render_d3d11.cpp` `MakeDevice`, Linux only): the game sets it, not
+   the player and not the launcher, since the game alone knows its window is
+   SDL3's.
+3. **DXVK's logs.** DXVK writes `bof3x_d3d11.log` and `bof3x_dxgi.log` into
+   the working folder, which is the game's: one run left
+   `<main checkout>/bof3/bof3x_d3d11.log` (09:33; not removed by this unit,
+   the folder is read only to it). The renderer now sets `DXVK_LOG_PATH` to
+   the program's folder when it is unset, so the player finds them beside
+   `bof3x` and `bof3x.log`.
+4. **A RECT's `LONG` in the render shim** (`render_shim.cpp`). The DirectDraw
+   shim's `Surface_Blt`, `Surface_BltFast`, `Surface_Lock`,
+   `Viewport_Clear` and their helpers read the game's RECTs as `long`,
+   which is 64 bits on Linux: every rectangle came apart, every Blt into a
+   texture was refused, and every texture stayed zero - the game drew its
+   lists (the frame hashes were there) onto a black picture. Now
+   `Coord = std::int32_t`. Found by `BOF3X_FRAMEHASH` against the Windows
+   64-bit run (the hashes differed; a texture dump showed 0 alpha, 0
+   colour); after the fix every frame hash matches. `width_census.py` had
+   counted these sites as `long` without telling a RECT from a `long`
+   result.
+5. **The disc check.** On `<main checkout>/bof3` (under `/mnt/c`, which folds
+   case) the probe's local test opens `CAPCOM.AVI` and the start goes on:
+   nothing else is needed. On the case-sensitive copy `~/bof3x-runs/lcB/bof3`
+   the local test fails (`capcom.avi`), every drive letter answers "no
+   root", and the start ends at the missing-disc message ("Please insert
+   the Breath of Fire III disc.", `Game_WinMain returned 1`) - measured. So
+   what the start needs on Linux is B2c's case fold for `CAPCOM.AVI`;
+   nothing in the disc probe changes, on either system.
+6. **The shim's surfaces above 4 GB** (met by B2c in a battle,
+   `quick_combat` about frame 406: `PutObject ... lies above 4 GB`, on the
+   base too). The DirectDraw shim took a surface and its pixels from the C
+   runtime's `calloc`, which on Linux maps large and late blocks above 4 GB;
+   the game keeps both in 32-bit words. Off Windows they now come from
+   `Crt_calloc` / `Crt_free`, whose blocks are R10's arena below 4 GB
+   (`render_shim.cpp` `LowAlloc` / `LowFree`); Windows keeps its `calloc`.
+   The frame's own buffers (vertices, commands, the snapshot arena) stay on
+   the C runtime's heap: no game word holds them. Measured after the fix,
+   B2c's settings (`pc-plus-us` cache, en-US, `BOF3X_OPT=none`,
+   `BOF3X_LAYERING=0`, `offscreen`): `quick_combat` to its end, recipe frame
+   2920, the F6 quicksave at `Frame_Counter` 901 and its F7 restore at 1201,
+   0 FATAL, no CRASH line. The `move_script::Word` fault B2c met did not
+   show in this run.
+
+Also fixed on the way: `Game_WinMain(0x0x400000, ...)` in the step-24 log
+line (`%p` prints its own `0x` with glibc); an `HRESULT` printed as
+`0xFFFFFFFF80004005` (a negative 32-bit value widened to a 64-bit `long`;
+`render_d3d11.cpp`, `satpixie.cpp`).
+
+**The frames, measured.** The recipe: no save, no input, `wait 1500`, with
+14 shots added by `tools/recipe_shots.py --from 100 --every 100` (frames
+100 to 1400 of the boot, the title and the attract's first area), point
+filter, the window 640 x 480 (scale 2), `BOF3X_FRAMEHASH=1`. The Linux run
+under `offscreen`; the Windows 64-bit run of the same build (the mixed copy:
+the 32-bit `bof3x-launcher-dev.exe` beside the 64-bit `bof3x.exe` and
+`bof3x.dll`, `--host exe`).
+
+| Check | Result |
+|---|---|
+| The frame hashes (every walk of the lists, textures by content) | 1,182 ticks in both logs, **0 differ** |
+| Shots f00100, f00200, f00300, f01400 | identical, pixel for pixel |
+| Shots f00400 .. f01300 | differ by at most 2 in a channel: f00400 (a fade) 53,094 of 307,200 pixels, f00500 .. f01300 (the title's blended "PRESS START BUTTON") 1,980 to 2,292 pixels, all in that line. The draw lists are the same (the hashes); the difference is the two devices' blending arithmetic (llvmpipe against the Windows machine's GPU), not the game |
+| The logo movie, 640 x 480 window (k = 1), `offscreen` | 98 of the 112 frames drawn (the presenter draws the frame due; shot writing slows it), **98 identical** to `bof3x-fmvdump`'s decode |
+| The logo movie, 1280 x 960 window (k = 2), a WSLg X11 window (screen free that morning) | 71 drawn, **71 identical**, every 2 x 2 block the decoder's pixel |
+| The logo movie, 960 x 720, `BOF3X_SNAP=0` (a fit) | drawn by the mip chain and linear sampler, no fault; 4 frames drawn of 112 (the first fit frame on llvmpipe took about 7 s); not compared - the fit is not GDI's HALFTONE |
+
+The movie frames are taken by a developer's switch of this unit,
+`BOF3X_FMV_SHOT_DIR` (Linux only): each frame drawn, the whole client as
+presented, written as `AVI_<n>.bmp` before the present.
+
+**The window icon.** `ExeIcon_Frame` ran at `Frame_Counter` 1313 under
+`offscreen`: `SDL_SetWindowIcon failed: That operation is not supported`,
+logged, not fatal (the offscreen driver has no icon). In the WSLg X11
+window the game never reached that tick: the window never had the focus,
+so `App_Active` stayed 0 and the loop waited at frame 1 (seven minutes,
+then killed by its PID). That is the game's rule on both systems (the
+first activation starts the loop; DIV-0033 runs on only after it), not a
+Linux fault; it means a WSLg run needs the window focused once. The icon
+on a real Linux window is **not verified**.
+
+**The gate line.**
+
+| Check | Result |
+|---|---|
+| Both Windows presets | build; no warning in a touched file. `codegen_same.py --by-function` against `3080284c`: 32-bit 32 symbols differ, all in `render_shim.cpp` and `render_d3d11.cpp`; 64-bit 33, those two files and 3 in `battle_menu_win.cpp` (the line numbers `Low32` takes, `__builtin_LINE`, moved by the Linux half's lines). The two render files: the RECT parameters' new mangled names (`PKl` to `PKi`, the same code), `MakeDevice` / `WindowBuffers` / `SaveTexture` split out of their callers, `g_level` |
+| `os_census --check --boundary`; `linux_tree.py --check` (in the WSL, `--dxvk` DXVK's `include/native`, `--sdl` SDL3's `include`) | ok; ok, 836 files compile, 0 wait |
+| `data_census --strict`, `reloc_census --check`, `reloc_bare --check`, `ledger_check`, `ledger_switches --check`, `tu_census --check --strict`, `retire_shells --check --strict` | ok |
+| `width_census --check` | fails on this unit's 12 sites alone: the step-24 `%p`, the three `HRESULT` prints (`unsigned long` of the 32-bit word), four `%p` in the renderer's two new Fatals, the four COM functions whose `long` result line changed text (`Surface_Blt`, `Surface_BltFast`, `Surface_Lock`, `Viewport_Clear`) |
+| The hosted shadow suite (32-bit), the exe host, the moved base | 922 `MISMATCHES` lines, every one 0, 0 FATAL, `done` (32,189 lines); exe host 10,392 lines, moved base 10,392, 0 FATAL each |
+| The Linux link | no undefined name |
+| `os_tests` (g++ 15), `config_tests` (WSL) | 558 checks, 0 failed; 4,400, 0 failures |
+| The ELF's self-test through the launcher | 10,393 lines, 0 FATAL, `self-test only: done` |
+
+**Not done:** the icon on a window that has the focus; the movie's fit
+compared with anything; the `SDL_VIDEO_DRIVER=wayland` path (this SDL3
+build has no Wayland driver: "wayland not available"); a run on the
+case-sensitive copy past the disc check (B2c's).
+
+### B2b as run (2026-11-21, branch `linux/lcB-b2b`, from `3080284c`)
+
+Unit B2b, faults, beside B2a and B2c. Files: `src/hook/crash_posix.cpp`,
+`src/hook/stackwatch_posix.cpp`, `tools/crash_report.py`,
+`tools/linux_probe/crash_catch_test.{cpp,sh}`, a new
+`tools/linux_probe/fault_preload.c`; and outside the unit's list, one
+declaration in `src/hook/crash.h` (under `#if !defined(_WIN32)`) and step
+23's lines in `src/hook/exe_host_posix.cpp` (B1's file; the change is the
+step itself, below).
+
+**How a fault ends on Linux: as on Windows, code 3, from step 23 on.**
+B1's catcher ended an unhandled fault by the signal (exit 139 for
+SIGSEGV), where Windows' exe host ends it with Fatal's code 3
+(`exe_host.cpp` `Unhandled`, set at step 23). Decided: Linux ends as
+Windows does. The reasons:
+
+- The work order says so: `exe_host_steps.h` step 23, "an exception nobody
+  handled ends the process as Fatal does, code 3", Linux column
+  "crash_posix.cpp's handler's end".
+- A player is told: Fatal's message ("a signal nobody handled ... see the
+  CRASH lines above") where the window otherwise vanishes. *Found:* on
+  this base it reaches stderr and the log only - nothing defines
+  `BOF3X_OS_SDL`, which `src/os/posix/dialog.cpp` needs for SDL's message
+  box, so no `Fatal` of the Linux build shows a box (measured: windowed
+  runs under WSLg, Wayland and `SDL_VIDEO_DRIVER=x11` alike, ended with
+  code 3 within 2 s, no box to click). The line is the build's
+  (`CMakeLists.txt`, off Windows: `BOF3X_OS_SDL` on the targets that link
+  SDL's video); with it, SDL on Wayland still needs `zenity` or `kdialog`
+  for a box (neither is installed here).
+- What reads the end: `start.cpp` waits for the game only under
+  `BOF3X_SELFTEST_ONLY` and prints its code (on POSIX 128 + the signal for
+  a signal's end, `os/process.h`); `tools/abc_run.py` takes any code but 0
+  as a failure and prints the log's `FATAL` lines; `input_run.py` prints
+  the code; `crash_report.py` reads the log and no code. None needs 139,
+  and the `FATAL` line plus code 3 are the one rule both systems now give.
+- The cost: the core file the signal's default would write (none by
+  default here: `core_pattern` is `core`, `ulimit -c` 0). A developer who
+  wants the process at the fault runs the ELF under a debugger, which
+  stops at the signal before the catcher.
+
+How (`crash_posix.cpp`): `Crash_EndUnhandledAsFatal` (declared in
+`crash.h` off Windows) is step 23 in `exe_host_posix.cpp`, in place of
+B1's log line. After it, a fault whose old disposition is the default or
+ignored is reported as before, then the reporter thread calls `Fatal`
+(its line, the state hash's flush, its message unless the run is a
+self-test, `_exit(3)`); the faulting thread waits without a bound once the
+report is written (the message waits for the player), and ends the
+process with `_exit(3)` itself if the report is not written in 20 s. A
+fault an earlier handler takes is passed to it as before; a second fault
+while the first one's `Fatal` runs waits for that end; a fault on the
+reporter's own thread is passed on (it would wait for itself). Before step
+23 a fault ends by its signal, as one before the filter ends by its
+exception on Windows. The exit trace's SIGTRAP handler ends the same way
+after step 23 (Windows' filter takes an unhandled breakpoint too).
+
+**The stack overflow.** The main thread runs on B1's placed stack
+`0x60000..0x160000` with the guard page `0x5F000..0x60000` under it, and
+`Crash_Start` (step 16) runs there, so the alternate stack
+(`sigaltstack`, 64 KB) is that thread's. An overflow faults on the guard
+page; the handler runs on the alternate stack; the report gains a line
+`CRASH n: a stack overflow - the access is to the guard page ... under
+thread N's stack ...` (the armed thread's stack is read by
+`os::CurrentStack` at `Crash_Start`, never in the handler). Windows names
+an overflow by its code `0xC00000FD`; this line is its Linux counterpart.
+The stack scan finds no words in an overflow: the stack pointer itself
+lies on the guard page, and the portable scan stops at the first word it
+cannot read (`crash.cpp`, unchanged; a scan from the guard's top is a
+change to a file Windows compiles, left).
+
+**Where an address lies** (`crash_posix.cpp` `Where`): in the game's image
+(`0x400000`, or the moved base, to the pool's end) as `the game's image, VA
+0x...` - the image is anonymous memory here, no loaded object; in the
+engine as `bof3x+0x...` from `image::g_ownBase`, as `crt_rest.cpp`'s
+messages give it; anything else (libc, SDL, DXVK) by `dladdr`.
+
+**The reader** (`crash_report.py --log`): a Linux report's engine is the
+name its stack lines carry (`  (bof3x)`); the ELF beside the log (or
+`--elf`) names those words and the fault's address by `llvm-addr2line` or
+`addr2line` (the ELF is linked at a fixed address; a position-independent
+one is said and left unnamed). Measured in the WSL and on Windows
+(`llvm-addr2line` of the toolchain, the ELF read through
+`\\wsl.localhost`): the same names.
+
+**The stack watch** (the owner's call 2): `BOF3X_STACKWATCH=1` stays a
+`Fatal` on Linux; its message now says why - a developer's switch that
+measures how far Windows grows the main stack (the TEB's words, the moving
+guard page, `VirtualQuery`); here the stack is mapped whole with a fixed
+guard page, so nothing grows, and an overflow is the crash report's. No
+ledger entry names the switch today. The line for the coordinator to
+place: *`BOF3X_STACKWATCH=1` (developer): Windows only; on Linux a Fatal
+that says why (the owner's call 2 of wave B, 2026-11-20), the main stack
+being placed whole with a fixed guard page there.*
+
+**Measured.**
+
+| Check | Result |
+|---|---|
+| `crash_catch_test.sh` (WSL, g++ 15) | 13 modes, each end checked: `read`, `write`, `exec`, `selftest`, `overflow` by signal 11; `bus` 7; `fpe` 8; `ill` 4; `abort` 6; `trap` 5; `unhandled`, `overflow_unhandled`, `trap_unhandled` exit 3 with one `FATAL: a signal nobody handled`; both overflows with the guard page's line. The test's doubles were stale (a PEB at `gs:0x60` for `ImageBase()`): they are the start-up's variables now |
+| The ELF, through the launcher, before step 23 (`BOF3X_EXEFILE=1 BOF3X_SELFTEST_ONLY=1 BOF3X_CRASH_TEST=0`, offscreen, the PC install) | `CRASH 0: signal 11 (SIGSEGV, code 1) at 0x...100701F6 (bof3x+0x701F6)`, the crash test's thread; the catcher armed on thread 1010's stack `0x60000..0x160000`; the launcher: `game process exit code 139`. `crash_report.py`: the fault named `bof3::(anonymous namespace)::SelfTest(unsigned long) (crash_posix.cpp:296)` |
+| The ELF past step 23 | `BOF3X_CRASH_TEST=<seconds>` cannot reach it on this base: the game is past step 23 for well under a second before the renderer stops it (`FATAL: render: D3D11CreateDeviceAndSwapChain failed, HRESULT 0x80004005`, offscreen and in a WSLg window alike, B2a's files), and the switch counts whole seconds from step 16. So `fault_preload.c`: an `LD_PRELOAD` library of the test's own, standing in for `SDL_CreateWindow`, which `Game_WinMain` calls first on the main thread, faults there (the game unchanged, no window made) |
+| - a read of `0x10` there (offscreen, launcher, an install of links to the PC install without its movies) | the report on the main thread, `rsp 0x15FB10` on the placed stack; `FATAL: a signal nobody handled: 11 (SIGSEGV, code 1) ...`; the same game started directly with the environment the launcher gave it: **exit 3**. `crash_report.py`: every stack word named, `game_window::Create(bool) (game_window.cpp:413)`, `Game_WinMain (magic_080.cpp:704)`, ... `EngineMain(void*) (exe_host_posix.cpp:764)`, `os::(anonymous namespace)::Entry() (placed.cpp:42)` |
+| - a recursion with no end there | `writing 0x5FE50`, `rsp 0x5FE50`; `CRASH 0: a stack overflow - the access is to the guard page 0x5F000..0x60000 under thread 4530's stack 0x60000..0x160000`; the `FATAL` line; direct: **exit 3**. The handler ran on the alternate stack with the main stack spent |
+| - the same in a WSLg window (09:56, the screen free), Wayland and `SDL_VIDEO_DRIVER=x11` | the report and the `FATAL` line, then the end within 2 s with no box: see the finding above |
+| `BOF3X_STACKWATCH=1` on the ELF (self-test, launcher) | `FATAL: BOF3X_STACKWATCH=1 is refused on Linux (the owner's call 2 of wave B, 2026-11-20): ...`; the launcher: `game process exit code 3` |
+| WSL gates | the Linux preset links, no undefined name, no warning in a file touched; `os_tests` (the brief's g++ line) 558 checks, 0 failed; `config_tests` 4,400 checks, 0 failures; the ELF's self-test through the launcher (`BOF3X_EXEFILE=1`): 10,393 lines, 0 FATAL, `self-test only: done` |
+| Windows: both presets | build, no warning; the one file a Windows build compiles that this unit changed is `crash.h` (comments and a declaration under `#if !defined(_WIN32)`); `codegen_same.py --by-function`, the objects with `3080284c`'s `crash.h` against this branch's: i686 29,430 function definitions, x86_64 20,896, **0 differ** each. So the hosted suite was not run (no Windows object differs) |
+| The censuses | `os_census.py`, then `--check --boundary`: ok (8 files wait for 1 later unit); `linux_tree.py --check` (in the WSL, `--sdl` and `--dxvk` at `~/src/b1deps`): 836 files compile, 0 wait; `data_census --strict`, `reloc_census --check`, `reloc_bare --check`, `ledger_check` (242 entries, 0 errors), `ledger_switches --check`, `tu_census --check --strict`, `retire_shells --check --strict`: ok. `width_census --check`: 27 new sites, every one in `crash_posix.cpp` (the new `uintptr_t` and `long` of the armed stack's range and its log lines) - expected for new sites, not regenerated here |
+
+**The install for the runs past step 23.** The launcher's game folder must
+not be the owner's install for a run that writes, and the movies stop the
+game on this base (B2a's `Draw`): `~/src/b2b-game` holds links to
+`<main checkout>/bof3`'s folders and large files, copies of its small ones
+(the saves, `BOF3.CFG`), no movies, and an empty `CAPCOM.AVI` of ours - the
+disc probe (`magic_080.cpp`, DIV-0100) asks for the name, and a movie that
+does not open is skipped as the original skips it. On ext4 the probe's
+names need their case (`CAPCOM.AVI`, `BOF3.EXE`): B2c's fold is not on this
+base; `/mnt/c` folds case itself, which is why runs on `<main checkout>/bof3`
+never showed it. DXVK writes `bof3x_d3d11.log` into the game folder unless
+`DXVK_LOG_LEVEL=none` (B2a's runs on `<main checkout>/bof3` leave it there).
+
+**For the coordinator's gate:** with B2a's renderer up, the switch itself
+past step 23 is `BOF3X_EXEFILE=1 BOF3X_CRASH_TEST=10 ./bof3x-launcher --game
+<install> --no-config` (a window, or offscreen if B2a's surface allows);
+pass: the `CRASH 0` lines, `FATAL: a signal nobody handled: 11 (SIGSEGV,
+code 1)`, and `tools/crash_report.py --log build-linux-x86_64/bof3x.log`
+naming the fault `SelfTest`.
+
+### B2c as run (2026-11-21, branch `linux/lcB-b2c`, from `3080284c`)
+
+Unit B2c: paths and saves, beside B2a and B2b. Every game run below used
+the PC install on the WSL's own disk (ext4, which looks at case):
+`~/bof3x-runs/lcB/bof3`, read only, or a copy of it of B2c's where a run
+writes. `/mnt/c` folds case by itself, so nothing there proves a fold.
+
+**The fold** (the owner's call 3 of 2026-11-19). `src/os/case_fold.h`, its
+POSIX half `src/os/posix/case_fold.cpp`, and a Windows half that gives the
+name back as asked (Windows' filesystems fold already). `os::Path` on POSIX
+calls it for every narrow name it converts, after the case check has looked
+at the name as asked; so the game's `Crt_fopen`, the `ifstream`s on
+`os::Path`, `IsFile`, `WalkDirectory` and `FindFirst` all take it. The rule:
+
+- Only a relative name (the game folder is the working folder, which
+  `bof3x-launcher` starts the game in) with no `..` part. An absolute name -
+  the cache, the home, a `BOF3X_` path, the temporary folder - is never
+  folded.
+- The exact name first (`lstat`): when it is there it is the name, whatever
+  else the folder holds. Otherwise one walk per part from the game folder
+  down: a part the folder holds exactly is kept, else the entry equal to it
+  but for ASCII case; a part with none, or with `*` or `?` (a walk's
+  pattern, which the walk matches without case itself), ends the fold and it
+  and the rest stay as asked, so a file made in a folder of another case
+  lands in that folder.
+- **Two names that differ in case alone** (`OYASUMI.DAT` and `Oyasumi.DAT`
+  in one folder, which no Windows folder can hold): the exact one when asked
+  exactly, else the first in byte order - which is the entry `WalkDirectory`
+  hands first (upper-cased order, ties by the bytes), so an open and a walk
+  take the same file on every run whatever order the filesystem lists in. In
+  ASCII the upper case comes first: `OYASUMI.DAT`.
+- Each folder's listing is cached and walked again when the folder's device,
+  inode, change or modify time is not what it was (a quicksave renamed into
+  it). Measured: the 1,261 names of the install that are not in upper case,
+  asked in upper case, open, with 4 walks (the game folder, `SND`, `BGM`,
+  `DAT`).
+- Under `BOF3X_CASECHECK=1` a folded name gives one line, once:
+  `CASEFOLD asked <name> opened <name as the disk holds it>`, beside the
+  check's own `CASECHECK asked ... found ...`. With the switch off the fold
+  says nothing (the case check's channel reaches the log only under the
+  switch, `hook/log.cpp:141`) and costs one `lstat` of a relative name.
+
+**The failure before the fold and the pass after** (a full start of the ELF
+through the Linux launcher, `BOF3X_EXEFILE=1`, `SDL_VIDEO_DRIVER=offscreen`,
+`BOF3X_CASECHECK=1`, a copy of the PC install on ext4):
+
+| Build | What the log says | Where it stops |
+|---|---|---|
+| `3080284c` | `CASECHECK asked CAPCOM.AVI found capcom.avi`, then `Game_WinMain returned 1` | The first name that fails is `CAPCOM.AVI`, the disc probe's local test (`Disc_Probe`, `file.cpp:40`): no local movie, no CD-ROM drive (`GetDriveTypeA`'s slot answers "no root"), so "Please insert the Breath of Fire III disc." and exit code 1 |
+| the branch | `CASECHECK asked CAPCOM.AVI found capcom.avi`, `CASEFOLD asked CAPCOM.AVI opened capcom.avi`; the window (offscreen), `DIV-0035 CAPCOM.AVI into the window`, Cinepak 640 x 480, 112 frames | The probe passes; the movie's first frame stops at `battle_menu_win.cpp:1069`'s Fatal (the movie's picture off Windows: B2a's) |
+
+The names of wave A's list, asked in Capcom's case through the branch's
+seam on the coordinator's copy: `CAPCOM.AVI` to `capcom.avi`, `LOGOS.AVI`
+to `logos.avi`, `SND\OYASUMI.DAT` to `SND/Oyasumi.DAT`, `BGM\000.DAT` to
+`BGM/000.dat`, and the `SND` streams `004_00`, `Akuryou`, `Dragon`,
+`Gaan01`, `Item01`, `Mimi01`, `Nakama02`, `Sippai01`, `Win` - each opens.
+
+**Past the movie.** With the movie unreadable (a test copy whose
+`capcom.avi` is a folder: the probe opens it, the movie's read refuses, and
+`Fmv_Play` skips it as for a missing file) and `DXVK_WSI_DRIVER=SDL3`, the
+ELF reaches `Display_Setup` (DXVK 3.1.1 on llvmpipe, a swap chain from SDL's
+offscreen driver: five images, mailbox), the loop and the title (`FIRST.DAT`,
+`DEMO.DAT`, the title's music) and runs until ended. Without
+`DXVK_WSI_DRIVER` DXVK makes no factory (`D3D11CreateDevice: Failed to
+create a DXGI factory`): B2a's. `quick_combat.txt` (combat's first 900
+frames, F6 at 900, F7 at 1200) from the `combat` save in slot 0, en-US from
+`analysis/cache/pc-plus-us`: the save loads (`save loaded slot 0
+(BISLPS00.DAT)`), the battle starts, and the run stops before frame 900,
+so no quicksave was made on Linux:
+
+| Run | Ends |
+|---|---|
+| the branch, 1 | frame 471: `CRASH 0: signal 11` at `move_script::Word` (`move_script_bytes.h:27`), reading through `r11 = 0x00402FD8_0093BA04` - two 32-bit words read as one 64-bit pointer; area 0x1D, mode 5 |
+| the branch, 2 | frame 406: `FATAL: render_shim.cpp:534 PutObject: 0x7ed28c06df30 lies above 4 GB` |
+| `3080284c` (a copy with `CAPCOM.AVI` a folder in upper case, so the base's probe passes) | the same `PutObject` Fatal |
+
+Both are outside this unit's files (the renderer's objects above 4 GB;
+a pointer of two halves in a battle's move script, which a 64-bit Windows
+run does not meet). The start also takes about two minutes from the
+launcher to the game's loop on this machine.
+
+**Where a Linux run puts things** (the files written, listed after the
+runs): the game's saves `BISLPS0x.DAT` and the quicksaves `BISLPS1x.DAT` in
+the game folder, the working folder, as on Windows; `bof3x.log` and
+`bof3x.window` beside the ELF (`LogOpen`: the module's path with `.log`);
+DXVK's own `bof3x_d3d11.log` and `bof3x_dxgi.log` in the game folder - the
+working folder, DXVK's default when `DXVK_LOG_PATH` is unset - **which a
+read-only install refuses and a player's install collects**: the
+launcher's or B2a's to set (`DXVK_LOG_PATH`, or `DXVK_LOG_LEVEL=none`).
+`bof3x.ini` is the launcher's home (its own folder, or `BOF3X_HOME`); with
+`--no-config` nothing is written there. The coordinator's copy was not
+written by any run.
+
+**The backslash in the save list's lines.** `/tmp/bof3x_qm_a_N\BISLPS??.DAT`
+was built by `quick_menu.cpp`'s `ListsSelfTest` (`"%sbof3x_qm_a_%u\\"`),
+then read through the seam, which takes a backslash for a separator
+(`os::Path`); so no file of that name was ever made (`find /tmp
+~/bof3x-runs/lcB -name '*\*'`: none, before the change and after). The two
+folders now end in the system's separator, as the temporary folder's name
+does: the same bytes on Windows, a slash on Linux, and the self-test's
+seven `save list   /tmp/bof3x_qm_a_N/BISLPS??.DAT` lines read so. The one
+backslash left in a Linux self-test's log is `DIV-0086: optional layer 1,
+DAT\area4-walls.*.DAT`, a relative pattern the engine builds in Capcom's
+form (`"DAT\\%s"`) and passes to the walk, which reads it through the seam:
+not a file's name.
+
+**D431's open item.** Read again, the gap is not the one D431 records: the
+next F6 does not refuse. After a crash between the third way's claim and
+its rename at step `k -> k+1`, the slots above `k+1` have each moved up, `k`
+is where it was and `k+1` is the empty claim; the next rotation moves the
+empty file up as a slot (`k+1 -> k+2`, its target vacated by the step
+above), then `k -> k+1`, and F6 succeeds - with a file of zero bytes in the
+history, which the quick list shows empty and F7 refuses ("not a save
+file"). The fix keeps the seam's rule ("an empty file at the target is a
+file: refused too") and is made where a slot's meaning is known:
+`snapshot.cpp`'s `Rotate` removes a slot file of zero bytes when its step
+comes, as a gap, with a log line (`quicksave   BISLPS15.DAT was empty ...:
+removed, a gap`). No build writes one: `WriteNewest` writes the temporary
+file whole and renames it. A new self-test case builds the crash's state
+(10..14 in place, an empty 15, 16..1F one up, the crashed take in
+`BISLPS10.TMP`) and checks that the next F6 leaves every quicksave one up,
+16 a gap, 10 the new one and no file of zero bytes. On Windows the same
+code runs; only a zero-byte `BISLPS1x.DAT` a person put there is now
+removed by F6 where it was moved up the history.
+
+**The unattended marker.** `os::CloseNamedEvent` (`os/named_event.h`, both
+backends: `CloseHandle`; `sem_close` and `sem_unlink`) gives a named
+event's name back, with a test (the name gone from `/dev/shm`, made again).
+Nothing calls it yet: `exe_host_posix.cpp` (step 17) keeps the marker's
+pointer nowhere, and a run ends by `_Exit`, `Fatal` or a signal. Each Linux
+run so far leaves `/dev/shm/sem.bof3x_unattended_<pid>` (eight after this
+unit's runs); the next process with that number unlinks it before it makes
+its own, so they do not collide, but they pile up until a reboot.
+
+**Measured.**
+
+| Check | Result |
+|---|---|
+| `os_tests`, the fold's block (`TestCaseFold`) and the close (`TestNamedEventClose`) | WSL, g++ 15 by the brief's line and the CMake build: 596 checks, 0 failed (8 walks; each name in each case, a missing name, a folder of another case, two names that differ in case alone, a walk's pattern, an absolute name, `..`, the cache walked again after a file was made, `errno` kept, the line once); Windows i686 643 to 644 and x86_64 647, 0 failed (the fold gives the name back; the system folds) - one i686 run failed the auto-reset event's two-waiter check (`os_tests.cpp:1114`, not this unit's) while a build ran beside it, and passed twice after |
+| `config_tests` (WSL) | 4,400 checks, 0 failures (`save_tests` fails to compile under g++ as at the base) |
+| The Linux link | no undefined name |
+| The ELF's self-test through the Linux launcher | `/mnt/c` install (`BOF3X_EXEFILE=1`): 10,394 lines, 0 FATAL, `done` (one more than B1's: the empty slot file's line); the ext4 copy with `BOF3X_CASECHECK=1`: 10,395, the same, no `CASECHECK` line |
+| `linux_tree.py --check` (WSL) | 837 files, 837 compile, 0 do not, 11 Windows-only |
+| `codegen_same.py --by-function` against `3080284c` | the engine: 32-bit 18 symbols, 64-bit 5, every one in `snapshot.cpp` or `quick_menu.cpp` (the 32-bit rest are their exception tables renumbered); the seam library (`build*/src/os`, which the tool's default root does not read): the five new functions and nothing changed (32-bit: `file.cpp`'s exception tables renumbered) |
+| `os_census.py --check` | 1,898 sites: one new, `CloseHandle` in `win32/named_event.cpp`; `--boundary` ok |
+| The other censuses | `data_census --strict`, `reloc_census`, `reloc_bare`, `width_census`, `ledger_check`, `ledger_switches`, `tu_census --strict`, `retire_shells --strict`: ok |
+| The hosted shadow suite (32-bit), the exe host, the moved base (Windows, under the lock) | 922 `MISMATCHES` lines, every count 0, 0 FATAL, `done` (32,190 lines); the exe host and the moved base (`BOF3X_EXEFILE=1`): 10,393 lines each, 0 FATAL, `done` - one more than B1's, the empty slot file's line, which the hosted suite shows too |
+
+**Not run:** the quicksave made and loaded on Linux in a game (the route
+stops before F6, above); the `combat` route's first minute to its end and
+on a disc-built install; a Windows run with `BOF3X_CASECHECK=1` (wave A's).
+
+### B2d as run (2026-11-21, branch `linux/lcB-b2d`, from `360260c4`)
+
+Unit B2d, alone after B2a..B2c: the routes on Linux - the harness, and what
+the ten state-hash routes find. Every game run below: the ELF through
+`bof3x-launcher` beside it, headless, under the round's lock, on a quiet
+machine (no compiler seen in the WSL or on Windows during any hashed run).
+
+**The harness** (`tools/input_run.py --host linux`, `tools/linux_run.py`).
+
+- **Through the launcher**, by default: `bof3x-launcher --game G
+  --no-config` beside the ELF (or `--launcher`), as the Windows runs'
+  launcher. It returns once the game is up; the game is followed by the pid
+  of its `started ... (pid N)` line (`/proc/<pid>/stat`, not a zombie) and
+  ended by that pid alone. `--direct` keeps C8's start of the ELF itself.
+  From Windows the same runs through `wsl -e` (the launcher's folder as the
+  working folder; the pid asked of the WSL helper's new `alive` operation).
+- **A game folder made for the run** (`--run-game DIR`, default `OUT/game` on
+  Linux; `linux_run.make_run_game`, also the helper's `mkgame`): **links**
+  into `--game` for every folder (`BGM`, `DAT`, `SND`, `CDImage`,
+  `directx7`) and every file the game only reads (`BOF3.exe`, the movies,
+  `DATA.TAG`, the installer's files); **real copies** of what a run writes:
+  the slots `BISLPS0?.DAT` and `BOF3.CFG` (the launcher writes its display
+  lines); the recipe save (`# save NAME`, `tools/recipe_saves/NAME.DAT`,
+  found in this checkout, beside the game, or the main checkout's from a
+  worktree) as slot 0. Not taken: quicksaves, `.recipe_slot0`, `*.TMP`,
+  DXVK's logs. The source (`~/bof3x-runs/lcB/bof3`) is never written; a
+  folder is removed again only when it carries the marker the function
+  writes. The other slots stay `--game`'s, because the Windows references
+  had the owner's slots beside the swapped slot 0, and a route that opens
+  the load menu reads every slot's header into `.data` (the slots of
+  `<main checkout>/bof3` and of the copy: the same bytes, unchanged since
+  2026-10-28). The slot-0 swap and its lock are not needed: the folder is
+  the run's. With the save in place for the whole run, every route is as
+  `--slot0-hold` (C0 held it on `shop` alone; the other nine never read
+  slot 0 after its load).
+- **Headless**, by default (`--window` keeps the caller's display):
+  `SDL_VIDEO_DRIVER=offscreen` and `SDL_AUDIO_DRIVER=dummy` unless the
+  caller set them, and no `DISPLAY` or `WAYLAND_DISPLAY` in the game's
+  environment (through the WSL: `env -u`). SDL3's dummy audio device takes
+  the stream a buffer at a time at the device's rate and plays it nowhere:
+  the mixer, the cursors, the ring's notifications and `Music_Pump` run as
+  with a device. `music_heard.py` on Linux runs with `BOF3X_MUSIC_LOG=1`:
+  `whelpBoss` pass, 164 ring lines, 6 tracks; `cutsceneAndNue` pass, 116
+  lines, 5 tracks - the counts of C0's 64-bit Windows runs.
+- **`BOF3X_EXEFILE=1`** by the Windows runners' rule (a PC folder holding
+  `BOF3.exe`, no cache named): the references read `.data` from the file.
+- **The settings of the references, and what is not the same.** C0's
+  environment (`BOF3X_OPT=none`, `BOF3X_LAYERING=0`, the skip list, no other
+  `BOF3X_` variable, no `BOF3X_LANG`: the launcher's language with no ini,
+  `original`), `input_run.py`'s additions (New Game's two screens off,
+  `BOF3X_SHOT_WAIT`, `BOF3X_SHOT_DIR`, `BOF3X_PRESENT=clean`, the recipe),
+  the launcher's defaults with no ini (`preset recommended, language
+  original` in both logs; windowed 640 x 480, scale 2, linear present, as
+  C0's log). Not the same, by the host: the desktop (Windows 3440 x 1440,
+  SDL's offscreen driver a fixed 1024 x 768), the sound device (Windows' 441
+  frames a buffer, SDL's dummy 1024), the GPU (llvmpipe), the install's
+  file system (ext4, the case fold), the slot 0 swap (none here).
+- **A Fatal's message box cannot hold a run.** `BOF3X_CRASH_TEST=60`,
+  headless, through the launcher, the run folder of `combat`: the game's
+  environment has neither display variable (read from
+  `/proc/<pid>/environ`); `CRASH 0: signal 11`, `FATAL: a signal nobody
+  handled`, and the process gone 60.1 s after the launcher returned, with
+  nothing killing it. Three routes that met a fault on the first pass
+  (below) ended the same way, the harness reporting `end: FATAL`.
+- Windows' path through `input_run.py` is the same: the 64-bit exe host of
+  this branch's build, C0's conditions, `shop` with `--slot0-hold` -
+  **identical to `cn_shop_c0x64` on all 3,137 ticks**, and the owner's slot 0
+  back, byte for byte.
+
+**The first finding: a Linux hash file compares with a Windows one as
+built.** The header's image place (`0x400000`), its fold (none), the extent,
+the skip list's hash (`2C491AB2`, 173 ranges) and the flags (our pointers by
+what they name, the battle message words, bound code words as their VAs)
+are the references'. Our image is an ELF at `0x10000000`: the census reads
+its `PT_LOAD` segments through `os::ModuleImage`, and the bound code places
+are `bind.cpp`'s at `0x7C400000..` on both systems. Two Linux runs of a
+route are identical on every tick (seven routes run twice; `whelpBoss` with
+and without `BOF3X_MUSIC_LOG`).
+
+**What the routes found, and fixed** (each a defect of the Linux build;
+the same code on Windows unless said):
+
+1. **`Window_DispatchKind`'s handlers** (`menu_list.cpp`; the
+   `move_script::Word` fault B2c met). The dispatcher calls the three gauge
+   handlers through a type of eight `std::uint32_t`; the handlers take eight
+   pointers. At 64 bits the 7th and 8th arguments lie on the stack (the 5th
+   to the 8th on Win64): a 32-bit word stored into an 8-byte slot leaves its
+   high half as it was, and the handler read `step` as
+   `0x00402FD8'0093BA04` (B2c's `r11`; `movsx esi, word [r11]` at
+   `Window_HpGaugeTrack`, by `addr2line` on B2c's ELF). It depends on what
+   the slot held before, which is why B2a's run of the same route did not
+   meet it. Now the words go out as `std::uintptr_t`, zero-extended. Win64
+   had the same latent read (it passed because the stale high halves there
+   were zero); its code changed (below), its behaviour not.
+2. **`Crt_sprintf` and `Crt_sscanf` through `__cdecl` types**
+   (`map_field_objects_callees.h`, `shell_callees.h`, their fills in
+   `area_map.cpp` and `magic_080.cpp`). On Linux `__cdecl` is `ms_abi` and
+   the two variadic functions are System V (LB0: no convention for a
+   `...`): three types still said `__cdecl`, so the caller put (buffer,
+   format, value) in `rcx`, `rdx`, `r8` and the callee read `rdi`, `rsi`,
+   `rdx`. `field_menu`, `menu_screens` and `worldMapAndAreaTransition`
+   faulted in `Crt_sprintf` reading `0x41` (the member status's level).
+   A census of the class (a script of this unit's, over every typed function
+   pointer whose comment names its target in `symbols.gen.h`: 897 types)
+   found these three and no other; types filled by an unnamed cast are not
+   covered by it.
+3. **The DirectSound layer's LONGs** (`sound_sdl.cpp`, `wav_dump.cpp`):
+   below, the width list.
+
+**The ten routes on the final build** (`dedc9245`'s ELF, tag `t3`, against
+`<main checkout>/analysis/statehash/cn_<route>_c0x64.sh`):
+
+| Route | End | Seconds | `diff` against `_c0x64` |
+|---|---|---:|---|
+| `field_menu` | recipe done, frame 1454 | 57 | the three desktop pages |
+| `menu_screens` | done, 1770 | 67 | the three desktop pages |
+| `combat` | done, 2620 | 95 | the three desktop pages |
+| `shop` | done, 3157 | 114 | the three desktop pages; 8 pages at ticks 2713..2756 |
+| `dragonTransform` | done, 4329 | 152 | the three desktop pages |
+| `cutsceneAndNue` | done, 7421 | 256 | the three desktop pages |
+| `whelpBoss` | done, 13181 | 448 | the three desktop pages |
+| `worldMapAndAreaTransition` | done, 2143 | 80 | the three desktop pages; `0x6C3000` from 1098 |
+| `caughFish` | done, 3889 | 138 | the three desktop pages; `0x6C3000` from 395 |
+| `masterAndManillo` | done, 5519 | 192 | the three desktop pages; `0x6C3000` from 324 |
+
+Each run: 0 FATAL, no `CRASH` line, within its recipe's time (the seconds
+are the launcher to the recipe's end; the start to the game's loop takes
+about 45 s here, not B2c's two minutes, the game folder on ext4).
+
+- **The three desktop pages** (`0x6C9000`, `0x7C9000`, `0x939000`, every
+  tick): raw dumps of `shop` at tick 2712 on both systems (Windows: the
+  64-bit run above with `BOF3X_STATEHASH_DUMP`) differ outside the skip list
+  in three ranges alone - `0x6C9F40` and `0x7C9F44` (the desktop's
+  `VERTRES` and `HORZRES` of `Display_Setup`, `display-setup.md` 2.1) and
+  `0x939A30..0x939A35` (`Desktop_Height`, `Desktop_Width`): 1440 / 3440 on
+  the Windows machine, 768 / 1024 from SDL's offscreen driver. A property of
+  the host's screen: two Windows machines with different desktops differ
+  there too.
+- **`0x6C3000`** (Direct3D's state): the Windows references disagree with
+  each other on it on these three routes; `check` with `_c0x32` as the
+  second reference counts it as noise and reports the three desktop pages
+  alone. Two Linux runs agree on it.
+- **`shop`'s window 2713..2756** (`0x66C000`, `0x7E0000`, `0x903000`,
+  `0x929000`, `0x7DE000`, `0x7E1000`, `0x803000`, `0x7CA000`; the pages
+  `state-hash.md` section 6 names for DIV-0201, "the mode transition after
+  the inn's jingle comes a frame apart"): the dumps at 2713 show Linux's
+  transition begun (`Transition_Busy` and `ModeFlow_TransitionKind` 1, the
+  ordering-table heads moved) where Windows' has not; at 2720 the two are
+  equal again but for the desktop; at 2740 the message box is a step apart
+  (`Msgbox_StepCount` 3 / 4, the pen 0x52 / 0x5E); from 2757 equal to the
+  end. The jingle (`SND\OYASUMI.DAT`) opens at frame 2513 on both; its end
+  is read from the sound device's cursor, which SDL's stream advances a
+  device buffer at a time. With the dummy device at 441 frames a buffer
+  (`SDL_AUDIO_DEVICE_SAMPLE_FRAMES=441`, Windows' size) the window starts a
+  tick later (2714..2759): the device's clock, not the game.
+
+**For the coordinator (nothing of this changed here):** the desktop words
+`0x6C9F40 4`, `0x7C9F44 4`, `0x939A30 8` are the host's and no system's
+defect; if the hash should not see them, that is a skip-list change and new
+Windows references. Short of that, the gate reads them as this table does.
+The `shop` window is the sound device's clock (DIV-0201's class) and cannot
+be skipped (game state follows from it); it is the same on every Linux run.
+
+**The width sites** (task 2's search: `width_census.py --list long`, 2,349
+rows, 1,789 of them `symbols.toml` ctypes that `gen_symbols.py` already
+writes as fixed-width; the source rows read one by one, and a scan of every
+function of 7 or more parameters with an 8-byte one on the stack):
+
+| Site | What | Done |
+|---|---|---|
+| `sound_sdl.cpp` `BufGetVolume`, `BufGetPan` (`long*`) | the game's out-local is `std::int32_t` (`sound_sp.cpp:118`): 8 bytes written into 4 | `std::int32_t*` |
+| `sound_sdl.cpp` `BufSetVolume`, `BufSetPan` (`long`) | the caller's `std::int32_t` arrives zero-extended: -600 read as 4,294,966,696 and refused, every level and pan lost | `std::int32_t` |
+| `sound_sdl.cpp` `Position` (`unsigned long offset`) | `music.cpp:503`'s `std::uint32_t` offset and its padding read as one 8-byte number: a notify offset past the buffer, refused | `std::uint32_t` |
+| `sound_sdl.cpp` `Buffer::volume/pan`, `Gain`, `kVolumeMin..`, the self-test's `MGetLong`, `MLong` | the model of the two above | `std::int32_t` |
+| `wav_dump.cpp` `HookSetVolume`, `HookSetPan`, `Buffer::volume/pan`, `Gain` | the same LONGs through the dump's hooks | `std::int32_t` |
+| `menu_list.cpp` `Window_DispatchKind` | eight words to eight pointers, two on the stack | `std::uintptr_t` |
+| HRESULT results as `long` (`sound_sdl.cpp`, `render_shim.cpp`, `wav_dump.cpp`, `bind.cpp` `DirectSoundThunk`, `exe_host_posix.cpp` `SlotDirectSoundCreate`) and `AddRef` / `Release` as `unsigned long` | the caller reads the low 32 bits of the register: the same value | left |
+| `render_shim.cpp` RECTs | B2a's `Coord` | (B2a) |
+| `wav_dump.cpp` `Buffer::bytes/frequency/lock_offset` (`unsigned long`) | the dump's own model, filled from `std::uint32_t` | left |
+| `input_script.cpp` `InputScript_RecordKey(unsigned, long)`; `statehash.cpp` `StateHash_SetImageBase(unsigned long)`; `strto32.h`'s `strtol` locals; `crash*.cpp`, `exe_host_posix.cpp`, `stallwatch.cpp` print casts | called directly with the declared type, or a print | left |
+| `stackwatch.h` `StackWatch_AtSetStackBase(unsigned long)`; `gapwatch.cpp`, `write_watch.cpp`, `calltrace.cpp` | Windows only (`linux_tree.py`'s `WINDOWS_ONLY`, the stack watch refused on Linux) | left |
+| `gte.cpp` `Gte_RotTransPers3/4`, `Gte_RotAverage3/4`; `sound_sdl.cpp` `BufLock` (pointers on the stack) | every caller's type spells the same pointers | left |
+
+**Windows** (`codegen_same.py --by-function` against `linux/lcB`'s builds of
+`360260c4`): 32-bit, 15 symbols - the eight renamed methods (`long` to
+`int` in the mangled name, the bodies the same hash) and the seven that name
+them; 64-bit, 26 - those, `Window_DispatchKind` (the zero-extended words),
+and the line numbers `Low32` takes (`__builtin_LINE`), moved by this unit's
+comments in `menu_list.cpp`, `sound_sdl.cpp` and `wav_dump.cpp`. The callee
+types and the two casts changed no code in either preset.
+
+**The gate line.** Both Windows presets build (no warning in a line this unit
+touched); the censuses pass but `width_census --check`, which names this
+unit's 12 changed lines (`sound_sdl.cpp` 6, `wav_dump.cpp` 4,
+`menu_list.cpp` 2) and is not regenerated here; `linux_tree.py --check` (in
+the WSL): 837 files compile, 0 wait. In the WSL: the Linux preset links with
+no undefined name; `os_tests` 596 checks, 0 failed; `config_tests` 4,400, 0
+failures; the ELF's self-test through the launcher (`BOF3X_EXEFILE=1`,
+offscreen): 10,394 lines, 0 FATAL, `self-test only: done`. On Windows,
+under the lock: the hosted shadow suite (32-bit) 922 `MISMATCHES` lines,
+every one 0, 0 FATAL, `done` (32,190 lines); the exe host (`BOF3X_EXEFILE=1`)
+10,393 lines, 0 FATAL, `done`.
+
+**Not done:** the routes on a disc-built install; a window (WSLg) run; the
+`shop` window bisected below the sound device's clock (one hypothesis
+tested, the buffer size); the general census of calling-convention
+mismatches for pointer types filled by unnamed casts.
+
+### Wave B as run (2026-11-21, branch `linux/lcB`, from `main` `ffb2c892`; not pushed)
+
+**The units.** B1, then B2a, B2b and B2c side by side, as staged; then a
+fifth unit the staging did not have, **B2d**, because the first routes on the
+ELF faulted and no unit owned the routes' harness or the width defects under
+them. Each was a worker's branch in its own worktree, merged `--no-ff` one
+at a time, built for Linux and for both Windows presets after the merge, and
+its proof run again there. Their sections are above. The coordinator's own
+commits: the censuses after B1, after the B2 units and after B2d; `Fatal`'s
+message box on Linux (`BOF3X_OS_SDL` was not defined for the seam, B2b's
+finding); the unattended marker's name given back at each orderly end (no
+`bof3x_unattended` name is left under `/dev/shm`); the ledger's and the
+defect list's lines below.
+
+**The gate (B3), on the merged branch** (the ELF of `3fa64b51`'s tree, md5
+`a27f931a...`; WSL Ubuntu, llvmpipe, SDL's `offscreen` driver and `dummy`
+audio device, no `DISPLAY` and no `WAYLAND_DISPLAY`; through
+`bof3x-launcher`; the game folder a copy of the PC install on ext4, each run
+in a folder of links made by `tools/input_run.py --host linux`; C0's
+settings, `BOF3X_OPT=none BOF3X_LAYERING=0` and the skip list). Scripts:
+`C:/Users/kerok/bof3x-runs/lcB/coord/` (`route.sh`, `b3_all.sh`,
+`b3_rest.sh`); hash files and logs: `~/bof3x-runs/lcB/b3/out/` in the WSL.
+
+| Route | Seconds | Ticks compared | `diff` against `_c0x64` | `check` with `_c0x32` as second reference |
+|---|---:|---:|---|---|
+| `field_menu` | 57 | 1,409 | the 3 desktop pages | the same 3 |
+| `menu_screens` | 67 | 1,729 | the 3 desktop pages | the same 3 |
+| `combat` | 95 | 2,561 | the 3 desktop pages | the same 3 |
+| `shop` | 113 | 3,137 | the 3 desktop pages, and 8 pages within ticks 2713..2756 | the same 11 |
+| `dragonTransform` | 153 | 4,289 | the 3 desktop pages | the same 3 |
+| `cutsceneAndNue` | 256 | 7,396 | the 3 desktop pages | the same 3 |
+| `whelpBoss` | 448 | 13,163 | the 3 desktop pages | the same 3 |
+| `worldMapAndAreaTransition` | 80 | 2,113 | the 3 desktop pages, and `0x6C3000` from tick 1098 | the 3 desktop pages |
+| `caughFish` | 137 | 3,841 | the 3 desktop pages, and `0x6C3000` from tick 395 | the 3 desktop pages |
+| `masterAndManillo` | 192 | 5,505 | the 3 desktop pages, and `0x6C3000` | the 3 desktop pages |
+
+Every run: the recipe's end reached, 0 `FATAL`, no `CRASH` line, no compiler
+seen beside it. This is B2d's table again, page for page, on the merged
+build. **How the differing pages are read** (B2d measured each, "B2d as
+run"):
+- **The 3 desktop pages** (`0x6C9000`, `0x7C9000`, `0x939000`, every tick):
+  the desktop's size, 3440 x 1440 on the Windows machine and 1024 x 768 on
+  SDL's offscreen driver; no other byte outside the skip list differs in
+  B2d's raw dumps. The host's, not a defect. The hash still sees them: to
+  hide them is a skip-list change and new Windows references, which was not
+  done.
+- **`0x6C3000`** on three routes: the two Windows references disagree there
+  themselves (the staging's allowance); `check` drops it.
+- **`shop`, ticks 2713..2756**: the mode transition after the inn's jingle
+  starts a tick apart, and the two runs are equal again from 2757 to the
+  end. The jingle's end is read through the sound device's cursor
+  (DIV-0201's class); with the dummy device at Windows' buffer size the
+  window moves by a tick. The same on every Linux run. **This is a
+  difference the gate does not explain away**: game state follows from it
+  for 44 ticks, and it is accepted here as the device's clock, on B2d's one
+  test.
+
+| Check | Result |
+|---|---|
+| `music_heard.py`, `whelpBoss` | pass: 164 ring lines, 6 tracks, heard advanced on every playing stretch (C0's counts) |
+| `music_heard.py`, `cutsceneAndNue` | pass: 116 ring lines, 5 tracks |
+| `quick_combat` (F6 at frame 900, F7 at 1200) with `BOF3X_CASECHECK=1` | the route's end reached, 0 `FATAL`; `F6 at Frame_Counter 901: BISLPS10.DAT, 4786341 bytes`, `F7 BISLPS10.DAT restored at Frame_Counter 1201: back to Frame_Counter 901`; the one fold of the run: `CASECHECK asked CAPCOM.AVI found capcom.avi` |
+| A fault past step 23 (`BOF3X_EXEFILE=1 BOF3X_CRASH_TEST=60`, headless) | `CRASH 0: signal 11 (SIGSEGV, code 1)`, `FATAL: a signal nobody handled: 11`, the game gone by itself 60 s after the launcher returned; `crash_report.py` names `SelfTest (crash_posix.cpp:296)`. The exit code was not read (the Linux launcher has returned by then); B2b measured 3 on a direct start |
+| The ELF's self-test through the launcher, each merge | 10,394 lines, 0 `FATAL`, `self-test only: done` |
+| The censuses on the merged branch | `os_census --check` and `--boundary`, `width_census --check`, `reloc_census --check`, `reloc_bare --check`, `data_census --strict`, `ledger_check` (242 entries, 0 errors), `ledger_switches --check`, `tu_census --check --strict`, `retire_shells --check --strict`: ok, after the three census files were made again |
+| Windows, both presets | build on every merge. The hosted shadow suite (32-bit; 922 `MISMATCHES` lines, every one 0) and the exe host's self-test ran in B2d's worktree on the tree the last merge has, byte for byte (`git diff` of the merge against B2d's tip is empty); they were not run again after it |
+
+**The gate's Windows half (2026-11-21, 18:49 to 19:36, the merged branch's
+32-bit build, `bof3x.dll` sha256 `948cc82afeb1...`).** The owner's word was
+that the machine was free. Runner `bof3x-runs\lcB\coord\win_gate.py`, C0's
+conditions (`c0.py`), outputs in `bof3x-runs\lcB\coord\win\out`.
+
+| What | Result |
+|---|---|
+| The ten routes on Windows against `cn_<route>_c0x32.sh` | Every route ends with rc 0, 0 `FATAL`, 0 `CRASH`, no compiler beside. `statehash.py diff`: seven identical on every tick (`field_menu` 1,409, `menu_screens` 1,729, `combat` 2,561, `shop` 3,137, `dragonTransform` 4,289, `cutsceneAndNue` 7,425, `whelpBoss` 13,185); `worldMapAndAreaTransition`, `caughFish` and `masterAndManillo` differ on page `0x6C3000` alone, the Direct3D page on which the two references of each of these routes also disagree. `statehash.py check` (against `_c0x32` and `_c0x64`): identical on all ten |
+| A quicksave made and restored on Windows (`quick_combat`, a game folder of the round's own) | `quicksave_check.py inproc`: equal, the 300 ticks after the restore are the 300 after the take |
+| That file loaded by a second Windows process (`quick_combat_cross`) | `quicksave_check.py cross`: equal on 1,664 ticks from the restore. This is the control for the two rows below: the cross recipe loads a file when the build allows it |
+| The Linux-made quicksave on Windows (`quick_combat_cross`) | `quicksave   F7 BISLPS10.DAT refused: another build - made by v0.1.0 (bof3x.dll ad6e260e1d2e...), this is v0.1.0 (948cc82afeb1...); the save half is still a save`. The run goes on to its end: rc 0, 0 `FATAL`, 0 `CRASH`; the file is left as it was (4,786,341 bytes) |
+| The Windows-made quicksave on Linux (headless, `coord/b3_cross.sh`) | `quicksave   F7 BISLPS10.DAT refused: another build - made by v0.1.0 (bof3x.dll 948cc82afeb1...), this is v0.1.0 (ad6e260e1d2e...); the save half is still a save`. rc 0, 0 `FATAL`, 0 `CRASH`; the file is left as it was (4,702,989 bytes) |
+
+**A quicksave does not cross the systems, and that is the design.** The
+staging's B3 asked for a quicksave made on each system to be *loaded* on the
+other. The quicksave's build id holds the hash of the module that made it
+(`snapshot.cpp`, `Parse`: "another build"; [`quicksave.md`](quicksave.md)),
+and the ELF and `bof3x.dll` are two modules, so each refuses the other's
+file, as a 64-bit Windows build refuses a 32-bit one's
+([`x64-build-round.md`](x64-build-round.md)). What the gate can ask, and what
+the two rows show, is that the refusal is clean on both systems: one log
+line that names both builds, no fault, the file untouched, the game playing
+on. The owner agreed on 2026-11-21 that no quicksave crosses the systems.
+The staging's line is wrong on this point; it is left as written.
+
+**Limits of the Windows half.** The harness measured the time since the last
+keyboard or mouse event during every run, and the least was 0 or 1 s in each:
+the pointer was moving, a few pixels about eleven times a second (Synergy,
+the owner's keyboard and mouse sharing, was running; whether it stopped
+during the runs was not measured). No route shows an effect of it. The
+quicksave steps ran on the 32-bit build alone. The 64-bit Windows build ran
+no route after the last merge (B2d's `shop` on it, before the merge, equals
+`_c0x64` on all 3,137 ticks). The save half of a refused quicksave was not
+loaded as a save on the other system.
+
+**LC's gate is closed** on these terms: what a headless run on llvmpipe and
+the Windows routes can show. What needs a person or a GPU is in the list
+below.
+
+**The records.** DIV-0094 and DIV-0238 are amended for the Linux build (the
+ELF and its three libraries, a fault's end, the files' case, DXVK's logs,
+the stack watch refused under call 2; the movie drawn by the renderer). No
+new ledger entry: nothing changes for a Windows player. D433 is the width
+and call-shape defects B2a and B2d met; D431's open item is closed by B2c.
+`BOF3X_FMV_SHOT_DIR` (B2a) is a developer's switch for a movie frame's
+capture, recorded in "B2a as run".
+
+**Not verified, and open:**
+- No picture of the Linux build was seen by a person. B2a compared frames by
+  hash offscreen; blended pixels differ from the Windows GPU's by at most 2
+  in one channel.
+- Nothing ran on a GPU or on a real desktop: the WSLg window never took
+  focus, so the loop waited at frame 1 there. The window's icon, the
+  message box (Wayland wants `zenity` or `kdialog` for it), sound through a
+  real device, and speed are unseen. Frost's machine, or a tester's.
+- The PC install alone: no disc-built install ran on Linux.
+- `Window_DispatchKind`'s stale stack words (D433) were latent on 64-bit
+  Windows too; fixed, and only `shop` ran there after the fix.
+- B2d's search for a wrong calling convention did not cover pointer types
+  filled by an unnamed cast.
+- `exe_host_posix.cpp` repeats the portable parts of `exe_host.cpp`.
+  `exe_host_steps.h`'s step 2 text disagrees with `bind.cpp`, which reads
+  the PE header. The Linux launcher's log says `(bof3x.exe)`. `save_tests`
+  does not compile under g++ (the same at `e9c1fb41`). An overflow's report
+  has no stack words.
+- An empty folder `C:\c` was left by one of B2b's runs.
 
 ## 5. What stands in for the launcher in tier 2
 

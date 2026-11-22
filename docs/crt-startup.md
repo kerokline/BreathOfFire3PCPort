@@ -529,7 +529,11 @@ commit, not by design.
 ### 11.4 `BOF3X_STACKWATCH=1`: the depth a run uses
 
 Instrumentation (`src/hook/stackwatch.cpp`), off by default; any value but
-`1` is a `Fatal`. Armed, it adds:
+`1` is a `Fatal`. **Windows only:** on Linux `1` is a `Fatal` too, one that
+says why (the owner's call 2 of the Linux round's wave B, 2026-11-20;
+DIV-0094's amendment of 2026-11-21): the main stack is placed whole there
+with a fixed guard page, so nothing grows, and an overflow is the crash
+report's. Armed, it adds:
 
 - **at start-up**, a check of the armed path on the DLL's own thread:
   `Task_SetStackBase` called once with `ecx` / `edx` planted - it must log,

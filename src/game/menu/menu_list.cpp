@@ -982,8 +982,13 @@ extern "C" __attribute__((disable_tail_calls, noinline)) unsigned __cdecl Window
     } else {
         std::memcpy(&handler, frame - 8 + 4 * i, sizeof handler);
     }
-    using Handler = unsigned (__cdecl*)(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t,
-                                        std::uint32_t, std::uint32_t, std::uint32_t);
+    // The three handlers take eight pointers, so each word goes out as a whole
+    // native word, zero-extended: at 64 bits the 7th and 8th arguments lie on
+    // the stack (the 5th to 8th on Win64), and a 32-bit word stored there
+    // leaves the slot's high half as it was - on Linux the handler read
+    // `step` as 0x00402FD8'0093BA04 and faulted (quick_combat, area 0x1D).
+    using Handler = unsigned (__cdecl*)(std::uintptr_t, std::uintptr_t, std::uintptr_t, std::uintptr_t, std::uintptr_t,
+                                        std::uintptr_t, std::uintptr_t, std::uintptr_t);
     return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(::bof3::CodePlace(handler)))(a0, a1, a2, a3, a4, a5, a6, a7);
 }
 

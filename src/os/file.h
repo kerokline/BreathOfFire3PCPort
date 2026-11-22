@@ -18,9 +18,11 @@
 // pair (UTF-8 and wide) and must not be fed a narrow name or feed one.
 //
 // Guarantees, on both systems: a backslash in the game's name reads as a
-// separator (on POSIX it is turned into a slash; the case of a name is NOT
-// folded - that is LB8's, at the source of each name, and BOF3X_CASECHECK
-// finds the names that differ: os/case_check.h); WalkDirectory hands
+// separator (on POSIX it is turned into a slash); a name the engine builds
+// is spelt at its source (LB8; BOF3X_CASECHECK finds the names that differ:
+// os/case_check.h), and on POSIX Path folds the case of a relative name
+// inside the game folder only, for the names the player's files bring
+// (os/case_fold.h); WalkDirectory hands
 // entries in name order, case-insensitive, like NTFS, so "the first match"
 // means the same thing on both. None of these throws: a name that does not
 // convert, or that the system refuses, is a name that is not there.

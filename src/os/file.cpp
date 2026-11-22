@@ -255,6 +255,14 @@ void CaseCheckNarrow(const char* narrow) noexcept {
     (void)Path(narrow);   // Path checks every name it converts (win32/file.cpp, posix/file.cpp)
 }
 
+void CaseCheckSay(const char* line) noexcept {
+    if (!CaseCheckOn() || !line) return;
+    try {
+        Say(line);
+    } catch (...) {
+    }
+}
+
 void CaseCheckMatch(const char* where, const Native& pattern, const Native& found) noexcept {
     if (!CaseCheckOn() || Match(pattern.c_str(), found.c_str(), true)) return;
     try {

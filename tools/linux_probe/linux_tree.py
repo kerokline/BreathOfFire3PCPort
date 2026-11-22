@@ -60,6 +60,15 @@ WINDOWS_ONLY = (
     ('src/game/platform/game_window_win32.cpp', 'R6: the Win32 window path and the SDL window\'s HWND steps (game_window_other.cpp is its counterpart)'),
     ('src/game/platform/fmv_play_win32.cpp', 'R6m: the movie\'s GDI picture, and Fmv_WndProc and its pump on the Win32 window path (fmv_play.cpp refuses or stops elsewhere)'),
 )
+# Files the Windows list never holds that the Linux build adds (cmake_list below), each the Linux half of a
+# WINDOWS_ONLY file or of a definition Windows makes in one (wave B, B1). Every one is compiled by this probe as any
+# other file is (sources()); on Windows each compiles to nothing (#ifndef _WIN32) and no Windows list takes it.
+LINUX_ONLY = (
+    ('src/hook/exe_host_posix.cpp', "R3: the exe host's start-up as a Linux main (exe_host.cpp is Windows')"),
+    ('src/hook/windows_only.cpp', "R2: the Windows-only watchers' entries, each a Fatal when its switch is set"),
+    ('src/hook/exe_icon_sdl.cpp', "R3: the window icon through SDL3 (exe_icon.cpp is Windows': HICON and WIC)"),
+    ('src/render/render_window_sdl.cpp', 'R9: SwapChainWindow and WindowClientSize over the SDL window'),
+)
 # The headers DXVK-native stands in for: a file that fails on one of these first is compiled again with --dxvk.
 DXVK_HEADERS = ('d3d11.h', 'dxgi.h', 'd3dcompiler.h', 'd3dcommon.h')
 # DXVK-native's include/native/windows at v3.1.1: its stand-ins for Windows' own headers, which only its Direct3D
@@ -200,6 +209,11 @@ def cmake_list(src, out):
                         break
             continue
         out_list.append(p)
+    for p, _ in LINUX_ONLY:
+        if p in have:
+            sys.exit(f'linux_tree --cmake-list: {p} is in LINUX_ONLY and in the Windows list as well')
+        out_list.append(p)
+        have.add(p)
     probed = set(sources())
     unprobed = [p for p in out_list if p not in probed]
     if unprobed:
@@ -243,6 +257,9 @@ def main():
     gone = [f for f, _ in WINDOWS_ONLY if not os.path.isfile(os.path.join(ROOT, f))]
     if gone:
         sys.exit('linux_tree: WINDOWS_ONLY names a file that does not exist: ' + ', '.join(gone))
+    gone = [f for f, _ in LINUX_ONLY if not os.path.isfile(os.path.join(ROOT, f))]
+    if gone:
+        sys.exit('linux_tree: LINUX_ONLY names a file that does not exist: ' + ', '.join(gone))
     with concurrent.futures.ThreadPoolExecutor(a.jobs) as ex:
         res = dict(ex.map(compile_one, [(f, flags, dxvk) for f in files]))
     bad = {f: (reason(e), len(e)) for f, e in res.items() if e}
