@@ -127,7 +127,7 @@ struct Callees {
     unsigned char (__cdecl* row_done)(const unsigned char* enemy, unsigned row);          // EnemyAI_RowDone
     // Capcom's: other groups' and unnamed
     unsigned char (__cdecl* is_out)(unsigned actor);                             // 0x4456C0 (group BB)
-    void (__cdecl* show_message)(unsigned, unsigned, unsigned, unsigned, unsigned);   // 0x44A650 (group BF)
+    void (__cdecl* show_message)(unsigned, unsigned, unsigned, unsigned, const char*);   // 0x44A650 BattleBanner_Add: the text a pointer (5th argument, on the stack at 64 bits)
     unsigned char (__cdecl* element_resisted)(unsigned attacker, unsigned target);    // 0x44FA70
     void (__cdecl* inflict)(unsigned target, unsigned status);                  // 0x44F1D0
     void (__cdecl* cure)(unsigned id, unsigned status);                         // 0x44F4B0 (group BA)

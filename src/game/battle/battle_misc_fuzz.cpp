@@ -358,8 +358,8 @@ U __cdecl StubCopyN(U dst, U src, U n) {
     }
     return (h % 3 == 0) ? Mix(25) : d;
 }
-U __cdecl StubBannerSet(U slot, U kind, U b2, U layer, U timer, U text) {
-    Record(18, slot, kind, b2, layer, timer, text);
+U __cdecl StubBannerSet(U slot, U kind, U b2, U layer, U timer, const char* text) {
+    Record(18, slot, kind, b2, layer, timer, Addr(text));
     return Mix(26);
 }
 

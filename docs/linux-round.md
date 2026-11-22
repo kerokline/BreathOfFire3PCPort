@@ -2975,6 +2975,222 @@ tree. The source: the main checkout's `bof3` folder copied to
   against the commit DXVK's tree records for it: read from the clone's
   files, not by `git`.
 
+### The banner fault and its class, as run (2026-11-22, branch `linux/lcC-banner`)
+
+A worker of wave C, from `linux/lcC` `c948685a`. Not pushed. No defect
+number and no ledger entry here: the coordinator numbers the defect; nothing
+changes for a player of the 32-bit build.
+
+**The defect.** On the Linux ELF the `combat` route on the US-disc install
+ends with a Fatal 26 s in. Measured on this branch's base (ELF md5
+`07d6f285...`, `route.sh us combat en-US before`): rc 1, 11,115 log lines,
+`FATAL: .../battle_banner.cpp:69 Addr: 0xfffffffa00904ec0 lies above 4 GB`.
+The low half is the banner's text buffer (`kBannerText`, `0x904EC0`); the
+high half is what the stack slot held before. `BattleBanner_Set(slot, kind,
+b2, layer, timer, const char* text)` was called through
+`battle_misc::Callees::banner_set`, typed `U (__cdecl*)(U, U, U, U, U, U)`
+and filled by `As<...>(BattleBanner_Set)` (a cast through `void*`, which no
+compiler warning sees). Under `ms_abi` (which `__cdecl` is on Linux, and is
+natively on 64-bit Windows) the 5th argument and later lie in 8-byte stack
+slots: the caller stored 4 bytes, the callee read 8. `BattleBanner_Add`'s
+5th argument had the same shape through `battle_damage::Callees::show_message`
+(`void (__cdecl*)(unsigned x5)`, filled from the address
+`bof3::addr::BattleBanner_Add`); the route did not reach it before the
+Fatal.
+
+**The fix** (commit `29c70d85`). How the tree types such tables elsewhere
+decided it: `battle_setup::Callees::message` / `message_at` (the same two
+functions) and `battle_actions::Callees::banner_add` already say a pointer
+for the text, so the two odd ones out were made to match.
+- `src/game/battle_misc_callees.h` `banner_set`: the last parameter
+  `const char*`; `src/game/battle/battle_3.cpp` (battle_misc's
+  `kOriginals`) fills it with `BattleBanner_Set` itself, no cast, so a
+  future difference from symbols.gen.h's prototype is a compile error.
+- `src/game/battle_damage_callees.h` `show_message`: the last parameter
+  `const char*`; its fill by address in `battle_3.cpp` (battle_damage's
+  `kOriginals`) takes the same type. The return stays `void` (the callers
+  read none; the function's `eax` is unread there, as before).
+- The callers: `BattleBanner_ShowName` (`battle_banner.cpp`) passes
+  `reinterpret_cast<const char*>(AtBattleMisc(::bof3::Img(kBannerText.v)))`;
+  `Battle_ApplyDamage`'s two calls (`battle_3.cpp`) pass the place the word
+  `BattleDamage_KillMessage` holds, through `move_script::At` (the file's own
+  word-to-place helper; `battle_fx.cpp`'s `BattleFxFlash_Banner` does the
+  same for its text word). These are all the callers of the two fields
+  (`grep` of `banner_set` and `show_message` over `src/`). Every value is a
+  place of the game's: the image's `.data` (the buffer, the message words),
+  below 4 GB by the 64-bit design, as before.
+- The i686 shadow stand-ins (`battle_misc_fuzz.cpp` `StubBannerSet`,
+  `battle_damage_fuzz.cpp` `StubShowMessage`) take the pointer and record
+  the same 32-bit word (`Addr` / `Address` of it).
+
+**Codegen** (`codegen_same.py --by-function`, the branch's builds against
+the base's, both in this worktree): 32-bit, 9 symbols differ, every one in
+the two fuzz files (the two stand-ins renamed by their mangled names, the
+stand-in tables that name them, `Clone` and the two `SelfTest`s that
+reference them); no game function's code differs, `battle_3.cpp` and
+`battle_banner.cpp` alike. 64-bit Windows: 2 differ, the two callers
+(`BattleBanner_ShowName`, `Battle_ApplyDamage`), which now load a 64-bit
+pointer into the argument.
+
+**The sweep: `tools/fnptr_census.py`** (new; run in the WSL, `python3
+tools/fnptr_census.py --build build-linux-x86_64 [--check]`). libclang 21
+through `ctypes` (no package installed) parses every translation unit of the
+Linux build's compile database (`ninja -t compdb`) with that build's flags,
+so `__cdecl` is `ms_abi` and a pointer 8 bytes. In every file under `src/`
+it takes two kinds of site:
+- *cast*: an explicit cast (reinterpret, C-style, functional, static) whose
+  type is a pointer to a function;
+- *call*: a call that returns a pointer to a function from one argument of
+  another type - the `As<>` / `Fn<>` helpers (97 template helpers named
+  `As`, `Fn`, `Cast`, `Ptr` or `Call` over `src/`, by `grep`),
+  whose own cast is on a template parameter and is checked at each use.
+
+The operand is followed to a function (its type as declared in that unit)
+or to an integer the compiler evaluates (`bof3::addr::Name`, a `CodeVa`
+constant, a literal), named through symbols.gen.h's `bof3::addr`. The
+callee's real type is its C-linkage definition from whichever unit defines
+it (what `BOF3_INJECT` binds), else symbols.gen.h's prototype. The shapes
+are compared per argument as x86-64 passes it (4-byte integer, 8-byte
+integer, pointer, float, double, record by size), with the calling
+convention, `...` and the return; and every C-linkage declaration under
+`src/` against its definition (`decl`). Verdicts in the tool's docstring.
+
+| | base `c948685a` | after the fix |
+|---|---:|---:|
+| translation units (0 parse errors) | 868 | 868 |
+| sites | 2,928 | 2,927 (the `As<>` of `banner_set` gone) |
+| `stack-narrow` | **2** (`banner_set`, `show_message`) | 0 |
+| `reg-narrow` / `truncating` / `variadic` | 20 / 26 / 3 | 20 / 26 / 3, all in `WAITING` |
+| `conv`, `class`, `ret-narrow`, `decl` | 0 | 0 |
+| `ok` (shapes equal for x86-64) | 1,525 | 1,526 |
+| `count` (another arity or a `void` return read; the same on x86-32) | 285 | 285 |
+| `unresolved` (a word known at run time) / `unknown` (no function of ours) | 972 / 142 | 972 / 142 |
+| `--check` | rc 1, the two banner sites | rc 0 |
+
+So the class has **two real instances, both the banner**, and both fixed.
+
+**The ones left, and why** (each listed in the tool's `WAITING`, with its
+reason; `--check` fails on a new finding and on an entry no longer found):
+- `reg-narrow`, 20 (a 4-byte word where the callee reads a pointer, in a
+  register): `battle_3.cpp`'s battle_misc table - `Sprite_SetTint` arg 1,
+  `EnemyAI_RowDone` 1, `EnemyAI_ApplyAction` 1 and 2, `EnemyAI_SetRowDone` 1,
+  `Str_CopyN` 1 and 2; `battle_banner.cpp` `Sprite_ReleaseTint` 1,
+  `Sprite_SetTint` 1; `battle_obj.cpp` `Sprite_PoseFromSet` 2;
+  `dragon_cmd.cpp` `Task_Restart` 1; `core/sound.cpp` `SndBuf_SetVolume` 1;
+  `effect/effect.cpp` `Stat_AddClampedTo` 1; `effect_1a.cpp` and
+  `effect_kind_0f.cpp` `EffectKind0F_DrawGlyph` 2; `effect_kind_0f.cpp`
+  `EffectKind0F_CharCount` 1; `minigame/shisu.cpp` `Shisu_DrawModel` 1;
+  `scena_03.cpp`, `scena_04_2.cpp`, `scena_07_2.cpp` `Field_CellTriggerAt`
+  1. Both ABIs leave the high half of a 32-bit register argument undefined;
+  it is zero here because the caller computes the word with 32-bit
+  arithmetic, which clears it. Latent, not wrong today; each fix is a change
+  of callers to pass places as pointers, and was not made in this unit (no
+  run could show it, and it is a wider edit than the defect). Not verified
+  site by site in the disassembly.
+- `truncating`, 26 (8 bytes passed or read where the callee has 4):
+  `Field_SlotStart` arg 2 (`area_174.cpp`, `area_198.cpp`, `area_85.cpp`),
+  `MagicFx_LinkByDepth` arg 4 (`buff_spike.cpp`, `leech_shell.cpp`,
+  `shield_spark.cpp`, two each), the pointer returns of `Char_AbilityList`
+  (twice), `Msg_SystemPtr`, `Str_CopyN` (`battle_3.cpp`) and `UiSprite_Draw`
+  (`effect_kind_0f.cpp`) read as a word: each value is a place of the game's
+  (the image, the packet pool, the message pool), below 4 GB by the 64-bit
+  design, and the original keeps it in 32 bits too. The other 13 are in the
+  shadow fuzz tables of `psx_gte_float.cpp`, `psx_gte_matrix.cpp` and
+  `psx_gte_transform.cpp` (`AsFn` of `Gte_*` and `Math_Cos`), inside
+  `WantsShadow` blocks, a constant false on x86-64: never called there.
+- `variadic`, 3: `Crt_sprintf` and `Crt_sscanf` through fixed-arity System V
+  types (`field/area_map.cpp`, `platform/magic_080.cpp`; B2d's fix of the
+  wrong convention). Integers and pointers travel in the same registers;
+  `al`, which a variadic System V callee reads as the count of vector
+  registers, is not set, and only bounds which registers its prologue saves.
+  Latent, left.
+
+**What the method cannot see:**
+- A function word read at run time: a `.data` table (the state and step
+  tables, `Window_DispatchKind`'s handlers, which B2d met), a parameter, a
+  field, `BH_WORD` / `CodePlaceToCall` - 972 `unresolved` sites. Of the 142
+  `unknown`, most are table bases or small offsets the evaluator reached in
+  such an expression; the rest are VAs with no function of ours on x86-64
+  (the `Mp3_*` and import-slot calls of `core/sound.cpp` and `d3d.cpp`,
+  `Crt_GetPtd`, `0x5A3A60..0x5A4C40`).
+- Casts inside templates (`bof3::detail::Original<T, va>`'s conversion,
+  `boss_harness::Call`): the pattern's types are dependent. `Original`'s
+  `T` is symbols.toml's prototype, which the `decl` check compares with the
+  definitions (0 findings).
+- Units the Linux build does not compile: the 11 Windows-only files and
+  the fuzz files (32-bit only). A Windows-only cast is not checked.
+- Calls from assembly (the naked functions and asm files).
+- Differences within 4 bytes (a byte against an int, signedness): the same
+  on x86-32, not reported. The 285 `count` rows were not read one by one.
+- A C++-linkage redeclaration with another type would fail to link; a
+  C-linkage one is the `decl` check.
+
+**Runs** (WSL Ubuntu, headless, the coordinator's scripts copied to
+`~/bof3x-runs/lcC-banner/` with the source path changed; source
+`~/src/lcC-banner` from `git archive` of the branch, `src/` checked equal to
+the commit with `diff -r`; the two installs copied from
+`~/bof3x-runs/lcC/us/home` and `~/bof3x-runs/lcC/psp/home`; one game at a
+time; the ELF of `29c70d85`, md5 `100fc71e...`).
+
+| Run | US disc (en-US) | PSP EU (en-150) |
+|---|---|---|
+| `combat`, the base `c948685a` (one run, the fault's proof) | rc 1 at 26 s, 1 `FATAL` (above) | not run |
+| The ELF's self-test through the launcher (`selftest.sh`) | rc 0, 10,514 lines, 0 `FATAL`, 0 `CRASH`, `self-test only: done` | rc 0, 10,488 lines, 0, 0, done |
+| `field_menu` | rc 0, 56 s, 0 / 0 | rc 0, 49 s, 0 / 0 |
+| `menu_screens` | rc 0, 67 s | rc 0, 59 s |
+| `combat` | rc 0, 95 s | rc 0, 88 s |
+| `shop` | rc 0, 113 s | rc 0, 106 s |
+| `dragonTransform` | rc 0, 153 s | rc 0, 144 s |
+| `cutsceneAndNue` | rc 0, 256 s | rc 0, 248 s |
+| `whelpBoss` | rc 0, 448 s | rc 0, 440 s |
+| `worldMapAndAreaTransition` | rc 0, 79 s | rc 0, 71 s |
+| `caughFish` | rc 0, 137 s | rc 0, 130 s |
+| `masterAndManillo` | rc 0, 192 s | rc 0, 185 s |
+
+Every route: the recipe's end reached, 0 `FATAL`, 0 `CRASH` (`grep -c` of
+the log), no compiler seen in the WSL by `route.sh`'s watch (0 samples on
+all twenty). One game at a time, 09:27 to 10:20. During the runs the
+Windows side ran the census gate below (Python, no compiler); the WSL ran
+no build. The hash files are in `~/bof3x-runs/lcC-banner/{us,psp}/out/`
+(tag `fix`).
+
+**Against the coordinator's trial fix** (`statehash.py diff` with
+`~/bof3x-runs/lcC/{us,psp}/out/<route>_c.sh`, the same installs, the ELF
+of the trial change quoted in the brief): 19 of the 20 identical on every
+compared tick (`combat` 2,602 ticks on each install, `whelpBoss` 13,163).
+The one difference: US `shop`, 8 pages within ticks 2848..2902, equal again
+from 2903 to the end: seven of the eight pages of B2d's `shop` window after
+the inn's jingle (`0x66C000`, `0x7E0000`, `0x903000`, `0x929000`,
+`0x7DE000`, `0x7E1000`, `0x803000`; the sound device's clock, DIV-0201's
+class), and the desktop page `0x7C9000` on one tick. The coordinator's
+`shop_c` run on that install is not a hash reference: its watch saw
+`clang++` in 22 samples (`shop_c.noise`, from 06:53:17). Not bisected; this
+unit's run saw no compiler.
+
+**The gate** (Windows, on `29c70d85` with the tool): `ledger_check` 245
+entries, 0 errors; `os_census --check` ok (1920 sites), `--boundary` ok,
+`--headers` ok; `width_census --check` ok; `reloc_census --check` ok;
+`reloc_bare --check` ok; `data_census --strict` ok; `ledger_switches --check`
+0 errors; `tu_census --check --strict` ok; `retire_shells --check --strict`
+ok. Both Windows presets build (`build`, `build-x86_64` in the worktree).
+
+**For the coordinator:** a ratchet line, if wanted (not wired anywhere):
+`python3 tools/fnptr_census.py --build build-linux-x86_64 --check` after a
+Linux build (about 2 minutes on 12 cores; needs `libclang-*.so` and
+`ninja`). It belongs in the Linux job of `build.yml` or a step of D1's
+`linux-build.sh`, not in `checks.yml` (it needs the configured build).
+
+**Not verified:**
+- **64-bit Windows.** The same stack-slot read is there (`__cdecl` is the
+  native `ms_abi`), but no route ran on the 64-bit Windows build, before or
+  after: whether the stale high half there was zero by chance (as B2d found
+  for `Window_DispatchKind`) is not known. Its codegen changed in the two
+  callers only.
+- The 32-bit shadow fuzz of `battle_misc` and `battle_damage` was not run
+  (its stand-ins changed type, their recorded words not).
+- The latent register and `al` cases above were not shown harmless in each
+  call site's disassembly; the reason given is the general one.
+
 ## 5. What stands in for the launcher in tier 2
 
 The launcher is Win32 dialogs: `config_dialog.cpp` 1,861 lines, `config.cpp`

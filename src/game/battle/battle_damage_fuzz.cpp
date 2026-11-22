@@ -199,8 +199,8 @@ unsigned char __cdecl StubIsOut(unsigned actor) {
     const std::uint32_t h = Hash();
     return static_cast<unsigned char>(Stale(h, h % 3 == 0, 0xFF));
 }
-void __cdecl StubShowMessage(unsigned a, unsigned b, unsigned c, unsigned d, unsigned e) {
-    Record(10, a, b, c, d, e);
+void __cdecl StubShowMessage(unsigned a, unsigned b, unsigned c, unsigned d, const char* e) {
+    Record(10, a, b, c, d, Address(e));
     Disturb();
 }
 unsigned char __cdecl StubResisted(unsigned attacker, unsigned target) {
