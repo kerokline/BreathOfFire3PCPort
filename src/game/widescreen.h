@@ -2,15 +2,16 @@
 // the picture widened by extra columns each side of the game's 320 x 240 view,
 // the view centred in it - the PSP's approach, every primitive shifted right by
 // the columns on the way to the screen, and the culls and edge-anchored
-// elements that the wider view exposes re-authored. Two widths:
+// elements that the wider view exposes re-authored. Three widths:
 // BOF3X_WIDE=1 is 16:9, 426 x 240 (53 columns a side); BOF3X_WIDE=2 is 21:9,
-// 560 x 240 (120 a side). Unset or 0, nothing here changes anything.
+// 560 x 240 (120 a side); BOF3X_WIDE=3 is 16:10, 384 x 240 (32 a side, the
+// Steam Deck's panel). Unset or 0, nothing here changes anything.
 #pragma once
 
 #include <cstdint>
 
 // Extra columns each side of the 320-wide view: 53 under BOF3X_WIDE=1, 120
-// under BOF3X_WIDE=2, 0 otherwise. Read once from the environment; any other
+// under BOF3X_WIDE=2, 32 under BOF3X_WIDE=3, 0 otherwise. Read once from the environment; any other
 // value is Fatal.
 unsigned Widescreen_Columns();
 
@@ -21,7 +22,7 @@ unsigned Widescreen_Columns();
 namespace widescreen_rule {
 // The columns a side for a picture `num`:`den` at 240 rows: 240 num / den
 // rounded down to an even width, less 320, halved - 53 for 16:9 (426), 120 for
-// 21:9 (560, exact).
+// 21:9 (560, exact), 32 for 16:10 (384, exact).
 constexpr unsigned ColumnsForAspect(unsigned num, unsigned den) { return ((240u * num / den) / 2u * 2u - 320u) / 2u; }
 // The terrain cull's margin past the original's [-50, 370]: the columns plus
 // the 47 the owner's eye settled on at 53 (100 = 53 + 47, 2026-09-23). Tuned
@@ -117,7 +118,7 @@ float Widescreen_RangeValue(unsigned at);
 // The bound a slide-off state decides by, given the one it read: that one.
 // BOF3X_SL_CONTROL=1 is the fuzz control: the bound moved out by the columns,
 // which is the late free the build before this amendment had; a fuzz at
-// BOF3X_WIDE=1 or 2 must refuse it.
+// BOF3X_WIDE=1, 2 or 3 must refuse it.
 short Widescreen_SlideLogic(short bound);
 // A holding slide (step, then hold at `bound` with +3 0), after its step:
 // `x_read` the x it read before stepping, +4 the x it left. Records Capcom's
@@ -164,7 +165,7 @@ bool Widescreen_FillsArmed();
 float Widescreen_FillRight(float edge);
 
 // The faster slide's property check (docs/ultrawide-slides.md section 4): at
-// 0, 53 and 120 columns, every one of the fourteen states from every start x
+// 0, 32, 53 and 120 columns, every one of the fourteen states from every start x
 // in a sweep, through the handler cycle Field_RunTaskRecords gives it (the
 // nine holding states are ours, called; the five freeing ones Capcom's step as
 // read): the frame it holds or frees on and the x outside its handler each
@@ -250,7 +251,7 @@ void Widescreen_SweepClear();
 // it passes it (the word +0x2E zero-extended); the same int back when the map
 // is off, else the mapped s16 zero-extended.
 int Widescreen_SweepShadeX(int x);
-// The map's property check, at 0, 53 and 120 columns: the identity at 0, the
+// The map's property check, at 0, 32, 53 and 120 columns: the identity at 0, the
 // ends onto the moved ends, the fixed points, monotonic over every x the two
 // sweeps draw. Fatal on a difference. Run by Widescreen_ArmFills.
 void Widescreen_CheckSweeps();

@@ -26,6 +26,14 @@ pictures are EB's (stage B).
   camera; what that ring covers at 560 is UC's question (section 3).
 - The launcher's "Widescreen" box is a three-way choice (`wide=0|1|2`), and
   `attract_run.py`, `input_run.py` and `abc_run.py` take `--wide 0|1|2`.
+- **Added 2026-11-21: a third width, 16:10.** `BOF3X_WIDE=3` / `wide=3` is
+  384 x 240, 32 columns a side (240 x 16 / 10 exactly), for the Steam Deck's
+  1280 x 800 panel (k = 3: 1152 x 720). Nothing is tuned for it: every value
+  is the rules' at 32 (terrain margin 79, inset 2, one backdrop pair, ranges
+  [-231, 551] / [-81, 401]), and the slide and sweep checks run at 32 too.
+  The launcher's box has a fourth entry, the run tools take `--wide 3`
+  (DIV-0041's amendment of 2026-11-21). Sections 1 to 6 below are as written
+  for the two widths.
 
 ## 1. The rules (`widescreen.h`, `namespace widescreen_rule`)
 

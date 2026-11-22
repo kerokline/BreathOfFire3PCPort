@@ -41,7 +41,7 @@ en-US	as-shipped	inactive	DIV-0037	none	An optional CRT look: scanlines and hala
 en-US	as-shipped	off	DIV-0038	PauseText	F9's pause lines in the overlay's language	Player yes
 en-US	as-shipped	cannot	DIV-0039	Game_WinMain	The window's title and the missing-disc box in English	Player costly: the original is only Capcom's function; this build cannot
 en-US	as-shipped	cannot	DIV-0040	Game_WndProc	F7 and F11 do nothing	Player costly: the original is only Capcom's function; this build cannot
-en-US	as-shipped	already-off	DIV-0041	ini:wide=0	A 426 x 240 or 560 x 240 picture: the view widened by 53 or 120 columns a side	Default off: already off
+en-US	as-shipped	already-off	DIV-0041	ini:wide=0	A 384, 426 or 560 x 240 picture: the view widened by 32, 53 or 120 columns a side	Default off: already off
 en-US	as-shipped	cannot	DIV-0042	Game_WndProc	The window resizes freely; the picture snaps to whole multiples or fills the height	Player costly: the original is only Capcom's function; this build cannot
 en-US	as-shipped	already-off	DIV-0043	ini:screen=clean	An optional second CRT look: SatPixie, with its parameters in the launcher	Default off: already off
 en-US	as-shipped	cannot	DIV-0044	Display_Setup	A primitive's corner at depth 0 is drawn at the nearest depth: the world map's compass needle	Player costly: the original is only Capcom's function; this build cannot
@@ -272,7 +272,7 @@ en-US	repaired	inactive	DIV-0037	none	An optional CRT look: scanlines and halati
 en-US	repaired	off	DIV-0038	PauseText	F9's pause lines in the overlay's language	Player yes
 en-US	repaired	cannot	DIV-0039	Game_WinMain	The window's title and the missing-disc box in English	Player costly: the original is only Capcom's function; this build cannot
 en-US	repaired	cannot	DIV-0040	Game_WndProc	F7 and F11 do nothing	Player costly: the original is only Capcom's function; this build cannot
-en-US	repaired	already-off	DIV-0041	ini:wide=0	A 426 x 240 or 560 x 240 picture: the view widened by 53 or 120 columns a side	Default off: already off
+en-US	repaired	already-off	DIV-0041	ini:wide=0	A 384, 426 or 560 x 240 picture: the view widened by 32, 53 or 120 columns a side	Default off: already off
 en-US	repaired	cannot	DIV-0042	Game_WndProc	The window resizes freely; the picture snaps to whole multiples or fills the height	Player costly: the original is only Capcom's function; this build cannot
 en-US	repaired	already-off	DIV-0043	ini:screen=clean	An optional second CRT look: SatPixie, with its parameters in the launcher	Default off: already off
 en-US	repaired	already-off	DIV-0045	ini:cheat.exp=1, ini:cheat.zenny=1	The EXP and zenny won in battle, times a launcher slider	Default off: already off
@@ -408,7 +408,7 @@ en-US	repaired	already-off	DIV-0243	ini:cheat.faerie=1	The faerie village's spee
 en-US	repaired	already-off	DIV-0244	ExamineAlwaysLearns	A mod can make an examining member always learn the enemy's skill	Default off: already off
 en-US	repaired	already-off	DIV-0245	FasterFaerieVillage	A mod can run the faerie village at five times its speed	Default off: already off
 en-US	playstation	also-available	DIV-0012	ini:filter=linear	Offer point sampling as a choice of look	Default off: the preset keeps it on, so switch it on yourself
-en-US	playstation	already-off	DIV-0041	ini:wide=0	A 426 x 240 or 560 x 240 picture: the view widened by 53 or 120 columns a side	Default off: already off
+en-US	playstation	already-off	DIV-0041	ini:wide=0	A 384, 426 or 560 x 240 picture: the view widened by 32, 53 or 120 columns a side	Default off: already off
 en-US	playstation	already-off	DIV-0086	ini:opt=	Optional layers from the player's PSP disc, walked after the language overlay	Default off: already off
 en-US	playstation	never	DIV-0103	none	A PSP-only install's base is the PSP's own sections	Player never: Forced or one-way
 en-US	playstation	never	DIV-0104	none	A PSP-built image of `.data` carries the PSP's level table and consumable 87	Player never: Forced or one-way

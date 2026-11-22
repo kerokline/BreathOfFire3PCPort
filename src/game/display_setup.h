@@ -14,7 +14,7 @@ unsigned DisplaySetup_WindowedScale();
 // The render target's scale once our set-up has run, else 0.
 unsigned DisplaySetup_TargetScale();
 
-// The width of the picture in the game's pixels: 320, 426 under BOF3X_WIDE=1 or 560 under =2
+// The width of the picture in the game's pixels: 320, 426 under BOF3X_WIDE=1, 560 under =2 or 384 under =3
 // (DIV-0041, src/game/widescreen.h). The height is always 240.
 unsigned DisplaySetup_ViewWidth();
 

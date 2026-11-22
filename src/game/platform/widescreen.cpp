@@ -1,7 +1,7 @@
 // Widescreen (DIV-0041, docs/widescreen.md). See widescreen.h.
 //
 // The backend does the picture: the render target is (320 + 2 c) k wide for c
-// columns a side (53 at 16:9, 120 at 21:9; docs/ultrawide-frame.md), the scene
+// columns a side (32 at 16:10, 53 at 16:9, 120 at 21:9; docs/ultrawide-frame.md), the scene
 // shader adds ck to every x (render_d3d11.cpp), so the game keeps
 // drawing in its own 0..320 space with the projection centre at (160, 120)
 // and anything it already draws past its edges - 3D geometry, scrolling
@@ -67,9 +67,12 @@ namespace {
 
 namespace rule = widescreen_rule;
 
-// The two widths (BOF3X_WIDE=1 and 2), each by its aspect at 240 rows.
+// The three widths (BOF3X_WIDE=1, 2 and 3), each by its aspect at 240 rows.
 constexpr U kColumns16x9 = rule::ColumnsForAspect(16, 9);   // 426 = 240 x 16 / 9 rounded down to even
 constexpr U kColumns21x9 = rule::ColumnsForAspect(21, 9);   // 560 = 240 x 21 / 9 exactly (the owner, 2026-10-13)
+// 384 = 240 x 16 / 10 exactly: the Steam Deck's 1280 x 800 panel (the owner, 2026-11-21). 32 columns a side, the
+// PSP's count. Narrower than 16:9, so every value is the rules' at 32 and nothing is tuned for it.
+constexpr U kColumns16x10 = rule::ColumnsForAspect(16, 10);
 
 // The 16:9 build's constants, which the rules must give at 53 (the property
 // check: these are the values the rules replaced, kept as the test's oracle).
@@ -80,7 +83,7 @@ constexpr U kColumns21x9 = rule::ColumnsForAspect(21, 9);   // 560 = 240 x 21 / 
 // held. The cell inset was lowered by 3 (a ring column is two map cells
 // across, about 20 screen px at the field camera's usual distance; the owner's
 // bridge, 2026-10-06). The menu backdrop drew one more pair a side.
-static_assert(kColumns16x9 == 53 && kColumns21x9 == 120, "the two widths");
+static_assert(kColumns16x9 == 53 && kColumns21x9 == 120 && kColumns16x10 == 32, "the three widths");
 static_assert(rule::TerrainMargin(53) == 100, "the terrain margin tuned by eye at 53");
 static_assert(rule::InsetColumns(53) == 3, "the cell inset lowered by 3 at 53");
 static_assert(rule::BackdropPairs(53) == 1, "one backdrop pair a side at 53");
@@ -235,7 +238,7 @@ short Widescreen_SlideLogic(short bound) {
         const bool on = n != 0 && n < sizeof text && std::strcmp(text, "1") == 0;
         if (on)
             bof3::Log("DIV-0041    BOF3X_SL_CONTROL=1: the slide-off states decide by the bound moved out by the columns "
-                      "(the late free before the faster slide) - a fuzz at BOF3X_WIDE=1 or 2 must refuse it");
+                      "(the late free before the faster slide) - a fuzz at BOF3X_WIDE=1, 2 or 3 must refuse it");
         return on;
     }();
     if (!control) return bound;
@@ -350,7 +353,8 @@ unsigned Widescreen_Columns() {
     if (n == 0 || std::strcmp(text, "0") == 0) columns = 0;
     else if (n < sizeof text && std::strcmp(text, "1") == 0) columns = kColumns16x9;
     else if (n < sizeof text && std::strcmp(text, "2") == 0) columns = kColumns21x9;
-    else bof3::Fatal("BOF3X_WIDE=%s: 0, 1 (16:9) or 2 (21:9)", n < sizeof text ? text : "...");
+    else if (n < sizeof text && std::strcmp(text, "3") == 0) columns = kColumns16x10;
+    else bof3::Fatal("BOF3X_WIDE=%s: 0, 1 (16:9), 2 (21:9) or 3 (16:10)", n < sizeof text ? text : "...");
     return static_cast<unsigned>(columns);
 }
 
@@ -364,6 +368,7 @@ void Widescreen_CheckRules() {
     };
     if (kColumns16x9 != 53) bad("the 16:9 columns", kColumns16x9, 53);
     if (kColumns21x9 != 120) bad("the 21:9 columns", kColumns21x9, 120);
+    if (kColumns16x10 != 32) bof3::Fatal("widescreen: the 16:10 columns are %u, not 32", kColumns16x10);
     if (rule::TerrainMargin(53) != 100) bad("the terrain margin", rule::TerrainMargin(53), 100);
     if (rule::InsetColumns(53) != 3) bad("the cell inset", rule::InsetColumns(53), 3);
     if (rule::BackdropPairs(53) != 1) bad("the backdrop pairs", rule::BackdropPairs(53), 1);
@@ -393,6 +398,11 @@ void Widescreen_CheckRules() {
               rule::TerrainMargin(kColumns21x9), rule::InsetColumns(kColumns21x9), rule::BackdropPairs(kColumns21x9),
               rule::RangeLo(-200.0f, kColumns21x9), rule::RangeHi(520.0f, kColumns21x9),
               rule::RangeLo(-50.0f, kColumns21x9), rule::RangeHi(370.0f, kColumns21x9), lowest, highest);
+    bof3::Log("DIV-0041    the width rules at 32 columns (16:10): terrain margin %u, inset %u, backdrop pairs %u, ranges "
+              "[%.0f, %.0f] / [%.0f, %.0f]",
+              rule::TerrainMargin(kColumns16x10), rule::InsetColumns(kColumns16x10), rule::BackdropPairs(kColumns16x10),
+              rule::RangeLo(-200.0f, kColumns16x10), rule::RangeHi(520.0f, kColumns16x10),
+              rule::RangeLo(-50.0f, kColumns16x10), rule::RangeHi(370.0f, kColumns16x10));
 }
 
 void Widescreen_Inject() {
@@ -427,7 +437,7 @@ void Widescreen_Inject() {
     {
         // BOF3X_WIDE_TERRAIN=N: the terrain cull's margin past [-50, 370], for
         // experiments (2026-10-07, the owner's waterfall); the rule's unless set
-        // (DIV-0041: 100 at 53 columns, 167 at 120).
+        // (DIV-0041: 79 at 32 columns, 100 at 53, 167 at 120).
         char text[16];
         const std::uint32_t n = bof3::os::GetEnv("BOF3X_WIDE_TERRAIN", text, sizeof text);
         if (n != 0) {
@@ -468,7 +478,7 @@ void Widescreen_Inject() {
 }
 
 // The faster slide's property check (widescreen.h). For each of the fourteen
-// states, at 0, 53 and 120 columns, from every start x in [-640, 640) and every
+// states, at 0, 32, 53 and 120 columns, from every start x in [-640, 640) and every
 // 257th across the s16 range, the record is run through the cycle
 // Field_RunTaskRecords gives it - Widescreen_SlideBefore, the state, the draw
 // (here: +4 read as the drawn x), Widescreen_SlideAfter - and three parked
@@ -509,7 +519,7 @@ void Widescreen_CheckSlides() {
     auto past = [](int x, int bound, Cmp c) {
         return c == kLt ? x < bound : c == kLe ? x <= bound : c == kGt ? x > bound : x >= bound;
     };
-    static const unsigned kWidths[] = {0, kColumns16x9, kColumns21x9};
+    static const unsigned kWidths[] = {0, kColumns16x10, kColumns16x9, kColumns21x9};
     constexpr int kMaxFrames = 0x10000 / 0x20 + 8;
 
     volatile U* const current = reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)));
@@ -529,7 +539,7 @@ void Widescreen_CheckSlides() {
         (call ? called : stepped) += 1;
         for (int x0 = -0x8000; x0 <= 0x7FFF; x0 += (x0 >= -640 && x0 < 640) ? 1 : 257) {
             int narrow_frames = -1;
-            for (unsigned w = 0; w < 3; ++w) {
+            for (unsigned w = 0; w < sizeof kWidths / sizeof kWidths[0]; ++w) {
                 const unsigned c = kWidths[w];
                 g_test_columns = static_cast<int>(c);
                 split = Split{};
@@ -632,7 +642,7 @@ void Widescreen_CheckSlides() {
     g_test_split = nullptr;
     g_test_columns = -1;
     bof3::Log("DIV-0041    the faster slide's check: 14 states (%u of ours called, %u stepped as read), %u starts each, "
-              "at 0, 53 and 120 columns, %llu frames: the hold / free frame and every x outside the handler as narrow's, "
+              "at 0, 32, 53 and 120 columns, %llu frames: the hold / free frame and every x outside the handler as narrow's, "
               "the drawn x at the wide bound on that frame; longest slide %d frames",
               called, stepped, starts / 14, frames_run, longest);
 }
@@ -760,7 +770,8 @@ void Widescreen_CheckSweeps() {
     // identity at 0 columns, the ends and fixed points where the rule puts
     // them, never decreasing, and the slide never drawn nearer the centre
     // than Capcom's x.
-    static const unsigned kColumns[] = {0, rule::ColumnsForAspect(16, 9), rule::ColumnsForAspect(21, 9)};
+    static const unsigned kColumns[] = {0, rule::ColumnsForAspect(16, 10), rule::ColumnsForAspect(16, 9),
+                                        rule::ColumnsForAspect(21, 9)};
     unsigned checks = 0;
     for (int which = 0; which < 2; ++which)
         for (const unsigned c : kColumns) {
@@ -810,7 +821,7 @@ void Widescreen_CheckSweeps() {
     if (g_live)
         bof3::Log("DIV-0041    the two sweeps drawn mapped: shade %s, slide %s; kind 0xD's slide [-70, 390] onto [%d, %d] "
                   "(160 fixed), area 172's shade [0, 400] onto [%d, %d] (anchored right from 220) (the map's check: %u, 0 "
-                  "differences at 0, 53 and 120 columns)",
+                  "differences at 0, 32, 53 and 120 columns)",
                   live != 0 ? "on" : "off (BOF3X_ORIGINAL=Widescreen)",
                   MarkColumns() != 0 ? "on"
                   : live == 0        ? "off (BOF3X_ORIGINAL=Widescreen)"
@@ -818,7 +829,7 @@ void Widescreen_CheckSweeps() {
                   rule::SlideMap(-70, g_live), rule::SlideMap(390, g_live), rule::ShadeMap(0, g_live),
                   rule::ShadeMap(400, g_live), checks);
     else
-        bof3::Log("DIV-0041    the two sweeps' map check: %u, 0 differences at 0, 53 and 120 columns (the view is narrow: off)",
+        bof3::Log("DIV-0041    the two sweeps' map check: %u, 0 differences at 0, 32, 53 and 120 columns (the view is narrow: off)",
                   checks);
 }
 

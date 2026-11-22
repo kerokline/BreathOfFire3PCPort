@@ -46,7 +46,7 @@ Here's a non-exhaustive list of the things that have changed ->
   game, you can choose which version changes to run with. For instance, you could 
   run with the original Stallion colors, but still steal Ivory Dice from Myria.
 - **Display**: choose between a PSX 4:3, PSP 16:9 (widened fully, not vertically
-  cropped like the original), or a comically large 21:9 Ultrawide.
+  cropped like the original), a Steam Deck 16:10, or a comically large 21:9 Ultrawide.
 - **Looks**: the port originally used a smooth filter, so the launcher now offers
   a choice of that, a sharp point filter, or the SatPixie shader.
 - **Controls**: modern pads through SDL3

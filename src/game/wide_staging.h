@@ -24,7 +24,7 @@
 
 namespace wide_staging {
 
-extern bool g_staging;   // D and E armed: BOF3X_WIDE 1 or 2, BOF3X_WIDE_STAGING not 0, after every self-test
+extern bool g_staging;   // D and E armed: BOF3X_WIDE 1, 2 or 3, BOF3X_WIDE_STAGING not 0, after every self-test
 extern bool g_hide;      // F armed: BOF3X_WIDE=2, BOF3X_WIDE_HIDE not 0, after every self-test
 
 // The hooks, one line each in the interpreters.

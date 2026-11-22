@@ -117,11 +117,12 @@ unsigned DisplaySetup_ScaleForClient(unsigned cw, unsigned ch) {
 namespace {
 // The present's k rule at each picture width (DIV-0036 / DIV-0042, the 21:9
 // picture of docs/ultrawide-frame.md): FitScale takes the view's width, so the
-// three widths share it. Checked at start-up on the monitors the docs name:
+// four widths share it. Checked at start-up on the monitors the docs name:
 // the owner's 3440 x 1440 lands on k = 6 at every width (1920 / 2556 / 3360
 // wide, the full 1440 rows), a 2560 x 1080 21:9 panel on 4 (2240 x 960 at
 // 560), a 1920 x 1080 16:9 one on 4 (1704 x 960 at 426; 560 x 3 = 1680 at
-// 21:9). Fatal on a difference: the rule changed under the widths.
+// 21:9), the Steam Deck's 1280 x 800 on 3 at 16:10 (1152 x 720 at 384; 426 x 3
+// = 1278 at 16:9). Fatal on a difference: the rule changed under the widths.
 void CheckFitScale() {
     struct Case {
         U view_w, cw, ch, k;
@@ -129,6 +130,7 @@ void CheckFitScale() {
     static const Case kCases[] = {
         {320, 3440, 1440, 6}, {426, 3440, 1440, 6}, {560, 3440, 1440, 6},
         {560, 2560, 1080, 4}, {426, 1920, 1080, 4}, {560, 1920, 1080, 3},
+        {384, 1280, 800, 3},  {426, 1280, 800, 3},  {384, 3440, 1440, 6},
         {560, 559, 239, 1},   // a client smaller than one picture: 1, never 0
     };
     for (const Case& c : kCases)

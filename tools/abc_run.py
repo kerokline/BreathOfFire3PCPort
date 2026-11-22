@@ -803,8 +803,8 @@ def main():
     ap.add_argument('--frames', type=int, default=ATTRACT_FRAMES, help='the attract route\'s length in recipe frames')
     ap.add_argument('--minutes', type=float, default=15.0, help='per run, before input_run gives up')
     ap.add_argument('--speed', type=int, default=1, help='BOF3X_SPEED (frames are still drawn where taken); default 1')
-    ap.add_argument('--wide', choices=('0', '1', '2'), default=None,
-                    help='BOF3X_WIDE for every run (input_run.py --wide): 0 320 x 240, 1 16:9, 2 21:9; unset, each '
+    ap.add_argument('--wide', choices=('0', '1', '2', '3'), default=None,
+                    help='BOF3X_WIDE for every run (input_run.py --wide): 0 320 x 240, 1 16:9, 2 21:9, 3 16:10; unset, each '
                          'install\'s launcher ini decides, as before')
     ap.add_argument('--statehash', action='store_true', help='also record the state hash and diff it per pair (context)')
     ap.add_argument('--statehash-skip', help='BOF3X_STATEHASH_SKIP for every run (e.g. a union of exe_tables.py gate-skip lists)')

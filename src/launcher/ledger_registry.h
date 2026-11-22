@@ -394,7 +394,7 @@ inline constexpr Entry kEntries[kEntryCount] = {
      Tier::Sensible, State::Active, 0, 47, 1, true, Player::Costly, 0, kLangAny},
     {40, "F7 and F11 do nothing",
      Tier::Sensible, State::Active, 0, 48, 1, true, Player::Costly, 0, kLangAny},
-    {41, "A 426 x 240 or 560 x 240 picture: the view widened by 53 or 120 columns a side",
+    {41, "A 384, 426 or 560 x 240 picture: the view widened by 32, 53 or 120 columns a side",
      Tier::Sensible, State::Active, 0, 49, 1, false, Player::Yes, kTowardPsp, kLangAny},
     {42, "The window resizes freely; the picture snaps to whole multiples or fills the height",
      Tier::Sensible, State::Active, 0, 50, 1, true, Player::Costly, 0, kLangAny},

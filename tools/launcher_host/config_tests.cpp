@@ -2030,7 +2030,7 @@ void TestChordRoundTrip() {
           "chord left on where the line had it: byte for byte");
 }
 
-// DIV-0041, the 21:9 picture (docs/ultrawide-frame.md): wide= 0, 1 or 2 reads,
+// DIV-0041, the 21:9 and 16:10 pictures (docs/ultrawide-frame.md): wide= 0, 1, 2 or 3 reads,
 // writes back the same, and goes out as BOF3X_WIDE (nothing for 0); a value
 // the DLL would refuse is dropped to the default, as every unknown value is;
 // a BOF3X_WIDE already set (the run tools' --wide) wins over the ini.
@@ -2038,7 +2038,7 @@ void TestWide() {
     const std::wstring a = Temp(L"bof3x_config_tests_wide.ini"), game = Temp(L"bof3x_wide_game");
     MakeDirs(game + P(L"\\DAT"));
     std::string err;
-    for (int v = 0; v <= 2; ++v) {
+    for (int v = 0; v <= 3; ++v) {
         WriteAll(a, "[bof3x]\r\nwide=" + std::to_string(v) + "\r\n");
         bof3x::Config c;
         Check(bof3x::ConfigLoad(a, c, err) && err.empty() && c.wide == v, "wide= read", std::to_string(c.wide));
@@ -2051,7 +2051,7 @@ void TestWide() {
         bof3x::ConfigApplyEnvironment(game, c, false);
         Check(Env("BOF3X_WIDE") == "0", "a BOF3X_WIDE already set is kept", Env("BOF3X_WIDE"));
     }
-    for (const char* bad : {"3", "-1", "21:9", "true"}) {
+    for (const char* bad : {"4", "-1", "21:9", "16:10", "true"}) {
         WriteAll(a, std::string("[bof3x]\r\nwide=") + bad + "\r\n");
         bof3x::Config c;
         Check(bof3x::ConfigLoad(a, c, err) && c.wide == 0, (std::string("wide=") + bad + " is the default").c_str(),
@@ -2557,7 +2557,7 @@ int main() {
     TestPresetsFixture();
     std::printf("the presets' plan at launch\n");
     TestPresetPlan();
-    std::printf("wide= (DIV-0041: off, 16:9, 21:9)\n");
+    std::printf("wide= (DIV-0041: off, 16:9, 21:9, 16:10)\n");
     TestWide();
     std::printf("interp= (DIV-0230: the in-between frame)\n");
     TestInterp();
