@@ -295,7 +295,7 @@ void ConfigLoad(const std::string& text, Config& cfg, std::string& error) {
             if (value == "0") cfg.wide = 0;
             else if (value == "1") cfg.wide = 1;
             else if (value == "2") cfg.wide = 2;
-        } else if (key == "cheat.exp" || key == "cheat.zenny") {
+        } else if (key == "cheat.exp" || key == "cheat.zenny" || key == "cheat.faerie") {
             char* end = nullptr;
             const long v = std::strtol(value.c_str(), &end, 10);
             // DIV-0045: 0..10 since 2026-10-03 (it was 0..50). A larger number,
@@ -303,7 +303,7 @@ void ConfigLoad(const std::string& text, Config& cfg, std::string& error) {
             // goes out as it is; the DLL clamps it to 10 and logs that
             // (src/game/cheats.cpp), and the Cheats dialog shows and saves 10.
             if (end == value.c_str() || *end || v < 0 || v > 1000000) continue;
-            (key == "cheat.exp" ? cfg.cheats.exp : cfg.cheats.zenny) = static_cast<int>(v);
+            (key == "cheat.exp" ? cfg.cheats.exp : key == "cheat.zenny" ? cfg.cheats.zenny : cfg.cheats.faerie) = static_cast<int>(v);
         } else if (key == "cheat.steal") {
             if (value == "0") cfg.cheats.steal = false;
             else if (value == "1") cfg.cheats.steal = true;
@@ -493,13 +493,15 @@ std::string ConfigText(const Config& cfg) {
     out += "# steal 1 makes Pilfer and Steal take an item whenever the enemy carries one (DIV-0046);\r\n";
     out += "# enemy_info 1 shows every enemy's HP gauge and Identify stats, bosses too (DIV-0187);\r\n";
     out += "# no_fail 1: every minigame ends in a win, and a minigame with a score gives its best prize (DIV-0188);\r\n";
-    out += "# learn 1: a member that watches an enemy always learns the skill the enemy uses (DIV-0226)\r\n";
+    out += "# learn 1: a member that watches an enemy always learns the skill the enemy uses (DIV-0226);\r\n";
+    out += "# faerie 0..10: the faerie village counts each battle that many times, 1 the original's, 0 stops it (DIV-0243)\r\n";
     out += "cheat.exp=" + std::to_string(cfg.cheats.exp) + "\r\n";
     out += "cheat.zenny=" + std::to_string(cfg.cheats.zenny) + "\r\n";
     out += std::string("cheat.steal=") + (cfg.cheats.steal ? "1" : "0") + "\r\n";
     out += std::string("cheat.enemy_info=") + (cfg.cheats.enemy_info ? "1" : "0") + "\r\n";
     out += std::string("cheat.no_fail=") + (cfg.cheats.no_fail ? "1" : "0") + "\r\n";
     out += std::string("cheat.learn=") + (cfg.cheats.learn ? "1" : "0") + "\r\n";
+    out += "cheat.faerie=" + std::to_string(cfg.cheats.faerie) + "\r\n";
     out += "# the keyboard: key.KEY=action (docs/controls.md; actions up down left right cross circle square\r\n";
     out += "# triangle l1 l2 r1 r2 start select, joined with +); at most 32 lines. Replaces the game's own table\r\n";
     out += "# (BOF3.CFG lines 3+) when it differs from the default, which is that table.\r\n";
@@ -754,6 +756,8 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, boo
         SetEnvW(L"BOF3X_NO_FAIL", L"1");
     if (bof3::os::GetEnvW(L"BOF3X_LEARN", existing, 64) == 0 && cfg.cheats.learn)
         SetEnvW(L"BOF3X_LEARN", L"1");
+    if (bof3::os::GetEnvW(L"BOF3X_FAERIE", existing, 64) == 0 && cfg.cheats.faerie != 1)
+        SetEnv("BOF3X_FAERIE", std::to_string(cfg.cheats.faerie).c_str());
 
     // The function keys: BOF3X_FKEYS only when they differ from what the game
     // builds without it (the defaults and BOF3X_RUBY_KEY's key), so an ini
@@ -1843,6 +1847,7 @@ const char* IniVariable(std::string_view key) {
         {"scale", "BOF3X_SCALE"},         {"cheat.exp", "BOF3X_EXP"}, {"cheat.zenny", "BOF3X_ZENNY"},
         {"cheat.steal", "BOF3X_STEAL"},   {"cheat.enemy_info", "BOF3X_ENEMY_INFO"},
         {"cheat.no_fail", "BOF3X_NO_FAIL"}, {"cheat.learn", "BOF3X_LEARN"},
+        {"cheat.faerie", "BOF3X_FAERIE"},
         {"desert_faerie", "BOF3X_DESERT_FAERIE"}, {"solo.champion", "BOF3X_SOLO"}};
     for (const auto& [k, v] : kFeeds)
         if (key == k) return v;

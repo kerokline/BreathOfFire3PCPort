@@ -132,6 +132,7 @@ void CheatsOpen(Pages& p);
 void CheatsApply(Pages& p);
 void CheatsPage1(Pages& p);
 void CheatsPage2(Pages& p);
+void CheatsPage3(Pages& p);
 // Game Options, Solo character (page_solo.cpp).
 void SoloOpen(Pages& p);
 void SoloApply(Pages& p);

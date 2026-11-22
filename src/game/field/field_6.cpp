@@ -12,6 +12,7 @@
 #include "bof3/symbols.gen.h"
 #include "common/asm_name.h"
 #include "game/area_entry_callees.h"
+#include "game/cheats.h"
 #include "game/event_leader_callees.h"
 #include "game/event_objs_callees.h"
 #include "game/event_ops_callees.h"
@@ -2379,7 +2380,7 @@ extern "C" void __cdecl Field_AfterBattleTally(void) {
             const bool first = flag == 0xF6 || flag == 0xF9 || flag == 0xFC;
             if (first) b = a;
             if (b != 0) {
-                Rest4a_ClockA = Rest4a_ClockA + 1u;
+                Rest4a_ClockA = Rest4a_ClockA + Cheats_FaerieSpeed();   // DIV-0243: 1 unless the cheat is set
                 int need = kThresholds[flag - 0xF6] - static_cast<int>(BFieldE2(first ? ::bof3::Img(FieldE2_BiasA_addr) : ::bof3::Img(FieldE2_BiasB_addr)));
                 if (need < 5) need = 5;
                 if (Rest4a_ClockA >= static_cast<U>(need)) {
@@ -3359,4 +3360,13 @@ void Field6_Inject() {
     BOF3_INJECT(Leader_TurnBack);
     BOF3_INJECT(Sprite_ClearSteps);
     BOF3_INJECT(Sprite_ApplyVelocity);
+    // DIV-0243 counts the village's battles in these; Capcom's body would count
+    // one a battle as before and the cheat would be silently half off.
+    if (Cheats_FaerieSpeed() != 1) {
+        static constexpr struct { std::uint32_t at; const char* name; } kNeeds[] = {
+            {bof3::addr::Field_AfterBattleTally, "Field_AfterBattleTally"},
+        };
+        for (const auto& need : kNeeds)
+            if (!bof3::IsEnabled(need.at)) bof3::Fatal("BOF3X_FAERIE needs %s ours, and it is disabled", need.name);
+    }
 }

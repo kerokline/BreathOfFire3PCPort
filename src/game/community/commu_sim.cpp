@@ -4,6 +4,7 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+#include "game/cheats.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -204,11 +205,11 @@ extern "C" void __cdecl CommuSim_Population(unsigned count) {
     const int four = static_cast<int>(4 * n);
     if (m > four) {
         const U clock = Game_BattleCount;
-        if (clock - Rest4a_StampShrink > 0x14) Rest4a_StampShrink = clock - 0x14;
+        if (Cheats_FaerieElapsed(clock, Rest4a_StampShrink) > 0x14) Rest4a_StampShrink = clock - Cheats_FaerieSpan(0x14);
         if (n0 >= 0x14) return;
         const U grow = Rest4a_StampGrow;
         const int room = ((m - four) >> 2) + 1;
-        int k = static_cast<int>((clock - grow) / 10u);
+        int k = static_cast<int>(Cheats_FaerieElapsed(clock, grow) / 10u);
         if (k > room) k = room;
         if (k == 0) return;
         for (int j = 0; j < k && n != 0x14; ++j, ++n) SH_CALL(CommuSim_AddRecord)();
@@ -218,13 +219,13 @@ extern "C" void __cdecl CommuSim_Population(unsigned count) {
     const U clock = Game_BattleCount;
     const U grow = Rest4a_StampGrow;
     if (mood != 0) {
-        if (clock - grow > 0xA) Rest4a_StampGrow = clock - 0xA;
-        if (clock - Rest4a_StampShrink > 0x14) Rest4a_StampShrink = clock - 0x14;
+        if (Cheats_FaerieElapsed(clock, grow) > 0xA) Rest4a_StampGrow = clock - Cheats_FaerieSpan(0xA);
+        if (Cheats_FaerieElapsed(clock, Rest4a_StampShrink) > 0x14) Rest4a_StampShrink = clock - Cheats_FaerieSpan(0x14);
         return;
     }
-    if (clock - grow > 0xA) Rest4a_StampGrow = clock - 0xA;
+    if (Cheats_FaerieElapsed(clock, grow) > 0xA) Rest4a_StampGrow = clock - Cheats_FaerieSpan(0xA);
     if (n0 <= 1) return;
-    const int k = static_cast<int>((clock - Rest4a_StampShrink) / 20u);
+    const int k = static_cast<int>(Cheats_FaerieElapsed(clock, Rest4a_StampShrink) / 20u);
     if (k == 0) return;
     for (int j = 0; j < k && n != 1; ++j, --n) SH_CALL(CommuSim_RemoveRecord)();
     Rest4a_StampShrink = Game_BattleCount;
@@ -236,7 +237,7 @@ extern "C" void __cdecl CommuSim_Population(unsigned count) {
 // mood; below 0 the mood is 0, above 99 it is 99; the stamp is the clock.
 extern "C" void __cdecl CommuSim_Mood(unsigned count) {
     const U clock = Game_BattleCount;
-    const U steps = ((clock - Rest4a_StampMood) / 5u) & 0xFFFF;
+    const U steps = (Cheats_FaerieElapsed(clock, Rest4a_StampMood) / 5u) & 0xFFFF;
     if (steps == 0) return;
     U sum = 0;
     for (U i = 0; i < at::kRecordCount; ++i)
@@ -267,9 +268,9 @@ extern "C" void __cdecl CommuSim_LevelLit(void) {
     auto v = static_cast<std::int16_t>(static_cast<unsigned short>(Word(At(::bof3::Img(at::kLevelLitCosts.v) + 2u * Rest4a_LevelLit)) - sum));
     if (v <= 0) v = 1;
     const U last = Rest4a_StampLevelLit;
-    if (Game_BattleCount - last < static_cast<U>(static_cast<int>(v))) return;
+    if (Cheats_FaerieElapsed(Game_BattleCount, last) < static_cast<U>(static_cast<int>(v))) return;
     const unsigned char level = Rest4a_LevelLit;
-    Rest4a_StampLevelLit = last + static_cast<U>(static_cast<int>(v));
+    Rest4a_StampLevelLit = last + Cheats_FaerieSpan(static_cast<U>(static_cast<int>(v)));
     const unsigned char n = Rest4b_BusyB;
     Rest4a_LevelLit = static_cast<unsigned char>(level + 1);
     At(::bof3::Img(at::kEvents.v) + 2u * n)[0] = 7;
@@ -289,10 +290,10 @@ extern "C" void __cdecl CommuSim_LevelDark(void) {
     auto v = static_cast<std::int16_t>(static_cast<unsigned short>(0x14 - sum));
     if (v <= 0) v = 1;
     const U last = Rest4a_StampLevelDark;
-    if (Game_BattleCount - last < static_cast<U>(static_cast<int>(v))) return;
+    if (Cheats_FaerieElapsed(Game_BattleCount, last) < static_cast<U>(static_cast<int>(v))) return;
     const unsigned char level = FieldE2_LevelA;
     if (Rest4a_LevelLit < At(::bof3::Img(at::kLevelDarkNeeds.v) + level)[0]) return;
-    Rest4a_StampLevelDark = last + static_cast<U>(static_cast<int>(v));
+    Rest4a_StampLevelDark = last + Cheats_FaerieSpan(static_cast<U>(static_cast<int>(v)));
     const unsigned char n = Rest4b_BusyB;
     FieldE2_LevelA = static_cast<unsigned char>(level + 1);
     At(::bof3::Img(at::kEvents.v) + 2u * n)[0] = 6;
@@ -325,7 +326,7 @@ extern "C" void __cdecl CommuSim_TickKind5(void) {
         if (count == 0) continue;
         auto d = static_cast<std::int16_t>(static_cast<unsigned short>((bl[2] + 2u) * 6u - sum));
         if (d < 5) d = 5;
-        const U q = (Game_BattleCount - UL(bl + 4)) / static_cast<U>(static_cast<int>(d));
+        const U q = Cheats_FaerieSteps(Cheats_FaerieElapsed(Game_BattleCount, UL(bl + 4)) / static_cast<U>(static_cast<int>(d)), bl[3]);
         const auto cap = static_cast<std::int16_t>(Rest4a_LevelLit + 4);
         if (q == 0) continue;
         const unsigned char level = bl[3];
@@ -361,7 +362,7 @@ extern "C" void __cdecl CommuSim_TickKind9(void) {
             if (r[0] == 0) continue;
             if (r[1] != b + 1) continue;
             const unsigned char level = Bld(b)[1];
-            if (Game_BattleCount - rv::As<records::CommunityRecord>(r)->stamp < (level + 1u) * 6u) {
+            if (Cheats_FaerieElapsed(Game_BattleCount, rv::As<records::CommunityRecord>(r)->stamp) < (level + 1u) * 6u) {
                 r[2] = 1;
                 continue;
             }
@@ -439,7 +440,7 @@ extern "C" void __cdecl CommuSim_TickKindD(void) {
                 if (p >= ::bof3::Img(at::kPriceTiersEnd.v)) break;
             }
             const U stamp = rv::As<records::CommunityRecord>(r)->stamp;
-            if (Game_BattleCount - stamp < Word(At(::bof3::Img(at::kPriceTiers.v) + 6 * tier + 2))) continue;
+            if (Cheats_FaerieElapsed(Game_BattleCount, stamp) < Word(At(::bof3::Img(at::kPriceTiers.v) + 6 * tier + 2))) continue;
             r[3] = static_cast<unsigned char>(status & 0xF);
             if (flags & 8) {
                 r[3] = static_cast<unsigned char>((status & 0xF) | 0x30);
@@ -493,7 +494,7 @@ extern "C" void __cdecl CommuSim_TickKindB(void) {
         const U divisor = 6u - count;
         if (divisor == 0)
             bof3::Fatal("CommuSim_TickKindB: building %u has 6 residents - the original divides by 0 (docs/rest_4a.md section 7)", (unsigned)b);
-        const U q = (Game_BattleCount - UL(bl + 4)) / divisor;
+        const U q = Cheats_FaerieSteps(Cheats_FaerieElapsed(Game_BattleCount, UL(bl + 4)) / divisor, bl[3]);
         if ((q & 0xFFFF) == 0) continue;
         const auto raised = static_cast<unsigned char>(bl[3] + q);
         bl[3] = raised;
@@ -805,7 +806,7 @@ extern "C" void __cdecl CommuPose_Kind7(unsigned object) {
 extern "C" void __cdecl CommuPose_Kind8(unsigned record, unsigned object, unsigned building) {
     const U r = record & 0xFFu;
     Sprite_Current[6] = 1;
-    const U age = Game_BattleCount - rv::As<records::CommunityRecord>(Rec(r))->stamp;
+    const U age = Cheats_FaerieElapsed(Game_BattleCount, rv::As<records::CommunityRecord>(Rec(r))->stamp);
     const U row = age < 0x14 ? 0 : (age < 0x28 ? 1 : 2);
     const U index = Count(building & 0xFFu) + 3 * row;
     SetWord(Pose(object & 0xFFu), Word(At(::bof3::Img(at::kOfferWords.v) + 2 * index)));
@@ -906,4 +907,21 @@ void CommuSim_Inject() {
     BOF3_INJECT(CommuPose_KindB);
     BOF3_INJECT(CommuPose_KindC);
     BOF3_INJECT(CommuPose_KindD);
+    // DIV-0243 counts the village's battles in these; Capcom's body would count
+    // one a battle as before and the cheat would be silently half off.
+    if (Cheats_FaerieSpeed() != 1) {
+        static constexpr struct { std::uint32_t at; const char* name; } kNeeds[] = {
+            {bof3::addr::CommuSim_Population, "CommuSim_Population"},
+            {bof3::addr::CommuSim_Mood, "CommuSim_Mood"},
+            {bof3::addr::CommuSim_LevelLit, "CommuSim_LevelLit"},
+            {bof3::addr::CommuSim_LevelDark, "CommuSim_LevelDark"},
+            {bof3::addr::CommuSim_TickKind5, "CommuSim_TickKind5"},
+            {bof3::addr::CommuSim_TickKind9, "CommuSim_TickKind9"},
+            {bof3::addr::CommuSim_TickKindD, "CommuSim_TickKindD"},
+            {bof3::addr::CommuSim_TickKindB, "CommuSim_TickKindB"},
+            {bof3::addr::CommuPose_Kind8, "CommuPose_Kind8"},
+        };
+        for (const auto& need : kNeeds)
+            if (!bof3::IsEnabled(need.at)) bof3::Fatal("BOF3X_FAERIE needs %s ours, and it is disabled", need.name);
+    }
 }

@@ -5,6 +5,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/cheats.h"
 #include "game/faerie_name.h"
 #include "game/labels.h"
 #include "game/lang_layout.h"
@@ -189,7 +190,7 @@ extern "C" void __cdecl CommuTail_TimedGift(void) {
         {0x4E, 0x1D, 0}, {0x51, 0x1E, 0}, {0x5B, 8, 0},    {0xC9, 0x19, 3}, {0x1F4, 0x1A, 3},
     };
     const unsigned arg = AreaW0c_TailSub;
-    const U elapsed = Game_BattleCount - L(::bof3::Img(at::kMembers.v) + 4 + 8 * arg);
+    const U elapsed = Cheats_FaerieElapsed(Game_BattleCount, L(::bof3::Img(at::kMembers.v) + 4 + 8 * arg));
     int k = 0;
     while (k < 20 && elapsed >= kRows[k].bound) ++k;
     --k;
@@ -486,4 +487,13 @@ void CommuTail_Inject() {
     BOF3_INJECT(CommuTail26_LoadDat);
     BOF3_INJECT(CommuTail26_End);
     BOF3_INJECT(CommuTail60_Stream);
+    // DIV-0243 counts the village's battles in these; Capcom's body would count
+    // one a battle as before and the cheat would be silently half off.
+    if (Cheats_FaerieSpeed() != 1) {
+        static constexpr struct { std::uint32_t at; const char* name; } kNeeds[] = {
+            {bof3::addr::CommuTail_TimedGift, "CommuTail_TimedGift"},
+        };
+        for (const auto& need : kNeeds)
+            if (!bof3::IsEnabled(need.at)) bof3::Fatal("BOF3X_FAERIE needs %s ours, and it is disabled", need.name);
+    }
 }

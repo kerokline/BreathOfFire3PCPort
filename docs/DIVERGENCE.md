@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 242 entries, DIV-0001..0242, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 243 entries, DIV-0001..0243, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -18367,5 +18367,82 @@ designed in rather than bolted on.
 - **Default:** on
 - **Player:** never - one-way for a player: the switch that reads BOF3.exe is the developer's, refused from a preset (the owner's decision 2, 2026-11-19)
 - **Toward:** none - no release had an install separate from its executable
+- **Languages:** any
+- **State:** active
+
+### The faerie village's speed: a Cheats slider
+
+- **ID:** DIV-0243
+- **Date:** 2026-11-21
+- **Subsystem:** the faerie village (areas 175..185): its simulation
+  `CommuSim_Population` `0x4555D0`, `_Mood` `0x455700`, `_LevelLit`
+  `0x4557A0`, `_LevelDark` `0x455870`, `_TickKind5` `0x455950`, `_TickKind9`
+  `0x455AA0`, `_TickKindD` `0x455BE0`, `_TickKindB` `0x455DF0` and
+  `CommuPose_Kind8` `0x4568A0` (`src/game/community/commu_sim.cpp`),
+  `CommuTail_TimedGift` `0x456E80` (`commu_tail.cpp`), and
+  `Field_AfterBattleTally` (`src/game/field/field_6.cpp`), all ours; the
+  switch in `src/game/core/cheats.cpp`; the launcher's Cheats sub-tab, Page 3;
+  [`cheats.md`](cheats.md) section 9.
+- **Tier:** Extension
+- **Original behaviour:** the village's clock is the battle count
+  `Game_BattleCount` (`0x904134`, plus one a battle). Each step keeps a stamp
+  of that count and asks for the battles since it: food every 5, a new faerie
+  every 10 while food is above four a faerie, a faerie lost every 20 at no
+  food, a culture level and a job level at a cost in battles less the
+  scholars' sum, a merchant's and a musician's level by a quotient, an
+  explorer's return, a copy's span by price, a gift by the time waited
+  ([`cheats.md`](cheats.md) section 9 has the fourteen reads). One count is
+  not a difference: after each battle `Field_AfterBattleTally` adds one to
+  the dword `0x9046B0` while a faerie clears or builds, toward the next of ten
+  story flags (20, 40 or 60 battles less the clear or build power, at least
+  5). And four stamps go up by one a battle while their room has no faerie,
+  which holds that room's wait still (`Records_CountUnpaired`,
+  `Records_CountUnpairedOfKind`).
+- **New behaviour:** with `BOF3X_FAERIE=n` (`cheat.faerie=n`, the slider
+  "Faerie development speed", 0 to 10) each battle since a stamp counts as n
+  for the village: every read above is `(count - stamp) x n`, and the
+  clearing and building count adds n a battle. 1 is the original's and the
+  default; 0 stops every step; 10 makes a step of 20 battles one of 2.
+  `Game_BattleCount` itself is not changed (its other readers, effect kind
+  `0x65`, the count a message shows and the solo mode, see real battles), and
+  nothing is added to the save: the stamps stay in real battles. What follows
+  from that:
+  - Where the original moves a stamp by a cost (the culture and job levels)
+    or keeps a stamp at most 10 or 20 behind the count (the population's two
+    stamps), the move is the cost in real battles, rounded up: at 10 a cost
+    of 13 is met after 2 battles and spends 2. A remainder is lost, never
+    gained.
+  - The four stamps that hold an empty room's wait still are left as they
+    are: one a battle holds the difference at any speed.
+  - The merchant's and the musician's steps are added in a byte, so in the
+    original 256 steps at once add nothing. A speed above 1 brings that
+    within one absence (about 76 battles at 10 with three musicians), so
+    above 1 the steps stop at what the byte holds and the level's own cap
+    applies. At 0 and 1 the byte wraps as the original's does.
+  - A change of the slider in a game under way rescales the wait in
+    progress: 15 battles waited at 1 read as 150 at 10, so several steps can
+    come at one visit; and battles fought at 0 are counted once the slider is
+    above 0 again. The original's own limits on a long absence still apply
+    (one culture and one job level a visit, the population's stamps kept
+    near the count).
+  The module stops the game at start when the slider is not 1 and one of the
+  eleven functions is left as Capcom's (`BOF3X_ORIGINAL`).
+- **Rationale:** the owner's request, 2026-11-21 (IDEAS I71): "a slider to
+  add to the cheats area - 'Fairy Development Speed' 0-10, where the number
+  is a multiplier against the combat count change". TheGreatBen's
+  *Definitive Edition* readme says the village progresses much faster; the
+  1.4 patch holds no such change ([`romhack-mods.md`](romhack-mods.md) 9), so
+  this is a switch of our own, for any install, and needs no mod.
+- **Also in the PSX version?** No. The simulation's twin is COMMU00 section
+  0 (not edited by the hack; `romhack-mods.md` 9).
+- **Verification:** 2026-11-21, headless (`BOF3X_SELFTEST_ONLY=1`, a clean copy of the four launcher files under `C:\Users\kerok\bof3x-runs\fs1121`, the 32-bit build of the branch `cheats/faerie-speed` off `main` `03c1b330`). Unset, `BOF3X_SHADOW='*'` exits 0 with every fuzz group at 0 mismatches (`rest_4a` 188,000 rounds, `rest_4b` 360,000, `field_e2` 306,000 among them): at 1 every read is the original's. `BOF3X_FAERIE=10 BOF3X_SHADOW=rest_4a` logs `DIV-0243 the faerie village counts each battle 10 times` and differs in 14,507 rounds; `BOF3X_FAERIE=0` in 16,305; the log names the first twelve of a run, all village steps of the catalog (`CommuSim_Population`, `_Mood`, `_LevelLit`, `_TickKind9`, `_TickKindD`, `CommuPose_Kind8`), and no count by function was taken. `rest_4b` at 10 differs in 4,081 rounds, the twelve named all `CommuTail_TimedGift`; `field_e2` at 10 in 329 and at 0 in 478, the twelve named all `Field_AfterBattleTally`. `BOF3X_FAERIE=11` logs the cap and runs as 10; `BOF3X_FAERIE=x` is `FATAL: BOF3X_FAERIE must be 0..10`; `BOF3X_FAERIE=3 BOF3X_ORIGINAL=CommuSim_Mood` is `FATAL: BOF3X_FAERIE needs CommuSim_Mood ours, and it is disabled`. The launcher's host suite: 4,419 checks, 0 failures (`cheat.faerie` set, saved and read back). Page 3 captured with no screen (`--capture`, `--page game --sub 2 --sheet 2`): the group, the slider at 1 and its sentence draw. `ledger_check.py`, `ledger_registry.py --check`, `ledger_switches.py --check`, `reloc_census.py --check` and `data_census.py --strict` pass. **Not played:** nobody has visited the village with the slider off 1; the fuzz shows that the reads differ, not that the village grows as meant.
+- **Reversible?** Yes: the slider at 1, `BOF3X_FAERIE` unset. What the
+  village gained with it above 1 stays in the save; the stamps are real
+  battle counts, so a save made with the slider at any value loads in the
+  original.
+- **Switch:** ini:cheat.faerie=1
+- **Default:** off - the slider starts at 1
+- **Player:** yes
+- **Toward:** none
 - **Languages:** any
 - **State:** active

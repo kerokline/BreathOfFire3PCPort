@@ -5,6 +5,7 @@ watched by the owner). 2026-10-03: the cap 10 and the two boss hooks (§2a,
 §2b) built and checked headless; the live run in §5 is owed. 2026-10-29: the
 enemy-information switch (§6) built and checked headless; not yet played.
 2026-11-12: the learn switch (§8) built and checked headless; not yet played.
+2026-11-21: the faerie village's speed (§9) built and checked headless; not yet played.
 
 The archival sibling ships three cheats as mods: EXP and zenny multiplier
 sliders (its `docs/EXP_BOOST.md`) and a "steal always succeeds" patch (its
@@ -23,6 +24,7 @@ since 2026-10-29 a fourth of our own, every enemy's HP gauge and stats shown
 | Every enemy's HP bar and stats shown | `cheat.enemy_info=` 0 / 1 | `BOF3X_ENEMY_INFO=1` when on | off | our `Battle_SetupEnemy` `0x494320` and `Battle_PlaceBossActor` `0x494570` write the enemy's byte `+0x8F` (§6) |
 | The minigames cannot be failed | `cheat.no_fail=` 0 / 1 | `BOF3X_NO_FAIL=1` when on | off | one guarded branch in each minigame's own judging step (§7) |
 | An examining member always learns the enemy's skill | `cheat.learn=` 0 / 1 | `BOF3X_LEARN=1` when on | off | our `Battle_MemberRollByAction` `0x453910` answers 1 after its refusals (§8) |
+| The faerie village's speed | `cheat.faerie=` 0..10 | `BOF3X_FAERIE=n` when not 1 | 1 | the village's reads of the battle count, times n (§9) |
 
 Unset, nothing here changes a byte or a number: every harness and oracle
 run leaves the variables unset, and the `battle_flow` fuzz compares ours
@@ -499,3 +501,89 @@ the bit confirms).
 cheat appears to be working as intended". Not said: the owner's eye on Page 2 of the Cheats
 sub-tab, which has a third group now ("Enemy skills", with no sentence under
 its box: the page has no room for one).
+
+## 9. The faerie village's speed (DIV-0243, 2026-11-21)
+
+The owner's request (IDEAS I71): a slider, 0 to 10, that multiplies the
+battles the village counts. `BOF3X_FAERIE=n` (`cheat.faerie=n`, "Faerie
+development speed" on the Cheats sub-tab's Page 3), read by `Cheats_Inject`
+with the same rules as the EXP multiplier (unset is 1, above 10 is 10 with a
+log line, anything else a `Fatal`).
+
+**The clock.** `Game_BattleCount` (`0x904134`) goes up by one a battle (the
+battle case of `GameMode_Field`, its one writer). The village keeps stamps
+of it and asks for the battles since a stamp. The slider does not touch the
+count: every village read goes through `Cheats_FaerieElapsed(count, stamp)`,
+which is `(count - stamp) x n`. The stamps stay in real battles, so the save
+holds nothing new.
+
+**The catalog: every read of the count in the village.** What each field
+means is [`rest_4a.md`](rest_4a.md) section 12 (food `0x9046CA`, culture
+`0x9046CC`, jobs unlocked `0x9046CB`; rooms 4 scholar, 5 merchant, 9
+explorer, 0xB music, 0xD copy shop). Thresholds that are numbers in our
+source are given; the ones the game reads from its tables are not (rule 1).
+
+| # | Step | Function | Stamp | Battles | After the step | Class |
+|---|---|---|---|---|---|---|
+| 1 | Food changes (the hunters' power sum less twice the faerie count, a step) | `CommuSim_Mood` | the food stamp `Rest4a_StampMood` | every 5 | stamp = count (the remainder is lost) | quotient |
+| 2 | A faerie is born, while food is above 4 a faerie and below 20 faeries | `CommuSim_Population` | the grow stamp | every 10, at most (food - 4 x count) / 4 + 1 at once | stamp = count | quotient |
+| 3 | A faerie is lost, at food 0 with more than one | `CommuSim_Population` | the shrink stamp | every 20 | stamp = count | quotient |
+| 4 | The grow stamp kept near the count while no faerie can be born | `CommuSim_Population` | the grow stamp | more than 10 behind | stamp = count - 10 | clamp |
+| 5 | The shrink stamp kept near the count while there is food | `CommuSim_Population` | the shrink stamp | more than 20 behind | stamp = count - 20 | clamp |
+| 6 | Culture goes up a level (below 7), one a visit | `CommuSim_LevelLit` | `Rest4a_StampLevelLit` | a cost from the game's table by level, less the culture scholars' intellect sum, at least 1 | stamp + the cost | carry |
+| 7 | Jobs unlocked goes up a level (below 10), one a visit, when culture allows | `CommuSim_LevelDark` | `Rest4a_StampLevelDark` | 20 less the job scholars' intellect sum, at least 1 | stamp + the cost | carry |
+| 8 | A merchant's shop level goes up | `CommuSim_TickKind5` | the room's `+4` | every max(5, (the room's `+2` + 2) x 6 - the residents' culture sum) | stamp = count | quotient, added in a byte |
+| 9 | A music room's level goes up | `CommuSim_TickKindB` | the room's `+4` | every 6 - the residents' count | stamp = count | quotient, added in a byte |
+| 10 | An explorer comes back | `CommuSim_TickKind9` | the faerie's `+4` | (the room's level + 1) x 6 | the faerie's state; the stamp is set when the player takes the gift | threshold |
+| 11 | A copy is ready (or fails) | `CommuSim_TickKindD` | the faerie's `+4`, set when the item is given (`CommuItem_Give`) | a span from the game's table by the item's price | the faerie's status | threshold |
+| 12 | The pose word of a room-8 faerie: one of three by its wait | `CommuPose_Kind8` | the faerie's `+4` | below 20, below 40, else | none | threshold |
+| 13 | The gift a faerie hands over grows with its wait: twenty steps, from 1 battle to 500 | `CommuTail_TimedGift` | the faerie's `+4` | the last row the wait reaches | stamp = count when the item is taken | threshold |
+| 14 | Clearing and building: the next of the ten story flags `0xF6..0xFF` | `Field_AfterBattleTally` | none: its own count `Rest4a_ClockA` (`0x9046B0`), plus one a battle while a faerie clears (first, fourth and seventh flag) or builds | 20, 40 or 60 less the clear or build power, at least 5 | the count = 0 | **a counter, not a difference** |
+| 15 | An empty room's wait held still: culture scholars, job scholars, each merchant and music room | `Records_CountUnpaired`, `Records_CountUnpairedOfKind` (from `Field_AfterBattleTally`) | the four stamps of rows 6 to 9 | plus one a battle while no faerie is in the room | - | **a stamp pushed, not read** |
+
+Not village steps, and not touched: the writes that set a stamp to the count
+(the first visit, a faerie born, a faerie moved or a room's job changed on
+the board, an item given to copy, a gift taken); effect kind `0x65` (the
+count modulo 5); `FieldTrigger` 1 (the count in a message); the solo mode's
+battle stamp. The master's test in area 50 reads its own byte.
+
+**The two that are handled apart** (rows 14 and 15):
+
+- Row 14 is a counter of its own, so it cannot go through the helper: it
+  adds the slider's number a battle (`Cheats_FaerieSpeed()`). At 0 it stands
+  still.
+- Row 15 needs **no** change, which is why it is listed. The push of one a
+  battle matches the count's one a battle, so the difference the helper
+  multiplies does not grow while the room is empty, at any speed. Pushing
+  the stamp by the slider's number would run it ahead of the count.
+
+**What the multiplier changes at the other sites.**
+
+- *Quotient* rows: the quotient of the multiplied difference. The stamp is
+  set to the count, as before.
+- *Carry* rows 6 and 7: the test is on the multiplied difference; the stamp
+  moves by `Cheats_FaerieSpan(cost)`, the cost in real battles rounded up
+  (13 at speed 10 is 2). Rounded up so that the stamp never passes the count
+  and a remainder is lost and not gained.
+- *Clamp* rows 4 and 5: the test is on the multiplied difference and the
+  stamp is kept `Cheats_FaerieSpan(10)` or `(20)` behind. Without this a stamp
+  20 real battles behind would be 200 village battles at speed 10: ten
+  faeries lost at once the moment food reached 0, where the original loses
+  one.
+- *Added in a byte*, rows 8 and 9: the level takes `level + q` in a byte, so
+  256 steps at once add nothing and 251 can wrap a level to 0. In the
+  original that needs about 750 battles away with three musicians; at speed
+  10 it is about 76. Above 1, `Cheats_FaerieSteps` stops the steps at what
+  the byte holds and the level's cap applies. At 0 and 1 nothing is changed.
+
+**What a player should know.** A change of the slider rescales the wait in
+progress (15 battles at 1 read as 150 at 10). Battles fought at 0 are
+counted when the slider goes above 0 again; the original's limits on a long
+absence apply then, as after any long absence.
+
+**The Definitive Edition.** Its readme's "faerie village faster" is not in
+the 1.4 patch ([`romhack-mods.md`](romhack-mods.md) 9). This slider is ours
+and works with or without the mod. Whether the mod should set a speed of its
+own when it is on, and which, is the owner's call (not built).
+
+**Verification.** 2026-11-21, headless (`BOF3X_SELFTEST_ONLY=1`, a clean copy of the four launcher files under `C:\Users\kerok\bof3x-runs\fs1121`, the 32-bit build of the branch `cheats/faerie-speed` off `main` `03c1b330`). Unset, `BOF3X_SHADOW='*'` exits 0 with every fuzz group at 0 mismatches (`rest_4a` 188,000 rounds, `rest_4b` 360,000, `field_e2` 306,000 among them): at 1 every read is the original's. `BOF3X_FAERIE=10 BOF3X_SHADOW=rest_4a` logs `DIV-0243 the faerie village counts each battle 10 times` and differs in 14,507 rounds; `BOF3X_FAERIE=0` in 16,305; the log names the first twelve of a run, all village steps of the catalog (`CommuSim_Population`, `_Mood`, `_LevelLit`, `_TickKind9`, `_TickKindD`, `CommuPose_Kind8`), and no count by function was taken. `rest_4b` at 10 differs in 4,081 rounds, the twelve named all `CommuTail_TimedGift`; `field_e2` at 10 in 329 and at 0 in 478, the twelve named all `Field_AfterBattleTally`. `BOF3X_FAERIE=11` logs the cap and runs as 10; `BOF3X_FAERIE=x` is `FATAL: BOF3X_FAERIE must be 0..10`; `BOF3X_FAERIE=3 BOF3X_ORIGINAL=CommuSim_Mood` is `FATAL: BOF3X_FAERIE needs CommuSim_Mood ours, and it is disabled`. The launcher's host suite: 4,419 checks, 0 failures (`cheat.faerie` set, saved and read back). Page 3 captured with no screen (`--capture`, `--page game --sub 2 --sheet 2`): the group, the slider at 1 and its sentence draw. `ledger_check.py`, `ledger_registry.py --check`, `ledger_switches.py --check`, `reloc_census.py --check` and `data_census.py --strict` pass. **Not played:** nobody has visited the village with the slider off 1; the fuzz shows that the reads differ, not that the village grows as meant.

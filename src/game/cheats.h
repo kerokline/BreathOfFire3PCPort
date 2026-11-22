@@ -1,7 +1,8 @@
 // Cheats (docs/cheats.md): the EXP and zenny multipliers, DIV-0045, the
 // steal roll that always passes, DIV-0046, every enemy's information
 // shown, DIV-0187, the minigames that cannot be failed, DIV-0188, and the
-// skill that is always learned, DIV-0226. Each
+// skill that is always learned, DIV-0226, and the faerie village's speed,
+// DIV-0243. Each
 // is a launcher setting carried by an environment variable, off when the
 // variable is unset.
 #pragma once
@@ -9,9 +10,32 @@
 #include <cstdint>
 
 // Reads BOF3X_EXP / BOF3X_ZENNY / BOF3X_STEAL / BOF3X_ENEMY_INFO /
-// BOF3X_NO_FAIL / BOF3X_LEARN and patches the two steal rolls when asked. Called once from
+// BOF3X_NO_FAIL / BOF3X_LEARN / BOF3X_FAERIE and patches the two steal rolls when asked. Called once from
 // InjectAll.
 void Cheats_Inject();
+
+// DIV-0243: the faerie village's speed, BOF3X_FAERIE=n, 0..10, 1 when unset.
+// The village counts battles (Game_BattleCount, 0x904134) from stamps it
+// keeps of that count. With the speed n each battle since a stamp counts as n
+// village battles; the count and the stamps stay in real battles, so the save
+// is as it was (docs/cheats.md section 9).
+std::uint32_t Cheats_FaerieSpeed();
+
+// The village battles since `stamp`: (clock - stamp) x the speed, unsigned as
+// the original's subtraction is. At 1 it is the original's difference.
+std::uint32_t Cheats_FaerieElapsed(std::uint32_t clock, std::uint32_t stamp);
+
+// The real battles that hold `span` village battles, rounded up: what a
+// stamp moves by when the village spends `span`, and how far behind the
+// clock a stamp is kept. At 1, and at 0 (where nothing is ever spent), `span`.
+std::uint32_t Cheats_FaerieSpan(std::uint32_t span);
+
+// A shop's level steps `q`, a quotient of the elapsed battles, with the level
+// they are added to. The original adds them in a byte, so 256 steps add
+// nothing; a speed above 1 brings that within a short absence, so there the
+// steps stop at what the byte holds (the caller's cap then applies). At 0 and
+// 1, `q` as it came.
+std::uint32_t Cheats_FaerieSteps(std::uint32_t q, std::uint32_t level);
 
 // DIV-0226: true under BOF3X_LEARN=1. Battle_MemberRollByAction
 // (src/game/battle/dragon_cmd.cpp) then answers 1 whenever its other tests
