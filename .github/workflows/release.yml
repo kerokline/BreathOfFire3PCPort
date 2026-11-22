@@ -18,12 +18,14 @@
 # The Linux tarball (docs/linux-round.md, groups D1 and D2): job `linux`
 # builds it beside the zips on ubuntu-24.04 with D1's script
 # (.github/scripts/linux-build.sh, as build.yml's linux-x86_64 job) and
-# tools/make_release.py --linux; job `linux-attach` waits for both and adds
-# bof3x-<tag>-linux-x86_64.tar.gz to the release the `release` job made (the
-# draft, or "latest"). Not code-signed: jsign signs Windows files. The `release`
-# job does not wait for Linux and does not change for it: a Linux failure
-# leaves the zips' release as it is, without the tarball (and takes a stale
-# tarball off "latest"), and the run is red. DXVK-native is built from its
+# tools/make_release.py --linux and hands bof3x-<tag>-linux-x86_64.tar.gz to
+# the `release` job as an artifact; that job needs `linux`, so it starts when
+# the tarball is made and puts it on the release with the zips (the draft, or
+# "latest"). Not code-signed: jsign signs Windows files. A Linux failure
+# blocks the release as a Windows one does (the owner, 2026-11-22): the
+# `release` job is skipped, no draft is made and "latest" keeps the files of
+# the last good run. The cost is time: the zips are built after the Linux
+# build, not beside it. DXVK-native is built from its
 # pinned source in every release run, with no DXVK cache, so the notices
 # make_release.py copies come from the tree the libraries were built from.
 name: Release
@@ -54,6 +56,8 @@ env:
 jobs:
   release:
     name: ${{ github.ref_type == 'branch' && 'Latest build' || 'Draft release' }}
+    # The tarball first: a failed Linux build skips this job (no release).
+    needs: [linux]
     runs-on: ubuntu-24.04
     steps:
       - name: The tag
@@ -225,13 +229,27 @@ jobs:
             echo "data/furigana/readings.toml is not in this commit: no furigana mod zip"
           fi
 
+      # The tarball job `linux` made, beside the zips.
+      - name: Fetch the Linux tarball
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-tarball
+          path: build/release
+
+      - name: The Linux tarball is there
+        run: |
+          set -euo pipefail
+          test -s "build/release/bof3x-$TAG-linux-x86_64.tar.gz"
+          tar -tzf "build/release/bof3x-$TAG-linux-x86_64.tar.gz" > /dev/null
+
       - name: Draft pre-release
         if: env.TAG != 'latest'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          gh release create "$TAG" "build/release/bof3x-$TAG-win.zip" "build/release/bof3x-$TAG-win-x64.zip" ${MOD_ZIPS:-} \
+          gh release create "$TAG" "build/release/bof3x-$TAG-win.zip" "build/release/bof3x-$TAG-win-x64.zip" \
+            "build/release/bof3x-$TAG-linux-x86_64.tar.gz" ${MOD_ZIPS:-} \
             --draft --prerelease --verify-tag \
             --title "Breath of Fire III - bof3x $TAG" \
             --notes-file "docs/releases/$TAG.md"
@@ -256,16 +274,21 @@ jobs:
             echo "(docs/releases/README.md; the latest release's notes say more). Take"
             echo "\`bof3x-latest-win.zip\`: it is the 32-bit build, the default. \`bof3x-latest-win-x64.zip\`"
             echo "is the 64-bit developer build of the same files; both use the same game copy."
+            echo
+            echo "Linux (x86_64): \`bof3x-latest-linux-x86_64.tar.gz\`. Unpack it and run \`./bof3x-launcher\`."
+            echo "It needs Python 3 and a Vulkan 1.3 driver from the system (README, the Linux section)."
           } > "$notes"
           if gh release view latest >/dev/null 2>&1; then
-            gh release upload latest "build/release/bof3x-latest-win.zip" "build/release/bof3x-latest-win-x64.zip" ${MOD_ZIPS:-} --clobber
+            gh release upload latest "build/release/bof3x-latest-win.zip" "build/release/bof3x-latest-win-x64.zip" \
+              "build/release/bof3x-latest-linux-x86_64.tar.gz" ${MOD_ZIPS:-} --clobber
             gh release edit latest --prerelease --latest=false --title "Latest build (main)" --notes-file "$notes"
           else
-            gh release create latest "build/release/bof3x-latest-win.zip" "build/release/bof3x-latest-win-x64.zip" ${MOD_ZIPS:-} \
+            gh release create latest "build/release/bof3x-latest-win.zip" "build/release/bof3x-latest-win-x64.zip" \
+              "build/release/bof3x-latest-linux-x86_64.tar.gz" ${MOD_ZIPS:-} \
               --prerelease --latest=false --verify-tag --title "Latest build (main)" --notes-file "$notes"
           fi
 
-  # The Linux tarball, built while the `release` job builds the zips.
+  # The Linux tarball, built before the `release` job, which needs it.
   linux:
     name: ${{ github.ref_type == 'branch' && 'Latest build' || 'Draft release' }} (Linux tarball)
     runs-on: ubuntu-24.04
@@ -322,52 +345,10 @@ jobs:
 
       # A .tar.gz keeps the files' modes inside it; the artifact's own zip
       # only carries it to the next job.
-      - name: Hand the tarball to linux-attach
+      - name: Hand the tarball to the release job
         uses: actions/upload-artifact@v4
         with:
           name: linux-tarball
           path: build/release/bof3x-${{ env.TAG }}-linux-x86_64.tar.gz
           if-no-files-found: error
           retention-days: 7
-
-  # The tarball onto the release the `release` job made. Runs when that job
-  # succeeded, whatever `linux` did: with no tarball it takes a stale one off
-  # "latest" (a draft has none to take off) and fails, so the run is red.
-  linux-attach:
-    name: ${{ github.ref_type == 'branch' && 'Latest build' || 'Draft release' }} (Linux tarball attached)
-    needs: [release, linux]
-    if: ${{ always() && needs.release.result == 'success' }}
-    runs-on: ubuntu-24.04
-    env:
-      GH_TOKEN: ${{ github.token }}
-      GH_REPO: ${{ github.repository }}
-    steps:
-      - name: The tag
-        run: |
-          set -euo pipefail
-          if [ "${{ github.ref_type }}" = branch ]; then echo "TAG=latest" >> "$GITHUB_ENV"
-          else echo "TAG=${{ github.event.inputs.tag || github.ref_name }}" >> "$GITHUB_ENV"; fi
-
-      - name: Fetch the tarball
-        if: ${{ needs.linux.result == 'success' }}
-        uses: actions/download-artifact@v4
-        with:
-          name: linux-tarball
-          path: linux-tarball
-
-      - name: Attach the tarball
-        if: ${{ needs.linux.result == 'success' }}
-        run: |
-          set -euo pipefail
-          gh release upload "$TAG" "linux-tarball/bof3x-$TAG-linux-x86_64.tar.gz" --clobber
-
-      - name: No tarball this time
-        if: ${{ needs.linux.result != 'success' }}
-        run: |
-          set -euo pipefail
-          if [ "$TAG" = latest ]; then
-            gh release delete-asset latest "bof3x-latest-linux-x86_64.tar.gz" --yes \
-              || echo "no Linux tarball on latest to take off"
-          fi
-          echo "::error::the Linux tarball was not built (job linux: ${{ needs.linux.result }}); the release has the zips alone"
-          exit 1

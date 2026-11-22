@@ -2900,6 +2900,15 @@ tree. The source: the main checkout's `bof3` folder copied to
   not hold the zips back, and the red run says it failed. The notes of
   "latest", which the `release` job writes, are not changed and do not name
   the tarball.
+  **Changed the same day by the owner's call (2026-11-22): a Linux failure
+  blocks the release as a Windows one does.** Job `linux-attach` is gone;
+  the `release` job has `needs: [linux]`, fetches the tarball artifact into
+  `build/release/`, checks it is there and reads as a tar, and names it in
+  its own `gh release create` / `gh release upload` lines beside the zips.
+  A failed `linux` job skips `release`: no draft, and "latest" keeps the
+  last good run's files. The notes of "latest" now name the tarball. The
+  cost: the zips are built after the Linux build, not beside it. Not run on
+  GitHub.
 - **DXVK's notices against the cache.** `build.yml`'s Linux job passes
   `BOF3X_DXVK_LIBDIR` on a cache hit, and `make_release.py` refuses such a
   build. The release job has no DXVK cache: DXVK-native is built from the

@@ -151,16 +151,16 @@ code-signed.
 builds on `ubuntu-24.04` with `.github/scripts/linux-build.sh` (`deps`,
 `configure`, `build`, `check`; the same steps as `build.yml`'s Linux job,
 but with no DXVK cache, so DXVK-native is built from its pinned commit and
-its notices come from that tree) and runs the line above with the tag. Job
-`linux-attach` then adds `bof3x-<tag>-linux-x86_64.tar.gz` to the release
-the `release` job made: the draft for a tag, or "latest" for a push to
-`main`. The `release` job does not wait for Linux. If the Linux build fails,
-the release goes out with the zips alone, a stale tarball is taken off
-"latest", and the run is red. A build on `ubuntu-24.04` needs glibc 2.38
+its notices come from that tree) and runs the line above with the tag. The
+`release` job needs `linux`: it starts when the tarball is made, fetches it,
+and puts `bof3x-<tag>-linux-x86_64.tar.gz` on the release with the zips: the
+draft for a tag, or "latest" for a push to `main`. If the Linux build fails,
+there is no release, as when a Windows build fails (the owner, 2026-11-22):
+no draft is made, and "latest" keeps the files of the last good run. The
+zips are built after the Linux build, not beside it, so a release run takes
+longer. A build on `ubuntu-24.04` needs glibc 2.38
 and `GLIBCXX_3.4.31` or newer (measured in a 24.04 root, `../linux-round.md`
-"D2 as run"). The
-notes of "latest" (written by the `release` job) do not name the tarball
-yet.
+"D2 as run"). The notes of "latest" name the tarball.
 
 **For the release notes** of the first release that carries the tarball, a
 paragraph to adapt:
