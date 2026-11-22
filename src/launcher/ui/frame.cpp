@@ -49,6 +49,7 @@ constexpr SubPage kSubPages[] = {
     {3, "Data", nullptr, VersionsDataPage},
     {3, "Cheats", "Page 1", CheatsPage1},
     {3, "Cheats", "Page 2", CheatsPage2},
+    {3, "Cheats", "Page 3", CheatsPage3},
     {3, "Solo character", nullptr, SoloPage},
     {4, "Data", nullptr, ModsPage},
     {4, "Extras", "Page 1", ExtrasPage},

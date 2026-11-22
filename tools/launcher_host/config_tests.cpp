@@ -2491,6 +2491,7 @@ void TestSetLine() {
           "--set opt= a list", why);
     Check(bof3x::ConfigSetLine(cfg, "opt", "", why) && cfg.opt.empty(), "--set opt= empty", why);
     Check(bof3x::ConfigSetLine(cfg, "cheat.exp", "4", why) && cfg.cheats.exp == 4, "--set cheat.exp=4", why);
+    Check(bof3x::ConfigSetLine(cfg, "cheat.faerie", "10", why) && cfg.cheats.faerie == 10, "--set cheat.faerie=10", why);
     Check(bof3x::ConfigSetLine(cfg, "language", "en-US", why) && cfg.language == "en-US" && cfg.language_named,
           "--set language=en-US", why);
     const bof3x::Config before = cfg;
@@ -2507,7 +2508,7 @@ void TestSetLine() {
     Check(bof3x::ConfigSave(ini, cfg) && ReadAll(ini) == bof3x::ConfigText(cfg), "ConfigSave writes ConfigText");
     bof3x::Config back;
     Check(bof3x::ConfigLoad(ini, back, why) && back.filter == bof3x::Filter::kPoint && back.wide == 2 &&
-              back.cheats.exp == 4,
+              back.cheats.exp == 4 && back.cheats.faerie == 10,
           "the --set values read back from the file");
     Remove(ini);
 }

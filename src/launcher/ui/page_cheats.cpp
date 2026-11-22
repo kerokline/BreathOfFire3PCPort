@@ -1,5 +1,6 @@
-// Game Options, Cheats, two pages (launcher.rc IDD_PAGE_GAME, IDD_PAGE_GAME2;
-// DIV-0045, DIV-0046, DIV-0187, DIV-0188, DIV-0226; docs/cheats.md).
+// Game Options, Cheats, three pages (the Win32 launcher's IDD_PAGE_GAME and
+// IDD_PAGE_GAME2, and a third of this launcher's own; DIV-0045, DIV-0046,
+// DIV-0187, DIV-0188, DIV-0226, DIV-0243; docs/cheats.md).
 // config_dialog.cpp's kCheatSliders, CheatsPopulate, CheatsReadBack and
 // CheatsSliderMoved, less the windows. The texts are the Win32 pages', word
 // for word.
@@ -20,7 +21,7 @@ namespace {
 constexpr int kCheatMultiplierMax = 10;   // the DLL clamps more to this (src/game/cheats.cpp)
 
 struct Boxes {
-    int exp = 1, zenny = 1;
+    int exp = 1, zenny = 1, faerie = 1;
     bool steal = false, enemy_info = false, no_fail = false, learn = false;
     bool touched = false;
 };
@@ -33,13 +34,14 @@ void FillBoxes(const Config::Cheats& ch) {
     Boxes& b = g_boxes;
     b.exp = Capped(ch.exp);
     b.zenny = Capped(ch.zenny);
+    b.faerie = Capped(ch.faerie);
     b.steal = ch.steal;
     b.enemy_info = ch.enemy_info;
     b.no_fail = ch.no_fail;
     b.learn = ch.learn;
 }
 
-// Either page's Defaults: every cheat, both pages.
+// Each page's Defaults: every cheat, all three pages.
 void DefaultsButton() {
     Place(0, Dy(114));
     Size(Dx(52), 23);
@@ -73,6 +75,7 @@ void CheatsApply(Pages& p) {
     Config::Cheats& ch = p.cfg->cheats;
     ch.exp = b.exp < 0 ? 0 : Capped(b.exp);
     ch.zenny = b.zenny < 0 ? 0 : Capped(b.zenny);
+    ch.faerie = b.faerie < 0 ? 0 : Capped(b.faerie);
     ch.steal = b.steal;
     ch.enemy_info = b.enemy_info;
     ch.no_fail = b.no_fail;
@@ -124,6 +127,23 @@ void CheatsPage2(Pages&) {
     GroupBegin("Enemy skills", 0, Dy(88), Dx(286), Dy(24));
     Place(Dx(7), Dy(99 - 88));
     if (Check("Examine always learns the skill that the enemy uses##learn", &b.learn)) b.touched = true;
+    GroupEnd();
+
+    DefaultsButton();
+}
+
+// Page 3: the faerie village (DIV-0243). No Win32 page came before it.
+void CheatsPage3(Pages&) {
+    Boxes& b = g_boxes;
+    GroupBegin("Faerie village", 0, 0, Dx(286), Dy(74));
+    MultiplierRow("Faerie development speed", "faerie", &b.faerie, 11);
+    Place(Dx(7), Dy(31));
+    Size(Dx(276));
+    Label("1 is normal. 0 stops the village. At 10, the village counts each battle as 10 battles: food, new faeries, "
+          "culture, jobs and shops come 10 times sooner.");
+    Place(Dx(7), Dy(55));
+    Size(Dx(276));
+    Label("When the slider is at 1, a mod can set the speed. The Definitive Edition sets 5.");
     GroupEnd();
 
     DefaultsButton();

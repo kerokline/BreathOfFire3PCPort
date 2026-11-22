@@ -5,6 +5,7 @@
 #include <cstdlib>
 
 #include "common/strto32.h"
+#include "hook/behaviour.h"
 #include "hook/code_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -87,6 +88,16 @@
 // the "cannot be learned" message (system message 0x23): the cheat leaves
 // it alone.
 //
+// DIV-0243: BOF3X_FAERIE=n, 0..10, the faerie village's speed. Every step of
+// the village (areas 175..185, src/game/community/) is a number of battles
+// since a stamp of Game_BattleCount: the code asks Cheats_FaerieElapsed for
+// that number, which is the difference times n. The one count that is not a
+// difference, the clearing and building count Field_AfterBattleTally adds one
+// to after a battle, adds n. The stamps a battle pushes up by one while a
+// room has no faerie (Records_CountUnpaired, _OfKind) are left alone: one
+// real battle a battle keeps the difference still at any speed. 1 is the
+// original's; 0 stops the village. docs/cheats.md section 9 has each site.
+//
 // Every harness run leaves these unset: with the variables unset nothing
 // here changes a byte or a number, and the battle_flow fuzz compares ours
 // against the original with the multipliers at 1.
@@ -97,6 +108,7 @@ std::uint32_t g_exp = 1, g_zenny = 1;
 bool g_enemy_info = false;
 bool g_no_fail = false;
 bool g_learn = false;
+std::uint32_t g_faerie = 1;
 // The roll masks: the imm32 at kPilferMaskImm / kStealMaskImm in this build -
 // 0xFF, or 0 once DIV-0046's patch goes in. Values of ours, never read from
 // the code (docs/operand-store.md); hosted, Operands_Check compares them.
@@ -104,6 +116,7 @@ std::uint32_t g_pilfer_mask = 0xFF;
 std::uint32_t g_steal_mask = 0xFF;
 
 constexpr std::int32_t kMultiplierMax = 10;   // the owner, 2026-10-02: 50 was humorously large
+constexpr std::uint32_t kModFaerieSpeed = 5;  // DIV-0245, the owner, 2026-11-21: the Definitive Edition's speed
 
 // 0..10, 1 when unset. A number above 10 is clamped to 10 and logged (an ini
 // saved while the cap was 50 must not lock its owner out); anything that is
@@ -151,8 +164,25 @@ void Cheats_Inject() {
     g_no_fail = Flag("BOF3X_NO_FAIL");
     if (g_no_fail) bof3::Log("DIV-0188    the minigames cannot be failed (BOF3X_NO_FAIL)");
 
-    g_learn = Flag("BOF3X_LEARN");
-    if (g_learn) bof3::Log("DIV-0226    a member that watches an enemy always learns its skill (BOF3X_LEARN)");
+    // DIV-0244: a mod's behaviour ExamineAlwaysLearns turns the same switch on.
+    const bool learn_env = Flag("BOF3X_LEARN");
+    g_learn = learn_env || bof3::BehaviourOn(bof3::behaviours::Id::ExamineAlwaysLearns);
+    if (g_learn)
+        bof3::Log("DIV-0226    a member that watches an enemy always learns its skill (%s)",
+                  learn_env ? "BOF3X_LEARN" : "DIV-0244, the behaviour ExamineAlwaysLearns");
+
+    // DIV-0245: a mod's behaviour FasterFaerieVillage gives the speed
+    // kModFaerieSpeed when BOF3X_FAERIE is unset. The launcher sends the
+    // variable only when the slider is not 1, so the slider at 1 leaves the
+    // speed to the mod and any other number is the player's.
+    char faerie_text[4];
+    const bool faerie_env = bof3::os::GetEnv("BOF3X_FAERIE", faerie_text, sizeof faerie_text) != 0;
+    g_faerie = Multiplier("BOF3X_FAERIE");
+    const bool faerie_mod = !faerie_env && bof3::BehaviourOn(bof3::behaviours::Id::FasterFaerieVillage);
+    if (faerie_mod) g_faerie = kModFaerieSpeed;
+    if (g_faerie != 1)
+        bof3::Log("DIV-0243    the faerie village counts each battle %u times (%s)", (std::uint32_t)g_faerie,
+                  faerie_mod ? "DIV-0245, the behaviour FasterFaerieVillage" : "BOF3X_FAERIE");
 
     bof3::Operand("DIV-0046 Pilfer roll mask", kPilferMaskImm, &g_pilfer_mask, 4);
     bof3::Operand("DIV-0046 Steal roll mask", kStealMaskImm, &g_steal_mask, 4);
@@ -171,3 +201,18 @@ std::uint32_t Cheats_StealRollMask() { return g_steal_mask; }
 bool Cheats_EnemyInfoShown() { return g_enemy_info; }
 bool Cheats_MinigameNoFail() { return g_no_fail; }
 bool Cheats_LearnAlways() { return g_learn; }
+
+std::uint32_t Cheats_FaerieSpeed() { return g_faerie; }
+
+std::uint32_t Cheats_FaerieElapsed(std::uint32_t clock, std::uint32_t stamp) { return (clock - stamp) * g_faerie; }
+
+std::uint32_t Cheats_FaerieSpan(std::uint32_t span) {
+    if (g_faerie <= 1) return span;
+    return (span + g_faerie - 1) / g_faerie;
+}
+
+std::uint32_t Cheats_FaerieSteps(std::uint32_t q, std::uint32_t level) {
+    if (g_faerie <= 1) return q;
+    const std::uint32_t room = level < 0xFF ? 0xFFu - level : 0u;
+    return q < room ? q : room;
+}

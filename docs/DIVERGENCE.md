@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 242 entries, DIV-0001..0242, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 245 entries, DIV-0001..0245, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -18443,5 +18443,151 @@ designed in rather than bolted on.
 - **Default:** on
 - **Player:** never - one-way for a player: the switch that reads BOF3.exe is the developer's, refused from a preset (the owner's decision 2, 2026-11-19)
 - **Toward:** none - no release had an install separate from its executable
+- **Languages:** any
+- **State:** active
+
+### The faerie village's speed: a Cheats slider
+
+- **ID:** DIV-0243
+- **Date:** 2026-11-21
+- **Subsystem:** the faerie village (areas 175..185): its simulation
+  `CommuSim_Population` `0x4555D0`, `_Mood` `0x455700`, `_LevelLit`
+  `0x4557A0`, `_LevelDark` `0x455870`, `_TickKind5` `0x455950`, `_TickKind9`
+  `0x455AA0`, `_TickKindD` `0x455BE0`, `_TickKindB` `0x455DF0` and
+  `CommuPose_Kind8` `0x4568A0` (`src/game/community/commu_sim.cpp`),
+  `CommuTail_TimedGift` `0x456E80` (`commu_tail.cpp`), and
+  `Field_AfterBattleTally` (`src/game/field/field_6.cpp`), all ours; the
+  switch in `src/game/core/cheats.cpp`; the launcher's Cheats sub-tab, Page 3;
+  [`cheats.md`](cheats.md) section 9.
+- **Tier:** Extension
+- **Original behaviour:** the village's clock is the battle count
+  `Game_BattleCount` (`0x904134`, plus one a battle). Each step keeps a stamp
+  of that count and asks for the battles since it: food every 5, a new faerie
+  every 10 while food is above four a faerie, a faerie lost every 20 at no
+  food, a culture level and a job level at a cost in battles less the
+  scholars' sum, a merchant's and a musician's level by a quotient, an
+  explorer's return, a copy's span by price, a gift by the time waited
+  ([`cheats.md`](cheats.md) section 9 has the fourteen reads). One count is
+  not a difference: after each battle `Field_AfterBattleTally` adds one to
+  the dword `0x9046B0` while a faerie clears or builds, toward the next of ten
+  story flags (20, 40 or 60 battles less the clear or build power, at least
+  5). And four stamps go up by one a battle while their room has no faerie,
+  which holds that room's wait still (`Records_CountUnpaired`,
+  `Records_CountUnpairedOfKind`).
+- **New behaviour:** with `BOF3X_FAERIE=n` (`cheat.faerie=n`, the slider
+  "Faerie development speed", 0 to 10) each battle since a stamp counts as n
+  for the village: every read above is `(count - stamp) x n`, and the
+  clearing and building count adds n a battle. 1 is the original's and the
+  default; 0 stops every step; 10 makes a step of 20 battles one of 2.
+  `Game_BattleCount` itself is not changed (its other readers, effect kind
+  `0x65`, the count a message shows and the solo mode, see real battles), and
+  nothing is added to the save: the stamps stay in real battles. What follows
+  from that:
+  - Where the original moves a stamp by a cost (the culture and job levels)
+    or keeps a stamp at most 10 or 20 behind the count (the population's two
+    stamps), the move is the cost in real battles, rounded up: at 10 a cost
+    of 13 is met after 2 battles and spends 2. A remainder is lost, never
+    gained.
+  - The four stamps that hold an empty room's wait still are left as they
+    are: one a battle holds the difference at any speed.
+  - The merchant's and the musician's steps are added in a byte, so in the
+    original 256 steps at once add nothing. A speed above 1 brings that
+    within one absence (about 76 battles at 10 with three musicians), so
+    above 1 the steps stop at what the byte holds and the level's own cap
+    applies. At 0 and 1 the byte wraps as the original's does.
+  - A change of the slider in a game under way rescales the wait in
+    progress: 15 battles waited at 1 read as 150 at 10, so several steps can
+    come at one visit; and battles fought at 0 are counted once the slider is
+    above 0 again. The original's own limits on a long absence still apply
+    (one culture and one job level a visit, the population's stamps kept
+    near the count).
+  The module stops the game at start when the slider is not 1 and one of the
+  eleven functions is left as Capcom's (`BOF3X_ORIGINAL`).
+- **Rationale:** the owner's request, 2026-11-21 (IDEAS I71): "a slider to
+  add to the cheats area - 'Fairy Development Speed' 0-10, where the number
+  is a multiplier against the combat count change". TheGreatBen's
+  *Definitive Edition* readme says the village progresses much faster; the
+  1.4 patch holds no such change ([`romhack-mods.md`](romhack-mods.md) 9), so
+  this is a switch of our own, for any install, and needs no mod.
+- **Also in the PSX version?** No. The simulation's twin is COMMU00 section
+  0 (not edited by the hack; `romhack-mods.md` 9).
+- **Verification:** 2026-11-21, headless (`BOF3X_SELFTEST_ONLY=1`, a clean copy of the four launcher files under `C:\Users\kerok\bof3x-runs\fs1121`, the 32-bit build of the branch `cheats/faerie-speed` off `main` `03c1b330`). Unset, `BOF3X_SHADOW='*'` exits 0 with every fuzz group at 0 mismatches (`rest_4a` 188,000 rounds, `rest_4b` 360,000, `field_e2` 306,000 among them): at 1 every read is the original's. `BOF3X_FAERIE=10 BOF3X_SHADOW=rest_4a` logs `DIV-0243 the faerie village counts each battle 10 times` and differs in 14,507 rounds; `BOF3X_FAERIE=0` in 16,305; the log names the first twelve of a run, all village steps of the catalog (`CommuSim_Population`, `_Mood`, `_LevelLit`, `_TickKind9`, `_TickKindD`, `CommuPose_Kind8`), and no count by function was taken. `rest_4b` at 10 differs in 4,081 rounds, the twelve named all `CommuTail_TimedGift`; `field_e2` at 10 in 329 and at 0 in 478, the twelve named all `Field_AfterBattleTally`. `BOF3X_FAERIE=11` logs the cap and runs as 10; `BOF3X_FAERIE=x` is `FATAL: BOF3X_FAERIE must be 0..10`; `BOF3X_FAERIE=3 BOF3X_ORIGINAL=CommuSim_Mood` is `FATAL: BOF3X_FAERIE needs CommuSim_Mood ours, and it is disabled`. The launcher's host suite: 4,419 checks, 0 failures (`cheat.faerie` set, saved and read back). Page 3 captured with no screen (`--capture`, `--page game --sub 2 --sheet 2`): the group, the slider at 1 and its sentence draw. `ledger_check.py`, `ledger_registry.py --check`, `ledger_switches.py --check`, `reloc_census.py --check` and `data_census.py --strict` pass. **Not played:** nobody has visited the village with the slider off 1; the fuzz shows that the reads differ, not that the village grows as meant.
+- **Reversible?** Yes: the slider at 1, `BOF3X_FAERIE` unset. What the
+  village gained with it above 1 stays in the save; the stamps are real
+  battle counts, so a save made with the slider at any value loads in the
+  original.
+- **Switch:** ini:cheat.faerie=1
+- **Default:** off - the slider starts at 1
+- **Player:** yes
+- **Toward:** none
+- **Languages:** any
+- **State:** active
+
+### A mod can make an examining member always learn the enemy's skill
+
+- **ID:** DIV-0244
+- **Date:** 2026-11-21
+- **Subsystem:** battle, the learning of an enemy's skill -
+  `Battle_MemberRollByAction` `0x453910` (ours,
+  `src/game/battle/dragon_cmd.cpp`) through `Cheats_LearnAlways`
+  (`src/game/core/cheats.cpp`); the behaviour `ExamineAlwaysLearns`
+  ([`mods.md`](mods.md) 11); `data/mods/known.toml`
+- **Tier:** Extension - another person's design, played only when a mod asks
+  for it
+- **Original behaviour:** as DIV-0226's: a member that watches an enemy
+  learns the skill the enemy uses on a roll by the skill's class.
+- **New behaviour:** with `ExamineAlwaysLearns` on, the game runs as with
+  DIV-0226's switch on (`cheat.learn=1`): the roll answers 1 after its
+  refusals. Nothing else is added; the start's log line names which of the
+  two turned it on. The Definitive Edition's `needs` names it, so the mod on
+  is the box on.
+- **Rationale:** the owner's call, 2026-11-21: the Definitive Edition should
+  set the "always learn skill" toggle. The hack's readme lists "Examine
+  always learning"; the 1.4 patch holds no such change
+  ([`romhack-mods.md`](romhack-mods.md) 9), so the mod asks for our switch.
+- **Also in the PSX version?** No.
+- **Verification:** 2026-11-21, headless (`BOF3X_SELFTEST_ONLY=1`, the 32-bit build of `cheats/faerie-speed` with `main` `158b77e6` merged in, the clean launcher copy of DIV-0243's runs). With no switch set, `BOF3X_SHADOW='*'` exits 0 with every fuzz group at 0 mismatches. `BOF3X_ON=ExamineAlwaysLearns BOF3X_SHADOW=battle_e6` logs `DIV-0226 a member that watches an enemy always learns its skill (DIV-0244, the behaviour ExamineAlwaysLearns)` and differs in 330 of 6,000 rounds, the twelve the log names all `Battle_MemberRollByAction`: the same count as DIV-0226's own run with `BOF3X_LEARN=1`. `tools/mods.py selftest` 0 failures and the launcher's host suite 4,451 checks, 0 failures, with the name in the Definitive Edition's `needs`; `ledger_check.py`, `ledger_registry.py --check`, `ledger_switches.py --check` pass. **Not played**, and not run with the mod itself: a mod added before this change keeps its old `needs` until the patch is added again.
+- **Reversible?** Yes - it is off unless a mod's `needs` or `on=` names it;
+  `BOF3X_OFF=ExamineAlwaysLearns` keeps it off (DIV-0226's box then decides
+  alone).
+- **Switch:** ExamineAlwaysLearns
+- **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
+- **Player:** yes - BOF3X_ON, on=
+- **Toward:** none - no release has it; it is the romhack's readme's
+- **Languages:** any
+- **State:** active
+
+### A mod can run the faerie village at five times its speed
+
+- **ID:** DIV-0245
+- **Date:** 2026-11-21
+- **Subsystem:** the faerie village's speed, DIV-0243
+  (`Cheats_FaerieSpeed`, `src/game/core/cheats.cpp`); the behaviour
+  `FasterFaerieVillage` ([`mods.md`](mods.md) 11); `data/mods/known.toml`;
+  [`cheats.md`](cheats.md) section 9
+- **Tier:** Extension - another person's design, played only when a mod asks
+  for it
+- **Original behaviour:** as DIV-0243's: the village counts each battle
+  once.
+- **New behaviour:** with `FasterFaerieVillage` on and `BOF3X_FAERIE` unset,
+  the village's speed is 5, as DIV-0243's slider at 5. The launcher sends
+  `BOF3X_FAERIE` only when the slider is not 1, so with the mod on the
+  slider at 1 gives 5, and any other number on the slider (0 and 2 to 10)
+  is the player's and wins. `BOF3X_FAERIE=1` set by hand also wins. The
+  Definitive Edition's `needs` names the behaviour.
+- **Rationale:** the owner's call, 2026-11-21: "lets have the definitive
+  edition set the slider to 5". The hack's readme says the village
+  progresses much faster; the 1.4 patch holds no such change
+  ([`romhack-mods.md`](romhack-mods.md) 9), so the number is the owner's,
+  not measured from the hack.
+- **Also in the PSX version?** No.
+- **Verification:** 2026-11-21, headless (`BOF3X_SELFTEST_ONLY=1`, the 32-bit build of `cheats/faerie-speed` with `main` `158b77e6` merged in, the clean launcher copy of DIV-0243's runs). With no switch set, `BOF3X_SHADOW='*'` exits 0 with every fuzz group at 0 mismatches. `BOF3X_ON=FasterFaerieVillage BOF3X_SHADOW=rest_4a` logs `DIV-0243 the faerie village counts each battle 5 times (DIV-0245, the behaviour FasterFaerieVillage)` and differs in 14,166 rounds, the twelve named all village steps. With `BOF3X_FAERIE=1` beside it, `rest_4a` is at 0 mismatches and no DIV-0243 line is logged: the variable wins. With `BOF3X_FAERIE=0` beside it the log says 0 times `(BOF3X_FAERIE)` and `field_e2` differs in 478 rounds, as DIV-0243's run at 0. `tools/mods.py selftest` 0 failures; the launcher's host suite 4,451 checks, 0 failures; Page 3's new sentence seen in a capture with no screen; `ledger_check.py`, `ledger_registry.py --check`, `ledger_switches.py --check`, `reloc_census.py --check`, `data_census.py --strict` pass. **Not played**, and not run with the mod itself: a mod added before this change keeps its old `needs` until the patch is added again.
+- **Reversible?** Yes - it is off unless a mod's `needs` or `on=` names it;
+  `BOF3X_OFF=FasterFaerieVillage` keeps it off, and the slider at a number
+  other than 1 replaces its 5.
+- **Switch:** FasterFaerieVillage
+- **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
+- **Player:** yes - BOF3X_ON, on=
+- **Toward:** none - no release has it; it is the romhack's readme's
 - **Languages:** any
 - **State:** active
