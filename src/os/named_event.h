@@ -23,7 +23,7 @@
 
 namespace bof3::os {
 
-struct NamedEvent;   // kept for the process's life
+struct NamedEvent;   // kept for the process's life, or until CloseNamedEvent
 
 // `name`: letters, digits and '_' (the backend adds the system's prefix).
 // Null on an error (LastError).
@@ -33,6 +33,13 @@ void ResetNamedEvent(NamedEvent* e) noexcept;
 // True when the event was set within `ms` milliseconds (and is taken: an
 // auto-reset event), false when the time ran out or the wait failed.
 bool WaitNamedEvent(NamedEvent* e, std::uint32_t ms) noexcept;
+
+// The event closed and its name given back: Windows' CloseHandle (the name
+// goes with its last handle); POSIX sem_close and sem_unlink, so nothing of it
+// stays in /dev/shm. `e` is not used again. A process that ends without this
+// call leaves the POSIX name behind (the unattended marker, step 17 of
+// hook/exe_host_steps.h, until its process number is used again).
+void CloseNamedEvent(NamedEvent* e) noexcept;
 
 // How this build waits, in words. For the tests, which say what was run.
 const char* NamedEventWaitWay() noexcept;

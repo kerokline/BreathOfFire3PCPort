@@ -139,9 +139,20 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      The owner checked the Sources page's window, the save editor's window and the Jukebox on a game folder with no
      `BOF3.exe` (2026-11-20: "both are working as expected"). **Owed:** the save editor's window on a disc-built install; the
      Sources page through a set-up in place; the Jukebox's and the save editor's drivers; the owner's play.
-   - **The Linux round's next units** are frost's, on his fork ([`linux-round.md`](linux-round.md) 4 and 6; "Waiting on
-     someone else"). Here: the renderer's remainder ([`platform-layers-plan.md`](platform-layers-plan.md) 2.2) gates tier 2;
-     call 1 of `linux-round.md` 6 chose DXVK-native. Tier 1's rows 5, 7
+   - **The Linux round's wave B ran on 2026-11-21, on the local branch `linux/lcB` (not pushed, no PR)**
+     ([`linux-round.md`](linux-round.md), "Wave B as run"): the game is a Linux ELF that starts through the Linux launcher and
+     ends the ten state-hash routes headless in the WSL on llvmpipe, each differing page explained; `music_heard.py`, a
+     quicksave and its load, and a forced fault pass there. The gate's Windows half ran the same evening: the ten routes equal `_c0x32`,
+     and each system refuses the other's quicksave cleanly (a quicksave is its build's; none crosses the systems, by
+     design), so LC's gate is closed on what headless runs show. **Owed by a person:** a look at the Linux picture, on a GPU and a real
+     desktop (frost's machine or a tester's). D433; DIV-0094 and DIV-0238 amended. As staged
+     ([`linux-round.md`](linux-round.md), "Wave B, staged"): wave A is on `main` (PR #265). The owner's call of 2026-11-19: what can be done here is done here,
+     frost takes it up when he has time. Built natively in the WSL, the link of `main` `e9c1fb41` is 7 names short
+     (`main`, `__ImageBase`, the gap watch's two entries, `ExeIcon_Frame`, the render window's two functions); DXVK-native
+     builds and links there. Four units: B1 alone (the link and the start-up to the ELF's self-test), then B2a (the
+     picture and the movies), B2b (faults) and B2c (paths and saves) side by side, then B3, LC's gate. The owner answered
+     all five calls on 2026-11-20 (in that section) and gave the word on 2026-11-21. The brief is `analysis/linux_lcB_brief.md` in the main checkout (not
+     tracked). The second backend no longer gates tier 2 (call 1 of section 6 chose DXVK-native). Tier 1's rows 5, 7
      and 9 to 12 are still to run on frost's Linux machine (2c).
    - **The romhack's behaviours** ([`disc-patch-round.md`](disc-patch-round.md) 6a to 6d; PRs #232, #233, #239): ten built,
      eight proven with the game, **all ten played by the owner on 2026-11-12** under version 1.0 (`main` `db9619da` from

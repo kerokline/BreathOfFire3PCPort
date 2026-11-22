@@ -18,9 +18,32 @@
 // kMaxReports reports; a second fault while one is reported is passed on
 // unreported.
 //
-// What the handler itself does is async-signal-safe: copies, an atomic
-// exchange, sem_post, nanosleep, sigaction, raise. The reporter is an
-// ordinary thread.
+// The exe host's step 23 (Crash_EndUnhandledAsFatal, crash.h) changes the
+// end of a fault nobody before us handles - its old disposition SIG_DFL or
+// SIG_IGN - to Windows' end of an exception nobody handled (exe_host.cpp
+// Unhandled): the reporter, its CRASH lines written, calls Fatal ("a signal
+// nobody handled"), which logs, shows its message unless the run is a
+// self-test, and ends the process with code 3. The faulting thread waits for
+// it without a bound once the report is written (Fatal's message waits for
+// the player); a report not written in 20 s ends the process with code 3 from
+// the handler (_exit), the lines lost as before. Why code 3 and not the
+// signal's own end, which the catcher gave before step 23 existed here: the
+// work order says so (exe_host_steps.h 23), a player sees Fatal's message in
+// place of a window that vanishes, and one rule serves the tools on both
+// systems - the log's FATAL line and the exit code 3 (log.cpp Fatal). What it
+// costs: the core file the signal's default would write; a developer who
+// wants one runs the ELF under a debugger, which stops at the signal first.
+//
+// The main thread's stack is placed (os/placed.h; exe_host_posix.cpp row 3)
+// with a no-access guard page under it, and the catcher is armed on that
+// stack (step 16): an overflow faults on the guard page with the stack
+// pointer at its edge, and the handler runs on the alternate stack below, so
+// it is reported - with a line that names the guard page - and ended as any
+// other fault.
+//
+// What the handler itself does is async-signal-safe: copies, atomics,
+// sem_post, nanosleep, sigaction, raise, _exit. The reporter is an ordinary
+// thread.
 #include "hook/crash.h"
 
 #include <atomic>
@@ -64,11 +87,52 @@ std::atomic<bool> g_done{false};
 sem_t g_wake;
 int g_pipe[2] = {-1, -1};       // Peek's second way, where process_vm_readv is refused
 char g_engine[256] = "the engine";
+std::uintptr_t g_engine_lo = 0, g_engine_hi = 0;   // the engine's loaded extent (Crash_Start)
+std::uintptr_t g_image_lo = 0, g_image_hi = 0;     // the game's image (Crash_Start)
+
+// Step 23 (the header comment): set once by Crash_EndUnhandledAsFatal.
+std::atomic<bool> g_end_as_fatal{false};
+bool g_fault_ends = false;              // the reported fault's end is Fatal's: set by its handler before the wake
+std::atomic<bool> g_ending{false};      // the reporter is in Fatal: the process is ending with code 3
+std::atomic<std::uint32_t> g_reporter_tid{0};
 
 // The alternate stack: for the thread that armed the catcher (sigaltstack is
 // a thread's own). A fault on another thread runs the handler on that
 // thread's stack, which serves unless that stack is what broke.
 alignas(16) unsigned char g_alt_stack[64 * 1024];
+// That thread and the stack it ran on when it armed it: an access in the page
+// under that stack is its overflow (Report's line). In the exe host the main
+// thread on its placed stack (exe_host_posix.cpp row 3, the guard below it).
+std::uint32_t g_armed_tid = 0;
+std::uintptr_t g_armed_stack_lo = 0, g_armed_stack_hi = 0;
+constexpr std::uintptr_t kPage = 0x1000;
+
+const char* Name(int sig) {
+    switch (sig) {
+        case SIGILL: return "SIGILL";
+        case SIGABRT: return "SIGABRT";
+        case SIGBUS: return "SIGBUS";
+        case SIGFPE: return "SIGFPE";
+        case SIGSEGV: return "SIGSEGV";
+        case SIGTRAP: return "SIGTRAP";
+        default: return "a signal";
+    }
+}
+
+// Whether a handler was there before ours: a function to pass the fault to.
+bool Handled(const struct sigaction& old) {
+    if (old.sa_flags & SA_SIGINFO) return old.sa_sigaction != nullptr;
+    return old.sa_handler != SIG_DFL && old.sa_handler != SIG_IGN;
+}
+
+// The faulting thread, once the process's end is the reporter's Fatal: it
+// waits for that end (Fatal's message waits for the player).
+[[noreturn]] void HoldForTheEnd() {
+    for (;;) {
+        const timespec t{1, 0};
+        nanosleep(&t, nullptr);
+    }
+}
 
 // The siginfo and the context as the portable report's facts.
 void Fill(int sig, const siginfo_t* si, const ucontext_t* uc) {
@@ -132,8 +196,13 @@ void PassOn(int sig, siginfo_t* si, void* uc) {
 
 void OnSignal(int sig, siginfo_t* si, void* uc) {
     const int saved_errno = errno;
+    // Step 23's end for this fault (the header comment); never for a fault of
+    // the reporter's own thread, which would wait for itself.
+    const bool ends = g_end_as_fatal.load() && !Handled(g_old[sig]) && os::ThreadId() != g_reporter_tid.load();
+    if (ends && g_ending.load()) HoldForTheEnd();   // another fault's Fatal is ending the process
     if (g_reports.load() < kMaxReports && g_busy.exchange(1) == 0) {
         Fill(sig, si, static_cast<const ucontext_t*>(uc));
+        g_fault_ends = ends;
         g_done.store(false);
         sem_post(&g_wake);
         // Bounded: if the reporter cannot finish, the crash must still proceed.
@@ -141,27 +210,59 @@ void OnSignal(int sig, siginfo_t* si, void* uc) {
             const timespec t{0, 1000000};
             nanosleep(&t, nullptr);
         }
+        if (ends) {
+            if (g_done.load()) HoldForTheEnd();   // the reporter is in Fatal
+            _exit(3);                             // no report in 20 s: Fatal's code all the same
+        }
         g_reports.fetch_add(1);
         g_busy.store(0);
+    } else if (ends) {
+        // Not reported: another fault's report is under way (or the four are
+        // spent). Its Fatal ends the process if it is a step-23 end; else
+        // this one ends it, with Fatal's code.
+        for (int ms = 0; ms < kWaitMs && !g_ending.load(); ++ms) {
+            const timespec t{0, 1000000};
+            nanosleep(&t, nullptr);
+        }
+        if (g_ending.load()) HoldForTheEnd();
+        _exit(3);
     }
     errno = saved_errno;
     PassOn(sig, si, uc);
 }
 
 void Report() {
-    const long n = g_fault.number;
-    crash::WriteReport(g_fault);
+    const crash::Fault& f = g_fault;
+    const long n = f.number;
+    crash::WriteReport(f);
+    // An overflow of the armed thread's stack (the header comment): Windows
+    // names it by its exception code (0xC00000FD); here the access says it.
+    if (f.access != crash::Access::None && f.thread == g_armed_tid && g_armed_stack_lo &&
+        f.access_at >= g_armed_stack_lo - kPage && f.access_at < g_armed_stack_lo)
+        Log("CRASH %ld: a stack overflow - the access is to the guard page 0x%llX..0x%llX under thread %lu's stack "
+            "0x%llX..0x%llX",
+            n, static_cast<unsigned long long>(g_armed_stack_lo - kPage), static_cast<unsigned long long>(g_armed_stack_lo),
+            (unsigned long)f.thread, static_cast<unsigned long long>(g_armed_stack_lo),
+            static_cast<unsigned long long>(g_armed_stack_hi));
     Log("CRASH %ld: no dump - this system has no minidump; the lines above are the whole report", n);
     crash::EndReport();
 }
 
-// The one reporter thread: waits on g_wake, reports g_fault, sets g_done.
+// The one reporter thread: waits on g_wake, reports g_fault, sets g_done;
+// for a step-23 end it then ends the process as Windows' Unhandled does.
 void Reporter() {
+    g_reporter_tid.store(os::ThreadId());
     for (;;) {
         while (sem_wait(&g_wake) != 0 && errno == EINTR) {
         }
         Report();
+        const bool ends = g_fault_ends;
+        if (ends) g_ending.store(true);
         g_done.store(true);
+        if (ends)
+            Fatal("a signal nobody handled: %u (%s, code %d) at 0x%0*llX (see the CRASH lines above)", (unsigned)g_fault.code,
+                  Name(static_cast<int>(g_fault.code)), g_fault.sub_code, static_cast<int>(2 * sizeof(std::uintptr_t)),
+                  static_cast<unsigned long long>(g_fault.addr));
     }
 }
 
@@ -225,11 +326,30 @@ void OnTrap(int sig, siginfo_t* si, void* uc) {
         g_old_trap.sa_handler(sig);
         return;
     }
+    // Step 23 (the header comment): a trap nobody handled ends the process as
+    // Windows' Unhandled ends an unhandled breakpoint. On the trapping thread,
+    // as the callback above logged there.
+    if (g_end_as_fatal.load()) {
+        const greg_t* g = static_cast<const ucontext_t*>(uc)->uc_mcontext.gregs;
+#if defined(__x86_64__)
+        const std::uintptr_t ip = g[REG_RIP];
+#else
+        const std::uintptr_t ip = g[REG_EIP];
+#endif
+        Fatal("a signal nobody handled: %d (SIGTRAP, code %d) at 0x%0*llX (see the exittrace lines above)", sig, si->si_code,
+              static_cast<int>(2 * sizeof(std::uintptr_t)), static_cast<unsigned long long>(ip));
+    }
     sigaction(sig, &g_old_trap, nullptr);
     raise(sig);
 }
 
 }  // namespace
+
+void Crash_EndUnhandledAsFatal() {
+    g_end_as_fatal.store(true);
+    Log("crash reporter: from here a fault no other handler takes ends the process as Fatal does, code 3, after its "
+        "CRASH lines (step 23; Windows' SetUnhandledExceptionFilter)");
+}
 
 bool Crash_WatchBreaks(BreakFn on_break) {
     g_on_break = on_break;
@@ -255,7 +375,22 @@ bool Peek(std::uintptr_t addr, void* out, size_t n) {
     return read(g_pipe[0], out, n) == static_cast<ssize_t>(n);
 }
 
+// The game's image is no loaded object here (the start-up maps it as
+// anonymous memory, exe_host_posix.cpp row 1): named by its VA. The engine is
+// the ELF (or the shared object holding this file): its name and the offset
+// from image::g_ownBase, the ELF's base, as crt_rest.cpp's messages give it.
+// Anything else (the C library, SDL, DXVK) by dladdr.
 void Where(std::uintptr_t addr, char* out, size_t cap) {
+    if (addr >= g_image_lo && addr < g_image_hi) {
+        std::snprintf(out, cap, "the game's image, VA 0x%08X",
+                      (unsigned)(static_cast<std::uint32_t>(addr) - ImageBase() + image::kBase));
+        return;
+    }
+    if (addr >= g_engine_lo && addr < g_engine_hi) {
+        const std::uintptr_t base = image::g_ownBase ? image::g_ownBase : g_engine_lo;
+        std::snprintf(out, cap, "%s+0x%lX", g_engine, (unsigned long)(addr - base));
+        return;
+    }
     Dl_info info;
     if (dladdr(reinterpret_cast<void*>(addr), &info) && info.dli_fname && info.dli_fname[0]) {
         const char* name = std::strrchr(info.dli_fname, '/');
@@ -282,7 +417,13 @@ void Crash_Start(void* dll_module) {
     if (!dl_iterate_phdr(FindExtent, &engine)) Fatal("crash reporter: no loaded object holds %p", dll_module);
     // The game's image: the linked span the engine maps it in (exe_layout.h),
     // from its base to the end of the pool.
-    crash::SetRanges(engine.lo, engine.hi, Img(exe_layout::kImageBase), Img(exe_layout::kPoolVa + exe_layout::kPoolSize));
+    g_engine_lo = engine.lo, g_engine_hi = engine.hi;
+    g_image_lo = Img(exe_layout::kImageBase), g_image_hi = Img(exe_layout::kPoolVa + exe_layout::kPoolSize);
+    crash::SetRanges(engine.lo, engine.hi, g_image_lo, g_image_hi);
+    g_armed_tid = os::ThreadId();
+    const os::StackRange stack = os::CurrentStack();
+    g_armed_stack_lo = reinterpret_cast<std::uintptr_t>(stack.limit);
+    g_armed_stack_hi = reinterpret_cast<std::uintptr_t>(stack.base);
 
     if (pipe2(g_pipe, O_CLOEXEC | O_NONBLOCK) != 0) g_pipe[0] = g_pipe[1] = -1;
     if (sem_init(&g_wake, 0, 0) != 0) Fatal("crash reporter: sem_init failed, error %d", errno);
@@ -298,7 +439,10 @@ void Crash_Start(void* dll_module) {
     sigemptyset(&sa.sa_mask);
     for (int sig : kSignals)
         if (sigaction(sig, &sa, &g_old[sig]) != 0) Fatal("crash reporter: sigaction(%d) failed, error %d", sig, errno);
-    Log("crash reporter armed (signals 4, 6, 7, 8, 11 on an alternate stack; no minidump on this system)");
+    Log("crash reporter armed (signals 4, 6, 7, 8, 11; thread %lu on an alternate stack, its own stack 0x%llX..0x%llX; "
+        "no minidump on this system)",
+        (unsigned long)g_armed_tid, static_cast<unsigned long long>(g_armed_stack_lo),
+        static_cast<unsigned long long>(g_armed_stack_hi));
 
     char num[16];
     if (os::GetEnv("BOF3X_CRASH_TEST", num, sizeof num) && num[0]) {

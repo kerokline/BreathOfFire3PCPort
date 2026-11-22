@@ -274,7 +274,7 @@ void Draw() {
 void WriteFake(const std::string& path, unsigned char mark) {
     // Not a save: 0xCBC bytes of a mark, so each listed file's summary says which file it came from.
     std::string bytes(0xCA0 + save_menu::kSummaryBytes, static_cast<char>(mark));
-    FILE* f = bof3::os::OpenNarrow(path.c_str(), "wb");   // the self-test's folders end in a backslash
+    FILE* f = bof3::os::OpenNarrow(path.c_str(), "wb");   // the self-test's folders end in the system's separator
     if (!f || std::fwrite(bytes.data(), 1, bytes.size(), f) != bytes.size()) Fail("cannot write a test file");
     std::fclose(f);
 }
@@ -287,8 +287,12 @@ void ListsSelfTest() {
     const char sep = static_cast<char>(std::filesystem::path::preferred_separator);
     const std::string tmp = tmp_dir.back() == sep ? tmp_dir : tmp_dir + sep;
     char dir_a[bof3::os::kMaxPath], dir_b[bof3::os::kMaxPath];
-    std::snprintf(dir_a, sizeof dir_a, "%sbof3x_qm_a_%u\\", tmp.c_str(), static_cast<std::uint32_t>(bof3::os::ProcessId()));
-    std::snprintf(dir_b, sizeof dir_b, "%sbof3x_qm_b_%u\\", tmp.c_str(), static_cast<std::uint32_t>(bof3::os::ProcessId()));
+    // Each folder ends in the system's separator, as `tmp` does: a backslash
+    // on Windows, as these names were always built; a slash on POSIX, so the
+    // patterns and names built on them carry no backslash there (the seam
+    // would read one as a separator, but the log showed it in the name).
+    std::snprintf(dir_a, sizeof dir_a, "%sbof3x_qm_a_%u%c", tmp.c_str(), static_cast<std::uint32_t>(bof3::os::ProcessId()), sep);
+    std::snprintf(dir_b, sizeof dir_b, "%sbof3x_qm_b_%u%c", tmp.c_str(), static_cast<std::uint32_t>(bof3::os::ProcessId()), sep);
     std::filesystem::create_directories(bof3::os::Path(dir_a), ec);
     std::filesystem::create_directories(bof3::os::Path(dir_b), ec);
     std::vector<std::string> made;

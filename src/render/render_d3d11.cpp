@@ -142,7 +142,9 @@ private:
 };
 
 void Check(HRESULT hr, const char* what) {
-    if (FAILED(hr)) bof3::Fatal("render: %s failed, HRESULT 0x%08lX", what, static_cast<unsigned long>(hr));
+    // Through the 32-bit word: a long is 64 bits on Linux, and a negative
+    // HRESULT widened to it printed as 0xFFFFFFFF80004005.
+    if (FAILED(hr)) bof3::Fatal("render: %s failed, HRESULT 0x%08lX", what, static_cast<unsigned long>(static_cast<std::uint32_t>(hr)));
 }
 
 // BOF3X_PRESENT: clean (unset) or satpixie (DIV-0043). "crt" was our own
@@ -832,22 +834,29 @@ void RunFrame(Frame& frame) {
     g_ctx->PSSetShaderResources(1, 1, &none);
 }
 
-void Show(bool in_between) {
+// The swap chain's buffers at the client's size now, into *cw and *ch. False
+// when there is nothing to show.
+bool WindowBuffers(U* cw, U* ch) {
     // The window may already be destroyed: WM_DESTROY arrives through the
     // loop's DispatchMessage, and the frame in flight still presents after
     // it. Its client size then fails (an unchecked RECT once reached
     // ResizeBuffers as E_INVALIDARG; render_window.h logs why). Nothing to show.
-    U cw = 0, ch = 0;
-    if (!WindowClientSize(g_opt.hwnd, &cw, &ch)) return;
-    if (cw == 0 || ch == 0) return;   // minimised: nothing to show
-    if (cw != g_window_w || ch != g_window_h) {
+    if (!WindowClientSize(g_opt.hwnd, cw, ch)) return false;
+    if (*cw == 0 || *ch == 0) return false;   // minimised: nothing to show
+    if (*cw != g_window_w || *ch != g_window_h) {
         Release(g_window_rtv);
         g_ctx->OMSetRenderTargets(0, nullptr, nullptr);
-        Check(g_swap->ResizeBuffers(0, cw, ch, DXGI_FORMAT_UNKNOWN, 0), "ResizeBuffers");
+        Check(g_swap->ResizeBuffers(0, *cw, *ch, DXGI_FORMAT_UNKNOWN, 0), "ResizeBuffers");
         MakeWindowTarget();
-        g_window_w = cw;
-        g_window_h = ch;
+        g_window_w = *cw;
+        g_window_h = *ch;
     }
+    return true;
+}
+
+void Show(bool in_between) {
+    U cw = 0, ch = 0;
+    if (!WindowBuffers(&cw, &ch)) return;
     // DIV-0042: with snap, an integer scale of the target on the window,
     // centred, black borders - and the target follows the client (RequestScale),
     // so in a window that is 1:1. Without snap, or when the client is smaller
@@ -900,9 +909,39 @@ void Show(bool in_between) {
 }  // namespace
 
 namespace {
-void InitOnFiber(const Options& options) {
-    FpuGuard fpu;
-    g_opt = options;
+D3D_FEATURE_LEVEL g_level;   // the device's, for InitOnFiber's line
+
+// The device, its swap chain on options.hwnd, and the window's target.
+void MakeDevice(const Options& options) {
+#ifndef _WIN32
+    // DXVK-native picks its window layer by DXVK_WSI_DRIVER and makes no
+    // DXGI factory while it is unset (measured, b1a1c99a: "DXVK_WSI_DRIVER
+    // environment variable unset", then E_FAIL). The window is SDL3's
+    // (render_window.h); a value the player set is left as it is.
+    {
+        char wsi[16];
+        if (bof3::os::GetEnv("DXVK_WSI_DRIVER", wsi, sizeof wsi) == 0) {
+            if (!bof3::os::SetEnv("DXVK_WSI_DRIVER", "SDL3")) bof3::Fatal("render: DXVK_WSI_DRIVER could not be set");
+            bof3::Log("render: DXVK_WSI_DRIVER=SDL3 (unset: the window is SDL3's)");
+        } else {
+            bof3::Log("render: DXVK_WSI_DRIVER=%s, as set", wsi);
+        }
+        // DXVK writes bof3x_d3d11.log and bof3x_dxgi.log into the working
+        // folder, which is the game's (measured: one in the install), where
+        // nothing of ours may write. Beside the program and bof3x.log
+        // instead, unless the player chose a folder.
+        char where[16];
+        std::string self;
+        if (bof3::os::GetEnv("DXVK_LOG_PATH", where, sizeof where) == 0 && bof3::os::ExecutablePath(&self)) {
+            const std::size_t slash = self.rfind('/');
+            if (slash != std::string::npos) {
+                const std::string dir = self.substr(0, slash);
+                if (!bof3::os::SetEnv("DXVK_LOG_PATH", dir.c_str())) bof3::Fatal("render: DXVK_LOG_PATH could not be set");
+                bof3::Log("render: DXVK_LOG_PATH=%s (unset: DXVK's logs beside the program, not in the game's folder)", dir.c_str());
+            }
+        }
+    }
+#endif
     DXGI_SWAP_CHAIN_DESC sd = {};
     // BOF3X_SWAP picks the swap effect by its first letter: f FLIP_DISCARD
     // (two buffers), s SEQUENTIAL, anything else or unset DISCARD (one buffer,
@@ -926,12 +965,13 @@ void InitOnFiber(const Options& options) {
     HRESULT hr = D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, flags, levels, 3,
                                                D3D11_SDK_VERSION, &sd, &g_swap, &g_device, &got, &g_ctx);
     if (FAILED(hr) && (flags & D3D11_CREATE_DEVICE_DEBUG)) {
-        bof3::Log("render: no debug layer (0x%08lX), retrying without", static_cast<unsigned long>(hr));
+        bof3::Log("render: no debug layer (0x%08lX), retrying without", static_cast<unsigned long>(static_cast<std::uint32_t>(hr)));
         flags &= ~D3D11_CREATE_DEVICE_DEBUG;
         hr = D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, flags, levels, 3,
                                            D3D11_SDK_VERSION, &sd, &g_swap, &g_device, &got, &g_ctx);
     }
     Check(hr, "D3D11CreateDeviceAndSwapChain");
+    g_level = got;
     IDXGIDevice* dxgi_device = nullptr;
     if (SUCCEEDED(g_device->QueryInterface(__uuidof(IDXGIDevice), reinterpret_cast<void**>(&dxgi_device)))) {
         IDXGIAdapter* adapter = nullptr;
@@ -951,6 +991,47 @@ void InitOnFiber(const Options& options) {
     // leaves 0 x 0 here, and the first Show answers it.
     WindowClientSize(options.hwnd, &g_window_w, &g_window_h);
     MakeWindowTarget();
+}
+
+#ifndef _WIN32
+// The movies' picture (PresentMovie): a texture of the movie's size, made at
+// the first frame, released when the set-up takes the device over.
+ID3D11Texture2D* g_movie;
+ID3D11ShaderResourceView* g_movie_srv;
+U g_movie_w, g_movie_h;
+#endif
+
+void InitOnFiber(const Options& options) {
+    FpuGuard fpu;
+#ifndef _WIN32
+    // The movies made the device and its swap chain on this system
+    // (PresentMovie): kept, on the window they were made on, and the rest
+    // made here as on Windows.
+    if (g_device) {
+        if (SwapChainWindow(options.hwnd) != SwapChainWindow(g_opt.hwnd))
+            bof3::Fatal("render: the set-up's window %p is not the one the movies' device was made on (%p)", options.hwnd,
+                        g_opt.hwnd);
+        // The movies' own objects; the rest of this function makes the
+        // set-up's, the present's among them, as on Windows.
+        Release(g_movie_srv);
+        Release(g_movie);
+        g_movie_w = g_movie_h = 0;
+        Release(g_present_vs);
+        Release(g_present_ps);
+        Release(g_sampler_present_point);
+        Release(g_sampler_present_linear);
+        Release(g_blend_off);
+        g_opt = options;
+        bof3::Log("render: the device and swap chain the movies made are kept (window %u x %u); the set-up makes the rest",
+                  g_window_w, g_window_h);
+    } else {
+        g_opt = options;
+        MakeDevice(options);
+    }
+#else
+    g_opt = options;
+    MakeDevice(options);
+#endif
     g_pad_x = options.pad_x * options.scale;
     g_scale = options.scale;
     MakeTarget((options.logical_w + 2 * options.pad_x) * options.scale, options.logical_h * options.scale);
@@ -1024,7 +1105,7 @@ void InitOnFiber(const Options& options) {
     if (g_look == Look::kSatpixie) SatpixieInit(g_device, g_target_w, g_target_h, options.scale);
 
     bof3::Log("render: Direct3D 11 feature level 0x%X, window %u x %u, target %u x %u (view %u x %u at %u, %u columns a side), present %s",
-              got, g_window_w, g_window_h, g_target_w, g_target_h, options.logical_w, options.logical_h, options.scale,
+              g_level, g_window_w, g_window_h, g_target_w, g_target_h, options.logical_w, options.logical_h, options.scale,
               options.pad_x, options.point_filter ? "point" : "linear");
     bof3::Log("DIV-0042    present: %s", options.snap ? "whole multiples of the picture" : "the picture fitted to the client");
 }
@@ -1046,13 +1127,22 @@ void InitOnFiber(const Options& options) {
 
 bof3::os::OwnStack g_render_stack{{256 * 1024, 1024 * 1024, false, false}};
 const bof3::os::OwnStack* g_render_fiber;   // the render stack, once the first call made it (SaveFrame asks)
-enum class Job { kNone, kInit, kPresent, kSave };
+enum class Job {
+    kNone, kInit, kPresent, kSave,
+#ifndef _WIN32
+    kMovie,   // PresentMovie: Windows draws its movies with GDI (fmv_play_win32.cpp)
+#endif
+};
 Job g_job;
 Frame* g_job_frame;
 bool g_job_in_between;   // PROTOTYPE (interp.h)
 const Options* g_job_options;
 const wchar_t* g_job_path;
 bool g_job_ok;
+#ifndef _WIN32
+const MoviePicture* g_job_movie;
+bool MovieOnFiber(const MoviePicture& picture);
+#endif
 
 void InitOnFiber(const Options& options);
 void PresentOnFiber(Frame& frame);
@@ -1063,6 +1153,9 @@ void RenderJob(void*) {
     case Job::kInit: InitOnFiber(*g_job_options); break;
     case Job::kPresent: PresentOnFiber(*g_job_frame); break;
     case Job::kSave: g_job_ok = SaveOnFiber(g_job_path); break;
+#ifndef _WIN32
+    case Job::kMovie: g_job_ok = MovieOnFiber(*g_job_movie); break;
+#endif
     case Job::kNone: break;
     }
     g_job = Job::kNone;
@@ -1142,11 +1235,9 @@ void InitD3d11(const Options& options) {
 namespace {
 // The target read back through a staging copy and written bottom-up as a
 // 24-bit BMP: no compressor to carry, and PIL reads it.
-bool SaveOnFiber(const wchar_t* path) {
-    FpuGuard fpu;
-    if (!g_target) return false;
+bool SaveTexture(ID3D11Texture2D* texture, const std::filesystem::path& path) {
     D3D11_TEXTURE2D_DESC d = {};
-    g_target->GetDesc(&d);
+    texture->GetDesc(&d);
     d.Usage = D3D11_USAGE_STAGING;
     d.BindFlags = 0;
     d.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
@@ -1156,7 +1247,7 @@ bool SaveOnFiber(const wchar_t* path) {
         bof3::Log("render: SaveFrame: no staging texture");
         return false;
     }
-    g_ctx->CopyResource(staging, g_target);
+    g_ctx->CopyResource(staging, texture);
     D3D11_MAPPED_SUBRESOURCE m = {};
     if (FAILED(g_ctx->Map(staging, 0, D3D11_MAP_READ, 0, &m))) {
         staging->Release();
@@ -1185,7 +1276,7 @@ bool SaveOnFiber(const wchar_t* path) {
                 dst[x * 3 + 2] = src[x * 4 + 2];
             }
         }
-        std::ofstream f(std::filesystem::path(path), std::ios::binary | std::ios::trunc);
+        std::ofstream f(path, std::ios::binary | std::ios::trunc);
         f.write(reinterpret_cast<const char*>(out), static_cast<std::streamsize>(size));
         f.close();   // the flush is part of the write: a close that fails is a frame not saved
         ok = !f.fail();
@@ -1196,7 +1287,122 @@ bool SaveOnFiber(const wchar_t* path) {
     staging->Release();
     return ok;
 }
+
+bool SaveOnFiber(const wchar_t* path) {
+    FpuGuard fpu;
+    if (!g_target) return false;
+    return SaveTexture(g_target, std::filesystem::path(path));
+}
+
+#ifndef _WIN32
+// The movie's frame into its texture: remade when the movie's size changes,
+// with every mip level when the picture is a fit (GenerateMips: each level
+// the average of the one above, so a smaller fit samples an average, as
+// GDI's HALFTONE gave on Windows; a larger fit is bilinear), one level for a
+// whole multiple, which the point sampler repeats pixel for pixel.
+void MovieTexture(const MoviePicture& m) {
+    D3D11_TEXTURE2D_DESC have = {};
+    if (g_movie) g_movie->GetDesc(&have);
+    const U levels = m.whole ? 1 : 0;   // 0: the whole chain
+    if (!g_movie || g_movie_w != m.width || g_movie_h != m.height || (have.MipLevels == 1) != m.whole) {
+        Release(g_movie_srv);
+        Release(g_movie);
+        D3D11_TEXTURE2D_DESC d = {};
+        d.Width = m.width;
+        d.Height = m.height;
+        d.MipLevels = levels;
+        d.ArraySize = 1;
+        d.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+        d.SampleDesc.Count = 1;
+        d.Usage = D3D11_USAGE_DEFAULT;
+        d.BindFlags = D3D11_BIND_SHADER_RESOURCE | (m.whole ? 0u : static_cast<U>(D3D11_BIND_RENDER_TARGET));
+        d.MiscFlags = m.whole ? 0u : static_cast<U>(D3D11_RESOURCE_MISC_GENERATE_MIPS);
+        Check(g_device->CreateTexture2D(&d, nullptr, &g_movie), "CreateTexture2D (movie)");
+        Check(g_device->CreateShaderResourceView(g_movie, nullptr, &g_movie_srv), "CreateShaderResourceView (movie)");
+        g_movie_w = m.width;
+        g_movie_h = m.height;
+        bof3::Log("render: the movie's texture %u x %u, %s", m.width, m.height,
+                  m.whole ? "one level, drawn by the point sampler (a whole multiple)" : "every mip level, drawn linear (a fit)");
+    }
+    g_ctx->UpdateSubresource(g_movie, 0, nullptr, m.pixels, m.width * 4, 0);
+    if (!m.whole) g_ctx->GenerateMips(g_movie_srv);
+}
+
+bool MovieOnFiber(const MoviePicture& m) {
+    FpuGuard fpu;
+    if (!g_device) {
+        Options early = {};
+        early.hwnd = m.window;
+        early.vsync = bof3::os::GetEnv("BOF3X_VSYNC", nullptr, 0) > 0;   // as ReadOptions reads it (d3d.cpp)
+        g_opt = early;
+        MakeDevice(early);
+        const float black[4] = {0, 0, 0, 1};
+        g_ctx->ClearRenderTargetView(g_window_rtv, black);
+        Code pvs = Shader(kPresentShader, "VS", "vs_4_0", bof3::shaders::kPresentVS);
+        Code pps = Shader(kPresentShader, "PS", "ps_4_0", bof3::shaders::kPresentPS);
+        CheckShaderSource("present", kPresentShader, bof3::shaders::kPresentSourceSha256);
+        Check(g_device->CreateVertexShader(pvs.data, pvs.size, nullptr, &g_present_vs), "CreateVertexShader (present)");
+        Check(g_device->CreatePixelShader(pps.data, pps.size, nullptr, &g_present_ps), "CreatePixelShader (present)");
+        pvs.Done();
+        pps.Done();
+        g_sampler_present_point = MakeSampler(true, true);
+        g_sampler_present_linear = MakeSampler(false, true);
+        D3D11_BLEND_DESC off = {};
+        off.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+        Check(g_device->CreateBlendState(&off, &g_blend_off), "CreateBlendState (off)");
+        bof3::Log("render: Direct3D 11 feature level 0x%X on the window %u x %u, brought up for the movies (the owner's "
+                  "call of 2026-11-19: the renderer before the movies on this system); the set-up makes the rest",
+                  g_level, g_window_w, g_window_h);
+    }
+    if (SwapChainWindow(m.window) != SwapChainWindow(g_opt.hwnd))
+        bof3::Fatal("render: a movie on window %p, the device's is %p", m.window, g_opt.hwnd);
+    U cw = 0, ch = 0;
+    if (!WindowBuffers(&cw, &ch)) return true;   // gone or minimised: nothing to show, as Show
+    MovieTexture(m);
+    const float black[4] = {0, 0, 0, 1};
+    g_ctx->ClearRenderTargetView(g_window_rtv, black);
+    g_ctx->OMSetRenderTargets(1, &g_window_rtv, nullptr);
+    const D3D11_VIEWPORT vp = {static_cast<float>(m.left), static_cast<float>(m.top), static_cast<float>(m.dest_w),
+                               static_cast<float>(m.dest_h), 0, 1};
+    g_ctx->RSSetViewports(1, &vp);
+    const float factor[4] = {0, 0, 0, 0};
+    g_ctx->OMSetBlendState(g_blend_off, factor, 0xFFFFFFFF);
+    g_ctx->RSSetState(nullptr);
+    g_ctx->IASetInputLayout(nullptr);
+    g_ctx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+    g_ctx->VSSetShader(g_present_vs, nullptr, 0);
+    g_ctx->PSSetShader(g_present_ps, nullptr, 0);
+    g_ctx->PSSetShaderResources(0, 1, &g_movie_srv);
+    ID3D11SamplerState* sampler = m.whole ? g_sampler_present_point : g_sampler_present_linear;
+    g_ctx->PSSetSamplers(0, 1, &sampler);
+    g_ctx->Draw(4, 0);
+    ID3D11ShaderResourceView* none = nullptr;
+    g_ctx->PSSetShaderResources(0, 1, &none);
+    bool ok = true;
+    if (m.shot) {
+        ID3D11Texture2D* back = nullptr;
+        Check(g_swap->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&back)), "GetBuffer (movie shot)");
+        ok = SaveTexture(back, std::filesystem::path(m.shot));
+        Release(back);
+    }
+    const HRESULT hr = g_swap->Present(g_opt.vsync ? 1 : 0, 0);
+    if (FAILED(hr) && hr != DXGI_STATUS_OCCLUDED) Check(hr, "Present (movie)");
+    return ok;
+}
+#endif
 }  // namespace
+
+#ifndef _WIN32
+bool PresentMovie(const MoviePicture& picture) {
+    if (g_device && bof3::os::ThreadId() != g_main_thread)
+        bof3::Fatal("render: a movie's present on thread %u, not the game's", bof3::os::ThreadId());
+    g_main_thread = bof3::os::ThreadId();
+    g_job_movie = &picture;
+    g_job_ok = false;
+    RunOnFiber(Job::kMovie);
+    return g_job_ok;
+}
+#endif
 
 bool SaveFrame(const wchar_t* path) {
     if (!g_render_fiber || !g_device) return false;

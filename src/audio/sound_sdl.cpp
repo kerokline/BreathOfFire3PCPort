@@ -56,7 +56,12 @@
 // are the game's own locals (void* first / second in SndBuf_Write), native in
 // width, and get a whole pointer. Everything else the game passes is a 32-bit
 // value (unsigned long is 32 bits on Win64 too) or a native pointer to a local.
-// Nothing in this file is conditional on the width.
+// Nothing in this file is conditional on the width. On Linux `long` is 8 bytes:
+// so the game's LONGs (volume, pan, the notify offset), which it passes and
+// points at as 32-bit words, are std::int32_t / std::uint32_t here, not `long` -
+// a `long*` wrote 8 bytes into its 4-byte local, a `long` parameter read a
+// negative level zero-extended (-600 as 4,294,966,696, refused). The HRESULT
+// results stay `long`: the caller reads the low 32 bits of the register.
 #include "audio/sound_sdl.h"
 
 #include <SDL3/SDL.h>
@@ -99,7 +104,7 @@ constexpr std::uint32_t kCapsPrimary = 0x1;   // DSBCAPS_PRIMARYBUFFER; the rest
 constexpr std::uint32_t kPlayLooping = 0x1;
 constexpr std::uint32_t kStatusPlaying = 0x1, kStatusLooping = 0x4;
 constexpr std::uint32_t kLockFromWriteCursor = 0x1, kLockEntireBuffer = 0x2;
-constexpr long kVolumeMin = -10000, kVolumeMax = 0, kPanLeft = -10000, kPanRight = 10000;
+constexpr std::int32_t kVolumeMin = -10000, kVolumeMax = 0, kPanLeft = -10000, kPanRight = 10000;
 constexpr std::uint32_t kFrequencyMin = 100, kFrequencyMax = 200000;
 constexpr std::uint32_t kDescSize = 0x24, kFormatSize = 0x12;
 // IID_IDirectSoundNotify {B0210783-89CD-11D0-AF08-00A0C925CD16}, the bytes of
@@ -195,7 +200,7 @@ struct Buffer {
     std::uint64_t pos;     // the play cursor, 32.32 fixed-point source frames
     std::uint64_t step;    // source frames an output frame advances, 32.32
     std::uint32_t frequency;   // 0: the format's rate
-    long volume, pan;
+    std::int32_t volume, pan;   // LONGs: 32 bits in both widths, and on Linux, where `long` is 8 bytes
     float gain_l, gain_r;
     unsigned notify_count;
     Notification notifies[kMaxNotify];
@@ -258,7 +263,7 @@ void SetStep(Buffer* b) {
     b->step = (rate << 32) / kOutRate;
 }
 
-float Gain(long hundredths) {
+float Gain(std::int32_t hundredths) {
     if (hundredths <= kVolumeMin) return 0.0f;
     if (hundredths >= 0) return 1.0f;
     return static_cast<float>(std::pow(10.0, hundredths / 2000.0));
@@ -653,7 +658,7 @@ long __stdcall BufGetFormat(void* self, void* format, std::uint32_t size, std::u
     if (written) *written = kFormatSize;
     return kOk;
 }
-long __stdcall BufGetVolume(void* self, long* v) {
+long __stdcall BufGetVolume(void* self, std::int32_t* v) {
     Buffer* b = Self(self);
     CheckBuffer(b, "IDirectSoundBuffer::GetVolume");
     if (!v) return kInvalidParam;
@@ -661,7 +666,7 @@ long __stdcall BufGetVolume(void* self, long* v) {
     *v = b->volume;
     return kOk;
 }
-long __stdcall BufGetPan(void* self, long* v) {
+long __stdcall BufGetPan(void* self, std::int32_t* v) {
     Buffer* b = Self(self);
     CheckBuffer(b, "IDirectSoundBuffer::GetPan");
     if (!v) return kInvalidParam;
@@ -758,7 +763,7 @@ long __stdcall BufSetFormat(void* self, const void* format) {
         f.rate, f.bits, f.channels, kOutRate);
     return kOk;
 }
-long __stdcall BufSetVolume(void* self, long v) {
+long __stdcall BufSetVolume(void* self, std::int32_t v) {
     Buffer* b = Self(self);
     CheckBuffer(b, "IDirectSoundBuffer::SetVolume");
     if (v < kVolumeMin || v > kVolumeMax) return kInvalidParam;   // DirectSound refuses a level above 0 (Music_SetVolume's note)
@@ -767,7 +772,7 @@ long __stdcall BufSetVolume(void* self, long v) {
     SetGains(b);
     return kOk;
 }
-long __stdcall BufSetPan(void* self, long v) {
+long __stdcall BufSetPan(void* self, std::int32_t v) {
     Buffer* b = Self(self);
     CheckBuffer(b, "IDirectSoundBuffer::SetPan");
     if (v < kPanLeft || v > kPanRight) return kInvalidParam;
@@ -826,10 +831,12 @@ unsigned long __stdcall NotRelease(void* self) {
     CheckBuffer(b, "IDirectSoundNotify::Release");
     return BufRelease(b);
 }
-// The game's own array: `struct Position { unsigned long offset; void* event; }`
-// (Music_SetNotify, sound.cpp), DSBPOSITIONNOTIFY's shape in either width.
+// The game's own array: `struct Position { std::uint32_t offset; void* event; }`
+// (Music_SetNotify, music.cpp), DSBPOSITIONNOTIFY's shape in either width: the
+// offset a DWORD, the event after it (+4 at 32 bits, +8 at 64, the padding
+// between them never read - on Linux an `unsigned long` offset read it).
 struct Position {
-    unsigned long offset;
+    std::uint32_t offset;
     void* event;
 };
 long __stdcall NotSetNotificationPositions(void* self, std::uint32_t count, const Position* positions) {
@@ -934,10 +941,10 @@ F Method(void* object, unsigned offset) {
 }
 using MCall = long(__stdcall*)(void*);
 using MStatus = long(__stdcall*)(void*, std::uint32_t*);
-using MGetLong = long(__stdcall*)(void*, long*);
+using MGetLong = long(__stdcall*)(void*, std::int32_t*);
 using MPosition = long(__stdcall*)(void*, std::uint32_t*, std::uint32_t*);
 using MValue = long(__stdcall*)(void*, std::uint32_t);
-using MLong = long(__stdcall*)(void*, long);
+using MLong = long(__stdcall*)(void*, std::int32_t);
 using MPlay = long(__stdcall*)(void*, std::uint32_t, std::uint32_t, std::uint32_t);
 using MLock = long(__stdcall*)(void*, std::uint32_t, std::uint32_t, void**, std::uint32_t*, void**, std::uint32_t*, std::uint32_t);
 using MUnlock = long(__stdcall*)(void*, void*, std::uint32_t, void*, std::uint32_t);
@@ -1075,7 +1082,7 @@ void SelfTest() {
     SDL_CHECK(out[0] == 1000 && out[2] == 1005, "Play resumes from the cursor (%d, %d)", out[0], out[2]);
 
     // The volume law and the pan.
-    long got = 1;
+    std::int32_t got = 1;
     SDL_CHECK(Method<MLong>(ramp, 0x3C)(ramp, 1) == kInvalidParam && Method<MLong>(ramp, 0x3C)(ramp, -10001) == kInvalidParam, "a level outside -10,000..0 accepted");
     SDL_CHECK(Method<MLong>(ramp, 0x3C)(ramp, -600) == kOk && Method<MGetLong>(ramp, 0x18)(ramp, &got) == kOk && got == -600, "SetVolume / GetVolume");
     SDL_CHECK(Method<MValue>(ramp, 0x34)(ramp, 200) == kOk, "SetCurrentPosition(200)");

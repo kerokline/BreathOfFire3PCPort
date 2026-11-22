@@ -134,8 +134,21 @@ add_custom_target(bof3x_suites DEPENDS "${_suites_hdr}")
 # subsystem for the game's window; no render. zlib licence (docs/THIRD_PARTY.md section 2). Pinned to a release
 # tag; the first configure needs the network.
 include(FetchContent)
-set(SDL_SHARED OFF CACHE BOOL "" FORCE)
-set(SDL_STATIC ON CACHE BOOL "" FORCE)
+# Static on Windows; shared off Windows (docs/linux-round.md, "Wave B,
+# staged", the owner's call 3 of 2026-11-20): DXVK-native opens SDL3 by name
+# (LoadLibraryA("libSDL3.so.0"), its wsi_platform_sdl3.cpp), so a static SDL3
+# in the ELF would give the process two copies and DXVK's surface would be
+# made from the other copy's window. The Linux build copies libSDL3.so.0
+# beside bof3x (cmake/linux_target.cmake). BOF3X_SDL names the target to link.
+if(WIN32)
+  set(SDL_SHARED OFF CACHE BOOL "" FORCE)
+  set(SDL_STATIC ON CACHE BOOL "" FORCE)
+  set(BOF3X_SDL SDL3::SDL3-static)
+else()
+  set(SDL_SHARED ON CACHE BOOL "" FORCE)
+  set(SDL_STATIC OFF CACHE BOOL "" FORCE)
+  set(BOF3X_SDL SDL3::SDL3-shared)
+endif()
 set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
 set(SDL_TESTS OFF CACHE BOOL "" FORCE)
 set(SDL_EXAMPLES OFF CACHE BOOL "" FORCE)
@@ -230,7 +243,7 @@ add_library(bof3x_imgui STATIC
   "${imgui_SOURCE_DIR}/backends/imgui_impl_sdlrenderer3.cpp")
 target_include_directories(bof3x_imgui PUBLIC "${imgui_SOURCE_DIR}" "${imgui_SOURCE_DIR}/backends")
 target_compile_definitions(bof3x_imgui PUBLIC IMGUI_DISABLE_DEMO_WINDOWS IMGUI_DISABLE_DEBUG_TOOLS IMGUI_DISABLE_OBSOLETE_FUNCTIONS)
-target_link_libraries(bof3x_imgui PUBLIC SDL3::SDL3-static)
+target_link_libraries(bof3x_imgui PUBLIC ${BOF3X_SDL})
 
 # The drawn launcher's three built-in files, each as a byte array
 # (tools/embed_file.py): the title page's picture, which the Win32 launcher
@@ -334,6 +347,7 @@ set(_dll_sources
   src/hook/exe_host.cpp
   src/hook/exe_file.cpp
   src/hook/exe_icon.cpp
+  src/hook/exe_icon_picture.cpp
   src/hook/code_bytes.cpp
   src/common/sha256.cpp
   src/common/file_token.cpp

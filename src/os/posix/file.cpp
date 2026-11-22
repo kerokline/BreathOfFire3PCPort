@@ -9,6 +9,7 @@
 #include <system_error>
 
 #include "os/case_check.h"
+#include "os/case_fold.h"
 
 namespace bof3::os {
 
@@ -17,8 +18,11 @@ std::filesystem::path Path(const char* narrow) noexcept {
         std::string s(narrow ? narrow : "");
         std::replace(s.begin(), s.end(), '\\', '/');
         std::filesystem::path p(std::move(s));
-        if (CaseCheckOn()) CaseCheck(p);
-        return p;
+        if (CaseCheckOn()) CaseCheck(p);   // the name as asked, as the Windows backend checks it
+        // A relative name inside the game folder that is there only under
+        // another case: the folder's spelling (os/case_fold.h, the owner's
+        // call 3 of 2026-11-19). An absolute name is left as it is.
+        return CaseFold(p);
     } catch (...) {
         return std::filesystem::path();
     }

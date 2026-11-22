@@ -48,6 +48,7 @@
 #include "input/function_keys.h"
 #include "input/key_codes.h"
 #include "render/render_d3d11.h"
+#include "render/interp_ident.h"
 #include "render/render_shim.h"
 #include "os/os.h"
 
@@ -304,9 +305,9 @@ To Cast(From f) { return reinterpret_cast<To>(reinterpret_cast<void*>(f)); }
 
 const Callees kOriginals = {
     Pad_Read,
-    Crt_fopen, Crt_fgets, Crt_atoi, Cast<int (__cdecl*)(const char*, const char*, void*, void*)>(Crt_sscanf), Crt_fclose,
+    Crt_fopen, Crt_fgets, Crt_atoi, Cast<int (*)(const char*, const char*, void*, void*)>(Crt_sscanf), Crt_fclose,
     Cfg_SetKeyTable, Cfg_SetDefaultKeys,
-    Cast<int (__cdecl*)(char*, const char*, const char*, const char*)>(Crt_sprintf), ::bof3::Img(Shell_ImportGetDriveType_addr),
+    Cast<int (*)(char*, const char*, const char*, const char*)>(Crt_sprintf), ::bof3::Img(Shell_ImportGetDriveType_addr),
     Gte_InitGeom, Gte_SetGeomOffset, Gte_SetGeomScreen, DInput_Init,
     reinterpret_cast<void (__cdecl*)(void*)>(static_cast<std::uintptr_t>(::bof3::Code(kSoundSetup.v))), Port_DroppedCall,
     Gpu_SetDefDrawEnv, Gpu_SetDefDispEnv, Gfx_InitBufferBlock, Gfx_BeginFrame, Task_SetStackBase,
@@ -1036,6 +1037,11 @@ extern "C" void __cdecl Gfx_BeginFrame(void) {
     const std::uint32_t b = Gfx_BufferIndex;
 
     Gfx_PacketNext = Gfx_PacketPools + (b << 16);
+    // The in-between's (interp_ident.h): this pool's primitives are no longer the figures they were.
+    {
+        unsigned char* const pool = Gfx_PacketNext;
+        render::interp::ForgetPrims(Low32(pool), Low32(pool) + 0x10000u);
+    }
 
     std::uint32_t* head = Gfx_OtHeads + ((b << 5) >> 2);
     for (unsigned k = 0; k < Gfx_OtPointers_count; ++k) Gfx_OtPointers[k] = head + k;

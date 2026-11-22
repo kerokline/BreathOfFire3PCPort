@@ -34,6 +34,12 @@ NamedEvent* CreateNamedEvent(const char* name) noexcept {
     return e;
 }
 
+void CloseNamedEvent(NamedEvent* e) noexcept {
+    if (!e) return;
+    CloseHandle(e->event);
+    delete e;
+}
+
 void ResetNamedEvent(NamedEvent* e) noexcept { ResetEvent(e->event); }
 
 bool WaitNamedEvent(NamedEvent* e, std::uint32_t ms) noexcept { return WaitForSingleObject(e->event, ms) == WAIT_OBJECT_0; }

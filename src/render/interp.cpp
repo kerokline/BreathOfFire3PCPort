@@ -1,5 +1,6 @@
 // PROTOTYPE: the in-between frame's matcher (interp.h).
 #include "render/interp.h"
+#include "render/interp_ident.h"
 
 #include <algorithm>
 #include <cmath>
@@ -12,6 +13,8 @@
 
 namespace render::interp {
 extern bool g_debug;
+extern bool g_figures;
+extern U g_figures_fc;
 namespace {
 
 using Key = std::uint64_t;
@@ -36,6 +39,10 @@ struct Entry {
     // when it had a pair: a cel that changes takes it on (Carry).
     bool has_motion;
     float mx, my;
+    // The game's object this draw is, 0 when not told, and where the object
+    // stood (interp_ident.h).
+    U object;
+    float ax, ay;
 };
 
 // The kept frame.
@@ -51,6 +58,25 @@ struct Motion {
 };
 std::vector<Motion> g_built;
 bool g_built_valid;
+
+// interp_ident.h. The primitives named this logic frame and the last (two
+// packet pools), and the recorded frame's draws that have a name, in the
+// order recorded.
+struct PrimTag {
+    U prim, object;
+};
+std::vector<PrimTag> g_prim_tags;
+struct DrawNote {
+    U index, object;
+    float x, y;
+};
+std::vector<DrawNote> g_notes;
+
+// The note of command `index`, null for none. The notes are in command order.
+const DrawNote* NoteOf(U index) {
+    const auto at = std::lower_bound(g_notes.begin(), g_notes.end(), index, [](const DrawNote& n, U i) { return n.index < i; });
+    return at != g_notes.end() && at->index == index ? &*at : nullptr;
+}
 
 void StateInto(Fnv& f, const Command& c) {
     f.Put(c.state.topology);
@@ -152,6 +178,8 @@ template <class Fn> U EachUnused(const std::vector<U>& order, Key Entry::*member
 }  // namespace
 
 bool g_debug;
+bool g_figures;
+U g_figures_fc;
 
 bool On() {
     static int on = -1;
@@ -162,6 +190,49 @@ bool On() {
     return on != 0;
 }
 
+bool IdentOn() { return On(); }
+
+namespace {
+// BOF3X_INTERP_IDENT=0: the names are kept and logged, rule 0 is not applied
+// (for an A/B of the rule).
+bool IdentRuleOn() {
+    static int on = -1;
+    if (on < 0) {
+        char v[8] = "";
+        on = (On() && !(bof3::os::GetEnv("BOF3X_INTERP_IDENT", v, sizeof v) > 0 && v[0] == '0')) ? 1 : 0;
+    }
+    return on != 0;
+}
+}  // namespace
+
+void TagPrim(std::uint32_t prim, std::uint32_t object) {
+    if (!IdentOn()) return;
+    // A frame's figures are tens; a pool never forgotten (a mode whose loop
+    // does not begin frames) would grow this, so it is bounded.
+    if (g_prim_tags.size() >= 1024) g_prim_tags.clear();
+    g_prim_tags.push_back({prim, object});
+}
+
+void ForgetPrims(std::uint32_t lo, std::uint32_t hi) {
+    if (g_prim_tags.empty()) return;
+    g_prim_tags.erase(std::remove_if(g_prim_tags.begin(), g_prim_tags.end(), [=](const PrimTag& t) { return t.prim >= lo && t.prim < hi; }),
+                      g_prim_tags.end());
+}
+
+std::uint32_t ObjectOf(std::uint32_t prim) {
+    for (const PrimTag& t : g_prim_tags)
+        if (t.prim == prim) return t.object;
+    return 0;
+}
+
+void NoteDraw(std::uint32_t index, std::uint32_t object, float x, float y) {
+    if (!IdentOn() || object == 0) return;
+    if (!g_notes.empty() && g_notes.back().index >= index) return;   // not in order: not this frame's
+    g_notes.push_back({index, object, x, y});
+}
+
+void ForgetDraws() { g_notes.clear(); }
+
 void Keep(const Frame& frame) {
     g_vertices.assign(frame.vertices, frame.vertices + frame.n_vertices);
     g_entries.clear();
@@ -170,6 +241,7 @@ void Keep(const Frame& frame) {
         const Command& c = frame.commands[i];
         if (!IsDraw(c)) continue;
         g_entries.push_back(EntryOf(c, frame.vertices + c.first));
+        if (const DrawNote* note = NoteOf(i)) g_entries.back().object = note->object, g_entries.back().ax = note->x, g_entries.back().ay = note->y;
         surfaces.push_back(SurfaceOf(c));
     }
     MarkAlone(g_entries.data(), surfaces);
@@ -506,6 +578,51 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
         }
         return best;
     };
+    // Rule 0, before every other: a draw the game named (interp_ident.h)
+    // goes with the kept draw of the same object, by the step of the place
+    // the object stands at, whole - whatever its cel, its texture and its box
+    // did. A figure's cel that changed needed three rules to guess at (a cel
+    // by shape, a cel by its place in the list, the motion its kept draw was
+    // shown with), and the last gives none on the first frame of a walk: the
+    // party stood for one in-between while the town went halfway (section 6,
+    // item 19). The game knows which object it drew and where it stands.
+    // Nothing is told of it, as of a draw found by its place: the tile after
+    // a figure in the list must not take the figure's motion to agree with.
+    // A kept draw with a name is no other draw's candidate, paired or not: a
+    // figure that left the picture is not what a new piece of it came from.
+    if (g_debug)
+        for (const DrawNote& n : g_notes)
+            bof3::Log("interp-dbg  NOTE cmd %u object %08X stands (%.1f, %.1f)", n.index, n.object, n.x, n.y);
+    if (IdentRuleOn()) {
+        for (U i = 0; i < frame.n_commands; ++i) {
+            const Command& c = frame.commands[i];
+            const DrawNote* note = IsDraw(c) ? NoteOf(i) : nullptr;
+            if (!note) continue;
+            for (Entry& e : g_entries) {
+                if (e.object != note->object || e.used) continue;
+                const float dx = e.ax - note->x, dy = e.ay - note->y;
+                if (dx * dx + dy * dy > cap) break;
+                if (g_debug)
+                    bof3::Log("interp-dbg  IDENT cmd %u object %08X tex %u at (%.1f, %.1f) stands (%.1f, %.1f) d (%.1f, %.1f)", i, note->object,
+                              SurfaceId(SurfaceOf(c)), frame.vertices[c.first].x, frame.vertices[c.first].y, note->x, note->y, dx, dy);
+                e.used = true;
+                half_dx[i] = dx * 0.5f;
+                half_dy[i] = dy * 0.5f;
+                if (dx != 0 || dy != 0) {
+                    ++s.moved;
+                    Vertex* o = out + c.first;
+                    for (U k = 0; k < c.count; ++k) o[k].x += dx * 0.5f, o[k].y += dy * 0.5f;
+                }
+                done[i] = 2;
+                by_gap[i] = true;
+                ++s.exact;
+                ++s.by_ident;
+                break;
+            }
+        }
+        for (Entry& e : g_entries)
+            if (e.object != 0) e.used = true;
+    }
     struct Last {
         const void* surface;
         float dx, dy;
@@ -515,6 +632,7 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
         const Command& c = frame.commands[i];
         if (!IsDraw(c)) continue;
         ++s.draws;
+        if (done[i] == 2) continue;   // rule 0 has it
         const Vertex& at = frame.vertices[c.first];
         const Entry& e = cur[i];
         const void* surface = SurfaceOf(c);
@@ -729,6 +847,30 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
         follow.push_back({static_cast<U>(i), first_dx, first_dy});
     }
     for (const Follow& f : follow) half_dx[f.i] = f.dx, half_dy[f.i] = f.dy;
+    // BOF3X_INTERP_STATS: a line for each named draw - the half step it is
+    // shown with, the half step of the place its object stands at, and the
+    // picture's (the median over the paired draws with no name): a figure's
+    // motion against what the game says it was, with rule 0 on or off.
+    if (g_figures && !g_notes.empty()) {
+        std::vector<float> gx, gy;
+        for (U i = 0; i < frame.n_commands; ++i)
+            if (done[i] == 2 && !NoteOf(i)) gx.push_back(half_dx[i]), gy.push_back(half_dy[i]);
+        float mx = 0, my = 0;
+        if (!gx.empty()) {
+            std::nth_element(gx.begin(), gx.begin() + gx.size() / 2, gx.end());
+            std::nth_element(gy.begin(), gy.begin() + gy.size() / 2, gy.end());
+            mx = gx[gx.size() / 2], my = gy[gy.size() / 2];
+        }
+        for (const DrawNote& n : g_notes) {
+            if (n.index >= frame.n_commands) continue;
+            int kept = 0;
+            float tx = 0, ty = 0;
+            for (const Entry& e : g_entries)
+                if (e.object == n.object) kept = 1, tx = (e.ax - n.x) * 0.5f, ty = (e.ay - n.y) * 0.5f;
+            bof3::Log("interp-fig  fc %u object %08X paired %d shown (%.2f, %.2f) kept %d stands (%.2f, %.2f) picture (%.2f, %.2f)",
+                      g_figures_fc, n.object, done[n.index] == 2, half_dx[n.index], half_dy[n.index], kept, tx, ty, mx, my);
+        }
+    }
     // The last word: a surface whose draws touch in the picture and follow
     // each other in the list is a mesh or a line of text, and its pieces
     // move alike. Where several neighbours go different ways the pairing is

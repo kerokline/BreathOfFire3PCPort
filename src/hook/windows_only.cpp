@@ -14,7 +14,8 @@
 //     silent fork, so it is refused).
 //
 // The Windows builds do not compile this file (CMakeLists.txt does not list
-// it), and its body is empty there in case a list ever takes it.
+// it), and its body is empty there in case a list ever takes it. The Linux
+// build adds it (tools/linux_probe/linux_tree.py, LINUX_ONLY).
 #ifndef _WIN32
 
 #include <cstdint>
@@ -53,7 +54,14 @@ void GapWatch_Start(void*) {
 }
 
 // The watch is never on here (GapWatch_Start refuses it), and on Windows these
-// three do nothing while it is off.
+// three do nothing while it is off. Why the harness calls the first two
+// (input_script.cpp, DeviceLatch and the recipe's `watch` lines): on Windows
+// a watched page of .data carries PAGE_GUARD, and a read by the state hash or
+// by a recipe's watch would count as a read of the game's; Pause takes every
+// guard off around such a read and Tick puts them back (gapwatch.h). With no
+// watch there is no guard to take off or put back, on either system: the
+// empty bodies are the Windows behaviour with BOF3X_GAPWATCH unset, the only
+// state this system allows (wave B, B1; the link wanted both names).
 void GapWatch_Pause() {}
 void GapWatch_Tick() {}
 void GapWatch_Flush() {}

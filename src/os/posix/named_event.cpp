@@ -24,6 +24,7 @@ namespace bof3::os {
 
 struct NamedEvent {
     sem_t* sem;
+    std::string name;   // "/<name>", for sem_unlink
 };
 
 NamedEvent* CreateNamedEvent(const char* name) noexcept {
@@ -32,7 +33,7 @@ NamedEvent* CreateNamedEvent(const char* name) noexcept {
         sem_unlink(full.c_str());   // a stale one of a process that had this number
         sem_t* s = sem_open(full.c_str(), O_CREAT | O_EXCL, 0600, 0u);
         if (s == SEM_FAILED) return nullptr;
-        auto* e = new (std::nothrow) NamedEvent{s};
+        auto* e = new (std::nothrow) NamedEvent{s, full};
         if (!e) {
             sem_close(s);
             sem_unlink(full.c_str());
@@ -43,6 +44,13 @@ NamedEvent* CreateNamedEvent(const char* name) noexcept {
         errno = ENOMEM;
         return nullptr;
     }
+}
+
+void CloseNamedEvent(NamedEvent* e) noexcept {
+    if (!e) return;
+    sem_close(e->sem);
+    sem_unlink(e->name.c_str());
+    delete e;
 }
 
 void ResetNamedEvent(NamedEvent* e) noexcept {

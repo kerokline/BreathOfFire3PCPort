@@ -1,6 +1,6 @@
 # Frame interpolation: one in-between frame (prototype)
 
-**Status:** EXPERIMENTAL (prototype 2026-11-13; item 18 closed and two measures added 2026-11-16; ledgered 2026-11-14 as
+**Status:** EXPERIMENTAL (prototype 2026-11-13; item 18 closed and two measures added 2026-11-16; figures paired by the game's own object 2026-11-21, section 6 item 20, on branch `render/interp-ident`; ledgered 2026-11-14 as
 DIVERGENCE DIV-0230). Off by default; the launcher's Settings page has the
 box "Smooth motion: 60 frames each second (experimental)" (`interp=1` in
 `bof3x.ini`, which goes out as `BOF3X_INTERP=1`). The open items of section 6
@@ -33,6 +33,7 @@ Colours, textures and draw order in the in-between are frame N's. Only
 | `src/render/interp.h`, `interp.cpp` | `Keep` (a copy of the frame just presented, with a look key per draw) and `Build` (the in-between's vertices). All of the matching. |
 | `src/render/render_shim.cpp` | `Present` calls `interp::Keep`; `PresentInBetween` builds, presents, and puts the frame list back as it was, so `BOF3X_FRAMEHASH` is untouched. Logs a stats line every 150 in-betweens, with the matcher's time (mean and most) and how many order tables were dropped. |
 | `src/render/render_d3d11.cpp` | `PresentInBetweenFrame`: `RunFrame` and `Show`, without the sweep of released textures or a pending scale change. `Show` advances the looks' clock by half a game frame for an in-between and for the present after it. |
+| `src/render/interp_ident.h` | The names: `Sprite_Draw` (`sprite_2.cpp`) tags its primitive with its object, `Gfx_BeginFrame` forgets a pool's tags, `D3d_DrawCellSprite` (`d3d.cpp`) notes the recorded draw's object and where it stands. Nothing unless `BOF3X_INTERP`. |
 | `src/game/platform/magic_080.cpp` | WinMain's loop: the in-between is due at speed 1, not paused, no shot pending; shown in the wait loop. `InterpDump`. |
 
 Switches (the first is the launcher's `interp=`, DIV-0230; the rest are tooling):
@@ -44,6 +45,7 @@ Switches (the first is the launcher's `interp=`, DIV-0230; the rest are tooling)
 | `BOF3X_INTERP_DUMP=<dir>` | writes `<Frame_Counter>_real.bmp` and `_mid.bmp` for two passes in every `BOF3X_INTERP_DUMP_EVERY` (default 100). The directory must exist: the first four writes log `NOT saved` otherwise. Logs nothing when unset. |
 | `BOF3X_INTERP_DEBUG=<Frame_Counter>` or `<first>-<last>` | logs those in-betweens' every decision (`interp-dbg` lines: `FRAME` at the head of each, then `DECIDE`, `VERT`, `FAIL`, `RUN`, `CUT?`) |
 | `BOF3X_INTERP_STATS=1` | one `interp-stat` line for each in-between: the draws by the rule that paired them, the runs broken, whether the frame was a cut, the matcher's time, and the time since the present (`after`); `none late` for a pass that drew and shows no in-between (section 6, item 18). `tools/interp_stats.py` reads them. Logs nothing when unset. |
+| `BOF3X_INTERP_IDENT=0` | rule 0 of section 3 off: the game's names for its figures are still kept and logged, the matcher does not use them. For an A/B of the rule. |
 | `BOF3X_LATE_EVERY=<n>` | not the in-between's own: WinMain takes the pass at each `Frame_Counter` that is n - 1 past a multiple of n as late and does not draw it, as on a machine that cannot keep the period. With a dump of one in six and n = 12, half the triples follow a late pass. |
 
 ## 3. How draws are matched
@@ -56,6 +58,13 @@ scale.
 The order of the rules is what the day's faults taught, each named in the
 code beside its rule:
 
+0. **The game's own object** (2026-11-21, section 6 item 20). A figure
+   drawn by `Sprite_Draw` is named: the draw carries its sprite object and
+   the place the object stands at in the picture (`interp_ident.h`). It
+   goes with the kept draw of the same object, by the step of that place,
+   whole, before every other rule - whatever its cel, texture and box did.
+   A kept draw with a name is no other draw's candidate. Rules 3's two
+   forms of "a cel that changed" still serve what has no name.
 1. **Votes.** Each surface's commonest motion, from each draw's nearest
    look-alike - and from its looks drawn once in each frame alone, where it
    has any (section 6, item 15: a row of look-alike pieces, moved more than
@@ -547,8 +556,8 @@ ear and the WAV A/B stay owed (IDEAS I68).
     frame, not two - and still none flagged. The in-between's own rule
     stays: the present after a late frame shows a frame two steps back.
 
-19. **A party figure stands for one in-between as a walk begins** - *open,
-    found 2026-11-16* by `tools/interp_motion.py`. worldMapAndAreaTransition
+19. **A party figure stands for one in-between as a walk begins** - *closed
+    2026-11-21 by item 20; found 2026-11-16* by `tools/interp_motion.py`. worldMapAndAreaTransition
     at `--wide 2`, Frame_Counter 480, in town: the ground goes halfway
     (898 of 903 draws moved, about 16 px by 5) and the two party figures are
     shown where frame N+1 has them, 11 px by 6 from where frame N has them.
@@ -561,6 +570,70 @@ ear and the WAV A/B stay owed (IDEAS I68).
     start: a carried draw whose kept motion is none, in a frame whose other
     draws move - against the world map's leader (item 14), who is rightly
     still while the ground moves.
+
+20. **Figures paired by the game's own object** - *prototype 2026-11-21*
+    (the owner's question: do the animations that change mid-loop change
+    the function that draws them, and should the matcher go by it).
+
+    **Not by the function.** `BOF3X_DRAWORDER` over recipe frames 418 to
+    928 of pathCouple at `--wide 2` (510 frames, the whole picture): every
+    figure is `Sprite_Draw`'s, 2,323 draws of code `0x84` / `0x86`, on the
+    cel-change frames as on the rest; the map is four paths (the layer
+    lists 214,207 draws, cell handlers 19,970, model records 9,509) and one
+    bare commit. The couple are sprite objects `0x7DF258` and `0x7DF1B4`;
+    their boxes change on Frame_Counter 550, 554, 572, 576 and 561, 566,
+    581, 586, item 17's frames, with the same tag. A cel is the object's
+    frame record (+0x54 with the word +0x5A) composed into a cell texture:
+    another record is another texture and box from the same code. So the
+    function says nothing a look does not, and no name or family changes.
+
+    **By the object.** The same tag carries the sprite object, which a cel
+    change does not touch, and the primitive carries where the object
+    stands (floats +8, +0xC). Rule 0 of section 3 pairs a named draw with
+    the kept draw of its object and moves it by that place's step. One cell
+    sprite is one recorded draw of four vertices, so there is nothing to
+    pair inside a figure.
+
+    Measured 2026-11-21, the build of `main` `ffb2c892` with the change,
+    `--wide 2`, `BOF3X_FILTER=point`, the rule off (`BOF3X_INTERP_IDENT=0`)
+    against on in one build. The `interp-fig` lines (`BOF3X_INTERP_STATS`)
+    give each named draw's half step as shown against its object's own:
+
+    | Route | Named draws | Off: 1.5 target px or more from the object's step | On |
+    |---|---|---|---|
+    | pathCouple | 3,090 | 127, the worst 11.8 px | 0 |
+    | worldMapAndAreaTransition | 4,510 | 192, the worst 45.9 px | 0 |
+
+    Most of the off side's are the two party followers (`0x802E8C`,
+    `0x802FD8`: 104 of 127 and 157 of 192). The on side's 0 says only that
+    no later rule undid rule 0; the pictures are the independent check.
+    `tools/interp_motion.py`: pathCouple 3 triples listed off (624, 774,
+    870), none on, of 155; worldMapAndAreaTransition 6 off, 4 on, of 357 -
+    480 (item 19) and 528 gone, 738, 804, 840 and 894 on both sides. Read by
+    eye: 480, the follower where frame N+1 has it off and halfway on, the
+    chimney halfway in both; 894, world map ground with no figure in it,
+    the same picture both ways. The rest not read.
+
+    Rule 3's place-in-the-list form is no longer used on these two routes
+    (653 and 458 draws off, 0 on); its by-shape form still is (41 to 4,
+    493 to 264). A battle's fighters are named too: combat, 12,895 named
+    draws in 2,284 of 2,622 in-betweens, not compared off against on. The
+    matcher's time is unchanged (pathCouple 0.95 ms off, 0.93 on; the
+    world map route 1.08 both).
+
+    **Logic neutrality.** `tools/statehash.py check`, two runs with the
+    rule off as the references and one with it on, the same build: identical
+    on all 961 compared ticks of pathCouple and all 2,113 of
+    worldMapAndAreaTransition. Run with the owner at the machine, not on a
+    quiet one. The ten proof routes not run.
+
+    **Not done.** The map's draws carry a name of their own in the same tag
+    (the view cell and its map cell), which would serve the look-alike
+    tiles of items 15 and 1; not tried. Models (`Sprite_AddDrawRecords`)
+    and effects have no name. Not played: the owner's eye on a walk through
+    a town and on a battle. The worst case not looked for: an object slot
+    reused by another figure between two frames pairs the two, held only by
+    the cap.
 
 Done 2026-11-14: the `DIVERGENCE.md` entry (DIV-0230) and the launcher's
 box. Before it leaves "experimental": the black and shift checkers in `tools/`, the debug

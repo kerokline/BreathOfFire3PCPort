@@ -7669,6 +7669,30 @@ designed in rather than bolted on.
   `dpiAware` (the window scales on a high-DPI desktop as before), no
   `setlocale`, the command line past the program name as `_wincmdln` gave
   it, the show flag from `STARTUPINFO`, the window title (DIV-0039).
+
+  **Amended 2026-11-21 (the Linux round's wave B,
+  [`linux-round.md`](linux-round.md) "B1 as run" to "Wave B as run"):** on
+  Linux the game is `bof3x`, a 64-bit ELF of ours linked at `0x10000000`
+  and started by `bof3x-launcher`. Beside it are `libSDL3.so.0` and
+  DXVK-native's `libdxvk_d3d11.so.0` and `libdxvk_dxgi.so.0`, found by the
+  ELF's `$ORIGIN` run path (the owner's call 3 of wave B). Before `main` it
+  reserves Capcom's range at `0x400000` itself, and it runs the game's main
+  thread on a stack of its own at `0x60000..0x160000` with a fixed guard
+  page under it. What differs there for a player:
+  - a fault nobody handles is a signal: our crash report in `bof3x.log`,
+    the line `FATAL: a signal nobody handled`, and exit code 3 once the
+    game's main thread runs (earlier in the start, the signal's own end).
+    `Fatal`'s box is SDL3's there; it was not seen on a real window;
+  - the game's files are found by any case of their names
+    (`os::CaseFold`), as Windows finds them: the game asks for `CAPCOM.AVI`
+    and a folder may hold `capcom.avi`;
+  - the picture is Direct3D 11 through DXVK on Vulkan, and DXVK's own logs
+    go beside the program, not into the game folder;
+  - the developer's `BOF3X_STACKWATCH=1` is Windows only; on Linux a
+    `Fatal` that says why (the owner's call 2 of wave B, 2026-11-20), the
+    main stack being placed whole with a fixed guard page there.
+  Run in the WSL on a software Vulkan device alone (llvmpipe), with no
+  window on a screen: not seen by the owner, and not run on a GPU.
 - **Rationale:** [`platform-layers-plan.md`](platform-layers-plan.md)
   section 3, state 3: the game no longer needs Capcom's executable to run,
   only his data, and the platform becomes ours to change (64 bits, another
@@ -17918,6 +17942,17 @@ designed in rather than bolted on.
   Off Windows the movie's picture is not drawn yet: a movie stops the game
   with a message naming the open decision ([`replacing-mci.md`](replacing-mci.md)
   9). That is the Linux build's, which does not link yet.
+
+  **Amended 2026-11-21 (the Linux round's wave B, unit B2a;
+  [`linux-round.md`](linux-round.md) "B2a as run"):** the Linux build links
+  and draws the movie. A Linux start plays `CAPCOM.AVI` alone (DIV-0202),
+  and the renderer draws it (`render::PresentMovie`): the device and the
+  swap chain come up on the game's window at the movie's first frame, and
+  `Display_Setup` keeps them. A fit that is not a whole multiple is an
+  average through a mip chain and the linear sampler, where the Windows
+  path's GDI uses HALFTONE. The start order on Windows is unchanged (the
+  owner's call 1 of wave B, 2026-11-20). Run offscreen on llvmpipe; the
+  movie was not looked at on a screen.
 
   **Amended 2026-11-18 (the review of PR #262):** off Windows a key that
   Windows would post as `WM_SYSKEYDOWN` - Alt, F10, or a key with Alt held -
