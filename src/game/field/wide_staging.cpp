@@ -648,35 +648,40 @@ namespace {
 // A field object, an extra object or a party member other than the leader
 // (ObjTrio's first member, whose state the scene mask's 0x10 reads); and the
 // exception list's key for it.
-bool Candidate(const unsigned char* sprite, unsigned& field, unsigned& index) {
+// `slot` is its place in g_seen: the 30 objects, the 4 extra, the trio's three.
+constexpr unsigned kSeenSlots = 30 + 4 + 3;
+bool Candidate(const unsigned char* sprite, unsigned& field, unsigned& index, unsigned& slot) {
     const std::uint32_t a = Address(sprite);
     const std::uint32_t objects = Address(rv::Bytes(Sprite_Objects)), extra = Address(rv::Bytes(Sprite_ObjectsExtra)), trio = Address(rv::Bytes(ObjTrio));
     if (a >= objects && a < objects + 30u * 0xA4u && (a - objects) % 0xA4u == 0) {
         field = 0x10;
         index = sprite[0x83];
+        slot = (a - objects) / 0xA4u;
         return true;
     }
     if (a >= extra && a < extra + 4u * 0xA4u && (a - extra) % 0xA4u == 0) {
         field = 0x10;
         index = 0x100;   // no script of its own: no exception can name it
+        slot = 30u + (a - extra) / 0xA4u;
         return true;
     }
     if (a > trio && a < trio + 3u * 0x14Cu && (a - trio) % 0x14Cu == 0) {
         field = 0;
         index = (a - trio) / 0x14Cu;
+        slot = 34u + index;
         return true;
     }
     return false;
 }
+bool Candidate(const unsigned char* sprite, unsigned& field, unsigned& index) {
+    unsigned slot = 0;
+    return Candidate(sprite, field, index, slot);
+}
 
-// The candidate's slot in g_seen: the 30 objects, the 4 extra, the trio's three.
-constexpr unsigned kSeenSlots = 30 + 4 + 3;
+// A candidate's slot in g_seen; kSeenSlots for what is no candidate.
 unsigned SeenSlot(const unsigned char* sprite) {
-    const std::uint32_t a = Address(sprite);
-    const std::uint32_t objects = Address(rv::Bytes(Sprite_Objects)), extra = Address(rv::Bytes(Sprite_ObjectsExtra)), trio = Address(rv::Bytes(ObjTrio));
-    if (a >= objects && a < objects + 30u * 0xA4u) return (a - objects) / 0xA4u;
-    if (a >= extra && a < extra + 4u * 0xA4u) return 30u + (a - extra) / 0xA4u;
-    return 34u + (a - trio) / 0x14Cu;
+    unsigned field = 0, index = 0, slot = kSeenSlots;
+    return Candidate(sprite, field, index, slot) ? slot : kSeenSlots;
 }
 
 // DIVERGENCE DIV-0124, amended 2026-11-21 (the owner's innkeeper, area 130;
@@ -752,13 +757,13 @@ bool FreeWalk() {
 }  // namespace
 
 bool HideSite(const unsigned char* sprite) {
-    unsigned field = 0, index = 0;
-    if (!Candidate(sprite, field, index)) return false;
+    unsigned field = 0, index = 0, slot = 0;
+    if (!Candidate(sprite, field, index, slot)) return false;
     if (g_seen_area != Game_AreaNumber) {   // another area's objects in the same slots
         for (Seen& s : g_seen) s = Seen{};
         g_seen_area = Game_AreaNumber;
     }
-    if (SeenDraw(g_seen[SeenSlot(sprite)], Frame_Counter, FreeWalk())) return false;
+    if (SeenDraw(g_seen[slot], Frame_Counter, FreeWalk())) return false;
     return Decide(sprite, field, index);
 }
 
@@ -766,9 +771,9 @@ bool HideSite(const unsigned char* sprite) {
 // the draw will find it.
 bool WouldHide(const unsigned char* sprite) {
     if (!g_hide) return false;
-    unsigned field = 0, index = 0;
-    if (!Candidate(sprite, field, index)) return false;
-    if (g_seen_area == Game_AreaNumber && SeenHolds(g_seen[SeenSlot(sprite)], Frame_Counter)) return false;
+    unsigned field = 0, index = 0, slot = 0;
+    if (!Candidate(sprite, field, index, slot)) return false;
+    if (g_seen_area == Game_AreaNumber && SeenHolds(g_seen[slot], Frame_Counter)) return false;
     return Decide(sprite, field, index);
 }
 
@@ -1164,6 +1169,7 @@ void SelfTest() {
         slots(rv::Bytes(&Sprite_ObjectsExtra[3]), 33, "slot: extra 3");
         slots(rv::Bytes(&ObjTrio[1]), 35, "slot: member 1");
         slots(rv::Bytes(&ObjTrio[2]), 36, "slot: member 2");
+        slots(rv::Bytes(ObjTrio), kSeenSlots, "slot: the leader has none");
         for (std::uint32_t base : {0u, 1000u, 0xFFFFFFF0u}) {   // the counter's wrap included
             for (unsigned walked = 0; walked <= kSeenFrames + 3; ++walked) {
                 Seen s{};
