@@ -6293,9 +6293,9 @@ src/game/battle/battle_obj.cpp	unsigned	global	-	at::kKindHandlers	2	0x655350	-	
 src/game/battle/battle_obj.cpp	BattleObj_StateInit	record	SetLong	S() + o	0	-	via=S	computed	PartyMember, offset o	b1-battle
 src/game/battle/battle_obj.cpp	BattleObj_StateInit	global	At	battle_obj_states::at::kPoseBase	0	0x904aac	-	no-entry	at::kPoseBase 0x904aac -	b0
 src/game/battle/battle_obj.cpp	BattleObj_PickPose	global	At	battle_windows::at::kBattleKind	0	0x904aa0	-	no-entry	at::kBattleKind 0x904aa0 -	b0
-src/game/battle/battle_obj.cpp	BattleObj_PickPose	global	-	battle_windows::at::kPoseSet	0	0x8c5d80	-	no-entry	at::kPoseSet 0x8c5d80 -	b0
-src/game/battle/battle_obj.cpp	BattleObj_PickPose	global	-	battle_windows::at::kPoseSet	1	0x8c5d80	-	no-entry	at::kPoseSet 0x8c5d80 -	b0
-src/game/battle/battle_obj.cpp	BattleObj_PickPose	global	-	battle_windows::at::kPoseSet	2	0x8c5d80	-	no-entry	at::kPoseSet 0x8c5d80 -	b0
+src/game/battle/battle_obj.cpp	BattleObj_PickPose	global	At	battle_windows::at::kPoseSet	0	0x8c5d80	-	no-entry	at::kPoseSet 0x8c5d80 -	b0
+src/game/battle/battle_obj.cpp	BattleObj_PickPose	global	At	battle_windows::at::kPoseSet	1	0x8c5d80	-	no-entry	at::kPoseSet 0x8c5d80 -	b0
+src/game/battle/battle_obj.cpp	BattleObj_PickPose	global	At	battle_windows::at::kPoseSet	2	0x8c5d80	-	no-entry	at::kPoseSet 0x8c5d80 -	b0
 src/game/battle/battle_obj.cpp	BattleObj_PickPose	global	At	battle_windows::at::kPoseMode	0	0x904aa8	-	no-entry	at::kPoseMode 0x904aa8 -	b0
 src/game/battle/battle_obj.cpp	BattleObj_PickPose	global	At	battle_windows::at::kSkillFlags	0	0x65c4dd	-	no-entry	at::kSkillFlags 0x65c4dd -	b0
 src/game/battle/battle_obj.cpp	BattleObj_StateIdle	global	At	battle_obj_states::at::kPhase	0	0x904aa0	-	no-entry	at::kPhase 0x904aa0 -	b0
@@ -23454,7 +23454,7 @@ src/game/minigame/shisu.cpp	MasterFigure_DrawFaded	global	BRest2c	rest_2c::at::k
 src/game/minigame/shisu.cpp	MasterFigure_DrawFaded	global	BRest2c	rest_2c::at::kFigureRgb	5	0x93993d	-	inside-entry	at::kFigureRgb 0x93993d Rest2c_FigureRgb	b0
 src/game/minigame/shisu.cpp	MasterFigure_DrawFaded	global	BRest2c	rest_2c::at::kFigureRgb	6	0x93993d	-	inside-entry	at::kFigureRgb 0x93993d Rest2c_FigureRgb	b0
 src/game/minigame/shisu.cpp	MasterFigure_DrawFaded	global	BRest2c	rest_2c::at::kFigureRgb	7	0x93993d	-	inside-entry	at::kFigureRgb 0x93993d Rest2c_FigureRgb	b0
-src/game/minigame/shisu.cpp	MasterFigure_DrawFaded	global	-	rest_2c::at::kFigure	0	0x9398e0	-	no-entry	at::kFigure 0x9398e0 -	b0
+src/game/minigame/shisu.cpp	MasterFigure_DrawFaded	global	At	rest_2c::at::kFigure	0	0x9398e0	-	no-entry	at::kFigure 0x9398e0 -	b0
 src/game/minigame/shisu.cpp	MasterFigure_DrawFaded	global	BRest2c	rest_2c::at::kFigureRgb	8	0x93993d	-	inside-entry	at::kFigureRgb 0x93993d Rest2c_FigureRgb	b0
 src/game/minigame/shisu.cpp	MasterFigure_DrawFaded	global	BRest2c	rest_2c::at::kFigureRgb	9	0x93993d	-	inside-entry	at::kFigureRgb 0x93993d Rest2c_FigureRgb	b0
 src/game/move_script_bytes.h	SetLong	global	At	SharedScratch_addr	0	0x903850	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (SharedScratch_addr - -)	c4-tc
