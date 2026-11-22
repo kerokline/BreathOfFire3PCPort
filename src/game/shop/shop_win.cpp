@@ -12,6 +12,7 @@
 #include "game/records.h"
 #include "game/widescreen.h"
 #include "game/yes_no_layout.h"
+#include "game/solo/solo_screens.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -158,7 +159,8 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_MemberStatsR
     Step(::bof3::Img(ShopWin_MemberStatsSteps_addr));
     const unsigned char* const w = RecMenuDrawHelpers();
     const unsigned item = w[0xC], slot = w[0xB];
-    const unsigned member = Member(w[0xA]);
+    // DIVERGENCE DIV-0228 (amended 2026-11-22): the solo champion alone (solo_screens.h).
+    const unsigned member = solo::SoloScreens_Record(w[0xA], Member(w[0xA]), "the shop's member panel");
     g.member_stats(static_cast<int>(X(w)), static_cast<int>(Y(w)), member, slot, item);
 }
 

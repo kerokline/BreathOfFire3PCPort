@@ -15,6 +15,7 @@
 #include "game/rest_2d_callees.h"
 #include "game/scenario_harness.h"
 #include "game/yes_no_layout.h"
+#include "game/solo/solo_screens.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "input/sigma.h"
@@ -95,16 +96,25 @@ void Say(unsigned k) {
 // The members (Field_MemberCount, ObjTrio's +0x148 record index) scanned for
 // the first whose record's +0x1F (its master) is (`equal`) or is not the
 // master byte: its slot, or the count when none is (signed compares).
+//
+// DIVERGENCE DIV-0228 (amended 2026-11-22): while the solo champion fights
+// alone the members are the champion alone (solo_screens.h), here and in
+// every member read below.
 unsigned FirstMember(unsigned char master, bool equal) {
-    const int count = Field_MemberCount;
+    const int count = static_cast<int>(solo::SoloScreens_Count(Field_MemberCount));
     int i = 0;
     for (; i < count; ++i) {
-        const unsigned record = BRest2c(::bof3::Img(rest_2c::at::kMembers.v) + static_cast<U>(i) * rest_2c::at::kObjStride);
+        const unsigned record = solo::SoloScreens_Record(
+            static_cast<unsigned>(i), BRest2c(::bof3::Img(rest_2c::at::kMembers.v) + static_cast<U>(i) * rest_2c::at::kObjStride),
+            "the master's pupil scan");
         const bool same = BRest2c(::bof3::Img(rest_2c::at::kRecords.v) + 0x1F + record * rest_2c::at::kRecordStride) == master;
         if (same == equal) break;
     }
     return static_cast<unsigned>(i);
 }
+
+// Field_MemberCount; DIV-0228: 1 while the solo champion fights alone.
+int MemberCount() { return static_cast<int>(solo::SoloScreens_Count(Field_MemberCount)); }
 
 }  // namespace
 
@@ -128,7 +138,14 @@ unsigned short MasterMessageRest2d(unsigned k) {
 }
 
 // Field_Members' byte of the party slot `slot` (ObjTrio + 0x148, 0x14C apart).
-unsigned char MemberAt(unsigned slot) { return (rv::Bytes(ObjTrio) + 0x148)[slot * rest_2d::at::kObjStride]; }
+// DIV-0228: the champion's record while the solo champion fights alone.
+unsigned char MemberAt(unsigned slot) {
+    return static_cast<unsigned char>(
+        solo::SoloScreens_Record(slot, (rv::Bytes(ObjTrio) + 0x148)[slot * rest_2d::at::kObjStride], "the master's member"));
+}
+
+// Field_MemberCount; DIV-0228: 1 while the solo champion fights alone.
+int ScreenMemberCount() { return static_cast<int>(solo::SoloScreens_Count(Field_MemberCount)); }
 
 // The member under the cursor: a CharacterRecords index.
 unsigned char CursorMember() { return MemberAt(Rest2d_Cursor); }
@@ -139,7 +156,7 @@ U RecordOf(unsigned member) { return ::bof3::Img(CharacterRecords_addr) + member
 // the cursor's frame over the cursor's member (blinking when `blink`), the
 // prompt's box, and the line - message `message` of MessagePools.
 void DrawMasterScreen(U message, unsigned blink, const unsigned char* (*line)(U)) {
-    for (unsigned i = 0; i < Field_MemberCount; ++i) {
+    for (unsigned i = 0; i < static_cast<unsigned>(ScreenMemberCount()); ++i) {
         const U y = 0x3E + 54 * i;
         MemberPanel(0x11, y, MemberAt(i), i);
         MemberLabel(0x89, y, MemberAt(i));
@@ -258,7 +275,7 @@ extern "C" void __cdecl MasterTalk_Say6(void) {
 extern "C" void __cdecl MasterTalk_CheckAllPupils(void) {
     if (Field_Request == 2) return;
     const unsigned char master = AreaW0c_TailSub;
-    if (static_cast<int>(FirstMember(master, false)) < Field_MemberCount) {
+    if (static_cast<int>(FirstMember(master, false)) < MemberCount()) {
         AreaW0c_AnswerMark = 3;
         AreaW3f_AnswerMarkD1 = 0;
         return;
@@ -279,7 +296,7 @@ extern "C" void __cdecl MasterTalk_Say8(void) {
 extern "C" void __cdecl MasterTalk_CheckAnyPupil(void) {
     if (Field_Request == 2) return;
     const unsigned char master = AreaW0c_TailSub;
-    if (static_cast<int>(FirstMember(master, true)) < Field_MemberCount) {
+    if (static_cast<int>(FirstMember(master, true)) < MemberCount()) {
         AreaW0c_AnswerMark = 4;
         AreaW3f_AnswerMarkD1 = 0;
         return;
@@ -338,11 +355,11 @@ extern "C" void __cdecl MasterScreen_PickMember(unsigned message, unsigned appre
         SH_CALL(Sound_PlayEffect)(0x106);
         AreaW3f_AnswerMarkD1 = 4;
     } else if (held & 0x1000) {
-        if (Rest2d_Cursor == 0) Rest2d_Cursor = static_cast<unsigned char>(Field_MemberCount - 1);
+        if (Rest2d_Cursor == 0) Rest2d_Cursor = static_cast<unsigned char>(ScreenMemberCount() - 1);
         else Rest2d_Cursor = static_cast<unsigned char>(Rest2d_Cursor - 1);
         SH_CALL(Sound_PlayEffect)(0x100);
     } else if (held & 0x4000) {
-        if (Rest2d_Cursor == static_cast<int>(Field_MemberCount) - 1) Rest2d_Cursor = 0;
+        if (Rest2d_Cursor == ScreenMemberCount() - 1) Rest2d_Cursor = 0;
         else Rest2d_Cursor = static_cast<unsigned char>(Rest2d_Cursor + 1);
         SH_CALL(Sound_PlayEffect)(0x100);
     }

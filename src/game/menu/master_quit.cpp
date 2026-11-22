@@ -13,6 +13,7 @@
 #include "game/rest_2d_callees.h"
 #include "game/scenario_harness.h"
 #include "game/yes_no_layout.h"
+#include "game/solo/solo_screens.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "input/sigma.h"
@@ -77,7 +78,17 @@ unsigned short MasterMessageRest2d(unsigned k) {
 }
 
 // Field_Members' byte of the party slot `slot` (ObjTrio + 0x148, 0x14C apart).
-unsigned char MemberAt(unsigned slot) { return (rv::Bytes(ObjTrio) + 0x148)[slot * rest_2d::at::kObjStride]; }
+//
+// DIVERGENCE DIV-0228 (amended 2026-11-22): while the solo champion fights alone the members are
+// the champion alone (solo_screens.h): the champion's record here, and a
+// count of 1 below.
+unsigned char MemberAt(unsigned slot) {
+    return static_cast<unsigned char>(
+        solo::SoloScreens_Record(slot, (rv::Bytes(ObjTrio) + 0x148)[slot * rest_2d::at::kObjStride], "the master's member"));
+}
+
+// Field_MemberCount; DIV-0228: 1 while the solo champion fights alone.
+int ScreenMemberCount() { return static_cast<int>(solo::SoloScreens_Count(Field_MemberCount)); }
 
 // The member under the cursor: a CharacterRecords index.
 unsigned char CursorMember() { return MemberAt(Rest2d_Cursor); }
@@ -95,7 +106,7 @@ void NameToText(U record) {
 // the cursor's frame over the cursor's member (blinking when `blink`), the
 // prompt's box, and the line - message `message` of MessagePools.
 void DrawMasterScreen(U message, unsigned blink, const unsigned char* (*line)(U)) {
-    for (unsigned i = 0; i < Field_MemberCount; ++i) {
+    for (unsigned i = 0; i < static_cast<unsigned>(ScreenMemberCount()); ++i) {
         const U y = 0x3E + 54 * i;
         MemberPanel(0x11, y, MemberAt(i), i);
         MemberLabel(0x89, y, MemberAt(i));
@@ -221,7 +232,7 @@ extern "C" void __cdecl MasterJoin_Step6Told(void) { TellAndStep(0xB); }
 extern "C" void __cdecl MasterJoin_Step7AllCheck(void) {
     if (Field_Request == 2) return;
     const unsigned char master = AreaW0c_TailSub;
-    const int n = Field_MemberCount;
+    const int n = ScreenMemberCount();
     int i = 0;
     while (i < n && move_script::At(RecordOf(MemberAt(static_cast<unsigned>(i))))[0x1F] == master) ++i;
     if (i < n) {
@@ -283,7 +294,7 @@ extern "C" void __cdecl MasterQuit_Step6Told(void) { TellAndStep(0xD); }
 extern "C" void __cdecl MasterQuit_Step7NoneLeftCheck(void) {
     if (Field_Request == 2) return;
     const unsigned char master = AreaW0c_TailSub;
-    const int n = Field_MemberCount;
+    const int n = ScreenMemberCount();
     int i = 0;
     while (i < n && move_script::At(RecordOf(MemberAt(static_cast<unsigned>(i))))[0x1F] != master) ++i;
     if (i < n) {
@@ -387,7 +398,7 @@ extern "C" void __cdecl MasterGrant_Step2Next(void) {
     if (Field_Request == 2) return;
     const auto cursor = static_cast<unsigned char>(Rest2d_Cursor + 1);
     Rest2d_Cursor = cursor;
-    if (cursor >= Field_MemberCount) AreaW0c_AnswerMark = 2;
+    if (cursor >= ScreenMemberCount()) AreaW0c_AnswerMark = 2;
     AreaW3f_AnswerMarkD1 = 1;
 }
 
