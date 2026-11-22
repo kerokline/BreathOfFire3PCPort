@@ -14299,10 +14299,17 @@ designed in rather than bolted on.
   functions, 0 mismatches; with `BOF3X_NO_FAIL=1` the same, 0 mismatches
   (the fuzz does not open record 36 in area 130, so it does not show the
   change); `BOF3X_NO_FAIL=1 BOF3X_ORIGINAL=ShopMode_Begin`: `FATAL:
-  BOF3X_NO_FAIL=1 needs ShopMode_Begin ours, and it is disabled`. **Not
-  seen live:** no recorded route reaches the seller; the owner's eye on the
-  shop in Parch, with the box on and off, and on another town's item shop
-  after it, is owed.
+  BOF3X_NO_FAIL=1 needs ShopMode_Begin ours, and it is disabled`. Which
+  areas read the record, the same day: every area's placement script
+  walked (`tools/event_scan.py`'s walk; the `5x` placement's `op[0x10]` /
+  `op[0x11]` are the object's `+0x18` / `+0x1C`, [`event-ops.md`](event-ops.md)
+  3) - of the 97 placements of kind 0, a shop, record 36 is placed in area
+  130 alone, so the change is Parch's and the write back is a guard, not a
+  path a script reaches. Three records are placed in more than one area: 0
+  (areas 0 and 7), 1 (areas 0, 7 and 68) and 32 (areas 147 and 150).
+  Live, the owner's play of the day with the box on: the four ingredients
+  listed, "looks right, and all the items are purchaseable". The box off
+  and another town's shop after Parch's were not reported.
 - **Rationale:** the owner's call, 2026-10-30: the groundwork for one
   switch that covers every minigame, for a player who wants the story
   without the reflex tests. One guarded branch per minigame, because the

@@ -464,7 +464,9 @@ offers the shisu's four ingredients - the items `Shisu_Result` takes, in its
 order - in place of the first four entries of its list; the other seven
 entries are as before. `ShopMode_Begin` writes the four pairs into the
 record when record 36 opens in area 130 and writes Capcom's four back when
-it next opens in another area, so the change is the one seller's. The
+it next opens in another area, so the change is the one seller's - a
+guard: no other area's script places record 36 (every placement script
+walked, 2026-11-21; DIV-0188's amendment has the count). The
 price is the owner's call of the day, 1 zenny for the three that have a base
 price of 0 - and it is what the shop does with a 0 already: the list, the
 detail and the purchase all scale the price through `Shop_ScalePrice`, which
