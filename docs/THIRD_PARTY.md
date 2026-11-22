@@ -1,6 +1,6 @@
 # Third-party code carried in this repository
 
-**Status:** CURRENT (2026-11-20)
+**Status:** CURRENT (2026-11-22)
 
 `CLAUDE.md` rule 5 keeps this list short: nothing copyleft, nothing whose
 terms we could not grant on at a handoff ([`LICENSING.md`](LICENSING.md)
@@ -412,3 +412,97 @@ the LPPL 1.3c's text is in the folder):
 licence, the LPPL text, the manifest, the README) go into every release zip
 as `licenses\tex-gyre-pagella\` (`tools/make_release.py`), since the
 release distributes the font inside the program.
+
+## 8. DXVK-native and what it carries (the Linux build's renderer, docs/linux-round.md)
+
+The Linux build draws through Direct3D 11 on Vulkan: `cmake/dxvk_native.cmake`
+fetches [doitsujin/dxvk](https://github.com/doitsujin/dxvk) at v3.1.1 (commit
+`b1a1c99ab52b687cf950d62c88bc2fa316b41663`, the one `cmake/dxvk_headers.cmake`
+names) with its submodules, at configure time, and builds two shared
+libraries with meson: `libdxvk_d3d11.so` and `libdxvk_dxgi.so`. The Linux
+tarball ships them beside the ELF as `libdxvk_d3d11.so.0` and
+`libdxvk_dxgi.so.0` (the decision: [`linux-round.md`](linux-round.md) section
+6, call 1). The Windows build does not use DXVK; its zips hold none of this.
+Nothing of DXVK is copied into this repository. **Paid with the Linux
+tarball (2026-11-22, group D2):** `tools/make_release.py --linux` copies each
+notice below from the fetched tree into `licenses/` and stops if one is
+missing or is not the expected text.
+
+What is in the two libraries, read from the tree the build fetched
+(`build-linux-x86_64/_deps/dxvk-native/src/dxvk_native`) and its meson build
+(`build.ninja` compiles `subprojects/dxbc-spirv` and `subprojects/libdisplay-info`;
+meson found no system `libdisplay-info` and built its fallback subproject):
+
+| Work | How it is in the libraries | Licence | File, sha256 | In the tarball |
+|---|---|---|---|---|
+| DXVK | compiled | zlib/libpng | `LICENSE`, `a5cb1a6d...3e30ce64` | `licenses/dxvk/LICENSE` |
+| dxbc-spirv (Philip Rebohle) | compiled (DXVK's shader compiler) | MIT | `subprojects/dxbc-spirv/LICENSE`, `0f8a5e68...e0e69ad8` | `licenses/dxbc-spirv/LICENSE` |
+| libdisplay-info (DXVK's fork, branch `windows`, `275e6459`) | compiled (meson's fallback) | MIT | `subprojects/libdisplay-info/LICENSE`, `15b39624...d339eedd` | `licenses/libdisplay-info/LICENSE` |
+| Vulkan-Headers (Khronos) | headers compiled against | Apache-2.0 OR MIT | `include/vulkan/LICENSE.md`, `ac24e5ea...da1ec7bc`, and its `LICENSES/` | `licenses/vulkan-headers/` |
+| SPIRV-Headers (Khronos) | headers compiled against | MIT (Khronos's wording) | `include/spirv/LICENSE`, `ea43b1de...b6307613` | `licenses/spirv-headers/LICENSE` |
+| MinGW-w64's DirectX headers (Joshua Ashton's copy) | headers compiled against | LGPL-2.1+, with the use of such headers left free (below) | `include/native/directx/README.md` and `COPYING.MinGW-w64.txt` (`f38e6194...5a7127f1`) | `licenses/mingw-directx-headers/` |
+
+**The DirectX headers.** Their folder's README says the headers are under the
+LGPL 2.1 and quotes the LGPL 2.1's section 5, paragraph 4: an object file
+that uses only numerical parameters, data structure layouts and accessors,
+and small macros and inline functions is unrestricted. The engine has
+compiled against the same headers since wave 2 (`cmake/dxvk_headers.cmake`).
+Nothing of them is vendored, and this project reads the use as that
+paragraph allows it (a reading, not advice; [`LICENSING.md`](LICENSING.md)
+section 4 is about vendoring copyleft source, which this is not). The
+tarball carries the README and the licence file so the notice travels with
+the libraries.
+
+DXVK's notice, from the commit's `LICENSE`:
+
+```
+                  Copyright (c) 2017 Philip Rebohle
+                  Copyright (c) 2019 Joshua Ashton
+                  Copyright (c) 2019 Robin Kertels
+                  Copyright (c) 2023 Jeffrey Ellison
+
+                          zlib/libpng license
+
+This software is provided 'as-is', without any express or implied
+warranty. In no event will the authors be held liable for any damages
+arising from the use of this software.
+
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute it
+freely, subject to the following restrictions:
+
+– The origin of this software must not be misrepresented; you must not
+  claim that you wrote the original software. If you use this software
+  in a product, an acknowledgment in the product documentation would be
+  appreciated but is not required.
+
+– Altered source versions must be plainly marked as such, and must not
+  be misrepresented as being the original software.
+
+– This notice may not be removed or altered from any source distribution.
+```
+
+The MIT notices of dxbc-spirv ("Copyright (c) 2025 Philip Rebohle") and
+libdisplay-info ("Copyright (c) 2022 The libdisplay-info Contributors") are
+the standard MIT text, word for word as section 5's but for those lines;
+the tarball holds each file whole.
+
+**SDL3 on Linux** (section 2): the Linux build links SDL3 as a shared library
+and ships it as `libSDL3.so.0`, where Windows links it statically. Its
+licence is section 2's zlib notice; the tarball carries the fetched tree's
+`LICENSE.txt` as `licenses/sdl3/LICENSE.txt`.
+
+**The C++ runtime inside DXVK's libraries.** DXVK's `meson.build` links its
+native libraries with `-static-libgcc -static-libstdc++` (lines 172-173 at
+that commit), so each of the two holds the parts of GCC's libstdc++ and
+libgcc it uses, from the build machine's GCC; neither names
+`libstdc++.so.6` as `NEEDED` (`readelf -d`). Those libraries are GPL-3.0
+with the GCC Runtime Library Exception, which lets a program compiled with
+them be distributed under any terms. No notice file is owed for that, and
+none is added.
+
+**Not in the tarball, and why.** glibc is the player's system's, and so are
+libstdc++ and libgcc for `bof3x` and `bof3x-launcher`, which name them as
+`NEEDED`. Vulkan's loader (`libvulkan.so.1`) and the graphics driver are the
+system's too: no binary in the tarball names the loader as `NEEDED`; DXVK
+opens it by name at run time.

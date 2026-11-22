@@ -34,7 +34,9 @@ struct Runtime {
 // folders up - on BOF3X_PYTHON or the Python on PATH. BOF3X_PYTHON wins over
 // the bundled interpreter too, for testing a release against another.
 // Windows: runtime\python\python.exe and python.exe; elsewhere
-// runtime/python/bin/python3 and python3.
+// runtime/python/bin/python3 and python3. The Linux tarball holds no Python:
+// there runtime/python is a venv the player makes, and when it is not there
+// the release's importer runs on python3 from PATH.
 Runtime FindRuntime();
 
 // The folder of this program, no separator at its end; empty when the system

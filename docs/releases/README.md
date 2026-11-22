@@ -118,6 +118,48 @@ so a second run is offline. To try the bundle without the system Python:
 <unzipped>\runtime\python\python.exe <unzipped>\runtime\tools\importer.py identify --json "<a .cue>"
 ```
 
+## The Linux tarball (2026-11-22, the Linux round's group D2)
+
+```
+cmake --preset linux-x86_64 && cmake --build build-linux-x86_64     # on Linux
+python3 tools/make_release.py --linux --version <tag>
+```
+
+writes `build/release/bof3x-<tag>-linux-x86_64.tar.gz`: one folder
+of that name holding `bof3x`, `bof3x-launcher`, `libSDL3.so.0`,
+`libdxvk_d3d11.so.0`, `libdxvk_dxgi.so.0`, the two names files, `README.txt`
+(the Linux one), `LICENSE`, `THIRD_PARTY.md`, `licenses/` (the zip's three
+and the notices of SDL3, DXVK and what DXVK carries,
+[`../THIRD_PARTY.md`](../THIRD_PARTY.md) section 8) and `runtime/` (the
+zip's reached tools and data, and `tools/requirements.txt`). **No Python is
+in it** ([`../linux-round.md`](../linux-round.md) section 6, call 3): the
+player makes a venv in `runtime/python`, or uses `python3` from `PATH`, and
+the launcher takes the first it finds. Nothing is downloaded. The game-data
+scan is the zip's. The archive sets the modes (0755 for the two programs and
+the three libraries) whatever the host's filesystem keeps, and the script
+reads each binary's `RUNPATH` and `NEEDED` names from the file and stops
+unless the programs find the three libraries beside them (`$ORIGIN`) and
+need nothing else but glibc and the C++ runtime. It prints the newest glibc
+and libstdc++ versions the binaries need and writes them into `README.txt`:
+**that is the oldest system the tarball runs on**, and it follows the build
+machine (a build on Ubuntu 26.04 needs glibc 2.43). The tarball is not
+code-signed. `release.yml` has no Linux job yet; it is added after the
+round's CI job (group D1) and calls the line above.
+
+**For the release notes** of the first release that carries the tarball, a
+paragraph to adapt:
+
+> **Linux (new, not yet played).** `bof3x-<tag>-linux-x86_64.tar.gz` is a
+> native build for 64-bit Linux. It needs a Vulkan 1.3 driver, X11 or
+> Wayland, and Python 3.11 or newer with the packages in
+> `runtime/tools/requirements.txt`; its `README.txt` says how to make the
+> Python environment and gives the lowest glibc it runs on. It ran on a
+> computer with no screen and a software graphics driver only: the setup
+> from the PC game folder, the install check and the game's self-tests
+> passed. Nobody has played it on a graphics card, heard its sound or used
+> a pad with it yet. Reports are welcome. The Windows zips under Proton or
+> Wine stay the other way to play on Linux.
+
 ## Versions
 
 `v<major>.<minor>.<patch>-alpha.<n>` while the game has been watched more

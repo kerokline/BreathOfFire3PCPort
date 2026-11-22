@@ -2648,6 +2648,144 @@ capture, recorded in "B2a as run".
   has no stack words.
 - An empty folder `C:\c` was left by one of B2b's runs.
 
+### D2 as run (2026-11-22, branch linux/lcC-d2)
+
+Group D2 of wave C: the tarball a Linux player uses, made by
+`tools/make_release.py`. Beside D1 (the CI job), from `main` `d56e4097`.
+
+**What changed since the staging's row.** The row named "C7's launcher" and
+"a start script" (section 6, call 5). Since stage P6 of
+[`launcher-portable.md`](launcher-portable.md) (section 14) the drawn
+`bof3x-launcher` is the launcher on Linux too, with the Sources page that
+runs the importer; the start script was never made and is not wanted. So the
+tarball is the zip's layout less the bundled Python: the player's Python
+does the setup (section 6, call 3), and the folder is portable as on Windows
+(the owner's call 3 of 2026-11-19).
+
+**What was built.**
+
+- **`make_release.py --linux`** (its own function, `main_linux`; the Windows
+  path's only change is that `--build`'s default is set after the argument is
+  read, to the same `build/`). `python3 tools/make_release.py --linux
+  --version V [--build build-linux-x86_64] [--out F]` writes
+  `build/release/bof3x-V-linux-x86_64.tar.gz`, one folder of that name
+  inside. It downloads nothing. Before it writes, it: checks each
+  third-party import the importer reaches against `tools/requirements.txt`
+  and `requirements-extra.txt` (or `NOT_BUNDLED`); reads the `RUNPATH` and
+  `NEEDED` names of the two programs and three libraries from the files
+  (its own ELF reader) and stops unless both programs have `RUNPATH
+  $ORIGIN` alone and nothing needs a library outside the folder but glibc
+  and the C++ runtime; copies ten notices from the fetched trees and stops
+  if one is missing or not the expected text; refuses a build configured
+  with `BOF3X_DXVK_LIBDIR` (libraries built elsewhere); runs the zip's
+  game-data scan on the stage. The archive sets the modes itself (0755 for
+  the programs and the libraries, 0644 for every other file, 0755 for
+  folders, owner 0), so that a tarball made on Windows over the WSL's build
+  gets the same ones (not run: the tarball below was made in the WSL). It writes the newest `GLIBC_` and `GLIBCXX_` versions the
+  binaries need into `README.txt`, in Simplified Technical English as the
+  zip's.
+- **The launcher finds the system's Python** (`src/launcher/ui/tool_run.cpp`
+  `FindRuntime`). It took `runtime/python/bin/python3` whenever
+  `runtime/tools/importer.py` was beside it, so a release without a bundled
+  Python said "cannot find Python". Now, off Windows only, it takes
+  `python3` from `PATH` when that file is not there; the refusal tells the
+  player to install Python 3 and the packages, and to read `README.txt`.
+  On Windows the condition is a constant false (`kWindowsNames`) and the
+  message is the old one; see the measured table for the object compare.
+- **[`THIRD_PARTY.md`](THIRD_PARTY.md) section 8**: DXVK-native and what it
+  carries, each licence read from the file at the pinned commit's fetched
+  tree (DXVK zlib; dxbc-spirv and libdisplay-info MIT, both compiled in;
+  Vulkan-Headers, SPIRV-Headers, the MinGW DirectX headers, compiled
+  against; libstdc++ and libgcc linked statically into DXVK's libraries by
+  its own `meson.build`); SDL3 as a shared library.
+- **`README.md`**, a Linux section; **[`releases/README.md`](releases/README.md)**,
+  how the tarball is made and a paragraph for the first release notes that
+  carry it. `release.yml` is not changed: the release job follows D1.
+
+**The tarball** (`v0.0.0-d2test`, from the `linux-x86_64` preset's build in
+the WSL, `~/src/lcC-d2`, a clean configure that fetched SDL3, Dear ImGui and
+DXVK; made there by `python3 tools/make_release.py --linux --version
+v0.0.0-d2test --build build-linux-x86_64 --out
+~/bof3x-runs/lcC-d2/bof3x-v0.0.0-d2test-linux-x86_64.tar.gz`):
+38,692,005 bytes (`ls -l`), 112 files and 114,859,152 bytes unpacked
+(`find . -type f | wc -l`, `du -sb`), 22 folders.
+
+| Kind | Files | Bytes (`stat -c %s`, `find -printf %s`) |
+|---|---:|---:|
+| programs: `bof3x`, `bof3x-launcher` | 2 | 75,964,256 (56,689,376 and 19,274,880) |
+| libraries: `libSDL3.so.0`, `libdxvk_d3d11.so.0`, `libdxvk_dxgi.so.0` | 3 | 23,907,352 (9,709,384, 8,462,704, 5,735,264) |
+| top-level text: `README.txt`, `LICENSE`, `THIRD_PARTY.md`, the two names files | 5 | 85,560 |
+| `licenses/`: dear-imgui, droid-sans (2), tex-gyre-pagella (4), dxvk, dxbc-spirv, libdisplay-info, vulkan-headers (3), spirv-headers, mingw-directx-headers (2), sdl3 | 17 | 93,296 |
+| `runtime/tools/`: the 35 reached tools and `requirements.txt` | 36 | 1,908,773 |
+| `runtime/`: `symbols.toml`, `fixtures.toml`, `tables.toml` | 3 | 8,172,724 |
+| `runtime/fixtures/`, `recipes/`, `exe_maps/`, `data/`, `src/` | 10, 24, 7, 3, 2 | 1,101,419, 2,927,885, 655,045, 18,634, 24,208 |
+
+`tar -tvzf`: 5 entries `-rwxr-xr-x` (the two programs and three
+libraries), 107 `-rw-r--r--`, 22 folders `drwxr-xr-x`. `readelf -d`:
+`bof3x` NEEDED `libdxvk_d3d11.so.0 libdxvk_dxgi.so.0 libSDL3.so.0
+libstdc++.so.6 libm.so.6 libgcc_s.so.1 libc.so.6`, RUNPATH `$ORIGIN`;
+`bof3x-launcher` `libSDL3.so.0` and the same four system names, RUNPATH
+`$ORIGIN`; `libSDL3.so.0` `libm`, `libc`; `libdxvk_d3d11.so.0`
+`libdxvk_dxgi.so.0 libc.so.6 ld-linux-x86-64.so.2`; `libdxvk_dxgi.so.0`
+`libm`, `libc`, `ld-linux`; none names `libvulkan` (DXVK holds the strings
+`libvulkan.so.1` and `libvulkan.so`, `strings`). Version needs (`objdump
+-T`): `GLIBC_2.43` from `bof3x-launcher` and `libSDL3.so.0`, `GLIBC_2.38`
+from the rest; `GLIBCXX_3.4.31` from the two programs. The build tree's path
+appears in `bof3x` as source file names (`strings`: `src/hook/bind.cpp` and
+others, debug and message text), never as a search path.
+
+**The proof**, in a clean folder on ext4 (`~/bof3x-runs/lcC-d2/clean`), every
+command under `env -i HOME=... PATH=/usr/bin:/bin SDL_VIDEODRIVER=offscreen
+SDL_AUDIODRIVER=dummy`, so no `LD_LIBRARY_PATH` and no path to the build
+tree. The source: the main checkout's `bof3` folder copied to
+`~/bof3x-runs/lcC-d2/pc` (ext4) without its `CDImage` folder. Script:
+`proof_d2.sh` in the session's scratch folder.
+
+| Step | Result |
+|---|---|
+| `ldd` on the five binaries | every library the folder holds resolves to the unpacked folder (`libdxvk_d3d11.so.0`, `libdxvk_dxgi.so.0`, `libSDL3.so.0` for `bof3x`; `libSDL3.so.0` for the launcher); the rest to `/usr/lib/x86_64-linux-gnu`. `ldd libdxvk_d3d11.so.0` by itself says `libdxvk_dxgi.so.0 => not found` (a library has no RUNPATH); in a run `bof3x` has loaded it first, by its own NEEDED, and the script checks that order |
+| `bof3x-launcher --list` | rc 0, the settings listed |
+| `bof3x-launcher --check --capture title.png` | rc 0, `check (scale 1, renderer vulkan); page -1 ... saved nothing`; the title page drawn into the PNG (not committed) |
+| No `python3` on `PATH` (`PATH=/nonexistent`), `--check --start` | the Sources page: `The importer cannot run.` and `The importer cannot find Python (none on PATH). Install Python 3 and the packages in requirements.txt. README.txt tells how.` |
+| No venv, the system's `python3` (3.14.4, without Pillow or capstone), `--check --start --script "wait 60; press Folder...; pick <pc>; press Add; wait 600; report sources"` (a second unpacked copy) | `sources list`, `sources add`, `setup --json-progress`, `stale` started on `runtime/tools/importer.py`; `The install is ready.` |
+| `python3 -m venv runtime/python` | rc 1 (`ensurepip` missing: Ubuntu's `python3-venv` is not installed here) |
+| `uv venv runtime/python`; `uv pip install --python runtime/python -r runtime/tools/requirements.txt` | CPython 3.14.4; `capstone==5.0.9`, `pillow==12.0.0` installed (capstone's own `__version__` says 5.0.7) |
+| `runtime/python/bin/python3` replaced, in a third copy, by a script that writes down its start | the launcher started it for `importer.py sources --home ...`: the venv's Python comes first |
+| The same Sources script with the venv | rc 0 in 12 s; `Recognised: PC, the 2001 Chinese release`, `No ffmpeg found: skipping the PC logo movie's repair (DIV-0001)`, the executable's tables and language layer zh-CN, `The install is ready.`; `cache/` 322 MB, `game/` 527 MB, `sources.toml` and `setup.log`, all in the unpacked folder |
+| `runtime/python/bin/python3 runtime/tools/importer.py verify --cache cache --overlays game/DAT` | rc 0: `995 containers held, 0 problem(s)`; `742 of 742 containers byte-identical`; the image is the PC source's `.data`, 638,976 bytes compared |
+| `BOF3X_SELFTEST_ONLY=1 bof3x-launcher --no-config` (from an empty working folder; the game folder found as `<folder>/game`) | rc 0; `.data from <folder>/cache (a PC install ...); BOF3.exe is not read`; `self-test only, game process exit code 0`; `bof3x.log` beside the ELF: 10,400 lines, 0 `FATAL`, 0 `CRASH`, the last `self-test only: done, ending the process` |
+| What the runs wrote | in the unpacked folder only: `bof3x.log`, `setup.log`, `sources.toml`, `cache/`, `game/`, `runtime/python/` (the venv) |
+
+**Windows, unchanged** (the branch's worktree, llvm-mingw):
+
+| Check | Result |
+|---|---|
+| `cmake --preset i686 && cmake --build build`; `cmake --preset x86_64 && cmake --build build-x86_64` (SDL3 and Dear ImGui from the main checkout's fetched trees) | both whole, no error |
+| `tool_run.cpp.obj` built from `origin/main`'s source and from the branch's, each width, `codegen_same.py` and `--by-function` | 0 differ: 32-bit 92 functions, 50 data and 3 bss symbols; 64-bit 93, 19 and 3 |
+| The zips by `origin/main`'s `make_release.py` and by the branch's, from the same `build` and `build-x86_64` (`--version v0.0.0-d2test`) | each pair 1,219 entries in the same order, the same names, sizes and methods (233,816,025 and 229,833,853 bytes unpacked); one entry's CRC differs in each pair, numpy's `dist-info/RECORD`, in two lines: the hashes of the console-script launchers pip writes (`bin/f2py.exe`, `bin/numpy-config.exe`) and the script then deletes, which pip makes anew on every install |
+
+**Not verified:**
+- The title screen, the window, a picture, sound, a pad: no person and no
+  GPU; the launcher's title page was drawn by `--check` into a PNG only.
+  The staging's "setup, then the title screen" stands here as setup, verify
+  and the ELF's self-test.
+- A machine that is not the build machine. The WSL that built the tarball
+  ran it, from a folder the build never touched; another distribution, an
+  older glibc, SteamOS and a Deck were not tried. **The tarball needs the
+  build machine's glibc or newer** (2.43 for a build on Ubuntu 26.04): a
+  release built on `ubuntu-24.04` in CI would need 2.39, which was not
+  measured.
+- A disc source on Linux through the tarball (the PC folder alone), and so
+  the paths that import Pillow and capstone: the PC setup ran to "The
+  install is ready" on the system's Python with neither installed.
+- `python3 -m venv` with `python3-venv` installed: this WSL lacks the
+  package (no `ensurepip`), so the README's first way failed as it says it
+  will without the package; the `uv` way was run.
+- The release job in `release.yml` and a tarball made in CI.
+- libdisplay-info's commit (`275e6459`, the branch `windows` of DXVK's fork)
+  against the commit DXVK's tree records for it: read from the clone's
+  files, not by `git`.
+
 ## 5. What stands in for the launcher in tier 2
 
 The launcher is Win32 dialogs: `config_dialog.cpp` 1,861 lines, `config.cpp`

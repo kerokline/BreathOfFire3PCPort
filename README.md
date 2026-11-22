@@ -71,6 +71,40 @@ the builds beta now, not alpha. See the [releases page](https://github.com/kerok
 
 For the documentation on the scripted process, please refer to [`docs/install_process.md`](docs/install_process.md)
 
+## Linux
+
+There is a native Linux build for x86-64: `bof3x-<version>-linux-x86_64.tar.gz`.
+It is new. It ran on a computer with no screen and a software graphics
+driver only: the setup from the PC game folder, the install check and the
+game's self-tests passed there. Nobody has played it on a graphics card,
+heard its sound or used a pad with it yet. If you try it, please tell us
+what you see.
+
+What you need:
+
+- A 64-bit Linux system with a recent glibc. The tarball's `README.txt`
+  gives the lowest glibc version that it needs.
+- A Vulkan 1.3 graphics driver, and X11 or Wayland.
+- Python 3.11 or newer with Pillow and capstone. The setup uses them. The
+  tarball holds no Python.
+- ffmpeg is optional, as on Windows.
+
+How to start:
+
+1. Extract the tarball to a folder you can write to.
+2. In that folder, make the Python environment for the setup:
+   `python3 -m venv runtime/python` and then
+   `runtime/python/bin/pip install -r runtime/tools/requirements.txt`.
+   On Debian and Ubuntu, `python3 -m venv` needs the package `python3-venv`.
+   If there is no `runtime/python`, the launcher uses `python3` from your
+   `PATH`.
+3. Start `./bof3x-launcher` and add your copy of the game on the Sources page.
+
+The folder is portable, as on Windows: the install, the settings and the
+logs stay in it. The Linux build has no developer launcher. To play the
+Windows build on Linux, you can also use Proton or Wine
+([`docs/linux-round.md`](docs/linux-round.md) section 2).
+
 <!-- game-art -->
 <p align ="center"><img width="320" height="240" alt="Shroom German" src="docs/images/shroomGerman.png" /></p>
 <!-- /game-art -->
@@ -156,7 +190,7 @@ Everything built from game data is built on the player's machine from the player
 This repository is licensed under [PolyForm Noncommercial 1.0.0](LICENSE).
 It is an independent interoperability and preservation effort, not affiliated
 with or endorsed by Capcom. Third-party code it carries (SDL3, the SatPixie
-shader, minimp3) is listed with its notices in
+shader, minimp3, and DXVK in the Linux build) is listed with its notices in
 [`docs/THIRD_PARTY.md`](docs/THIRD_PARTY.md).
 
 [`docs/LICENSING.md`](docs/LICENSING.md) explains why that licence and what
