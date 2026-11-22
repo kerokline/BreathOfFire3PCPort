@@ -84,7 +84,7 @@ struct Callees {
     unsigned (__cdecl* script_tick_once)();                                             // Sprite_ScriptTickOnce (al)
     unsigned (__cdecl* ensure_pose)(unsigned);                                          // Sprite_EnsureAnimation
     // other groups', by address
-    unsigned (__cdecl* pose_from)(unsigned, std::uint32_t, unsigned);                   // 0x589110
+    unsigned (__cdecl* pose_from)(unsigned, unsigned char*, unsigned);                  // 0x589110 Sprite_PoseFromSet(animation, set, size)
     void (__cdecl* draw_value)(int, int, unsigned, unsigned);                           // 0x444340
     void (__cdecl* draw_edge)(int, int, unsigned, unsigned);                            // 0x4447B0
     void (__cdecl* draw_tile)(int, int, unsigned, unsigned);                            // 0x444900

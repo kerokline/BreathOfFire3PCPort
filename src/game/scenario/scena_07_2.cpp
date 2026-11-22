@@ -141,7 +141,7 @@ void PartyRestore() { SH_AT(void (__cdecl*)(), scena_sc7::kPartyRestore.v)(); }
 void StatusBit80() { SH_AT(void (__cdecl*)(), scena_sc7::kStatusBit80.v)(); }
 
 unsigned char CellFind(std::uint32_t records, unsigned n, int x, int z) {
-    return static_cast<unsigned char>(SH_AT(std::uint32_t (__cdecl*)(std::uint32_t, unsigned, int, int), scena_sc7::kCellFind.v)(records, n, x, z));
+    return static_cast<unsigned char>(SH_AT(std::uint32_t (__cdecl*)(unsigned char*, unsigned, int, int), scena_sc7::kCellFind.v)(At(records), n, x, z));
 }
 
 std::uint32_t SpriteFindFree() { return SH_AT(std::uint32_t (__cdecl*)(), scena_sc7::kSpriteFindFree.v)(); }

@@ -90,7 +90,7 @@ void PartyRestore() { SH_AT(void (__cdecl*)(), scena_sc3::kPartyRestore.v)(); }
 void StatusBit80() { SH_AT(void (__cdecl*)(), scena_sc3::kStatusBit80.v)(); }
 
 unsigned char CellFind(std::uint32_t records, unsigned n, int x, int z) {
-    return static_cast<unsigned char>(SH_AT(std::uint32_t (__cdecl*)(std::uint32_t, unsigned, int, int), scena_sc3::kCellFind.v)(records, n, x, z));
+    return static_cast<unsigned char>(SH_AT(std::uint32_t (__cdecl*)(unsigned char*, unsigned, int, int), scena_sc3::kCellFind.v)(At(records), n, x, z));
 }
 
 // Takes an effect slot into the byte 0x903850 and, when there is one, marks

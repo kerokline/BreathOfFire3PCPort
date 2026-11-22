@@ -655,7 +655,7 @@ const Callees kOriginals = {
     Gpu_SetTile, Gpu_SetSprt, Gpu_SetSemiTrans, Gpu_SetDrawMode, Gpu_GetTPage, Gpu_GetClut, Gfx_CommitPrim,
     Transition_Start, Field_MemberSprite, Sprite_SetAnimation, NewGame_InitCharacters, Scenario_Start,
     Scenario_Load, Field_PartyLoad, PartySet_Select, File_LoadDone, Task_Sleep,
-    Fn<void (__cdecl*)(U)>(::bof3::Code(kTaskRestart.v)),
+    Fn<void (__cdecl*)(void*)>(::bof3::Code(kTaskRestart.v)),
     Save_ListFiles, Save_ReadFile, Save_ReadSummaries,
     TitleMenu_DrawFrame, TitleMenu_DrawRows, TitleMenu_DrawRow, TitleMenu_DrawPiece, SaveMenu_DrawSlots,
     NewGame_RollGrowth, NewGame_RollSum,

@@ -79,7 +79,7 @@ void Run(const char* who, U table, unsigned entries, unsigned state) {
 }
 
 U MessageLine(U pen, U text, U width, U x) {
-    return SH_AT(U (__cdecl*)(U, U, U, U), at::kMessageLine.v)(pen, text, width, x);
+    return SH_AT(U (__cdecl*)(U, const unsigned char*, U, int), at::kMessageLine.v)(pen, At(text), width, static_cast<int>(x));
 }
 
 void CopyDword(unsigned char* to, const unsigned char* from) { std::memcpy(to, from, 4); }

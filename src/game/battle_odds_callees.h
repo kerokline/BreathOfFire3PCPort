@@ -55,8 +55,8 @@ struct Callees {
     U (__cdecl* none_of_kind)(U);          // BattleBanner_NoneOfKind 0x44A830 (battle_misc)
     U (__cdecl* calc_damage)(U, U, U);     // Battle_CalcDamage 0x445CF0 (battle_damage)
     U (__cdecl* free_task)();              // BattleTask_FreeCurrent 0x4351F0 (battle_flow)
-    U (__cdecl* release_tint)(U);          // Sprite_ReleaseTint 0x454DC0 (field_event)
-    U (__cdecl* set_tint)(U, U, U, U, U);  // Sprite_SetTint 0x454CC0 (battle_sprites)
+    U (__cdecl* release_tint)(unsigned char*);           // Sprite_ReleaseTint 0x454DC0 (field_event): the sprite a pointer
+    U (__cdecl* set_tint)(unsigned char*, U, U, U, U);   // Sprite_SetTint 0x454CC0 (battle_sprites): the sprite a pointer
     U (__cdecl* fx_size)();                // BattleActor_FxSize 0x4FC1F0 (battle_items)
     U (__cdecl* set_flag40)(U);            // Battle_SetTargetFlag40 0x4530D0 (battle_sprites)
 };

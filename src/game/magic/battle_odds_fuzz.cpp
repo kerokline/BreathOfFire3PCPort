@@ -199,12 +199,14 @@ void DisturbSprite(U salt) {
     default: break;
     }
 }
-U __cdecl StubReleaseTint(U sprite) {
+U __cdecl StubReleaseTint(unsigned char* sprite_p) {
+    const U sprite = Addr(sprite_p);
     Record(4, sprite);
     DisturbSprite(6);
     return Mix(7);
 }
-U __cdecl StubSetTint(U sprite, U r, U gg, U b, U a) {
+U __cdecl StubSetTint(unsigned char* sprite_p, U r, U gg, U b, U a) {
+    const U sprite = Addr(sprite_p);
     Record(5, sprite, r & 0xFF, gg & 0xFF, b & 0xFF, a & 0xFF);
     DisturbSprite(8);
     return Mix(9);
