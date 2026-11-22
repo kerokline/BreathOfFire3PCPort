@@ -480,7 +480,7 @@ const Callees kOriginals = {
     Battle_ElementAffinity,
     EnemyAI_RowDone,
     Fn<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Battle_ActorIsOut)),
-    Fn<void (__cdecl*)(unsigned, unsigned, unsigned, unsigned, unsigned)>(::bof3::Code(bof3::addr::BattleBanner_Add)),
+    Fn<void (__cdecl*)(unsigned, unsigned, unsigned, unsigned, const char*)>(::bof3::Code(bof3::addr::BattleBanner_Add)),
     Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(::bof3::Code(bof3::addr::Battle_StatusResisted80)),
     Fn<void (__cdecl*)(unsigned, unsigned)>(::bof3::Code(bof3::addr::Battle_InflictStatus)),
     Fn<void (__cdecl*)(unsigned, unsigned)>(::bof3::Code(bof3::addr::Battle_ClearStatus)),
@@ -512,22 +512,22 @@ using F0 = U __cdecl();
 const Callees kOriginals = {
     Fn<U __cdecl(U, U)>(::bof3::Code(bof3::addr::BattleTask_Create)),
     Fn<U __cdecl(U)>(::bof3::Code(bof3::addr::Battle_ActorIsOut)),
-    Fn<U __cdecl(U, U, U, U, U)>(::bof3::Code(bof3::addr::Sprite_SetTint)),
+    Fn<U __cdecl(unsigned char*, U, U, U, U)>(::bof3::Code(bof3::addr::Sprite_SetTint)),
     As<U (__cdecl*)(U)>(Sound_PlayEffect),
     As<U (__cdecl*)(U)>(Sound_LoadStream),
     Fn<U __cdecl(U, U, U)>(::bof3::Code(bof3::addr::Char_AbilityList)),
     Fn<U __cdecl(U, U, U)>(::bof3::Code(bof3::addr::Skill_CanUse)),
     As<U (__cdecl*)()>(Window_FreeCurrent),
     Fn<U __cdecl(U)>(::bof3::Code(bof3::addr::EnemyAI_CondElement)),
-    Fn<U __cdecl(U, U)>(::bof3::Code(bof3::addr::EnemyAI_RowDone)),
-    Fn<U __cdecl(U, U)>(::bof3::Code(bof3::addr::EnemyAI_ApplyAction)),
-    Fn<U __cdecl(U, U, U)>(::bof3::Code(bof3::addr::EnemyAI_SetRowDone)),
+    Fn<U __cdecl(const unsigned char*, U)>(::bof3::Code(bof3::addr::EnemyAI_RowDone)),
+    Fn<U __cdecl(unsigned char*, const unsigned char*)>(::bof3::Code(bof3::addr::EnemyAI_ApplyAction)),
+    Fn<U __cdecl(unsigned char*, U, U)>(::bof3::Code(bof3::addr::EnemyAI_SetRowDone)),
     Fn<F0>(::bof3::Code(bof3::addr::EnemyAI_DedupMessages)),
     As<U (__cdecl*)()>(Sprite_UpdateScreenA),
     Fn<F0>(::bof3::Code(bof3::addr::Sprite_UpdateScreenSlot)),
     As<U (__cdecl*)()>(Battle_InitActorContext),
-    As<U (__cdecl*)(U, U, U)>(Str_CopyN),
-    As<U (__cdecl*)(U, U, U, U, U, U)>(BattleBanner_Set),
+    As<U (__cdecl*)(char*, const char*, U)>(Str_CopyN),
+    BattleBanner_Set,
     {Fn<F0>(::bof3::Code(kRetOnly.v)), Fn<F0>(::bof3::Code(kBannerKind1.v)), Fn<F0>(::bof3::Code(kBannerKind2.v)), Fn<F0>(::bof3::Code(kRetOnly.v)), Fn<F0>(::bof3::Code(kRetOnly.v))},
 };
 Callees g = kOriginals;
@@ -1625,7 +1625,7 @@ extern "C" short __cdecl Battle_ApplyDamage(unsigned attacker, unsigned target) 
         auto* const pr = rv::As<records::PartyMember>(p - 0x10);
         if (static_cast<std::int32_t>(pr->flags_130) & 0x100) {
             v = pr->hp;
-            battle_damage::g.show_message(1, 0, 0, 0x1E, BattleDamage_KillMessage);
+            battle_damage::g.show_message(1, 0, 0, 0x1E, reinterpret_cast<const char*>(move_script::At(BattleDamage_KillMessage)));
             const std::uint32_t f = U32(static_cast<std::int32_t>(pr->flags_130)) & ~0x100u;
             WindowRecords[4].state = 1;
             pr->flags_130 = S32(f);
@@ -1654,7 +1654,7 @@ extern "C" short __cdecl Battle_ApplyDamage(unsigned attacker, unsigned target) 
         if (er->hp != 0xFFFF) {
             if ((static_cast<std::int32_t>(er->flags_110) & 0x100) && er->hp <= 0x7FFF) {
                 v = move_script::Word(e + battle_damage::at::kEHp);
-                battle_damage::g.show_message(1, 0, 0, 0x1E, BattleDamage_KillMessage);
+                battle_damage::g.show_message(1, 0, 0, 0x1E, reinterpret_cast<const char*>(move_script::At(BattleDamage_KillMessage)));
                 const std::uint32_t f = U32(static_cast<std::int32_t>(er->flags_110)) & ~0x100u;
                 WindowRecords[4].state = 1;
                 er->flags_110 = S32(f);

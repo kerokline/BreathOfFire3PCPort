@@ -214,8 +214,8 @@ void __cdecl StubUpdateScreen() {
 unsigned __cdecl StubTick() { Record(10, Id(Field_State), Id(Sprite_Current)); Disturb(); return Hash(); }
 unsigned __cdecl StubTickOnce() { Record(11, Id(Field_State), Id(Sprite_Current)); Disturb(); return Hash(); }
 unsigned __cdecl StubEnsurePose(unsigned pose) { Record(12, pose & 0xFF, Id(Sprite_Current)); Disturb(); return Hash(); }
-unsigned __cdecl StubPoseFrom(unsigned pose, std::uint32_t set, unsigned size) {
-    Record(13, pose & 0xFF, set, size);
+unsigned __cdecl StubPoseFrom(unsigned pose, unsigned char* set, unsigned size) {
+    Record(13, pose & 0xFF, Address(set), size);
     Disturb();
     return Hash();
 }

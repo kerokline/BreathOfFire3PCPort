@@ -31,6 +31,29 @@ Every download is pinned by version and sha256 and kept in --downloads, so a
 second run is offline. The zip is checked for game data before it is written
 (CLAUDE.md rule 1): no file of a game-data kind, and no file whose sha256 is
 one fixtures.toml catalogues.
+
+The Linux tarball (docs/linux-round.md, group D2; section 6, calls 3 and 5):
+
+    python tools/make_release.py --linux --version V [--build build-linux-x86_64] [--out TAR.GZ]
+
+writes bof3x-V-linux-x86_64.tar.gz from the linux-x86_64 preset's build, one
+folder of the same name inside it, portable as the zip is (the home is the
+executable's folder):
+
+    bof3x  bof3x-launcher  libSDL3.so.0  libdxvk_d3d11.so.0  libdxvk_dxgi.so.0
+    music-names.tsv  save-names.tsv  README.txt  LICENSE  THIRD_PARTY.md
+    licenses/             the zip's three, and dxvk/ and sdl3/ from the
+                          build's fetched trees (the two libraries it ships)
+    runtime/tools/        the zip's reached tools, and requirements.txt
+    runtime/fixtures.toml, fixtures/, recipes/, ...   as the zip
+
+No Python is in it: the importer runs on the system's (call 3). The launcher
+takes runtime/python/bin/python3 when the player made that venv, else
+python3 on PATH (src/launcher/ui/tool_run.cpp FindRuntime). Nothing is
+downloaded. The same game-data scan runs on its stage; the modes are set in
+the archive (0755 for the programs and libraries, 0644 for the rest), and the
+ELF's RUNPATH and NEEDED names are read from the file and checked against
+what the folder holds. The tarball is not Authenticode-signed; release.yml attests it (docs/releases/README.md).
 """
 import argparse
 import ast
@@ -39,7 +62,9 @@ import os
 import re
 import shutil
 import subprocess
+import struct
 import sys
+import tarfile
 import tempfile
 import tomllib
 import urllib.request
@@ -337,15 +362,352 @@ def scan(stage):
     return bad
 
 
+# ---- The Linux tarball (--linux) ---------------------------------------------------
+# docs/linux-round.md, group D2. Its own code path: nothing above changes for
+# the Windows zips.
+
+# What the linux-x86_64 preset's build folder holds beside the ELF
+# (cmake/linux_target.cmake): the ELF, the launcher, the three libraries
+# under their sonames (RUNPATH $ORIGIN finds them there) and the names files.
+LINUX_BUILD_FILES = ("bof3x", "bof3x-launcher", "libSDL3.so.0", "libdxvk_d3d11.so.0", "libdxvk_dxgi.so.0",
+                     "music-names.tsv", "save-names.tsv")
+LINUX_PROGRAMS = ("bof3x", "bof3x-launcher")
+# Libraries a player's system holds (glibc, the C++ runtime): the one kind
+# of NEEDED name allowed that the folder does not hold. Anything else is a
+# library the tarball would need and does not carry, and the script stops.
+LINUX_SYSTEM_LIBS = ("libc.so.6", "libm.so.6", "libstdc++.so.6", "libgcc_s.so.1", "ld-linux-x86-64.so.2",
+                     "libdl.so.2", "libpthread.so.0", "librt.so.1")
+# The notices of the third-party work in the two shipped libraries the zip
+# does not have, from the trees the build fetched (docs/THIRD_PARTY.md
+# sections 2 and 8): (folder in licenses/, tree, the file in it, a text the
+# file must hold). "dxvk" is the tree cmake/dxvk_native.cmake built the
+# libraries from (DXVK v3.1.1, b1a1c99a, with its submodules); libdisplay-info
+# and dxbc-spirv are compiled into them; Vulkan-Headers, SPIRV-Headers and the
+# MinGW DirectX headers are headers they compile against.
+LINUX_LICENSES = [("dxvk", "dxvk", "LICENSE", "Philip Rebohle"),
+                  ("dxbc-spirv", "dxvk", "subprojects/dxbc-spirv/LICENSE", "Philip Rebohle"),
+                  ("libdisplay-info", "dxvk", "subprojects/libdisplay-info/LICENSE", "libdisplay-info Contributors"),
+                  ("vulkan-headers", "dxvk", "include/vulkan/LICENSE.md", "Khronos"),
+                  ("vulkan-headers", "dxvk", "include/vulkan/LICENSES/Apache-2.0.txt", "Apache License"),
+                  ("vulkan-headers", "dxvk", "include/vulkan/LICENSES/MIT.txt", "MIT"),
+                  ("spirv-headers", "dxvk", "include/spirv/LICENSE", "Khronos"),
+                  ("mingw-directx-headers", "dxvk", "include/native/directx/README.md", "LGPL"),
+                  ("mingw-directx-headers", "dxvk", "include/native/directx/COPYING.MinGW-w64.txt", "MinGW-w64"),
+                  ("sdl3", "sdl3", "LICENSE.txt", "Sam Lantinga")]
+
+
+def cache_value(build, key):
+    """A CMakeCache.txt entry's value, or ''."""
+    p = os.path.join(build, "CMakeCache.txt")
+    if os.path.isfile(p):
+        with open(p, encoding="utf-8", errors="replace") as f:
+            for line in f:
+                if line.startswith(key + ":"):
+                    return line.split("=", 1)[1].strip()
+    return ""
+
+
+def linux_trees(build):
+    """{tree name: folder} for LINUX_LICENSES: DXVK as the build's external project fetched it, SDL3 as
+    FetchContent did (or the folder -DFETCHCONTENT_SOURCE_DIR_SDL3 named)."""
+    if cache_value(build, "BOF3X_DXVK_LIBDIR"):
+        raise SystemExit("%s was configured with BOF3X_DXVK_LIBDIR=%s: DXVK's libraries were built elsewhere, so the "
+                         "release cannot vouch for their commit or their notices. Configure without it."
+                         % (build, cache_value(build, "BOF3X_DXVK_LIBDIR")))
+    return {"dxvk": os.path.join(build, "_deps", "dxvk-native", "src", "dxvk_native"),
+            "sdl3": cache_value(build, "FETCHCONTENT_SOURCE_DIR_SDL3") or os.path.join(build, "_deps", "sdl3-src")}
+
+
+def elf_dynamic(p):
+    """(NEEDED names, RUNPATH, RPATH, the strings of .dynstr) of a 64-bit little-endian ELF, read from its
+    PT_DYNAMIC segment."""
+    with open(p, "rb") as f:
+        data = f.read()
+    if data[:4] != b"\x7fELF" or data[4] != 2 or data[5] != 1:
+        raise SystemExit("%s: not a 64-bit little-endian ELF" % p)
+    phoff, = struct.unpack_from("<Q", data, 0x20)
+    phentsize, phnum = struct.unpack_from("<HH", data, 0x36)
+    loads, dyn = [], None
+    for i in range(phnum):
+        p_type, _, p_offset, p_vaddr, _, p_filesz, _, _ = struct.unpack_from("<IIQQQQQQ", data, phoff + i * phentsize)
+        if p_type == 1:
+            loads.append((p_vaddr, p_offset, p_filesz))
+        elif p_type == 2:
+            dyn = (p_offset, p_filesz)
+    if dyn is None:
+        raise SystemExit("%s: no dynamic segment" % p)
+    tags = []
+    for at in range(dyn[0], dyn[0] + dyn[1], 16):
+        tag, val = struct.unpack_from("<qQ", data, at)
+        if tag == 0:
+            break
+        tags.append((tag, val))
+    strtab = next(v for t, v in tags if t == 5)
+    strsz = next(v for t, v in tags if t == 10)
+    off = next(o + strtab - va for va, o, sz in loads if va <= strtab < va + sz)
+    table = data[off:off + strsz]
+    def s(i):
+        return table[i:table.index(b"\0", i)].decode("utf-8", "replace")
+    needed = [s(v) for t, v in tags if t == 1]
+    runpath = [s(v) for t, v in tags if t == 29]
+    rpath = [s(v) for t, v in tags if t == 15]
+    return needed, runpath, rpath, [x.decode("utf-8", "replace") for x in table.split(b"\0") if x]
+
+
+def newest(strings, prefix):
+    """The highest version named prefix+N.N[.N] among strings, as text, or ''."""
+    best = None
+    for x in strings:
+        m = re.fullmatch(re.escape(prefix) + r"(\d+(?:\.\d+)+)", x)
+        if m:
+            v = tuple(int(n) for n in m.group(1).split("."))
+            best = v if best is None or v > best else best
+    return prefix + ".".join(map(str, best)) if best else ""
+
+
+def requirement_names(path):
+    """The package names of a pip requirements file, lower case."""
+    names = set()
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            line = line.split("#", 1)[0].strip()
+            if line:
+                names.add(re.split(r"[=<>!~\[; ]", line, maxsplit=1)[0].lower())
+    return names
+
+
+README_LINUX = """Breath of Fire III - bof3x {version} ({stage}), Linux x86-64
+=================================================================
+
+A renovation of the 2001 PC port of Breath of Fire III. This download holds
+no game data. You supply your own copy of the game.
+
+This is the first Linux build. It ran only on a computer with no screen and
+with a software graphics driver. Nobody has played it on a graphics card or
+heard its sound yet. Please tell us what you see.
+
+What you need
+-------------
+
+- A 64-bit Linux system (x86-64) with {glibc} or newer and the GNU C++
+  library with {glibcxx} or newer.
+- A Vulkan 1.3 graphics driver (Mesa or your graphics card's driver).
+- X11 or Wayland.
+- Python 3.11 or newer, with the packages in runtime/tools/requirements.txt
+  (Pillow and capstone). The setup of the game uses them. Steps 2 and 3
+  below install them.
+- ffmpeg (optional): a PlayStation disc needs none. Only a PC install's logo
+  movie repair and the PSP's sound effects and logo movie need ffmpeg.
+  Install it from your system's packages, then run the setup again.
+
+How to start
+------------
+
+1. Extract this folder to a place you can write to, e.g. ~/Games:
+     tar -xzf bof3x-*-linux-x86_64.tar.gz -C ~/Games
+2. Open a terminal in the folder bof3x-{version}-linux-x86_64.
+3. Make a Python environment for the setup in runtime/python:
+     python3 -m venv runtime/python
+     runtime/python/bin/pip install -r runtime/tools/requirements.txt
+   On Debian and Ubuntu, "python3 -m venv" needs the package python3-venv.
+   With uv, do this instead:
+     uv venv runtime/python
+     uv pip install --python runtime/python -r runtime/tools/requirements.txt
+   If you do not make runtime/python, the launcher uses python3 from your
+   PATH. Then install Pillow and capstone for that Python yourself.
+4. Start the launcher:
+     ./bof3x-launcher
+5. On the Sources page, add what you own - any of:
+     - the PC game's folder (the one holding BOF3.exe and DAT)
+     - a PlayStation disc image as .cue/.bin (or a .zip of them)
+     - a PSP disc image as .iso (or a .zip of it)
+   Each is checked against the known releases. The first one makes the
+   install. Later ones add their languages and extras.
+6. Play.
+
+Everything the setup writes stays in this folder: sources.toml, cache/ and
+game/. The settings (bof3x.ini), the log (bof3x.log) and the graphics logs
+also stay here. Your own files are only read, never changed. To use another
+folder for these files, set BOF3X_HOME.
+
+Not supported yet: .chd and .cso images (convert them back to .cue/.bin or
+.iso), 2048-byte .iso images of a PlayStation disc (they lose the disc's
+audio and movie sectors). The Linux build has no developer launcher: the
+hosted build and a moved image are on Windows only.
+
+{stage_note} See
+the release notes for what is known. Licences: LICENSE (this project) and
+THIRD_PARTY.md (what it uses). The licenses/ folder holds the licence texts
+of the work inside the programs and libraries of this folder: Dear ImGui and
+the fonts Droid Sans and TeX Gyre Pagella (in bof3x-launcher), SDL3
+(libSDL3.so.0), and DXVK with the work it uses (libdxvk_d3d11.so.0 and
+libdxvk_dxgi.so.0).
+"""
+
+
+def main_linux(a):
+    """The Linux tarball: docs/linux-round.md group D2. See the module's docstring."""
+    stage_word, stage_note = stage_of(a.version)
+    build = os.path.abspath(a.build or os.path.join(ROOT, "build-linux-x86_64"))
+    missing = [f for f in LINUX_BUILD_FILES if not os.path.isfile(os.path.join(build, f))]
+    if missing:
+        raise SystemExit("%s lacks %s: build first, on Linux (cmake --preset linux-x86_64 && cmake --build %s)"
+                         % (build, ", ".join(missing), os.path.basename(os.path.normpath(build))))
+    name = "bof3x-%s-linux-x86_64" % a.version
+    out = os.path.abspath(a.out or os.path.join(ROOT, "build", "release", name + ".tar.gz"))
+
+    # The importer's third-party imports against the requirements files: a
+    # Linux player installs them (call 3), so each import a player's setup
+    # can reach is in requirements.txt or, named there, in requirements-extra.txt.
+    tools, third = reached_tools()
+    req = requirement_names(os.path.join(TOOLS, "requirements.txt"))
+    extra = requirement_names(os.path.join(TOOLS, "requirements-extra.txt"))
+    uncovered = sorted(k for k in third if k not in NOT_BUNDLED and PROVIDES.get(k, k).lower() not in req | extra)
+    if uncovered:
+        raise SystemExit("the importer imports %s, which neither tools/requirements.txt nor requirements-extra.txt "
+                         "names, nor NOT_BUNDLED lists" % ", ".join(uncovered))
+    in_req = sorted(k for k in third if PROVIDES.get(k, k).lower() in req)
+    in_extra = sorted(k for k in third if k not in in_req and PROVIDES.get(k, k).lower() in extra)
+
+    # Each binary: what it needs, and where the loader finds it.
+    elf = {}
+    for f in LINUX_BUILD_FILES:
+        if f in LINUX_PROGRAMS or ".so" in f:
+            elf[f] = elf_dynamic(os.path.join(build, f))
+    for f in LINUX_PROGRAMS:
+        needed, runpath, rpath, _ = elf[f]
+        if runpath != ["$ORIGIN"] or rpath:
+            raise SystemExit("%s: RUNPATH %s, RPATH %s - the release needs RUNPATH $ORIGIN alone "
+                             "(cmake/linux_target.cmake)" % (f, runpath or "none", rpath or "none"))
+    for f, (needed, _, _, _) in elf.items():
+        foreign = [n for n in needed if n not in LINUX_BUILD_FILES and n not in LINUX_SYSTEM_LIBS]
+        if foreign:
+            raise SystemExit("%s needs %s, which the tarball does not hold and LINUX_SYSTEM_LIBS does not name"
+                             % (f, ", ".join(foreign)))
+        # A bundled library a library needs must be loaded already by the
+        # programs (their RUNPATH does not reach a library's own NEEDED).
+        if f not in LINUX_PROGRAMS:
+            for n in needed:
+                if n in LINUX_BUILD_FILES and n not in elf["bof3x"][0]:
+                    raise SystemExit("%s needs %s, which bof3x does not load first" % (f, n))
+    dynstr = [x for v in elf.values() for x in v[3]]
+    glibc, glibcxx = newest(dynstr, "GLIBC_"), newest(dynstr, "GLIBCXX_")
+
+    trees = linux_trees(build)
+    notices = []
+    for folder, tree, rel, must in LINUX_LICENSES:
+        p = os.path.join(trees[tree], *rel.split("/"))
+        if not os.path.isfile(p):
+            raise SystemExit("%s is not there: the release owes this notice (docs/THIRD_PARTY.md). Build with cmake "
+                             "first, from a configure that fetched DXVK and SDL3." % p)
+        with open(p, encoding="utf-8", errors="replace") as f:
+            if must not in f.read():
+                raise SystemExit("%s does not hold %r: not the notice the release expects" % (p, must))
+        notices.append((folder, p))
+
+    tmp = None
+    if a.stage:
+        stage = os.path.abspath(a.stage)
+        if os.path.exists(stage):
+            shutil.rmtree(stage)
+    else:
+        tmp = tempfile.mkdtemp(prefix="bof3x_release_")
+        stage = os.path.join(tmp, "stage")
+    top = os.path.join(stage, name)
+    try:
+        os.makedirs(top)
+        for f in LINUX_BUILD_FILES:
+            shutil.copyfile(os.path.join(build, f), os.path.join(top, f))
+        for src, dst in TOP:
+            shutil.copyfile(os.path.join(ROOT, src), os.path.join(top, dst))
+        lic = os.path.join(top, "licenses")
+        os.makedirs(os.path.join(lic, "dear-imgui"))
+        shutil.copyfile(imgui_notice(build), os.path.join(lic, "dear-imgui", "LICENSE.txt"))
+        for folder, src in LICENSES:
+            os.makedirs(os.path.join(lic, folder), exist_ok=True)
+            shutil.copyfile(os.path.join(ROOT, *src.split("/")), os.path.join(lic, folder, os.path.basename(src)))
+        for folder, p in notices:
+            os.makedirs(os.path.join(lic, folder), exist_ok=True)
+            shutil.copyfile(p, os.path.join(lic, folder, os.path.basename(p)))
+        rt = os.path.join(top, "runtime")
+        os.makedirs(os.path.join(rt, "tools"))
+        for m in tools:
+            shutil.copyfile(os.path.join(TOOLS, m + ".py"), os.path.join(rt, "tools", m + ".py"))
+        shutil.copyfile(os.path.join(TOOLS, "requirements.txt"), os.path.join(rt, "tools", "requirements.txt"))
+        for d in DATA:
+            s, t = os.path.join(ROOT, *d.split("/")), os.path.join(rt, *d.split("/"))
+            os.makedirs(os.path.dirname(t), exist_ok=True)
+            (shutil.copytree if os.path.isdir(s) else shutil.copyfile)(s, t)
+        with open(os.path.join(top, "README.txt"), "w", encoding="utf-8", newline="\n") as f:
+            f.write(README_LINUX.format(version=a.version, stage=stage_word, stage_note=stage_note,
+                                        glibc=glibc.replace("GLIBC_", "glibc "), glibcxx=glibcxx))
+        bad = scan(stage)
+        if bad:
+            raise SystemExit("game data in the release - refusing to write it:\n  " + "\n  ".join(bad[:20]))
+        files = sorted(os.path.relpath(os.path.join(d, n), stage).replace(os.sep, "/")
+                       for d, _, fs in os.walk(stage) for n in fs)
+        dirs = sorted(os.path.relpath(d, stage).replace(os.sep, "/") for d, _, _ in os.walk(stage) if d != stage)
+
+        def entry(rel, is_dir):
+            # The modes are the archive's, whatever the host's filesystem
+            # keeps: a tarball made on Windows has the same ones.
+            ti = tarfile.TarInfo(rel)
+            st = os.stat(os.path.join(stage, *rel.split("/")))
+            ti.mtime = int(st.st_mtime)
+            ti.uid = ti.gid = 0
+            ti.uname = ti.gname = ""
+            if is_dir:
+                ti.type, ti.mode = tarfile.DIRTYPE, 0o755
+            else:
+                base = rel.rsplit("/", 1)[-1]
+                ti.size = st.st_size
+                ti.mode = 0o755 if rel.count("/") == 1 and (base in LINUX_PROGRAMS or ".so" in base) else 0o644
+            return ti
+
+        os.makedirs(os.path.dirname(out), exist_ok=True)
+        if os.path.exists(out):
+            os.remove(out)
+        with tarfile.open(out + ".part", "w:gz", compresslevel=9, format=tarfile.PAX_FORMAT) as t:
+            for rel in sorted(dirs + files, key=lambda r: (r.split("/"))):
+                if rel in dirs:
+                    t.addfile(entry(rel, True))
+                else:
+                    with open(os.path.join(stage, *rel.split("/")), "rb") as f:
+                        t.addfile(entry(rel, False), f)
+        os.replace(out + ".part", out)
+    finally:
+        if tmp:
+            shutil.rmtree(tmp, ignore_errors=True)
+    print("%s: %d files, %.1f MB, from %s" % (out, len(files), os.path.getsize(out) / 1e6, build))
+    for f in sorted(elf):
+        needed, runpath, _, _ = elf[f]
+        print("  %s: NEEDED %s%s" % (f, " ".join(needed), "; RUNPATH " + ":".join(runpath) if runpath else ""))
+    print("  needs at least %s, %s (the binaries' version needs)" % (glibc, glibcxx))
+    print("  licenses: dear-imgui droid-sans tex-gyre-pagella %s" % " ".join(dict.fromkeys(n[0] for n in notices)))
+    print("  runtime/tools: %d files and requirements.txt (%s)" % (len(tools), " ".join(tools)))
+    print("  the player installs: %s (requirements.txt); for paths a setup does not take by default: %s "
+          "(requirements-extra.txt); NOT_BUNDLED: %s"
+          % (", ".join(in_req), ", ".join(in_extra) or "none", ", ".join(sorted(k for k in third if k in NOT_BUNDLED))))
+    print("  runtime data: %s" % ", ".join(DATA))
+    print("  game-data scan: clean")
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--version", required=True, help="the release's tag, e.g. v0.1.0-alpha.1")
-    ap.add_argument("--build", default=os.path.join(ROOT, "build"), help="where cmake built the launcher (default build/)")
-    ap.add_argument("--out", help="the zip (default build/release/bof3x-VERSION-win.zip)")
+    ap.add_argument("--build", help="where cmake built the launcher (default build/; with --linux build-linux-x86_64/)")
+    ap.add_argument("--out", help="the zip (default build/release/bof3x-VERSION-win.zip; with --linux "
+                                  "build/release/bof3x-VERSION-linux-x86_64.tar.gz)")
     ap.add_argument("--downloads", default=os.path.join(ROOT, "build", "release-downloads"),
                     help="where the pinned downloads are kept between runs")
     ap.add_argument("--stage", help="lay the release out here and keep it (default a temporary folder)")
+    ap.add_argument("--linux", action="store_true",
+                    help="the Linux tarball from the linux-x86_64 preset's build, in place of the Windows zip")
     a = ap.parse_args()
+    if a.linux:
+        return main_linux(a)
+    a.build = a.build or os.path.join(ROOT, "build")
     stage_word, stage_note = stage_of(a.version)
     missing = [f for f in BUILD_FILES if not os.path.isfile(os.path.join(a.build, f))]
     if missing:

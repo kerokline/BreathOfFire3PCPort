@@ -2648,6 +2648,713 @@ capture, recorded in "B2a as run".
   has no stack words.
 - An empty folder `C:\c` was left by one of B2b's runs.
 
+### D1 as run (2026-11-22, branch `linux/lcC-d1`)
+
+Group D1 of wave C: a native CI gate that keeps the Linux build alive. From
+`main` `d56e4097`. Not pushed: **the job has never run on GitHub.**
+
+**What was built.**
+
+- **`build.yml`, a third job `linux-x86_64 (clang)`** on `ubuntu-24.04`. It
+  is a product build, so it sits beside the two Windows builds and uploads
+  its files, as they do; the host unit suites and the repository gates stay
+  `checks.yml`'s. Its steps are one script,
+  `.github/scripts/linux-build.sh` (`deps`, `versions`, `configure`,
+  `build`, `check`, `selftest`, `tree`), so that D2's release and a run by
+  hand do the same thing. In order: the packages (meson, glslang-tools,
+  ccache, and SDL3's headers: X11 with XTest, Wayland and libdecor, ALSA,
+  PulseAudio, PipeWire, udev, D-Bus, DRM/GBM, EGL, Vulkan); the versions;
+  two caches (below); `cmake --preset linux-x86_64`; the build; the ELFs'
+  shape; the checks with no game data; `linux_tree.py --check`; the upload
+  of `bof3x`, `bof3x-launcher`, the three libraries and the two name lists.
+- **The caches.** DXVK-native's libraries, keyed by
+  `cmake/dxvk_native.cmake` and `cmake/dxvk_headers.cmake` (which pin and
+  build them), SDL3's tag (its headers are DXVK's) and the compiler's
+  version line: on a hit the configure passes `BOF3X_DXVK_LIBDIR` and meson
+  does not run; on a miss the external project builds them and a step keeps
+  meson's install folder for the next run. ccache for every other object,
+  restored from the newest entry and saved under the commit.
+- **`check`**: the five files are there; both programs are `EXEC` (non-PIE,
+  stage LA2), carry RUNPATH `$ORIGIN`, need `libSDL3.so.0` (and `bof3x`
+  DXVK's two) and `ldd` finds each in the build folder, nothing "not found";
+  `bof3x`'s first `LOAD` segment is at `0x10000000`. A link that ends has no
+  undefined name: GNU ld fails an executable's link on one.
+- **`selftest`, what needs no game data:** the drawn launcher with no window
+  (`--check`, SDL's `offscreen` video and `dummy` sound, no `--game`, no
+  `--ini`): a picture of the title page, every tab and the sub-tabs of
+  Settings and Controls opened, `report jukebox`, Back, Exit, which saves
+  to `--save`; then `tools/key_host`'s `key_tests` and `capture_tests`
+  against the SDL source the configure fetched.
+- **`checks.yml`'s `os-host`** builds and runs `config_tests` beside
+  `os_tests` (the target alone: `save_tests` does not compile under g++,
+  "Wave B as run"), and runs the header ratchet beside the boundary gate.
+- **The header ratchet of section 3, `os_census.py --headers`.** What
+  existed: `--check` refuses a new Windows header row anywhere, and
+  `--boundary` refuses `windows.h` outside `src/os` and `src/launcher`.
+  Neither sees a POSIX header: the census counts Windows spellings only.
+  Measured: with `#include <unistd.h>` added to `src/game/core/sound.cpp`,
+  `os_census.py --check` said `ok (1920 sites)` and `--boundary` `ok`.
+  `--headers` fails on any operating-system header, Windows' or POSIX's and
+  Linux's, in a file of `src/` outside `src/os` and the harness-only files,
+  unless `HEADERS_WAITING` lists the pair (file, header); the list may only
+  shrink. Today: `ok (32 operating-system includes in 17 files outside
+  src/os, all listed; 7 of them in src/game)`. The seven in `src/game`:
+  `malloc.h` in `core/sound.cpp` and `platform/music.cpp`, `dinput.h` (under
+  `#ifdef _WIN32`) in `platform/d_input.cpp` and `platform/rdata_consts.cpp`,
+  and the two `*_win32.cpp` files of `WINDOWS_ONLY`. The scope is wider than
+  the game folders on purpose: a POSIX header in `src/common` was as
+  invisible as one in `src/game`.
+- Which reading was taken: the brief's "self-test with no game data if one
+  exists". The ELF's own self-test (`BOF3X_SELFTEST_ONLY=1`) maps Capcom's
+  image from `BOF3.exe` or a cache (step 11) and the launcher refuses a
+  start with neither ("no game data", "B1 as run"), so it is not in the job.
+  `save_editor_check.py` copies a player's saves and an install: not in the
+  job either.
+
+**The runner, read and not run.** GitHub's `runner-images`
+`images/ubuntu/Ubuntu2404-Readme.md`, image `20261116.376.1` (read
+2026-11-22): Clang 16.0.6, 17.0.6, 18.1.3; GNU C++ 12.4.0, 13.3.0, 14.2.0;
+CMake 3.31.6; Ninja 1.13.2; pkg-config 1.8.1; Python 3.12.3; no meson and
+no glslang. The tree's floors: `cmake_minimum_required(VERSION 3.25)` and
+preset version 6 (CMake 3.25); DXVK v3.1.1's `meson_version : '>= 0.58'`
+(its `meson.build`); C++20. Ubuntu 24.04's apt has meson 1.3.2 and
+glslang 15.1.0 (measured below), so nothing is downloaded beside apt.
+
+**How it was proven here.** No sudo, so a 24.04 root without one:
+`ubuntu-base-24.04.5-base-amd64.tar.gz` from cdimage.ubuntu.com (sha256
+`e77b6f10...0c86`, checked against its `SHA256SUMS`), entered by user
+namespaces (`unshare -r -m`, then `chroot`) in the WSL under
+`~/src/lcC-d1`, with what the image holds preinstalled put in first: apt's
+`clang-18`, `g++` (13) and `g++-14`, Python 3.12, and Kitware's CMake 3.31.6.
+The tree was copied in from the branch's files (`git ls-files -co`). Then
+the script's steps in the job's order.
+
+| Step | Result |
+|---|---|
+| `versions` | `Ubuntu clang version 18.1.3`, `Selected GCC installation: /usr/lib/gcc/x86_64-linux-gnu/14`, cmake 3.31.6, ninja 1.11.1, meson 1.3.2, glslang 11:15.1.0, Python 3.12.3, ccache 4.9.1 |
+| `deps` | 54 s |
+| `configure`, cold | 38 s; `linux_tree --cmake-list: 794 files for Linux, 12 of the Windows list left out` |
+| `build`, cold (12 cores; DXVK by the external project; ccache 890 misses of 902) | 454 s, rc 0 |
+| `check` | both `EXEC`, RUNPATH `[$ORIGIN]`, the three libraries found beside them; `first LOAD segment at 0x0000000010000000`; `size`: text 12,137,099, data 14,112, bss 28,105,489 |
+| `selftest` | `check (scale 1, renderer software); page -1 sub 0 sheet 0, asked exit, saved the settings`; `saved.ini: 163 lines; title.png: 84052 bytes`; `key_tests` `133780 checks, 0 failed`; `capture_tests` `329 checks, 0 failed` |
+| The second run: the keep step's copy, a fresh build folder, `BOF3X_DXVK_LIBDIR` set (a cache hit), ccache warm | configure 65 s, build 15 s (ccache 902 of 902 hits), no `dxvk-native` folder under `_deps`; `bof3x` and both DXVK libraries `md5sum -c` OK against the first run's; `check` and `selftest` as above |
+| `tree` (`linux_tree.py --check`) | `837 files, 837 compile for x86_64-linux-gnu, 0 do not; 11 Windows-only files left out`, `--check: ok (0 files wait)`, 152 s |
+| `os-host`'s steps, the image's default `c++` (GNU 13.3.0) | `os_tests: 596 checks, 0 failed`; `config_tests` `4455 checks, 0 failures`; `os_census` `--check` ok (1920 sites), `--boundary` ok, `--headers` ok |
+| Negative controls | `--headers` with `<unistd.h>` added to `sound.cpp`: rc 1, `src/game/core/sound.cpp:11: include <unistd.h>`; with `<malloc.h>` taken out of `music.cpp`: rc 1, "listed in HEADERS_WAITING but no longer included". `check` with `libdxvk_dxgi.so.0` taken away: "is missing"; with `bof3x`'s ELF type byte made `DYN`: "is not a non-PIE executable" |
+
+The two workflow files parse (`yaml.safe_load`). On Windows, `os_census.py`
+`--check`, `--boundary` and `--headers` pass. No source or CMake file was
+changed, so the Windows presets were not built again.
+
+**Not verified:**
+- **The job on GitHub, all of it.** Above all: that `clang++` on the image
+  is clang 18 by that name (the readme lists the versions, not the default
+  link; the `versions` step stops with an error if it is not on `PATH`);
+  the time on the image's 4 cores (the cold build took 454 s on 12 here);
+  the two caches' save and restore by `actions/cache`, and the DXVK key's
+  first miss; the artifact's upload (an artifact's zip does not keep the
+  executable bit).
+- The runner's own extras, which the base root lacks (other toolchains and
+  libraries on its paths), and Python 3.13 by `setup-python`: the root had
+  3.12.
+- The launcher check's picture was not looked at; only its size is checked.
+- Nothing here runs the game, a window or DXVK at run time (wave B's
+  limits stand).
+- The build log holds about 9,000 compiler warnings (`grep -c warning:`),
+  the tree's own under `-Wall -Wextra`; the job does not count them.
+
+### D2 as run (2026-11-22, branch linux/lcC-d2)
+
+Group D2 of wave C: the tarball a Linux player uses, made by
+`tools/make_release.py`. Beside D1 (the CI job), from `main` `d56e4097`.
+
+**What changed since the staging's row.** The row named "C7's launcher" and
+"a start script" (section 6, call 5). Since stage P6 of
+[`launcher-portable.md`](launcher-portable.md) (section 14) the drawn
+`bof3x-launcher` is the launcher on Linux too, with the Sources page that
+runs the importer; the start script was never made and is not wanted. So the
+tarball is the zip's layout less the bundled Python: the player's Python
+does the setup (section 6, call 3), and the folder is portable as on Windows
+(the owner's call 3 of 2026-11-19).
+
+**What was built.**
+
+- **`make_release.py --linux`** (its own function, `main_linux`; the Windows
+  path's only change is that `--build`'s default is set after the argument is
+  read, to the same `build/`). `python3 tools/make_release.py --linux
+  --version V [--build build-linux-x86_64] [--out F]` writes
+  `build/release/bof3x-V-linux-x86_64.tar.gz`, one folder of that name
+  inside. It downloads nothing. Before it writes, it: checks each
+  third-party import the importer reaches against `tools/requirements.txt`
+  and `requirements-extra.txt` (or `NOT_BUNDLED`); reads the `RUNPATH` and
+  `NEEDED` names of the two programs and three libraries from the files
+  (its own ELF reader) and stops unless both programs have `RUNPATH
+  $ORIGIN` alone and nothing needs a library outside the folder but glibc
+  and the C++ runtime; copies ten notices from the fetched trees and stops
+  if one is missing or not the expected text; refuses a build configured
+  with `BOF3X_DXVK_LIBDIR` (libraries built elsewhere); runs the zip's
+  game-data scan on the stage. The archive sets the modes itself (0755 for
+  the programs and the libraries, 0644 for every other file, 0755 for
+  folders, owner 0), so that a tarball made on Windows over the WSL's build
+  gets the same ones (not run: the tarball below was made in the WSL). It writes the newest `GLIBC_` and `GLIBCXX_` versions the
+  binaries need into `README.txt`, in Simplified Technical English as the
+  zip's.
+- **The launcher finds the system's Python** (`src/launcher/ui/tool_run.cpp`
+  `FindRuntime`). It took `runtime/python/bin/python3` whenever
+  `runtime/tools/importer.py` was beside it, so a release without a bundled
+  Python said "cannot find Python". Now, off Windows only, it takes
+  `python3` from `PATH` when that file is not there; the refusal tells the
+  player to install Python 3 and the packages, and to read `README.txt`.
+  On Windows the condition is a constant false (`kWindowsNames`) and the
+  message is the old one; see the measured table for the object compare.
+- **[`THIRD_PARTY.md`](THIRD_PARTY.md) section 8**: DXVK-native and what it
+  carries, each licence read from the file at the pinned commit's fetched
+  tree (DXVK zlib; dxbc-spirv and libdisplay-info MIT, both compiled in;
+  Vulkan-Headers, SPIRV-Headers, the MinGW DirectX headers, compiled
+  against; libstdc++ and libgcc linked statically into DXVK's libraries by
+  its own `meson.build`); SDL3 as a shared library.
+- **`README.md`**, a Linux section; **[`releases/README.md`](releases/README.md)**,
+  how the tarball is made and a paragraph for the first release notes that
+  carry it. `release.yml`'s Linux jobs came after D1's merge (the follow-up
+  below).
+
+**The tarball** (`v0.0.0-d2test`, from the `linux-x86_64` preset's build in
+the WSL, `~/src/lcC-d2`, a clean configure that fetched SDL3, Dear ImGui and
+DXVK; made there by `python3 tools/make_release.py --linux --version
+v0.0.0-d2test --build build-linux-x86_64 --out
+~/bof3x-runs/lcC-d2/bof3x-v0.0.0-d2test-linux-x86_64.tar.gz`):
+38,692,005 bytes (`ls -l`), 112 files and 114,859,152 bytes unpacked
+(`find . -type f | wc -l`, `du -sb`), 22 folders.
+
+| Kind | Files | Bytes (`stat -c %s`, `find -printf %s`) |
+|---|---:|---:|
+| programs: `bof3x`, `bof3x-launcher` | 2 | 75,964,256 (56,689,376 and 19,274,880) |
+| libraries: `libSDL3.so.0`, `libdxvk_d3d11.so.0`, `libdxvk_dxgi.so.0` | 3 | 23,907,352 (9,709,384, 8,462,704, 5,735,264) |
+| top-level text: `README.txt`, `LICENSE`, `THIRD_PARTY.md`, the two names files | 5 | 85,560 |
+| `licenses/`: dear-imgui, droid-sans (2), tex-gyre-pagella (4), dxvk, dxbc-spirv, libdisplay-info, vulkan-headers (3), spirv-headers, mingw-directx-headers (2), sdl3 | 17 | 93,296 |
+| `runtime/tools/`: the 35 reached tools and `requirements.txt` | 36 | 1,908,773 |
+| `runtime/`: `symbols.toml`, `fixtures.toml`, `tables.toml` | 3 | 8,172,724 |
+| `runtime/fixtures/`, `recipes/`, `exe_maps/`, `data/`, `src/` | 10, 24, 7, 3, 2 | 1,101,419, 2,927,885, 655,045, 18,634, 24,208 |
+
+`tar -tvzf`: 5 entries `-rwxr-xr-x` (the two programs and three
+libraries), 107 `-rw-r--r--`, 22 folders `drwxr-xr-x`. `readelf -d`:
+`bof3x` NEEDED `libdxvk_d3d11.so.0 libdxvk_dxgi.so.0 libSDL3.so.0
+libstdc++.so.6 libm.so.6 libgcc_s.so.1 libc.so.6`, RUNPATH `$ORIGIN`;
+`bof3x-launcher` `libSDL3.so.0` and the same four system names, RUNPATH
+`$ORIGIN`; `libSDL3.so.0` `libm`, `libc`; `libdxvk_d3d11.so.0`
+`libdxvk_dxgi.so.0 libc.so.6 ld-linux-x86-64.so.2`; `libdxvk_dxgi.so.0`
+`libm`, `libc`, `ld-linux`; none names `libvulkan` (DXVK holds the strings
+`libvulkan.so.1` and `libvulkan.so`, `strings`). Version needs (`objdump
+-T`): `GLIBC_2.43` from `bof3x-launcher` and `libSDL3.so.0`, `GLIBC_2.38`
+from the rest; `GLIBCXX_3.4.31` from the two programs. The build tree's path
+appears in `bof3x` as source file names (`strings`: `src/hook/bind.cpp` and
+others, debug and message text), never as a search path.
+
+**The proof**, in a clean folder on ext4 (`~/bof3x-runs/lcC-d2/clean`), every
+command under `env -i HOME=... PATH=/usr/bin:/bin SDL_VIDEODRIVER=offscreen
+SDL_AUDIODRIVER=dummy`, so no `LD_LIBRARY_PATH` and no path to the build
+tree. The source: the main checkout's `bof3` folder copied to
+`~/bof3x-runs/lcC-d2/pc` (ext4) without its `CDImage` folder. Script:
+`proof_d2.sh` in the session's scratch folder.
+
+| Step | Result |
+|---|---|
+| `ldd` on the five binaries | every library the folder holds resolves to the unpacked folder (`libdxvk_d3d11.so.0`, `libdxvk_dxgi.so.0`, `libSDL3.so.0` for `bof3x`; `libSDL3.so.0` for the launcher); the rest to `/usr/lib/x86_64-linux-gnu`. `ldd libdxvk_d3d11.so.0` by itself says `libdxvk_dxgi.so.0 => not found` (a library has no RUNPATH); in a run `bof3x` has loaded it first, by its own NEEDED, and the script checks that order |
+| `bof3x-launcher --list` | rc 0, the settings listed |
+| `bof3x-launcher --check --capture title.png` | rc 0, `check (scale 1, renderer vulkan); page -1 ... saved nothing`; the title page drawn into the PNG (not committed) |
+| No `python3` on `PATH` (`PATH=/nonexistent`), `--check --start` | the Sources page: `The importer cannot run.` and `The importer cannot find Python (none on PATH). Install Python 3 and the packages in requirements.txt. README.txt tells how.` |
+| No venv, the system's `python3` (3.14.4, without Pillow or capstone), `--check --start --script "wait 60; press Folder...; pick <pc>; press Add; wait 600; report sources"` (a second unpacked copy) | `sources list`, `sources add`, `setup --json-progress`, `stale` started on `runtime/tools/importer.py`; `The install is ready.` |
+| `python3 -m venv runtime/python` | rc 1 (`ensurepip` missing: Ubuntu's `python3-venv` is not installed here) |
+| `uv venv runtime/python`; `uv pip install --python runtime/python -r runtime/tools/requirements.txt` | CPython 3.14.4; `capstone==5.0.9`, `pillow==12.0.0` installed (capstone's own `__version__` says 5.0.7) |
+| `runtime/python/bin/python3` replaced, in a third copy, by a script that writes down its start | the launcher started it for `importer.py sources --home ...`: the venv's Python comes first |
+| The same Sources script with the venv | rc 0 in 12 s; `Recognised: PC, the 2001 Chinese release`, `No ffmpeg found: skipping the PC logo movie's repair (DIV-0001)`, the executable's tables and language layer zh-CN, `The install is ready.`; `cache/` 322 MB, `game/` 527 MB, `sources.toml` and `setup.log`, all in the unpacked folder |
+| `runtime/python/bin/python3 runtime/tools/importer.py verify --cache cache --overlays game/DAT` | rc 0: `995 containers held, 0 problem(s)`; `742 of 742 containers byte-identical`; the image is the PC source's `.data`, 638,976 bytes compared |
+| `BOF3X_SELFTEST_ONLY=1 bof3x-launcher --no-config` (from an empty working folder; the game folder found as `<folder>/game`) | rc 0; `.data from <folder>/cache (a PC install ...); BOF3.exe is not read`; `self-test only, game process exit code 0`; `bof3x.log` beside the ELF: 10,400 lines, 0 `FATAL`, 0 `CRASH`, the last `self-test only: done, ending the process` |
+| What the runs wrote | in the unpacked folder only: `bof3x.log`, `setup.log`, `sources.toml`, `cache/`, `game/`, `runtime/python/` (the venv) |
+
+**Windows, unchanged** (the branch's worktree, llvm-mingw):
+
+| Check | Result |
+|---|---|
+| `cmake --preset i686 && cmake --build build`; `cmake --preset x86_64 && cmake --build build-x86_64` (SDL3 and Dear ImGui from the main checkout's fetched trees) | both whole, no error |
+| `tool_run.cpp.obj` built from `origin/main`'s source and from the branch's, each width, `codegen_same.py` and `--by-function` | 0 differ: 32-bit 92 functions, 50 data and 3 bss symbols; 64-bit 93, 19 and 3 |
+| The zips by `origin/main`'s `make_release.py` and by the branch's, from the same `build` and `build-x86_64` (`--version v0.0.0-d2test`) | each pair 1,219 entries in the same order, the same names, sizes and methods (233,816,025 and 229,833,853 bytes unpacked); one entry's CRC differs in each pair, numpy's `dist-info/RECORD`, in two lines: the hashes of the console-script launchers pip writes (`bin/f2py.exe`, `bin/numpy-config.exe`) and the script then deletes, which pip makes anew on every install |
+
+**The follow-up after D1's merge (2026-11-22, on `linux/lcC` `14f58a07`).**
+
+- **`release.yml`, two jobs; the `release` job is not changed** (`git diff`
+  against `origin/main` deletes no line of the file). Job `linux`
+  (`ubuntu-24.04`): the tag step as the `release` job's (the same `TAG`,
+  `VERSION`, `REF`), checkout of `REF`, Python 3.13, then D1's script:
+  `deps`, `configure` with `BOF3X_DXVK_LIBDIR` empty, `build`, `check`;
+  then `python tools/make_release.py --linux --version "$VERSION" --build
+  build-linux-x86_64 --out "build/release/bof3x-$TAG-linux-x86_64.tar.gz"`
+  and the tarball handed on as an artifact. Job `linux-attach` needs both
+  and runs when `release` succeeded, whatever `linux` did: with the tarball
+  it runs `gh release upload "$TAG" ... --clobber` onto the draft or onto
+  "latest"; without it, it takes `bof3x-latest-linux-x86_64.tar.gz` off
+  "latest" (an older build's tarball beside new zips would mislead) and
+  fails. **Why the release goes out without Linux:** the file's own rule is
+  that the Windows zips are the player's default and publishing is the
+  owner's click; the Linux build is new and unplayed, so its failure should
+  not hold the zips back, and the red run says it failed. The notes of
+  "latest", which the `release` job writes, are not changed and do not name
+  the tarball.
+  **Changed the same day by the owner's call (2026-11-22): a Linux failure
+  blocks the release as a Windows one does.** Job `linux-attach` is gone;
+  the `release` job has `needs: [linux]`, fetches the tarball artifact into
+  `build/release/`, checks it is there and reads as a tar, and names it in
+  its own `gh release create` / `gh release upload` lines beside the zips.
+  A failed `linux` job skips `release`: no draft, and "latest" keeps the
+  last good run's files. The notes of "latest" now name the tarball. The
+  cost: the zips are built after the Linux build, not beside it. Not run on
+  GitHub.
+- **DXVK's notices against the cache.** `build.yml`'s Linux job passes
+  `BOF3X_DXVK_LIBDIR` on a cache hit, and `make_release.py` refuses such a
+  build. The release job has no DXVK cache: DXVK-native is built from the
+  pinned commit in every release run, and the notices are copied from the
+  tree that build fetched. The check was not loosened.
+- **The glibc floor, measured.** The tip's tree built in an Ubuntu 24.04
+  root of D2's own (a copy of D1's `~/src/lcC-d1/noble`, entered the same
+  way; `~/src/lcC-d2/enter.sh`, the tree in `~/src/lcC-d2/work/repo`, D1's
+  ccache copied): `versions`, `configure` (`BOF3X_DXVK_LIBDIR:PATH=` empty,
+  DXVK built by the external project: `_deps/dxvk-native/lib/libdxvk_*.so.0.30101`),
+  `build` 75 s, `check` ok (first `LOAD` at `0x10000000`). `ldd (Ubuntu
+  GLIBC 2.39-0ubuntu8.12) 2.39`, Python 3.12.3. `make_release.py --linux
+  --version v0.0.0-d2noble` there: 112 files, 39,119,850 bytes, sha256
+  `5df6e145...b493d0e6`, the same NEEDED and RUNPATH as above, game-data
+  scan clean, **`needs at least GLIBC_2.38, GLIBCXX_3.4.31`**, and
+  `README.txt` says "glibc 2.38 or newer and the GNU C++ library with
+  GLIBCXX_3.4.31 or newer". Per binary (`objdump -T`): all five
+  `GLIBC_2.38`; `GLIBCXX_3.4.31` from the two programs.
+- **That tarball on 26.04**, the proof above again (`proof_noble.sh`, the
+  same steps): modes 5 `-rwxr-xr-x`, 107 `-rw-r--r--`, 22 folders; 112
+  files, 116,502,147 bytes; `ldd` under `env -i` finds the three libraries
+  in the unpacked folder and the rest in `/usr/lib/x86_64-linux-gnu`;
+  `--list` and `--check` rc 0; no `python3` on `PATH`: the refusal; the
+  system's `python3`: "The install is ready."; the venv's wrapper started
+  for `importer.py sources`; with the `uv` venv the Sources script rc 0 in
+  5 s, "The install is ready."; `verify` rc 0, `995 containers held, 0
+  problem(s)`, `742 of 742 containers byte-identical`; `BOF3X_SELFTEST_ONLY=1
+  bof3x-launcher --no-config` rc 0, 10,400 log lines, 0 `FATAL`, 0 `CRASH`,
+  `self-test only: done, ending the process`.
+- **One line of the tarball's `README.txt` changed after these proofs:** its
+  `tar -xzf` example names `bof3x-*-linux-x86_64.tar.gz`, since "latest"'s
+  file is `bof3x-latest-linux-x86_64.tar.gz` while its folder and version
+  are `latest-<commit>`. Checked by a `--version latest-14f58a07` run of
+  the script: the line reads so, the folder is
+  `bof3x-latest-14f58a07-linux-x86_64`.
+
+**Not verified:**
+- The title screen, the window, a picture, sound, a pad: no person and no
+  GPU; the launcher's title page was drawn by `--check` into a PNG only.
+  The staging's "setup, then the title screen" stands here as setup, verify
+  and the ELF's self-test.
+- A system older than the build's. The 26.04-built tarball ran on the
+  machine that built it; the 24.04-built one (the follow-up below) ran on
+  26.04, a newer system, which is a player's usual case. No system at the
+  floor itself (glibc 2.38), no other distribution, SteamOS or Deck was
+  tried. **The tarball needs the build machine's glibc or newer.**
+- A disc source on Linux through the tarball (the PC folder alone), and so
+  the paths that import Pillow and capstone: the PC setup ran to "The
+  install is ready" on the system's Python with neither installed.
+- `python3 -m venv` with `python3-venv` installed: this WSL lacks the
+  package (no `ensurepip`), so the README's first way failed as it says it
+  will without the package; the `uv` way was run.
+- **The release jobs have never run on GitHub.** Not run: the runner's
+  `deps`, its clang and Python 3.13 under `make_release.py`, a cold DXVK
+  build on the runner's 4 cores, the artifact's hand-over, `gh release
+  upload` onto a draft found by its tag, `--clobber` on "latest", and the
+  failure path's `gh release delete-asset`. The workflow was parsed
+  (`yaml.safe_load`), and every expression and `if:` read by hand;
+  `actionlint` is not installed here.
+- The Linux binaries carry no release tag: `BOF3X_VERSION_TAG` stamps the
+  Windows files alone (`CMakeLists.txt`), and the Linux job does not pass it.
+  The tag is in the tarball's name and its `README.txt`.
+- libdisplay-info's commit (`275e6459`, the branch `windows` of DXVK's fork)
+  against the commit DXVK's tree records for it: read from the clone's
+  files, not by `git`.
+
+### The banner fault and its class, as run (2026-11-22, branch `linux/lcC-banner`)
+
+A worker of wave C, from `linux/lcC` `c948685a`. Not pushed. No defect
+number and no ledger entry here: the coordinator numbers the defect; nothing
+changes for a player of the 32-bit build.
+
+**The defect.** On the Linux ELF the `combat` route on the US-disc install
+ends with a Fatal 26 s in. Measured on this branch's base (ELF md5
+`07d6f285...`, `route.sh us combat en-US before`): rc 1, 11,115 log lines,
+`FATAL: .../battle_banner.cpp:69 Addr: 0xfffffffa00904ec0 lies above 4 GB`.
+The low half is the banner's text buffer (`kBannerText`, `0x904EC0`); the
+high half is what the stack slot held before. `BattleBanner_Set(slot, kind,
+b2, layer, timer, const char* text)` was called through
+`battle_misc::Callees::banner_set`, typed `U (__cdecl*)(U, U, U, U, U, U)`
+and filled by `As<...>(BattleBanner_Set)` (a cast through `void*`, which no
+compiler warning sees). Under `ms_abi` (which `__cdecl` is on Linux, and is
+natively on 64-bit Windows) the 5th argument and later lie in 8-byte stack
+slots: the caller stored 4 bytes, the callee read 8. `BattleBanner_Add`'s
+5th argument had the same shape through `battle_damage::Callees::show_message`
+(`void (__cdecl*)(unsigned x5)`, filled from the address
+`bof3::addr::BattleBanner_Add`); the route did not reach it before the
+Fatal.
+
+**The fix** (commit `29c70d85`). How the tree types such tables elsewhere
+decided it: `battle_setup::Callees::message` / `message_at` (the same two
+functions) and `battle_actions::Callees::banner_add` already say a pointer
+for the text, so the two odd ones out were made to match.
+- `src/game/battle_misc_callees.h` `banner_set`: the last parameter
+  `const char*`; `src/game/battle/battle_3.cpp` (battle_misc's
+  `kOriginals`) fills it with `BattleBanner_Set` itself, no cast, so a
+  future difference from symbols.gen.h's prototype is a compile error.
+- `src/game/battle_damage_callees.h` `show_message`: the last parameter
+  `const char*`; its fill by address in `battle_3.cpp` (battle_damage's
+  `kOriginals`) takes the same type. The return stays `void` (the callers
+  read none; the function's `eax` is unread there, as before).
+- The callers: `BattleBanner_ShowName` (`battle_banner.cpp`) passes
+  `reinterpret_cast<const char*>(AtBattleMisc(::bof3::Img(kBannerText.v)))`;
+  `Battle_ApplyDamage`'s two calls (`battle_3.cpp`) pass the place the word
+  `BattleDamage_KillMessage` holds, through `move_script::At` (the file's own
+  word-to-place helper; `battle_fx.cpp`'s `BattleFxFlash_Banner` does the
+  same for its text word). These are all the callers of the two fields
+  (`grep` of `banner_set` and `show_message` over `src/`). Every value is a
+  place of the game's: the image's `.data` (the buffer, the message words),
+  below 4 GB by the 64-bit design, as before.
+- The i686 shadow stand-ins (`battle_misc_fuzz.cpp` `StubBannerSet`,
+  `battle_damage_fuzz.cpp` `StubShowMessage`) take the pointer and record
+  the same 32-bit word (`Addr` / `Address` of it).
+
+**Codegen** (`codegen_same.py --by-function`, the branch's builds against
+the base's, both in this worktree): 32-bit, 9 symbols differ, every one in
+the two fuzz files (the two stand-ins renamed by their mangled names, the
+stand-in tables that name them, `Clone` and the two `SelfTest`s that
+reference them); no game function's code differs, `battle_3.cpp` and
+`battle_banner.cpp` alike. 64-bit Windows: 2 differ, the two callers
+(`BattleBanner_ShowName`, `Battle_ApplyDamage`), which now load a 64-bit
+pointer into the argument.
+
+**The sweep: `tools/fnptr_census.py`** (new; run in the WSL, `python3
+tools/fnptr_census.py --build build-linux-x86_64 [--check]`). libclang 21
+through `ctypes` (no package installed) parses every translation unit of the
+Linux build's compile database (`ninja -t compdb`) with that build's flags,
+so `__cdecl` is `ms_abi` and a pointer 8 bytes. In every file under `src/`
+it takes two kinds of site:
+- *cast*: an explicit cast (reinterpret, C-style, functional, static) whose
+  type is a pointer to a function;
+- *call*: a call that returns a pointer to a function from one argument of
+  another type - the `As<>` / `Fn<>` helpers (97 template helpers named
+  `As`, `Fn`, `Cast`, `Ptr` or `Call` over `src/`, by `grep`),
+  whose own cast is on a template parameter and is checked at each use.
+
+The operand is followed to a function (its type as declared in that unit)
+or to an integer the compiler evaluates (`bof3::addr::Name`, a `CodeVa`
+constant, a literal), named through symbols.gen.h's `bof3::addr`. The
+callee's real type is its C-linkage definition from whichever unit defines
+it (what `BOF3_INJECT` binds), else symbols.gen.h's prototype. The shapes
+are compared per argument as x86-64 passes it (4-byte integer, 8-byte
+integer, pointer, float, double, record by size), with the calling
+convention, `...` and the return; and every C-linkage declaration under
+`src/` against its definition (`decl`). Verdicts in the tool's docstring.
+
+| | base `c948685a` | after the fix |
+|---|---:|---:|
+| translation units (0 parse errors) | 868 | 868 |
+| sites | 2,928 | 2,927 (the `As<>` of `banner_set` gone) |
+| `stack-narrow` | **2** (`banner_set`, `show_message`) | 0 |
+| `reg-narrow` / `truncating` / `variadic` | 20 / 26 / 3 | 20 / 26 / 3, all in `WAITING` |
+| `conv`, `class`, `ret-narrow`, `decl` | 0 | 0 |
+| `ok` (shapes equal for x86-64) | 1,525 | 1,526 |
+| `count` (another arity or a `void` return read; the same on x86-32) | 285 | 285 |
+| `unresolved` (a word known at run time) / `unknown` (no function of ours) | 972 / 142 | 972 / 142 |
+| `--check` | rc 1, the two banner sites | rc 0 |
+
+So the class has **two real instances, both the banner**, and both fixed.
+
+**The ones left, and why** (each listed in the tool's `WAITING`, with its
+reason; `--check` fails on a new finding and on an entry no longer found):
+- `reg-narrow`, 20 (a 4-byte word where the callee reads a pointer, in a
+  register): `battle_3.cpp`'s battle_misc table - `Sprite_SetTint` arg 1,
+  `EnemyAI_RowDone` 1, `EnemyAI_ApplyAction` 1 and 2, `EnemyAI_SetRowDone` 1,
+  `Str_CopyN` 1 and 2; `battle_banner.cpp` `Sprite_ReleaseTint` 1,
+  `Sprite_SetTint` 1; `battle_obj.cpp` `Sprite_PoseFromSet` 2;
+  `dragon_cmd.cpp` `Task_Restart` 1; `core/sound.cpp` `SndBuf_SetVolume` 1;
+  `effect/effect.cpp` `Stat_AddClampedTo` 1; `effect_1a.cpp` and
+  `effect_kind_0f.cpp` `EffectKind0F_DrawGlyph` 2; `effect_kind_0f.cpp`
+  `EffectKind0F_CharCount` 1; `minigame/shisu.cpp` `Shisu_DrawModel` 1;
+  `scena_03.cpp`, `scena_04_2.cpp`, `scena_07_2.cpp` `Field_CellTriggerAt`
+  1. Both ABIs leave the high half of a 32-bit register argument undefined;
+  it is zero here because the caller computes the word with 32-bit
+  arithmetic, which clears it. Latent, not wrong today; each fix is a change
+  of callers to pass places as pointers, and was not made in this unit (no
+  run could show it, and it is a wider edit than the defect). Not verified
+  site by site in the disassembly.
+- `truncating`, 26 (8 bytes passed or read where the callee has 4):
+  `Field_SlotStart` arg 2 (`area_174.cpp`, `area_198.cpp`, `area_85.cpp`),
+  `MagicFx_LinkByDepth` arg 4 (`buff_spike.cpp`, `leech_shell.cpp`,
+  `shield_spark.cpp`, two each), the pointer returns of `Char_AbilityList`
+  (twice), `Msg_SystemPtr`, `Str_CopyN` (`battle_3.cpp`) and `UiSprite_Draw`
+  (`effect_kind_0f.cpp`) read as a word: each value is a place of the game's
+  (the image, the packet pool, the message pool), below 4 GB by the 64-bit
+  design, and the original keeps it in 32 bits too. The other 13 are in the
+  shadow fuzz tables of `psx_gte_float.cpp`, `psx_gte_matrix.cpp` and
+  `psx_gte_transform.cpp` (`AsFn` of `Gte_*` and `Math_Cos`), inside
+  `WantsShadow` blocks, a constant false on x86-64: never called there.
+- `variadic`, 3: `Crt_sprintf` and `Crt_sscanf` through fixed-arity System V
+  types (`field/area_map.cpp`, `platform/magic_080.cpp`; B2d's fix of the
+  wrong convention). Integers and pointers travel in the same registers;
+  `al`, which a variadic System V callee reads as the count of vector
+  registers, is not set, and only bounds which registers its prologue saves.
+  Latent, left.
+
+**What the method cannot see:**
+- A function word read at run time: a `.data` table (the state and step
+  tables, `Window_DispatchKind`'s handlers, which B2d met), a parameter, a
+  field, `BH_WORD` / `CodePlaceToCall` - 972 `unresolved` sites. Of the 142
+  `unknown`, most are table bases or small offsets the evaluator reached in
+  such an expression; the rest are VAs with no function of ours on x86-64
+  (the `Mp3_*` and import-slot calls of `core/sound.cpp` and `d3d.cpp`,
+  `Crt_GetPtd`, `0x5A3A60..0x5A4C40`).
+- Casts inside templates (`bof3::detail::Original<T, va>`'s conversion,
+  `boss_harness::Call`): the pattern's types are dependent. `Original`'s
+  `T` is symbols.toml's prototype, which the `decl` check compares with the
+  definitions (0 findings).
+- Units the Linux build does not compile: the 11 Windows-only files and
+  the fuzz files (32-bit only). A Windows-only cast is not checked.
+- Calls from assembly (the naked functions and asm files).
+- Differences within 4 bytes (a byte against an int, signedness): the same
+  on x86-32, not reported. The 285 `count` rows were not read one by one.
+- A C++-linkage redeclaration with another type would fail to link; a
+  C-linkage one is the `decl` check.
+
+**Runs** (WSL Ubuntu, headless, the coordinator's scripts copied to
+`~/bof3x-runs/lcC-banner/` with the source path changed; source
+`~/src/lcC-banner` from `git archive` of the branch, `src/` checked equal to
+the commit with `diff -r`; the two installs copied from
+`~/bof3x-runs/lcC/us/home` and `~/bof3x-runs/lcC/psp/home`; one game at a
+time; the ELF of `29c70d85`, md5 `100fc71e...`).
+
+| Run | US disc (en-US) | PSP EU (en-150) |
+|---|---|---|
+| `combat`, the base `c948685a` (one run, the fault's proof) | rc 1 at 26 s, 1 `FATAL` (above) | not run |
+| The ELF's self-test through the launcher (`selftest.sh`) | rc 0, 10,514 lines, 0 `FATAL`, 0 `CRASH`, `self-test only: done` | rc 0, 10,488 lines, 0, 0, done |
+| `field_menu` | rc 0, 56 s, 0 / 0 | rc 0, 49 s, 0 / 0 |
+| `menu_screens` | rc 0, 67 s | rc 0, 59 s |
+| `combat` | rc 0, 95 s | rc 0, 88 s |
+| `shop` | rc 0, 113 s | rc 0, 106 s |
+| `dragonTransform` | rc 0, 153 s | rc 0, 144 s |
+| `cutsceneAndNue` | rc 0, 256 s | rc 0, 248 s |
+| `whelpBoss` | rc 0, 448 s | rc 0, 440 s |
+| `worldMapAndAreaTransition` | rc 0, 79 s | rc 0, 71 s |
+| `caughFish` | rc 0, 137 s | rc 0, 130 s |
+| `masterAndManillo` | rc 0, 192 s | rc 0, 185 s |
+
+Every route: the recipe's end reached, 0 `FATAL`, 0 `CRASH` (`grep -c` of
+the log), no compiler seen in the WSL by `route.sh`'s watch (0 samples on
+all twenty). One game at a time, 09:27 to 10:20. During the runs the
+Windows side ran the census gate below (Python, no compiler); the WSL ran
+no build. The hash files are in `~/bof3x-runs/lcC-banner/{us,psp}/out/`
+(tag `fix`).
+
+**Against the coordinator's trial fix** (`statehash.py diff` with
+`~/bof3x-runs/lcC/{us,psp}/out/<route>_c.sh`, the same installs, the ELF
+of the trial change quoted in the brief): 19 of the 20 identical on every
+compared tick (`combat` 2,602 ticks on each install, `whelpBoss` 13,163).
+The one difference: US `shop`, 8 pages within ticks 2848..2902, equal again
+from 2903 to the end: seven of the eight pages of B2d's `shop` window after
+the inn's jingle (`0x66C000`, `0x7E0000`, `0x903000`, `0x929000`,
+`0x7DE000`, `0x7E1000`, `0x803000`; the sound device's clock, DIV-0201's
+class), and the desktop page `0x7C9000` on one tick. The coordinator's
+`shop_c` run on that install is not a hash reference: its watch saw
+`clang++` in 22 samples (`shop_c.noise`, from 06:53:17). Not bisected; this
+unit's run saw no compiler.
+
+**The gate** (Windows, on `29c70d85` with the tool): `ledger_check` 245
+entries, 0 errors; `os_census --check` ok (1920 sites), `--boundary` ok,
+`--headers` ok; `width_census --check` ok; `reloc_census --check` ok;
+`reloc_bare --check` ok; `data_census --strict` ok; `ledger_switches --check`
+0 errors; `tu_census --check --strict` ok; `retire_shells --check --strict`
+ok. Both Windows presets build (`build`, `build-x86_64` in the worktree).
+
+**For the coordinator:** a ratchet line, if wanted (not wired anywhere):
+`python3 tools/fnptr_census.py --build build-linux-x86_64 --check` after a
+Linux build (about 2 minutes on 12 cores; needs `libclang-*.so` and
+`ninja`). It belongs in the Linux job of `build.yml` or a step of D1's
+`linux-build.sh`, not in `checks.yml` (it needs the configured build).
+
+**Not verified:**
+- **64-bit Windows.** The same stack-slot read is there (`__cdecl` is the
+  native `ms_abi`), but no route ran on the 64-bit Windows build, before or
+  after: whether the stale high half there was zero by chance (as B2d found
+  for `Window_DispatchKind`) is not known. Its codegen changed in the two
+  callers only.
+- The 32-bit shadow fuzz of `battle_misc` and `battle_damage` was not run
+  (its stand-ins changed type, their recorded words not).
+- The latent register and `al` cases above were not shown harmless in each
+  call site's disassembly; the reason given is the general one.
+
+**Addition, 2026-11-22: the 20 register-narrow calls fixed** (branch
+`linux/lcC-regnarrow`, from `origin/linux/lcC` `4072c542`; the owner's call
+that they be fixed rather than listed). Each call now passes the place as
+the pointer its function takes, by the idiom its module already uses for
+that kind of place; every caller of each changed member found by the
+compiler (a word where a pointer is now typed does not compile), the i686
+shadow stand-ins included.
+
+| Site (callee, argument) | Was | Now |
+|---|---|---|
+| battle_misc `set_tint` (Sprite_SetTint 1) | `U` | `unsigned char*`; `BattleMisc_StatusTintBody` passes `AtBattleMisc(SpriteCurrent())` |
+| battle_misc `ai_row_done` (EnemyAI_RowDone 1), `ai_apply` (EnemyAI_ApplyAction 1, 2), `ai_set_done` (EnemyAI_SetRowDone 1) | `U` | `const unsigned char*` / `unsigned char*`; `effect.cpp` (`FireRow`, `EnemyAI_TurnCheck`'s ops 0x21..0x24) passes `AtBattleMisc(...)` of the same words |
+| battle_misc `copy_n` (Str_CopyN 1, 2) | `U, U` | `char*, const char*`; `BattleBanner_SetMessage`, `BattleBanner_ShowName` pass `AtBattleMisc` of the same words, cast to `char*` |
+| battle_odds `release_tint`, `set_tint` (1) | `U` | `unsigned char*`; `BattleFx_TintActor` passes `AtBattleOdds(object)` |
+| battle_windows `pose_from` (Sprite_PoseFromSet 2) | `std::uint32_t` | `unsigned char*`; `BattleObj_PickPose` passes `battle_windows::At(Img(kPoseSet))` |
+| save_menu `task_restart` (Task_Restart 1) | `U` | `void*`; `sound.cpp` passes the code place as `battle_loss.cpp` and `scena_15_2.cpp` do (`reinterpret_cast<void*>(static_cast<std::uintptr_t>(Code(...)))`) |
+| `SH_AT` SndBuf_SetVolume (1) | `std::uint32_t` | `void*` (`AtScenaSx2(buffer)`), the level as `int` |
+| `BH_AT` Stat_AddClampedTo (1) | `U` (`Key(stat)`) | `unsigned short*` (the `stat` pointer the function already held) |
+| `SH_AT` EffectKind0F_DrawGlyph (2), in `effect_1a.cpp` and `effect_kind_0f.cpp`; EffectKind0F_CharCount (1) | `U` | `const unsigned char*` (`At(text)`) inside the local wrappers `MessageLine` and `StringCount`; their callers unchanged |
+| `SH_AT` Shisu_DrawModel (1) | `U` | `unsigned char*` (`At(Img(kFigure))`) |
+| `SH_AT` Field_CellTriggerAt (1), `scena_03.cpp`, `scena_04_2.cpp`, `scena_07_2.cpp` | `std::uint32_t` | `unsigned char*` (`At(records)`) inside each `CellFind` |
+
+**Why the tables keep their casts.** The battle_misc, battle_odds and
+battle_windows tables return `eax` whole (`U` or `unsigned`) where the
+functions return a byte, `void` or a pointer, which the groups' callers and
+fuzz rely on (the header comments say so); and the tables reach other
+groups' functions by address, so that `BOF3X_ORIGINAL` of a callee still
+sends the call to Capcom's copy in the hosted build. Filling those with the
+function itself would change one or the other, so only the argument types
+changed. No site needed more than its callers; none was left.
+
+**Left listed** (unchanged, 25 entries of `WAITING`): the 13 live
+`truncating` (pointers into the image and its pools read or passed as 32
+bits), the 13 `truncating` in the shadow fuzz tables, and the 3 `variadic`.
+`Str_CopyN`'s pointer return read as `U` was not changed with its arguments:
+`BattleBanner_SetMessage` passes that `eax` on as a word, so the fix would
+not be the same shape.
+
+**Census** (`fnptr_census.py --check` in the WSL, the branch's Linux build):
+868 units, 0 parse errors, 2,927 sites; `ok` 1,537 (was 1,526),
+`reg-narrow` 0 (was 20), `truncating` 26, `variadic` 3, `count` 285,
+`unresolved` 972, `unknown` 142; 25 waiting, 0 failing, rc 0.
+
+**Codegen** (`codegen_same.py --by-function`, against builds of
+`origin/linux/lcC` `4072c542` in the same worktree). 32-bit: 27 symbols
+differ, every one in a fuzz file (`battle_misc_fuzz`, `battle_odds_fuzz`,
+`battle_windows_fuzz`, `save_menu_fuzz`: the stand-ins renamed by their
+mangled names, the tables and `Clone` / `SelfTest` that name them); no game
+function differs. 64-bit Windows: 19 differ - `BattleBanner_SetMessage`,
+`BattleBanner_ShowName`, `BattleFx_TintActor`, `BattleObj_PickPose`,
+`EffectKind0F_LineFade`, `_LineNext`, `_LineScroll`, `_LineType`, `_Title`,
+`_TitleClose` (the inlined `MessageLine` / `StringCount`),
+`Effect_DrainAp`, `Effect_DrainHp` and their `DrainActor`,
+`EnemyAI_TurnCheck`, `MasterFigure_DrawFaded`, `Scena03_CellHook`,
+`Scena04_CellHook`, `Scena07_CellHook`, `Sound_SetCueVolume`: the callers,
+now loading a 64-bit register (`mov rcx, rdi` where `mov ecx, edi` was).
+The other changed callers (`BattleMisc_StatusTintBody`, `effect_1a.cpp`'s
+`MessageLine` callers, the `task_restart` caller) compile to the same code:
+their words were already produced by 32-bit loads.
+
+**The census files.** `data_census --strict` named the four sites that now
+pass a place through `At()`; their rows in `analysis/typed_left.tsv` were
+rekeyed (accessor `-` to `At`), reasons kept. `width_census --check` named
+the `task_restart` argument; `analysis/width_census.tsv` was made again (it
+is line-keyed, so it also carries line moves of files changed earlier on
+`linux/lcC`; rows moved, none added or removed outside this change).
+
+**Runs** (the WSL as before: `~/src/lcC-banner` brought to the commit,
+`src/` checked equal to it with `diff -r`; the ELF of `73224478`, md5
+`02aede46...`; the same two install copies; one game at a time, 10:49 to
+11:42, tag `rn`; no build in the WSL during them):
+- Self-test: US rc 0, 10,514 lines; PSP rc 0, 10,488; 0 `FATAL`, 0 `CRASH`,
+  `self-test only: done`.
+- The ten routes on both installs: 20 runs, rc 0, 0 `FATAL`, 0 `CRASH`, the
+  recipe's end reached, no compiler seen (0 samples each); seconds within
+  1 s of the `fix` runs.
+- `statehash.py diff` of each against this unit's own `fix` run of the same
+  route and install: **identical on every compared tick, all 20** (`combat`
+  2,602 ticks, `shop` 3,137, `whelpBoss` 13,163 on each install). US `shop`
+  included: the window found against the coordinator's `shop_c` above does
+  not appear between two quiet runs.
+- The logs are 4 to 12 lines longer than the `fix` runs'. The difference
+  (digits and addresses masked, `diff`) is the state hash's `watch` lines,
+  "the word at ... holds our function's own address, not its place (name)":
+  which game words happen to equal an address of a function of ours depends
+  on where the linker put the functions, which this change moved. The hash
+  itself is the same.
+
+**The gate on `c502661a`** (Windows, after the Linux runs; a first pass
+during them found the two census files, which were then made): `ledger_check` 245 entries, 0 errors; `os_census --check` (1920
+sites), `--boundary`, `--headers`; `width_census --check` and `data_census
+--strict` (after the two census files above); `reloc_census --check`;
+`reloc_bare --check`; `ledger_switches --check`; `tu_census --check
+--strict`; `retire_shells --check --strict`; `importer.py check` (742 files,
+0 errors, and its sub-checks, `build_reuse`'s lint among them): all rc 0.
+Both Windows presets build.
+
+**Not verified:** the 64-bit Windows build ran no route (as before); the
+32-bit shadow fuzz of the four groups whose stand-ins changed type was not
+run (their recorded words are the same 32-bit values); no person saw a
+picture.
+
+### Wave C as run (2026-11-22, branch `linux/lcC`, from `main` `d56e4097`)
+
+The coordinator's part: the merges, the disc-built installs, the gate.
+Groups D1 and D2 and the banner unit are above; group D3 (people's checks)
+is not done, and D4 is this section and the status documents.
+
+- **The branch.** `linux/lcC` is `main` `d56e4097` with D2, D1, D2's
+  release jobs and the banner unit merged in that order, and one commit of
+  the coordinator's (`60cbba56`): a Linux failure blocks the release, the
+  owner's call (in "D2 as run").
+- **Disc-built installs on the Linux ELF, headless in the WSL** (llvmpipe,
+  SDL's offscreen video and dummy audio, no `DISPLAY`). Two installs made
+  by the importer under the WSL's Python from disc images copied to ext4: a
+  US PlayStation disc alone (`en-US`) and the European PSP image alone
+  (`en-150`). `setup` rc 0 on both (the PSP one in 58 s); `verify --cache`:
+  741 containers and 0 base problems each. The US one names the known
+  `opt/area4-walls` line. The PSP one has no effects, voices or logo movie:
+  the WSL has no `ffmpeg`, so those were not built and not tested.
+  - **Self-test** through the Linux launcher: US 10,514 log lines, PSP
+    10,488, both 0 `FATAL`, 0 `CRASH`.
+  - **The fault met:** `combat` on the US install, 26 s in, the banner's
+    `Low32` (the unit above). The first runs of the other routes used a
+    trial of the fix; the runs that count are the banner unit's, on the
+    committed fix: the ten state-hash routes on both installs, 20 runs, rc
+    0, 0 `FATAL`, 0 `CRASH`, the recipe's end reached, no compiler seen
+    beside any.
+  - **Repeatability:** with the trial fix, `combat` twice on each install
+    on a quiet machine: `statehash.py diff` identical on all 2,602 compared
+    ticks, both installs.
+  - **Not covered:** the picture and the sound (no person, no GPU, no sound
+    device); a comparison with Windows runs of the same installs (no such
+    references exist); `music_heard.py` on these installs; a disc source
+    through the release tarball; one window of US `shop` (ticks 2848..2902,
+    8 pages, 7 of them the after-jingle pages of B2d's kind) that differs
+    between the banner unit's run and a run made beside a compiler - not
+    bisected.
+- **The gate on the merged tree** (Windows side): `ledger_check` (245
+  entries, 0 errors), `os_census --check` / `--boundary` / `--headers`,
+  `width_census`, `reloc_census`, `reloc_bare`, `data_census --strict`,
+  `ledger_switches`, `tu_census --check --strict`, `retire_shells --check
+  --strict` pass; both Windows presets build; the three workflow files
+  parse. `src/` of the merged tip equals the banner unit's tip, whose Linux
+  build and runs are above. **No workflow of this wave has run on GitHub
+  before the pull request**: the Linux CI job's first real run is the
+  pull request's, and the release jobs' is the merge's push to `main`.
+- **Left open, listed for the owner:** the ELF's self-test is not in CI (it
+  needs game data); a build on `ubuntu-24.04` needs glibc 2.38 or newer.
+- **The census is in the Linux CI job (the owner's word, 2026-11-22):**
+  `linux-build.sh census` after the build, `libclang1-18` added to the
+  script's packages. Tried first with libclang 18 in the Ubuntu 24.04 root
+  on this tree: rc 0 in 2 min 25 s on 12 cores, the same counts as with
+  libclang 21 (868 units, 0 parse errors, 2,927 sites, 25 waiting, 0
+  failing).
+- **After the pull request was opened (#276), the same day:** the PR's
+  first run failed `importer.py check` on the census tool's libclang handle
+  (a module global `build_reuse`'s lint did not know; the tool is now in
+  its exempt list, and `importer.py check` is in the gate). At the owner's
+  word the census's 20 register-narrow calls were fixed (the addition to
+  the banner section above; merged here, both Windows presets build, the
+  gate passes), and the MinGW DirectX headers' licence reading was checked
+  at the source (`THIRD_PARTY.md` section 8).
+
 ## 5. What stands in for the launcher in tier 2
 
 The launcher is Win32 dialogs: `config_dialog.cpp` 1,861 lines, `config.cpp`

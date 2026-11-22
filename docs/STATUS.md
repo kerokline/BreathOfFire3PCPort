@@ -8,7 +8,27 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
-**The Linux round's wave B, 2026-11-21, on the local branch `linux/lcB` (not on `main`, not pushed).** The game links as an
+**The Linux round's wave C, 2026-11-22 (merged as PR #276; groups D1 and D2, the banner unit and its follow-up).** CI
+builds and checks the Linux target on every pull request: `build.yml`'s `linux-x86_64 (clang)` job on `ubuntu-24.04`
+(`.github/scripts/linux-build.sh`: the build, the ELFs' shape and libraries, the checks with no game data,
+`linux_tree.py --check`, `fnptr_census.py --check`), and `checks.yml` runs the config tests and a header ratchet
+(`os_census.py --headers`) on Linux. `tools/make_release.py --linux` makes `bof3x-<tag>-linux-x86_64.tar.gz` (the ELF, the
+launcher, SDL3 and DXVK-native's libraries, the importer, the notices; no Python, no game data); `release.yml` builds it
+first and puts it on the release with the zips, so "latest" and every draft release carry a Linux tarball, and a Linux
+failure blocks the release as a Windows one does (the owner). A US-disc install and a PSP-only install made in the WSL
+pass the ELF's self-test and end the ten state-hash routes headless with no fault. One fault was met there and fixed: the
+battle banner's text read from a half-written stack slot on the 64-bit builds (D433 amended). `tools/fnptr_census.py`
+searches that class: the two banner sites were its only real cases, its 20 word-in-a-register calls were fixed too, and 25
+latent findings stay listed with their reasons. The MinGW DirectX headers' licence was checked at the source
+([`THIRD_PARTY.md`](THIRD_PARTY.md) section 8). The record: [`linux-round.md`](linux-round.md), "D1 as run" to "Wave C as
+run". **What ran on GitHub:** the pull request's checks, the Linux job among them. **Not seen yet:** `release.yml`'s Linux
+jobs, whose first run is the merge's push to `main` - read that run, and the tarball on "latest", before a tester is sent
+to it. **Not done:** no person has seen the Linux picture and nothing ran on a GPU, a real desktop or a sound device
+(group D3, with the tarball: frost's machine or a tester's); the banner fault's twin on 64-bit Windows was never looked
+for, and that build ran no route with the fixes; the PSP install in the WSL had no effects, voices or logo movie (no
+`ffmpeg` there); a build on `ubuntu-24.04` needs glibc 2.38 or newer; the tarball's build attestation (`actions/attest`, its signature; [`releases/README.md`](releases/README.md)) has not run on GitHub.
+
+**The Linux round's wave B, 2026-11-21 (merged as PR #270).** The game links as an
 x86-64 Linux ELF, `bof3x`, beside its own `libSDL3.so.0` and DXVK-native's two libraries, and the Linux `bof3x-launcher`
 starts it. Headless in the WSL (llvmpipe, SDL's offscreen driver) it passes its self-test and ends the ten state-hash routes
 with no fault; against the 64-bit Windows references the pages that differ are the desktop's size, the known Direct3D noise
@@ -109,8 +129,10 @@ against ffmpeg's decode and `tools/xa.py`, both widths, and under Proton on a Li
 where `main` also draws with nothing added to the prefix ([`linux-round.md`](linux-round.md) 2c). The PC
 movie's repair and the PSP's sound and movie still take the player's ffmpeg.
 
-**Merged since the beta, 2026-11-08..20, one line each (none of it released):**
+**Merged since the beta, 2026-11-08..22, one line each (none of it released; the other pull requests of 2026-11-20..22, #268 to #275, are not listed here yet):**
 
+- **PR #276 (2026-11-22):** the Linux round's wave C: the Linux CI job, the Linux release tarball, the banner fault of disc-built installs and its class (above; D433 amended).
+- **PR #270 (2026-11-21):** the Linux round's wave B: the game as a Linux ELF, started by the Linux launcher (above; D433).
 - **PR #267 (2026-11-20):** the drawn launcher replaces the Win32 dialogs, one launcher for Windows and Linux (stages P1 to P6, above).
 - **PR #266 (2026-11-20):** `BOF3.exe` out of the player's run (above; DIV-0241, DIV-0242).
 - **PR #265 (2026-11-20):** the Linux round's stage LC, wave A: the launcher's model off Windows, the OS seam's last Windows-only names, paths and case, the Linux target, the exe host's start-up as steps ([`linux-round.md`](linux-round.md), "Wave A as run"). No behaviour change on Windows.

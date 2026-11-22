@@ -39,7 +39,8 @@ game-data kind or any file whose hash `fixtures.toml` catalogues.
    is the 32-bit build, the player's default; `bof3x-<tag>-win-x64.zip` is
    the 64-bit developer build of the same files
    ([`../x64-build-round.md`](../x64-build-round.md) 6). Both need the same
-   copy of the game.
+   copy of the game. The Linux tarball is built first and goes on the same
+   draft ("The Linux tarball" below).
 4. The owner reads the draft on GitHub, downloads the zip, tries it on a
    clean folder, and presses **Publish**. Nothing is public before that
    click. (`workflow_dispatch` with a tag re-runs step 3 for an existing tag,
@@ -117,6 +118,80 @@ so a second run is offline. To try the bundle without the system Python:
 ```
 <unzipped>\runtime\python\python.exe <unzipped>\runtime\tools\importer.py identify --json "<a .cue>"
 ```
+
+## The Linux tarball (2026-11-22, the Linux round's group D2)
+
+```
+cmake --preset linux-x86_64 && cmake --build build-linux-x86_64     # on Linux
+python3 tools/make_release.py --linux --version <tag>
+```
+
+writes `build/release/bof3x-<tag>-linux-x86_64.tar.gz`: one folder
+of that name holding `bof3x`, `bof3x-launcher`, `libSDL3.so.0`,
+`libdxvk_d3d11.so.0`, `libdxvk_dxgi.so.0`, the two names files, `README.txt`
+(the Linux one), `LICENSE`, `THIRD_PARTY.md`, `licenses/` (the zip's three
+and the notices of SDL3, DXVK and what DXVK carries,
+[`../THIRD_PARTY.md`](../THIRD_PARTY.md) section 8) and `runtime/` (the
+zip's reached tools and data, and `tools/requirements.txt`). **No Python is
+in it** ([`../linux-round.md`](../linux-round.md) section 6, call 3): the
+player makes a venv in `runtime/python`, or uses `python3` from `PATH`, and
+the launcher takes the first it finds. Nothing is downloaded. The game-data
+scan is the zip's. The archive sets the modes (0755 for the two programs and
+the three libraries) whatever the host's filesystem keeps, and the script
+reads each binary's `RUNPATH` and `NEEDED` names from the file and stops
+unless the programs find the three libraries beside them (`$ORIGIN`) and
+need nothing else but glibc and the C++ runtime. It prints the newest glibc
+and libstdc++ versions the binaries need and writes them into `README.txt`:
+**that is the oldest system the tarball runs on**, and it follows the build
+machine (a build on Ubuntu 26.04 needs glibc 2.43, one on 24.04, as the
+release job's, 2.38). The tarball is signed by a build attestation, not by
+Authenticode (below).
+
+**The tarball's signature (2026-11-22, the owner; not yet run on GitHub).**
+Authenticode signs Windows files, and Linux has no check like SmartScreen
+that a signature would satisfy. What a Linux download can have is proof of
+where it was built. Job `linux` of `release.yml` runs `actions/attest` on the
+tarball: a SLSA build provenance attestation over the file's sha256, signed
+with a Sigstore certificate issued to that workflow run, and stored by GitHub
+for the repository. It uses no secret and no key of the owner's. To check a
+download (GitHub's CLI):
+
+```
+gh attestation verify bof3x-<tag>-linux-x86_64.tar.gz --repo kerokline/BreathOfFire3PCPort
+```
+
+It passes only for a file this repository's workflow built, byte for byte.
+The Windows zips are not attested; their binaries carry Authenticode. If the
+attestation step fails, the Linux job fails and there is no release.
+
+**In `release.yml`** (since 2026-11-22, not yet run on GitHub): job `linux`
+builds on `ubuntu-24.04` with `.github/scripts/linux-build.sh` (`deps`,
+`configure`, `build`, `check`; the same steps as `build.yml`'s Linux job,
+but with no DXVK cache, so DXVK-native is built from its pinned commit and
+its notices come from that tree) and runs the line above with the tag. The
+`release` job needs `linux`: it starts when the tarball is made, fetches it,
+and puts `bof3x-<tag>-linux-x86_64.tar.gz` on the release with the zips: the
+draft for a tag, or "latest" for a push to `main`. If the Linux build fails,
+there is no release, as when a Windows build fails (the owner, 2026-11-22):
+no draft is made, and "latest" keeps the files of the last good run. The
+zips are built after the Linux build, not beside it, so a release run takes
+longer. A build on `ubuntu-24.04` needs glibc 2.38
+and `GLIBCXX_3.4.31` or newer (measured in a 24.04 root, `../linux-round.md`
+"D2 as run"). The notes of "latest" name the tarball.
+
+**For the release notes** of the first release that carries the tarball, a
+paragraph to adapt:
+
+> **Linux (new, not yet played).** `bof3x-<tag>-linux-x86_64.tar.gz` is a
+> native build for 64-bit Linux. It needs a Vulkan 1.3 driver, X11 or
+> Wayland, and Python 3.11 or newer with the packages in
+> `runtime/tools/requirements.txt`; its `README.txt` says how to make the
+> Python environment and gives the lowest glibc it runs on. It ran on a
+> computer with no screen and a software graphics driver only: the setup
+> from the PC game folder, the install check and the game's self-tests
+> passed. Nobody has played it on a graphics card, heard its sound or used
+> a pad with it yet. Reports are welcome. The Windows zips under Proton or
+> Wine stay the other way to play on Linux.
 
 ## Versions
 

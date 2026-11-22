@@ -92,7 +92,7 @@ MEMOS = [("cache_inventory", "_psp_table", None), ("exe_tables", "_PC_POINTER_BY
 # linux_run's _mount_root is WSL's drive mount, read once for a harness run).
 LINT_EXEMPT = {"loc_build", "attract_run", "band_rows", "close_probe", "input_run", "magic_rows", "scenario_rows",
                "statehash", "build_reuse", "data_census", "quicksave_check", "quicksave_census", "quicksave_frames",
-               "mem_dump", "move_funcs", "linux_run"}
+               "mem_dump", "move_funcs", "linux_run", "fnptr_census"}
 
 _MON_ID = 4                     # a sys.monitoring tool id no debugger, coverage or profiler takes
 _CO_FUNCTION = 0x0001 | 0x0002  # CO_OPTIMIZED | CO_NEWLOCALS: a function's body, not a module's or class's

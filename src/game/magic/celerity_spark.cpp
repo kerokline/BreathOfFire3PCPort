@@ -362,8 +362,8 @@ extern "C" std::uint32_t __cdecl BattleFx_TintActor(void) {
     s[9] = static_cast<unsigned char>(s[9] - 1);
     s = Sprite();
     if (s[9] != 0) return Low32(s);
-    g.release_tint(object);
-    const U index = g.set_tint(object, 0, 0, 0, 1);
+    g.release_tint(AtBattleOdds(object));
+    const U index = g.set_tint(AtBattleOdds(object), 0, 0, 0, 1);
     Sprite()[0xA] = static_cast<unsigned char>(index);
     Sprite()[9] = 8;
     s = Sprite();

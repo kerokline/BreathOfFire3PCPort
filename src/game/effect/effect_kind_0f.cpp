@@ -162,7 +162,7 @@ U WindowBox(U x, U y, U w, U h, U colour) {
 U OptionBoxes(U x, U y, U bits) { return SH_AT(U (__cdecl*)(U, U, U), at::kOptionBoxes.v)(x, y, bits); }
 
 U MessageLine(U pen, U text, U width, U x) {
-    return SH_AT(U (__cdecl*)(U, U, U, U), at::kMessageLine.v)(pen, text, width, x);
+    return SH_AT(U (__cdecl*)(U, const unsigned char*, U, int), at::kMessageLine.v)(pen, At(text), width, static_cast<int>(x));
 }
 
 U MemberRows(U x, U y) { return SH_AT(U (__cdecl*)(U, U), at::kMemberRows.v)(x, y); }
@@ -173,7 +173,7 @@ U ItemListB(U x, U y) { return SH_AT(U (__cdecl*)(U, U), at::kItemListB.v)(x, y)
 
 void PanelTitle() { SH_AT(void (__cdecl*)(), at::kPanelTitle.v)(); }
 
-U StringCount(U text) { return SH_AT(U (__cdecl*)(U), at::kStringCount.v)(text); }
+U StringCount(U text) { return SH_AT(U (__cdecl*)(const unsigned char*), at::kStringCount.v)(At(text)); }
 
 const unsigned char* TextAt(U address) { return At(address); }
 

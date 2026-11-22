@@ -5,7 +5,9 @@
 # (docs/x64-build-round.md 3 "XA4") is the developer's 64-bit build, the same
 # source with the x86_64 preset. Both must pass: each links its three
 # binaries, checks their imports and uploads them. Cross-compiled on Linux:
-# the toolchain is the same, and the runner is faster to start.
+# the toolchain is the same, and the runner is faster to start. The third job,
+# linux-x86_64 (docs/linux-round.md, group D1), is the native Linux build with
+# the linux-x86_64 preset and the system's clang; it must pass too.
 #
 # The build reads no game data (CMakeLists.txt), so a hosted runner is enough.
 # Nothing here runs the game; the checks that need BOF3.exe stay on the
@@ -230,5 +232,124 @@ jobs:
             build-x86_64/bof3x.dll
             build-x86_64/bof3x-launcher.exe
             build-x86_64/bof3x.exe
+          if-no-files-found: error
+          retention-days: 14
+
+  # The native Linux build (docs/linux-round.md, stages LC and LD, group D1):
+  # the linux-x86_64 preset on the runner itself - the system's clang, non-PIE,
+  # linked at 0x10000000, SDL3 shared and DXVK-native's two libraries built by
+  # meson at the commit cmake/dxvk_headers.cmake pins. It builds and links
+  # bof3x (the exe host as an ELF) and the drawn bof3x-launcher; GNU ld fails an
+  # executable's link on any undefined name, so a build that ends is wave B's
+  # "no undefined name". The steps are .github/scripts/linux-build.sh's, which
+  # the release (D2) and a run by hand use too.
+  #
+  # A product build, so it is here beside the two Windows builds, with its
+  # files uploaded; the host unit suites that need only the system compiler
+  # (os_tests, config_tests) and the repository gates are checks.yml's os-host
+  # job. Nothing here runs the game: the ELF's own self-test maps Capcom's
+  # image from BOF3.exe or a cache and stops without one, so it stays on a
+  # machine with an install.
+  #
+  # Two caches. DXVK-native's libraries, keyed by the two cmake files that pin
+  # and build them, SDL3's tag (its headers are DXVK's) and the compiler: on a
+  # hit cmake/dxvk_native.cmake links them (BOF3X_DXVK_LIBDIR) and meson does
+  # not run. ccache for every object else, SDL3's and ours, restored from the
+  # newest entry and saved under the commit.
+  linux-x86_64:
+    name: linux-x86_64 (clang)
+    runs-on: ubuntu-24.04
+    env:
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+      CCACHE_MAXSIZE: 500M
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install the build's packages (meson, glslang, ccache, SDL3's headers)
+        run: .github/scripts/linux-build.sh deps
+
+      - name: Toolchain versions
+        run: .github/scripts/linux-build.sh versions
+
+      - name: DXVK-native's cache key
+        id: dxvk-key
+        run: |
+          set -euo pipefail
+          pin=$(cat cmake/dxvk_native.cmake cmake/dxvk_headers.cmake | sha256sum | cut -c1-16)
+          sdl=$(grep -oE 'GIT_TAG release-[0-9.]+' CMakeLists.txt | head -1 | cut -d' ' -f2)
+          cc=$(clang++ --version | head -1 | sha256sum | cut -c1-8)
+          echo "key=dxvk-native-$pin-$sdl-$cc-ubuntu-24.04" >> "$GITHUB_OUTPUT"
+          echo "dir=$RUNNER_TEMP/dxvk-native" >> "$GITHUB_OUTPUT"
+
+      - name: Cache DXVK-native
+        id: dxvk-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.dxvk-key.outputs.dir }}
+          key: ${{ steps.dxvk-key.outputs.key }}
+
+      - name: Cache ccache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-linux-x86_64-${{ github.sha }}
+          restore-keys: ccache-linux-x86_64-
+
+      - name: Configure
+        env:
+          BOF3X_DXVK_LIBDIR: ${{ steps.dxvk-cache.outputs.cache-hit == 'true' && steps.dxvk-key.outputs.dir || '' }}
+        run: .github/scripts/linux-build.sh configure
+
+      - name: Build
+        run: .github/scripts/linux-build.sh build
+
+      # Kept for the next run: the libraries meson installed, as built here.
+      - name: Keep DXVK-native's libraries for the cache
+        if: steps.dxvk-cache.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p "${{ steps.dxvk-key.outputs.dir }}"
+          cp -a build-linux-x86_64/_deps/dxvk-native/lib/libdxvk_d3d11.so* build-linux-x86_64/_deps/dxvk-native/lib/libdxvk_dxgi.so* \
+            "${{ steps.dxvk-key.outputs.dir }}/"
+          ls -l "${{ steps.dxvk-key.outputs.dir }}"
+
+      # The ELFs' shape: non-PIE, bof3x's first segment at 0x10000000, RUNPATH
+      # $ORIGIN, and libSDL3.so.0 and DXVK's two found beside them.
+      - name: Check the ELFs and their libraries
+        run: .github/scripts/linux-build.sh check
+
+      # No game data: the launcher's pages with no window (SDL's offscreen
+      # video, dummy sound) and the keyboard tables (tools/key_host).
+      - name: Checks with no game data
+        run: .github/scripts/linux-build.sh selftest
+
+      # Every source file that is not Windows' by design compiles for Linux,
+      # including any no build list takes (the round's gate line).
+      - name: linux_tree.py --check
+        run: .github/scripts/linux-build.sh tree
+
+      # A call through a cast function pointer whose shape differs from the
+      # function's on x86-64: the battle banner's fault (D433's amendment).
+      - name: fnptr_census.py --check
+        run: .github/scripts/linux-build.sh census
+
+      # Our own binaries and the three libraries a player's folder holds
+      # beside them (SDL3 and DXVK, both zlib). No game data is in the build tree.
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: bof3x-linux-x86_64-${{ github.sha }}
+          path: |
+            build-linux-x86_64/bof3x
+            build-linux-x86_64/bof3x-launcher
+            build-linux-x86_64/libSDL3.so.0
+            build-linux-x86_64/libdxvk_d3d11.so.0
+            build-linux-x86_64/libdxvk_dxgi.so.0
+            build-linux-x86_64/music-names.tsv
+            build-linux-x86_64/save-names.tsv
           if-no-files-found: error
           retention-days: 14

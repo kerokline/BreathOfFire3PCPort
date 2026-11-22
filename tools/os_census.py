@@ -8,6 +8,9 @@
     python tools/os_census.py --list CLASS    # print every site of one class, write nothing
     python tools/os_census.py --files [PREFIX]  # per file: what it takes from the system (src/ paths under PREFIX)
     python tools/os_census.py --outside src/game/platform   # the same for every game file outside one folder
+    python tools/os_census.py --boundary      # fail on a file past the seam (windows.h, a replaced call)
+    python tools/os_census.py --headers       # fail on an operating-system header, Windows' or POSIX's, outside
+                                              # src/os that HEADERS_WAITING does not list (section 3's ratchet)
 
 Stage LA1 of the Linux round (docs/linux-round.md section 4). Reads src/ only -
 no game data - and writes our own file names, lines and the names of Windows
@@ -437,6 +440,83 @@ def boundary(sites):
     return 0
 
 
+# ---- the header ratchet --------------------------------------------------------
+# docs/linux-round.md section 3: "The game folders then include no
+# operating-system header at all, and CI holds that with a ratchet." --check
+# holds the Windows headers (a new include row fails it) and --boundary holds
+# windows.h outside src/os and src/launcher, but neither sees a POSIX header:
+# the census counts Windows spellings only, so `#include <unistd.h>` in a game
+# file passed both. --headers fails on any operating-system header - Windows'
+# (WIN_HEADER_CLASS) or POSIX's and Linux's (below) - included by a file of
+# src/ outside the seam (src/os) and the harness-only files, unless the pair
+# (file, header) is in HEADERS_WAITING. That list may only shrink: an entry
+# whose header the file no longer includes fails too. The game folders' own
+# entries (src/game/) are the ones the section asks to go; the others are the
+# files Windows or Linux holds by design (linux_tree.py's WINDOWS_ONLY and
+# LINUX_ONLY halves) and the renderer's Direct3D headers, which DXVK-native
+# supplies on Linux.
+POSIX_HEADERS = {
+    'unistd.h', 'fcntl.h', 'dlfcn.h', 'pthread.h', 'signal.h', 'ucontext.h', 'semaphore.h', 'link.h', 'poll.h',
+    'dirent.h', 'termios.h', 'sched.h', 'execinfo.h', 'elf.h', 'spawn.h', 'pwd.h', 'grp.h', 'glob.h', 'syslog.h',
+    'netdb.h', 'mntent.h', 'libgen.h', 'fnmatch.h', 'wordexp.h', 'utime.h', 'ftw.h', 'aio.h', 'mqueue.h',
+}
+POSIX_HEADER_PREFIXES = ('sys/', 'linux/', 'asm/', 'bits/', 'X11/', 'wayland-', 'alsa/', 'pulse/', 'pipewire/')
+HEADERS_WAITING = {
+    'src/game/core/sound.cpp': ({'malloc.h'}, "the Windows C run time's header (os_census class crt); glibc has one"),
+    'src/game/platform/music.cpp': ({'malloc.h'}, "the Windows C run time's header (os_census class crt); glibc has one"),
+    'src/game/platform/d_input.cpp': ({'dinput.h'}, 'DirectInput, under #ifdef _WIN32'),
+    'src/game/platform/rdata_consts.cpp': ({'dinput.h'}, "DirectInput's constants, under #ifdef _WIN32"),
+    'src/game/platform/game_window_win32.cpp': ({'windows.h'}, 'W: linux_tree.py WINDOWS_ONLY'),
+    'src/game/platform/fmv_play_win32.cpp': ({'windows.h', 'mmsystem.h'}, 'W: linux_tree.py WINDOWS_ONLY'),
+    'src/hook/exe_host.cpp': ({'windows.h'}, 'W: linux_tree.py WINDOWS_ONLY'),
+    'src/hook/exe_icon.cpp': ({'windows.h', 'wincodec.h', 'objidl.h'}, 'W: linux_tree.py WINDOWS_ONLY'),
+    'src/hook/dllmain.cpp': ({'windows.h'}, 'W: linux_tree.py WINDOWS_ONLY'),
+    'src/hook/host_win32.cpp': ({'windows.h'}, 'W: linux_tree.py WINDOWS_ONLY'),
+    'src/hook/crash_win32.cpp': ({'windows.h', 'dbghelp.h'}, 'W: linux_tree.py WINDOWS_ONLY'),
+    'src/hook/stackwatch_win32.cpp': ({'windows.h', 'tlhelp32.h'}, 'W: linux_tree.py WINDOWS_ONLY'),
+    'src/hook/crash_posix.cpp': ({'dlfcn.h', 'fcntl.h', 'link.h', 'semaphore.h', 'signal.h', 'sys/uio.h',
+                                  'ucontext.h', 'unistd.h'}, "the fault catcher's POSIX half (crash_win32.cpp's counterpart)"),
+    'src/launcher/launcher.cpp': ({'windows.h'}, 'W: the developer launcher, linux_tree.py SKIP'),
+    'src/launcher/key_codes_check.cpp': ({'windows.h', 'dinput.h'}, "W: key_codes.h against the SDK's names, under #ifdef _WIN32"),
+    'src/render/render_d3d11.cpp': ({'d3d11.h', 'd3dcompiler.h', 'dxgi.h'}, 'Direct3D 11: DXVK-native on Linux'),
+    'src/render/satpixie.h': ({'d3d11.h'}, 'Direct3D 11: DXVK-native on Linux'),
+}
+
+
+def is_os_header(hdr):
+    return hdr in WIN_HEADER_CLASS or hdr in POSIX_HEADERS or hdr.startswith(POSIX_HEADER_PREFIXES)
+
+
+def headers(files):
+    found = collections.defaultdict(set)
+    where = {}
+    for f in files:
+        if f.rel.startswith('src/os/') or is_harness(f.rel):
+            continue
+        for m in INCLUDE.finditer(f.code):
+            hdr = m.group(1)
+            if is_os_header(hdr):
+                found[f.rel].add(hdr)
+                where.setdefault((f.rel, hdr), bisect.bisect_right(f.starts, m.start()))
+    fail = 0
+    for rel in sorted(found):
+        allowed = HEADERS_WAITING.get(rel, (set(), ''))[0]
+        for hdr in sorted(found[rel] - allowed):
+            fail += 1
+            print(f'{rel}:{where[(rel, hdr)]}: include <{hdr}>: an operating-system header outside src/os; use '
+                  'bof3::os (src/os/os.h), or list the file in HEADERS_WAITING with its reason')
+    for rel in sorted(HEADERS_WAITING):
+        for hdr in sorted(HEADERS_WAITING[rel][0] - found.get(rel, set())):
+            fail += 1
+            print(f'{rel}: <{hdr}> listed in HEADERS_WAITING but no longer included: remove it from the entry')
+    if fail:
+        return 1
+    game = sum(len(v) for k, v in found.items() if k.startswith('src/game/'))
+    print(f'os_census --headers: ok ({sum(len(v) for v in found.values())} operating-system includes in '
+          f'{len(found)} files outside src/os, all listed; {game} of them in src/game)')
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('--out', default=DEFAULT_OUT)
@@ -446,9 +526,12 @@ def main():
     ap.add_argument('--files', nargs='?', const='src/', metavar='PREFIX')
     ap.add_argument('--boundary', action='store_true', help='fail when a file outside src/os, src/launcher and the harness-only files reaches the system past the seam')
     ap.add_argument('--outside', metavar='PREFIX', help='game files outside PREFIX that include windows.h, and what they take')
+    ap.add_argument('--headers', action='store_true', help='fail when a file outside src/os and the harness-only files includes an operating-system header (Windows or POSIX) that HEADERS_WAITING does not list')
     a = ap.parse_args()
 
     files = dc.load_sources()
+    if a.headers:
+        return headers(files)
     sites = scan(files)
     frows = file_rows(files, sites)
 

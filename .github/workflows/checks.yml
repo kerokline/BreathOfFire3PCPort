@@ -219,29 +219,49 @@ jobs:
     # The operating-system seam's POSIX backend (src/os/posix, docs/linux-round.md
     # LB1) built with the system compiler and run on the runner itself: memory at
     # fixed addresses, the directory walk, clocks, the environment - synthetic
-    # data only. Also the boundary gate: nothing outside src/os, src/launcher and
-    # the harness files reaches the system past the seam.
+    # data only. Also the launcher's settings code on that backend
+    # (tools/launcher_host's config_tests: bof3x.ini read and written, the
+    # environment and BOF3.CFG made from it, the presets; group C7, and D1 of
+    # the stages LC and LD round), and the gates of the seam: nothing outside
+    # src/os, src/launcher and the harness files reaches the system past the
+    # seam, and no file outside src/os includes an operating-system header,
+    # Windows' or POSIX's, that the list in tools/os_census.py does not hold
+    # (linux-round.md section 3's ratchet). The native Linux build is
+    # build.yml's linux-x86_64 job.
     name: OS seam host suite
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
+      # Before the build: config_tests' build generates the launcher's suites
+      # table with Python 3.11 or later (tools/suites.py).
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
       - name: Build
         run: |
           cmake -S tools/os_host -B "$RUNNER_TEMP/os-host"
           cmake --build "$RUNNER_TEMP/os-host" -j 4
+          # config_tests alone: the folder's save_tests needs the image's
+          # readers and does not compile under g++ (linux-round.md, "Wave B
+          # as run").
+          cmake -S tools/launcher_host -B "$RUNNER_TEMP/launcher-host"
+          cmake --build "$RUNNER_TEMP/launcher-host" -j 4 --target config_tests
 
       - name: os_tests
         run: '"$RUNNER_TEMP/os-host/os_tests"'
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
+      - name: config_tests
+        run: '"$RUNNER_TEMP/launcher-host/config_tests"'
 
       - name: Boundary gate
         run: |
           python tools/os_census.py --check
           python tools/os_census.py --boundary
+
+      - name: No operating-system header outside src/os beyond the listed ones
+        run: python tools/os_census.py --headers
 
   os-host-windows:
     # The same suite against the Win32 backend (src/os/win32), built with the

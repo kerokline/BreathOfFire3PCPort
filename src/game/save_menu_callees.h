@@ -205,7 +205,7 @@ struct Callees {
     void (__cdecl* party_select)(unsigned, unsigned);          // PartySet_Select (ours)
     int (__cdecl* load_done)();                                // File_LoadDone (ours)
     void (__cdecl* task_sleep)(int);                           // Task_Sleep
-    void (__cdecl* task_restart)(U);                           // 0x5A9976
+    void (__cdecl* task_restart)(void*);                       // 0x5A9976 Task_Restart(entry): the entry a code place
     // This module's own, called by each other
     int (__cdecl* list_files)();                               // Save_ListFiles
     int (__cdecl* read_file)(const char*, unsigned, int);      // Save_ReadFile

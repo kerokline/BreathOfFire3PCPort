@@ -96,22 +96,26 @@ inline U Sprite_ObjectsAt() { return Of(Sprite_Objects); }
 struct Callees {
     U (__cdecl* alloc_context)(U, U);           // 0x435180 (group BB): a context slot, al
     U (__cdecl* actor_out)(U);                  // 0x4456C0 (group BB): al 1 when the actor is absent or bit 0x40
-    U (__cdecl* set_tint)(U, U, U, U, U);       // Sprite_SetTint 0x454CC0 (group BG)
+    U (__cdecl* set_tint)(unsigned char*, U, U, U, U);   // Sprite_SetTint 0x454CC0 (group BG): the sprite a pointer
     U (__cdecl* play_effect)(U);                // Sound_PlayEffect 0x587740 (ours)
     U (__cdecl* load_stream)(U);                // Sound_LoadStream 0x587910 (ours)
     U (__cdecl* item_list)(U, U, U);            // 0x591E50 (group BD): an actor's inventory page
     U (__cdecl* item_usable)(U, U, U);          // 0x57DA70 (group BD): al 0 when usable
     U (__cdecl* free_window)();                 // Window_FreeCurrent 0x59E310 (ours)
     U (__cdecl* ai_condition)(U);               // 0x44B320 EnemyAI_CondElement (group BE5, round 12; was EnemyAI_CondPartyFlag here)
-    U (__cdecl* ai_row_done)(U, U);             // 0x44B2C0 (group BE): EnemyAI_RowDone
-    U (__cdecl* ai_apply)(U, U);                // 0x44B3A0 EnemyAI_ApplyAction (BE5)
-    U (__cdecl* ai_set_done)(U, U, U);          // 0x44B2E0 EnemyAI_SetRowDone (BE5)
+    U (__cdecl* ai_row_done)(const unsigned char*, U);   // 0x44B2C0 (group BE): EnemyAI_RowDone(enemy, row)
+    U (__cdecl* ai_apply)(unsigned char*, const unsigned char*);   // 0x44B3A0 EnemyAI_ApplyAction(enemy, row) (BE5)
+    U (__cdecl* ai_set_done)(unsigned char*, U, U);      // 0x44B2E0 EnemyAI_SetRowDone(enemy, row, on) (BE5)
     U (__cdecl* ai_finish)();                   // 0x44B920 EnemyAI_DedupMessages (BE5; its eax unread by the one caller)
     U (__cdecl* update_screen_a)();             // Sprite_UpdateScreenA 0x57B830 (ours)
     U (__cdecl* update_screen_slot)();          // Sprite_UpdateScreenSlot 0x588F00 (group BG)
     U (__cdecl* init_context)();                // Battle_InitActorContext 0x446BD0 (this module)
-    U (__cdecl* copy_n)(U, U, U);               // Str_CopyN 0x5171A0 (this module)
-    U (__cdecl* banner_set)(U, U, U, U, U, U);  // BattleBanner_Set 0x44A6E0 (this module)
+    U (__cdecl* copy_n)(char*, const char*, U);          // Str_CopyN 0x5171A0 (this module)
+    // BattleBanner_Set 0x44A6E0 (this module). The text is a pointer, as the
+    // function takes it: the 6th argument lies on the stack at 64 bits, where a
+    // 4-byte word leaves the slot's high half as it was (docs/linux-round.md,
+    // "The banner fault and its class").
+    U (__cdecl* banner_set)(U, U, U, U, U, const char*);
     U (__cdecl* banner[5])();                   // the dispatch's table: ret, kind 1, kind 2, ret, ret
 };
 extern const Callees kOriginals;

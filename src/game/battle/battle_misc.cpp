@@ -97,7 +97,7 @@ void SetSpriteCurrent(battle_misc::U v) { PutLong(AtBattleMisc(battle_misc::at::
 // compares the result: a plain `return 0` failed 1494 of 3000 rounds), and
 // the x86_64 half is the same three instructions on the argument register.
 extern "C" std::uint32_t __cdecl BattleMisc_StatusTintBody(void) {
-    return g.set_tint(SpriteCurrent(), 0xFFFFFFFAu, 0xFFFFFFF6u, 0, 0);
+    return g.set_tint(AtBattleMisc(SpriteCurrent()), 0xFFFFFFFAu, 0xFFFFFFF6u, 0, 0);
 }
 
 // --- the actor contexts -------------------------------------------------------------

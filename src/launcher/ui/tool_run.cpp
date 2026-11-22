@@ -132,6 +132,12 @@ Runtime FindRuntime() {
         rt.python = !env_python.empty() ? env_python
                     : kWindowsNames     ? dir + ToolSep(L"\\runtime\\python\\python.exe")
                                         : dir + ToolSep(L"\\runtime\\python\\bin\\python3");
+        // The Linux tarball holds no Python (docs/linux-round.md section 6,
+        // call 3): runtime/python is the venv the player makes from its
+        // README, and without one the system's python3 on PATH, with the
+        // packages of requirements.txt installed by the system. Windows'
+        // zip always holds runtime\python\python.exe; nothing changes there.
+        if (!kWindowsNames && env_python.empty() && !IsFile(rt.python)) rt.python = FindProgram(L"python3");
     } else {
         std::wstring up = dir;
         for (int i = 0; i < 4 && !up.empty(); ++i) {
@@ -150,7 +156,8 @@ Runtime FindRuntime() {
                    L"). Extract all files of the release, not only the launcher.";
     else if (rt.python.empty() || !IsFile(rt.python))
         rt.error = L"The importer cannot find Python (" + (rt.python.empty() ? std::wstring(L"none on PATH") : rt.python) +
-                   L"). Extract all files of the release, not only the launcher.";
+                   (kWindowsNames ? L"). Extract all files of the release, not only the launcher."
+                                  : L"). Install Python 3 and the packages in requirements.txt. README.txt tells how.");
     return rt;
 }
 
