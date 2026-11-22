@@ -5,6 +5,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/cheats.h"
 #include "game/record_views.h"
 #include "game/shop_states_callees.h"
 #include "game/sound_in.h"
@@ -53,6 +54,40 @@ U Addr(const void* p) { return Low32(p); }
 using Handler = void (__cdecl*)();
 
 Handler Entry(shop_states::U table, unsigned index) { return shop_states::Fn<Handler>(LongShopStates(table + index * 4)); }
+
+// DIVERGENCE DIV-0188 (amended 2026-11-21, IDEAS I72): with the no-fail
+// switch on, Parch's item seller - shop record 36, opened in area 130 - offers
+// the shisu's four ingredients (Shisu_Result's kItems, in its order) in place
+// of its first four entries. The record is changed where it lies and put back
+// the next time it opens anywhere else, so another seller that reads record 36
+// keeps Capcom's list; the first four pairs are kept here, not written out in
+// this source. A record with fewer than four entries (a mod's) is left alone.
+// The three with a base price of 0 sell for 1 zenny, the owner's call, with
+// nothing written: every price the shop draws or takes is Shop_ScalePrice's,
+// which answers 1 in place of 0.
+constexpr shop_states::U kParchArea = 130;
+constexpr shop_states::U kParchItemShop = 36;
+constexpr unsigned char kShisuItems[4] = {0x4D, 0x23, 0x24, 0x56};
+unsigned char g_parch_kept[8];
+bool g_parch_stocked = false;
+
+// `record` is the shop's record, ShopMode_Begin's ShopStates2_ShopList.
+void ParchShisuStock(shop_states::U shop, unsigned char* record) {
+    if (shop != kParchItemShop) return;
+    const bool want = Cheats_MinigameNoFail() && Game_AreaNumber == kParchArea;
+    if (want == g_parch_stocked) return;
+    if (want) {
+        if (record[0] < 4) return;
+        std::memcpy(g_parch_kept, record + 1, sizeof g_parch_kept);
+        for (unsigned i = 0; i < 4; ++i) {
+            record[1 + 2 * i] = 0;
+            record[2 + 2 * i] = kShisuItems[i];
+        }
+    } else {
+        std::memcpy(record + 1, g_parch_kept, sizeof g_parch_kept);
+    }
+    g_parch_stocked = want;
+}
 
 }  // namespace
 
@@ -110,6 +145,7 @@ extern "C" void __cdecl ShopMode_Begin(void) {
     BShopStates(::bof3::Img(shop_states::at::kCount.v)) = 6;
     ShopStates_Clear0A = 0;
     ShopStates2_ShopList = ::bof3::Img(shop_states::at::kShopRecords.v) + shop_states::at::kShopRecordBytes * ScenaSc1_ShopByteB;
+    ParchShisuStock(ScenaSc1_ShopByteB, AtShopStates(ShopStates2_ShopList));   // DIV-0188
 }
 
 // original 0x57F5D0 (PSX 0x801D0FF8), ShopMode_States 1 and 4: the way out.
@@ -141,4 +177,9 @@ void ShopMode_Inject() {
     BOF3_INJECT(ShopMode_Dispatch);
     BOF3_INJECT(ShopMode_Begin);
     BOF3_INJECT(ShopMode_End);
+    // DIV-0188: with the switch on, the shop's opening must be ours - left as
+    // Capcom's, Parch's seller would stock as before and the cheat would be
+    // silently half off.
+    if (Cheats_MinigameNoFail() && !bof3::IsEnabled(bof3::addr::ShopMode_Begin))
+        bof3::Fatal("BOF3X_NO_FAIL=1 needs ShopMode_Begin ours, and it is disabled");
 }
