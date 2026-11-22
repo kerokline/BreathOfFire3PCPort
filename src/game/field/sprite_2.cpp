@@ -23,6 +23,7 @@
 #include "hook/detour.h"
 #include "hook/draw_order.h"
 #include "hook/log.h"
+#include "render/interp_ident.h"
 
 namespace {
 
@@ -232,6 +233,7 @@ void Draw() {
     }
 
     unsigned char* const prim = Gfx_PacketNext;
+    render::interp::TagPrim(Low32(prim), Low32(object));   // the in-between's (interp_ident.h): nothing unless BOF3X_INTERP
     Gpu_SetCode84(prim);
     Sprite_ClutWord(reinterpret_cast<unsigned short*>(prim + 0x1C));
     float scale_x = 1.0f, scale_y = 1.0f;

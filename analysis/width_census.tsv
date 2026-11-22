@@ -4890,26 +4890,28 @@ site	src/game/field/sprite.cpp	468	low32	image_local	live	Offset(table, move_scr
 site	src/game/field/sprite.cpp	582	low32	image_local	live	image	Low32	move_script::SetLong(move_script::At(::bof3::Img(Gfx_UploadQueueRecord_addr) + count * 4u), static_cast<std::int32_t>(Low32(image)));
 site	src/game/field/sprite.cpp	588	low32	image_local	live	script	Low32	rv::Current<records::SpriteObject>()->script = static_cast<std::int32_t>(Low32(script));
 site	src/game/field/sprite.cpp	705	low32	object_ours	live	&sprite_pose::g_reach_word	Low32	bof3::PatchBytes(" ", Low32(&sprite_pose::g_reach_word), &was, &is, 1);
-site	src/game/field/sprite_2.cpp	87	low32	pool	live	draw_pool::Items() + (Gfx_BufferIndex + index * 2u) * 0x48u	Low32	const auto at = Low32(draw_pool::Items() + (Gfx_BufferIndex + index * 2u) * 0x48u);
-site	src/game/field/sprite_2.cpp	89	uintptr	-	live	std::uintptr_t	-	Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(at));
-site	src/game/field/sprite_2.cpp	89	widen	param	live	at	std::uint32_t*	Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(at));
-site	src/game/field/sprite_2.cpp	107	uintptr	-	live	std::uintptr_t	-	Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(FrameNode(kLayer)[1]));
-site	src/game/field/sprite_2.cpp	107	widen	other	live	FrameNode(kLayer)[1]	std::uint32_t*	Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(FrameNode(kLayer)[1]));
-site	src/game/field/sprite_2.cpp	159	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<T>(static_cast<std::uintptr_t>(w));
-site	src/game/field/sprite_2.cpp	159	widen	param	live	w	T	return reinterpret_cast<T>(static_cast<std::uintptr_t>(w));
-site	src/game/field/sprite_2.cpp	169	low32	image_local	live	v	Low32	const std::uint32_t w = Low32(v);
-site	src/game/field/sprite_2.cpp	498	uintptr	-	live	std::uintptr_t	-	Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(FrameNode(layer)[1]));
-site	src/game/field/sprite_2.cpp	498	widen	other	live	FrameNode(layer)[1]	std::uint32_t*	Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(FrameNode(layer)[1]));
-site	src/game/field/sprite_2.cpp	516	low32	pool	live	draw_pool::Items() + (Gfx_BufferIndex + (DrawTable[item] & 0xFFFu) * 2u) * 0x48u	Low32	return Low32(draw_pool::Items() + (Gfx_BufferIndex + (DrawTable[item] & 0xFFFu) * 2u) * 0x48u);
-site	src/game/field/sprite_2.cpp	522	uintptr	-	live	std::uintptr_t	-	Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(at()));
-site	src/game/field/sprite_2.cpp	522	widen	other	live	at()	std::uint32_t*	Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(at()));
-site	src/game/field/sprite_2.cpp	550	low32	image_local	live	object	Low32	record[0] = Low32(object);
-site	src/game/field/sprite_2.cpp	581	uintptr	-	live	std::uintptr_t	-	Sprite_Current = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(record[0]));
-site	src/game/field/sprite_2.cpp	581	widen	param	live	record[0]	unsigned char*	Sprite_Current = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(record[0]));
-site	src/game/field/sprite_2.cpp	592	uintptr	-	live	std::uintptr_t	-	unsigned char* const owner = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(record[2]));
-site	src/game/field/sprite_2.cpp	592	widen	param	live	record[2]	unsigned char*	unsigned char* const owner = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(record[2]));
-site	src/game/field/sprite_2.cpp	598	uintptr	-	live	std::uintptr_t	-	Gfx_OtPointers[Sprite_Current[0x29]] = reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(record[0]));
-site	src/game/field/sprite_2.cpp	598	widen	param	live	record[0]	std::uint32_t*	Gfx_OtPointers[Sprite_Current[0x29]] = reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(record[0]));
+site	src/game/field/sprite_2.cpp	88	low32	pool	live	draw_pool::Items() + (Gfx_BufferIndex + index * 2u) * 0x48u	Low32	const auto at = Low32(draw_pool::Items() + (Gfx_BufferIndex + index * 2u) * 0x48u);
+site	src/game/field/sprite_2.cpp	90	uintptr	-	live	std::uintptr_t	-	Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(at));
+site	src/game/field/sprite_2.cpp	90	widen	param	live	at	std::uint32_t*	Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(at));
+site	src/game/field/sprite_2.cpp	108	uintptr	-	live	std::uintptr_t	-	Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(FrameNode(kLayer)[1]));
+site	src/game/field/sprite_2.cpp	108	widen	other	live	FrameNode(kLayer)[1]	std::uint32_t*	Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(FrameNode(kLayer)[1]));
+site	src/game/field/sprite_2.cpp	160	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<T>(static_cast<std::uintptr_t>(w));
+site	src/game/field/sprite_2.cpp	160	widen	param	live	w	T	return reinterpret_cast<T>(static_cast<std::uintptr_t>(w));
+site	src/game/field/sprite_2.cpp	170	low32	image_local	live	v	Low32	const std::uint32_t w = Low32(v);
+site	src/game/field/sprite_2.cpp	236	low32	image_local	live	object	Low32	render::interp::TagPrim(Low32(prim), Low32(object));
+site	src/game/field/sprite_2.cpp	236	low32	pool	live	prim	Low32	render::interp::TagPrim(Low32(prim), Low32(object));
+site	src/game/field/sprite_2.cpp	500	uintptr	-	live	std::uintptr_t	-	Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(FrameNode(layer)[1]));
+site	src/game/field/sprite_2.cpp	500	widen	other	live	FrameNode(layer)[1]	std::uint32_t*	Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(FrameNode(layer)[1]));
+site	src/game/field/sprite_2.cpp	518	low32	pool	live	draw_pool::Items() + (Gfx_BufferIndex + (DrawTable[item] & 0xFFFu) * 2u) * 0x48u	Low32	return Low32(draw_pool::Items() + (Gfx_BufferIndex + (DrawTable[item] & 0xFFFu) * 2u) * 0x48u);
+site	src/game/field/sprite_2.cpp	524	uintptr	-	live	std::uintptr_t	-	Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(at()));
+site	src/game/field/sprite_2.cpp	524	widen	other	live	at()	std::uint32_t*	Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(at()));
+site	src/game/field/sprite_2.cpp	552	low32	image_local	live	object	Low32	record[0] = Low32(object);
+site	src/game/field/sprite_2.cpp	583	uintptr	-	live	std::uintptr_t	-	Sprite_Current = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(record[0]));
+site	src/game/field/sprite_2.cpp	583	widen	param	live	record[0]	unsigned char*	Sprite_Current = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(record[0]));
+site	src/game/field/sprite_2.cpp	594	uintptr	-	live	std::uintptr_t	-	unsigned char* const owner = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(record[2]));
+site	src/game/field/sprite_2.cpp	594	widen	param	live	record[2]	unsigned char*	unsigned char* const owner = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(record[2]));
+site	src/game/field/sprite_2.cpp	600	uintptr	-	live	std::uintptr_t	-	Gfx_OtPointers[Sprite_Current[0x29]] = reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(record[0]));
+site	src/game/field/sprite_2.cpp	600	widen	param	live	record[0]	std::uint32_t*	Gfx_OtPointers[Sprite_Current[0x29]] = reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(record[0]));
 site	src/game/field/sprite_anim.cpp	35	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<T>(static_cast<std::uintptr_t>(w));
 site	src/game/field/sprite_anim.cpp	35	widen	param	live	w	T	return reinterpret_cast<T>(static_cast<std::uintptr_t>(w));
 site	src/game/field/sprite_anim.cpp	44	low32	image_local	live	v	Low32	const std::uint32_t w = Low32(v);
@@ -6558,105 +6560,106 @@ site	src/game/platform/cell.cpp	20	low32	helper_def	live	p	Low32	U Addr(const vo
 site	src/game/platform/cell.cpp	74	narrow_call	image_local	live	src	Addr	U s = Addr(src);
 site	src/game/platform/cfg.cpp	40	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/platform/cfg.cpp	40	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/d3d.cpp	108	uintptr	-	live	std::uintptr_t	-	unsigned char* AtBattleDraw(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/d3d.cpp	108	widen	param	live	address	unsigned char*	unsigned char* AtBattleDraw(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/d3d.cpp	132	asm	x87	live	flds %1	flds fmuls fstps	__asm__ volatile("flds %1\n\tfmuls %2\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b) : "st");
-site	src/game/platform/d3d.cpp	139	asm	x87	live	flds %1	fdivs flds fstps	__asm__ volatile("flds %1\n\tfdivs %2\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b) : "st");
-site	src/game/platform/d3d.cpp	144	uintptr	-	live	std::uintptr_t	-	void** DeviceBattleDraw() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(AtBattleDraw(::bof3::Im
-site	src/game/platform/d3d.cpp	144	widen	other	live	*reinterpret_cast<const volatile std::uint32_t*>(AtBattleDraw(::bof3::Img(D3d_Device_addr)))	void**	void** DeviceBattleDraw() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(AtBattleDraw(::bof3::Im
-site	src/game/platform/d3d.cpp	195	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/d3d.cpp	195	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/d3d.cpp	235	asm	x87	live	flds %1	flds fmuls fstps	__asm__ volatile("flds %1\n\tfmuls %2\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b) : "st");
-site	src/game/platform/d3d.cpp	242	asm	x87	live	flds %1	fdivs flds fstps	__asm__ volatile("flds %1\n\tfdivs %2\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b) : "st");
-site	src/game/platform/d3d.cpp	249	asm	x87	live	flds %1	flds fstps	__asm__ volatile("flds %1\n\tfstps %0" : "=m"(r) : "m"(a) : "st");
-site	src/game/platform/d3d.cpp	256	asm	x87	live	flds %1	fadds flds fmuls fstps	__asm__ volatile("flds %1\n\tfadds %2\n\tfmuls %3\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b), "m"(c) : "st");
-site	src/game/platform/d3d.cpp	264	asm	x87	live	fildl %1	fildl fmuls fstps fsubrs	__asm__ volatile("fildl %1\n\tfmuls %2\n\tfsubrs %3\n\tfmuls %4\n\tfstps %0"
-site	src/game/platform/d3d.cpp	269	asm	x87	live	fildl %1	fadds fildl fmuls fstps	__asm__ volatile("fildl %1\n\tfmuls %2\n\tfadds %3\n\tfmuls %4\n\tfstps %0"
-site	src/game/platform/d3d.cpp	280	asm	x87	live	flds %1	fidivl flds fstps	__asm__ volatile("flds %1\n\tfidivl %2\n\tfstps %0" : "=m"(r) : "m"(k), "m"(n) : "st");
-site	src/game/platform/d3d.cpp	287	asm	x87	live	fildl %1	fidivl fildl fstps fsubs	__asm__ volatile("fildl %1\n\tfsubs %2\n\tfidivl %3\n\tfstps %0" : "=m"(r) : "m"(e), "m"(k), "m"(n) : "st");
-site	src/game/platform/d3d.cpp	292	uintptr	-	live	std::uintptr_t	-	void** Device() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))
-site	src/game/platform/d3d.cpp	292	widen	other	live	*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))	void**	void** Device() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))
-site	src/game/platform/d3d.cpp	419	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/d3d.cpp	419	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/d3d.cpp	439	uintptr	-	live	std::uintptr_t	-	void** device = reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))));
-site	src/game/platform/d3d.cpp	439	widen	other	live	*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))	void**	void** device = reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))));
-site	src/game/platform/d3d.cpp	550	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/d3d.cpp	550	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/d3d.cpp	552	low32	helper_def	live	p	Low32	U Addr(const void* p) { return Low32(p); }
-site	src/game/platform/d3d.cpp	587	asm	x87	live	flds %1	flds fmuls fstps	__asm__ volatile("flds %1\n\tfmuls %2\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b) : "st");
-site	src/game/platform/d3d.cpp	594	asm	x87	live	flds %1	fdivs flds fstps	__asm__ volatile("flds %1\n\tfdivs %2\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b) : "st");
-site	src/game/platform/d3d.cpp	601	asm	x87	live	flds %1	flds fstps	__asm__ volatile("flds %1\n\tfstps %0" : "=m"(r) : "m"(a) : "st");
-site	src/game/platform/d3d.cpp	608	asm	x87	live	fildl %1	fildl fmuls fstps	__asm__ volatile("fildl %1\n\tfmuls %2\n\tfstps %0" : "=m"(r) : "m"(i), "m"(k) : "st");
-site	src/game/platform/d3d.cpp	627	asm	x87	live	flds %[a]	flds fmuls	__asm__ volatile("flds %[a]\n\tfmuls %[b]\n\t" BOF3X_FTOL
-site	src/game/platform/d3d.cpp	638	asm	x87	live	fildl %[i]	fildl fmuls	__asm__ volatile("fildl %[i]\n\tfmuls %[b]\n\t" BOF3X_FTOL
-site	src/game/platform/d3d.cpp	649	asm	x87	live	fildll %[chan]	fildl fildll fmulp fmuls	__asm__ volatile("fildll %[chan]\n\tfildl %[c]\n\tfmuls %[k]\n\tfmulp %%st, %%st(1)\n\t" BOF3X_FTOL
-site	src/game/platform/d3d.cpp	660	asm	x87	live	fildl %[c]	fildl fimull fmuls	__asm__ volatile("fildl %[c]\n\tfmuls %[k]\n\tfimull %[chan]\n\t" BOF3X_FTOL
-site	src/game/platform/d3d.cpp	668	uintptr	-	live	std::uintptr_t	-	void** Device() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))
-site	src/game/platform/d3d.cpp	668	widen	other	live	*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))	void**	void** Device() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))
-site	src/game/platform/d3d.cpp	700	uintptr	-	live	std::uintptr_t	-	void** SurfaceAt(U address) { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(address)))); }
-site	src/game/platform/d3d.cpp	700	widen	other	live	*reinterpret_cast<const volatile std::uint32_t*>(At(address))	void**	void** SurfaceAt(U address) { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(address)))); }
-site	src/game/platform/d3d.cpp	704	narrow_call	image_local	live	desc	Addr	return reinterpret_cast<Com5>(Method(surface, 0x64))(surface, 0, Addr(desc), 1, 0);
-site	src/game/platform/d3d.cpp	736	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/d3d.cpp	736	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/d3d.cpp	777	uintptr	-	live	std::uintptr_t	-	unsigned char* AtDisplaySetup(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/d3d.cpp	777	widen	param	live	address	unsigned char*	unsigned char* AtDisplaySetup(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/d3d.cpp	788	low32	image_local	live	p	Low32	void PutPtr(U address, const void* p) { PutLongDisplaySetup(address, Low32(p)); }
-site	src/game/platform/d3d.cpp	923	ptr_overlay	image	live	DDraw_Primary.Native()	Surface	auto* primary = static_cast<render::Surface*>(DDraw_Primary.Native());
-site	src/game/platform/d3d.cpp	924	ptr_overlay	image	live	DDraw_BackBuffer.Native()	Surface	auto* back = static_cast<render::Surface*>(DDraw_BackBuffer.Native());
-site	src/game/platform/d3d.cpp	964	uintptr	-	live	std::uintptr_t	-	unsigned char* AtFieldMisc(field_misc::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/d3d.cpp	964	widen	param	live	address	unsigned char*	unsigned char* AtFieldMisc(field_misc::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/d3d.cpp	987	asm	x87	live	flds %1	flds fmuls fstps	__asm__ volatile("flds %1\n\tfmuls %2\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b) : "st");
-site	src/game/platform/d3d.cpp	994	asm	x87	live	flds %1	fdivs flds fstps	__asm__ volatile("flds %1\n\tfdivs %2\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b) : "st");
-site	src/game/platform/d3d.cpp	999	uintptr	-	live	std::uintptr_t	-	void** DeviceFieldMisc() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(AtFieldMisc(::bof3::Img(
-site	src/game/platform/d3d.cpp	999	widen	other	live	*reinterpret_cast<const volatile std::uint32_t*>(AtFieldMisc(::bof3::Img(D3d_Device_addr)))	void**	void** DeviceFieldMisc() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(AtFieldMisc(::bof3::Img(
-site	src/game/platform/d3d.cpp	1206	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/d3d.cpp	1206	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/d3d.cpp	1231	uintptr	-	live	std::uintptr_t	-	void** Device() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))
-site	src/game/platform/d3d.cpp	1231	widen	other	live	*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))	void**	void** Device() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))
-site	src/game/platform/d3d.cpp	1256	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/d3d.cpp	1256	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/d3d.cpp	1297	uintptr	-	live	std::uintptr_t	-	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/d3d.cpp	1297	widen	param	live	address	unsigned char*	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/d3d.cpp	1299	low32	helper_def	live	p	Low32	std::uint32_t Address(const volatile void* p) { return Low32(p); }
-site	src/game/platform/d3d.cpp	1315	low32	image_local	live	v	Low32	const std::uint32_t w = Low32(v);
-site	src/game/platform/d3d.cpp	1330	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/d3d.cpp	1330	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/d3d.cpp	1359	asm	x87	live	flds %1	flds fmuls fstps	__asm__ volatile("flds %1\n\tfmuls %2\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b) : "st");
-site	src/game/platform/d3d.cpp	1366	asm	x87	live	flds %1	fdivs flds fstps	__asm__ volatile("flds %1\n\tfdivs %2\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b) : "st");
-site	src/game/platform/d3d.cpp	1373	asm	x87	live	flds %1	flds fstps	__asm__ volatile("flds %1\n\tfstps %0" : "=m"(r) : "m"(a) : "st");
-site	src/game/platform/d3d.cpp	1380	asm	x87	live	flds %1	fadds flds fmuls fstps	__asm__ volatile("flds %1\n\tfadds %2\n\tfmuls %3\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b), "m"(c) : "st");
-site	src/game/platform/d3d.cpp	1387	asm	x87	live	fildl %1	fadds fildl fmuls fstps	__asm__ volatile("fildl %1\n\tfadds %2\n\tfmuls %3\n\tfstps %0" : "=m"(r) : "m"(i), "m"(b), "m"(c) : "st");
-site	src/game/platform/d3d.cpp	1392	uintptr	-	live	std::uintptr_t	-	void** Device() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))
-site	src/game/platform/d3d.cpp	1392	widen	other	live	*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))	void**	void** Device() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))
-site	src/game/platform/d3d.cpp	1489	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/d3d.cpp	1489	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/d3d.cpp	1491	uintptr	-	live	std::uintptr_t	-	void* Ptr(U address) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/d3d.cpp	1491	widen	param	live	address	void*	void* Ptr(U address) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/d3d.cpp	1493	low32	helper_def	live	p	Low32	U Addr(const void* p) { return Low32(p); }
-site	src/game/platform/d3d.cpp	1576	asm	x87	live	fildl %[tw]	fidivl fildl fimull fistpll fldcw fnstcw movw orb	__asm__ volatile(
-site	src/game/platform/d3d.cpp	1649	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/d3d.cpp	1649	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/d3d.cpp	1686	uintptr	-	live	std::uintptr_t	-	void* o = reinterpret_cast<void*>(static_cast<std::uintptr_t>(object));
-site	src/game/platform/d3d.cpp	1686	widen	param	live	object	void*	void* o = reinterpret_cast<void*>(static_cast<std::uintptr_t>(object));
-site	src/game/platform/d3d.cpp	1710	uintptr	-	live	std::uintptr_t	-	void* Surface() const { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(Long(b + 0x24))); }
-site	src/game/platform/d3d.cpp	1710	widen	word_read	live	Long(b + 0x24)	void*	void* Surface() const { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(Long(b + 0x24))); }
-site	src/game/platform/d3d.cpp	1750	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(word));
-site	src/game/platform/d3d.cpp	1750	widen	param	live	word	Fn [fn]	return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(word));
-site	src/game/platform/d3d.cpp	1796	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(kRetOnly.v))),
-site	src/game/platform/d3d.cpp	1816	uintptr	-	live	std::uintptr_t	-	Handler H(U address) { return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(::bof3::CodePlace(address))); }
-site	src/game/platform/d3d.cpp	1816	widen	code_place	live	::bof3::CodePlace(address)	Handler [fn]	Handler H(U address) { return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(::bof3::CodePlace(address))); }
-site	src/game/platform/d3d.cpp	1851	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(kRetOnly.v))),
-site	src/game/platform/d3d.cpp	1871	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(kRetOnly.v))),
-site	src/game/platform/d3d.cpp	1887	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(kRetOnly.v))),
-site	src/game/platform/d3d.cpp	2187	low32	pool	live	ot	Low32	d3d_list::U node = Low32(ot);
-site	src/game/platform/d3d.cpp	2351	low32	image_local	live	surface	Low32	tex_page::Com(tex_page::Long(Low32(surface)), kQueryInterface, tex_page::At(kTexture2Iid), texture);
-site	src/game/platform/d3d.cpp	2547	uintptr	-	live	std::uintptr_t	-	render::NoteDirectPage(reinterpret_cast<void*>(static_cast<std::uintptr_t>(texture)),
-site	src/game/platform/d3d.cpp	2547	widen	param	live	texture	void*	render::NoteDirectPage(reinterpret_cast<void*>(static_cast<std::uintptr_t>(texture)),
-site	src/game/platform/d3d.cpp	3790	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<char*>(static_cast<std::uintptr_t>(::bof3::Img(0x6C3A68) + static_cast<U>(device) * 0x13C));
-site	src/game/platform/d3d.cpp	3790	widen	img_place	live	::bof3::Img(0x6C3A68) + static_cast<U>(device) * 0x13C	char*	return reinterpret_cast<char*>(static_cast<std::uintptr_t>(::bof3::Img(0x6C3A68) + static_cast<U>(device) * 0x13C));
-site	src/game/platform/d3d.cpp	3890	narrow_call	image	live	Snd_BufferDesc	Address	const std::uint32_t desc = Address(Snd_BufferDesc);
-site	src/game/platform/d3d.cpp	3903	narrow_call	image	live	Snd_WaveFormat	Address	const std::uint32_t format = Address(Snd_WaveFormat);
-site	src/game/platform/d3d.cpp	4006	low32	object_ours	live	&g_tile1_quad	Low32	bof3::PatchBytes(" ", Low32(&g_tile1_quad),
+site	src/game/platform/d3d.cpp	109	uintptr	-	live	std::uintptr_t	-	unsigned char* AtBattleDraw(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/d3d.cpp	109	widen	param	live	address	unsigned char*	unsigned char* AtBattleDraw(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/d3d.cpp	133	asm	x87	live	flds %1	flds fmuls fstps	__asm__ volatile("flds %1\n\tfmuls %2\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b) : "st");
+site	src/game/platform/d3d.cpp	140	asm	x87	live	flds %1	fdivs flds fstps	__asm__ volatile("flds %1\n\tfdivs %2\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b) : "st");
+site	src/game/platform/d3d.cpp	145	uintptr	-	live	std::uintptr_t	-	void** DeviceBattleDraw() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(AtBattleDraw(::bof3::Im
+site	src/game/platform/d3d.cpp	145	widen	other	live	*reinterpret_cast<const volatile std::uint32_t*>(AtBattleDraw(::bof3::Img(D3d_Device_addr)))	void**	void** DeviceBattleDraw() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(AtBattleDraw(::bof3::Im
+site	src/game/platform/d3d.cpp	196	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/d3d.cpp	196	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/d3d.cpp	236	asm	x87	live	flds %1	flds fmuls fstps	__asm__ volatile("flds %1\n\tfmuls %2\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b) : "st");
+site	src/game/platform/d3d.cpp	243	asm	x87	live	flds %1	fdivs flds fstps	__asm__ volatile("flds %1\n\tfdivs %2\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b) : "st");
+site	src/game/platform/d3d.cpp	250	asm	x87	live	flds %1	flds fstps	__asm__ volatile("flds %1\n\tfstps %0" : "=m"(r) : "m"(a) : "st");
+site	src/game/platform/d3d.cpp	257	asm	x87	live	flds %1	fadds flds fmuls fstps	__asm__ volatile("flds %1\n\tfadds %2\n\tfmuls %3\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b), "m"(c) : "st");
+site	src/game/platform/d3d.cpp	265	asm	x87	live	fildl %1	fildl fmuls fstps fsubrs	__asm__ volatile("fildl %1\n\tfmuls %2\n\tfsubrs %3\n\tfmuls %4\n\tfstps %0"
+site	src/game/platform/d3d.cpp	270	asm	x87	live	fildl %1	fadds fildl fmuls fstps	__asm__ volatile("fildl %1\n\tfmuls %2\n\tfadds %3\n\tfmuls %4\n\tfstps %0"
+site	src/game/platform/d3d.cpp	281	asm	x87	live	flds %1	fidivl flds fstps	__asm__ volatile("flds %1\n\tfidivl %2\n\tfstps %0" : "=m"(r) : "m"(k), "m"(n) : "st");
+site	src/game/platform/d3d.cpp	288	asm	x87	live	fildl %1	fidivl fildl fstps fsubs	__asm__ volatile("fildl %1\n\tfsubs %2\n\tfidivl %3\n\tfstps %0" : "=m"(r) : "m"(e), "m"(k), "m"(n) : "st");
+site	src/game/platform/d3d.cpp	293	uintptr	-	live	std::uintptr_t	-	void** Device() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))
+site	src/game/platform/d3d.cpp	293	widen	other	live	*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))	void**	void** Device() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))
+site	src/game/platform/d3d.cpp	420	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/d3d.cpp	420	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/d3d.cpp	440	uintptr	-	live	std::uintptr_t	-	void** device = reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))));
+site	src/game/platform/d3d.cpp	440	widen	other	live	*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))	void**	void** device = reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))));
+site	src/game/platform/d3d.cpp	551	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/d3d.cpp	551	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/d3d.cpp	553	low32	helper_def	live	p	Low32	U Addr(const void* p) { return Low32(p); }
+site	src/game/platform/d3d.cpp	588	asm	x87	live	flds %1	flds fmuls fstps	__asm__ volatile("flds %1\n\tfmuls %2\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b) : "st");
+site	src/game/platform/d3d.cpp	595	asm	x87	live	flds %1	fdivs flds fstps	__asm__ volatile("flds %1\n\tfdivs %2\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b) : "st");
+site	src/game/platform/d3d.cpp	602	asm	x87	live	flds %1	flds fstps	__asm__ volatile("flds %1\n\tfstps %0" : "=m"(r) : "m"(a) : "st");
+site	src/game/platform/d3d.cpp	609	asm	x87	live	fildl %1	fildl fmuls fstps	__asm__ volatile("fildl %1\n\tfmuls %2\n\tfstps %0" : "=m"(r) : "m"(i), "m"(k) : "st");
+site	src/game/platform/d3d.cpp	628	asm	x87	live	flds %[a]	flds fmuls	__asm__ volatile("flds %[a]\n\tfmuls %[b]\n\t" BOF3X_FTOL
+site	src/game/platform/d3d.cpp	639	asm	x87	live	fildl %[i]	fildl fmuls	__asm__ volatile("fildl %[i]\n\tfmuls %[b]\n\t" BOF3X_FTOL
+site	src/game/platform/d3d.cpp	650	asm	x87	live	fildll %[chan]	fildl fildll fmulp fmuls	__asm__ volatile("fildll %[chan]\n\tfildl %[c]\n\tfmuls %[k]\n\tfmulp %%st, %%st(1)\n\t" BOF3X_FTOL
+site	src/game/platform/d3d.cpp	661	asm	x87	live	fildl %[c]	fildl fimull fmuls	__asm__ volatile("fildl %[c]\n\tfmuls %[k]\n\tfimull %[chan]\n\t" BOF3X_FTOL
+site	src/game/platform/d3d.cpp	669	uintptr	-	live	std::uintptr_t	-	void** Device() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))
+site	src/game/platform/d3d.cpp	669	widen	other	live	*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))	void**	void** Device() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))
+site	src/game/platform/d3d.cpp	701	uintptr	-	live	std::uintptr_t	-	void** SurfaceAt(U address) { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(address)))); }
+site	src/game/platform/d3d.cpp	701	widen	other	live	*reinterpret_cast<const volatile std::uint32_t*>(At(address))	void**	void** SurfaceAt(U address) { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(address)))); }
+site	src/game/platform/d3d.cpp	705	narrow_call	image_local	live	desc	Addr	return reinterpret_cast<Com5>(Method(surface, 0x64))(surface, 0, Addr(desc), 1, 0);
+site	src/game/platform/d3d.cpp	737	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/d3d.cpp	737	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/d3d.cpp	778	uintptr	-	live	std::uintptr_t	-	unsigned char* AtDisplaySetup(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/d3d.cpp	778	widen	param	live	address	unsigned char*	unsigned char* AtDisplaySetup(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/d3d.cpp	789	low32	image_local	live	p	Low32	void PutPtr(U address, const void* p) { PutLongDisplaySetup(address, Low32(p)); }
+site	src/game/platform/d3d.cpp	924	ptr_overlay	image	live	DDraw_Primary.Native()	Surface	auto* primary = static_cast<render::Surface*>(DDraw_Primary.Native());
+site	src/game/platform/d3d.cpp	925	ptr_overlay	image	live	DDraw_BackBuffer.Native()	Surface	auto* back = static_cast<render::Surface*>(DDraw_BackBuffer.Native());
+site	src/game/platform/d3d.cpp	965	uintptr	-	live	std::uintptr_t	-	unsigned char* AtFieldMisc(field_misc::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/d3d.cpp	965	widen	param	live	address	unsigned char*	unsigned char* AtFieldMisc(field_misc::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/d3d.cpp	988	asm	x87	live	flds %1	flds fmuls fstps	__asm__ volatile("flds %1\n\tfmuls %2\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b) : "st");
+site	src/game/platform/d3d.cpp	995	asm	x87	live	flds %1	fdivs flds fstps	__asm__ volatile("flds %1\n\tfdivs %2\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b) : "st");
+site	src/game/platform/d3d.cpp	1000	uintptr	-	live	std::uintptr_t	-	void** DeviceFieldMisc() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(AtFieldMisc(::bof3::Img(
+site	src/game/platform/d3d.cpp	1000	widen	other	live	*reinterpret_cast<const volatile std::uint32_t*>(AtFieldMisc(::bof3::Img(D3d_Device_addr)))	void**	void** DeviceFieldMisc() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(AtFieldMisc(::bof3::Img(
+site	src/game/platform/d3d.cpp	1207	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/d3d.cpp	1207	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/d3d.cpp	1232	uintptr	-	live	std::uintptr_t	-	void** Device() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))
+site	src/game/platform/d3d.cpp	1232	widen	other	live	*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))	void**	void** Device() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))
+site	src/game/platform/d3d.cpp	1257	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/d3d.cpp	1257	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/d3d.cpp	1298	uintptr	-	live	std::uintptr_t	-	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/d3d.cpp	1298	widen	param	live	address	unsigned char*	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/d3d.cpp	1300	low32	helper_def	live	p	Low32	std::uint32_t Address(const volatile void* p) { return Low32(p); }
+site	src/game/platform/d3d.cpp	1316	low32	image_local	live	v	Low32	const std::uint32_t w = Low32(v);
+site	src/game/platform/d3d.cpp	1331	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/d3d.cpp	1331	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/d3d.cpp	1360	asm	x87	live	flds %1	flds fmuls fstps	__asm__ volatile("flds %1\n\tfmuls %2\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b) : "st");
+site	src/game/platform/d3d.cpp	1367	asm	x87	live	flds %1	fdivs flds fstps	__asm__ volatile("flds %1\n\tfdivs %2\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b) : "st");
+site	src/game/platform/d3d.cpp	1374	asm	x87	live	flds %1	flds fstps	__asm__ volatile("flds %1\n\tfstps %0" : "=m"(r) : "m"(a) : "st");
+site	src/game/platform/d3d.cpp	1381	asm	x87	live	flds %1	fadds flds fmuls fstps	__asm__ volatile("flds %1\n\tfadds %2\n\tfmuls %3\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b), "m"(c) : "st");
+site	src/game/platform/d3d.cpp	1388	asm	x87	live	fildl %1	fadds fildl fmuls fstps	__asm__ volatile("fildl %1\n\tfadds %2\n\tfmuls %3\n\tfstps %0" : "=m"(r) : "m"(i), "m"(b), "m"(c) : "st");
+site	src/game/platform/d3d.cpp	1393	uintptr	-	live	std::uintptr_t	-	void** Device() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))
+site	src/game/platform/d3d.cpp	1393	widen	other	live	*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))	void**	void** Device() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))
+site	src/game/platform/d3d.cpp	1490	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/d3d.cpp	1490	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/d3d.cpp	1492	uintptr	-	live	std::uintptr_t	-	void* Ptr(U address) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/d3d.cpp	1492	widen	param	live	address	void*	void* Ptr(U address) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/d3d.cpp	1494	low32	helper_def	live	p	Low32	U Addr(const void* p) { return Low32(p); }
+site	src/game/platform/d3d.cpp	1577	asm	x87	live	fildl %[tw]	fidivl fildl fimull fistpll fldcw fnstcw movw orb	__asm__ volatile(
+site	src/game/platform/d3d.cpp	1650	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/d3d.cpp	1650	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/d3d.cpp	1687	uintptr	-	live	std::uintptr_t	-	void* o = reinterpret_cast<void*>(static_cast<std::uintptr_t>(object));
+site	src/game/platform/d3d.cpp	1687	widen	param	live	object	void*	void* o = reinterpret_cast<void*>(static_cast<std::uintptr_t>(object));
+site	src/game/platform/d3d.cpp	1711	uintptr	-	live	std::uintptr_t	-	void* Surface() const { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(Long(b + 0x24))); }
+site	src/game/platform/d3d.cpp	1711	widen	word_read	live	Long(b + 0x24)	void*	void* Surface() const { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(Long(b + 0x24))); }
+site	src/game/platform/d3d.cpp	1751	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(word));
+site	src/game/platform/d3d.cpp	1751	widen	param	live	word	Fn [fn]	return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(word));
+site	src/game/platform/d3d.cpp	1797	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(kRetOnly.v))),
+site	src/game/platform/d3d.cpp	1817	uintptr	-	live	std::uintptr_t	-	Handler H(U address) { return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(::bof3::CodePlace(address))); }
+site	src/game/platform/d3d.cpp	1817	widen	code_place	live	::bof3::CodePlace(address)	Handler [fn]	Handler H(U address) { return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(::bof3::CodePlace(address))); }
+site	src/game/platform/d3d.cpp	1852	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(kRetOnly.v))),
+site	src/game/platform/d3d.cpp	1872	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(kRetOnly.v))),
+site	src/game/platform/d3d.cpp	1888	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(kRetOnly.v))),
+site	src/game/platform/d3d.cpp	2188	low32	pool	live	ot	Low32	d3d_list::U node = Low32(ot);
+site	src/game/platform/d3d.cpp	2352	low32	image_local	live	surface	Low32	tex_page::Com(tex_page::Long(Low32(surface)), kQueryInterface, tex_page::At(kTexture2Iid), texture);
+site	src/game/platform/d3d.cpp	2548	uintptr	-	live	std::uintptr_t	-	render::NoteDirectPage(reinterpret_cast<void*>(static_cast<std::uintptr_t>(texture)),
+site	src/game/platform/d3d.cpp	2548	widen	param	live	texture	void*	render::NoteDirectPage(reinterpret_cast<void*>(static_cast<std::uintptr_t>(texture)),
+site	src/game/platform/d3d.cpp	3322	low32	pool	live	prim	Low32	const std::uint32_t object = render::interp::IdentOn() ? render::interp::ObjectOf(Low32(prim)) : 0;
+site	src/game/platform/d3d.cpp	3799	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<char*>(static_cast<std::uintptr_t>(::bof3::Img(0x6C3A68) + static_cast<U>(device) * 0x13C));
+site	src/game/platform/d3d.cpp	3799	widen	img_place	live	::bof3::Img(0x6C3A68) + static_cast<U>(device) * 0x13C	char*	return reinterpret_cast<char*>(static_cast<std::uintptr_t>(::bof3::Img(0x6C3A68) + static_cast<U>(device) * 0x13C));
+site	src/game/platform/d3d.cpp	3899	narrow_call	image	live	Snd_BufferDesc	Address	const std::uint32_t desc = Address(Snd_BufferDesc);
+site	src/game/platform/d3d.cpp	3912	narrow_call	image	live	Snd_WaveFormat	Address	const std::uint32_t format = Address(Snd_WaveFormat);
+site	src/game/platform/d3d.cpp	4015	low32	object_ours	live	&g_tile1_quad	Low32	bof3::PatchBytes(" ", Low32(&g_tile1_quad),
 site	src/game/platform/d3d_draw.cpp	49	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/platform/d3d_draw.cpp	49	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/platform/d3d_draw.cpp	145	low32	object_ours	live	&g_cell_vram	Low32	bof3::PatchBytes(" ", Low32(&g_cell_vram), &was, &is, 1);
@@ -6832,25 +6835,27 @@ site	src/game/platform/gte.cpp	617	fmt_place	word	live	Gte_Transformed[0]	%08X	"
 site	src/game/platform/gte.cpp	617	fmt_place	word	live	Gte_Transformed[1]	%08X	"original %08X %08X %08X", Gte_Transformed[0], Gte_Transformed[1], Gte_Transformed[2],
 site	src/game/platform/gte.cpp	617	fmt_place	word	live	Gte_Transformed[2]	%08X	"original %08X %08X %08X", Gte_Transformed[0], Gte_Transformed[1], Gte_Transformed[2],
 site	src/game/platform/gte.cpp	910	low32	object_ours	live	&psx_gte::g_lv_exact	Low32	Low32(&psx_gte::g_lv_exact), was, is, 4);
-site	src/game/platform/magic_080.cpp	121	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	121	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	123	uintptr	-	live	std::uintptr_t	-	std::uint32_t* Longs(U address) { return reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	123	widen	param	live	address	std::uint32_t*	std::uint32_t* Longs(U address) { return reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	125	low32	helper_def	live	p	Low32	U Addr(const volatile void* p) { return Low32(p); }
-site	src/game/platform/magic_080.cpp	164	uintptr	-	live	std::uintptr_t	-	const char* StrWinMain(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	164	widen	param	live	address	const char*	const char* StrWinMain(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	311	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(void*)>(static_cast<std::uintptr_t>(::bof3::Code(kSoundSetup.v))), Port_DroppedCall,
-site	src/game/platform/magic_080.cpp	736	long	l	live	long	-	long long draw_ticks = 0, logic_ticks = 0;
-site	src/game/platform/magic_080.cpp	754	uintptr	-	live	std::uintptr_t	-	Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
-site	src/game/platform/magic_080.cpp	754	widen	code_place	live	::bof3::Code(bof3::addr::Boot_Task)	void*	Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
-site	src/game/platform/magic_080.cpp	906	uintptr	-	live	std::uintptr_t	-	unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride));
-site	src/game/platform/magic_080.cpp	906	widen	img_place	live	::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride	unsigned char*	unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride));
-site	src/game/platform/magic_080.cpp	965	naked	-	live	Cfg_Load	-	extern " " __attribute__((naked)) void __cdecl Cfg_Load(void) {
-site	src/game/platform/magic_080.cpp	966	width_if	asm_pair	live	Cfg_Load	#if defined(__i386__)	#if defined(__i386__)
-site	src/game/platform/magic_080.cpp	967	asm	stack	live	subl $0x3C, %esp	call leal pushl subl	asm("subl $0x3C, %esp\n\t"
-site	src/game/platform/magic_080.cpp	979	asm	stack	live	subq $0x68, %rsp	call leaq subq	asm("subq $0x68, %rsp\n\t"
-site	src/game/platform/magic_080.cpp	1049	low32	image_local	live	node	Low32	node[1] = Low32(node);
-site	src/game/platform/magic_080.cpp	1066	narrow_call	image	live	Gfx_CurrentEnv	Addr	const U block = Addr(Gfx_CurrentEnv);
+site	src/game/platform/magic_080.cpp	122	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	122	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	124	uintptr	-	live	std::uintptr_t	-	std::uint32_t* Longs(U address) { return reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	124	widen	param	live	address	std::uint32_t*	std::uint32_t* Longs(U address) { return reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	126	low32	helper_def	live	p	Low32	U Addr(const volatile void* p) { return Low32(p); }
+site	src/game/platform/magic_080.cpp	165	uintptr	-	live	std::uintptr_t	-	const char* StrWinMain(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	165	widen	param	live	address	const char*	const char* StrWinMain(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	312	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(void*)>(static_cast<std::uintptr_t>(::bof3::Code(kSoundSetup.v))), Port_DroppedCall,
+site	src/game/platform/magic_080.cpp	737	long	l	live	long	-	long long draw_ticks = 0, logic_ticks = 0;
+site	src/game/platform/magic_080.cpp	755	uintptr	-	live	std::uintptr_t	-	Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
+site	src/game/platform/magic_080.cpp	755	widen	code_place	live	::bof3::Code(bof3::addr::Boot_Task)	void*	Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
+site	src/game/platform/magic_080.cpp	907	uintptr	-	live	std::uintptr_t	-	unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride));
+site	src/game/platform/magic_080.cpp	907	widen	img_place	live	::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride	unsigned char*	unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride));
+site	src/game/platform/magic_080.cpp	966	naked	-	live	Cfg_Load	-	extern " " __attribute__((naked)) void __cdecl Cfg_Load(void) {
+site	src/game/platform/magic_080.cpp	967	width_if	asm_pair	live	Cfg_Load	#if defined(__i386__)	#if defined(__i386__)
+site	src/game/platform/magic_080.cpp	968	asm	stack	live	subl $0x3C, %esp	call leal pushl subl	asm("subl $0x3C, %esp\n\t"
+site	src/game/platform/magic_080.cpp	980	asm	stack	live	subq $0x68, %rsp	call leaq subq	asm("subq $0x68, %rsp\n\t"
+site	src/game/platform/magic_080.cpp	1043	low32	image_local	live	pool	Low32	render::interp::ForgetPrims(Low32(pool), Low32(pool) + 0x10000u);
+site	src/game/platform/magic_080.cpp	1043	low32	image_local	live	pool	Low32	render::interp::ForgetPrims(Low32(pool), Low32(pool) + 0x10000u);
+site	src/game/platform/magic_080.cpp	1055	low32	image_local	live	node	Low32	node[1] = Low32(node);
+site	src/game/platform/magic_080.cpp	1072	narrow_call	image	live	Gfx_CurrentEnv	Addr	const U block = Addr(Gfx_CurrentEnv);
 site	src/game/platform/music.cpp	80	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/platform/music.cpp	80	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/platform/music.cpp	110	uintptr	-	live	std::uintptr_t	-	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
@@ -9333,6 +9338,9 @@ site	src/render/gfx_snapshot.cpp	439	narrow_call	image	live	Gfx_PixelFormat	Va	{
 site	src/render/gfx_snapshot.cpp	444	fmt_place	pointer	live	n.at	%08X	if (i == kKeptCount || n.at != n.symbol) Fatal("gfx_snapshot: kept range 0x%08X, symbols.toml says 0x%08X", n.at, n.symbol);
 site	src/render/gfx_snapshot.cpp	444	fmt_place	word	live	n.symbol	%08X	if (i == kKeptCount || n.at != n.symbol) Fatal("gfx_snapshot: kept range 0x%08X, symbols.toml says 0x%08X", n.at, n.symbol);
 site	src/render/gfx_snapshot.cpp	446	narrow_call	image	live	&D3d_ShadeModeCache	Va	if (Va(&D3d_ShadeModeCache) != ::bof3::Img(0x6C3A44)) Fatal(" ");
+site	src/render/interp.cpp	595	fmt_place	word	live	n.object	%08X	bof3::Log("interp-dbg NOTE cmd %u object %08X stands (%.1f, %.1f)", n.index, n.object, n.x, n.y);
+site	src/render/interp.cpp	606	fmt_place	word	live	note->object	%08X	bof3::Log("interp-dbg IDENT cmd %u object %08X tex %u at (%.1f, %.1f) stands (%.1f, %.1f) d (%.1f, %.1f)", i, note->object,
+site	src/render/interp.cpp	870	fmt_place	word	live	n.object	%08X	bof3::Log("interp-fig fc %u object %08X paired %d shown (%.2f, %.2f) kept %d stands (%.2f, %.2f) picture (%.2f, %.2f)",
 site	src/render/render_d3d11.cpp	135	asm	cw	live	fnstcw %0	fnstcw	FpuGuard() { __asm__ volatile("fnstcw %0" : "=m"(cw_)); }
 site	src/render/render_d3d11.cpp	136	asm	cw	live	fldcw %0	fldcw	~FpuGuard() { __asm__ volatile("fldcw %0" : : "m"(cw_)); }
 site	src/render/render_d3d11.cpp	147	long	ul	live	unsigned long	-	if (FAILED(hr)) bof3::Fatal(" ", what, static_cast<unsigned long>(static_cast<std::uint32_t>(hr)));
@@ -9344,105 +9352,105 @@ site	src/render/render_d3d11.cpp	1012	fmt_place	pointer	live	options.hwnd	%p	bof
 site	src/render/render_d3d11.cpp	1358	fmt_place	pointer	live	g_opt.hwnd	%p	bof3::Fatal("render: a movie on window %p, the device's is %p", m.window, g_opt.hwnd);
 site	src/render/render_d3d11.cpp	1358	fmt_place	pointer	live	m.window	%p	bof3::Fatal("render: a movie on window %p, the device's is %p", m.window, g_opt.hwnd);
 site	src/render/render_d3d11.cpp	1422	ptr_overlay	unread	live	s->gpu	GpuTexture	auto* g = static_cast<GpuTexture*>(s->gpu);
-site	src/render/render_shim.cpp	107	long	l	live	long	-	template <int kObject, int kSlot> long __stdcall Unsupported(void*) {
-site	src/render/render_shim.cpp	142	ptr_overlay	unread	live	Bytes(texture) - offsetof(Surface, texture_vtable)	Surface	return reinterpret_cast<Surface*>(Bytes(texture) - offsetof(Surface, texture_vtable));
-site	src/render/render_shim.cpp	290	ptr_overlay	object_ours	live	g_frame.arena + g_frame.arena_used	TexVersion	auto* v = reinterpret_cast<TexVersion*>(g_frame.arena + g_frame.arena_used);
-site	src/render/render_shim.cpp	317	long	ul	live	unsigned long	-	using ReleaseFn = unsigned long(__stdcall*)(void*);
-site	src/render/render_shim.cpp	351	long	l	live	long	-	unsigned long long h = 0xCBF29CE484222325ull;
-site	src/render/render_shim.cpp	362	long	l	live	long	-	unsigned long long TextureHash(const TexVersion* v) {
-site	src/render/render_shim.cpp	384	long	l	live	long	-	static unsigned long long seen_hash[kSeen];
-site	src/render/render_shim.cpp	433	long	l	live	long	-	unsigned long long th;
-site	src/render/render_shim.cpp	450	fmt_place	word	live	static_cast<U>(f.h >> 32)	%08X	bof3::Log("framehash drawn at Frame_Counter %u: %u commands, %u vertices, %u textures, %08X%08X (%u clears)", tag,
-site	src/render/render_shim.cpp	450	fmt_place	word	live	static_cast<U>(f.h)	%08X	bof3::Log("framehash drawn at Frame_Counter %u: %u commands, %u vertices, %u textures, %08X%08X (%u clears)", tag,
-site	src/render/render_shim.cpp	560	low32	unread	live	object	Low32	const std::uint32_t word = Low32(object);
-site	src/render/render_shim.cpp	566	long	l	live	long	-	long __stdcall Surface_QueryInterface(void* self, const void* iid, void** out) {
-site	src/render/render_shim.cpp	575	ptr_overlay	unread	live	self	Surface	auto* s = static_cast<Surface*>(self);
-site	src/render/render_shim.cpp	576	long	l	live	long	-	if (!out) return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	588	long	l	live	long	-	return static_cast<long>(kNoInterface);
-site	src/render/render_shim.cpp	591	long	ul	live	unsigned long	-	unsigned long __stdcall Surface_AddRef(void* self) { return ++static_cast<Surface*>(self)->refs; }
-site	src/render/render_shim.cpp	591	ptr_overlay	unread	live	self	Surface	unsigned long __stdcall Surface_AddRef(void* self) { return ++static_cast<Surface*>(self)->refs; }
-site	src/render/render_shim.cpp	593	long	ul	live	unsigned long	-	unsigned long __stdcall Surface_Release(void* self) {
-site	src/render/render_shim.cpp	594	ptr_overlay	unread	live	self	Surface	auto* s = static_cast<Surface*>(self);
-site	src/render/render_shim.cpp	616	long	l	live	long	-	long __stdcall Surface_Blt(void* self, const Coord* dst_rect, void* src_surface, const Coord* src_rect, U flags, void* fx) {
-site	src/render/render_shim.cpp	617	ptr_overlay	unread	live	self	Surface	auto* dst = static_cast<Surface*>(self);
-site	src/render/render_shim.cpp	624	long	l	live	long	-	if (!fx) return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	637	long	l	live	long	-	if (!RectInside(r, dst)) return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	642	ptr_overlay	unread	live	src_surface	Surface	auto* src = static_cast<Surface*>(src_surface);
-site	src/render/render_shim.cpp	643	long	l	live	long	-	if (!src || !IsSurface(src)) return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	652	long	l	live	long	-	if (!RectInside(dr, dst) || !RectInside(sr, src)) return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	658	long	l	live	long	-	long __stdcall Surface_BltFast(void* self, U x, U y, void* src_surface, const Coord* src_rect, U trans) {
-site	src/render/render_shim.cpp	659	ptr_overlay	unread	live	self	Surface	auto* dst = static_cast<Surface*>(self);
-site	src/render/render_shim.cpp	660	ptr_overlay	unread	live	src_surface	Surface	auto* src = static_cast<Surface*>(src_surface);
-site	src/render/render_shim.cpp	661	long	l	live	long	-	if (!src || !IsSurface(src)) return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	669	long	l	live	long	-	if (!RectInside(dr, dst) || !RectInside(sr, src)) return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	675	long	l	live	long	-	long __stdcall Surface_Flip(void* self, void*, U) {
-site	src/render/render_shim.cpp	676	ptr_overlay	unread	live	self	Surface	auto* s = static_cast<Surface*>(self);
-site	src/render/render_shim.cpp	677	long	l	live	long	-	if (!s->is_primary) return static_cast<long>(kUnsupported);
-site	src/render/render_shim.cpp	688	low32	unread	live	s->pixels	Low32	if (with_surface) PutLong(d + kDescSurface, Low32(s->pixels));
-site	src/render/render_shim.cpp	701	long	l	live	long	-	long __stdcall Surface_GetSurfaceDesc(void* self, void* desc) {
-site	src/render/render_shim.cpp	702	long	l	live	long	-	if (!desc || Long(desc) != kDescBytes) return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	703	ptr_overlay	unread	live	self	Surface	FillDesc(static_cast<Surface*>(self), Bytes(desc), false);
-site	src/render/render_shim.cpp	707	long	l	live	long	-	long __stdcall Surface_IsLost(void*) { return kDdOk; }
-site	src/render/render_shim.cpp	708	long	l	live	long	-	long __stdcall Surface_Restore(void*) { return kDdOk; }
-site	src/render/render_shim.cpp	710	long	l	live	long	-	long __stdcall Surface_Lock(void* self, const Coord* rect, void* desc, U, void*) {
-site	src/render/render_shim.cpp	711	ptr_overlay	unread	live	self	Surface	auto* s = static_cast<Surface*>(self);
-site	src/render/render_shim.cpp	712	long	l	live	long	-	if (!desc || Long(desc) != kDescBytes) return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	714	long	l	live	long	-	if (s->locked) return static_cast<long>(kSurfaceBusy);
-site	src/render/render_shim.cpp	722	long	l	live	long	-	long __stdcall Surface_Unlock(void* self, const void*) {
-site	src/render/render_shim.cpp	723	ptr_overlay	unread	live	self	Surface	auto* s = static_cast<Surface*>(self);
-site	src/render/render_shim.cpp	724	long	l	live	long	-	if (!s->locked) return static_cast<long>(kNotLocked);
-site	src/render/render_shim.cpp	729	long	l	live	long	-	long __stdcall Surface_SetColorKey(void* self, U flags, const U* key) {
-site	src/render/render_shim.cpp	730	ptr_overlay	unread	live	self	Surface	auto* s = static_cast<Surface*>(self);
-site	src/render/render_shim.cpp	731	long	l	live	long	-	if (flags != 8) return static_cast<long>(kUnsupported);
-site	src/render/render_shim.cpp	747	long	l	live	long	-	long __stdcall Texture_QueryInterface(void* self, const void* iid, void** out) {
-site	src/render/render_shim.cpp	750	long	ul	live	unsigned long	-	unsigned long __stdcall Texture_AddRef(void* self) { return Surface_AddRef(SurfaceOfTexture(self)); }
-site	src/render/render_shim.cpp	751	long	ul	live	unsigned long	-	unsigned long __stdcall Texture_Release(void* self) { return Surface_Release(SurfaceOfTexture(self)); }
-site	src/render/render_shim.cpp	752	long	l	live	long	-	long __stdcall Texture_GetHandle(void* self, void*, U* handle) {
-site	src/render/render_shim.cpp	753	long	l	live	long	-	if (!handle) return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	756	low32	unread	live	self	Low32	*handle = Low32(self);
-site	src/render/render_shim.cpp	759	long	l	live	long	-	long __stdcall Texture_PaletteChanged(void*, U, U) { return kDdOk; }
-site	src/render/render_shim.cpp	760	long	l	live	long	-	long __stdcall Texture_Load(void* self, void* from) {
-site	src/render/render_shim.cpp	762	long	l	live	long	-	if (!from || !IsTexture(from)) return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	775	long	l	live	long	-	long __stdcall Dd_QueryInterface(void*, const void*, void** out) {
-site	src/render/render_shim.cpp	777	long	l	live	long	-	return static_cast<long>(kNoInterface);
-site	src/render/render_shim.cpp	779	long	ul	live	unsigned long	-	unsigned long __stdcall Dd_AddRef(void*) { return 1; }
-site	src/render/render_shim.cpp	780	long	ul	live	unsigned long	-	unsigned long __stdcall Dd_Release(void*) { return 1; }
-site	src/render/render_shim.cpp	782	long	l	live	long	-	long __stdcall Dd_CreateSurface(void*, const void* desc, Surface** out, void*) {
-site	src/render/render_shim.cpp	783	long	l	live	long	-	if (!desc || !out || Long(desc) != kDescBytes) return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	786	long	l	live	long	-	if (!(flags & kSdWidth) || !(flags & kSdHeight)) return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	790	long	l	live	long	-	if (Long(pf + kPfSize) != 0x20) return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	802	long	l	live	long	-	if (!s) return static_cast<long>(0x8007000Eu);
-site	src/render/render_shim.cpp	814	long	l	live	long	-	long __stdcall Device_QueryInterface(void*, const void*, void** out) {
-site	src/render/render_shim.cpp	816	long	l	live	long	-	return static_cast<long>(kNoInterface);
-site	src/render/render_shim.cpp	818	long	ul	live	unsigned long	-	unsigned long __stdcall Device_AddRef(void*) { return 1; }
-site	src/render/render_shim.cpp	819	long	ul	live	unsigned long	-	unsigned long __stdcall Device_Release(void*) { return 1; }
-site	src/render/render_shim.cpp	820	long	l	live	long	-	long __stdcall Device_BeginScene(void*) { return kDdOk; }
-site	src/render/render_shim.cpp	821	long	l	live	long	-	long __stdcall Device_EndScene(void*) { return kDdOk; }
-site	src/render/render_shim.cpp	832	long	l	live	long	-	long __stdcall Device_SetRenderState(void*, U state, U value) {
-site	src/render/render_shim.cpp	882	long	l	live	long	-	long __stdcall Device_DrawPrimitive(void*, U type, U fvf, const void* vertices, U count, U) {
-site	src/render/render_shim.cpp	884	long	l	live	long	-	if (!vertices || count == 0) return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	900	fmt_place	word	live	in[k].x	%08X	bof3::Log("drawlog: v%u x %g y %g z %g rhw %g diffuse %08X specular %08X uv %g %g", k, in[k].x, in[k].y, in[k].z, in[k].rhw, in[k].diffuse, in[k].specular, in[k
-site	src/render/render_shim.cpp	900	fmt_place	word	live	in[k].y	%08X	bof3::Log("drawlog: v%u x %g y %g z %g rhw %g diffuse %08X specular %08X uv %g %g", k, in[k].x, in[k].y, in[k].z, in[k].rhw, in[k].diffuse, in[k].specular, in[k
-site	src/render/render_shim.cpp	994	long	l	live	long	-	long __stdcall Device_SetTexture(void*, U stage, void* texture) {
-site	src/render/render_shim.cpp	1004	fmt_place	word	live	Low32(texture)	%08X	if (logged++ < 8) bof3::Log("render: SetTexture(0, 0x%08X) is not a texture - refused", Low32(texture));
-site	src/render/render_shim.cpp	1004	low32	unread	live	texture	Low32	if (logged++ < 8) bof3::Log(" ", Low32(texture));
-site	src/render/render_shim.cpp	1006	long	l	live	long	-	return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	1012	long	l	live	long	-	long __stdcall Device_SetTextureStageState(void*, U stage, U type, U value) {
-site	src/render/render_shim.cpp	1033	long	l	live	long	-	long __stdcall Viewport_QueryInterface(void*, const void*, void** out) {
-site	src/render/render_shim.cpp	1035	long	l	live	long	-	return static_cast<long>(kNoInterface);
-site	src/render/render_shim.cpp	1037	long	ul	live	unsigned long	-	unsigned long __stdcall Viewport_AddRef(void*) { return 1; }
-site	src/render/render_shim.cpp	1038	long	ul	live	unsigned long	-	unsigned long __stdcall Viewport_Release(void*) { return 1; }
-site	src/render/render_shim.cpp	1039	long	l	live	long	-	long __stdcall Viewport_SetBackground(void*, U handle) {
-site	src/render/render_shim.cpp	1043	long	l	live	long	-	long __stdcall Viewport_Clear(void*, U count, const Coord* rects, U flags) {
-site	src/render/render_shim.cpp	1056	long	l	live	long	-	long __stdcall Material_QueryInterface(void*, const void*, void** out) {
-site	src/render/render_shim.cpp	1058	long	l	live	long	-	return static_cast<long>(kNoInterface);
-site	src/render/render_shim.cpp	1060	long	ul	live	unsigned long	-	unsigned long __stdcall Material_AddRef(void*) { return 1; }
-site	src/render/render_shim.cpp	1061	long	ul	live	unsigned long	-	unsigned long __stdcall Material_Release(void*) { return 1; }
-site	src/render/render_shim.cpp	1062	long	l	live	long	-	long __stdcall Material_SetMaterial(void*, const void* material) {
-site	src/render/render_shim.cpp	1063	long	l	live	long	-	if (!material || Long(material) != 0x50) return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	1074	long	l	live	long	-	long __stdcall Material_GetHandle(void*, void*, U* handle) {
-site	src/render/render_shim.cpp	1075	long	l	live	long	-	if (!handle) return static_cast<long>(kInvalidParams);
-site	src/render/render_shim.cpp	1177	ptr_overlay	unread	live	LowAlloc(sizeof(Surface))	Surface	s = static_cast<Surface*>(LowAlloc(sizeof(Surface)));
+site	src/render/render_shim.cpp	108	long	l	live	long	-	template <int kObject, int kSlot> long __stdcall Unsupported(void*) {
+site	src/render/render_shim.cpp	143	ptr_overlay	unread	live	Bytes(texture) - offsetof(Surface, texture_vtable)	Surface	return reinterpret_cast<Surface*>(Bytes(texture) - offsetof(Surface, texture_vtable));
+site	src/render/render_shim.cpp	291	ptr_overlay	object_ours	live	g_frame.arena + g_frame.arena_used	TexVersion	auto* v = reinterpret_cast<TexVersion*>(g_frame.arena + g_frame.arena_used);
+site	src/render/render_shim.cpp	318	long	ul	live	unsigned long	-	using ReleaseFn = unsigned long(__stdcall*)(void*);
+site	src/render/render_shim.cpp	352	long	l	live	long	-	unsigned long long h = 0xCBF29CE484222325ull;
+site	src/render/render_shim.cpp	363	long	l	live	long	-	unsigned long long TextureHash(const TexVersion* v) {
+site	src/render/render_shim.cpp	385	long	l	live	long	-	static unsigned long long seen_hash[kSeen];
+site	src/render/render_shim.cpp	434	long	l	live	long	-	unsigned long long th;
+site	src/render/render_shim.cpp	451	fmt_place	word	live	static_cast<U>(f.h >> 32)	%08X	bof3::Log("framehash drawn at Frame_Counter %u: %u commands, %u vertices, %u textures, %08X%08X (%u clears)", tag,
+site	src/render/render_shim.cpp	451	fmt_place	word	live	static_cast<U>(f.h)	%08X	bof3::Log("framehash drawn at Frame_Counter %u: %u commands, %u vertices, %u textures, %08X%08X (%u clears)", tag,
+site	src/render/render_shim.cpp	561	low32	unread	live	object	Low32	const std::uint32_t word = Low32(object);
+site	src/render/render_shim.cpp	567	long	l	live	long	-	long __stdcall Surface_QueryInterface(void* self, const void* iid, void** out) {
+site	src/render/render_shim.cpp	576	ptr_overlay	unread	live	self	Surface	auto* s = static_cast<Surface*>(self);
+site	src/render/render_shim.cpp	577	long	l	live	long	-	if (!out) return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	589	long	l	live	long	-	return static_cast<long>(kNoInterface);
+site	src/render/render_shim.cpp	592	long	ul	live	unsigned long	-	unsigned long __stdcall Surface_AddRef(void* self) { return ++static_cast<Surface*>(self)->refs; }
+site	src/render/render_shim.cpp	592	ptr_overlay	unread	live	self	Surface	unsigned long __stdcall Surface_AddRef(void* self) { return ++static_cast<Surface*>(self)->refs; }
+site	src/render/render_shim.cpp	594	long	ul	live	unsigned long	-	unsigned long __stdcall Surface_Release(void* self) {
+site	src/render/render_shim.cpp	595	ptr_overlay	unread	live	self	Surface	auto* s = static_cast<Surface*>(self);
+site	src/render/render_shim.cpp	617	long	l	live	long	-	long __stdcall Surface_Blt(void* self, const Coord* dst_rect, void* src_surface, const Coord* src_rect, U flags, void* fx) {
+site	src/render/render_shim.cpp	618	ptr_overlay	unread	live	self	Surface	auto* dst = static_cast<Surface*>(self);
+site	src/render/render_shim.cpp	625	long	l	live	long	-	if (!fx) return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	638	long	l	live	long	-	if (!RectInside(r, dst)) return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	643	ptr_overlay	unread	live	src_surface	Surface	auto* src = static_cast<Surface*>(src_surface);
+site	src/render/render_shim.cpp	644	long	l	live	long	-	if (!src || !IsSurface(src)) return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	653	long	l	live	long	-	if (!RectInside(dr, dst) || !RectInside(sr, src)) return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	659	long	l	live	long	-	long __stdcall Surface_BltFast(void* self, U x, U y, void* src_surface, const Coord* src_rect, U trans) {
+site	src/render/render_shim.cpp	660	ptr_overlay	unread	live	self	Surface	auto* dst = static_cast<Surface*>(self);
+site	src/render/render_shim.cpp	661	ptr_overlay	unread	live	src_surface	Surface	auto* src = static_cast<Surface*>(src_surface);
+site	src/render/render_shim.cpp	662	long	l	live	long	-	if (!src || !IsSurface(src)) return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	670	long	l	live	long	-	if (!RectInside(dr, dst) || !RectInside(sr, src)) return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	676	long	l	live	long	-	long __stdcall Surface_Flip(void* self, void*, U) {
+site	src/render/render_shim.cpp	677	ptr_overlay	unread	live	self	Surface	auto* s = static_cast<Surface*>(self);
+site	src/render/render_shim.cpp	678	long	l	live	long	-	if (!s->is_primary) return static_cast<long>(kUnsupported);
+site	src/render/render_shim.cpp	689	low32	unread	live	s->pixels	Low32	if (with_surface) PutLong(d + kDescSurface, Low32(s->pixels));
+site	src/render/render_shim.cpp	702	long	l	live	long	-	long __stdcall Surface_GetSurfaceDesc(void* self, void* desc) {
+site	src/render/render_shim.cpp	703	long	l	live	long	-	if (!desc || Long(desc) != kDescBytes) return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	704	ptr_overlay	unread	live	self	Surface	FillDesc(static_cast<Surface*>(self), Bytes(desc), false);
+site	src/render/render_shim.cpp	708	long	l	live	long	-	long __stdcall Surface_IsLost(void*) { return kDdOk; }
+site	src/render/render_shim.cpp	709	long	l	live	long	-	long __stdcall Surface_Restore(void*) { return kDdOk; }
+site	src/render/render_shim.cpp	711	long	l	live	long	-	long __stdcall Surface_Lock(void* self, const Coord* rect, void* desc, U, void*) {
+site	src/render/render_shim.cpp	712	ptr_overlay	unread	live	self	Surface	auto* s = static_cast<Surface*>(self);
+site	src/render/render_shim.cpp	713	long	l	live	long	-	if (!desc || Long(desc) != kDescBytes) return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	715	long	l	live	long	-	if (s->locked) return static_cast<long>(kSurfaceBusy);
+site	src/render/render_shim.cpp	723	long	l	live	long	-	long __stdcall Surface_Unlock(void* self, const void*) {
+site	src/render/render_shim.cpp	724	ptr_overlay	unread	live	self	Surface	auto* s = static_cast<Surface*>(self);
+site	src/render/render_shim.cpp	725	long	l	live	long	-	if (!s->locked) return static_cast<long>(kNotLocked);
+site	src/render/render_shim.cpp	730	long	l	live	long	-	long __stdcall Surface_SetColorKey(void* self, U flags, const U* key) {
+site	src/render/render_shim.cpp	731	ptr_overlay	unread	live	self	Surface	auto* s = static_cast<Surface*>(self);
+site	src/render/render_shim.cpp	732	long	l	live	long	-	if (flags != 8) return static_cast<long>(kUnsupported);
+site	src/render/render_shim.cpp	748	long	l	live	long	-	long __stdcall Texture_QueryInterface(void* self, const void* iid, void** out) {
+site	src/render/render_shim.cpp	751	long	ul	live	unsigned long	-	unsigned long __stdcall Texture_AddRef(void* self) { return Surface_AddRef(SurfaceOfTexture(self)); }
+site	src/render/render_shim.cpp	752	long	ul	live	unsigned long	-	unsigned long __stdcall Texture_Release(void* self) { return Surface_Release(SurfaceOfTexture(self)); }
+site	src/render/render_shim.cpp	753	long	l	live	long	-	long __stdcall Texture_GetHandle(void* self, void*, U* handle) {
+site	src/render/render_shim.cpp	754	long	l	live	long	-	if (!handle) return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	757	low32	unread	live	self	Low32	*handle = Low32(self);
+site	src/render/render_shim.cpp	760	long	l	live	long	-	long __stdcall Texture_PaletteChanged(void*, U, U) { return kDdOk; }
+site	src/render/render_shim.cpp	761	long	l	live	long	-	long __stdcall Texture_Load(void* self, void* from) {
+site	src/render/render_shim.cpp	763	long	l	live	long	-	if (!from || !IsTexture(from)) return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	776	long	l	live	long	-	long __stdcall Dd_QueryInterface(void*, const void*, void** out) {
+site	src/render/render_shim.cpp	778	long	l	live	long	-	return static_cast<long>(kNoInterface);
+site	src/render/render_shim.cpp	780	long	ul	live	unsigned long	-	unsigned long __stdcall Dd_AddRef(void*) { return 1; }
+site	src/render/render_shim.cpp	781	long	ul	live	unsigned long	-	unsigned long __stdcall Dd_Release(void*) { return 1; }
+site	src/render/render_shim.cpp	783	long	l	live	long	-	long __stdcall Dd_CreateSurface(void*, const void* desc, Surface** out, void*) {
+site	src/render/render_shim.cpp	784	long	l	live	long	-	if (!desc || !out || Long(desc) != kDescBytes) return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	787	long	l	live	long	-	if (!(flags & kSdWidth) || !(flags & kSdHeight)) return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	791	long	l	live	long	-	if (Long(pf + kPfSize) != 0x20) return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	803	long	l	live	long	-	if (!s) return static_cast<long>(0x8007000Eu);
+site	src/render/render_shim.cpp	815	long	l	live	long	-	long __stdcall Device_QueryInterface(void*, const void*, void** out) {
+site	src/render/render_shim.cpp	817	long	l	live	long	-	return static_cast<long>(kNoInterface);
+site	src/render/render_shim.cpp	819	long	ul	live	unsigned long	-	unsigned long __stdcall Device_AddRef(void*) { return 1; }
+site	src/render/render_shim.cpp	820	long	ul	live	unsigned long	-	unsigned long __stdcall Device_Release(void*) { return 1; }
+site	src/render/render_shim.cpp	821	long	l	live	long	-	long __stdcall Device_BeginScene(void*) { return kDdOk; }
+site	src/render/render_shim.cpp	822	long	l	live	long	-	long __stdcall Device_EndScene(void*) { return kDdOk; }
+site	src/render/render_shim.cpp	833	long	l	live	long	-	long __stdcall Device_SetRenderState(void*, U state, U value) {
+site	src/render/render_shim.cpp	883	long	l	live	long	-	long __stdcall Device_DrawPrimitive(void*, U type, U fvf, const void* vertices, U count, U) {
+site	src/render/render_shim.cpp	885	long	l	live	long	-	if (!vertices || count == 0) return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	901	fmt_place	word	live	in[k].x	%08X	bof3::Log("drawlog: v%u x %g y %g z %g rhw %g diffuse %08X specular %08X uv %g %g", k, in[k].x, in[k].y, in[k].z, in[k].rhw, in[k].diffuse, in[k].specular, in[k
+site	src/render/render_shim.cpp	901	fmt_place	word	live	in[k].y	%08X	bof3::Log("drawlog: v%u x %g y %g z %g rhw %g diffuse %08X specular %08X uv %g %g", k, in[k].x, in[k].y, in[k].z, in[k].rhw, in[k].diffuse, in[k].specular, in[k
+site	src/render/render_shim.cpp	995	long	l	live	long	-	long __stdcall Device_SetTexture(void*, U stage, void* texture) {
+site	src/render/render_shim.cpp	1005	fmt_place	word	live	Low32(texture)	%08X	if (logged++ < 8) bof3::Log("render: SetTexture(0, 0x%08X) is not a texture - refused", Low32(texture));
+site	src/render/render_shim.cpp	1005	low32	unread	live	texture	Low32	if (logged++ < 8) bof3::Log(" ", Low32(texture));
+site	src/render/render_shim.cpp	1007	long	l	live	long	-	return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	1013	long	l	live	long	-	long __stdcall Device_SetTextureStageState(void*, U stage, U type, U value) {
+site	src/render/render_shim.cpp	1034	long	l	live	long	-	long __stdcall Viewport_QueryInterface(void*, const void*, void** out) {
+site	src/render/render_shim.cpp	1036	long	l	live	long	-	return static_cast<long>(kNoInterface);
+site	src/render/render_shim.cpp	1038	long	ul	live	unsigned long	-	unsigned long __stdcall Viewport_AddRef(void*) { return 1; }
+site	src/render/render_shim.cpp	1039	long	ul	live	unsigned long	-	unsigned long __stdcall Viewport_Release(void*) { return 1; }
+site	src/render/render_shim.cpp	1040	long	l	live	long	-	long __stdcall Viewport_SetBackground(void*, U handle) {
+site	src/render/render_shim.cpp	1044	long	l	live	long	-	long __stdcall Viewport_Clear(void*, U count, const Coord* rects, U flags) {
+site	src/render/render_shim.cpp	1057	long	l	live	long	-	long __stdcall Material_QueryInterface(void*, const void*, void** out) {
+site	src/render/render_shim.cpp	1059	long	l	live	long	-	return static_cast<long>(kNoInterface);
+site	src/render/render_shim.cpp	1061	long	ul	live	unsigned long	-	unsigned long __stdcall Material_AddRef(void*) { return 1; }
+site	src/render/render_shim.cpp	1062	long	ul	live	unsigned long	-	unsigned long __stdcall Material_Release(void*) { return 1; }
+site	src/render/render_shim.cpp	1063	long	l	live	long	-	long __stdcall Material_SetMaterial(void*, const void* material) {
+site	src/render/render_shim.cpp	1064	long	l	live	long	-	if (!material || Long(material) != 0x50) return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	1075	long	l	live	long	-	long __stdcall Material_GetHandle(void*, void*, U* handle) {
+site	src/render/render_shim.cpp	1076	long	l	live	long	-	if (!handle) return static_cast<long>(kInvalidParams);
+site	src/render/render_shim.cpp	1178	ptr_overlay	unread	live	LowAlloc(sizeof(Surface))	Surface	s = static_cast<Surface*>(LowAlloc(sizeof(Surface)));
 site	src/render/satpixie.cpp	242	long	ul	live	unsigned long	-	if (FAILED(hr)) bof3::Fatal(" ", what, static_cast<unsigned long>(static_cast<std::uint32_t>(hr)));
 site	src/video/fmv_dump.cpp	38	long	l	live	long	-	const long size = std::ftell(in);
 site	symbols.toml	607	ptr_member	ours_crt	live	File_Slots	void * [16]	0x7de3e4
@@ -13693,8 +13701,8 @@ file	src/game/field/sprite.cpp	live	low32	object_ours	1
 file	src/game/field/sprite.cpp	live	uintptr	-	5
 file	src/game/field/sprite.cpp	live	widen	param	2
 file	src/game/field/sprite.cpp	live	widen	word_read	1
-file	src/game/field/sprite_2.cpp	live	low32	image_local	2
-file	src/game/field/sprite_2.cpp	live	low32	pool	2
+file	src/game/field/sprite_2.cpp	live	low32	image_local	3
+file	src/game/field/sprite_2.cpp	live	low32	pool	3
 file	src/game/field/sprite_2.cpp	live	uintptr	-	8
 file	src/game/field/sprite_2.cpp	live	widen	other	3
 file	src/game/field/sprite_2.cpp	live	widen	param	5
@@ -14511,7 +14519,7 @@ file	src/game/platform/d3d.cpp	live	asm	x87	26
 file	src/game/platform/d3d.cpp	live	low32	helper_def	3
 file	src/game/platform/d3d.cpp	live	low32	image_local	3
 file	src/game/platform/d3d.cpp	live	low32	object_ours	1
-file	src/game/platform/d3d.cpp	live	low32	pool	1
+file	src/game/platform/d3d.cpp	live	low32	pool	2
 file	src/game/platform/d3d.cpp	live	narrow_call	image	2
 file	src/game/platform/d3d.cpp	live	narrow_call	image_local	1
 file	src/game/platform/d3d.cpp	live	ptr_overlay	image	2
@@ -14601,7 +14609,7 @@ file	src/game/platform/gte.cpp	live	low32	object_ours	1
 file	src/game/platform/magic_080.cpp	live	asm	stack	2
 file	src/game/platform/magic_080.cpp	live	long	l	1
 file	src/game/platform/magic_080.cpp	live	low32	helper_def	1
-file	src/game/platform/magic_080.cpp	live	low32	image_local	1
+file	src/game/platform/magic_080.cpp	live	low32	image_local	3
 file	src/game/platform/magic_080.cpp	live	naked	-	1
 file	src/game/platform/magic_080.cpp	live	narrow_call	image	1
 file	src/game/platform/magic_080.cpp	live	uintptr	-	6
@@ -15353,6 +15361,7 @@ file	src/render/gfx_snapshot.cpp	live	narrow_call	unread	8
 file	src/render/gfx_snapshot.cpp	live	uintptr	-	2
 file	src/render/gfx_snapshot.cpp	live	widen	param	1
 file	src/render/gfx_snapshot.cpp	live	widen	word_read	1
+file	src/render/interp.cpp	live	fmt_place	word	3
 file	src/render/render_d3d11.cpp	live	asm	cw	2
 file	src/render/render_d3d11.cpp	live	fmt_place	pointer	4
 file	src/render/render_d3d11.cpp	live	long	ul	2
@@ -15378,8 +15387,8 @@ file	symbols.toml	live	ptr_member	ours_render	11
 file	symbols.toml	live	ptr_member	windows_function	14
 file	symbols.toml	live	ptr_member	windows_handle	3
 file	symbols.toml	live	ptr_member	windows_object	10
-#count sites	11345
-#count sites_live	7874
+#count sites	11353
+#count sites_live	7882
 #count sites_fuzz	3471
 #count fuzz_files	250
 #count narrow	357
@@ -15562,9 +15571,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count uintptr_-	1983
 #count uintptr_-_live	1317
 #count uintptr_-_live_files	524
-#count fmt_place	545
-#count fmt_place_live	475
-#count fmt_place_live_files	73
+#count fmt_place	548
+#count fmt_place_live	478
+#count fmt_place_live_files	74
 #count fmt_place_fuzz	70
 #count fmt_place_fuzz_files	35
 #count fmt_place_narrowed	24
@@ -15573,9 +15582,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count fmt_place_pointer	124
 #count fmt_place_pointer_live	109
 #count fmt_place_pointer_live_files	34
-#count fmt_place_word	397
-#count fmt_place_word_live	349
-#count fmt_place_word_live_files	59
+#count fmt_place_word	400
+#count fmt_place_word_live	352
+#count fmt_place_word_live_files	60
 #count import_slot	14
 #count import_slot_live	14
 #count import_slot_live_files	1
@@ -15616,8 +15625,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count ptr_member_windows_object	10
 #count ptr_member_windows_object_live	10
 #count ptr_member_windows_object_live_files	1
-#count low32	734
-#count low32_live	726
+#count low32	739
+#count low32_live	731
 #count low32_live_files	469
 #count low32_fuzz	8
 #count low32_fuzz_files	1
@@ -15633,14 +15642,14 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count low32_image	28
 #count low32_image_live	28
 #count low32_image_live_files	26
-#count low32_image_local	139
-#count low32_image_local_live	139
+#count low32_image_local	142
+#count low32_image_local_live	142
 #count low32_image_local_live_files	91
 #count low32_object_ours	95
 #count low32_object_ours_live	95
 #count low32_object_ours_live_files	65
-#count low32_pool	18
-#count low32_pool_live	18
+#count low32_pool	20
+#count low32_pool_live	20
 #count low32_pool_live_files	14
 #count low32_unread	25
 #count low32_unread_live	25

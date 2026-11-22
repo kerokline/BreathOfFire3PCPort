@@ -51,6 +51,7 @@
 #include "game/sprt_draw.h"
 #include "game/sprt_draw_callees.h"
 #include "game/tex_cells_callees.h"
+#include "render/interp_ident.h"
 #include "game/tex_page_callees.h"
 #include "game/text_advance.h"
 #include "game/text_draw.h"
@@ -3315,7 +3316,15 @@ std::int32_t D3d_DrawCellSprite(const unsigned char* prim) {
     d3d_draw::g.ret_only(1);
     d3d_draw::g.set_blend(prim[7], d3d_draw::Word(prim + 0x1E));
     d3d_draw::g.set_shade(1);
-    return d3d_draw::DrawVertices(5, 4);
+    // The in-between's (interp_ident.h): the object Sprite_Draw named for this
+    // primitive and where it stands, on the draw just recorded. Nothing unless
+    // BOF3X_INTERP.
+    const std::uint32_t object = render::interp::IdentOn() ? render::interp::ObjectOf(Low32(prim)) : 0;
+    const std::uint32_t before = object != 0 ? render::interp::CommandsRecorded() : 0;
+    const std::int32_t drawn = d3d_draw::DrawVertices(5, 4);
+    if (object != 0 && render::interp::CommandsRecorded() == before + 1)
+        render::interp::NoteDraw(before, object, x * static_cast<float>(D3d_ScaleX), y * static_cast<float>(D3d_ScaleY));
+    return drawn;
 }
 
 int D3d_CellTexture(unsigned first, unsigned count, unsigned clut, unsigned flags) {

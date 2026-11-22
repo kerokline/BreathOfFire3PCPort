@@ -20,6 +20,7 @@
 #include "hook/log.h"
 #include "render/fb_grab.h"
 #include "render/interp.h"
+#include "render/interp_ident.h"
 #include "os/os.h"
 
 namespace render {
@@ -1232,7 +1233,12 @@ PipeState& CurrentState() { return g_state; }
 void SetClearColor(U argb) { g_clear_color = argb; }
 Frame& CurrentFrame() { return g_frame; }
 
+namespace interp {
+std::uint32_t CommandsRecorded() { return g_frame.n_commands; }
+}  // namespace interp
+
 void ResetFrame() {
+    interp::ForgetDraws();
     g_n_walks = 0;
     g_frame.n_vertices = 0;
     g_frame.n_commands = 0;
@@ -1248,7 +1254,7 @@ void ResetFrame() {
 
 void SetPresentHook(PresentFn fn) { g_present = fn; }
 
-namespace interp { extern bool g_debug; }
+namespace interp { extern bool g_debug; extern bool g_figures; extern U g_figures_fc; }
 // PROTOTYPE (interp.h). The pillarbox bars go on for the in-between picture
 // and come off again: the present adds them itself, after the frame hash.
 namespace {
@@ -1291,6 +1297,8 @@ void PresentInBetween() {
     }
     interp::g_debug = debug_at >= 0 && static_cast<int>(Frame_Counter) >= debug_at && static_cast<int>(Frame_Counter) <= debug_to;
     if (interp::g_debug) bof3::Log("interp-dbg  FRAME %u", static_cast<U>(Frame_Counter));
+    interp::g_figures = InterpStatsOn();
+    interp::g_figures_fc = static_cast<U>(Frame_Counter);
     const std::uint64_t t0 = bof3::os::Counter();
     const bool built = interp::Build(g_frame, g_mid_vertices, max_move, &s);
     const double build_ms = static_cast<double>(bof3::os::Counter() - t0) * 1000.0 / static_cast<double>(bof3::os::CounterFrequency());
@@ -1300,9 +1308,9 @@ void PresentInBetween() {
         g_in_between(mid);
         if (InterpStatsOn())
             bof3::Log("interp-stat fc %u draws %u order %u exact %u loose %u carried %u gap %u lone %u far %u unmatched %u followed %u "
-                      "moved %u snapped %u runs %u cut %u dropped %u ms %.2f after %.1f",
+                      "moved %u snapped %u runs %u cut %u dropped %u ident %u ms %.2f after %.1f",
                       static_cast<U>(Frame_Counter), s.draws, s.by_order, s.exact, s.loose, s.carried, s.by_gap, s.lone, s.far_,
-                      s.unmatched, s.followed, s.moved, s.snapped, s.broken_runs, s.cut, s.order_dropped, build_ms,
+                      s.unmatched, s.followed, s.moved, s.snapped, s.broken_runs, s.cut, s.order_dropped, s.by_ident, build_ms,
                       static_cast<double>(t0 - g_interp_present_at) * 1000.0 / static_cast<double>(bof3::os::CounterFrequency()));
         static interp::Stats sum;
         static U frames;

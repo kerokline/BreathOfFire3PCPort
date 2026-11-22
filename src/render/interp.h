@@ -34,6 +34,7 @@ struct Stats {
     U carried;       // rule 3: a cel that changed, by shape alone, with its kept draw's motion
     U by_gap;        // rule 3: a cel that changed box and texture, by its place in the list
     U lone;          // rule 4: a lone look-alike
+    U by_ident;      // rule 0: the game's own object (interp_ident.h)
     U broken_runs;   // rule 7: runs shown unmoved
     U cut;           // rule 8: 1 when the whole frame was shown unmoved
 };

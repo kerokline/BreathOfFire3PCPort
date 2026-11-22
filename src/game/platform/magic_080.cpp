@@ -48,6 +48,7 @@
 #include "input/function_keys.h"
 #include "input/key_codes.h"
 #include "render/render_d3d11.h"
+#include "render/interp_ident.h"
 #include "render/render_shim.h"
 #include "os/os.h"
 
@@ -1036,6 +1037,11 @@ extern "C" void __cdecl Gfx_BeginFrame(void) {
     const std::uint32_t b = Gfx_BufferIndex;
 
     Gfx_PacketNext = Gfx_PacketPools + (b << 16);
+    // The in-between's (interp_ident.h): this pool's primitives are no longer the figures they were.
+    {
+        unsigned char* const pool = Gfx_PacketNext;
+        render::interp::ForgetPrims(Low32(pool), Low32(pool) + 0x10000u);
+    }
 
     std::uint32_t* head = Gfx_OtHeads + ((b << 5) >> 2);
     for (unsigned k = 0; k < Gfx_OtPointers_count; ++k) Gfx_OtPointers[k] = head + k;
