@@ -231,7 +231,8 @@ U __cdecl StubActorOut(U actor) {
     if (index >= 3 && index <= 10 && h % 5 == 0) At(Battle_Enemies_addr + (index - 3) * kEnemyStride + 0x114)[0] ^= 8;
     return ByteAnswer(2);
 }
-U __cdecl StubTint(U sprite, U r, U gg, U b, U a) {
+U __cdecl StubTint(unsigned char* sprite_p, U r, U gg, U b, U a) {
+    const U sprite = Addr(sprite_p);
     Record(3, sprite, r, gg, b, a);
     return Mix(3);
 }
@@ -291,17 +292,20 @@ U __cdecl StubAiCondition(U mask) {
     DisturbAi(9);
     return ByteAnswer(10);
 }
-U __cdecl StubAiRowDone(U actor, U row) {
+U __cdecl StubAiRowDone(const unsigned char* actor_p, U row) {
+    const U actor = Addr(actor_p);
     Record(10, actor, row & 0xFF);
     DisturbAi(11);
     return ByteAnswer(12);
 }
-U __cdecl StubAiApply(U actor, U row) {
+U __cdecl StubAiApply(unsigned char* actor_p, const unsigned char* row_p) {
+    const U actor = Addr(actor_p), row = Addr(row_p);
     Record(11, actor, row);
     DisturbAi(13);
     return Mix(14);
 }
-U __cdecl StubAiSetDone(U actor, U row, U flag) {
+U __cdecl StubAiSetDone(unsigned char* actor_p, U row, U flag) {
+    const U actor = Addr(actor_p);
     Record(12, actor, row & 0xFF, flag);
     DisturbAi(15);
     return Mix(16);
@@ -346,7 +350,8 @@ U __cdecl StubInitContext() {
 // Str_CopyN, as the real one: at most n & 0xFF bytes to the NUL, then a NUL;
 // returns where the NUL went. It may flip the suffix switch or move the suffix,
 // both read after it by BattleBanner_ShowName.
-U __cdecl StubCopyN(U dst, U src, U n) {
+U __cdecl StubCopyN(char* dst_p, const char* src_p, U n) {
+    const U dst = Addr(dst_p), src = Addr(src_p);
     Record(17, dst, src, n);
     U d = dst, s = src;
     for (U k = 0; k < (n & 0xFF) && At(s)[0]; ++k) At(d++)[0] = At(s++)[0];

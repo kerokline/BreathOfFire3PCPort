@@ -825,6 +825,7 @@ site	src/game/battle/battle_banner.cpp	225	low32	image_local	live	e	Low32	return
 site	src/game/battle/battle_damage_fuzz.cpp	43	narrow	helper_def	fuzz	p	-	std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/battle/battle_damage_fuzz.cpp	43	uintptr	-	fuzz	std::uintptr_t	-	std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/battle/battle_damage_fuzz.cpp	191	narrow_call	image_local	fuzz	enemy	Address	Record(8, Address(enemy), row & 0xFF);
+site	src/game/battle/battle_damage_fuzz.cpp	203	narrow_call	image_local	fuzz	e	Address	Record(10, a, b, c, d, Address(e));
 site	src/game/battle/battle_damage_fuzz.cpp	251	narrow_call	image_local	fuzz	enemy	Address	Record(19, Address(enemy), Address(row));
 site	src/game/battle/battle_damage_fuzz.cpp	251	narrow_call	image_local	fuzz	row	Address	Record(19, Address(enemy), Address(row));
 site	src/game/battle/battle_damage_fuzz.cpp	255	narrow_call	image_local	fuzz	enemy	Address	Record(20, Address(enemy), row & 0xFF, on & 0xFF);
@@ -1012,31 +1013,39 @@ site	src/game/battle/battle_misc_fuzz.cpp	64	widen	param	fuzz	address	unsigned c
 site	src/game/battle/battle_misc_fuzz.cpp	65	narrow	helper_def	fuzz	p	-	U Addr(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/battle/battle_misc_fuzz.cpp	65	uintptr	-	fuzz	std::uintptr_t	-	U Addr(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/battle/battle_misc_fuzz.cpp	203	narrow_call	object_ours	fuzz	g_enemy	Addr	default: return Addr(g_enemy) + ((h >> 4) % 4) * 4;
-site	src/game/battle/battle_misc_fuzz.cpp	255	narrow_call	object_ours	fuzz	g_items	Addr	case 0: return Addr(g_items) + (h >> 4) % 0x40;
-site	src/game/battle/battle_misc_fuzz.cpp	277	narrow_call	object_ours	fuzz	g_enemy	Addr	case 0: PutLong(At(BattleE3_CurrentEnemy_addr), (h >> 8) % 2 ? SomeEnemy(h >> 12) : Addr(g_enemy)); break;
-site	src/game/battle/battle_misc_fuzz.cpp	357	narrow_call	object_ours	fuzz	g_strings	Addr	if (h % 7 == 0) PutLong(At(BattleMisc_NameSuffix_addr), Addr(g_strings) + 0x100 + (h >> 8) % 0x40);
-site	src/game/battle/battle_misc_fuzz.cpp	492	narrow_call	func_ours	fuzz	target	Addr	PutLong(at, Addr(target));
-site	src/game/battle/battle_misc_fuzz.cpp	536	fmt_place	word	fuzz	(unsigned)ret_ours	%08X	std::snprintf(why, sizeof why, "the result %08X, the original %08X", (unsigned)ret_ours,
-site	src/game/battle/battle_misc_fuzz.cpp	536	fmt_place	word	fuzz	(unsigned)ret_theirs	%08X	std::snprintf(why, sizeof why, "the result %08X, the original %08X", (unsigned)ret_ours,
-site	src/game/battle/battle_misc_fuzz.cpp	603	narrow_call	object_ours	fuzz	g_record	Addr	FillRandom(Addr(g_record), sizeof g_record);
-site	src/game/battle/battle_misc_fuzz.cpp	604	narrow_call	object_ours	fuzz	g_record	Addr	const U record = Next() % 3 ? Addr(g_record) + Next() % 0x40 : kParty + Next() % kPartyBytes;
-site	src/game/battle/battle_misc_fuzz.cpp	635	narrow_call	object_ours	fuzz	g_enemy	Addr	{Addr(g_enemy), sizeof g_enemy}};
-site	src/game/battle/battle_misc_fuzz.cpp	643	narrow_call	object_ours	fuzz	g_enemy	Addr	FillRandom(Addr(g_enemy), sizeof g_enemy);
-site	src/game/battle/battle_misc_fuzz.cpp	707	narrow_call	object_ours	fuzz	g_lists	Addr	const U ptr = OneIn(8) ? 0 : Addr(g_lists) + 4 * (Next() % (at / 4));
-site	src/game/battle/battle_misc_fuzz.cpp	761	narrow_call	object_ours	fuzz	g_items	Addr	FillRandom(Addr(g_items), sizeof g_items);
-site	src/game/battle/battle_misc_fuzz.cpp	775	narrow_call	object_ours	fuzz	g_record	Addr	FillRandom(Addr(g_record), sizeof g_record);
-site	src/game/battle/battle_misc_fuzz.cpp	779	narrow_call	object_ours	fuzz	g_record	Addr	U acting = Addr(g_record);
-site	src/game/battle/battle_misc_fuzz.cpp	783	narrow_call	object_ours	fuzz	g_record	Addr	const U source = Addr(g_record) + 0x40;
-site	src/game/battle/battle_misc_fuzz.cpp	921	narrow_call	object_ours	fuzz	g_strings	Addr	for (U m = 0; m < 256; ++m) PutLong(At(::bof3::Img(kMessages.v) + m * 4), Addr(g_strings) + Next() % 0x100);
-site	src/game/battle/battle_misc_fuzz.cpp	945	narrow_call	object_ours	fuzz	g_actor	Addr	FillRandom(Addr(g_actor), sizeof g_actor);
-site	src/game/battle/battle_misc_fuzz.cpp	952	narrow_call	object_ours	fuzz	g_strings	Addr	const U suffix = Addr(g_strings) + 0x100 + Next() % 0x40;
-site	src/game/battle/battle_misc_fuzz.cpp	958	narrow_call	object_ours	fuzz	g_actor	Addr	e.a[0] = Addr(g_actor);
-site	src/game/battle/battle_misc_fuzz.cpp	969	narrow_call	object_ours	fuzz	g_enemy	Addr	{Addr(g_enemy), sizeof g_enemy}};
-site	src/game/battle/battle_misc_fuzz.cpp	975	narrow_call	object_ours	fuzz	g_enemy	Addr	FillRandom(Addr(g_enemy), sizeof g_enemy);
-site	src/game/battle/battle_misc_fuzz.cpp	980	narrow_call	object_ours	fuzz	g_enemy	Addr	const U enemy = Next() % 3 ? SomeEnemy() : Addr(g_enemy);
-site	src/game/battle/battle_misc_fuzz.cpp	1012	narrow_call	object_ours	fuzz	g_str	Addr	const Region regions[] = {{Addr(g_str), sizeof g_str}};
-site	src/game/battle/battle_misc_fuzz.cpp	1027	narrow_call	object_ours	fuzz	g_str	Addr	e.a[0] = Addr(g_str) + dst;
-site	src/game/battle/battle_misc_fuzz.cpp	1028	narrow_call	object_ours	fuzz	g_str	Addr	e.a[1] = Addr(g_str) + src;
+site	src/game/battle/battle_misc_fuzz.cpp	235	narrow_call	image_local	fuzz	sprite_p	Addr	const U sprite = Addr(sprite_p);
+site	src/game/battle/battle_misc_fuzz.cpp	256	narrow_call	object_ours	fuzz	g_items	Addr	case 0: return Addr(g_items) + (h >> 4) % 0x40;
+site	src/game/battle/battle_misc_fuzz.cpp	278	narrow_call	object_ours	fuzz	g_enemy	Addr	case 0: PutLong(At(BattleE3_CurrentEnemy_addr), (h >> 8) % 2 ? SomeEnemy(h >> 12) : Addr(g_enemy)); break;
+site	src/game/battle/battle_misc_fuzz.cpp	296	narrow_call	image_local	fuzz	actor_p	Addr	const U actor = Addr(actor_p);
+site	src/game/battle/battle_misc_fuzz.cpp	302	narrow_call	image_local	fuzz	actor_p	Addr	const U actor = Addr(actor_p), row = Addr(row_p);
+site	src/game/battle/battle_misc_fuzz.cpp	302	narrow_call	image_local	fuzz	row_p	Addr	const U actor = Addr(actor_p), row = Addr(row_p);
+site	src/game/battle/battle_misc_fuzz.cpp	308	narrow_call	image_local	fuzz	actor_p	Addr	const U actor = Addr(actor_p);
+site	src/game/battle/battle_misc_fuzz.cpp	354	narrow_call	image_local	fuzz	dst_p	Addr	const U dst = Addr(dst_p), src = Addr(src_p);
+site	src/game/battle/battle_misc_fuzz.cpp	354	narrow_call	image_local	fuzz	src_p	Addr	const U dst = Addr(dst_p), src = Addr(src_p);
+site	src/game/battle/battle_misc_fuzz.cpp	362	narrow_call	object_ours	fuzz	g_strings	Addr	if (h % 7 == 0) PutLong(At(BattleMisc_NameSuffix_addr), Addr(g_strings) + 0x100 + (h >> 8) % 0x40);
+site	src/game/battle/battle_misc_fuzz.cpp	367	narrow_call	image_local	fuzz	text	Addr	Record(18, slot, kind, b2, layer, timer, Addr(text));
+site	src/game/battle/battle_misc_fuzz.cpp	497	narrow_call	func_ours	fuzz	target	Addr	PutLong(at, Addr(target));
+site	src/game/battle/battle_misc_fuzz.cpp	541	fmt_place	word	fuzz	(unsigned)ret_ours	%08X	std::snprintf(why, sizeof why, "the result %08X, the original %08X", (unsigned)ret_ours,
+site	src/game/battle/battle_misc_fuzz.cpp	541	fmt_place	word	fuzz	(unsigned)ret_theirs	%08X	std::snprintf(why, sizeof why, "the result %08X, the original %08X", (unsigned)ret_ours,
+site	src/game/battle/battle_misc_fuzz.cpp	608	narrow_call	object_ours	fuzz	g_record	Addr	FillRandom(Addr(g_record), sizeof g_record);
+site	src/game/battle/battle_misc_fuzz.cpp	609	narrow_call	object_ours	fuzz	g_record	Addr	const U record = Next() % 3 ? Addr(g_record) + Next() % 0x40 : kParty + Next() % kPartyBytes;
+site	src/game/battle/battle_misc_fuzz.cpp	640	narrow_call	object_ours	fuzz	g_enemy	Addr	{Addr(g_enemy), sizeof g_enemy}};
+site	src/game/battle/battle_misc_fuzz.cpp	648	narrow_call	object_ours	fuzz	g_enemy	Addr	FillRandom(Addr(g_enemy), sizeof g_enemy);
+site	src/game/battle/battle_misc_fuzz.cpp	712	narrow_call	object_ours	fuzz	g_lists	Addr	const U ptr = OneIn(8) ? 0 : Addr(g_lists) + 4 * (Next() % (at / 4));
+site	src/game/battle/battle_misc_fuzz.cpp	766	narrow_call	object_ours	fuzz	g_items	Addr	FillRandom(Addr(g_items), sizeof g_items);
+site	src/game/battle/battle_misc_fuzz.cpp	780	narrow_call	object_ours	fuzz	g_record	Addr	FillRandom(Addr(g_record), sizeof g_record);
+site	src/game/battle/battle_misc_fuzz.cpp	784	narrow_call	object_ours	fuzz	g_record	Addr	U acting = Addr(g_record);
+site	src/game/battle/battle_misc_fuzz.cpp	788	narrow_call	object_ours	fuzz	g_record	Addr	const U source = Addr(g_record) + 0x40;
+site	src/game/battle/battle_misc_fuzz.cpp	926	narrow_call	object_ours	fuzz	g_strings	Addr	for (U m = 0; m < 256; ++m) PutLong(At(::bof3::Img(kMessages.v) + m * 4), Addr(g_strings) + Next() % 0x100);
+site	src/game/battle/battle_misc_fuzz.cpp	950	narrow_call	object_ours	fuzz	g_actor	Addr	FillRandom(Addr(g_actor), sizeof g_actor);
+site	src/game/battle/battle_misc_fuzz.cpp	957	narrow_call	object_ours	fuzz	g_strings	Addr	const U suffix = Addr(g_strings) + 0x100 + Next() % 0x40;
+site	src/game/battle/battle_misc_fuzz.cpp	963	narrow_call	object_ours	fuzz	g_actor	Addr	e.a[0] = Addr(g_actor);
+site	src/game/battle/battle_misc_fuzz.cpp	974	narrow_call	object_ours	fuzz	g_enemy	Addr	{Addr(g_enemy), sizeof g_enemy}};
+site	src/game/battle/battle_misc_fuzz.cpp	980	narrow_call	object_ours	fuzz	g_enemy	Addr	FillRandom(Addr(g_enemy), sizeof g_enemy);
+site	src/game/battle/battle_misc_fuzz.cpp	985	narrow_call	object_ours	fuzz	g_enemy	Addr	const U enemy = Next() % 3 ? SomeEnemy() : Addr(g_enemy);
+site	src/game/battle/battle_misc_fuzz.cpp	1017	narrow_call	object_ours	fuzz	g_str	Addr	const Region regions[] = {{Addr(g_str), sizeof g_str}};
+site	src/game/battle/battle_misc_fuzz.cpp	1032	narrow_call	object_ours	fuzz	g_str	Addr	e.a[0] = Addr(g_str) + dst;
+site	src/game/battle/battle_misc_fuzz.cpp	1033	narrow_call	object_ours	fuzz	g_str	Addr	e.a[1] = Addr(g_str) + src;
 site	src/game/battle/battle_obj.cpp	48	low32	helper_def	live	p	Low32	U Key(const void* p) { return Low32(p); }
 site	src/game/battle/battle_obj.cpp	52	narrow_call	image_local	live	p	Key	void SetPtrAt(U cell, const void* p) { SetLong(move_script::At(cell), static_cast<std::int32_t>(Key(p))); }
 site	src/game/battle/battle_obj.cpp	63	low32	helper_def	live	p	Low32	template <typename T> U AddressOf(T* p) { return Low32(p); }
@@ -1151,6 +1160,7 @@ site	src/game/battle/battle_windows_fuzz.cpp	55	uintptr	-	fuzz	std::uintptr_t	-	
 site	src/game/battle/battle_windows_fuzz.cpp	102	narrow_call	image_local	fuzz	p	Address	const std::uint32_t at = Address(p), base = Address(&g_buf);
 site	src/game/battle/battle_windows_fuzz.cpp	102	narrow_call	object_ours	fuzz	&g_buf	Address	const std::uint32_t at = Address(p), base = Address(&g_buf);
 site	src/game/battle/battle_windows_fuzz.cpp	141	narrow_call	object_ours	fuzz	g_buf.windows[v % kWindows]	Address	case 9: SetLong(At(BattleWinStates_Current_addr), static_cast<std::int32_t>(Address(g_buf.windows[v % kWindows]))); break;
+site	src/game/battle/battle_windows_fuzz.cpp	218	narrow_call	image_local	fuzz	set	Address	Record(13, pose & 0xFF, Address(set), size);
 site	src/game/battle/battle_windows_fuzz.cpp	366	narrow_call	func_ours	fuzz	reinterpret_cast<const void*>(&StubKind<0>)	Address	s.kind_handlers[0] = Address(reinterpret_cast<const void*>(&StubKind<0>));
 site	src/game/battle/battle_windows_fuzz.cpp	367	narrow_call	func_ours	fuzz	reinterpret_cast<const void*>(&StubKind<1>)	Address	s.kind_handlers[1] = Address(reinterpret_cast<const void*>(&StubKind<1>));
 site	src/game/battle/battle_windows_fuzz.cpp	368	narrow_call	func_ours	fuzz	reinterpret_cast<const void*>(&StubKind<2>)	Address	s.kind_handlers[2] = Address(reinterpret_cast<const void*>(&StubKind<2>));
@@ -1899,8 +1909,8 @@ site	src/game/community/commu_name.cpp	59	uintptr	-	live	std::uintptr_t	-	reinte
 site	src/game/community/commu_name.cpp	59	widen	word_read	live	L(table + 4 * index)	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(table + 4 * index)))();
 site	src/game/community/commu_name.cpp	1378	low32	object_ours	live	&rest_4d::g_entry_abandons	Low32	Low32(&rest_4d::g_entry_abandons), &was, &is, 1);
 site	src/game/community/commu_name.cpp	1387	low32	object_ours	live	&commu_name::g_grid	Low32	if (bof3::PatchBytes(" ", Low32(&commu_name::g_grid), &was, &is, 1))
-site	src/game/community/commu_tail.cpp	64	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(table + 4 * static_cast<U>(index))))();
-site	src/game/community/commu_tail.cpp	64	widen	word_read	live	L(table + 4 * static_cast<U>(index))	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(table + 4 * static_cast<U>(index))))();
+site	src/game/community/commu_tail.cpp	65	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(table + 4 * static_cast<U>(index))))();
+site	src/game/community/commu_tail.cpp	65	widen	word_read	live	L(table + 4 * static_cast<U>(index))	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(table + 4 * static_cast<U>(index))))();
 site	src/game/community/rest_4a_fuzz.cpp	41	narrow	helper_def	fuzz	p	-	U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/community/rest_4a_fuzz.cpp	41	uintptr	-	fuzz	std::uintptr_t	-	U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/community/rest_4a_fuzz.cpp	42	narrow_call	func_ours	fuzz	reinterpret_cast<const void*>(f)	Key	template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
@@ -2085,6 +2095,7 @@ site	src/game/core/save_menu_fuzz.cpp	369	narrow_call	image_local	fuzz	p	Addr	Re
 site	src/game/core/save_menu_fuzz.cpp	380	narrow_call	object_ours	fuzz	g_prim	Addr	Record(0x2D, slot, size, Long(Gfx_PacketNext_addr) - Addr(g_prim));
 site	src/game/core/save_menu_fuzz.cpp	390	narrow_call	object_ours	fuzz	g_sprite	Addr	if (h & 1) PutLong(Sprite_Current_addr, (h & 2) ? Addr(g_sprite) : ObjTrio_addr);
 site	src/game/core/save_menu_fuzz.cpp	391	narrow_call	object_ours	fuzz	g_sprite	Addr	if (h & 4) PutLong(Field_State_addr, (h & 8) ? Addr(g_sprite) : ObjTrio_addr);
+site	src/game/core/save_menu_fuzz.cpp	414	narrow_call	func_ours	fuzz	entry	Addr	void __cdecl StubTaskRestart(void* entry) { Record(0x38, Addr(entry)); }
 site	src/game/core/save_menu_fuzz.cpp	421	narrow_call	image_local	fuzz	path	Addr	Record(0x3A, Addr(path), size, static_cast<U>(offset));
 site	src/game/core/save_menu_fuzz.cpp	767	narrow_call	func_ours	fuzz	code	Addr	const U base = 0x583210, moved = Addr(code) - base;
 site	src/game/core/save_menu_fuzz.cpp	784	asm	cw	fuzz	fnstcw %0	fnstcw	__asm__ volatile("fnstcw %0" : "=m"(cw));
@@ -2151,6 +2162,8 @@ site	src/game/core/sound.cpp	1112	naked	-	live	LoadMenu_Error	-	extern " " __att
 site	src/game/core/sound.cpp	1113	width_if	asm_pair	live	LoadMenu_Error	#if defined(__i386__)	#if defined(__i386__)
 site	src/game/core/sound.cpp	1114	asm	stack	live	push %ecx	call push	__asm__ volatile(
 site	src/game/core/sound.cpp	1120	asm	stack	live	jmp	jmp	__asm__ volatile("jmp " BOF3_SYM(SaveMenu_LoadErrorBody)); // the caller's ecx is the body's first argument already
+site	src/game/core/sound.cpp	1237	uintptr	-	live	std::uintptr_t	-	save_menu::g.task_restart(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(save_menu::at::kGameTask.v))));
+site	src/game/core/sound.cpp	1237	widen	code_place	live	::bof3::Code(save_menu::at::kGameTask.v)	void*	save_menu::g.task_restart(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(save_menu::at::kGameTask.v))));
 site	src/game/core/task.cpp	18	uintptr	-	live	std::uintptr_t	-	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/core/task.cpp	18	widen	param	live	address	unsigned char*	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/core/task.cpp	48	uintptr	-	live	std::uintptr_t	-	const auto e = reinterpret_cast<std::uintptr_t>(entry);
@@ -4031,31 +4044,31 @@ site	src/game/field/field_4.cpp	669	narrow_call	image_local	live	fs	AddressEvent
 site	src/game/field/field_4.cpp	1999	narrow_call	image_local	live	c	Address	return static_cast<unsigned char>(Address(c));
 site	src/game/field/field_4.cpp	2241	low32	object_ours	live	&event_leader::g_edge_no_area	Low32	bof3::PatchBytes(" ", Low32(&event_leader::g_edge_no_area),
 site	src/game/field/field_4.cpp	2251	low32	object_ours	live	&field_event::g_mantle_cap	Low32	bof3::PatchBytes(" ", Low32(&field_event::g_mantle_cap), &was, &is, 1);
-site	src/game/field/field_6.cpp	82	low32	helper_def	live	p	Low32	std::uint32_t Address(const volatile void* p) { return Low32(p); }
-site	src/game/field/field_6.cpp	111	uintptr	-	live	std::uintptr_t	-	unsigned char* AtEventObjs(std::uint32_t a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
-site	src/game/field/field_6.cpp	111	widen	param	live	a	unsigned char*	unsigned char* AtEventObjs(std::uint32_t a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
-site	src/game/field/field_6.cpp	147	asm	other	live	cltd	cltd idivl	__asm__ volatile("cltd\n\tidivl %2" : "=a"(quotient) : "a"(dividend), "r"(divisor) : "edx", "cc");
-site	src/game/field/field_6.cpp	345	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<unsigned short*>(static_cast<std::uintptr_t>(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + (static_cast<U>(s[5]) << 6)));
-site	src/game/field/field_6.cpp	345	widen	img_place	live	::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + (static_cast<U>(s[5]) << 6)	unsigned short*	return reinterpret_cast<unsigned short*>(static_cast<std::uintptr_t>(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + (static_cast<U>(s[5]) << 6)));
-site	src/game/field/field_6.cpp	392	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<HandlerFieldEvent>(static_cast<std::uintptr_t>(table[index]))();
-site	src/game/field/field_6.cpp	392	widen	param	live	table[index]	HandlerFieldEvent	reinterpret_cast<HandlerFieldEvent>(static_cast<std::uintptr_t>(table[index]))();
-site	src/game/field/field_6.cpp	440	uintptr	-	live	std::uintptr_t	-	const auto callee = reinterpret_cast<std::uintptr_t>(SH_CALL(Sprite_EnsureAnimation));
-site	src/game/field/field_6.cpp	469	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<T>(static_cast<std::uintptr_t>(w));
-site	src/game/field/field_6.cpp	469	widen	param	live	w	T	return reinterpret_cast<T>(static_cast<std::uintptr_t>(w));
-site	src/game/field/field_6.cpp	505	uintptr	-	live	std::uintptr_t	-	F Fn(std::uint32_t address) { return reinterpret_cast<F>(static_cast<std::uintptr_t>(address)); }
-site	src/game/field/field_6.cpp	505	widen	param	live	address	F [fn]	F Fn(std::uint32_t address) { return reinterpret_cast<F>(static_cast<std::uintptr_t>(address)); }
-site	src/game/field/field_6.cpp	1111	narrow_call	image	live	&Field_ScriptFlags	Address	if (header & 0x20) move_script::At(Address(&Field_ScriptFlags))[0] |= 8;
-site	src/game/field/field_6.cpp	1113	narrow_call	image	live	&Field_ScriptFlags	Address	move_script::At(Address(&Field_ScriptFlags) + 1)[0] |= 1;
-site	src/game/field/field_6.cpp	1114	narrow_call	image	live	&Field_ScriptFlags2	Address	move_script::At(Address(&Field_ScriptFlags2) + 1)[0] |= 0x80;
-site	src/game/field/field_6.cpp	1592	low32	image_local	live	s	Low32	const auto p = Low32(s);
-site	src/game/field/field_6.cpp	2271	naked	-	live	Scenario_CallA	-	extern " " __attribute__((naked)) void __cdecl Scenario_CallA(unsigned) {
-site	src/game/field/field_6.cpp	2272	width_if	asm_pair	live	Scenario_CallA	#if defined(__i386__)	#if defined(__i386__)
-site	src/game/field/field_6.cpp	2276	asm	other	live	movl	movl	asm("movl " BOF3_SYM(Bof3_ImageMove) ", %%edx\n\t"
-site	src/game/field/field_6.cpp	2291	asm	other	live	movslq	movslq	asm("movslq " BOF3_SYM(Bof3_ImageMove) "(%%rip), %%r10\n\t"
-site	src/game/field/field_6.cpp	2312	naked	-	live	Scenario_CallB	-	extern " " __attribute__((naked)) void __cdecl Scenario_CallB(unsigned) {
-site	src/game/field/field_6.cpp	2313	width_if	asm_pair	live	Scenario_CallB	#if defined(__i386__)	#if defined(__i386__)
-site	src/game/field/field_6.cpp	2317	asm	other	live	movl	movl	asm("movl " BOF3_SYM(Bof3_ImageMove) ", %%edx\n\t"
-site	src/game/field/field_6.cpp	2332	asm	other	live	movslq	movslq	asm("movslq " BOF3_SYM(Bof3_ImageMove) "(%%rip), %%r10\n\t"
+site	src/game/field/field_6.cpp	83	low32	helper_def	live	p	Low32	std::uint32_t Address(const volatile void* p) { return Low32(p); }
+site	src/game/field/field_6.cpp	112	uintptr	-	live	std::uintptr_t	-	unsigned char* AtEventObjs(std::uint32_t a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
+site	src/game/field/field_6.cpp	112	widen	param	live	a	unsigned char*	unsigned char* AtEventObjs(std::uint32_t a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
+site	src/game/field/field_6.cpp	148	asm	other	live	cltd	cltd idivl	__asm__ volatile("cltd\n\tidivl %2" : "=a"(quotient) : "a"(dividend), "r"(divisor) : "edx", "cc");
+site	src/game/field/field_6.cpp	346	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<unsigned short*>(static_cast<std::uintptr_t>(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + (static_cast<U>(s[5]) << 6)));
+site	src/game/field/field_6.cpp	346	widen	img_place	live	::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + (static_cast<U>(s[5]) << 6)	unsigned short*	return reinterpret_cast<unsigned short*>(static_cast<std::uintptr_t>(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + (static_cast<U>(s[5]) << 6)));
+site	src/game/field/field_6.cpp	393	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<HandlerFieldEvent>(static_cast<std::uintptr_t>(table[index]))();
+site	src/game/field/field_6.cpp	393	widen	param	live	table[index]	HandlerFieldEvent	reinterpret_cast<HandlerFieldEvent>(static_cast<std::uintptr_t>(table[index]))();
+site	src/game/field/field_6.cpp	441	uintptr	-	live	std::uintptr_t	-	const auto callee = reinterpret_cast<std::uintptr_t>(SH_CALL(Sprite_EnsureAnimation));
+site	src/game/field/field_6.cpp	470	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<T>(static_cast<std::uintptr_t>(w));
+site	src/game/field/field_6.cpp	470	widen	param	live	w	T	return reinterpret_cast<T>(static_cast<std::uintptr_t>(w));
+site	src/game/field/field_6.cpp	506	uintptr	-	live	std::uintptr_t	-	F Fn(std::uint32_t address) { return reinterpret_cast<F>(static_cast<std::uintptr_t>(address)); }
+site	src/game/field/field_6.cpp	506	widen	param	live	address	F [fn]	F Fn(std::uint32_t address) { return reinterpret_cast<F>(static_cast<std::uintptr_t>(address)); }
+site	src/game/field/field_6.cpp	1112	narrow_call	image	live	&Field_ScriptFlags	Address	if (header & 0x20) move_script::At(Address(&Field_ScriptFlags))[0] |= 8;
+site	src/game/field/field_6.cpp	1114	narrow_call	image	live	&Field_ScriptFlags	Address	move_script::At(Address(&Field_ScriptFlags) + 1)[0] |= 1;
+site	src/game/field/field_6.cpp	1115	narrow_call	image	live	&Field_ScriptFlags2	Address	move_script::At(Address(&Field_ScriptFlags2) + 1)[0] |= 0x80;
+site	src/game/field/field_6.cpp	1593	low32	image_local	live	s	Low32	const auto p = Low32(s);
+site	src/game/field/field_6.cpp	2272	naked	-	live	Scenario_CallA	-	extern " " __attribute__((naked)) void __cdecl Scenario_CallA(unsigned) {
+site	src/game/field/field_6.cpp	2273	width_if	asm_pair	live	Scenario_CallA	#if defined(__i386__)	#if defined(__i386__)
+site	src/game/field/field_6.cpp	2277	asm	other	live	movl	movl	asm("movl " BOF3_SYM(Bof3_ImageMove) ", %%edx\n\t"
+site	src/game/field/field_6.cpp	2292	asm	other	live	movslq	movslq	asm("movslq " BOF3_SYM(Bof3_ImageMove) "(%%rip), %%r10\n\t"
+site	src/game/field/field_6.cpp	2313	naked	-	live	Scenario_CallB	-	extern " " __attribute__((naked)) void __cdecl Scenario_CallB(unsigned) {
+site	src/game/field/field_6.cpp	2314	width_if	asm_pair	live	Scenario_CallB	#if defined(__i386__)	#if defined(__i386__)
+site	src/game/field/field_6.cpp	2318	asm	other	live	movl	movl	asm("movl " BOF3_SYM(Bof3_ImageMove) ", %%edx\n\t"
+site	src/game/field/field_6.cpp	2333	asm	other	live	movslq	movslq	asm("movslq " BOF3_SYM(Bof3_ImageMove) "(%%rip), %%r10\n\t"
 site	src/game/field/field_7.cpp	154	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(field_modes::Long(field_modes::At(table + 4u * static_cast<std::uint32_t>
 site	src/game/field/field_7.cpp	154	widen	word_read	live	static_cast<std::uint32_t>(field_modes::Long(field_modes::At(table + 4u * static_cast<std::uint32_t>(index))))	VoidFn [fn]	return reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(field_modes::Long(field_modes::At(table + 4u * static_cast<std::uint32_t>
 site	src/game/field/field_7.cpp	174	low32	image	live	Cond_Flags	Low32	const std::uint32_t kCondFlags = Low32(Cond_Flags);
@@ -4964,15 +4977,15 @@ site	src/game/field/wide_staging.cpp	583	narrow_call	image_local	live	rv::Bytes(
 site	src/game/field/wide_staging.cpp	583	narrow_call	image_local	live	sprite	Address	const std::uint32_t at = Address(sprite), objects = Address(rv::Bytes(Sprite_Objects));
 site	src/game/field/wide_staging.cpp	587	fmt_place	pointer	live	at	%08X	bof3::Log("DIV-0122 site %u: the placement op at %08X did not leave its object current (%08X); not moved", i,
 site	src/game/field/wide_staging.cpp	587	fmt_place	word	live	a	%08X	bof3::Log("DIV-0122 site %u: the placement op at %08X did not leave its object current (%08X); not moved", i,
-site	src/game/field/wide_staging.cpp	652	narrow_call	image_local	live	sprite	Address	const std::uint32_t a = Address(sprite);
-site	src/game/field/wide_staging.cpp	653	narrow_call	image_local	live	rv::Bytes(ObjTrio)	Address	const std::uint32_t objects = Address(rv::Bytes(Sprite_Objects)), extra = Address(rv::Bytes(Sprite_ObjectsExtra)), trio = Address(rv::Bytes(ObjTrio));
-site	src/game/field/wide_staging.cpp	653	narrow_call	image_local	live	rv::Bytes(Sprite_Objects)	Address	const std::uint32_t objects = Address(rv::Bytes(Sprite_Objects)), extra = Address(rv::Bytes(Sprite_ObjectsExtra)), trio = Address(rv::Bytes(ObjTrio));
-site	src/game/field/wide_staging.cpp	653	narrow_call	image_local	live	rv::Bytes(Sprite_ObjectsExtra)	Address	const std::uint32_t objects = Address(rv::Bytes(Sprite_Objects)), extra = Address(rv::Bytes(Sprite_ObjectsExtra)), trio = Address(rv::Bytes(ObjTrio));
-site	src/game/field/wide_staging.cpp	1124	narrow_call	image_local	live	script	Address	const bool ok = Address(script) == ::bof3::Img(s.script) && h == s.hash && MoveAt(script + s.move, dir, steps, length) &&
-site	src/game/field/wide_staging.cpp	1133	fmt_place	narrowed	live	Address(script)	%08X	bof3::Log("DIV-0122 site %u (area %u +0x%02X[%u]) left original: the script is %08X, hash %08X - not the "
-site	src/game/field/wide_staging.cpp	1133	fmt_place	word	live	h	%08X	bof3::Log("DIV-0122 site %u (area %u +0x%02X[%u]) left original: the script is %08X, hash %08X - not the "
-site	src/game/field/wide_staging.cpp	1135	narrow_call	image_local	live	script	Address	i, s.area, s.field, s.index, Address(script), h);
-site	src/game/field/wide_staging.cpp	1145	narrow_call	image_local	live	script	Address	const bool ok = cs && Address(script) == cs->script && Fnv(script, cs->span) == cs->hash &&
+site	src/game/field/wide_staging.cpp	654	narrow_call	image_local	live	sprite	Address	const std::uint32_t a = Address(sprite);
+site	src/game/field/wide_staging.cpp	655	narrow_call	image_local	live	rv::Bytes(ObjTrio)	Address	const std::uint32_t objects = Address(rv::Bytes(Sprite_Objects)), extra = Address(rv::Bytes(Sprite_ObjectsExtra)), trio = Address(rv::Bytes(ObjTrio));
+site	src/game/field/wide_staging.cpp	655	narrow_call	image_local	live	rv::Bytes(Sprite_Objects)	Address	const std::uint32_t objects = Address(rv::Bytes(Sprite_Objects)), extra = Address(rv::Bytes(Sprite_ObjectsExtra)), trio = Address(rv::Bytes(ObjTrio));
+site	src/game/field/wide_staging.cpp	655	narrow_call	image_local	live	rv::Bytes(Sprite_ObjectsExtra)	Address	const std::uint32_t objects = Address(rv::Bytes(Sprite_Objects)), extra = Address(rv::Bytes(Sprite_ObjectsExtra)), trio = Address(rv::Bytes(ObjTrio));
+site	src/game/field/wide_staging.cpp	1252	narrow_call	image_local	live	script	Address	const bool ok = Address(script) == ::bof3::Img(s.script) && h == s.hash && MoveAt(script + s.move, dir, steps, length) &&
+site	src/game/field/wide_staging.cpp	1261	fmt_place	narrowed	live	Address(script)	%08X	bof3::Log("DIV-0122 site %u (area %u +0x%02X[%u]) left original: the script is %08X, hash %08X - not the "
+site	src/game/field/wide_staging.cpp	1261	fmt_place	word	live	h	%08X	bof3::Log("DIV-0122 site %u (area %u +0x%02X[%u]) left original: the script is %08X, hash %08X - not the "
+site	src/game/field/wide_staging.cpp	1263	narrow_call	image_local	live	script	Address	i, s.area, s.field, s.index, Address(script), h);
+site	src/game/field/wide_staging.cpp	1273	narrow_call	image_local	live	script	Address	const bool ok = cs && Address(script) == cs->script && Fnv(script, cs->span) == cs->hash &&
 site	src/game/field_misc_callees.h	52	low32	helper_def	live	p	Low32	inline U Of(const volatile void* p) { return Low32(p); }
 site	src/game/field_misc_callees.h	53	narrow_call	image	live	&AreaMap_Bytes	Of	inline U AreaMap_BytesAt() { return Of(&AreaMap_Bytes); }
 site	src/game/field_misc_callees.h	54	narrow_call	image	live	&AreaMap_CellBase	Of	inline U AreaMap_CellBaseAt() { return Of(&AreaMap_CellBase); }
@@ -5078,15 +5091,17 @@ site	src/game/magic/battle_odds_fuzz.cpp	55	narrow	helper_def	fuzz	p	-	U Addr(co
 site	src/game/magic/battle_odds_fuzz.cpp	55	uintptr	-	fuzz	std::uintptr_t	-	U Addr(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/magic/battle_odds_fuzz.cpp	161	narrow_call	object_ours	fuzz	g_objects	Addr	U SomeObject(U h) { return Addr(g_objects) + (h % 16) * 0x20; }
 site	src/game/magic/battle_odds_fuzz.cpp	182	narrow_call	object_ours	fuzz	g_results	Addr	if (h % 4 == 0) PutLong(At(BattleDamage_Result_addr), Addr(g_results) + ((h >> 8) % 0x38));
-site	src/game/magic/battle_odds_fuzz.cpp	303	fmt_place	word	fuzz	(unsigned)ret_ours	%08X	std::snprintf(why, sizeof why, "the result %08X, the original %08X", (unsigned)ret_ours, (unsigned)ret_theirs);
-site	src/game/magic/battle_odds_fuzz.cpp	303	fmt_place	word	fuzz	(unsigned)ret_theirs	%08X	std::snprintf(why, sizeof why, "the result %08X, the original %08X", (unsigned)ret_ours, (unsigned)ret_theirs);
-site	src/game/magic/battle_odds_fuzz.cpp	354	narrow_call	object_ours	fuzz	g_results	Addr	FillRandom(Addr(g_results), sizeof g_results);
-site	src/game/magic/battle_odds_fuzz.cpp	355	narrow_call	object_ours	fuzz	g_results	Addr	PutLong(At(BattleDamage_Result_addr), Addr(g_results) + Next() % 0x38);
-site	src/game/magic/battle_odds_fuzz.cpp	364	narrow_call	object_ours	fuzz	g_results	Addr	FillRandom(Addr(g_results), sizeof g_results);
-site	src/game/magic/battle_odds_fuzz.cpp	365	narrow_call	object_ours	fuzz	g_results	Addr	PutLong(At(BattleDamage_Result_addr), Addr(g_results) + Next() % 0x38);
-site	src/game/magic/battle_odds_fuzz.cpp	384	narrow_call	object_ours	fuzz	g_objects	Addr	FillRandom(Addr(g_objects), sizeof g_objects);
-site	src/game/magic/battle_odds_fuzz.cpp	478	narrow_call	object_ours	fuzz	g_objects	Addr	g_regions[kRegions - 2].at = Addr(g_objects);
-site	src/game/magic/battle_odds_fuzz.cpp	479	narrow_call	object_ours	fuzz	g_results	Addr	g_regions[kRegions - 1].at = Addr(g_results);
+site	src/game/magic/battle_odds_fuzz.cpp	203	narrow_call	image_local	fuzz	sprite_p	Addr	const U sprite = Addr(sprite_p);
+site	src/game/magic/battle_odds_fuzz.cpp	209	narrow_call	image_local	fuzz	sprite_p	Addr	const U sprite = Addr(sprite_p);
+site	src/game/magic/battle_odds_fuzz.cpp	305	fmt_place	word	fuzz	(unsigned)ret_ours	%08X	std::snprintf(why, sizeof why, "the result %08X, the original %08X", (unsigned)ret_ours, (unsigned)ret_theirs);
+site	src/game/magic/battle_odds_fuzz.cpp	305	fmt_place	word	fuzz	(unsigned)ret_theirs	%08X	std::snprintf(why, sizeof why, "the result %08X, the original %08X", (unsigned)ret_ours, (unsigned)ret_theirs);
+site	src/game/magic/battle_odds_fuzz.cpp	356	narrow_call	object_ours	fuzz	g_results	Addr	FillRandom(Addr(g_results), sizeof g_results);
+site	src/game/magic/battle_odds_fuzz.cpp	357	narrow_call	object_ours	fuzz	g_results	Addr	PutLong(At(BattleDamage_Result_addr), Addr(g_results) + Next() % 0x38);
+site	src/game/magic/battle_odds_fuzz.cpp	366	narrow_call	object_ours	fuzz	g_results	Addr	FillRandom(Addr(g_results), sizeof g_results);
+site	src/game/magic/battle_odds_fuzz.cpp	367	narrow_call	object_ours	fuzz	g_results	Addr	PutLong(At(BattleDamage_Result_addr), Addr(g_results) + Next() % 0x38);
+site	src/game/magic/battle_odds_fuzz.cpp	386	narrow_call	object_ours	fuzz	g_objects	Addr	FillRandom(Addr(g_objects), sizeof g_objects);
+site	src/game/magic/battle_odds_fuzz.cpp	480	narrow_call	object_ours	fuzz	g_objects	Addr	g_regions[kRegions - 2].at = Addr(g_objects);
+site	src/game/magic/battle_odds_fuzz.cpp	481	narrow_call	object_ours	fuzz	g_results	Addr	g_regions[kRegions - 1].at = Addr(g_results);
 site	src/game/magic/benediction_child.cpp	73	low32	helper_def	live	p	Low32	std::uint32_t Key(const void* p) { return Low32(p); }
 site	src/game/magic/benediction_child.cpp	253	narrow_call	image_local	live	s	Key	tc->owner = static_cast<std::int32_t>(Key(s));
 site	src/game/magic/benediction_child.cpp	359	narrow_call	image_local	live	s	Key	tr->owner = static_cast<std::int32_t>(Key(s));
@@ -7264,14 +7279,14 @@ site	src/game/platform/tex_page_fuzz.cpp	338	narrow_call	object_ours	fuzz	g_pale
 site	src/game/platform/tex_page_fuzz.cpp	485	narrow_call	object_ours	fuzz	g_surfaces[0]	Addr	PutLong(Dd_StageSurface_addr, Addr(g_surfaces[0]));
 site	src/game/platform/tex_page_fuzz.cpp	487	narrow_call	object_ours	fuzz	g_palettes + i	Addr	for (U i = 0; i < kPaletteBytes; i += 4) PutLong(Addr(g_palettes + i), Next());
 site	src/game/platform/tex_page_fuzz.cpp	570	narrow_call	object_ours	fuzz	g_surfaces[2]	Addr	PutLong(g_entry + 0x10, Addr(g_surfaces[2]));
-site	src/game/platform/widescreen.cpp	191	low32	image_local	live	rec	Low32	const U a = Low32(rec);
-site	src/game/platform/widescreen.cpp	225	long	l	live	long	-	else d = e.aD + static_cast<int>(static_cast<long long>(L - e.aL) * (e.endD - e.aD) / (e.endL - e.aL));
-site	src/game/platform/widescreen.cpp	412	low32	func_ours	live	s.ours	Low32	const U ours = Low32(s.ours);
-site	src/game/platform/widescreen.cpp	422	low32	object_ours	live	&g_slide_switch	Low32	bof3::PatchBytes(" ", Low32(&g_slide_switch), &was, &is, 1);
-site	src/game/platform/widescreen.cpp	515	uintptr	-	live	std::uintptr_t	-	volatile U* const current = reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)));
-site	src/game/platform/widescreen.cpp	515	widen	img_place	live	::bof3::Img(BattleWinStates_Current_addr)	volatile U*	volatile U* const current = reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)));
-site	src/game/platform/widescreen.cpp	522	long	l	live	long	-	unsigned long long frames_run = 0;
-site	src/game/platform/widescreen.cpp	542	low32	image_local	live	rec	Low32	*current = Low32(rec);
+site	src/game/platform/widescreen.cpp	198	low32	image_local	live	rec	Low32	const U a = Low32(rec);
+site	src/game/platform/widescreen.cpp	232	long	l	live	long	-	else d = e.aD + static_cast<int>(static_cast<long long>(L - e.aL) * (e.endD - e.aD) / (e.endL - e.aL));
+site	src/game/platform/widescreen.cpp	431	low32	func_ours	live	s.ours	Low32	const U ours = Low32(s.ours);
+site	src/game/platform/widescreen.cpp	441	low32	object_ours	live	&g_slide_switch	Low32	bof3::PatchBytes(" ", Low32(&g_slide_switch), &was, &is, 1);
+site	src/game/platform/widescreen.cpp	535	uintptr	-	live	std::uintptr_t	-	volatile U* const current = reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)));
+site	src/game/platform/widescreen.cpp	535	widen	img_place	live	::bof3::Img(BattleWinStates_Current_addr)	volatile U*	volatile U* const current = reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)));
+site	src/game/platform/widescreen.cpp	542	long	l	live	long	-	unsigned long long frames_run = 0;
+site	src/game/platform/widescreen.cpp	562	low32	image_local	live	rec	Low32	*current = Low32(rec);
 site	src/game/platform/win_main.cpp	151	fmt_place	word	live	code	%08X	bof3::Log("exittrace ExitProcess(0x%08X)", code);
 site	src/game/platform/win_main.cpp	163	uintptr	-	live	std::uintptr_t	-	void TracedBreak(const char* what, std::uintptr_t ip, std::uintptr_t sp, std::uint32_t flags) {
 site	src/game/platform/win_main.cpp	163	uintptr	-	live	std::uintptr_t	-	void TracedBreak(const char* what, std::uintptr_t ip, std::uintptr_t sp, std::uint32_t flags) {
@@ -7911,13 +7926,13 @@ site	src/game/shop/shared_list.cpp	208	uintptr	-	live	std::uintptr_t	-	unsigned 
 site	src/game/shop/shared_list.cpp	208	widen	param	live	address	unsigned char*	unsigned char* AtShopStates2(shop_states2::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/shop/shop_browse.cpp	76	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2c(table + 4 * index)))();
 site	src/game/shop/shop_browse.cpp	76	widen	other	live	LRest2c(table + 4 * index)	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2c(table + 4 * index)))();
-site	src/game/shop/shop_mode.cpp	20	uintptr	-	live	std::uintptr_t	-	template <typename T> T Fn(U address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
-site	src/game/shop/shop_mode.cpp	20	widen	param	live	address	T	template <typename T> T Fn(U address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
-site	src/game/shop/shop_mode.cpp	28	uintptr	-	live	std::uintptr_t	-	unsigned char* AtShopStates(shop_states::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/shop/shop_mode.cpp	28	widen	param	live	address	unsigned char*	unsigned char* AtShopStates(shop_states::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/shop/shop_mode.cpp	51	low32	helper_def	live	p	Low32	U Addr(const void* p) { return Low32(p); }
-site	src/game/shop/shop_mode.cpp	96	narrow_call	image_local	live	o	Addr	PutLong(::bof3::Img(shop_states::at::kSpriteCurrent.v), Addr(o));
-site	src/game/shop/shop_mode.cpp	125	narrow_call	image_local	live	o	Addr	PutLong(::bof3::Img(shop_states::at::kSpriteCurrent.v), Addr(o));
+site	src/game/shop/shop_mode.cpp	21	uintptr	-	live	std::uintptr_t	-	template <typename T> T Fn(U address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+site	src/game/shop/shop_mode.cpp	21	widen	param	live	address	T	template <typename T> T Fn(U address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+site	src/game/shop/shop_mode.cpp	29	uintptr	-	live	std::uintptr_t	-	unsigned char* AtShopStates(shop_states::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/shop/shop_mode.cpp	29	widen	param	live	address	unsigned char*	unsigned char* AtShopStates(shop_states::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/shop/shop_mode.cpp	52	low32	helper_def	live	p	Low32	U Addr(const void* p) { return Low32(p); }
+site	src/game/shop/shop_mode.cpp	131	narrow_call	image_local	live	o	Addr	PutLong(::bof3::Img(shop_states::at::kSpriteCurrent.v), Addr(o));
+site	src/game/shop/shop_mode.cpp	161	narrow_call	image_local	live	o	Addr	PutLong(::bof3::Img(shop_states::at::kSpriteCurrent.v), Addr(o));
 site	src/game/shop/shop_resist.cpp	87	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2c(table + 4 * index)))();
 site	src/game/shop/shop_resist.cpp	87	widen	other	live	LRest2c(table + 4 * index)	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2c(table + 4 * index)))();
 site	src/game/shop/shop_states2_fuzz.cpp	29	uintptr	-	fuzz	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
@@ -8134,9 +8149,9 @@ site	src/game/text/text_draw.cpp	524	widen	img_place	live	::bof3::Img(kStandIns.
 site	src/game/text/text_draw.cpp	525	uintptr	-	live	std::uintptr_t	-	g_bt.port[i] = port ? reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(p))[0] : 0;
 site	src/game/text/text_draw.cpp	525	widen	param	live	p	const std::uint8_t*	g_bt.port[i] = port ? reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(p))[0] : 0;
 site	src/game/text/text_draw.cpp	533	low32	object_ours	live	&g_button_text	Low32	" ", Low32(&g_button_text), &was, &is, 1);
-site	src/game/widescreen.h	219	long	l	live	long	-	const long long sign = x1 > x0 ? 1 : -1;
-site	src/game/widescreen.h	220	long	l	live	long	-	const long long num = sign * (x - x0) * (d1 - d0), den = sign * (x1 - x0);
-site	src/game/widescreen.h	221	long	l	live	long	-	const long long q = num >= 0 ? (num + den / 2) / den : -((-num + den / 2) / den);
+site	src/game/widescreen.h	235	long	l	live	long	-	const long long sign = x1 > x0 ? 1 : -1;
+site	src/game/widescreen.h	236	long	l	live	long	-	const long long num = sign * (x - x0) * (d1 - d0), den = sign * (x1 - x0);
+site	src/game/widescreen.h	237	long	l	live	long	-	const long long q = num >= 0 ? (num + den / 2) / den : -((-num + den / 2) / den);
 site	src/game/world_map_callees.h	77	low32	helper_def	live	p	Low32	inline U Of(const volatile void* p) { return Low32(p); }
 site	src/game/world_map_callees.h	78	narrow_call	image	live	&Sprite_Current	Of	inline U Sprite_CurrentAt() { return Of(&Sprite_Current); }
 site	src/game/world_map_callees.h	79	narrow_call	image	live	&Gfx_PacketNext	Of	inline U Gfx_PacketNextAt() { return Of(&Gfx_PacketNext); }
@@ -9205,9 +9220,9 @@ site	src/input/sigma.cpp	195	uintptr	-	live	std::uintptr_t	-	Check(std::memcmp(j
 site	src/input/sigma.cpp	195	widen	img_place	live	::bof3::Img(kBootDefaults.v)	const void*	Check(std::memcmp(jp, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(::bof3::Img(kBootDefaults.v))), sizeof jp) == 0,
 site	src/input/sigma.cpp	526	low32	object_ours	live	&g_sigma_on	Low32	bof3::PatchBytes(" ", Low32(&g_sigma_on), &was, &is, 1);
 site	src/input/sigma.cpp	527	low32	object_ours	live	&g_by_source	Low32	bof3::PatchBytes(" ", Low32(&g_by_source), &was,
-site	src/launcher/config.cpp	300	long	l	live	long	-	const long v = std::strtol(value.c_str(), &end, 10);
-site	src/launcher/config.cpp	1404	long	l	live	long	-	long long off = 0;
-site	src/launcher/config.cpp	1417	long	l	live	long	-	off += 16 + static_cast<long long>(len);
+site	src/launcher/config.cpp	301	long	l	live	long	-	const long v = std::strtol(value.c_str(), &end, 10);
+site	src/launcher/config.cpp	1410	long	l	live	long	-	long long off = 0;
+site	src/launcher/config.cpp	1423	long	l	live	long	-	off += 16 + static_cast<long long>(len);
 site	src/launcher/launcher.cpp	111	uintptr	-	live	std::uintptr_t	-	if (!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base)), &dos, sizeof dos, nullptr) ||
 site	src/launcher/launcher.cpp	111	widen	param	live	base	LPCVOID	if (!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base)), &dos, sizeof dos, nullptr) ||
 site	src/launcher/launcher.cpp	113	uintptr	-	live	std::uintptr_t	-	!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base + dos.e_lfanew)), &nt, sizeof nt,
@@ -9338,9 +9353,9 @@ site	src/render/gfx_snapshot.cpp	439	narrow_call	image	live	Gfx_PixelFormat	Va	{
 site	src/render/gfx_snapshot.cpp	444	fmt_place	pointer	live	n.at	%08X	if (i == kKeptCount || n.at != n.symbol) Fatal("gfx_snapshot: kept range 0x%08X, symbols.toml says 0x%08X", n.at, n.symbol);
 site	src/render/gfx_snapshot.cpp	444	fmt_place	word	live	n.symbol	%08X	if (i == kKeptCount || n.at != n.symbol) Fatal("gfx_snapshot: kept range 0x%08X, symbols.toml says 0x%08X", n.at, n.symbol);
 site	src/render/gfx_snapshot.cpp	446	narrow_call	image	live	&D3d_ShadeModeCache	Va	if (Va(&D3d_ShadeModeCache) != ::bof3::Img(0x6C3A44)) Fatal(" ");
-site	src/render/interp.cpp	595	fmt_place	word	live	n.object	%08X	bof3::Log("interp-dbg NOTE cmd %u object %08X stands (%.1f, %.1f)", n.index, n.object, n.x, n.y);
-site	src/render/interp.cpp	606	fmt_place	word	live	note->object	%08X	bof3::Log("interp-dbg IDENT cmd %u object %08X tex %u at (%.1f, %.1f) stands (%.1f, %.1f) d (%.1f, %.1f)", i, note->object,
-site	src/render/interp.cpp	870	fmt_place	word	live	n.object	%08X	bof3::Log("interp-fig fc %u object %08X paired %d shown (%.2f, %.2f) kept %d stands (%.2f, %.2f) picture (%.2f, %.2f)",
+site	src/render/interp.cpp	646	fmt_place	word	live	n.object	%08X	bof3::Log("interp-dbg NOTE cmd %u object %08X stands (%.1f, %.1f)", n.index, n.object, n.x, n.y);
+site	src/render/interp.cpp	657	fmt_place	word	live	note->object	%08X	bof3::Log("interp-dbg IDENT cmd %u object %08X tex %u at (%.1f, %.1f) stands (%.1f, %.1f) d (%.1f, %.1f)", i, note->object,
+site	src/render/interp.cpp	922	fmt_place	word	live	n.object	%08X	bof3::Log("interp-fig fc %u object %08X paired %d shown (%.2f, %.2f) kept %d stands (%.2f, %.2f) picture (%.2f, %.2f)",
 site	src/render/render_d3d11.cpp	135	asm	cw	live	fnstcw %0	fnstcw	FpuGuard() { __asm__ volatile("fnstcw %0" : "=m"(cw_)); }
 site	src/render/render_d3d11.cpp	136	asm	cw	live	fldcw %0	fldcw	~FpuGuard() { __asm__ volatile("fldcw %0" : : "m"(cw_)); }
 site	src/render/render_d3d11.cpp	147	long	ul	live	unsigned long	-	if (FAILED(hr)) bof3::Fatal(" ", what, static_cast<unsigned long>(static_cast<std::uint32_t>(hr)));
@@ -11792,7 +11807,7 @@ file	src/game/battle/battle_banner.cpp	live	low32	image_local	3
 file	src/game/battle/battle_banner.cpp	live	uintptr	-	2
 file	src/game/battle/battle_banner.cpp	live	widen	param	2
 file	src/game/battle/battle_damage_fuzz.cpp	fuzz	narrow	helper_def	1
-file	src/game/battle/battle_damage_fuzz.cpp	fuzz	narrow_call	image_local	6
+file	src/game/battle/battle_damage_fuzz.cpp	fuzz	narrow_call	image_local	7
 file	src/game/battle/battle_damage_fuzz.cpp	fuzz	narrow_call	object_ours	5
 file	src/game/battle/battle_damage_fuzz.cpp	fuzz	uintptr	-	1
 file	src/game/battle/battle_e1_fuzz.cpp	fuzz	narrow	helper_def	1
@@ -11879,6 +11894,7 @@ file	src/game/battle/battle_misc_fuzz.cpp	fuzz	fmt_place	word	2
 file	src/game/battle/battle_misc_fuzz.cpp	fuzz	naked	-	1
 file	src/game/battle/battle_misc_fuzz.cpp	fuzz	narrow	helper_def	1
 file	src/game/battle/battle_misc_fuzz.cpp	fuzz	narrow_call	func_ours	1
+file	src/game/battle/battle_misc_fuzz.cpp	fuzz	narrow_call	image_local	8
 file	src/game/battle/battle_misc_fuzz.cpp	fuzz	narrow_call	object_ours	23
 file	src/game/battle/battle_misc_fuzz.cpp	fuzz	uintptr	-	2
 file	src/game/battle/battle_misc_fuzz.cpp	fuzz	widen	param	1
@@ -11944,7 +11960,7 @@ file	src/game/battle/battle_windows.cpp	live	widen	param	1
 file	src/game/battle/battle_windows_fuzz.cpp	fuzz	asm	cw	2
 file	src/game/battle/battle_windows_fuzz.cpp	fuzz	narrow	helper_def	1
 file	src/game/battle/battle_windows_fuzz.cpp	fuzz	narrow_call	func_ours	3
-file	src/game/battle/battle_windows_fuzz.cpp	fuzz	narrow_call	image_local	3
+file	src/game/battle/battle_windows_fuzz.cpp	fuzz	narrow_call	image_local	4
 file	src/game/battle/battle_windows_fuzz.cpp	fuzz	narrow_call	object_ours	6
 file	src/game/battle/battle_windows_fuzz.cpp	fuzz	uintptr	-	1
 file	src/game/battle/boss_spawn_fuzz.cpp	fuzz	narrow	helper_def	1
@@ -12304,7 +12320,7 @@ file	src/game/core/save_menu_fuzz.cpp	fuzz	asm	stack	1
 file	src/game/core/save_menu_fuzz.cpp	fuzz	asm_symbol	underscore	1
 file	src/game/core/save_menu_fuzz.cpp	fuzz	fmt_place	word	2
 file	src/game/core/save_menu_fuzz.cpp	fuzz	narrow	helper_def	1
-file	src/game/core/save_menu_fuzz.cpp	fuzz	narrow_call	func_ours	1
+file	src/game/core/save_menu_fuzz.cpp	fuzz	narrow_call	func_ours	2
 file	src/game/core/save_menu_fuzz.cpp	fuzz	narrow_call	image_local	27
 file	src/game/core/save_menu_fuzz.cpp	fuzz	narrow_call	object_ours	19
 file	src/game/core/save_menu_fuzz.cpp	fuzz	uintptr	-	2
@@ -12319,7 +12335,8 @@ file	src/game/core/sound.cpp	live	narrow_call	heap	1
 file	src/game/core/sound.cpp	live	narrow_call	image	3
 file	src/game/core/sound.cpp	live	narrow_call	image_local	1
 file	src/game/core/sound.cpp	live	narrow_call	unread	1
-file	src/game/core/sound.cpp	live	uintptr	-	8
+file	src/game/core/sound.cpp	live	uintptr	-	9
+file	src/game/core/sound.cpp	live	widen	code_place	1
 file	src/game/core/sound.cpp	live	widen	img_place	2
 file	src/game/core/sound.cpp	live	widen	param	8
 file	src/game/core/sound.cpp	live	width_if	asm_pair	4
@@ -13771,6 +13788,7 @@ file	src/game/magic/battle_odds_fuzz.cpp	fuzz	asm	stack	1
 file	src/game/magic/battle_odds_fuzz.cpp	fuzz	fmt_place	word	2
 file	src/game/magic/battle_odds_fuzz.cpp	fuzz	naked	-	1
 file	src/game/magic/battle_odds_fuzz.cpp	fuzz	narrow	helper_def	1
+file	src/game/magic/battle_odds_fuzz.cpp	fuzz	narrow_call	image_local	2
 file	src/game/magic/battle_odds_fuzz.cpp	fuzz	narrow_call	object_ours	9
 file	src/game/magic/battle_odds_fuzz.cpp	fuzz	uintptr	-	2
 file	src/game/magic/battle_odds_fuzz.cpp	fuzz	widen	param	1
@@ -15387,9 +15405,9 @@ file	symbols.toml	live	ptr_member	ours_render	11
 file	symbols.toml	live	ptr_member	windows_function	14
 file	symbols.toml	live	ptr_member	windows_handle	3
 file	symbols.toml	live	ptr_member	windows_object	10
-#count sites	11353
-#count sites_live	7882
-#count sites_fuzz	3471
+#count sites	11368
+#count sites_live	7884
+#count sites_fuzz	3484
 #count fuzz_files	250
 #count narrow	357
 #count narrow_live	9
@@ -15423,15 +15441,15 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count narrow_windows	4
 #count narrow_windows_live	2
 #count narrow_windows_live_files	2
-#count narrow_call	3328
+#count narrow_call	3341
 #count narrow_call_live	1499
 #count narrow_call_live_files	332
-#count narrow_call_fuzz	1829
+#count narrow_call_fuzz	1842
 #count narrow_call_fuzz_files	234
 #count narrow_call_crt	2
 #count narrow_call_crt_live	2
 #count narrow_call_crt_live_files	1
-#count narrow_call_func_ours	235
+#count narrow_call_func_ours	236
 #count narrow_call_func_ours_live	40
 #count narrow_call_func_ours_live_files	10
 #count narrow_call_heap	1
@@ -15440,7 +15458,7 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count narrow_call_image	1230
 #count narrow_call_image_live	828
 #count narrow_call_image_live_files	194
-#count narrow_call_image_local	1188
+#count narrow_call_image_local	1200
 #count narrow_call_image_local_live	531
 #count narrow_call_image_local_live_files	197
 #count narrow_call_object_ours	524
@@ -15455,14 +15473,14 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count narrow_call_windows	11
 #count narrow_call_windows_live	5
 #count narrow_call_windows_live_files	2
-#count widen	1348
-#count widen_live	1038
+#count widen	1349
+#count widen_live	1039
 #count widen_live_files	488
 #count widen_fuzz	310
 #count widen_fuzz_files	147
-#count widen_code_place	26
-#count widen_code_place_live	26
-#count widen_code_place_live_files	16
+#count widen_code_place	27
+#count widen_code_place_live	27
+#count widen_code_place_live_files	17
 #count widen_img_place	96
 #count widen_img_place_live	91
 #count widen_img_place_live_files	56
@@ -15563,13 +15581,13 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count sizeof_ptr_-	17
 #count sizeof_ptr_-_live	17
 #count sizeof_ptr_-_live_files	9
-#count uintptr	1983
-#count uintptr_live	1317
+#count uintptr	1984
+#count uintptr_live	1318
 #count uintptr_live_files	524
 #count uintptr_fuzz	666
 #count uintptr_fuzz_files	249
-#count uintptr_-	1983
-#count uintptr_-_live	1317
+#count uintptr_-	1984
+#count uintptr_-_live	1318
 #count uintptr_-_live_files	524
 #count fmt_place	548
 #count fmt_place_live	478

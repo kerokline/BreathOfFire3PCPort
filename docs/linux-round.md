@@ -3191,6 +3191,108 @@ Linux build (about 2 minutes on 12 cores; needs `libclang-*.so` and
 - The latent register and `al` cases above were not shown harmless in each
   call site's disassembly; the reason given is the general one.
 
+**Addition, 2026-11-22: the 20 register-narrow calls fixed** (branch
+`linux/lcC-regnarrow`, from `origin/linux/lcC` `4072c542`; the owner's call
+that they be fixed rather than listed). Each call now passes the place as
+the pointer its function takes, by the idiom its module already uses for
+that kind of place; every caller of each changed member found by the
+compiler (a word where a pointer is now typed does not compile), the i686
+shadow stand-ins included.
+
+| Site (callee, argument) | Was | Now |
+|---|---|---|
+| battle_misc `set_tint` (Sprite_SetTint 1) | `U` | `unsigned char*`; `BattleMisc_StatusTintBody` passes `AtBattleMisc(SpriteCurrent())` |
+| battle_misc `ai_row_done` (EnemyAI_RowDone 1), `ai_apply` (EnemyAI_ApplyAction 1, 2), `ai_set_done` (EnemyAI_SetRowDone 1) | `U` | `const unsigned char*` / `unsigned char*`; `effect.cpp` (`FireRow`, `EnemyAI_TurnCheck`'s ops 0x21..0x24) passes `AtBattleMisc(...)` of the same words |
+| battle_misc `copy_n` (Str_CopyN 1, 2) | `U, U` | `char*, const char*`; `BattleBanner_SetMessage`, `BattleBanner_ShowName` pass `AtBattleMisc` of the same words, cast to `char*` |
+| battle_odds `release_tint`, `set_tint` (1) | `U` | `unsigned char*`; `BattleFx_TintActor` passes `AtBattleOdds(object)` |
+| battle_windows `pose_from` (Sprite_PoseFromSet 2) | `std::uint32_t` | `unsigned char*`; `BattleObj_PickPose` passes `battle_windows::At(Img(kPoseSet))` |
+| save_menu `task_restart` (Task_Restart 1) | `U` | `void*`; `sound.cpp` passes the code place as `battle_loss.cpp` and `scena_15_2.cpp` do (`reinterpret_cast<void*>(static_cast<std::uintptr_t>(Code(...)))`) |
+| `SH_AT` SndBuf_SetVolume (1) | `std::uint32_t` | `void*` (`AtScenaSx2(buffer)`), the level as `int` |
+| `BH_AT` Stat_AddClampedTo (1) | `U` (`Key(stat)`) | `unsigned short*` (the `stat` pointer the function already held) |
+| `SH_AT` EffectKind0F_DrawGlyph (2), in `effect_1a.cpp` and `effect_kind_0f.cpp`; EffectKind0F_CharCount (1) | `U` | `const unsigned char*` (`At(text)`) inside the local wrappers `MessageLine` and `StringCount`; their callers unchanged |
+| `SH_AT` Shisu_DrawModel (1) | `U` | `unsigned char*` (`At(Img(kFigure))`) |
+| `SH_AT` Field_CellTriggerAt (1), `scena_03.cpp`, `scena_04_2.cpp`, `scena_07_2.cpp` | `std::uint32_t` | `unsigned char*` (`At(records)`) inside each `CellFind` |
+
+**Why the tables keep their casts.** The battle_misc, battle_odds and
+battle_windows tables return `eax` whole (`U` or `unsigned`) where the
+functions return a byte, `void` or a pointer, which the groups' callers and
+fuzz rely on (the header comments say so); and the tables reach other
+groups' functions by address, so that `BOF3X_ORIGINAL` of a callee still
+sends the call to Capcom's copy in the hosted build. Filling those with the
+function itself would change one or the other, so only the argument types
+changed. No site needed more than its callers; none was left.
+
+**Left listed** (unchanged, 25 entries of `WAITING`): the 13 live
+`truncating` (pointers into the image and its pools read or passed as 32
+bits), the 13 `truncating` in the shadow fuzz tables, and the 3 `variadic`.
+`Str_CopyN`'s pointer return read as `U` was not changed with its arguments:
+`BattleBanner_SetMessage` passes that `eax` on as a word, so the fix would
+not be the same shape.
+
+**Census** (`fnptr_census.py --check` in the WSL, the branch's Linux build):
+868 units, 0 parse errors, 2,927 sites; `ok` 1,537 (was 1,526),
+`reg-narrow` 0 (was 20), `truncating` 26, `variadic` 3, `count` 285,
+`unresolved` 972, `unknown` 142; 25 waiting, 0 failing, rc 0.
+
+**Codegen** (`codegen_same.py --by-function`, against builds of
+`origin/linux/lcC` `4072c542` in the same worktree). 32-bit: 27 symbols
+differ, every one in a fuzz file (`battle_misc_fuzz`, `battle_odds_fuzz`,
+`battle_windows_fuzz`, `save_menu_fuzz`: the stand-ins renamed by their
+mangled names, the tables and `Clone` / `SelfTest` that name them); no game
+function differs. 64-bit Windows: 19 differ - `BattleBanner_SetMessage`,
+`BattleBanner_ShowName`, `BattleFx_TintActor`, `BattleObj_PickPose`,
+`EffectKind0F_LineFade`, `_LineNext`, `_LineScroll`, `_LineType`, `_Title`,
+`_TitleClose` (the inlined `MessageLine` / `StringCount`),
+`Effect_DrainAp`, `Effect_DrainHp` and their `DrainActor`,
+`EnemyAI_TurnCheck`, `MasterFigure_DrawFaded`, `Scena03_CellHook`,
+`Scena04_CellHook`, `Scena07_CellHook`, `Sound_SetCueVolume`: the callers,
+now loading a 64-bit register (`mov rcx, rdi` where `mov ecx, edi` was).
+The other changed callers (`BattleMisc_StatusTintBody`, `effect_1a.cpp`'s
+`MessageLine` callers, the `task_restart` caller) compile to the same code:
+their words were already produced by 32-bit loads.
+
+**The census files.** `data_census --strict` named the four sites that now
+pass a place through `At()`; their rows in `analysis/typed_left.tsv` were
+rekeyed (accessor `-` to `At`), reasons kept. `width_census --check` named
+the `task_restart` argument; `analysis/width_census.tsv` was made again (it
+is line-keyed, so it also carries line moves of files changed earlier on
+`linux/lcC`; rows moved, none added or removed outside this change).
+
+**Runs** (the WSL as before: `~/src/lcC-banner` brought to the commit,
+`src/` checked equal to it with `diff -r`; the ELF of `73224478`, md5
+`02aede46...`; the same two install copies; one game at a time, 10:49 to
+11:42, tag `rn`; no build in the WSL during them):
+- Self-test: US rc 0, 10,514 lines; PSP rc 0, 10,488; 0 `FATAL`, 0 `CRASH`,
+  `self-test only: done`.
+- The ten routes on both installs: 20 runs, rc 0, 0 `FATAL`, 0 `CRASH`, the
+  recipe's end reached, no compiler seen (0 samples each); seconds within
+  1 s of the `fix` runs.
+- `statehash.py diff` of each against this unit's own `fix` run of the same
+  route and install: **identical on every compared tick, all 20** (`combat`
+  2,602 ticks, `shop` 3,137, `whelpBoss` 13,163 on each install). US `shop`
+  included: the window found against the coordinator's `shop_c` above does
+  not appear between two quiet runs.
+- The logs are 4 to 12 lines longer than the `fix` runs'. The difference
+  (digits and addresses masked, `diff`) is the state hash's `watch` lines,
+  "the word at ... holds our function's own address, not its place (name)":
+  which game words happen to equal an address of a function of ours depends
+  on where the linker put the functions, which this change moved. The hash
+  itself is the same.
+
+**The gate on `c502661a`** (Windows, after the Linux runs; a first pass
+during them found the two census files, which were then made): `ledger_check` 245 entries, 0 errors; `os_census --check` (1920
+sites), `--boundary`, `--headers`; `width_census --check` and `data_census
+--strict` (after the two census files above); `reloc_census --check`;
+`reloc_bare --check`; `ledger_switches --check`; `tu_census --check
+--strict`; `retire_shells --check --strict`; `importer.py check` (742 files,
+0 errors, and its sub-checks, `build_reuse`'s lint among them): all rc 0.
+Both Windows presets build.
+
+**Not verified:** the 64-bit Windows build ran no route (as before); the
+32-bit shadow fuzz of the four groups whose stand-ins changed type was not
+run (their recorded words are the same 32-bit values); no person saw a
+picture.
+
 ### Wave C as run (2026-11-22, branch `linux/lcC`, from `main` `d56e4097`)
 
 The coordinator's part: the merges, the disc-built installs, the gate.

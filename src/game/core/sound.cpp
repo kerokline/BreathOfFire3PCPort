@@ -409,7 +409,7 @@ extern "C" void __cdecl Sound_SetCueVolume(unsigned cue, unsigned level) {
         const std::uint32_t voice = UScenaSx2(LongScenaSx2(AtScenaSx2(cue_at + 4 * k)));
         if (voice == 0) continue;
         const std::uint32_t buffer = UScenaSx2(LongScenaSx2(AtScenaSx2(AddrScenaSx2(Sound_Banks) + scena_sx2::at::kBankVoices + bank + (voice & 0xFF) * 8)));
-        SH_AT(void (__cdecl*)(std::uint32_t, std::uint32_t), scena_sx2::at::kSndBufVolume.v)(buffer, level);
+        SH_AT(void (__cdecl*)(void*, int), scena_sx2::at::kSndBufVolume.v)(AtScenaSx2(buffer), static_cast<int>(level));
     }
 }
 
@@ -1234,7 +1234,7 @@ extern "C" void __cdecl TitleFlow_EnterGame(void) {
         save_menu::g.roll_growth(i);
         save_menu::g.recalc(AtSaveMenu(::bof3::Img(CharacterRecords_addr) + i * save_menu::at::kCharStride));
     }
-    save_menu::g.task_restart(::bof3::Code(save_menu::at::kGameTask.v));
+    save_menu::g.task_restart(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(save_menu::at::kGameTask.v))));
 }
 
 // 0x588880 (docs/title-menu.md section 2). With something to load, rows 0, 1,

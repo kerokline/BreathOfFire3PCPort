@@ -621,8 +621,6 @@ def _wait(file, target, verdict, details, why):
 
 _LOW = ("the value is a place of the game's (the image, its pools or the low-memory reservations), "
         "below 4 GB by the 64-bit design; the callee keeps 32 bits of it as the original does")
-_REG = ("a register argument: the caller computes the word with 32-bit arithmetic, which clears the "
-        "high half on x86-64; the ABI leaves that half undefined, so it is latent, not wrong today")
 _VAR = ("System V both sides (B2d): the integer and pointer arguments are in the same registers; "
         "al, the variadic callee's count of vector registers, is not set, which only bounds a save")
 _wait("src/game/area/area_174.cpp", "Field_SlotStart", "truncating", ["argument 2: ptr passed, 4 bytes read (register)"], _LOW)
@@ -631,26 +629,7 @@ _wait("src/game/area/area_85.cpp", "Field_SlotStart", "truncating", ["argument 2
 _wait("src/game/battle/battle_3.cpp", "Char_AbilityList", "truncating", ["return: 4 bytes read, ptr made"], _LOW)
 _wait("src/game/battle/battle_3.cpp", "Msg_SystemPtr", "truncating", ["return: 4 bytes read, ptr made"], _LOW)
 _wait("src/game/battle/battle_3.cpp", "Str_CopyN", "truncating", ["return: 4 bytes read, ptr made"], _LOW)
-_wait("src/game/battle/battle_3.cpp", "Str_CopyN", "reg-narrow",
-      ["argument 1: 4 bytes passed, ptr read (register)", "argument 2: 4 bytes passed, ptr read (register)"], _REG)
-_wait("src/game/battle/battle_3.cpp", "Sprite_SetTint", "reg-narrow", ["argument 1: 4 bytes passed, ptr read (register)"], _REG)
-_wait("src/game/battle/battle_3.cpp", "EnemyAI_RowDone", "reg-narrow", ["argument 1: 4 bytes passed, ptr read (register)"], _REG)
-_wait("src/game/battle/battle_3.cpp", "EnemyAI_ApplyAction", "reg-narrow",
-      ["argument 1: 4 bytes passed, ptr read (register)", "argument 2: 4 bytes passed, ptr read (register)"], _REG)
-_wait("src/game/battle/battle_3.cpp", "EnemyAI_SetRowDone", "reg-narrow", ["argument 1: 4 bytes passed, ptr read (register)"], _REG)
-_wait("src/game/battle/battle_banner.cpp", "Sprite_ReleaseTint", "reg-narrow", ["argument 1: 4 bytes passed, ptr read (register)"], _REG)
-_wait("src/game/battle/battle_banner.cpp", "Sprite_SetTint", "reg-narrow", ["argument 1: 4 bytes passed, ptr read (register)"], _REG)
-_wait("src/game/battle/battle_obj.cpp", "Sprite_PoseFromSet", "reg-narrow", ["argument 2: 4 bytes passed, ptr read (register)"], _REG)
-_wait("src/game/battle/dragon_cmd.cpp", "Task_Restart", "reg-narrow", ["argument 1: 4 bytes passed, ptr read (register)"], _REG)
-_wait("src/game/core/sound.cpp", "SndBuf_SetVolume", "reg-narrow", ["argument 1: 4 bytes passed, ptr read (register)"], _REG)
-_wait("src/game/effect/effect.cpp", "Stat_AddClampedTo", "reg-narrow", ["argument 1: 4 bytes passed, ptr read (register)"], _REG)
-_wait("src/game/effect/effect_1a.cpp", "EffectKind0F_DrawGlyph", "reg-narrow", ["argument 2: 4 bytes passed, ptr read (register)"], _REG)
-_wait("src/game/effect/effect_kind_0f.cpp", "EffectKind0F_DrawGlyph", "reg-narrow", ["argument 2: 4 bytes passed, ptr read (register)"], _REG)
-_wait("src/game/effect/effect_kind_0f.cpp", "EffectKind0F_CharCount", "reg-narrow", ["argument 1: 4 bytes passed, ptr read (register)"], _REG)
 _wait("src/game/effect/effect_kind_0f.cpp", "UiSprite_Draw", "truncating", ["return: 4 bytes read, ptr made"], _LOW)
-_wait("src/game/minigame/shisu.cpp", "Shisu_DrawModel", "reg-narrow", ["argument 1: 4 bytes passed, ptr read (register)"], _REG)
-for _f in ("scena_03", "scena_04_2", "scena_07_2"):
-    _wait("src/game/scenario/%s.cpp" % _f, "Field_CellTriggerAt", "reg-narrow", ["argument 1: 4 bytes passed, ptr read (register)"], _REG)
 for _f in ("buff_spike", "leech_shell", "shield_spark"):
     _wait("src/game/magic/%s.cpp" % _f, "MagicFx_LinkByDepth", "truncating", ["argument 4: ptr passed, 4 bytes read (register)"], _LOW)
 _wait("src/game/field/area_map.cpp", "Crt_sprintf", "variadic", ["caller fixed, callee variadic"], _VAR)

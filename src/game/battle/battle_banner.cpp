@@ -108,8 +108,8 @@ const Callees kOriginals = {
     As<U (__cdecl*)(U)>(BattleBanner_NoneOfKind),
     As<U (__cdecl*)(U, U, U)>(Battle_CalcDamage),
     As<U (__cdecl*)()>(BattleTask_FreeCurrent),
-    As<U (__cdecl*)(U)>(Sprite_ReleaseTint),
-    As<U (__cdecl*)(U, U, U, U, U)>(Sprite_SetTint),
+    As<U (__cdecl*)(unsigned char*)>(Sprite_ReleaseTint),
+    As<U (__cdecl*)(unsigned char*, U, U, U, U)>(Sprite_SetTint),
     As<U (__cdecl*)()>(BattleActor_FxSize),
     As<U (__cdecl*)(U)>(Battle_SetTargetFlag40),
 };
@@ -270,7 +270,9 @@ extern "C" unsigned char __cdecl BattleQueue_Pending(void) {
 // DIVERGENCE DIV-0052: 12 bytes, the US release's count, once a language
 // overlay has repointed the table at its longer words (src/game/battle_text.cpp).
 extern "C" std::uint32_t __cdecl BattleBanner_SetMessage(unsigned msg, unsigned b2) {
-    const battle_misc::U eax = battle_misc::g.copy_n(::bof3::Img(kBannerText.v), LongBattleMisc(AtBattleMisc(::bof3::Img(kMessages.v) + (msg & 0xFF) * 4)), BattleMessages_CopyRoom());
+    const battle_misc::U eax = battle_misc::g.copy_n(reinterpret_cast<char*>(AtBattleMisc(::bof3::Img(kBannerText.v))),
+                                                        reinterpret_cast<const char*>(AtBattleMisc(LongBattleMisc(AtBattleMisc(::bof3::Img(kMessages.v) + (msg & 0xFF) * 4)))),
+                                                        BattleMessages_CopyRoom());
     Banner(0)[2] = static_cast<unsigned char>(b2);
     return eax;
 }
@@ -298,7 +300,7 @@ extern "C" void __cdecl Battle_EnemyNameToText(unsigned actor) {
 // rep movsb). Then BattleBanner_Set(0, 1, 1, 0, 0xFF, kBannerText), whose eax
 // is returned.
 extern "C" std::uint32_t __cdecl BattleBanner_ShowName(const unsigned char* actor) {
-    battle_misc::g.copy_n(::bof3::Img(kBannerText.v), Addr(actor) + 0x80, 8);
+    battle_misc::g.copy_n(reinterpret_cast<char*>(AtBattleMisc(::bof3::Img(kBannerText.v))), reinterpret_cast<const char*>(AtBattleMisc(Addr(actor) + 0x80)), 8);
     if (BattlePhases_B7A != 0) {
         const battle_misc::U src = BattleMisc_NameSuffix;
         battle_misc::U n = 0;

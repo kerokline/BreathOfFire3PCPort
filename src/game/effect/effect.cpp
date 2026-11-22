@@ -170,7 +170,7 @@ void DrainActor(const Drain& d) {
     if (static_cast<S32BattleE5>(Word(stat)) + S16BattleE5(Word(ResultBattleE5() + d.at)) > static_cast<S32BattleE5>(W(max_at)))
         Ptr(::bof3::Img(battle_e5::at::kActingSprite2.v))[8] = static_cast<unsigned char>(Ptr(::bof3::Img(battle_e5::at::kActingSprite2.v))[8] | d.flag);
     const U result = BattleDamage_Result;
-    const U change = BH_AT(U3, battle_e5::at::kStatAdd.v)(Key(stat), (result & 0xFFFF0000u) | W(max_at), Word(At(result) + d.at));
+    const U change = BH_AT(U (__cdecl*)(unsigned short*, U, U), battle_e5::at::kStatAdd.v)(reinterpret_cast<unsigned short*>(stat), (result & 0xFFFF0000u) | W(max_at), Word(At(result) + d.at));
     if (d.ap) BH_AT(U2, battle_e5::at::kApPopup.v)(0u - change, B(::bof3::Img(battle_e5::at::kActor.v)));
     else BH_CALL(Battle_SetDamagePopup)(0u - change, B(::bof3::Img(battle_e5::at::kActor.v)));
     Ptr(::bof3::Img(battle_e5::at::kActingSprite2.v))[8] = 0;
@@ -194,9 +194,9 @@ battle_misc::U CurrentEnemy() { return Low32(BattleE3_CurrentEnemy.Native()); }
 // then EnemyAI_ApplyAction and EnemyAI_SetRowDone(.., row, 1), each handed the
 // current enemy read again. `actor` is what the row's test used.
 void FireRow(battle_misc::U actor, battle_misc::U row_address, battle_misc::U row) {
-    if (battle_misc::g.ai_row_done(actor, row) & 0xFF) return;
-    battle_misc::g.ai_apply(CurrentEnemy(), row_address);
-    battle_misc::g.ai_set_done(CurrentEnemy(), row, 1);
+    if (battle_misc::g.ai_row_done(AtBattleMisc(actor), row) & 0xFF) return;
+    battle_misc::g.ai_apply(AtBattleMisc(CurrentEnemy()), AtBattleMisc(row_address));
+    battle_misc::g.ai_set_done(AtBattleMisc(CurrentEnemy()), row, 1);
 }
 
 }  // namespace
@@ -576,10 +576,10 @@ extern "C" std::uint32_t __cdecl EnemyAI_TurnCheck(void) {
             if (AtBattleMisc(actor + 0xAA)[0] == 0) FireRow(actor, row, i);
             break;
         case 0x21: case 0x22: case 0x23:
-            if (battle_misc::g.ai_condition(1u << (op - 0x21)) & 0xFF) battle_misc::g.ai_apply(CurrentEnemy(), row);
+            if (battle_misc::g.ai_condition(1u << (op - 0x21)) & 0xFF) battle_misc::g.ai_apply(AtBattleMisc(CurrentEnemy()), AtBattleMisc(row));
             break;
         case 0x24:
-            if (acting == 1 && WordBattleMisc(AtBattleMisc(actor + 0x108)) != 0) battle_misc::g.ai_apply(actor, row);
+            if (acting == 1 && WordBattleMisc(AtBattleMisc(actor + 0x108)) != 0) battle_misc::g.ai_apply(AtBattleMisc(actor), AtBattleMisc(row));
             break;
         case 0x25:
             if (static_cast<std::int32_t>(WordBattleMisc(AtBattleMisc(actor + 0xA4))) <=

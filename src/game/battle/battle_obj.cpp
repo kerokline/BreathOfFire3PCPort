@@ -228,7 +228,7 @@ const Callees kOriginals = {
     reinterpret_cast<unsigned (__cdecl*)()>(reinterpret_cast<void*>(&Sprite_ScriptTick)),
     reinterpret_cast<unsigned (__cdecl*)()>(reinterpret_cast<void*>(&Sprite_ScriptTickOnce)),
     reinterpret_cast<unsigned (__cdecl*)(unsigned)>(reinterpret_cast<void*>(&Sprite_EnsureAnimation)),
-    Fn<unsigned (__cdecl*)(unsigned, std::uint32_t, unsigned)>(::bof3::Code(kPoseFrom.v)),
+    Fn<unsigned (__cdecl*)(unsigned, unsigned char*, unsigned)>(::bof3::Code(kPoseFrom.v)),
     Fn<void (__cdecl*)(int, int, unsigned, unsigned)>(::bof3::Code(kDrawValue.v)),
     Fn<void (__cdecl*)(int, int, unsigned, unsigned)>(::bof3::Code(kDrawEdge.v)),
     Fn<void (__cdecl*)(int, int, unsigned, unsigned)>(::bof3::Code(kDrawTile.v)),
@@ -341,9 +341,9 @@ extern "C" unsigned __cdecl BattleObj_PickPose() {
     if (own_poses) {
         const bool high = (EventBattle_Flags & 0x20) != 0;
         if (FieldState()[0x91] & 0x40)
-            return battle_windows::g.pose_from(static_cast<unsigned char>(Sprite()[8] + 0x1C), ::bof3::Img(battle_windows::at::kPoseSet.v), 0x1800);
-        if (high) return battle_windows::g.pose_from(Sprite()[0x4B], ::bof3::Img(battle_windows::at::kPoseSet.v), 0x1800);
-        return battle_windows::g.pose_from(static_cast<unsigned char>(Sprite()[8] + 0x20), ::bof3::Img(battle_windows::at::kPoseSet.v), 0x1800);
+            return battle_windows::g.pose_from(static_cast<unsigned char>(Sprite()[8] + 0x1C), battle_windows::At(::bof3::Img(battle_windows::at::kPoseSet.v)), 0x1800);
+        if (high) return battle_windows::g.pose_from(Sprite()[0x4B], battle_windows::At(::bof3::Img(battle_windows::at::kPoseSet.v)), 0x1800);
+        return battle_windows::g.pose_from(static_cast<unsigned char>(Sprite()[8] + 0x20), battle_windows::At(::bof3::Img(battle_windows::at::kPoseSet.v)), 0x1800);
     }
     unsigned char* const f = FieldState();
     auto* const member_rec = rv::As<records::PartyMember>(f);

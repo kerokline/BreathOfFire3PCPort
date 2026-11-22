@@ -411,7 +411,7 @@ int __cdecl StubLoadDone() {
     return static_cast<int>(Hash(0x36A) | 1);
 }
 void __cdecl StubTaskSleep(int n) { Record(0x37, static_cast<U>(n)); }
-void __cdecl StubTaskRestart(U entry) { Record(0x38, entry); }
+void __cdecl StubTaskRestart(void* entry) { Record(0x38, Addr(entry)); }
 int __cdecl StubListFiles() {
     Record(0x39);
     const U h = Hash(0x39A);

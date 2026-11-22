@@ -926,7 +926,7 @@ extern "C" void __cdecl MasterFigure_DrawFaded(void) {
                                 : 0xFF;
     BRest2c(::bof3::Img(rest_2c::at::kFigureRgb.v) + 2) = static_cast<int>(BRest2c(::bof3::Img(rest_2c::at::kFigureRgb.v) + 2)) > t ? static_cast<unsigned char>(BRest2c(::bof3::Img(rest_2c::at::kFigureRgb.v) + 2) + down)
                                                                          : 0;
-    SH_AT(void (__cdecl*)(U), rest_2c::at::kFigureDraw.v)(::bof3::Img(rest_2c::at::kFigure.v));
+    SH_AT(void (__cdecl*)(unsigned char*), rest_2c::at::kFigureDraw.v)(At(::bof3::Img(rest_2c::at::kFigure.v)));
     Rest2c_FigureRgb = r;
     BRest2c(::bof3::Img(rest_2c::at::kFigureRgb.v) + 1) = g;
     BRest2c(::bof3::Img(rest_2c::at::kFigureRgb.v) + 2) = b;
