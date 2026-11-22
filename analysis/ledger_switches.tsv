@@ -10454,11 +10454,11 @@ switch	env:BOF3X_VSYNC	env	yes		src/game/platform/d3d.cpp:960 src/render/render_
 switch	env:BOF3X_WAV_DIR	env	yes		src/hook/wav_dump.cpp:684	read in src/
 switch	env:BOF3X_WAV_LABEL	env	yes		src/hook/wav_dump.cpp:691	read in src/
 switch	env:BOF3X_WIDE	launcher	yes		src/launcher/config.cpp:741 src/game/platform/widescreen.cpp:356 src/launcher/config.cpp:740 src/launcher/config.cpp:1847	read in src/, set by the launcher
-switch	env:BOF3X_WIDE_HIDE	env	yes		src/game/field/wide_staging.cpp:1237	read in src/
+switch	env:BOF3X_WIDE_HIDE	env	yes		src/game/field/wide_staging.cpp:1243	read in src/
 switch	env:BOF3X_WIDE_INSET	env	yes		src/game/platform/widescreen.cpp:467	read in src/
 switch	env:BOF3X_WIDE_RING	env	yes		src/game/field/map_rim.cpp:682	read in src/
-switch	env:BOF3X_WIDE_STAGING	env	yes		src/game/field/wide_staging.cpp:1236	read in src/
-switch	env:BOF3X_WIDE_STAGING_LOG	env	yes		src/game/field/wide_staging.cpp:1226	read in src/
+switch	env:BOF3X_WIDE_STAGING	env	yes		src/game/field/wide_staging.cpp:1242	read in src/
+switch	env:BOF3X_WIDE_STAGING_LOG	env	yes		src/game/field/wide_staging.cpp:1232	read in src/
 switch	env:BOF3X_WIDE_TERRAIN	env	yes		src/game/platform/widescreen.cpp:452	read in src/
 switch	env:BOF3X_WRITEWATCH	env	yes		src/hook/windows_only.cpp:81 src/hook/write_watch.cpp:190	read in src/
 switch	env:BOF3X_ZENNY	launcher	yes		src/launcher/config.cpp:752 src/game/core/cheats.cpp:158 src/launcher/config.cpp:751 src/launcher/config.cpp:1849	read in src/, set by the launcher
