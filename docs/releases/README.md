@@ -39,8 +39,8 @@ game-data kind or any file whose hash `fixtures.toml` catalogues.
    is the 32-bit build, the player's default; `bof3x-<tag>-win-x64.zip` is
    the 64-bit developer build of the same files
    ([`../x64-build-round.md`](../x64-build-round.md) 6). Both need the same
-   copy of the game. A second job adds the Linux tarball to the same draft
-   ("The Linux tarball" below).
+   copy of the game. The Linux tarball is built first and goes on the same
+   draft ("The Linux tarball" below).
 4. The owner reads the draft on GitHub, downloads the zip, tries it on a
    clean folder, and presses **Publish**. Nothing is public before that
    click. (`workflow_dispatch` with a tag re-runs step 3 for an existing tag,
