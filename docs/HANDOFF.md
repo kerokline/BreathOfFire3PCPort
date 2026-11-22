@@ -148,8 +148,8 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      battle on a disc-built install (the banner fault's twin there, never looked for). The census's 20 register-narrow calls
      were fixed the same day at the owner's word (25 findings stay listed: places below 4 GB, the shadow fuzz tables, two
      variadic calls), and the MinGW DirectX headers' licence reading was checked at the source (`THIRD_PARTY.md` section 8).
-     **Open, the owner's:** whether to put `fnptr_census.py --check` in the Linux CI
-     job (it was run with libclang 21; the runner's clang is 18); `ffmpeg` in the WSL to make the PSP install's effects, voices and logo movie there.
+     `fnptr_census.py --check` is in the Linux CI job (same counts with the runner's libclang 18 as with 21).
+     **Open, the owner's:** `ffmpeg` in the WSL to make the PSP install's effects, voices and logo movie there.
    - **The Linux round's wave B ran on 2026-11-21 (merged as PR #270)**
      ([`linux-round.md`](linux-round.md), "Wave B as run"): the game is a Linux ELF that starts through the Linux launcher and
      ends the ten state-hash routes headless in the WSL on llvmpipe, each differing page explained; `music_heard.py`, a

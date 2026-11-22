@@ -332,6 +332,11 @@ jobs:
       - name: linux_tree.py --check
         run: .github/scripts/linux-build.sh tree
 
+      # A call through a cast function pointer whose shape differs from the
+      # function's on x86-64: the battle banner's fault (D433's amendment).
+      - name: fnptr_census.py --check
+        run: .github/scripts/linux-build.sh census
+
       # Our own binaries and the three libraries a player's folder holds
       # beside them (SDL3 and DXVK, both zlib). No game data is in the build tree.
       - name: Upload

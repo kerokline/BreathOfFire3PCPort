@@ -9,6 +9,7 @@
 #   .github/scripts/linux-build.sh check       the ELFs' shape and their libraries
 #   .github/scripts/linux-build.sh selftest    the checks that need no game data
 #   .github/scripts/linux-build.sh tree        linux_tree.py --check (after configure)
+#   .github/scripts/linux-build.sh census      fnptr_census.py --check (after build)
 #   .github/scripts/linux-build.sh versions    the tools' versions (configure prints them too)
 #
 # Run from the repository's root. Reads no game data and writes only under
@@ -30,12 +31,13 @@ CHECK_DIR=${LINUX_CHECK_DIR:-$BUILD/ci-check}
 #   meson, glslang-tools   DXVK-native's build and its shaders (cmake/dxvk_native.cmake)
 #   ninja-build, pkgconf   named, so that the list also serves a bare 24.04
 #   ccache                 the objects between runs (build.yml's cache)
+#   libclang1-18           libclang for tools/fnptr_census.py (the `census` step)
 #   SDL3's headers         X11 (with XTest), Wayland and libdecor, ALSA, PulseAudio,
 #                          PipeWire, udev, D-Bus, DRM/GBM, EGL, Vulkan: SDL loads each
 #                          at run time and compiles its driver only when the headers
 #                          are there, so this list decides what a player's SDL can do
 PACKAGES=(
-  meson glslang-tools ninja-build pkgconf ccache
+  meson glslang-tools ninja-build pkgconf ccache libclang1-18
   libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev libxtst-dev
   libxkbcommon-dev libwayland-dev libdecor-0-dev libegl-dev
   libasound2-dev libpulse-dev libpipewire-0.3-dev
@@ -167,6 +169,15 @@ tree() {
   python tools/linux_probe/linux_tree.py --check --jobs "$(nproc)"
 }
 
+# The function-pointer census (docs/linux-round.md, "The banner fault and its
+# class"): every call through a cast function pointer against the real
+# function, by what x86-64 does with each argument. It parses the build's
+# translation units with libclang, so it needs the build's generated headers:
+# run it after `build`. Fails on a finding its WAITING list does not hold.
+census() {
+  python tools/fnptr_census.py --build "$BUILD" --check --jobs "$(nproc)"
+}
+
 case "${1:-}" in
   deps) deps ;;
   versions) versions ;;
@@ -175,5 +186,6 @@ case "${1:-}" in
   check) check ;;
   selftest) selftest ;;
   tree) tree ;;
+  census) census ;;
   *) echo "usage: $0 deps|versions|configure|build|check|selftest|tree" >&2; exit 2 ;;
 esac

@@ -3338,11 +3338,14 @@ is not done, and D4 is this section and the status documents.
   build and runs are above. **No workflow of this wave has run on GitHub
   before the pull request**: the Linux CI job's first real run is the
   pull request's, and the release jobs' is the merge's push to `main`.
-- **Left open, listed for the owner:** `fnptr_census.py --check` is not in
-  CI (it needs a configured Linux build and libclang; it was run with
-  libclang 21, and the runner's clang is 18); the ELF's self-test is not in
-  CI (it needs game data); a build on `ubuntu-24.04` needs glibc 2.38 or
-  newer.
+- **Left open, listed for the owner:** the ELF's self-test is not in CI (it
+  needs game data); a build on `ubuntu-24.04` needs glibc 2.38 or newer.
+- **The census is in the Linux CI job (the owner's word, 2026-11-22):**
+  `linux-build.sh census` after the build, `libclang1-18` added to the
+  script's packages. Tried first with libclang 18 in the Ubuntu 24.04 root
+  on this tree: rc 0 in 2 min 25 s on 12 cores, the same counts as with
+  libclang 21 (868 units, 0 parse errors, 2,927 sites, 25 waiting, 0
+  failing).
 - **After the pull request was opened (#276), the same day:** the PR's
   first run failed `importer.py check` on the census tool's libclang handle
   (a module global `build_reuse`'s lint did not know; the tool is now in
