@@ -9948,6 +9948,16 @@ designed in rather than bolted on.
   no exception names, is not drawn. Bit 7 and every field the original writes
   are unchanged; only the primitive is skipped. 16:9 and narrow are
   unchanged.
+  **Amended 2026-11-21 (a sprite the player could already see,
+  [`wide-staging.md`](wide-staging.md) 12):** a candidate drawn through ten
+  frames of free walking in a row (the field's modes, the scene mask clear)
+  is kept - not hidden - from then on, while it goes on being drawn with no
+  more than four frames between two draws in the same area. Until then a
+  plain talk hid a bystander: the owner's innkeeper of area 130, in the
+  21:9 band, went out for the merchant's greeting (mask `02`) and came back
+  when the shop's menu opened (`Game_Mode` 3, not a field scene). The marks
+  are draw-only, read by `HideSite` and the census alone, and stepped by
+  `Frame_Counter`.
 - **Rationale:** the owner's call ([`ultrawide-round.md`](ultrawide-round.md)
   4, layer 2): a simple hide for what is still visible in the 21:9-only part
   of the bands.
@@ -9961,6 +9971,15 @@ designed in rather than bolted on.
   `balioAndSunder_2`'s areas 39 and 41 hidden (283 rows) and the leader never
   ([`ultrawide-census-4.md`](ultrawide-census-4.md) 3). The hash differs from
   the run without it in draw pages only. **Not played by the owner.**
+  The amendment of 2026-11-21: the self-test's section 4a (the marks from 0
+  to 13 frames of walking, through 200 scene frames, across the gap and
+  past it, the counter going back and wrapping; the slots); the owner's
+  route `ultrawideMerchantCull` at 21:9, where the census has object 0
+  `hidden` on recipe frames 378..447 on the build before and on none after
+  ([`wide-staging.md`](wide-staging.md) 12). The owner watched the replay.
+  Not run: the state hash, the census on the routes of census 3 and 4 (a
+  scene's actor that stood in the 21:9 band in free walking before its
+  scene is now drawn through it).
 - **Reversible?** `BOF3X_WIDE_HIDE=0`, or 16:9.
 - **Switch:** env:BOF3X_WIDE_HIDE=0
 - **Default:** on

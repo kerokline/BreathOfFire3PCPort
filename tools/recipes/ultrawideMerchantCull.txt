@@ -1,0 +1,236 @@
+# Recorded by BOF3X_RECORD (src/hook/input_script.cpp): one pad word a frame from
+# recipe frame 0. BOF3X_LANG=en-US BOF3X_FILTER=point - play it back with the same
+# language, since text timing differs between them. F12 wrote the shots;
+# F1..F11, and any key that ended a pause, are `key KEY 0` steps.
+# save ultrawideMerchantCull
+wait 56
+hold start 3
+wait 67
+hold start 7
+wait 51
+hold circle 4
+wait 27
+hold circle 6
+wait 8
+hold circle 6
+wait 7
+hold circle 6
+wait 63
+hold down+left 12
+hold left 4
+hold up+left 41
+wait 10
+hold circle 6
+wait 31
+hold circle 6
+wait 19
+hold circle 5
+wait 39
+hold circle 6
+wait 29
+hold up 3
+wait 12
+hold up 4
+wait 3
+hold up 4
+wait 3
+hold up 3
+wait 3
+hold up 4
+wait 4
+hold up 4
+wait 3
+hold up 3
+wait 4
+hold up 3
+wait 3
+hold up 3
+wait 4
+hold up 3
+wait 4
+hold up 9
+wait 4
+hold up 3
+wait 3
+hold up 4
+wait 3
+hold up 4
+wait 3
+hold up 3
+wait 3
+hold up 3
+wait 3
+hold up 3
+wait 3
+hold up 3
+wait 4
+hold up 2
+wait 4
+hold up 3
+wait 3
+hold up 3
+wait 3
+hold up 3
+wait 3
+hold up 3
+wait 4
+hold up 3
+wait 4
+hold up 2
+wait 4
+hold up 3
+wait 3
+hold up 3
+wait 4
+hold up 3
+wait 3
+hold up 2
+wait 4
+hold up 3
+wait 4
+hold up 2
+wait 4
+hold up 3
+wait 3
+hold up 2
+wait 4
+hold up 3
+wait 3
+hold up 3
+wait 3
+hold up 4
+wait 3
+hold up 3
+wait 3
+hold up 4
+wait 3
+hold up 3
+wait 3
+hold up 4
+wait 3
+hold up 3
+wait 3
+hold up 2
+wait 4
+hold up 3
+wait 3
+hold up 2
+wait 4
+hold up 4
+wait 16
+hold cross 4
+wait 8
+hold right 4
+wait 3
+hold circle 5
+wait 27
+hold down 4
+wait 3
+hold down 3
+wait 3
+hold down 3
+wait 3
+hold down 2
+wait 3
+hold down 4
+wait 3
+hold down 3
+wait 3
+hold down 3
+wait 3
+hold down 3
+wait 3
+hold down 3
+wait 6
+hold up 3
+wait 4
+hold up 2
+wait 4
+hold up 1
+wait 3
+hold up 3
+wait 4
+hold up 3
+wait 4
+hold up 3
+wait 4
+hold up 2
+wait 4
+hold up 3
+wait 4
+hold up 2
+wait 3
+hold up 4
+wait 3
+hold up 4
+wait 6
+hold down 3
+wait 4
+hold down 4
+wait 2
+hold down 3
+wait 3
+hold down 4
+wait 3
+hold down 3
+wait 3
+hold down 4
+wait 2
+hold down 4
+wait 3
+hold down 4
+wait 3
+hold down 3
+wait 3
+hold down 3
+wait 3
+hold down 4
+wait 3
+hold down 3
+wait 3
+hold down 4
+wait 6
+hold up 3
+wait 4
+hold up 3
+wait 3
+hold up 3
+wait 4
+hold up 2
+wait 4
+hold up 3
+wait 4
+hold up 2
+wait 10
+hold up 4
+wait 3
+hold up 3
+wait 3
+hold up 4
+wait 3
+hold up 4
+wait 3
+hold up 3
+wait 4
+hold up 3
+wait 3
+hold up 3
+wait 3
+hold up 4
+wait 3
+hold up 3
+wait 4
+hold up 3
+wait 34
+hold cross 4
+wait 20
+hold cross 5
+wait 116
+key f9 0   # recipe frame 1393
+wait 23
+key f9 0   # recipe frame 1416, paused
+wait 27
+key f9 0   # recipe frame 1443
+wait 35
+key f9 0   # recipe frame 1478, paused
+wait 1

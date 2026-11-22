@@ -578,6 +578,57 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
         }
         return best;
     };
+    // A leap among the still: a pair that is not the draw's partner by order,
+    // that moves it further than a sixth of the cap, while of the kLeapReach
+    // draws before it in the list and of those after it, some have a partner
+    // by order that leaves them still (a quarter of the leap at most) and none
+    // has one that takes it the leap's way (within a quarter of it). The dark
+    // copy's own letters can have partners by order that go anywhere: they
+    // are neither. A thing that moves keeps its
+    // place in the list, or moves with what is drawn around it; a draw that
+    // changes its place in the list and its place in the picture at once,
+    // between draws that did neither, is another thing with the same look.
+    //
+    // A shop's list draws the row under the hand a second time: a dark copy
+    // of its letters and price, then the bullet, the letters and the price
+    // again, raised. When the hand goes to another row those draws come at
+    // that row's place in the list. Their looks are drawn once (the dark
+    // copy's letters and price are surfaces of their own), so each voted the
+    // row's step for its surface, agreed with it, took the old row's draw and
+    // was shown half a row from its row for one in-between, the raised bullet
+    // after it with it; and where the rows below held look-alikes (a price, a
+    // letter), they took the step from the draw before them, six rows of the
+    // list shown half a row down (the owner, 2026-11-21: the bullets jump as
+    // the hand goes up the shop's list; Frame_Counter 687 and 571 of
+    // ultrawideMerchantCull). The hand itself is its partner by order and
+    // still slides. Upright, textured draws only: a figure's sprite the game
+    // names goes by rule 0 before this is asked.
+    constexpr int kLeapReach = 24;
+    const auto Leaps = [&](U i, const Entry& e) {
+        if (align[i] >= 0 && &e == &g_entries[align[i]]) return false;
+        const Command& c = frame.commands[i];
+        if (!c.state.texture || !Upright(frame.vertices + c.first, c.count)) return false;
+        const Vertex& p = g_vertices[e.first];
+        const Vertex& at = frame.vertices[c.first];
+        const float m2 = (p.x - at.x) * (p.x - at.x) + (p.y - at.y) * (p.y - at.y);
+        if (m2 <= cap / 36) return false;
+        const float mx = p.x - at.x, my = p.y - at.y;
+        for (int dir = -1; dir <= 1; dir += 2) {
+            bool still = false;
+            int seen = 0;
+            for (std::int64_t j = static_cast<std::int64_t>(i) + dir; j >= 0 && j < static_cast<std::int64_t>(frame.n_commands) && seen < kLeapReach; j += dir) {
+                if (!IsDraw(frame.commands[j])) continue;
+                ++seen;
+                float ox, oy;
+                if (!AlignMotion(static_cast<U>(j), &ox, &oy)) continue;
+                if (((ox - mx) * (ox - mx) + (oy - my) * (oy - my)) * 16 <= m2) return false;   // it goes with a neighbour
+                if ((ox * ox + oy * oy) * 16 <= m2) still = true;
+            }
+            if (!still) return false;
+        }
+        if (g_debug) bof3::Log("interp-dbg  LEAP cmd %u at (%.1f, %.1f) from (%.1f, %.1f)", i, at.x, at.y, p.x, p.y);
+        return true;
+    };
     // Rule 0, before every other: a draw the game named (interp_ident.h)
     // goes with the kept draw of the same object, by the step of the place
     // the object stands at, whole - whatever its cel, its texture and its box
@@ -741,10 +792,11 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
             Remember();
             ++s.loose;
             ++s.carried;
-        } else if (best >= 0 && (agrees || clear) && Pair(i, g_entries[best])) {
+        } else if (best >= 0 && (agrees || clear) && !Leaps(i, g_entries[best]) && Pair(i, g_entries[best])) {
             Remember();
             ++(best_is_look ? s.exact : s.loose);
-        } else if (nearest_look >= 0 && looks <= 2 && nearest_d <= cap / 16 && Pair(i, g_entries[nearest_look])) {
+        } else if (nearest_look >= 0 && looks <= 2 && nearest_d <= cap / 16 && !Leaps(i, g_entries[nearest_look]) &&
+                   Pair(i, g_entries[nearest_look])) {
             // Within a quarter of the cap: a line of text that changed has
             // letters whose only look-alike is a letter of the old line, and
             // they slid in from where those stood (the sixth sweep, the

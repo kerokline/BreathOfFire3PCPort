@@ -632,3 +632,58 @@ problems on main's rows ("no SS row for the camera") and then stops in the
 case-zero replay, before and after this row, which adds a seventh of the
 same kind because the scan has no camera for area 28. The tool wants a
 repair of its own.
+
+## 12. A sprite the player could already see is not hidden (2026-11-21)
+
+**Status:** BUILT and replayed (2026-11-21); the owner watched the replay.
+DIV-0124's amendment.
+
+The owner's report: at 21:9, on entering a shop, the innkeeper to the right
+disappears and comes back. The owner's route `ultrawideMerchantCull`
+(area 130, chapter 11; `tools/recipes/ultrawideMerchantCull.txt`).
+
+**Measured** (the band census, `BOF3X_BANDLOG`, the route at `--wide 2` on
+the owner's build of 2026-11-21): object 0, the innkeeper, stands at x 398
+.. 446, wholly past 373. Free walking, recipe frames 350..377: drawn. The
+talk with the merchant, frames 378..447, mask `02`: `hidden`. The shop's
+menu, frames 448..1278, mask `02` still: drawn, because the menu is
+`Game_Mode` 3 and section 6's rule admits modes 2 and 4 only. So it was
+not a cull distance: the hide took a bystander for the 70 frames of a plain
+talk.
+
+**The rule.** A candidate (section 6's: an object, an extra object, a party
+member other than the leader) drawn through `kSeenFrames` = 10 frames of
+free walking in a row - `FieldScene()` true and the scene mask's bits 1..8
+clear - is kept: `HideSite` does not hide it, in a scene or under a menu,
+for as long as it goes on being drawn with no more than `kSeenGap` = 4
+frames between two draws and the area is the same. One mark for each of the
+37 candidate slots (`g_seen`, `wide_staging.cpp`), stepped by
+`Frame_Counter`, so a run at any `BOF3X_SPEED` decides the same and a
+quickload (the counter goes back) drops the marks.
+
+- Ten frames in a row, not one: a scene that lets the mask go for a frame or
+  two between two of its parts must not turn what it hides into something
+  kept. Not measured in a scene; this route's own census shows the mask
+  going from `0C` to `00` at the area's entry (frames 294 to 295).
+- A menu over the field neither gives the mark nor takes it.
+- A sprite the cull drops (outside the 21:9 picture) is not drawn, so its
+  mark ends after four frames.
+
+**What changes besides the report.** An actor that stood in the 21:9-only
+band during free walking and then takes part in a scene is now drawn
+through that scene; before, it went out on the scene's first frame. The
+player had it in view either way. An actor a scene places, parks or walks
+in the band after the scene began is hidden as before.
+
+**Checked.** The self-test (section 4a of `SelfTest`): the marks after 0 to
+13 frames of walking, through 200 frames of a scene, a second draw in a
+frame, across the gap and one frame past it, the counter going back, the
+counter's wrap, 40 stretches of 9 free frames, and the slots
+(`wide_staging self-test: 89000 checks, 0 mismatches`, hosted, at 21:9 and
+narrow). The route
+again on the build with the rule: the census has no `hidden` row for
+object 0; frames 378..447 are `parked-scene`, drawn.
+
+**Not verified:** the state hash (the marks are our own statics, not the
+game's memory - argued, not run); the census of the routes of
+`ultrawide-census-3.md` and `-4.md` for rows that are now drawn.
