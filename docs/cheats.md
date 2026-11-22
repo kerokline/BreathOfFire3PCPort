@@ -459,6 +459,23 @@ Verification (`D:\bof3x-runs\vin1103`):
   recipe frame 1,845): unset, the rank 1 and "You got Wisdom Seed!"; with the
   switch, the score 0xB4, the rank 5 and "You got Shaman'sRing!".
 
+**The shisu's ingredients in Parch** (2026-11-21, IDEAS I72; the owner's
+call: "replace the first 4 items (vitamin, antidote, eye drops, panacea)").
+With the switch on, the item seller of Parch (shop record 36, area 130)
+offers the shisu's four ingredients - the items `Shisu_Result` takes, in its
+order - in place of the first four entries of its list; the other seven
+entries are as before. `ShopMode_Begin` writes the four pairs into the
+record when record 36 opens in area 130 and writes Capcom's four back when
+it next opens in another area, so the change is the one seller's - a
+guard: no other area's script places record 36 (every placement script
+walked, 2026-11-21; DIV-0188's amendment has the count). The
+price is the owner's call of the day, 1 zenny for the three that have a base
+price of 0 - and it is what the shop does with a 0 already: the list, the
+detail and the purchase all scale the price through `Shop_ScalePrice`, which
+answers 1 in place of 0, so no price is written (`Shop_SellPrice` buys them
+back for 0, as it did). `ShopMode_Inject` is the
+`Fatal` when `ShopMode_Begin` is left as Capcom's under the switch.
+
 The box's note on Page 2 and the ini's comment no longer list the minigames
 (the owner's word, 2026-11-03): "Every minigame ends in a win. A minigame
 with a score gives its best prize." The table above is the list.

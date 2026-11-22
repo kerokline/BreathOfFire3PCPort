@@ -9415,9 +9415,9 @@ switch	ShopBrowse_Open	detour	costly		src/game/shop/shop_browse.cpp:334	BOF3_INJ
 switch	ShopBrowse_OpenDetail	detour	costly		src/game/shop/shop_browse.cpp:344	BOF3_INJECT
 switch	ShopBrowse_OpenStep	detour	costly		src/game/shop/shop_browse.cpp:333	BOF3_INJECT
 switch	ShopBrowse_OpenWait	detour	costly		src/game/shop/shop_browse.cpp:335	BOF3_INJECT
-switch	ShopMode_Begin	detour	costly		src/game/shop/shop_mode.cpp:142	BOF3_INJECT
-switch	ShopMode_Dispatch	detour	costly		src/game/shop/shop_mode.cpp:141	BOF3_INJECT
-switch	ShopMode_End	detour	costly		src/game/shop/shop_mode.cpp:143	BOF3_INJECT
+switch	ShopMode_Begin	detour	costly		src/game/shop/shop_mode.cpp:178	BOF3_INJECT
+switch	ShopMode_Dispatch	detour	costly		src/game/shop/shop_mode.cpp:177	BOF3_INJECT
+switch	ShopMode_End	detour	costly		src/game/shop/shop_mode.cpp:179	BOF3_INJECT
 switch	ShopResist_Close	detour	costly		src/game/shop/shop_resist.cpp:381	BOF3_INJECT
 switch	ShopResist_Confirm	detour	costly		src/game/shop/shop_resist.cpp:380	BOF3_INJECT
 switch	ShopResist_Dispatch	detour	costly		src/game/shop/shop_resist.cpp:376	BOF3_INJECT
