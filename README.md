@@ -73,8 +73,9 @@ For the documentation on the scripted process, please refer to [`docs/install_pr
 
 ## Linux
 
-There is a native Linux build for x86-64: `bof3x-<version>-linux-x86_64.tar.gz`.
-It is new. It ran on a computer with no screen and a software graphics
+There is a native Linux build for x86-64: `bof3x-<version>-linux-x86_64.tar.gz`,
+on the releases page beside the Windows zips (from the first release made
+after 2026-11-22). It is new. It ran on a computer with no screen and a software graphics
 driver only: the setup from the PC game folder, the install check and the
 game's self-tests passed there. Nobody has played it on a graphics card,
 heard its sound or used a pad with it yet. If you try it, please tell us

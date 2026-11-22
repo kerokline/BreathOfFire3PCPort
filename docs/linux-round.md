@@ -2815,7 +2815,8 @@ does the setup (section 6, call 3), and the folder is portable as on Windows
   its own `meson.build`); SDL3 as a shared library.
 - **`README.md`**, a Linux section; **[`releases/README.md`](releases/README.md)**,
   how the tarball is made and a paragraph for the first release notes that
-  carry it. `release.yml` is not changed: the release job follows D1.
+  carry it. `release.yml`'s Linux jobs came after D1's merge (the follow-up
+  below).
 
 **The tarball** (`v0.0.0-d2test`, from the `linux-x86_64` preset's build in
 the WSL, `~/src/lcC-d2`, a clean configure that fetched SDL3, Dear ImGui and
@@ -2879,24 +2880,88 @@ tree. The source: the main checkout's `bof3` folder copied to
 | `tool_run.cpp.obj` built from `origin/main`'s source and from the branch's, each width, `codegen_same.py` and `--by-function` | 0 differ: 32-bit 92 functions, 50 data and 3 bss symbols; 64-bit 93, 19 and 3 |
 | The zips by `origin/main`'s `make_release.py` and by the branch's, from the same `build` and `build-x86_64` (`--version v0.0.0-d2test`) | each pair 1,219 entries in the same order, the same names, sizes and methods (233,816,025 and 229,833,853 bytes unpacked); one entry's CRC differs in each pair, numpy's `dist-info/RECORD`, in two lines: the hashes of the console-script launchers pip writes (`bin/f2py.exe`, `bin/numpy-config.exe`) and the script then deletes, which pip makes anew on every install |
 
+**The follow-up after D1's merge (2026-11-22, on `linux/lcC` `14f58a07`).**
+
+- **`release.yml`, two jobs; the `release` job is not changed** (`git diff`
+  against `origin/main` deletes no line of the file). Job `linux`
+  (`ubuntu-24.04`): the tag step as the `release` job's (the same `TAG`,
+  `VERSION`, `REF`), checkout of `REF`, Python 3.13, then D1's script:
+  `deps`, `configure` with `BOF3X_DXVK_LIBDIR` empty, `build`, `check`;
+  then `python tools/make_release.py --linux --version "$VERSION" --build
+  build-linux-x86_64 --out "build/release/bof3x-$TAG-linux-x86_64.tar.gz"`
+  and the tarball handed on as an artifact. Job `linux-attach` needs both
+  and runs when `release` succeeded, whatever `linux` did: with the tarball
+  it runs `gh release upload "$TAG" ... --clobber` onto the draft or onto
+  "latest"; without it, it takes `bof3x-latest-linux-x86_64.tar.gz` off
+  "latest" (an older build's tarball beside new zips would mislead) and
+  fails. **Why the release goes out without Linux:** the file's own rule is
+  that the Windows zips are the player's default and publishing is the
+  owner's click; the Linux build is new and unplayed, so its failure should
+  not hold the zips back, and the red run says it failed. The notes of
+  "latest", which the `release` job writes, are not changed and do not name
+  the tarball.
+- **DXVK's notices against the cache.** `build.yml`'s Linux job passes
+  `BOF3X_DXVK_LIBDIR` on a cache hit, and `make_release.py` refuses such a
+  build. The release job has no DXVK cache: DXVK-native is built from the
+  pinned commit in every release run, and the notices are copied from the
+  tree that build fetched. The check was not loosened.
+- **The glibc floor, measured.** The tip's tree built in an Ubuntu 24.04
+  root of D2's own (a copy of D1's `~/src/lcC-d1/noble`, entered the same
+  way; `~/src/lcC-d2/enter.sh`, the tree in `~/src/lcC-d2/work/repo`, D1's
+  ccache copied): `versions`, `configure` (`BOF3X_DXVK_LIBDIR:PATH=` empty,
+  DXVK built by the external project: `_deps/dxvk-native/lib/libdxvk_*.so.0.30101`),
+  `build` 75 s, `check` ok (first `LOAD` at `0x10000000`). `ldd (Ubuntu
+  GLIBC 2.39-0ubuntu8.12) 2.39`, Python 3.12.3. `make_release.py --linux
+  --version v0.0.0-d2noble` there: 112 files, 39,119,850 bytes, sha256
+  `5df6e145...b493d0e6`, the same NEEDED and RUNPATH as above, game-data
+  scan clean, **`needs at least GLIBC_2.38, GLIBCXX_3.4.31`**, and
+  `README.txt` says "glibc 2.38 or newer and the GNU C++ library with
+  GLIBCXX_3.4.31 or newer". Per binary (`objdump -T`): all five
+  `GLIBC_2.38`; `GLIBCXX_3.4.31` from the two programs.
+- **That tarball on 26.04**, the proof above again (`proof_noble.sh`, the
+  same steps): modes 5 `-rwxr-xr-x`, 107 `-rw-r--r--`, 22 folders; 112
+  files, 116,502,147 bytes; `ldd` under `env -i` finds the three libraries
+  in the unpacked folder and the rest in `/usr/lib/x86_64-linux-gnu`;
+  `--list` and `--check` rc 0; no `python3` on `PATH`: the refusal; the
+  system's `python3`: "The install is ready."; the venv's wrapper started
+  for `importer.py sources`; with the `uv` venv the Sources script rc 0 in
+  5 s, "The install is ready."; `verify` rc 0, `995 containers held, 0
+  problem(s)`, `742 of 742 containers byte-identical`; `BOF3X_SELFTEST_ONLY=1
+  bof3x-launcher --no-config` rc 0, 10,400 log lines, 0 `FATAL`, 0 `CRASH`,
+  `self-test only: done, ending the process`.
+- **One line of the tarball's `README.txt` changed after these proofs:** its
+  `tar -xzf` example names `bof3x-*-linux-x86_64.tar.gz`, since "latest"'s
+  file is `bof3x-latest-linux-x86_64.tar.gz` while its folder and version
+  are `latest-<commit>`. Checked by a `--version latest-14f58a07` run of
+  the script: the line reads so, the folder is
+  `bof3x-latest-14f58a07-linux-x86_64`.
+
 **Not verified:**
 - The title screen, the window, a picture, sound, a pad: no person and no
   GPU; the launcher's title page was drawn by `--check` into a PNG only.
   The staging's "setup, then the title screen" stands here as setup, verify
   and the ELF's self-test.
-- A machine that is not the build machine. The WSL that built the tarball
-  ran it, from a folder the build never touched; another distribution, an
-  older glibc, SteamOS and a Deck were not tried. **The tarball needs the
-  build machine's glibc or newer** (2.43 for a build on Ubuntu 26.04): a
-  release built on `ubuntu-24.04` in CI would need 2.39, which was not
-  measured.
+- A system older than the build's. The 26.04-built tarball ran on the
+  machine that built it; the 24.04-built one (the follow-up below) ran on
+  26.04, a newer system, which is a player's usual case. No system at the
+  floor itself (glibc 2.38), no other distribution, SteamOS or Deck was
+  tried. **The tarball needs the build machine's glibc or newer.**
 - A disc source on Linux through the tarball (the PC folder alone), and so
   the paths that import Pillow and capstone: the PC setup ran to "The
   install is ready" on the system's Python with neither installed.
 - `python3 -m venv` with `python3-venv` installed: this WSL lacks the
   package (no `ensurepip`), so the README's first way failed as it says it
   will without the package; the `uv` way was run.
-- The release job in `release.yml` and a tarball made in CI.
+- **The release jobs have never run on GitHub.** Not run: the runner's
+  `deps`, its clang and Python 3.13 under `make_release.py`, a cold DXVK
+  build on the runner's 4 cores, the artifact's hand-over, `gh release
+  upload` onto a draft found by its tag, `--clobber` on "latest", and the
+  failure path's `gh release delete-asset`. The workflow was parsed
+  (`yaml.safe_load`), and every expression and `if:` read by hand;
+  `actionlint` is not installed here.
+- The Linux binaries carry no release tag: `BOF3X_VERSION_TAG` stamps the
+  Windows files alone (`CMakeLists.txt`), and the Linux job does not pass it.
+  The tag is in the tarball's name and its `README.txt`.
 - libdisplay-info's commit (`275e6459`, the branch `windows` of DXVK's fork)
   against the commit DXVK's tree records for it: read from the clone's
   files, not by `git`.

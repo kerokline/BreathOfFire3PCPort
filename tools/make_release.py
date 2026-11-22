@@ -504,7 +504,7 @@ How to start
 ------------
 
 1. Extract this folder to a place you can write to, e.g. ~/Games:
-     tar -xzf bof3x-{version}-linux-x86_64.tar.gz -C ~/Games
+     tar -xzf bof3x-*-linux-x86_64.tar.gz -C ~/Games
 2. Open a terminal in the folder bof3x-{version}-linux-x86_64.
 3. Make a Python environment for the setup in runtime/python:
      python3 -m venv runtime/python

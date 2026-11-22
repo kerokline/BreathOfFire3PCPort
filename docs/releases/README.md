@@ -39,7 +39,8 @@ game-data kind or any file whose hash `fixtures.toml` catalogues.
    is the 32-bit build, the player's default; `bof3x-<tag>-win-x64.zip` is
    the 64-bit developer build of the same files
    ([`../x64-build-round.md`](../x64-build-round.md) 6). Both need the same
-   copy of the game.
+   copy of the game. A second job adds the Linux tarball to the same draft
+   ("The Linux tarball" below).
 4. The owner reads the draft on GitHub, downloads the zip, tries it on a
    clean folder, and presses **Publish**. Nothing is public before that
    click. (`workflow_dispatch` with a tag re-runs step 3 for an existing tag,
@@ -142,9 +143,24 @@ unless the programs find the three libraries beside them (`$ORIGIN`) and
 need nothing else but glibc and the C++ runtime. It prints the newest glibc
 and libstdc++ versions the binaries need and writes them into `README.txt`:
 **that is the oldest system the tarball runs on**, and it follows the build
-machine (a build on Ubuntu 26.04 needs glibc 2.43). The tarball is not
-code-signed. `release.yml` has no Linux job yet; it is added after the
-round's CI job (group D1) and calls the line above.
+machine (a build on Ubuntu 26.04 needs glibc 2.43, one on 24.04, as the
+release job's, 2.38). The tarball is not
+code-signed.
+
+**In `release.yml`** (since 2026-11-22, not yet run on GitHub): job `linux`
+builds on `ubuntu-24.04` with `.github/scripts/linux-build.sh` (`deps`,
+`configure`, `build`, `check`; the same steps as `build.yml`'s Linux job,
+but with no DXVK cache, so DXVK-native is built from its pinned commit and
+its notices come from that tree) and runs the line above with the tag. Job
+`linux-attach` then adds `bof3x-<tag>-linux-x86_64.tar.gz` to the release
+the `release` job made: the draft for a tag, or "latest" for a push to
+`main`. The `release` job does not wait for Linux. If the Linux build fails,
+the release goes out with the zips alone, a stale tarball is taken off
+"latest", and the run is red. A build on `ubuntu-24.04` needs glibc 2.38
+and `GLIBCXX_3.4.31` or newer (measured in a 24.04 root, `../linux-round.md`
+"D2 as run"). The
+notes of "latest" (written by the `release` job) do not name the tarball
+yet.
 
 **For the release notes** of the first release that carries the tarball, a
 paragraph to adapt:

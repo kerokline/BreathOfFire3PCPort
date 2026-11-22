@@ -14,6 +14,18 @@
 # published pre-release "latest" gets the new zips, always at
 # releases/download/latest/bof3x-latest-win.zip (and -win-x64.zip). It is
 # never marked GitHub's latest release, so a published v* release keeps that.
+#
+# The Linux tarball (docs/linux-round.md, groups D1 and D2): job `linux`
+# builds it beside the zips on ubuntu-24.04 with D1's script
+# (.github/scripts/linux-build.sh, as build.yml's linux-x86_64 job) and
+# tools/make_release.py --linux; job `linux-attach` waits for both and adds
+# bof3x-<tag>-linux-x86_64.tar.gz to the release the `release` job made (the
+# draft, or "latest"). Not code-signed: jsign signs Windows files. The `release`
+# job does not wait for Linux and does not change for it: a Linux failure
+# leaves the zips' release as it is, without the tarball (and takes a stale
+# tarball off "latest"), and the run is red. DXVK-native is built from its
+# pinned source in every release run, with no DXVK cache, so the notices
+# make_release.py copies come from the tree the libraries were built from.
 name: Release
 
 on:
@@ -252,3 +264,110 @@ jobs:
             gh release create latest "build/release/bof3x-latest-win.zip" "build/release/bof3x-latest-win-x64.zip" ${MOD_ZIPS:-} \
               --prerelease --latest=false --verify-tag --title "Latest build (main)" --notes-file "$notes"
           fi
+
+  # The Linux tarball, built while the `release` job builds the zips.
+  linux:
+    name: ${{ github.ref_type == 'branch' && 'Latest build' || 'Draft release' }} (Linux tarball)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: The tag
+        run: |
+          set -euo pipefail
+          if [ "${{ github.ref_type }}" = branch ]; then
+            echo "TAG=latest" >> "$GITHUB_ENV"
+            echo "VERSION=latest-${GITHUB_SHA::8}" >> "$GITHUB_ENV"
+            echo "REF=$GITHUB_SHA" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          tag="${{ github.event.inputs.tag || github.ref_name }}"
+          case "$tag" in v*) ;; *) echo "::error::not a release tag: $tag"; exit 1;; esac
+          echo "TAG=$tag" >> "$GITHUB_ENV"
+          echo "VERSION=$tag" >> "$GITHUB_ENV"
+          echo "REF=$tag" >> "$GITHUB_ENV"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.REF }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install the build's packages (meson, glslang, ccache, SDL3's headers)
+        run: .github/scripts/linux-build.sh deps
+
+      # No DXVK cache here (build.yml's job has one): BOF3X_DXVK_LIBDIR stays
+      # empty, so cmake/dxvk_native.cmake builds DXVK-native from the pinned
+      # commit and make_release.py takes its notices from that tree (it refuses
+      # a build configured with BOF3X_DXVK_LIBDIR).
+      - name: Configure
+        env:
+          BOF3X_DXVK_LIBDIR: ""
+        run: .github/scripts/linux-build.sh configure
+
+      - name: Build
+        run: .github/scripts/linux-build.sh build
+
+      - name: Check the ELFs and their libraries
+        run: .github/scripts/linux-build.sh check
+
+      # The ELF, the launcher, the three libraries, the importer and its data,
+      # the notices; no Python and no game data (the script checks).
+      - name: Lay out the tarball
+        run: |
+          set -euo pipefail
+          python tools/make_release.py --linux --version "$VERSION" --build build-linux-x86_64 \
+            --out "build/release/bof3x-$TAG-linux-x86_64.tar.gz"
+          tar -tvzf "build/release/bof3x-$TAG-linux-x86_64.tar.gz" | awk '$1 ~ /^-rwx/ {print $1, $6}'
+
+      # A .tar.gz keeps the files' modes inside it; the artifact's own zip
+      # only carries it to the next job.
+      - name: Hand the tarball to linux-attach
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-tarball
+          path: build/release/bof3x-${{ env.TAG }}-linux-x86_64.tar.gz
+          if-no-files-found: error
+          retention-days: 7
+
+  # The tarball onto the release the `release` job made. Runs when that job
+  # succeeded, whatever `linux` did: with no tarball it takes a stale one off
+  # "latest" (a draft has none to take off) and fails, so the run is red.
+  linux-attach:
+    name: ${{ github.ref_type == 'branch' && 'Latest build' || 'Draft release' }} (Linux tarball attached)
+    needs: [release, linux]
+    if: ${{ always() && needs.release.result == 'success' }}
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: The tag
+        run: |
+          set -euo pipefail
+          if [ "${{ github.ref_type }}" = branch ]; then echo "TAG=latest" >> "$GITHUB_ENV"
+          else echo "TAG=${{ github.event.inputs.tag || github.ref_name }}" >> "$GITHUB_ENV"; fi
+
+      - name: Fetch the tarball
+        if: ${{ needs.linux.result == 'success' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-tarball
+          path: linux-tarball
+
+      - name: Attach the tarball
+        if: ${{ needs.linux.result == 'success' }}
+        run: |
+          set -euo pipefail
+          gh release upload "$TAG" "linux-tarball/bof3x-$TAG-linux-x86_64.tar.gz" --clobber
+
+      - name: No tarball this time
+        if: ${{ needs.linux.result != 'success' }}
+        run: |
+          set -euo pipefail
+          if [ "$TAG" = latest ]; then
+            gh release delete-asset latest "bof3x-latest-linux-x86_64.tar.gz" --yes \
+              || echo "no Linux tarball on latest to take off"
+          fi
+          echo "::error::the Linux tarball was not built (job linux: ${{ needs.linux.result }}); the release has the zips alone"
+          exit 1
