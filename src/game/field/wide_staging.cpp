@@ -210,7 +210,7 @@ const HideException kHideExceptions[] = {
 
 // --- the rule ----------------------------------------------------------------
 
-unsigned g_columns = 0;   // Widescreen_Live() at the arm
+unsigned g_columns = 0;   // Widescreen_LiveLogic() at the arm: the staging goes by the logic's columns (16:9's under 16:10)
 
 unsigned StepsFor(int beyond, unsigned pps10, unsigned top, unsigned c) {
     if (c == 0) return 0;
@@ -1221,7 +1221,7 @@ void SelfTest() {
 }
 
 void Arm() {
-    g_columns = Widescreen_Live();
+    g_columns = Widescreen_LiveLogic();
     if (g_columns == 0) return;
     g_log_all = EnvUnsigned("BOF3X_WIDE_STAGING_LOG", 0, 0, 1) != 0;
     // The fastest speed whose frames stay whole: a step is still half a cell.

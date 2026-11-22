@@ -6,6 +6,14 @@
 // BOF3X_WIDE=1 is 16:9, 426 x 240 (53 columns a side); BOF3X_WIDE=2 is 21:9,
 // 560 x 240 (120 a side); BOF3X_WIDE=3 is 16:10, 384 x 240 (32 a side, the
 // Steam Deck's panel). Unset or 0, nothing here changes anything.
+//
+// Two widths are read (the owner, 2026-11-21): the picture's columns, for what
+// is drawn to the picture's edge (Widescreen_Columns, _Live, _Fill, _Anchor),
+// and the logic's columns, for what the game culls by and stages scenes by
+// (Widescreen_LogicColumns, _LiveLogic, _Cull). They are the same at 16:9 and
+// 21:9. Under 16:10 the picture's are 32 and the logic's 16:9's 53: the culls,
+// the cell inset and the scene staging are the 16:9 game's, seen through a
+// frame 21 columns a side narrower.
 #pragma once
 
 #include <cstdint>
@@ -14,6 +22,9 @@
 // under BOF3X_WIDE=2, 32 under BOF3X_WIDE=3, 0 otherwise. Read once from the environment; any other
 // value is Fatal.
 unsigned Widescreen_Columns();
+// The columns the culls, the cell inset and the staging go by: Widescreen_Columns(),
+// but 53 under BOF3X_WIDE=3. Never fewer than the picture's.
+unsigned Widescreen_LogicColumns();
 
 // The rules every width-dependent value is derived by, in the columns c: each
 // gives the 16:9 build's constant at c = 53 (Widescreen_CheckRules proves it at
@@ -54,11 +65,13 @@ void Widescreen_CheckRules();
 // start-up fuzz that runs earlier compares the original's layout - and 0
 // for good when the view is not wide. What our own drawing code reads.
 unsigned Widescreen_Live();
+// Widescreen_LogicColumns() once Widescreen_Inject has run, 0 before it and when the view is not wide.
+unsigned Widescreen_LiveLogic();
 
 // The terrain cull of MapView_Build 0x56EC00 (ours, src/game/map_layers.cpp):
 // the kept screen-x interval, -50..370 as the original has it, widened by
 // Widescreen_Inject by widescreen_rule::TerrainMargin when the view is wide
-// (-150..470 at 53 columns, -217..537 at 120).
+// (-150..470 at 53 logic columns, -217..537 at 120).
 extern float Widescreen_TerrainLo, Widescreen_TerrainHi;
 
 // Columns the view's cell inset (map_layers.cpp Inset(), MapView_Inset
@@ -148,6 +161,8 @@ void Widescreen_Inject();
 // (0, 0) 320 x 240; then Widescreen_Live's columns. A fill draws at
 // (Widescreen_FillX(), 0) Widescreen_FillWidth() x 240 (DIV-0041 section 3c).
 unsigned Widescreen_Fill();
+// The columns an x cull is moved out by: as Widescreen_Fill (0 until the fills are armed), the logic's columns.
+unsigned Widescreen_Cull();
 float Widescreen_FillX();       // 0.0f - columns: not -columns, which is -0.0f when narrow
 float Widescreen_FillWidth();   // 320.0f + 2 * columns
 void Widescreen_ArmFills();

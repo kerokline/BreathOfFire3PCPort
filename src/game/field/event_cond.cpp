@@ -83,7 +83,7 @@ const unsigned char* Record54(const unsigned char* sprite) {
 }  // namespace
 namespace field_frame { BandSprite g_band[0x28]; }
 namespace field_frame { unsigned g_band_count; }
-namespace field_frame { int g_band_fill = -1; }   // the self-test's columns; -1 is Widescreen_Fill()
+namespace field_frame { int g_band_fill = -1; }   // the self-test's columns; -1 is Widescreen_Cull()
 namespace {
 
 void BandNote(unsigned char* sprite) {
@@ -426,7 +426,7 @@ extern "C" void __cdecl Sprite_ProjectA(void) {
     if (x > 0x140 + margin[0] || x < -static_cast<int>(margin[1]) || y > 0xF0 + margin[2] || y < -static_cast<int>(margin[3])) {
         sprite->flags |= 0x80;   // off screen
         // DIV-0041 (UC2): in the band, drawn after all (BandNote above).
-        const int fill = field_frame::g_band_fill >= 0 ? field_frame::g_band_fill : static_cast<int>(Widescreen_Fill());
+        const int fill = field_frame::g_band_fill >= 0 ? field_frame::g_band_fill : static_cast<int>(Widescreen_Cull());
         if (fill != 0 && x <= 0x140 + margin[0] + fill && x >= -static_cast<int>(margin[1]) - fill &&
             y <= 0xF0 + margin[2] && y >= -static_cast<int>(margin[3]))
             BandNote(rv::Bytes(sprite));

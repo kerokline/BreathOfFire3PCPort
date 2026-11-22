@@ -10131,7 +10131,7 @@ switch	WhelpBreathSprite_Start	detour	costly		src/game/magic/whelp_breath_flames
 switch	WhiteFlag_Task	detour	costly		src/game/magic/white_flag.cpp:86	BOF3_INJECT
 switch	WhiteFlag_TintSource	detour	costly		src/game/magic/white_flag.cpp:87	BOF3_INJECT
 switch	WhiteFlag_Untint	detour	costly		src/game/magic/white_flag.cpp:88	BOF3_INJECT
-switch	Widescreen	code	yes		src/game/platform/widescreen.cpp:425 src/game/platform/widescreen.cpp:432	PatchBytes
+switch	Widescreen	code	yes		src/game/platform/widescreen.cpp:434 src/game/platform/widescreen.cpp:441	PatchBytes
 switch	Win1_ButtonRow	detour	costly		src/game/menu/window.cpp:1273	BOF3_INJECT
 switch	Win1_DrawShisuPanel	detour	costly		src/game/menu/window.cpp:1275	BOF3_INJECT
 switch	Win1_ShisuPanel	detour	costly		src/game/menu/window.cpp:1274	BOF3_INJECT
@@ -10429,7 +10429,7 @@ switch	env:BOF3X_SHOT_EVERY	env	yes		src/hook/input_script.cpp:1390	read in src/
 switch	env:BOF3X_SHOT_WAIT	env	yes		src/hook/input_script.cpp:1400	read in src/
 switch	env:BOF3X_SIDE_DUP	env	yes		src/game/field/map_layers.cpp:128	read in src/
 switch	env:BOF3X_SIDE_ZERO	env	yes		src/game/field/map_layers.cpp:74	read in src/
-switch	env:BOF3X_SL_CONTROL	env	yes		src/game/platform/widescreen.cpp:237	read in src/
+switch	env:BOF3X_SL_CONTROL	env	yes		src/game/platform/widescreen.cpp:241	read in src/
 switch	env:BOF3X_SNAP	launcher	yes		src/launcher/config.cpp:735 src/game/platform/display_setup.cpp:103 src/launcher/config.cpp:734 src/launcher/config.cpp:1847	read in src/, set by the launcher
 switch	env:BOF3X_SOLO	launcher	yes		src/launcher/config.cpp:684 src/game/solo/solo.cpp:192 src/launcher/config.cpp:682 src/launcher/config.cpp:1853	read in src/, set by the launcher
 switch	env:BOF3X_SPEED	env	yes		src/game/platform/magic_080.cpp:649 src/hook/wav_dump.cpp:722	read in src/
@@ -10453,13 +10453,13 @@ switch	env:BOF3X_UNLEARNED_BLUE	launcher	yes		src/launcher/config.cpp:729 src/ga
 switch	env:BOF3X_VSYNC	env	yes		src/game/platform/d3d.cpp:960 src/render/render_d3d11.cpp:1336	read in src/
 switch	env:BOF3X_WAV_DIR	env	yes		src/hook/wav_dump.cpp:684	read in src/
 switch	env:BOF3X_WAV_LABEL	env	yes		src/hook/wav_dump.cpp:691	read in src/
-switch	env:BOF3X_WIDE	launcher	yes		src/launcher/config.cpp:741 src/game/platform/widescreen.cpp:352 src/launcher/config.cpp:740 src/launcher/config.cpp:1847	read in src/, set by the launcher
+switch	env:BOF3X_WIDE	launcher	yes		src/launcher/config.cpp:741 src/game/platform/widescreen.cpp:356 src/launcher/config.cpp:740 src/launcher/config.cpp:1847	read in src/, set by the launcher
 switch	env:BOF3X_WIDE_HIDE	env	yes		src/game/field/wide_staging.cpp:1237	read in src/
-switch	env:BOF3X_WIDE_INSET	env	yes		src/game/platform/widescreen.cpp:457	read in src/
+switch	env:BOF3X_WIDE_INSET	env	yes		src/game/platform/widescreen.cpp:467	read in src/
 switch	env:BOF3X_WIDE_RING	env	yes		src/game/field/map_rim.cpp:682	read in src/
 switch	env:BOF3X_WIDE_STAGING	env	yes		src/game/field/wide_staging.cpp:1236	read in src/
 switch	env:BOF3X_WIDE_STAGING_LOG	env	yes		src/game/field/wide_staging.cpp:1226	read in src/
-switch	env:BOF3X_WIDE_TERRAIN	env	yes		src/game/platform/widescreen.cpp:442	read in src/
+switch	env:BOF3X_WIDE_TERRAIN	env	yes		src/game/platform/widescreen.cpp:452	read in src/
 switch	env:BOF3X_WRITEWATCH	env	yes		src/hook/windows_only.cpp:81 src/hook/write_watch.cpp:190	read in src/
 switch	env:BOF3X_ZENNY	launcher	yes		src/launcher/config.cpp:752 src/game/core/cheats.cpp:158 src/launcher/config.cpp:751 src/launcher/config.cpp:1849	read in src/, set by the launcher
 switch	ini:background	launcher	yes		src/launcher/config.cpp:246	ini key -> BOF3X_BACKGROUND
@@ -10542,7 +10542,7 @@ entry	DIV-0037	launcher	yes	env:BOF3X_PRESENT, ini:screen		tier Sensible; kind l
 entry	DIV-0038	code,lang,launcher	yes	PauseText, lang, env:BOF3X_OFF, ini:off		tier Sensible; kind code
 entry	DIV-0039	detour	costly	Game_WinMain		tier Sensible; kind detour
 entry	DIV-0040	detour	costly	Game_WndProc		tier Sensible; kind detour
-entry	DIV-0041	code,detour,env,launcher	yes	Widescreen, env:BOF3X_WIDE, env:BOF3X_WIDE_INSET, env:BOF3X_WIDE_TERRAIN, env:BOF3X_SL_CONTROL, env:BOF3X_WIDE_RING, env:BOF3X_PILLARBOX, ini:wide		tier Sensible; kind mixed; Reversible? is 34622 characters: read it by hand
+entry	DIV-0041	code,detour,env,launcher	yes	Widescreen, env:BOF3X_WIDE, env:BOF3X_WIDE_INSET, env:BOF3X_WIDE_TERRAIN, env:BOF3X_SL_CONTROL, env:BOF3X_WIDE_RING, env:BOF3X_PILLARBOX, ini:wide		tier Sensible; kind mixed; Reversible? is 35783 characters: read it by hand
 entry	DIV-0042	detour,launcher	yes	env:BOF3X_SNAP		tier Sensible; kind detour
 entry	DIV-0043	launcher	yes	env:BOF3X_PRESENT		tier Sensible; kind launcher
 entry	DIV-0044	detour	costly	Display_Setup		tier Intent; kind detour; the prose starts "No" but names a switch

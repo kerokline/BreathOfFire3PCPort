@@ -276,7 +276,7 @@ void Draw() {
         Put<std::int32_t>(object, 0x44, scale);
     }
     const short x = Get<short>(object, 0x2E), y = Get<short>(object, 0x30);
-    const int draw = sprite_draw::g_draw_columns >= 0 ? sprite_draw::g_draw_columns : static_cast<int>(Widescreen_Fill());
+    const int draw = sprite_draw::g_draw_columns >= 0 ? sprite_draw::g_draw_columns : static_cast<int>(Widescreen_Cull());
     if (!Cull(object, x, y, draw, sprite_draw::g_flag_columns >= 0 ? sprite_draw::g_flag_columns : 0)) return;
     if (g_sprite_capture != 0 && (object[0x24] & 8)) {   // DIV-0142: the PSX's draw into VRAM, before any screen test
         sprite_draw::Capture(object);
@@ -502,12 +502,12 @@ void SelfTest(DrawFn theirs, ClutFn their_clut, DrawFn their_reset, AddFn their_
     // DIV-0041's off-screen flag split (UC2, docs/ultrawide-culls-fix.md): the
     // fills are unarmed while this runs, so the rounds above compare the
     // narrow cull. Here the picture's cull is moved by the build's own columns
-    // (Widescreen_Columns: 53 at BOF3X_WIDE=1, 120 at =2) and the flag kept at
+    // (Widescreen_LogicColumns: 53 at BOF3X_WIDE=1 and =3, 120 at =2) and the flag kept at
     // 0, as Sprite_Draw runs once armed, and only the object is compared with
     // Capcom's: bit 7 must be theirs in every round, x biased to both bounds.
     // The control moves the flag with the picture (the 2026-09-30 build's
     // behaviour) and must be refused. Narrow there is no band: not run.
-    const int columns = static_cast<int>(Widescreen_Columns());
+    const int columns = static_cast<int>(Widescreen_LogicColumns());
     unsigned split_bad = 0, control_refused = 0, band = 0;
     constexpr unsigned kSplitRounds = 16000;
     if (columns > 0) {

@@ -42,15 +42,18 @@ using U = std::uint32_t;
 
 float Widescreen_TerrainLo = -50.0f, Widescreen_TerrainHi = 370.0f;
 unsigned g_live;
+unsigned g_logic;   // Widescreen_LogicColumns() once Widescreen_Inject has run
 unsigned g_inset_columns;
 unsigned g_backdrop_pairs;
 
 unsigned Widescreen_Live() { return g_live; }
+unsigned Widescreen_LiveLogic() { return g_logic; }
 unsigned Widescreen_InsetColumns() { return g_inset_columns; }
 unsigned Widescreen_BackdropPairs() { return g_backdrop_pairs; }
 
 bool g_fills_armed;
 unsigned Widescreen_Fill() { return g_fills_armed ? g_live : 0; }
+unsigned Widescreen_Cull() { return g_fills_armed ? g_logic : 0; }
 bool Widescreen_FillsArmed() { return g_fills_armed; }
 float Widescreen_FillX() { return 0.0f - static_cast<float>(Widescreen_Fill()); }
 float Widescreen_FillWidth() { return 320.0f + 2.0f * static_cast<float>(Widescreen_Fill()); }
@@ -71,7 +74,8 @@ namespace rule = widescreen_rule;
 constexpr U kColumns16x9 = rule::ColumnsForAspect(16, 9);   // 426 = 240 x 16 / 9 rounded down to even
 constexpr U kColumns21x9 = rule::ColumnsForAspect(21, 9);   // 560 = 240 x 21 / 9 exactly (the owner, 2026-10-13)
 // 384 = 240 x 16 / 10 exactly: the Steam Deck's 1280 x 800 panel (the owner, 2026-11-21). 32 columns a side, the
-// PSP's count. Narrower than 16:9, so every value is the rules' at 32 and nothing is tuned for it.
+// PSP's count. Only the picture is 32: what the game culls by and stages scenes by is 16:9's 53
+// (Widescreen_LogicColumns; the owner, 2026-11-21), so 16:10 is the 16:9 game seen through a narrower frame.
 constexpr U kColumns16x10 = rule::ColumnsForAspect(16, 10);
 
 // The 16:9 build's constants, which the rules must give at 53 (the property
@@ -358,6 +362,11 @@ unsigned Widescreen_Columns() {
     return static_cast<unsigned>(columns);
 }
 
+unsigned Widescreen_LogicColumns() {
+    const unsigned c = Widescreen_Columns();
+    return c == kColumns16x10 ? kColumns16x9 : c;
+}
+
 // The property check (widescreen.h). The 16:9 values are the constants the
 // rules replaced: kTerrainMargin 100, kInsetColumns 3, the backdrop's one pair,
 // the frame ranges [-252, 572] / [-102, 422], and the fourteen slide bounds as
@@ -398,11 +407,9 @@ void Widescreen_CheckRules() {
               rule::TerrainMargin(kColumns21x9), rule::InsetColumns(kColumns21x9), rule::BackdropPairs(kColumns21x9),
               rule::RangeLo(-200.0f, kColumns21x9), rule::RangeHi(520.0f, kColumns21x9),
               rule::RangeLo(-50.0f, kColumns21x9), rule::RangeHi(370.0f, kColumns21x9), lowest, highest);
-    bof3::Log("DIV-0041    the width rules at 32 columns (16:10): terrain margin %u, inset %u, backdrop pairs %u, ranges "
-              "[%.0f, %.0f] / [%.0f, %.0f]",
-              rule::TerrainMargin(kColumns16x10), rule::InsetColumns(kColumns16x10), rule::BackdropPairs(kColumns16x10),
-              rule::RangeLo(-200.0f, kColumns16x10), rule::RangeHi(520.0f, kColumns16x10),
-              rule::RangeLo(-50.0f, kColumns16x10), rule::RangeHi(370.0f, kColumns16x10));
+    bof3::Log("DIV-0041    the 16:10 picture: %u columns a side for the picture's edges (fills, anchors, slides, sweeps, "
+              "backdrop pairs %u); the culls, the cell inset and the staging are 16:9's, at %u",
+              kColumns16x10, rule::BackdropPairs(kColumns16x10), kColumns16x9);
 }
 
 void Widescreen_Inject() {
@@ -413,10 +420,12 @@ void Widescreen_Inject() {
     Widescreen_CheckRules();
     const U columns = Widescreen_Columns();
     if (columns == 0) return;
-    g_wide_lo = rule::RangeLo(-200.0f, columns);
-    g_wide_hi = rule::RangeHi(520.0f, columns);
-    g_narrow_lo = rule::RangeLo(-50.0f, columns);
-    g_narrow_hi = rule::RangeHi(370.0f, columns);
+    // What the culls, the inset and the staging go by: the picture's columns, but 16:9's under the 16:10 picture.
+    const U logic = Widescreen_LogicColumns();
+    g_wide_lo = rule::RangeLo(-200.0f, logic);
+    g_wide_hi = rule::RangeHi(520.0f, logic);
+    g_narrow_lo = rule::RangeLo(-50.0f, logic);
+    g_narrow_hi = rule::RangeHi(370.0f, logic);
     for (Site& s : g_sites) {
         std::uint8_t expected[4], replacement[4];
         const U ours = Low32(s.ours);
@@ -432,12 +441,13 @@ void Widescreen_Inject() {
         bof3::PatchBytes("Widescreen", Low32(&g_slide_switch), &was, &is, 1);
     }
     g_live = columns;
+    g_logic = logic;
     g_backdrop_pairs = rule::BackdropPairs(columns);
-    U terrain_margin = rule::TerrainMargin(columns);
+    U terrain_margin = rule::TerrainMargin(logic);
     {
         // BOF3X_WIDE_TERRAIN=N: the terrain cull's margin past [-50, 370], for
         // experiments (2026-10-07, the owner's waterfall); the rule's unless set
-        // (DIV-0041: 79 at 32 columns, 100 at 53, 167 at 120).
+        // (DIV-0041: 100 at 53 columns, 167 at 120; 16:10 takes 16:9's).
         char text[16];
         const std::uint32_t n = bof3::os::GetEnv("BOF3X_WIDE_TERRAIN", text, sizeof text);
         if (n != 0) {
@@ -450,7 +460,7 @@ void Widescreen_Inject() {
     }
     Widescreen_TerrainLo = -50.0f - static_cast<float>(terrain_margin);
     Widescreen_TerrainHi = 370.0f + static_cast<float>(terrain_margin);
-    const U inset_asked = rule::InsetColumns(columns);
+    const U inset_asked = rule::InsetColumns(logic);
     g_inset_columns = inset_asked;
     {
         char text[16];
@@ -468,10 +478,10 @@ void Widescreen_Inject() {
     // whatever the camera: past that, what the ring covers is UC's measurement
     // and RG's to grow (IDEAS I37).
     constexpr U kLargestInset = (0x160 - 0) / 50 - 1;   // Inset() head-on (Cond_AngleFB 0x200) at distance 0
-    bof3::Log("DIV-0041    widescreen: %u columns a side (%u x 240); terrain cull [%.0f, %.0f]; area-map frame ranges "
+    bof3::Log("DIV-0041    widescreen: %u columns a side (%u x 240), culls and staging at %u; terrain cull [%.0f, %.0f]; area-map frame ranges "
               "[%.0f, %.0f] and [%.0f, %.0f]; menu backdrop %u pair(s) more a side; cell inset asked %u lower a side "
               "(ceil(columns / 20)), applied %u%s (BOF3X_WIDE, BOF3X_WIDE_TERRAIN, BOF3X_WIDE_INSET)",
-              columns, 320 + 2 * columns, Widescreen_TerrainLo, Widescreen_TerrainHi, g_wide_lo, g_wide_hi, g_narrow_lo,
+              columns, 320 + 2 * columns, logic, Widescreen_TerrainLo, Widescreen_TerrainHi, g_wide_lo, g_wide_hi, g_narrow_lo,
               g_narrow_hi, g_backdrop_pairs, inset_asked, g_inset_columns,
               g_inset_columns >= kLargestInset ? " - the original's largest inset is 6, so the whole 28-column ring is walked"
                                                : "");
