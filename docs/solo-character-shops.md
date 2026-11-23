@@ -3,7 +3,8 @@
 **Status:** BUILT (2026-11-22, branch `solo/shop-master` off `main`
 `8e5d1ea0`). The owner's call, [`solo-character-round.md`](solo-character-round.md)
 6l. Ledger: DIV-0228, amended 2026-11-22. Run on the two recorded routes with
-the mode off and on (section 4). **Not played by the owner.**
+the mode off and on, and played by the owner 2026-11-22 (section 4): both
+screens work as intended; one limit found, the skill grant (section 5).
 
 ## 1. What changes
 
@@ -120,20 +121,35 @@ are the "not joined yet" case.
   `tools/ledger_registry.py --check` and `tools/data_census.py --strict`
   pass (the two changed helpers are kept in the shape the census keys by).
 
-## 5. Not done
+- **The owner's play** (2026-11-22, this branch's build in `game\`,
+  `on=SoloCharacter`, champion Rei). The owner's words: "Both masters and
+  shops work as intended"; "The stop being my apprentice check works as
+  well"; "the skill up appears to only work when the person is in the team,
+  which is ok for now". On the camp's list: "Masters can't be reached from
+  the camp list unless the ultimate edition mod (or something like it) is
+  turned on - normally they just show who is apprenticed to that master, but
+  I believe it only shows if they are currently in the team (so for instance,
+  rei does not currently show as under banyan)".
 
-- Not played by the owner.
+## 5. Not done, and limits found in play
+
+- **A master's skill grant reaches the champion only while the champion
+  walks with the team** (the owner's play; "ok for now"). The cause is not
+  read: `MasterGrant_Step2Next` runs over the screen's members, so what
+  keeps a champion outside the team from the grant is before it or beside
+  it. Open.
+- **The camp's master list names a master's pupils from the team only**, so
+  a champion outside the team is not named under their master (the owner's
+  belief from play, not read in the source). Not changed: the list was not
+  asked for. Open, the owner's call.
+- The masters reached from the camp's list (DIV-0223): they are reached only
+  with a mod that turns that on (the owner); not run.
 - The recorded routes were made with a team: on the mode-on runs the inputs
   meant for a three-member pick land on a one-member pick. They reach the
   screens and leave them; they are not a player's route through them.
-- A champion who walks with the team, and one in reserve: not run (the same
-  reads answer; only "not joined" was run).
-- "Stop being my apprentice" (`MasterQuit_*`): changed by the same two
-  helpers as the join, not reached by the route.
-- A master's skill grant to the champion (`MasterGrant_Step1Member`): not
-  reached by the route.
-- The masters reached from the camp's list (DIV-0223): the same screens, not
-  run.
+- A champion who walks with the team, one in reserve, "stop being my
+  apprentice" and the skill grant: not reached by a recorded route; played
+  by the owner (section 4).
 - The 64-bit and Linux builds: not built here.
 - The state-hash off-proof was not run: with the switch off every changed
   read returns the value the original read, and the hosted fuzz groups of

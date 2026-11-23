@@ -17325,7 +17325,11 @@ designed in rather than bolted on.
   champion as pupil, and every frame outside those screens is pixel-identical
   to the mode-off run. Not run: a champion in the team or in reserve, the
   release from a master, a master's skill grant, the camp's master list, the
-  64-bit and Linux builds, the state-hash off-proof. **Not played.**
+  64-bit and Linux builds, the state-hash off-proof. **Played by the owner,
+  2026-11-22** (`solo-character-shops.md` 4, champion Rei): the merchant,
+  the masters' join and release work as intended; a master's skill grant
+  reaches the champion only while the champion walks with the team (the
+  owner: "ok for now"; cause not read).
 - **Reversible?** Yes - off unless `on=` (or a mod's needs) names it;
   `BOF3X_OFF=SoloCharacter` keeps it off. The mark stays in saves made with
   it.
