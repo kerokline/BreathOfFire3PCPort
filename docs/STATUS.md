@@ -1,12 +1,23 @@
 # Status
 
-**Status:** IN PROGRESS (2026-11-20: `main` is `e9c1fb41`, the PR #267 merge; `v0.1.0-beta.1` was published on 2026-11-08 from `44fd3204`; everything merged since - PRs #213 to #267 - is unreleased; the state-hash pairs `orig5` are current, [`state-hash.md`](state-hash.md) 6)
+**Status:** IN PROGRESS (2026-11-23: `main` is `1071ec91`, the PR #278 merge, the PSP preset, a change of the launcher and its tests alone; the tip before it, `0805b220`, the PR #277 merge, was proved by scripted runs that day, [`hardening-1123.md`](hardening-1123.md); before it 2026-11-20: `main` `e9c1fb41`, the PR #267 merge; `v0.1.0-beta.1` was published on 2026-11-08 from `44fd3204`; everything merged since - PRs #213 to #278 - is unreleased; the state-hash pairs `orig5` are current, [`state-hash.md`](state-hash.md) 6)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
 true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
+
+**The beta.2 hardening proofs, 2026-11-23 (`main` `0805b220`; [`hardening-1123.md`](hardening-1123.md)).** Scripted runs on a
+quiet machine, nothing in `src/` changed: the ten state-hash routes equal ours of 2026-11-20 and 2026-11-16 (seven on
+every tick, three but for the noise page `0x6C3000`) on the 32-bit exe host, and the 64-bit exe host equals the 32-bit
+one the same way; the hosted shadow suite 922 lines of 0; the exe host's self-test at 32-bit, the moved base and 64-bit;
+`music_heard.py` on two routes; two routes under `BOF3X_ARENA=1` identical to the runs without it; the three recipes
+that end with `quit`. On a new US-disc install: the Definitive Edition 1.4 mod added by its patch alone, the self-test
+with it on (12 of 14 behaviours) and off at both widths, two routes with it on, and `combat` and `whelpBoss` at both
+widths with every frame the same bytes. Read and left: one text-pointer word the hash does not fold on a disc-built
+install, and the `rest_2e` fuzz's missing callee with `LevelSkillCatchUp` on. Not played; the tag is held for a
+person's check of the Linux build.
 
 **The Linux round's wave C, 2026-11-22 (merged as PR #276; groups D1 and D2, the banner unit and its follow-up).** CI
 builds and checks the Linux target on every pull request: `build.yml`'s `linux-x86_64 (clang)` job on `ubuntu-24.04`
