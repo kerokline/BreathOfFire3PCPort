@@ -769,8 +769,8 @@ of ryu for the default character?"
 
 What it sets: while the champion fights, the Skill Notes' member list is the
 champion first, joined or not, then the other joined members in the game's
-order. The others are kept (our reading of "the default character", not the
-owner's words): a member's skills can go to the notes only from that
+order. The others are kept (our reading of "the default character"; the
+owner on being told, and after play: "that will work"): a member's skills can go to the notes only from that
 member's slots, so dropping them from the list would lock those skills away.
 [`solo-character-shops.md`](solo-character-shops.md) 6; DIV-0228, amended.
 

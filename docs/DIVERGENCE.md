@@ -17338,7 +17338,8 @@ designed in rather than bolted on.
   2026-11-22** (`solo-character-shops.md` 4, champion Rei): the merchant,
   the masters' join, release and skill grant work as intended. The Skill
   Notes' list: built after that play; the self-test's six cases of the
-  order and the hosted fuzz with the switches off; not played.
+  order and the hosted fuzz with the switches off; then played by the
+  owner the same day: works as expected.
 - **Reversible?** Yes - off unless `on=` (or a mod's needs) names it;
   `BOF3X_OFF=SoloCharacter` keeps it off. The mark stays in saves made with
   it.

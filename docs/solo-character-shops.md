@@ -5,7 +5,7 @@
 6l. Ledger: DIV-0228, amended 2026-11-22. Run on the two recorded routes with
 the mode off and on, and played by the owner 2026-11-22 (section 4): both
 screens work as intended. The camp's Skill Notes (section 6) were built
-after that play and are **not played**.
+after that play and then played by the owner too: they work as expected.
 
 ## 1. What changes
 
@@ -152,7 +152,7 @@ are the "not joined yet" case.
 - The state-hash off-proof was not run: with the switch off every changed
   read returns the value the original read, and the hosted fuzz groups of
   these files compare ours with Capcom's code.
-- The Skill Notes of section 6: no route run, not played.
+- The Skill Notes of section 6: no route run; played by the owner.
 
 ## 6. The camp's Skill Notes open on the champion (2026-11-22, round doc 6m)
 
@@ -186,5 +186,7 @@ room). Hosted `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` with the switches
 off: 922 `MISMATCHES` lines, every one 0 (`field_s`, the
 group of `SharedList_Setup`, among them), `solo self-test: 295 checks
 passed`, "self-test only: done". `tools/data_census.py --strict` passes (the list keeps
-its one recorded write in `SharedList_Setup`). **No route run and not
-played.**
+its one recorded write in `SharedList_Setup`). No route run. **Played by
+the owner, 2026-11-22: "that will work. I confirmed in
+game that it works like I'd expect", the other members kept in the
+list included.**
