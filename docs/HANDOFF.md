@@ -304,7 +304,7 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      200 % scale; an ini written before this stage holds an auto-written `scale=2`, which now fixes k = 2 on a
      scaled desktop until the line is emptied (it matters only until `bof3x.window` exists). **Left:** the fixture
      TSVs under `tools/launcher_host/` are not checked in CI (Windows only); the `BOF3X_OFF=` log line is cut at
-     about 1 KB; the PSP preset (I32); which sound name makes `0x7DE000` vary. Traps paid for: an empty `ini:opt=`
+     about 1 KB; which sound name makes `0x7DE000` vary. Traps paid for: an empty `ini:opt=`
      means the key set to empty, not unset (DIV-0110..0113); a preset never turns an entry on (an `ini:` / `env:`
      switch holds only the off value), it lists a `Default: off` entry it would want as "also available"; a
      `Languages:` other than `any` is the language pick's, skipped by a preset when the chosen language is not

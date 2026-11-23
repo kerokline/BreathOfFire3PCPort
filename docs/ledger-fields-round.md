@@ -795,6 +795,31 @@ behaviour not measured (DIV-0071, 0144, 0180 - a crash fix - and, under the
 Latin four, 0027, 0058, 0059). The owner's answer: `none` is related to no
 release, so the PlayStation preset leaves it alone (the rule above).
 
+**The fifth preset, PSP, as run (2026-11-23, branch `docs/psp-toward-audit`;
+IDEAS I32).** The owner's calls of 2026-11-23: an entry of the Preset box,
+the 16:9 picture, and a sentence that says it is the PSP version as far as
+this project measured it. The rule is PlayStation's with the PSP's name, in
+`classify`'s order unchanged: *off* every such entry whose `Toward:` names a
+release and not `psp`; `Toward: none` stays; *also available* the
+`Default: off` entries that list `psp`. On the ledger of that day (245
+entries, after the `Toward:` audit that added `psp` to 51 entries):
+
+| Language | off | skipped by language | lang-governed | cannot | also available | left alone: never / already off / not active |
+|---|---|---|---|---|---|---|
+| `original` | 10 | 28 | 0 | 7 | 8 | 10 / 1 / 0 |
+| `en-US` | 10 | 4 | 20 | 11 | 8 | 10 / 1 / 0 |
+
+The ten *off* are the same under both: DIV-0080, 0087, 0150, 0152, 0163,
+0164, 0167, 0174, 0175, 0182. It is the first preset that also **sets**
+settings, which the rule above ("only ever turns entries off") did not have:
+`wide=1`, the three suites at the PSP's side as the pages write them, and
+`music=psp`, each where the install can take it and the environment has not
+set its variable ([`launcher-settings.md`](launcher-settings.md) 3.3, "What
+the PSP preset sets"). That is plan data beside the entries' (`PresetPlan::sets`,
+its values in `PresetPlan::ini`); `classify` and `PresetClassify` are
+unchanged apart from the rule, and the fixtures `presets_<language>.tsv`
+gained the `psp` rows (64 each).
+
 ### D2 as run (2026-10-28, off the stage branch at `f493bafb`)
 
 One Opus agent, worktree `C:\Users\kerok\bof3x-runs\lfd1028\wt_d2`, branch
