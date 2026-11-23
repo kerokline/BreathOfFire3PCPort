@@ -739,6 +739,41 @@ story went on, `solo-character-proof.md` 6d); fight 22 has no save that
 reaches it, so its stand-down rests on the rule's self-test and on fight 13's
 run.
 
+## 6l. The owner's twelfth answer (2026-11-22): the merchant and the masters show the champion alone
+
+The owner, in their words: "when you go to a merchant, it shows you the solo
+character's stat / equips items to them instead of the current team, and when
+you go to a master, it shows the solo character for assigning master status";
+and on a champion the story has not joined yet: "yes, the shop and master
+should show the solo character even if they haven't joined yet. Their stats
+and equipment should be available still I think (because it is created at
+newgame)"; and on the masters: "we hopefully shouldn't have to change the
+scripted tests, because the field team will still be the right person - its
+only the 'would you like to be my apprentice / stop being my apprentice'
+screens we would need to change".
+
+What it sets: **where 6l and 6f differ, 6l holds, for these two screens
+only.** While the champion fights, the merchant's buy screen and the masters'
+member screens hold the champion alone, a walker or not, joined or not. The
+team, the field, the scripts' party tests and every other menu stay the
+game's. Built as a read-side view, nothing written:
+[`solo-character-shops.md`](solo-character-shops.md); the ledger is DIV-0228,
+amended.
+
+## 6m. The owner's thirteenth answer (2026-11-22): the camp's Skill Notes open on the champion
+
+The owner, after playing 6l's build, in their words: "there's currently no
+way to change skill notes for the solo character if they are removed from the
+team. Can you change the camp skill notes to use the solo character instead
+of ryu for the default character?"
+
+What it sets: while the champion fights, the Skill Notes' member list is the
+champion first, joined or not, then the other joined members in the game's
+order. The others are kept (our reading of "the default character"; the
+owner on being told, and after play: "that will work"): a member's skills can go to the notes only from that
+member's slots, so dropping them from the list would lock those skills away.
+[`solo-character-shops.md`](solo-character-shops.md) 6; DIV-0228, amended.
+
 ## 7. Not in this round
 
 - The champion screen at New Game (I34's sequence).

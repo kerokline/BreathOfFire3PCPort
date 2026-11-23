@@ -25,6 +25,7 @@
 #include "game/text_pairs.h"
 #include "game/widescreen.h"
 #include "game/yes_no_layout.h"
+#include "game/solo/solo_screens.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "input/sigma.h"
@@ -244,7 +245,8 @@ extern "C" void __cdecl ShopWin_MemberSlideDown(void) {
 extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_EquipRun(void) {
     Step(::bof3::Img(ShopWin_EquipSteps_addr));
     const unsigned char* const w = RecMenuDrawHelpers();
-    const unsigned member = Member(w[0xA]);
+    // DIVERGENCE DIV-0228 (amended 2026-11-22): the solo champion alone (solo_screens.h).
+    const unsigned member = solo::SoloScreens_Record(w[0xA], Member(w[0xA]), "the shop's equipment box");
     menu_draw_helpers::g.equip_panel(static_cast<int>(X(w)), static_cast<int>(Y(w)), member);
 }
 

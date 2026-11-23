@@ -24,6 +24,7 @@
 #include "game/title_menu.h"
 #include "game/widescreen.h"
 #include "game/yes_no_layout.h"
+#include "game/solo/solo_screens.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "hook/run_speed.h"
@@ -132,9 +133,16 @@ unsigned char* Counts(shop_states2::U kind) { return AtShopStates2(LongShopState
 unsigned char* Panel(int i) { return AtShopStates2(::bof3::Img(WindowRecords_addr) + 0x6c + static_cast<shop_states2::U>(i) * shop_states2::at::kMemberStride); }
 
 // Member m's record index: 0x66972C[0x904062[m]], m signed.
-shop_states2::U RecordOf(int member) { return ByteShopStates2(::bof3::Img(shop_states2::at::kRecordOf.v) + ByteShopStates2(::bof3::Img(shop_states2::at::kPartyList.v) + static_cast<shop_states2::U>(member))); }
+//
+// DIVERGENCE DIV-0228 (amended 2026-11-22): while the solo champion fights alone the shop's one
+// member is the champion (solo_screens.h); else the original's read.
+// (One line, as the helpers around it: tools/data_census.py names a site by
+// the first header after the last line that starts with a closing brace.)
+shop_states2::U RecordOf(int member) { return solo::SoloScreens_Record(static_cast<unsigned>(member), ByteShopStates2(::bof3::Img(shop_states2::at::kRecordOf.v) + ByteShopStates2(::bof3::Img(shop_states2::at::kPartyList.v) + static_cast<shop_states2::U>(member))), "the shop's member"); }
 
-shop_states2::U PartyCount() { return static_cast<shop_states2::U>(shop_states2::g.party_count(0)) & 0xFF; }
+// Party_Count(0)'s low byte; DIV-0228: 1 while the solo champion fights alone
+// (the callee is asked first, as the original asks it).
+shop_states2::U PartyCount() { return solo::SoloScreens_Count(static_cast<shop_states2::U>(shop_states2::g.party_count(0)) & 0xFF); }
 
 bool Confirmed(shop_states2::U pressed) { return (static_cast<std::uint32_t>(Field_ConfirmButtons) & pressed & 0xFFFF) != 0; }
 

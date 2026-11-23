@@ -11,6 +11,7 @@
 #include "game/rest_2c.h"
 #include "game/rest_2c_callees.h"
 #include "game/scenario_harness.h"
+#include "game/solo/solo_screens.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "input/sigma.h"
@@ -66,12 +67,16 @@ namespace {
 // 36 * slide, 0x3E + 54 * slot) and MasterPanel_DrawStats at (0x89 + 40 *
 // slide, the same y), each of the member's record index; then the title box
 // Menu_DrawPanelBox(0x14, 0x10 - 10 * slide, 0x118, 0x13, the window colour).
+//
+// DIVERGENCE DIV-0228 (amended 2026-11-22): while the solo champion fights alone the one member is
+// the champion (solo_screens.h); else the original's count and records.
 void Panels() {
-    for (unsigned slot = 0; slot < Field_MemberCount; ++slot) {
-        const unsigned char* const member = AtRest2c(::bof3::Img(ObjTrio_addr) + 0x148 + slot * rest_2c::at::kObjStride);
+    for (unsigned slot = 0; slot < solo::SoloScreens_Count(Field_MemberCount); ++slot) {
+        const unsigned char* const walker = AtRest2c(::bof3::Img(ObjTrio_addr) + 0x148 + slot * rest_2c::at::kObjStride);
         const int y = static_cast<int>(54 * slot + 0x3E);
-        SH_CALL(MasterPanel_DrawMember)(0x11 - 36 * Rest2c_TalkSlide, y, member[0], slot);
-        SH_CALL(MasterPanel_DrawStats)(0x89 + 40 * Rest2c_TalkSlide, y, member[0]);
+        // The walker's byte is read again for the second call, as the original reads it.
+        SH_CALL(MasterPanel_DrawMember)(0x11 - 36 * Rest2c_TalkSlide, y, solo::SoloScreens_Record(slot, walker[0], "the master's panels"), slot);
+        SH_CALL(MasterPanel_DrawStats)(0x89 + 40 * Rest2c_TalkSlide, y, solo::SoloScreens_Record(slot, walker[0], "the master's panels"));
     }
     SH_CALL(Menu_DrawPanelBox)(0x14, 0x10 - 10 * Rest2c_TalkSlide, 0x118, 0x13, static_cast<unsigned char>(Config_WindowColour));
 }

@@ -17157,7 +17157,11 @@ designed in rather than bolted on.
 - **Subsystem:** the solo-character mode, `src/game/solo/` (ours):
   `solo.{h,cpp}` (the switch, the mark, the questions), `solo_battle.{h,cpp}`
   (the combat swap), `solo_level.{h,cpp}` (the level-1 start),
-  `solo_party_set.{h,cpp}` (fight 16's extra section). Calls: the stamp in
+  `solo_party_set.{h,cpp}` (fight 16's extra section), `solo_screens.{h,cpp}`
+  (the merchant's and the masters' one member, amended 2026-11-22: the member
+  reads of `src/game/shop/shop_trade.cpp`, `shop_win.cpp`, `shop_win_2.cpp`
+  and `src/game/menu/master_talk.cpp`, `master_talk_2.cpp`,
+  `master_quit.cpp`). Calls: the stamp in
   `Area_Enter` `0x594E60` (`src/game/menu/item_trade.cpp`) and in
   `TitleFlow_NewGame` `0x5880E0` (`src/game/core/sound.cpp`); the battle
   hooks in `GameMode5_Turn` / `_Load` / `_Place` / `_Leave` and
@@ -17172,7 +17176,8 @@ designed in rather than bolted on.
   [`solo-character-combat.md`](solo-character-combat.md),
   [`solo-character-level1.md`](solo-character-level1.md),
   [`solo-character-party-set.md`](solo-character-party-set.md),
-  [`solo-character-proof.md`](solo-character-proof.md)
+  [`solo-character-proof.md`](solo-character-proof.md),
+  [`solo-character-shops.md`](solo-character-shops.md)
 - **Tier:** Extension - a challenge mode the player asks for
 - **Original behaviour:** every battle is fought by the party the field
   holds, up to three members (`Field_PartyLoad(1)` from the second list
@@ -17238,8 +17243,37 @@ designed in rather than bolted on.
   (HP 0), count 2, the champion first, and record 4 as champion is revived
   and healed at the battle's start and fights alone (6j: "leave rei in the
   team. So the team becomes rei (dead), champion").
+  **The merchant and the masters (amended 2026-11-22, the owner's call,
+  round doc 6l; where this and "the menus are the original's" above differ,
+  this holds for these two screens).** While the champion fights
+  (`Solo_ChampionFights()`: the same test as the combat swap, so joined or
+  not under "champion always") the merchant's buy screen and the masters'
+  member screens hold one member, the champion: the merchant's stat panel,
+  "equip it?" member and equipment box (the original: each member of the
+  first list `0x904062`, `Party_Count(0)` of them), and the masters' panels,
+  the pick for "be my apprentice" and "stop being my apprentice", the
+  all-pupils and any-pupil tests and the skills a master grants (the
+  original: each walker, `Field_MemberCount` of them by `ObjTrio +0x148`).
+  Nothing is written for it: the party lists, the walkers and the count are
+  the game's, so the field, the scripts' own party tests and the field menu
+  see the team as before. A walker who is not the champion cannot be
+  equipped at a merchant or taken or released by a master while the mode
+  shows the champion (the field menu still equips them), and a walker
+  already apprenticed is not offered that master's skills until the mode
+  stands down. Not changed: the sell screen (it shows no member), the
+  resistance shop `ShopResist_*`, and every other menu but the one below.
+  **The camp's Skill Notes (the same day, the owner's call, round doc 6m).**
+  The original's member list is the joined records in record order
+  (`SharedList_Setup` `0x584F90`: `+0xB` bit 0 of the eight, to `0x6BC8BC`,
+  the count to `0x6BC8C5`), and the screen opens on the first. While the
+  champion fights the list is the champion first, joined or not, then the
+  other joined records in their order: a champion the story has taken away
+  can still move skills, and the others stay in the list so their skills
+  can go to the notes. The list is the screen's own, rebuilt at each
+  opening; no save byte is written for it.
   With the switch off nothing reads or writes the byte, `Area_Enter`'s and
-  New Game's calls return at their first test, and no battle hook acts.
+  New Game's calls return at their first test, no battle hook acts, and the
+  two screens' reads answer the game's own count and records.
 - **Rationale:** the owner's request (issue #223, IDEAS I56, 2026-11-03):
   solo challenges are fun, and knocking your own friends out at the start of
   every fight is not. The owner's answers of 2026-11-12 (round doc 6 and 6a):
@@ -17289,7 +17323,23 @@ designed in rather than bolted on.
   replays of `af09b08a` against the same pair, all 7,425 ticks,
   `solo-character-proof.md` 6e). **Owed:**
   installs other than the PC files for fight 16's extra section. **Not
-  played by the owner.**
+  played by the owner.** **The amendment of 2026-11-22**
+  (`solo-character-shops.md` 4): the 32-bit build of
+  `solo/shop-master`; hosted `BOF3X_SHADOW='*'` 922 groups at 0 mismatches
+  with the switches off (a first run caught a merged read in the masters'
+  panels, fixed), `solo self-test: 289`, the exe host exit 0; the recorded
+  `shop` and `masterAndManillo` routes with the mode off and on, a champion
+  not yet joined on each (record 1 in chapter 1, record 2 in chapter 3): the
+  merchant shows and equips the champion alone, the master takes the
+  champion as pupil, and every frame outside those screens is pixel-identical
+  to the mode-off run. Not run: a champion in the team or in reserve, the
+  release from a master, a master's skill grant, the camp's master list, the
+  64-bit and Linux builds, the state-hash off-proof. **Played by the owner,
+  2026-11-22** (`solo-character-shops.md` 4, champion Rei): the merchant,
+  the masters' join, release and skill grant work as intended. The Skill
+  Notes' list: built after that play; the self-test's six cases of the
+  order and the hosted fuzz with the switches off; then played by the
+  owner the same day: works as expected.
 - **Reversible?** Yes - off unless `on=` (or a mod's needs) names it;
   `BOF3X_OFF=SoloCharacter` keeps it off. The mark stays in saves made with
   it.
