@@ -5,6 +5,7 @@
 #
 #   .github/scripts/linux-build.sh deps        the packages (apt-get; sudo when not root)
 #   .github/scripts/linux-build.sh configure   cmake --preset linux-x86_64 [DXVK from $BOF3X_DXVK_LIBDIR]
+#                                              [the tag from $BOF3X_VERSION_TAG]
 #   .github/scripts/linux-build.sh build       cmake --build build-linux-x86_64
 #   .github/scripts/linux-build.sh check       the ELFs' shape and their libraries
 #   .github/scripts/linux-build.sh selftest    the checks that need no game data
@@ -73,6 +74,11 @@ configure() {
   # install folder): cmake/dxvk_native.cmake links those and builds nothing.
   if [ -n "${BOF3X_DXVK_LIBDIR:-}" ]; then
     args+=("-DBOF3X_DXVK_LIBDIR=$BOF3X_DXVK_LIBDIR")
+  fi
+  # The release's tag for the ELF (src/version.h.in; release.yml sets it, as
+  # it does for the Windows configures). Unset, CMake's default: v<numbers>.
+  if [ -n "${BOF3X_VERSION_TAG:-}" ]; then
+    args+=("-DBOF3X_VERSION_TAG=$BOF3X_VERSION_TAG")
   fi
   cmake --preset linux-x86_64 "${args[@]}"
 }

@@ -333,10 +333,13 @@ jobs:
       # No DXVK cache here (build.yml's job has one): BOF3X_DXVK_LIBDIR stays
       # empty, so cmake/dxvk_native.cmake builds DXVK-native from the pinned
       # commit and make_release.py takes its notices from that tree (it refuses
-      # a build configured with BOF3X_DXVK_LIBDIR).
+      # a build configured with BOF3X_DXVK_LIBDIR). The tag goes into the ELF
+      # (src/version.h.in), as into the Windows binaries; make_release.py
+      # --linux refuses a build whose tag is not the release's.
       - name: Configure
         env:
           BOF3X_DXVK_LIBDIR: ""
+          BOF3X_VERSION_TAG: ${{ env.VERSION }}
         run: .github/scripts/linux-build.sh configure
 
       - name: Build

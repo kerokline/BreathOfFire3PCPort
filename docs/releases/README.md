@@ -122,7 +122,7 @@ so a second run is offline. To try the bundle without the system Python:
 ## The Linux tarball (2026-11-22, the Linux round's group D2)
 
 ```
-cmake --preset linux-x86_64 && cmake --build build-linux-x86_64     # on Linux
+cmake --preset linux-x86_64 -DBOF3X_VERSION_TAG=<tag> && cmake --build build-linux-x86_64     # on Linux
 python3 tools/make_release.py --linux --version <tag>
 ```
 

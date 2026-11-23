@@ -556,6 +556,20 @@ def main_linux(a):
     name = "bof3x-%s-linux-x86_64" % a.version
     out = os.path.abspath(a.out or os.path.join(ROOT, "build", "release", name + ".tar.gz"))
 
+    # The tag the ELF carries (src/version.h.in BOF3X_VERSION_TAG; a quicksave's
+    # build identity, src/hook/snapshot.cpp) is the release's: the configure
+    # took it, and the linked program holds it. The first Linux tarballs said
+    # latest-<sha> in the README and v0.1.0 in the program (2026-11-23).
+    tag = cache_value(build, "BOF3X_VERSION_TAG")
+    if tag != a.version:
+        raise SystemExit("%s was configured with BOF3X_VERSION_TAG=%s, and the release is %s: configure with "
+                         "-DBOF3X_VERSION_TAG=%s (BOF3X_VERSION_TAG=%s .github/scripts/linux-build.sh configure) "
+                         "and build again" % (build, tag or "(none)", a.version, a.version, a.version))
+    with open(os.path.join(build, "bof3x"), "rb") as f:
+        if a.version.encode() + bytes(1) not in f.read():
+            raise SystemExit("%s/bof3x does not hold the tag %s: it was not built since the configure. Build again."
+                             % (build, a.version))
+
     # The importer's third-party imports against the requirements files: a
     # Linux player installs them (call 3), so each import a player's setup
     # can reach is in requirements.txt or, named there, in requirements-extra.txt.
