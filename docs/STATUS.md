@@ -41,11 +41,13 @@ symbols zips and the log gained a `build:` line ([`releases/README.md`](releases
 day** (45231155748, "latest" at 3398f7bb): the 64-bit strip, the signing after the strip (`bof3x.dll` and the launcher
 `Valid` to Windows) and the three symbols zips; the win zip 45.0 MB where it was 74.6, the tarball 14.2 where it was 39.1;
 a made fault on each system named from its symbols zip ([`releases/README.md`](releases/README.md) "Symbols"). **Found
-and fixed, not seen:** Windows reported `bof3x.exe` (written by `tools/make_exe.py`, signed by jsign) as `NotSigned`, in
+and fixed:** Windows reported `bof3x.exe` (written by `tools/make_exe.py`, signed by jsign) as `NotSigned`, in
 this download and in beta.1's: its header said linker version 1.0, and Windows reads no signature below 3.0
-([`releases/README.md`](releases/README.md) "Signing"). `make_exe.py` writes 14.0 now; read the next release run's
-`bof3x.exe` with `Get-AuthenticodeSignature`. **Not seen yet:** `release.yml` with job
-`publish` (2026-11-23: the publish out of a newer push's reach) - read its first run. **Not done:** no person has seen the Linux picture and nothing ran on a GPU, a real desktop or a sound device
+([`releases/README.md`](releases/README.md) "Signing"). `make_exe.py` writes 14.0 now, and the six binaries of "latest"
+at 5e1b6dd6 (run 45263911609), both `bof3x.exe` among them, are `Valid` and timestamped to `Get-AuthenticodeSignature`.
+**Job `publish`, seen both ways (2026-11-23):** run 45259981400 was cancelled in its Windows build by the next push, its
+publish skipped, and "latest" stayed whole at 3398f7bb; run 45263911609 published, and the tag and the seven files
+are 5e1b6dd6's. Not seen: a newer push during a publish (the wait), and a `v*` tag's draft through the new job. **Not done:** no person has seen the Linux picture and nothing ran on a GPU, a real desktop or a sound device
 (group D3, with the tarball: frost's machine or a tester's); the banner fault's twin on 64-bit Windows was never looked
 for, and that build ran no route with the fixes; the PSP install in the WSL had no effects, voices or logo movie (no
 `ffmpeg` there); a build on `ubuntu-24.04` needs glibc 2.38 or newer.

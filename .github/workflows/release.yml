@@ -382,7 +382,9 @@ jobs:
   # group); this one's group never cancels, so a publish that began ends, and
   # the newer run's publish waits for it.
   publish:
-    name: ${{ github.ref_type == 'branch' && 'Latest build' || 'Draft release' }} (publish)
+    # A plain name: a skipped job's name expression is shown as written
+    # (run 45259981400, cancelled before this job).
+    name: Publish
     needs: [release]
     runs-on: ubuntu-24.04
     concurrency:
@@ -472,12 +474,13 @@ jobs:
           {
             echo "**The current build of \`main\`** - commit ${GITHUB_SHA::8}, built $(date -u +'%Y-%m-%d %H:%M UTC')."
             echo
-            echo "Replaced on every push to main: not a release, not checked by hand. For a release, take a"
-            echo "\`v*\` one. The zip holds no game data: unzip it into a folder with a short path, run"
-            echo "\`bof3x-launcher.exe\` and add your own copy of the game on the Sources page"
-            echo "(docs/releases/README.md; the latest release's notes say more). Take"
-            echo "\`bof3x-latest-win.zip\`: it is the 32-bit build, the default. \`bof3x-latest-win-x64.zip\`"
-            echo "is the 64-bit developer build of the same files; both use the same game copy."
+            echo "This build is replaced on every push, not checked by hand."
+            echo
+            echo "The zip holds no game data: unzip it into a folder, and run \`bof3x-launcher.exe\`."
+            echo "You can add your copy of the game on the Sources page which loads."
+            echo
+            echo "Windows: Take \`bof3x-latest-win.zip\`: it is a 32-bit build, and the default."
+            echo "\`bof3x-latest-win-x64.zip\` is a 64-bit build of the same files."
             echo
             echo "Linux (x86_64): \`bof3x-latest-linux-x86_64.tar.gz\`. Unpack it and run \`./bof3x-launcher\`."
             echo "It needs Python 3 and a Vulkan 1.3 driver from the system (README, the Linux section)."
