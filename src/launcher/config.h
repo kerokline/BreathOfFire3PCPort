@@ -71,7 +71,8 @@ enum class Display { kFullscreen, kWindowed };
 // set of the ledger's entries at launch, on top of bof3x.ini. Recommended (the
 // default) turns off nothing. The rules are PresetClassify's, below; the
 // reference they must agree with is `python tools/ledger_registry.py presets`.
-enum class Preset { kRecommended, kShipped, kRepaired, kPlayStation };
+// PSP (the owner's calls of 2026-11-23) also sets settings: PresetPlan::sets.
+enum class Preset { kRecommended, kShipped, kRepaired, kPlayStation, kPsp };
 
 struct Config {
     std::string language = kLanguageOriginal;
@@ -167,7 +168,7 @@ struct Config {
     // off as a whole (disc-patch, table-edit) is on unless it is named here;
     // an id no installed mod has is kept and does nothing. Empty: none off.
     std::string mods_off;
-    // The preset (preset=recommended|shipped|repaired|playstation; the
+    // The preset (preset=recommended|shipped|repaired|playstation|psp; the
     // Configure page's Preset box): applied at launch on top of every other
     // key, which it does not rewrite (ConfigPresetPlan / ConfigPresetApply).
     // Any other value is dropped to the default, as filter= is, and said on
@@ -699,10 +700,20 @@ std::string ConfigRubyPlayable(const std::wstring& game_dir, const std::string& 
 //   Repaired     those of them whose tier is Sensible or Extension; Intent and Forced stay.
 //   PlayStation  those of them whose Toward: names a release and not psx (the
 //                owner's call of 2026-10-28: Toward none stays, as psx does).
+//   PSP          those of them whose Toward: names a release and not psp (the
+//                owner's calls of 2026-11-23: the PlayStation's rule for the PSP).
 // An entry whose Languages: omits the language played is skipped; a Switch:
 // lang entry is the language pick's, never a preset's; Player costly is listed
 // as "this build cannot"; a Default: off entry the preset would keep on
-// (Repaired: Intent and Forced, PlayStation: psx) is listed as "also available".
+// (Repaired: Intent and Forced, PlayStation: psx, PSP: psp) is listed as "also
+// available".
+//
+// PSP alone also sets settings (PresetPlan::sets, the owner's calls of
+// 2026-11-23): wide=1, the 16:9 picture; each of the three suites at the PSP's
+// side, as the Graphics and audio and the Data pages write that choice
+// (SuitesOptEdit, SuitesPspEdit: opt= and psp=); and music=psp. A suite or
+// the music this install cannot play is left as it is and listed "not on this
+// install"; a setting whose variable the environment has is kept.
 
 // The preset's ini value, the box's label and the sentence under the box.
 struct PresetInfo {
@@ -723,6 +734,9 @@ inline constexpr PresetInfo kPresets[] = {
     {Preset::kPlayStation, "playstation", L"PlayStation - as the PlayStation version",
      L"This preset turns off the changes that make the game different from the PlayStation version. The repairs "
      L"and the other changes stay on."},
+    {Preset::kPsp, "psp", L"PSP - as the PSP version",
+     L"This preset turns off the changes that the PSP version does not have. It sets the 16:9 picture and the "
+     L"PSP's graphics, sound and data that this install has. It shows the PSP version as this project measured it."},
 };
 // The preset an ini or BOF3X_PRESET value names, or nullptr.
 const PresetInfo* PresetNamed(std::string_view name);
@@ -764,6 +778,25 @@ struct PresetPlan {
     std::string off;           // the code names, comma-separated, distinct, the ledger's order
     std::vector<std::pair<std::string, std::string>> ini;   // key, value: what the launcher sends instead
     std::vector<std::pair<std::string, std::string>> env;   // variable, value: set where the environment has none
+    // A setting the preset sets of its own, not by an entry's Switch: (PSP
+    // alone): the wide picture, a suite, the music. A set one has its ini
+    // values in `ini` above (wide=, opt=, psp=, music=), so PresetOverrides
+    // greys its control and ConfigPresetApply hands it over.
+    struct Setting {
+        enum class State {
+            kSet,       // the preset sets it: its values are in `ini`
+            kBase,      // a suite on a PSP base: the PSP's side is the base already, nothing to write
+            kNotHere,   // this install cannot play it: left as it is
+            kKept,      // the environment sets its variable: kept
+        };
+        std::string what;    // "wide", a suite's id (graphics, audio, data), "music"
+        std::string label;   // as the list names it: "Widescreen: 16:9", "Graphics: PSP"
+        State state = State::kSet;
+        std::string why;     // kBase, kNotHere, kKept: the reason
+        // kSet suites: each member the PSP's side cannot play here, with why.
+        std::vector<std::pair<std::string, std::string>> members_not_here;
+    };
+    std::vector<Setting> sets;
 };
 // The plan of `preset` for `language` (ConfigLanguagePlayed) on the install
 // in `game_dir` with the settings `cfg`. Reads the environment (a variable it
@@ -779,6 +812,13 @@ PresetPlan ConfigPresetPlan(const std::wstring& game_dir, const Config& cfg, Pre
                             const std::string& language);
 // Whether the plan overrides the ini key `key` (the dialog greys its control).
 bool PresetOverrides(const PresetPlan& plan, std::string_view key);
+// Whether the plan sets `what` (PresetPlan::Setting::what: "wide", a suite's id,
+// "music") at launch: its control is grey.
+bool PresetSets(const PresetPlan& plan, std::string_view what);
+// Why `preset` has nothing to take on this install, or empty when it has: PSP
+// on an install with no PSP source at all - no suite's PSP side and no PSP
+// music (the Preset box greys the entry). The other presets: always empty.
+std::wstring ConfigPresetWhyNot(const std::wstring& game_dir, const Config& cfg, Preset preset);
 // The settings the game is given: `cfg` with the plan's ini values, its other
 // keys as read, and off= the plan's code names then the player's own list
 // (BOF3X_OFF's syntax: a player's -name keeps that change on).
