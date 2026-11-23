@@ -22,6 +22,8 @@
 #ifndef _WIN32
 
 #include <SDL3/SDL.h>
+#include <elf.h>
+#include <link.h>
 
 #include <cerrno>
 #include <cstdio>
@@ -59,6 +61,7 @@
 #include "hook/wav_dump.h"
 #include "hook/write_watch.h"
 #include "os/os.h"
+#include "version.gen.h"
 
 #if !defined(__x86_64__)
 #error "exe_host_posix.cpp: the Linux exe host is the 64-bit build alone (the import slots' thunks, bind.h)"
@@ -783,6 +786,45 @@ void EngineMain(void* p) {
 // An address inside this ELF, for its module (os::ModuleImage).
 void Anchor() {}
 
+// This ELF's GNU build id (the linker's note, which a strip keeps) as hex,
+// or "none": the name of the one build whose kept symbols fit a log
+// (docs/releases/README.md "Symbols"). Two builds of one tag differ by it.
+int BuildIdOf(struct dl_phdr_info* info, size_t, void* out) {
+    const std::uintptr_t anchor = reinterpret_cast<std::uintptr_t>(&Anchor);
+    bool ours = false;
+    for (int i = 0; i < info->dlpi_phnum; ++i) {
+        const ElfW(Phdr)& ph = info->dlpi_phdr[i];
+        if (ph.p_type == PT_LOAD && anchor >= info->dlpi_addr + ph.p_vaddr &&
+            anchor < info->dlpi_addr + ph.p_vaddr + ph.p_memsz)
+            ours = true;
+    }
+    if (!ours) return 0;
+    for (int i = 0; i < info->dlpi_phnum; ++i) {
+        const ElfW(Phdr)& ph = info->dlpi_phdr[i];
+        if (ph.p_type != PT_NOTE) continue;
+        const auto* p = reinterpret_cast<const unsigned char*>(info->dlpi_addr + ph.p_vaddr);
+        const unsigned char* const end = p + ph.p_memsz;
+        while (p + sizeof(ElfW(Nhdr)) <= end) {
+            ElfW(Nhdr) note;
+            std::memcpy(&note, p, sizeof note);
+            const unsigned char* const name = p + sizeof note;
+            const unsigned char* const desc = name + ((note.n_namesz + 3u) & ~3u);
+            if (desc + note.n_descsz > end) break;
+            if (note.n_type == NT_GNU_BUILD_ID && note.n_namesz == 4 && std::memcmp(name, "GNU", 4) == 0) {
+                auto* hex = static_cast<std::string*>(out);
+                char two[3];
+                for (unsigned k = 0; k < note.n_descsz; ++k) {
+                    std::snprintf(two, sizeof two, "%02x", desc[k]);
+                    *hex += two;
+                }
+                return 1;
+            }
+            p = desc + ((note.n_descsz + 3u) & ~3u);
+        }
+    }
+    return 1;
+}
+
 }  // namespace
 }  // namespace bof3
 
@@ -800,6 +842,11 @@ int main(int argc, char** argv) {
     LogOpen(module);
     Log("bof3x started as process %u (the ELF at 0x%llX..0x%llX)", os::ProcessId(), static_cast<unsigned long long>(self.base),
         static_cast<unsigned long long>(self.base + self.extent));
+    {
+        std::string build_id;
+        dl_iterate_phdr(BuildIdOf, &build_id);
+        Log("build: %s, build id %s", BOF3X_VERSION_TAG, build_id.empty() ? "none" : build_id.c_str());
+    }
     // Step 1's proof: ImageBase() is a Fatal when it is read unset
     // (image_base.h), and every namespace-scope table that places an address
     // ran before main; reaching this line means each read the base the

@@ -77,6 +77,44 @@ every few days under the same validated identity, and reputation
 (two years at most): when signing starts failing with an authentication
 error, make a new one and replace the secret.
 
+## Symbols (2026-11-23)
+
+The presets build `RelWithDebInfo`, so a binary as built holds its DWARF:
+71 of `bof3x.dll`'s 93 MB and 31 of the launcher's 38 MB (the 32-bit build,
+measured 2026-11-23). Until that day the downloads shipped it. A player's copy
+needs none of it: the log's `CRASH` lines name an address as
+`module+0xOFFSET`, the Windows minidump is `MiniDumpWriteDump`'s, and the
+game's own addresses are named from `symbols.toml`. Debug information is read
+on the developer's side only.
+
+So `release.yml` runs `tools/strip_symbols.py` in both jobs, after the build
+and **before the signing** (a strip after Authenticode breaks the signature):
+
+- each binary **as built** goes into a symbols zip, an asset beside the
+  downloads: `bof3x-<tag>-win-symbols.zip`, `-win-x64-symbols.zip` and
+  `-linux-x86_64-symbols.zip`;
+- the build's own file is then stripped of its `.debug_*` sections
+  (`strip --strip-debug`: the symbol table stays).
+
+`make_release.py` refuses a binary that still holds debug sections
+(`--keep-debug` takes it anyway, for a download made by hand).
+
+**How a report finds its symbols:** the log's `build:` line, its second line,
+names the tag (`v0.1.0-beta.2`, or `latest-<commit>`), and on Linux the ELF's
+GNU build id, which the strip keeps. Take that tag's symbols zip; for a
+Linux log, `python tools/crash_report.py --log bof3x.log --elf <the zip's
+bof3x>` names the engine's addresses by `addr2line`. A `latest` build's
+symbols are replaced with the build, so a report against an older `latest`
+needs a rebuild of that commit (same toolchain, same tag: the layout is the
+same).
+
+By hand, the same two steps before the zip:
+
+```
+python tools/strip_symbols.py --build build --out build/release/bof3x-<tag>-win-symbols.zip
+python tools/make_release.py --version <tag>
+```
+
 ## The latest build (2026-10-15)
 
 Every push to `main` builds the same zips as a release does and publishes
@@ -103,6 +141,7 @@ public, so the latest build is too.
 
 ```
 cmake --preset i686 && cmake --build build
+python tools/strip_symbols.py --build build --out build/release/bof3x-v0.1.0-alpha.1-win-symbols.zip
 python tools/make_release.py --version v0.1.0-alpha.1
 ```
 
@@ -123,6 +162,7 @@ so a second run is offline. To try the bundle without the system Python:
 
 ```
 cmake --preset linux-x86_64 -DBOF3X_VERSION_TAG=<tag> && cmake --build build-linux-x86_64     # on Linux
+python3 tools/strip_symbols.py --linux --build build-linux-x86_64 --out build/release/bof3x-<tag>-linux-x86_64-symbols.zip
 python3 tools/make_release.py --linux --version <tag>
 ```
 

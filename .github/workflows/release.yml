@@ -145,6 +145,20 @@ jobs:
       - name: The importer's recipes against fixtures/ (no game data)
         run: python tools/importer.py check
 
+      # The debug information out of the downloads and into a symbols zip per
+      # build (2026-11-23, docs/releases/README.md "Symbols"): the presets build
+      # RelWithDebInfo, and the DWARF was three quarters of bof3x.dll and of the
+      # launcher. tools/strip_symbols.py keeps each binary as built in
+      # bof3x-<tag>-win[-x64]-symbols.zip, then strips the build's file. Before
+      # the signing: a strip after Authenticode breaks the signature.
+      # make_release.py refuses a binary that still holds debug sections.
+      - name: Keep the symbols, strip the binaries
+        run: |
+          set -euo pipefail
+          python tools/strip_symbols.py --build build --out "build/release/bof3x-$TAG-win-symbols.zip"
+          python tools/strip_symbols.py --build build-x86_64 --out "build/release/bof3x-$TAG-win-x64-symbols.zip"
+          echo "SYMBOLS=build/release/bof3x-$TAG-win-symbols.zip build/release/bof3x-$TAG-win-x64-symbols.zip build/release/bof3x-$TAG-linux-x86_64-symbols.zip" >> "$GITHUB_ENV"
+
       # Authenticode (2026-10-16, docs/releases/README.md "Signing"): the three
       # binaries of each width are signed with the owner's Azure Trusted
       # Signing identity by jsign, which signs that service's files from Linux
@@ -233,7 +247,7 @@ jobs:
             echo "data/furigana/readings.toml is not in this commit: no furigana mod zip"
           fi
 
-      # The tarball job `linux` made, beside the zips.
+      # The tarball job `linux` made and its symbols zip, beside the zips.
       - name: Fetch the Linux tarball
         uses: actions/download-artifact@v4
         with:
@@ -245,6 +259,7 @@ jobs:
           set -euo pipefail
           test -s "build/release/bof3x-$TAG-linux-x86_64.tar.gz"
           tar -tzf "build/release/bof3x-$TAG-linux-x86_64.tar.gz" > /dev/null
+          for z in $SYMBOLS; do test -s "$z"; python -m zipfile -l "$z" > /dev/null; done
 
       - name: Draft pre-release
         if: env.TAG != 'latest'
@@ -253,7 +268,7 @@ jobs:
         run: |
           set -euo pipefail
           gh release create "$TAG" "build/release/bof3x-$TAG-win.zip" "build/release/bof3x-$TAG-win-x64.zip" \
-            "build/release/bof3x-$TAG-linux-x86_64.tar.gz" ${MOD_ZIPS:-} \
+            "build/release/bof3x-$TAG-linux-x86_64.tar.gz" ${MOD_ZIPS:-} $SYMBOLS \
             --draft --prerelease --verify-tag \
             --title "Breath of Fire III - bof3x $TAG" \
             --notes-file "docs/releases/$TAG.md"
@@ -281,14 +296,17 @@ jobs:
             echo
             echo "Linux (x86_64): \`bof3x-latest-linux-x86_64.tar.gz\`. Unpack it and run \`./bof3x-launcher\`."
             echo "It needs Python 3 and a Vulkan 1.3 driver from the system (README, the Linux section)."
+            echo
+            echo "The files with \`-symbols.zip\` in the name are for developers. They hold the debug"
+            echo "information of the programs. You do not need them to play."
           } > "$notes"
           if gh release view latest >/dev/null 2>&1; then
             gh release upload latest "build/release/bof3x-latest-win.zip" "build/release/bof3x-latest-win-x64.zip" \
-              "build/release/bof3x-latest-linux-x86_64.tar.gz" ${MOD_ZIPS:-} --clobber
+              "build/release/bof3x-latest-linux-x86_64.tar.gz" ${MOD_ZIPS:-} $SYMBOLS --clobber
             gh release edit latest --prerelease --latest=false --title "Latest build (main)" --notes-file "$notes"
           else
             gh release create latest "build/release/bof3x-latest-win.zip" "build/release/bof3x-latest-win-x64.zip" \
-              "build/release/bof3x-latest-linux-x86_64.tar.gz" ${MOD_ZIPS:-} \
+              "build/release/bof3x-latest-linux-x86_64.tar.gz" ${MOD_ZIPS:-} $SYMBOLS \
               --prerelease --latest=false --verify-tag --title "Latest build (main)" --notes-file "$notes"
           fi
 
@@ -348,6 +366,14 @@ jobs:
       - name: Check the ELFs and their libraries
         run: .github/scripts/linux-build.sh check
 
+      # As the Windows job does: the five files as built into the symbols zip,
+      # then stripped of their debug sections (the GNU build id stays; the
+      # log's "build:" line prints it).
+      - name: Keep the symbols, strip the binaries
+        run: |
+          python tools/strip_symbols.py --linux --build build-linux-x86_64 \
+            --out "build/release/bof3x-$TAG-linux-x86_64-symbols.zip"
+
       # The ELF, the launcher, the three libraries, the importer and its data,
       # the notices; no Python and no game data (the script checks).
       - name: Lay out the tarball
@@ -375,6 +401,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: linux-tarball
-          path: build/release/bof3x-${{ env.TAG }}-linux-x86_64.tar.gz
+          path: |
+            build/release/bof3x-${{ env.TAG }}-linux-x86_64.tar.gz
+            build/release/bof3x-${{ env.TAG }}-linux-x86_64-symbols.zip
           if-no-files-found: error
           retention-days: 7

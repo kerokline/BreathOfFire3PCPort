@@ -32,12 +32,16 @@ battle banner's text read from a half-written stack slot on the 64-bit builds (D
 searches that class: the two banner sites were its only real cases, its 20 word-in-a-register calls were fixed too, and 25
 latent findings stay listed with their reasons. The MinGW DirectX headers' licence was checked at the source
 ([`THIRD_PARTY.md`](THIRD_PARTY.md) section 8). The record: [`linux-round.md`](linux-round.md), "D1 as run" to "Wave C as
-run". **What ran on GitHub:** the pull request's checks, the Linux job among them. **Not seen yet:** `release.yml`'s Linux
-jobs, whose first run is the merge's push to `main` - read that run, and the tarball on "latest", before a tester is sent
-to it. **Not done:** no person has seen the Linux picture and nothing ran on a GPU, a real desktop or a sound device
+run". **What ran on GitHub:** the pull request's checks, the Linux job among them. **`release.yml`'s Linux jobs, read 2026-11-23**
+(runs 45054087685 and 45100087822, and the tarball on "latest"): both jobs passed, the attestation verifies
+(`gh attestation verify`), the layout and the libraries are right, and the launcher's `--check` passes from the unpacked
+tarball in the WSL. One defect, fixed that day: the ELF carried the default tag `v0.1.0`, not the release's
+(`linux-build.sh configure` got no tag). The same day the downloads of both systems lost their debug information to
+symbols zips and the log gained a `build:` line ([`releases/README.md`](releases/README.md) "Symbols"). **Not seen yet:**
+a `release.yml` run with the tag and the strip - read the first one, and its downloads. **Not done:** no person has seen the Linux picture and nothing ran on a GPU, a real desktop or a sound device
 (group D3, with the tarball: frost's machine or a tester's); the banner fault's twin on 64-bit Windows was never looked
 for, and that build ran no route with the fixes; the PSP install in the WSL had no effects, voices or logo movie (no
-`ffmpeg` there); a build on `ubuntu-24.04` needs glibc 2.38 or newer; the tarball's build attestation (`actions/attest`, its signature; [`releases/README.md`](releases/README.md)) has not run on GitHub.
+`ffmpeg` there); a build on `ubuntu-24.04` needs glibc 2.38 or newer.
 
 **The Linux round's wave B, 2026-11-21 (merged as PR #270).** The game links as an
 x86-64 Linux ELF, `bof3x`, beside its own `libSDL3.so.0` and DXVK-native's two libraries, and the Linux `bof3x-launcher`
