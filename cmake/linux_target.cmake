@@ -37,11 +37,17 @@ set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_SOURCE_D
 # the asm texts are written to the Win64 convention, and one text serves both
 # systems when every __cdecl function keeps it. __stdcall, WINAPI and
 # STDMETHODCALLTYPE stay as DXVK-native's headers define them (empty), so the
-# calls into DXVK and SDL keep System V. -fdeclspec: __declspec(naked) and the
-# others. The same flags as tools/linux_probe/linux_tree.py's compile.
+# calls into DXVK and SDL keep System V. -D__stdcall= gives every file that
+# empty __stdcall, also one that includes no DXVK header (the generated
+# symbols.gen.h, the *_callees.h): clang ignores the keyword on x86-64 Linux
+# and said so once per use, 6,574 of the build's -Wignored-attributes, so
+# the code is the same and the warning stays on for every other attribute.
+# DXVK's own `#define __stdcall` is the same empty text, so it redefines
+# nothing. -fdeclspec: __declspec(naked) and the others. The same flags as
+# tools/linux_probe/linux_tree.py's compile.
 # -fno-pie: the image's code reaches our functions by rel32 (stage LA2), so
 # the ELF is not position-independent.
-set(BOF3X_LINUX_COMPILE_OPTIONS -fdeclspec "-D__cdecl=__attribute__((ms_abi))" -fno-pie)
+set(BOF3X_LINUX_COMPILE_OPTIONS -fdeclspec "-D__cdecl=__attribute__((ms_abi))" -D__stdcall= -fno-pie)
 
 # --- how the ELF is linked ------------------------------------------------------
 # Non-PIE, linked at 0x10000000 (stage LA2, docs/linux-round.md "LA2, low

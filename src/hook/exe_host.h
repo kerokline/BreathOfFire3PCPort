@@ -6,8 +6,16 @@
 // Maps, binds and starts the game: Game_WinMain's answer is the exit code
 // the entry hands to ExitProcess. `command_line` is GetCommandLineA()'s whole
 // line; the program name is skipped as Capcom's _wincmdln skipped it.
-// Exported by name from bof3x.dll; bof3x.exe imports it.
+// Exported by name from bof3x.dll; bof3x.exe imports it. The ELF is one
+// program and nothing defines Engine_Main there (exe_host_posix.cpp's main
+// does its work); clang ignores dllexport on that target with a warning in
+// every file that includes this header, so the Linux build declares it
+// without one.
+#ifdef _WIN32
 extern "C" __declspec(dllexport) int __cdecl Engine_Main(void* hinstance, const char* command_line, int show);
+#else
+extern "C" int __cdecl Engine_Main(void* hinstance, const char* command_line, int show);
+#endif
 
 #include <cstdint>
 
