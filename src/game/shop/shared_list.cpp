@@ -18,6 +18,7 @@
 #include "game/shop/shared_list_callees.h"
 #include "game/shop_states2.h"
 #include "game/shop_states2_callees.h"
+#include "game/solo/solo_screens.h"
 #include "game/yes_no_layout.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -737,8 +738,12 @@ extern "C" void __cdecl SharedList_Setup(void) {
     records::WindowRecord* const win21 = &WindowRecords[0x15];
     unsigned char n = 0;
     FieldS_JoinedCount = 0;
+    unsigned char joined[8];
     for (unsigned char r = 0; r < 8; ++r)
-        if (Rec(r)[0xB] & 1) B(::bof3::Img(field_s::at::kJoined) + n++) = r;
+        if (Rec(r)[0xB] & 1) joined[n++] = r;
+    // DIVERGENCE DIV-0228 (amended 2026-11-22): the solo champion first, joined or not.
+    n = static_cast<unsigned char>(solo::SoloScreens_ChampionFirst(joined, n));
+    for (unsigned char i = 0; i < n; ++i) B(::bof3::Img(field_s::at::kJoined) + i) = joined[i];
     FieldS_JoinedCount = n;
     win0->handler = 7;
     win0->kind = 0;

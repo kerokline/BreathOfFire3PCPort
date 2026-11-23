@@ -4,7 +4,8 @@
 `8e5d1ea0`). The owner's call, [`solo-character-round.md`](solo-character-round.md)
 6l. Ledger: DIV-0228, amended 2026-11-22. Run on the two recorded routes with
 the mode off and on, and played by the owner 2026-11-22 (section 4): both
-screens work as intended; one limit found, the skill grant (section 5).
+screens work as intended. The camp's Skill Notes (section 6) were built
+after that play and are **not played**.
 
 ## 1. What changes
 
@@ -124,8 +125,10 @@ are the "not joined yet" case.
 - **The owner's play** (2026-11-22, this branch's build in `game\`,
   `on=SoloCharacter`, champion Rei). The owner's words: "Both masters and
   shops work as intended"; "The stop being my apprentice check works as
-  well"; "the skill up appears to only work when the person is in the team,
-  which is ok for now". On the camp's list: "Masters can't be reached from
+  well". The skill grant: first reported as working only with the champion
+  in the team, then withdrawn - "that was my mistake - I had tried to edit a
+  save, and hadn't set the level high enough. The skill grant does seem to
+  be working". On the camp's list: "Masters can't be reached from
   the camp list unless the ultimate edition mod (or something like it) is
   turned on - normally they just show who is apprenticed to that master, but
   I believe it only shows if they are currently in the team (so for instance,
@@ -133,11 +136,6 @@ are the "not joined yet" case.
 
 ## 5. Not done, and limits found in play
 
-- **A master's skill grant reaches the champion only while the champion
-  walks with the team** (the owner's play; "ok for now"). The cause is not
-  read: `MasterGrant_Step2Next` runs over the screen's members, so what
-  keeps a champion outside the team from the grant is before it or beside
-  it. Open.
 - **The camp's master list names a master's pupils from the team only**, so
   a champion outside the team is not named under their master (the owner's
   belief from play, not read in the source). Not changed: the list was not
@@ -154,3 +152,39 @@ are the "not joined yet" case.
 - The state-hash off-proof was not run: with the switch off every changed
   read returns the value the original read, and the hosted fuzz groups of
   these files compare ours with Capcom's code.
+- The Skill Notes of section 6: no route run, not played.
+
+## 6. The camp's Skill Notes open on the champion (2026-11-22, round doc 6m)
+
+The owner's play of the two screens found that a champion the story has
+taken out of the team could not move skills: the Skill Notes list the joined
+records only.
+
+**How the screen holds its members (by reading the source).**
+`SharedList_Setup` `0x584F90` (`shared_list.cpp`) writes the records whose
+`+0xB` bit 0 ("joined") is set, of the eight in record order, to the eight
+bytes at `0x6BC8BC` and their count to `FieldS_JoinedCount` `0x6BC8C5`.
+`SharedList_Menu`, `SharedList_UseItem` and `SharedList_PickMember` open on
+entry 0 and step left and right through the count. Unlike the merchant and
+the masters, the list is not the team: it is every joined member.
+
+**What is built.** `SoloScreens_ChampionFirst(list, count)`
+(`solo_screens.cpp`), called by `SharedList_Setup` on the list it has just
+made, before it is stored: while the champion fights
+(`Solo_ChampionFights()`), the champion's record first, joined or not, then
+the other joined records in their order; the new count. Otherwise the list
+is stored as the original stores it. The other members are kept because a
+skill goes to the notes only from its holder's slots.
+
+This one is a write, not a read-side view: the list at `0x6BC8BC` holds the
+new order. It is the screen's own scratch, rebuilt at every opening and read
+by nothing else (`grep kJoined src`: `shared_list.cpp` and its fuzz).
+
+**Checks.** `solo self-test`: six cases of the order (a joined champion, one
+not joined, one already first, an empty list, the full eight, eight with no
+room). Hosted `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` with the switches
+off: 922 `MISMATCHES` lines, every one 0 (`field_s`, the
+group of `SharedList_Setup`, among them), `solo self-test: 295 checks
+passed`, "self-test only: done". `tools/data_census.py --strict` passes (the list keeps
+its one recorded write in `SharedList_Setup`). **No route run and not
+played.**

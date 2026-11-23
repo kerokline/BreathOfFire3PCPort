@@ -33,6 +33,15 @@ unsigned SoloScreens_Count(unsigned game_count);
 // exists; another slot is a Fatal naming `who`.
 unsigned SoloScreens_Record(unsigned slot, unsigned game_record, const char* who);
 
+// The camp's Skill Notes hold every joined record, in record order, in a list
+// of eight bytes (SharedList_Setup, 0x6BC8BC), and open on the first. While
+// the champion fights alone the list is the champion first, joined or not,
+// then the other joined records in their order: the screen opens on the
+// champion, and the others stay reachable so their skills can still go to the
+// notes. `list` holds `count` records, room for eight; answers the new count.
+// Otherwise the list and the count are left as they are.
+unsigned SoloScreens_ChampionFirst(unsigned char* list, unsigned count);
+
 // The pure half's self-test (no game state); the number of checks. Called
 // from Solo_SelfTest.
 int Solo_ScreensSelfTest();

@@ -17261,7 +17261,16 @@ designed in rather than bolted on.
   shows the champion (the field menu still equips them), and a walker
   already apprenticed is not offered that master's skills until the mode
   stands down. Not changed: the sell screen (it shows no member), the
-  resistance shop `ShopResist_*`, and every other menu.
+  resistance shop `ShopResist_*`, and every other menu but the one below.
+  **The camp's Skill Notes (the same day, the owner's call, round doc 6m).**
+  The original's member list is the joined records in record order
+  (`SharedList_Setup` `0x584F90`: `+0xB` bit 0 of the eight, to `0x6BC8BC`,
+  the count to `0x6BC8C5`), and the screen opens on the first. While the
+  champion fights the list is the champion first, joined or not, then the
+  other joined records in their order: a champion the story has taken away
+  can still move skills, and the others stay in the list so their skills
+  can go to the notes. The list is the screen's own, rebuilt at each
+  opening; no save byte is written for it.
   With the switch off nothing reads or writes the byte, `Area_Enter`'s and
   New Game's calls return at their first test, no battle hook acts, and the
   two screens' reads answer the game's own count and records.
@@ -17327,9 +17336,9 @@ designed in rather than bolted on.
   release from a master, a master's skill grant, the camp's master list, the
   64-bit and Linux builds, the state-hash off-proof. **Played by the owner,
   2026-11-22** (`solo-character-shops.md` 4, champion Rei): the merchant,
-  the masters' join and release work as intended; a master's skill grant
-  reaches the champion only while the champion walks with the team (the
-  owner: "ok for now"; cause not read).
+  the masters' join, release and skill grant work as intended. The Skill
+  Notes' list: built after that play; the self-test's six cases of the
+  order and the hosted fuzz with the switches off; not played.
 - **Reversible?** Yes - off unless `on=` (or a mod's needs) names it;
   `BOF3X_OFF=SoloCharacter` keeps it off. The mark stays in saves made with
   it.

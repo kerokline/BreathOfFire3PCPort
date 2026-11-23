@@ -760,6 +760,20 @@ game's. Built as a read-side view, nothing written:
 [`solo-character-shops.md`](solo-character-shops.md); the ledger is DIV-0228,
 amended.
 
+## 6m. The owner's thirteenth answer (2026-11-22): the camp's Skill Notes open on the champion
+
+The owner, after playing 6l's build, in their words: "there's currently no
+way to change skill notes for the solo character if they are removed from the
+team. Can you change the camp skill notes to use the solo character instead
+of ryu for the default character?"
+
+What it sets: while the champion fights, the Skill Notes' member list is the
+champion first, joined or not, then the other joined members in the game's
+order. The others are kept (our reading of "the default character", not the
+owner's words): a member's skills can go to the notes only from that
+member's slots, so dropping them from the list would lock those skills away.
+[`solo-character-shops.md`](solo-character-shops.md) 6; DIV-0228, amended.
+
 ## 7. Not in this round
 
 - The champion screen at New Game (I34's sequence).
