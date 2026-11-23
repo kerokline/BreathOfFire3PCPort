@@ -40,9 +40,11 @@ tarball in the WSL. One defect, fixed that day: the ELF carried the default tag 
 symbols zips and the log gained a `build:` line ([`releases/README.md`](releases/README.md) "Symbols"). **That run, read the same
 day** (45231155748, "latest" at 3398f7bb): the 64-bit strip, the signing after the strip (`bof3x.dll` and the launcher
 `Valid` to Windows) and the three symbols zips; the win zip 45.0 MB where it was 74.6, the tarball 14.2 where it was 39.1;
-a made fault on each system named from its symbols zip ([`releases/README.md`](releases/README.md) "Symbols"). **Found,
-not fixed:** Windows reports `bof3x.exe` (written by `tools/make_exe.py`, signed by jsign) as `NotSigned`, in this
-download and in beta.1's, though `make_exe.py --verify-only` says "signed". **Not seen yet:** `release.yml` with job
+a made fault on each system named from its symbols zip ([`releases/README.md`](releases/README.md) "Symbols"). **Found
+and fixed, not seen:** Windows reported `bof3x.exe` (written by `tools/make_exe.py`, signed by jsign) as `NotSigned`, in
+this download and in beta.1's: its header said linker version 1.0, and Windows reads no signature below 3.0
+([`releases/README.md`](releases/README.md) "Signing"). `make_exe.py` writes 14.0 now; read the next release run's
+`bof3x.exe` with `Get-AuthenticodeSignature`. **Not seen yet:** `release.yml` with job
 `publish` (2026-11-23: the publish out of a newer push's reach) - read its first run. **Not done:** no person has seen the Linux picture and nothing ran on a GPU, a real desktop or a sound device
 (group D3, with the tarball: frost's machine or a tester's); the banner fault's twin on 64-bit Windows was never looked
 for, and that build ran no route with the fixes; the PSP install in the WSL had no effects, voices or logo movie (no
