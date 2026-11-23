@@ -43,4 +43,7 @@ void* ModuleExportByOrdinal(const char* name, unsigned ordinal) {
     return m ? reinterpret_cast<void*>(GetProcAddress(m, MAKEINTRESOURCEA(ordinal))) : nullptr;
 }
 
+// A PE carries no GNU build-id note (os/module.h): no module answers.
+bool ModuleBuildId(const void*, std::string*) { return false; }
+
 }  // namespace bof3::os

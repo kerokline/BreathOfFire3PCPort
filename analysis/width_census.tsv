@@ -6292,27 +6292,27 @@ site	src/game/menu/item_use_fuzz.cpp	187	narrow_call	image_local	fuzz	bits	Addre
 site	src/game/menu/item_use_fuzz.cpp	472	narrow_call	image_local	fuzz	p	Address	args.a[0] = Address(p);
 site	src/game/menu/item_use_fuzz.cpp	481	narrow_call	image_local	fuzz	p	Address	args.a[0] = Address(p);
 site	src/game/menu/item_use_fuzz.cpp	590	narrow_call	object_ours	fuzz	g_area_table + 32 * a	Address	const std::uint32_t table = Address(g_area_table + 32 * a);
-site	src/game/menu/master_quit.cpp	51	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(move_script::At(table + 4 * index)))))();
-site	src/game/menu/master_quit.cpp	51	widen	word_read	live	static_cast<U>(Long(move_script::At(table + 4 * index)))	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(move_script::At(table + 4 * index)))))();
-site	src/game/menu/master_quit.cpp	121	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(::bof3::CodePlace(target)))(0x1B, 0x13, 0, 0xFF, MessageText(message));
-site	src/game/menu/master_quit.cpp	121	widen	code_place	live	::bof3::CodePlace(target)	Fn [fn]	return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(::bof3::CodePlace(target)))(0x1B, 0x13, 0, 0xFF, MessageText(message));
-site	src/game/menu/master_quit.cpp	131	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Fn>(static_cast<std::uintptr_t>(::bof3::CodePlace(target)))(static_cast<int>(x), 0x15, 0);
-site	src/game/menu/master_quit.cpp	131	widen	code_place	live	::bof3::CodePlace(target)	Fn [fn]	reinterpret_cast<Fn>(static_cast<std::uintptr_t>(::bof3::CodePlace(target)))(static_cast<int>(x), 0x15, 0);
-site	src/game/menu/master_talk.cpp	56	low32	helper_def	live	p	Low32	U Key(const void* p) { return Low32(p); }
-site	src/game/menu/master_talk.cpp	102	narrow_call	image_local	live	p + 0x16	Key	PutW(Key(p + 0x16), clut);
-site	src/game/menu/master_talk.cpp	103	narrow_call	image_local	live	p + 0x26	Key	PutW(Key(p + 0x26), 0xF);
-site	src/game/menu/master_talk.cpp	112	narrow_call	image_local	live	rect + 8	Key	PutL(::bof3::Img(rest_2c::at::kPacketNext.v), Key(rect + 8));
-site	src/game/menu/master_talk.cpp	113	narrow_call	image_local	live	rect	Key	PutW(Key(rect), 0);
-site	src/game/menu/master_talk.cpp	114	narrow_call	image_local	live	rect + 2	Key	PutW(Key(rect + 2), y);
-site	src/game/menu/master_talk.cpp	115	narrow_call	image_local	live	rect + 4	Key	PutW(Key(rect + 4), size);
-site	src/game/menu/master_talk.cpp	116	narrow_call	image_local	live	rect + 6	Key	PutW(Key(rect + 6), size);
-site	src/game/menu/master_talk.cpp	117	narrow_call	image_local	live	rect	Key	SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext.Native(), 0, 1, 0xF, Key(rect));
-site	src/game/menu/master_talk_2.cpp	48	low32	helper_def	live	p	Low32	U Key(const void* p) { return Low32(p); }
-site	src/game/menu/master_talk_2.cpp	62	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2c(table + 4 * index)))();
-site	src/game/menu/master_talk_2.cpp	62	widen	other	live	LRest2c(table + 4 * index)	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2c(table + 4 * index)))();
-site	src/game/menu/master_talk_2.cpp	195	narrow_call	image_local	live	p + 0x18	Key	PutW(Key(p + 0x18), 0x28);
-site	src/game/menu/master_talk_2.cpp	196	narrow_call	image_local	live	p + 0x1A	Key	PutW(Key(p + 0x1A), 0x30);
-site	src/game/menu/master_talk_2.cpp	197	narrow_call	image_local	live	p + 0x16	Key	PutW(Key(p + 0x16), clut);
+site	src/game/menu/master_quit.cpp	52	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(move_script::At(table + 4 * index)))))();
+site	src/game/menu/master_quit.cpp	52	widen	word_read	live	static_cast<U>(Long(move_script::At(table + 4 * index)))	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(move_script::At(table + 4 * index)))))();
+site	src/game/menu/master_quit.cpp	132	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(::bof3::CodePlace(target)))(0x1B, 0x13, 0, 0xFF, MessageText(message));
+site	src/game/menu/master_quit.cpp	132	widen	code_place	live	::bof3::CodePlace(target)	Fn [fn]	return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(::bof3::CodePlace(target)))(0x1B, 0x13, 0, 0xFF, MessageText(message));
+site	src/game/menu/master_quit.cpp	142	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Fn>(static_cast<std::uintptr_t>(::bof3::CodePlace(target)))(static_cast<int>(x), 0x15, 0);
+site	src/game/menu/master_quit.cpp	142	widen	code_place	live	::bof3::CodePlace(target)	Fn [fn]	reinterpret_cast<Fn>(static_cast<std::uintptr_t>(::bof3::CodePlace(target)))(static_cast<int>(x), 0x15, 0);
+site	src/game/menu/master_talk.cpp	57	low32	helper_def	live	p	Low32	U Key(const void* p) { return Low32(p); }
+site	src/game/menu/master_talk.cpp	107	narrow_call	image_local	live	p + 0x16	Key	PutW(Key(p + 0x16), clut);
+site	src/game/menu/master_talk.cpp	108	narrow_call	image_local	live	p + 0x26	Key	PutW(Key(p + 0x26), 0xF);
+site	src/game/menu/master_talk.cpp	117	narrow_call	image_local	live	rect + 8	Key	PutL(::bof3::Img(rest_2c::at::kPacketNext.v), Key(rect + 8));
+site	src/game/menu/master_talk.cpp	118	narrow_call	image_local	live	rect	Key	PutW(Key(rect), 0);
+site	src/game/menu/master_talk.cpp	119	narrow_call	image_local	live	rect + 2	Key	PutW(Key(rect + 2), y);
+site	src/game/menu/master_talk.cpp	120	narrow_call	image_local	live	rect + 4	Key	PutW(Key(rect + 4), size);
+site	src/game/menu/master_talk.cpp	121	narrow_call	image_local	live	rect + 6	Key	PutW(Key(rect + 6), size);
+site	src/game/menu/master_talk.cpp	122	narrow_call	image_local	live	rect	Key	SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext.Native(), 0, 1, 0xF, Key(rect));
+site	src/game/menu/master_talk_2.cpp	49	low32	helper_def	live	p	Low32	U Key(const void* p) { return Low32(p); }
+site	src/game/menu/master_talk_2.cpp	63	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2c(table + 4 * index)))();
+site	src/game/menu/master_talk_2.cpp	63	widen	other	live	LRest2c(table + 4 * index)	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2c(table + 4 * index)))();
+site	src/game/menu/master_talk_2.cpp	212	narrow_call	image_local	live	p + 0x18	Key	PutW(Key(p + 0x18), 0x28);
+site	src/game/menu/master_talk_2.cpp	213	narrow_call	image_local	live	p + 0x1A	Key	PutW(Key(p + 0x1A), 0x30);
+site	src/game/menu/master_talk_2.cpp	214	narrow_call	image_local	live	p + 0x16	Key	PutW(Key(p + 0x16), clut);
 site	src/game/menu/menu.cpp	148	uintptr	-	live	std::uintptr_t	-	unsigned char* AtMapFieldObjects(map_field_objects::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/menu/menu.cpp	148	widen	param	live	address	unsigned char*	unsigned char* AtMapFieldObjects(map_field_objects::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/menu/menu.cpp	160	uintptr	-	live	std::uintptr_t	-	unsigned char* PacketNext() { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(DwordMapFieldObjects(AtMapFieldObjects(map_field_objects::at::
@@ -7920,10 +7920,10 @@ site	src/game/shop/rest_2h_fuzz.cpp	582	narrow_call	object_ours	fuzz	g_vt_dev	Ke
 site	src/game/shop/rest_2h_fuzz.cpp	585	narrow_call	object_ours	fuzz	g_instance	Key	g_regions[n_regions - 2].at = Key(g_instance);
 site	src/game/shop/rest_2h_fuzz.cpp	586	narrow_call	object_ours	fuzz	g_reserve	Key	g_regions[n_regions - 1].at = Key(g_reserve);
 site	src/game/shop/rest_2h_fuzz.cpp	591	narrow_call	object_ours	fuzz	g_r2h_slide_copy	Key	g_master_bound = Key(g_r2h_slide_copy) + 6;
-site	src/game/shop/shared_list.cpp	205	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2c(table + 4 * index)))();
-site	src/game/shop/shared_list.cpp	205	widen	other	live	LRest2c(table + 4 * index)	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2c(table + 4 * index)))();
-site	src/game/shop/shared_list.cpp	208	uintptr	-	live	std::uintptr_t	-	unsigned char* AtShopStates2(shop_states2::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/shop/shared_list.cpp	208	widen	param	live	address	unsigned char*	unsigned char* AtShopStates2(shop_states2::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/shop/shared_list.cpp	206	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2c(table + 4 * index)))();
+site	src/game/shop/shared_list.cpp	206	widen	other	live	LRest2c(table + 4 * index)	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2c(table + 4 * index)))();
+site	src/game/shop/shared_list.cpp	209	uintptr	-	live	std::uintptr_t	-	unsigned char* AtShopStates2(shop_states2::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/shop/shared_list.cpp	209	widen	param	live	address	unsigned char*	unsigned char* AtShopStates2(shop_states2::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/shop/shop_browse.cpp	76	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2c(table + 4 * index)))();
 site	src/game/shop/shop_browse.cpp	76	widen	other	live	LRest2c(table + 4 * index)	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2c(table + 4 * index)))();
 site	src/game/shop/shop_mode.cpp	21	uintptr	-	live	std::uintptr_t	-	template <typename T> T Fn(U address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
@@ -7964,33 +7964,33 @@ site	src/game/shop/shop_states_fuzz.cpp	207	narrow_call	image_local	fuzz	fmt	Add
 site	src/game/shop/shop_states_fuzz.cpp	214	narrow_call	image_local	fuzz	text	Addr	Record(17, slot, length, Addr(text));
 site	src/game/shop/shop_states_fuzz.cpp	660	narrow_call	image_local	fuzz	reinterpret_cast<const void*>(TargetTable()[i])	Addr	for (unsigned i = 0; i < kModeEntries; ++i) PutLong(ShopMode_States_addr + i * 4, Addr(reinterpret_cast<const void*>(TargetTable()[i])));
 site	src/game/shop/shop_states_fuzz.cpp	662	narrow_call	image_local	fuzz	reinterpret_cast<const void*>(TargetTable()[kModeEntries + i])	Addr	PutLong(Inn_Steps_addr + i * 4, Addr(reinterpret_cast<const void*>(TargetTable()[kModeEntries + i])));
-site	src/game/shop/shop_trade.cpp	70	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2c(table + 4 * index)))();
-site	src/game/shop/shop_trade.cpp	70	widen	other	live	LRest2c(table + 4 * index)	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2c(table + 4 * index)))();
-site	src/game/shop/shop_trade.cpp	76	uintptr	-	live	std::uintptr_t	-	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/shop/shop_trade.cpp	76	widen	param	live	address	unsigned char*	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/shop/shop_trade.cpp	96	uintptr	-	live	std::uintptr_t	-	unsigned char* AtShopStates2(shop_states2::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/shop/shop_trade.cpp	96	widen	param	live	address	unsigned char*	unsigned char* AtShopStates2(shop_states2::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/shop/shop_trade.cpp	245	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(target));
-site	src/game/shop/shop_trade.cpp	245	widen	param	live	target	Handler [fn]	return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(target));
-site	src/game/shop/shop_trade.cpp	1281	low32	object_ours	live	&g_shop_yes_no_hand	Low32	bof3::PatchBytes(" ", Low32(&g_shop_yes_no_hand),
-site	src/game/shop/shop_win.cpp	35	uintptr	-	live	std::uintptr_t	-	return AtMenuDrawHelpers(*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr))));
-site	src/game/shop/shop_win.cpp	35	widen	img_place	live	::bof3::Img(BattleWinStates_Current_addr)	volatile std::uint32_t*	return AtMenuDrawHelpers(*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr))));
-site	src/game/shop/shop_win.cpp	51	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<menu_draw_helpers::U>(LongMenuDrawHelpers(AtMenuDrawHelpers(table + index * 4)))))();
-site	src/game/shop/shop_win.cpp	51	widen	other	live	static_cast<menu_draw_helpers::U>(LongMenuDrawHelpers(AtMenuDrawHelpers(table + index * 4)))	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<menu_draw_helpers::U>(LongMenuDrawHelpers(AtMenuDrawHelpers(table + index * 4)))))();
-site	src/game/shop/shop_win.cpp	170	low32	object_ours	live	&g_shop_yes_no_line	Low32	bof3::PatchBytes(" ", Low32(&g_shop_yes_no_line),
-site	src/game/shop/shop_win_2.cpp	57	uintptr	-	live	std::uintptr_t	-	return AtMenuDrawHelpers(*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr))));
-site	src/game/shop/shop_win_2.cpp	57	widen	img_place	live	::bof3::Img(BattleWinStates_Current_addr)	volatile std::uint32_t*	return AtMenuDrawHelpers(*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr))));
-site	src/game/shop/shop_win_2.cpp	73	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<menu_draw_helpers::U>(LongMenuDrawHelpers(AtMenuDrawHelpers(table + index * 4)))))();
-site	src/game/shop/shop_win_2.cpp	73	widen	other	live	static_cast<menu_draw_helpers::U>(LongMenuDrawHelpers(AtMenuDrawHelpers(table + index * 4)))	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<menu_draw_helpers::U>(LongMenuDrawHelpers(AtMenuDrawHelpers(table + index * 4)))))();
-site	src/game/shop/shop_win_2.cpp	117	low32	helper_def	live	p	Low32	std::uint32_t Addr(const void* p) { return Low32(p); }
-site	src/game/shop/shop_win_2.cpp	172	uintptr	-	live	std::uintptr_t	-	unsigned char* RecRest2h() { return AtRest2h(*reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)))); }
-site	src/game/shop/shop_win_2.cpp	172	widen	img_place	live	::bof3::Img(BattleWinStates_Current_addr)	volatile U*	unsigned char* RecRest2h() { return AtRest2h(*reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)))); }
-site	src/game/shop/shop_win_2.cpp	190	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2h(table + 4 * index)))();
-site	src/game/shop/shop_win_2.cpp	190	widen	other	live	LRest2h(table + 4 * index)	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2h(table + 4 * index)))();
-site	src/game/shop/shop_win_2.cpp	273	narrow_call	image_local	live	w + 0x20	Addr	const unsigned char* const list = Ptr(Addr(w + 0x20));
-site	src/game/shop/shop_win_2.cpp	338	narrow_call	image_local	live	w + 0x20	Addr	const unsigned char* const list = Ptr(Addr(w + 0x20));
-site	src/game/shop/shop_win_2.cpp	484	low32	image	live	Widescreen_SlideOperand(at::kMasterBound.v)	Low32	std::uint32_t g_master_bound = Low32(Widescreen_SlideOperand(at::kMasterBound.v));
-site	src/game/shop/shop_win_2.cpp	772	low32	object_ours	live	&rest_2h::g_pupil_label_off	Low32	Low32(&rest_2h::g_pupil_label_off),
+site	src/game/shop/shop_trade.cpp	71	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2c(table + 4 * index)))();
+site	src/game/shop/shop_trade.cpp	71	widen	other	live	LRest2c(table + 4 * index)	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2c(table + 4 * index)))();
+site	src/game/shop/shop_trade.cpp	77	uintptr	-	live	std::uintptr_t	-	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/shop/shop_trade.cpp	77	widen	param	live	address	unsigned char*	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/shop/shop_trade.cpp	97	uintptr	-	live	std::uintptr_t	-	unsigned char* AtShopStates2(shop_states2::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/shop/shop_trade.cpp	97	widen	param	live	address	unsigned char*	unsigned char* AtShopStates2(shop_states2::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/shop/shop_trade.cpp	253	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(target));
+site	src/game/shop/shop_trade.cpp	253	widen	param	live	target	Handler [fn]	return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(target));
+site	src/game/shop/shop_trade.cpp	1289	low32	object_ours	live	&g_shop_yes_no_hand	Low32	bof3::PatchBytes(" ", Low32(&g_shop_yes_no_hand),
+site	src/game/shop/shop_win.cpp	36	uintptr	-	live	std::uintptr_t	-	return AtMenuDrawHelpers(*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr))));
+site	src/game/shop/shop_win.cpp	36	widen	img_place	live	::bof3::Img(BattleWinStates_Current_addr)	volatile std::uint32_t*	return AtMenuDrawHelpers(*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr))));
+site	src/game/shop/shop_win.cpp	52	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<menu_draw_helpers::U>(LongMenuDrawHelpers(AtMenuDrawHelpers(table + index * 4)))))();
+site	src/game/shop/shop_win.cpp	52	widen	other	live	static_cast<menu_draw_helpers::U>(LongMenuDrawHelpers(AtMenuDrawHelpers(table + index * 4)))	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<menu_draw_helpers::U>(LongMenuDrawHelpers(AtMenuDrawHelpers(table + index * 4)))))();
+site	src/game/shop/shop_win.cpp	172	low32	object_ours	live	&g_shop_yes_no_line	Low32	bof3::PatchBytes(" ", Low32(&g_shop_yes_no_line),
+site	src/game/shop/shop_win_2.cpp	58	uintptr	-	live	std::uintptr_t	-	return AtMenuDrawHelpers(*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr))));
+site	src/game/shop/shop_win_2.cpp	58	widen	img_place	live	::bof3::Img(BattleWinStates_Current_addr)	volatile std::uint32_t*	return AtMenuDrawHelpers(*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr))));
+site	src/game/shop/shop_win_2.cpp	74	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<menu_draw_helpers::U>(LongMenuDrawHelpers(AtMenuDrawHelpers(table + index * 4)))))();
+site	src/game/shop/shop_win_2.cpp	74	widen	other	live	static_cast<menu_draw_helpers::U>(LongMenuDrawHelpers(AtMenuDrawHelpers(table + index * 4)))	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<menu_draw_helpers::U>(LongMenuDrawHelpers(AtMenuDrawHelpers(table + index * 4)))))();
+site	src/game/shop/shop_win_2.cpp	118	low32	helper_def	live	p	Low32	std::uint32_t Addr(const void* p) { return Low32(p); }
+site	src/game/shop/shop_win_2.cpp	173	uintptr	-	live	std::uintptr_t	-	unsigned char* RecRest2h() { return AtRest2h(*reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)))); }
+site	src/game/shop/shop_win_2.cpp	173	widen	img_place	live	::bof3::Img(BattleWinStates_Current_addr)	volatile U*	unsigned char* RecRest2h() { return AtRest2h(*reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)))); }
+site	src/game/shop/shop_win_2.cpp	191	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2h(table + 4 * index)))();
+site	src/game/shop/shop_win_2.cpp	191	widen	other	live	LRest2h(table + 4 * index)	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2h(table + 4 * index)))();
+site	src/game/shop/shop_win_2.cpp	275	narrow_call	image_local	live	w + 0x20	Addr	const unsigned char* const list = Ptr(Addr(w + 0x20));
+site	src/game/shop/shop_win_2.cpp	340	narrow_call	image_local	live	w + 0x20	Addr	const unsigned char* const list = Ptr(Addr(w + 0x20));
+site	src/game/shop/shop_win_2.cpp	486	low32	image	live	Widescreen_SlideOperand(at::kMasterBound.v)	Low32	std::uint32_t g_master_bound = Low32(Widescreen_SlideOperand(at::kMasterBound.v));
+site	src/game/shop/shop_win_2.cpp	774	low32	object_ours	live	&rest_2h::g_pupil_label_off	Low32	Low32(&rest_2h::g_pupil_label_off),
 site	src/game/sound_rest_callees.h	55	sizeof_ptr	-	live	sizeof(void*)	-	static_assert(offsetof(Callees, halt) == 2 * sizeof(void*) && offsetof(Callees, resume) == 3 * sizeof(void*) &&
 site	src/game/sound_rest_callees.h	55	sizeof_ptr	-	live	sizeof(void*)	-	static_assert(offsetof(Callees, halt) == 2 * sizeof(void*) && offsetof(Callees, resume) == 3 * sizeof(void*) &&
 site	src/game/sound_rest_callees.h	56	sizeof_ptr	-	live	sizeof(void*)	-	offsetof(Callees, music_playing) == 4 * sizeof(void*),
@@ -8602,83 +8602,83 @@ site	src/hook/exe_host.cpp	542	narrow	windows	live	info->ExceptionRecord->Except
 site	src/hook/exe_host.cpp	542	uintptr	-	live	std::uintptr_t	-	static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(info->ExceptionRecord->ExceptionAddress)));
 site	src/hook/exe_host.cpp	608	fmt_place	pointer	live	hinstance	%p	Log("Engine_Main: hinstance %p, show %d, on thread %lu", hinstance, show, GetCurrentThreadId());
 site	src/hook/exe_host.cpp	651	fmt_place	pointer	live	hinstance	%p	Log("Engine_Main: Game_WinMain(0x%p, null, \"%s\", %d) on the main thread", hinstance, line, show);
-site	src/hook/exe_host_posix.cpp	63	width_if	asm_pair	live	-	#if !defined(__x86_64__)	#if !defined(__x86_64__)
-site	src/hook/exe_host_posix.cpp	70	uintptr	-	live	std::uintptr_t	-	std::uintptr_t g_ownBase = 0;
-site	src/hook/exe_host_posix.cpp	77	uintptr	-	live	std::uintptr_t	-	void* At(std::uint32_t place) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(place)); }
-site	src/hook/exe_host_posix.cpp	77	widen	param	live	place	void*	void* At(std::uint32_t place) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(place)); }
-site	src/hook/exe_host_posix.cpp	110	uintptr	-	live	std::uintptr_t	-	void* AtU(std::uintptr_t a) { return reinterpret_cast<void*>(a); }
-site	src/hook/exe_host_posix.cpp	126	long	l	live	long	-	const unsigned long long v = std::strtoull(text, &end, 0);
-site	src/hook/exe_host_posix.cpp	181	uintptr	-	live	std::uintptr_t	-	[[noreturn]] void RefuseRange(const char* what, std::uintptr_t lo, std::uintptr_t hi, int error) {
-site	src/hook/exe_host_posix.cpp	181	uintptr	-	live	std::uintptr_t	-	[[noreturn]] void RefuseRange(const char* what, std::uintptr_t lo, std::uintptr_t hi, int error) {
-site	src/hook/exe_host_posix.cpp	184	long	l	live	long	-	static_cast<unsigned long long>(lo), static_cast<unsigned long long>(hi), error, std::strerror(error),
-site	src/hook/exe_host_posix.cpp	184	long	l	live	long	-	static_cast<unsigned long long>(lo), static_cast<unsigned long long>(hi), error, std::strerror(error),
-site	src/hook/exe_host_posix.cpp	217	uintptr	-	live	std::uintptr_t	-	std::uintptr_t r_hi = m.base + m.size;
-site	src/hook/exe_host_posix.cpp	222	fmt_place	word	live	(unsigned)best_at	%08X	Log("fence: the largest free run below 16 MB at main is 0x%X bytes at 0x%08X (the image takes 0x%X)", (unsigned)best,
-site	src/hook/exe_host_posix.cpp	235	fmt_place	word	live	(unsigned)(ImageBase() + kSpan)	%08X	Log("fence: the image's span 0x%08X..0x%08X reserved by the start-up before any initialiser, .game and .pool "
-site	src/hook/exe_host_posix.cpp	235	fmt_place	word	live	(unsigned)ImageBase()	%08X	Log("fence: the image's span 0x%08X..0x%08X reserved by the start-up before any initialiser, .game and .pool "
-site	src/hook/exe_host_posix.cpp	236	fmt_place	word	live	(unsigned)(ImageBase() + kSpan)	%08X	"read-write in it; the main thread's stack 0x%08X..0x%08X, its guard page under it (docs/linux-round.md, "
-site	src/hook/exe_host_posix.cpp	236	fmt_place	word	live	(unsigned)ImageBase()	%08X	"read-write in it; the main thread's stack 0x%08X..0x%08X, its guard page under it (docs/linux-round.md, "
-site	src/hook/exe_host_posix.cpp	240	fmt_place	word	live	(unsigned)kImageBase	%08X	Log("fence: the image at its linked base 0x%08X; nothing to fence", (unsigned)kImageBase);
-site	src/hook/exe_host_posix.cpp	244	fmt_place	word	live	(unsigned)(kImageBase + kSpan)	%08X	Log("fence: the image at 0x%08X, moved from 0x%08X: the linked span 0x%08X..0x%08X reserved no-access whole, "
-site	src/hook/exe_host_posix.cpp	244	fmt_place	word	live	(unsigned)ImageBase()	%08X	Log("fence: the image at 0x%08X, moved from 0x%08X: the linked span 0x%08X..0x%08X reserved no-access whole, "
-site	src/hook/exe_host_posix.cpp	244	fmt_place	word	live	(unsigned)kImageBase	%08X	Log("fence: the image at 0x%08X, moved from 0x%08X: the linked span 0x%08X..0x%08X reserved no-access whole, "
-site	src/hook/exe_host_posix.cpp	244	fmt_place	word	live	(unsigned)kImageBase	%08X	Log("fence: the image at 0x%08X, moved from 0x%08X: the linked span 0x%08X..0x%08X reserved no-access whole, "
-site	src/hook/exe_host_posix.cpp	257	fmt_place	word	live	(unsigned)a	%08X	if (!os::MemQuery(At(a), &m)) Fatal("layout: MemQuery(0x%08X) failed, errno %u", (unsigned)a, os::LastError());
-site	src/hook/exe_host_posix.cpp	261	fmt_place	word	live	(unsigned)(a - Img(va) + va)	%08X	Fatal("layout: %s at 0x%08X (VA 0x%08X) is not the start-up's %s mapping (state %u, r%u w%u x%u, private %u)",
-site	src/hook/exe_host_posix.cpp	261	fmt_place	word	live	(unsigned)a	%08X	Fatal("layout: %s at 0x%08X (VA 0x%08X) is not the start-up's %s mapping (state %u, r%u w%u x%u, private %u)",
-site	src/hook/exe_host_posix.cpp	264	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t next = m.base + m.size;
-site	src/hook/exe_host_posix.cpp	265	fmt_place	word	live	(unsigned)a	%08X	if (next <= a) Fatal("layout: MemQuery(0x%08X) answered an empty run", (unsigned)a);
-site	src/hook/exe_host_posix.cpp	274	fmt_place	word	live	(unsigned)kGameVa	%08X	Log("layout: .stub 0x%08X +0x%X no access, .game 0x%08X +0x%X RW, .pool 0x%08X +0x%X RW, as exe_layout.h (VAs; the "
-site	src/hook/exe_host_posix.cpp	274	fmt_place	word	live	(unsigned)kPoolVa	%08X	Log("layout: .stub 0x%08X +0x%X no access, .game 0x%08X +0x%X RW, .pool 0x%08X +0x%X RW, as exe_layout.h (VAs; the "
-site	src/hook/exe_host_posix.cpp	274	fmt_place	word	live	(unsigned)kStubVa	%08X	Log("layout: .stub 0x%08X +0x%X no access, .game 0x%08X +0x%X RW, .pool 0x%08X +0x%X RW, as exe_layout.h (VAs; the "
-site	src/hook/exe_host_posix.cpp	275	fmt_place	word	live	(unsigned)kStubVa	%08X	"image at 0x%08X, an anonymous mapping of the start-up's)",
-site	src/hook/exe_host_posix.cpp	290	fmt_place	word	live	(unsigned)a	%08X	if (!os::MemQuery(At(a), &m)) Fatal("stub: MemQuery(0x%08X) failed, errno %u", (unsigned)a, os::LastError());
-site	src/hook/exe_host_posix.cpp	291	fmt_place	word	live	(unsigned)a	%08X	if (m.readable || m.writable || m.executable) Fatal("stub: 0x%08X is still accessible after the change", (unsigned)a);
-site	src/hook/exe_host_posix.cpp	294	fmt_place	word	live	(unsigned)(kStubVa + kStubSize)	%08X	Log("stub: .stub 0x%08X..0x%08X (VA 0x%08X..0x%08X) is no-access: the trap for a code value that is not bound",
-site	src/hook/exe_host_posix.cpp	294	fmt_place	word	live	(unsigned)Img(kStubVa + kStubSize)	%08X	Log("stub: .stub 0x%08X..0x%08X (VA 0x%08X..0x%08X) is no-access: the trap for a code value that is not bound",
-site	src/hook/exe_host_posix.cpp	294	fmt_place	word	live	(unsigned)Img(kStubVa)	%08X	Log("stub: .stub 0x%08X..0x%08X (VA 0x%08X..0x%08X) is no-access: the trap for a code value that is not bound",
-site	src/hook/exe_host_posix.cpp	294	fmt_place	word	live	(unsigned)kStubVa	%08X	Log("stub: .stub 0x%08X..0x%08X (VA 0x%08X..0x%08X) is no-access: the trap for a code value that is not bound",
-site	src/hook/exe_host_posix.cpp	349	fmt_place	word	live	(unsigned)(kGameVa + i)	%08X	if (game[i]) Fatal("data: .game is not zero at VA 0x%08X before the copy", (unsigned)(kGameVa + i));
-site	src/hook/exe_host_posix.cpp	361	fmt_place	word	live	(unsigned)a	%08X	if (*static_cast<const std::uint8_t*>(Place(a))) Fatal("data: .bss is not zero at VA 0x%08X after the copy", (unsigned)a);
-site	src/hook/exe_host_posix.cpp	362	fmt_place	word	live	(unsigned)kDataVa	%08X	Log("data: .rdata 0x%08X + 0x%X bytes the engine's (none from the file), .data 0x%08X + 0x%X bytes from %s; .bss "
-site	src/hook/exe_host_posix.cpp	362	fmt_place	word	live	(unsigned)kRdataVa	%08X	Log("data: .rdata 0x%08X + 0x%X bytes the engine's (none from the file), .data 0x%08X + 0x%X bytes from %s; .bss "
-site	src/hook/exe_host_posix.cpp	363	fmt_place	word	live	(unsigned)kDataVa	%08X	"zero 0x%08X..0x%08X (virtual end 0x%08X)",
-site	src/hook/exe_host_posix.cpp	363	fmt_place	word	live	(unsigned)kRdataBytes	%08X	"zero 0x%08X..0x%08X (virtual end 0x%08X)",
-site	src/hook/exe_host_posix.cpp	363	fmt_place	word	live	(unsigned)kRdataVa	%08X	"zero 0x%08X..0x%08X (virtual end 0x%08X)",
-site	src/hook/exe_host_posix.cpp	388	fmt_place	word	live	(unsigned)r.pc	%08X	Fatal("rebase: the run 0x%08X x%u lies outside .data's file bytes", (unsigned)r.pc, (unsigned)r.words);
-site	src/hook/exe_host_posix.cpp	394	fmt_place	word	live	(unsigned)v	%08X	Fatal("rebase: the %s pointer word at VA 0x%08X holds 0x%08X, outside 0x%08X..0x%08X: not the pointer "
-site	src/hook/exe_host_posix.cpp	394	fmt_place	word	live	(unsigned)va	%08X	Fatal("rebase: the %s pointer word at VA 0x%08X holds 0x%08X, outside 0x%08X..0x%08X: not the pointer "
-site	src/hook/exe_host_posix.cpp	394	fmt_place	word	live	(unsigned)want.hi	%08X	Fatal("rebase: the %s pointer word at VA 0x%08X holds 0x%08X, outside 0x%08X..0x%08X: not the pointer "
-site	src/hook/exe_host_posix.cpp	394	fmt_place	word	live	(unsigned)want.lo	%08X	Fatal("rebase: the %s pointer word at VA 0x%08X holds 0x%08X, outside 0x%08X..0x%08X: not the pointer "
-site	src/hook/exe_host_posix.cpp	412	fmt_place	word	live	words[rebase::kData]	%08X	"their linked ranges; the data words moved by 0x%X (the image at 0x%08X); the code words bound, %u to their places "
-site	src/hook/exe_host_posix.cpp	431	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t kCurrentProcess = ~static_cast<std::uintptr_t>(0);
-site	src/hook/exe_host_posix.cpp	431	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t kCurrentProcess = ~static_cast<std::uintptr_t>(0);
-site	src/hook/exe_host_posix.cpp	437	long	l	live	long	-	long SlotDirectSoundCreate(const void*, void**, void*) {
-site	src/hook/exe_host_posix.cpp	447	fmt_place	pointer	live	(unsigned)slot	%08X	Fatal("GDI32's %s was called through its import slot 0x%08X, but this system has no GDI and the renderer hands out "
-site	src/hook/exe_host_posix.cpp	527	uintptr	-	live	std::uintptr_t	-	if (reinterpret_cast<std::uintptr_t>(process) != kCurrentProcess)
-site	src/hook/exe_host_posix.cpp	528	fmt_place	pointer	live	process	%p	Fatal("TerminateProcess through its import slot of a process that is not this one (%p)", process);
-site	src/hook/exe_host_posix.cpp	561	uintptr	-	live	std::uintptr_t	-	SDL_Window* parent = hwnd ? SDL_GetWindowFromID(static_cast<SDL_WindowID>(reinterpret_cast<std::uintptr_t>(hwnd))) : nullptr;
-site	src/hook/exe_host_posix.cpp	609	uintptr	-	live	std::uintptr_t	-	if (now != thunk[i] || target != reinterpret_cast<std::uintptr_t>(s.ours))
-site	src/hook/exe_host_posix.cpp	610	fmt_place	pointer	live	(unsigned)s.at	%08X	Fatal("slots: 0x%08X does not read back as the thunk 0x%08X of our %s!%s", (unsigned)s.at, (unsigned)thunk[i], s.dll,
-site	src/hook/exe_host_posix.cpp	610	fmt_place	word	live	(unsigned)thunk[i]	%08X	Fatal("slots: 0x%08X does not read back as the thunk 0x%08X of our %s!%s", (unsigned)s.at, (unsigned)thunk[i], s.dll,
-site	src/hook/exe_host_posix.cpp	616	uintptr	-	live	std::uintptr_t	-	const std::uint32_t through = reinterpret_cast<std::uint32_t(*)()>(static_cast<std::uintptr_t>(tick_word))();
-site	src/hook/exe_host_posix.cpp	620	fmt_place	word	live	(unsigned)thunk[0]	%08X	Log("slots: %u import slots bound to 14-byte thunks at 0x%08X.. of functions of ours (no system library holds "
-site	src/hook/exe_host_posix.cpp	631	asm	cw	live	fnstcw %0	fnstcw	asm volatile("fnstcw %0" : "=m"(before));
-site	src/hook/exe_host_posix.cpp	632	asm	cw	live	fldcw %0	fldcw	asm volatile("fldcw %0" : : "m"(cw));
-site	src/hook/exe_host_posix.cpp	633	asm	cw	live	fnstcw %0	fnstcw	asm volatile("fnstcw %0" : "=m"(after));
-site	src/hook/exe_host_posix.cpp	634	asm	cw	live	stmxcsr %0	stmxcsr	asm volatile("stmxcsr %0" : "=m"(mxcsr));
-site	src/hook/exe_host_posix.cpp	637	fmt_place	word	live	before	%08X	"Capcom's start-up left it); MXCSR 0x%08X, not set", before, after, mxcsr);
-site	src/hook/exe_host_posix.cpp	707	ptr_overlay	unread	live	p	Run	Run& run = *static_cast<Run*>(p);
-site	src/hook/exe_host_posix.cpp	724	fmt_place	pointer	live	hinstance	%p	Log("Engine_Main: hinstance %p, show %d, on thread %u, its stack 0x%llX..0x%llX (the placed stack, row 3)", hinstance,
-site	src/hook/exe_host_posix.cpp	725	long	l	live	long	-	show, os::ThreadId(), static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(stack.limit)),
-site	src/hook/exe_host_posix.cpp	725	uintptr	-	live	std::uintptr_t	-	show, os::ThreadId(), static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(stack.limit)),
-site	src/hook/exe_host_posix.cpp	726	long	l	live	long	-	static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(stack.base)));
-site	src/hook/exe_host_posix.cpp	726	uintptr	-	live	std::uintptr_t	-	static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(stack.base)));
-site	src/hook/exe_host_posix.cpp	777	fmt_place	pointer	live	hinstance	%p	Log("Engine_Main: Game_WinMain(%p, null, \"%s\", %d) on the main thread", hinstance, line, show);
-site	src/hook/exe_host_posix.cpp	801	long	l	live	long	-	Log(" ", os::ProcessId(), static_cast<unsigned long long>(self.base),
-site	src/hook/exe_host_posix.cpp	802	long	l	live	long	-	static_cast<unsigned long long>(self.base + self.extent));
-site	src/hook/exe_host_posix.cpp	817	fmt_place	word	live	(unsigned)kStackHi	%08X	Fatal("start-up: the switch onto the main thread's placed stack 0x%08X..0x%08X failed, errno %u", (unsigned)kStackLo,
-site	src/hook/exe_host_posix.cpp	817	fmt_place	word	live	(unsigned)kStackLo	%08X	Fatal("start-up: the switch onto the main thread's placed stack 0x%08X..0x%08X failed, errno %u", (unsigned)kStackLo,
+site	src/hook/exe_host_posix.cpp	64	width_if	asm_pair	live	-	#if !defined(__x86_64__)	#if !defined(__x86_64__)
+site	src/hook/exe_host_posix.cpp	71	uintptr	-	live	std::uintptr_t	-	std::uintptr_t g_ownBase = 0;
+site	src/hook/exe_host_posix.cpp	78	uintptr	-	live	std::uintptr_t	-	void* At(std::uint32_t place) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(place)); }
+site	src/hook/exe_host_posix.cpp	78	widen	param	live	place	void*	void* At(std::uint32_t place) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(place)); }
+site	src/hook/exe_host_posix.cpp	111	uintptr	-	live	std::uintptr_t	-	void* AtU(std::uintptr_t a) { return reinterpret_cast<void*>(a); }
+site	src/hook/exe_host_posix.cpp	127	long	l	live	long	-	const unsigned long long v = std::strtoull(text, &end, 0);
+site	src/hook/exe_host_posix.cpp	182	uintptr	-	live	std::uintptr_t	-	[[noreturn]] void RefuseRange(const char* what, std::uintptr_t lo, std::uintptr_t hi, int error) {
+site	src/hook/exe_host_posix.cpp	182	uintptr	-	live	std::uintptr_t	-	[[noreturn]] void RefuseRange(const char* what, std::uintptr_t lo, std::uintptr_t hi, int error) {
+site	src/hook/exe_host_posix.cpp	185	long	l	live	long	-	static_cast<unsigned long long>(lo), static_cast<unsigned long long>(hi), error, std::strerror(error),
+site	src/hook/exe_host_posix.cpp	185	long	l	live	long	-	static_cast<unsigned long long>(lo), static_cast<unsigned long long>(hi), error, std::strerror(error),
+site	src/hook/exe_host_posix.cpp	218	uintptr	-	live	std::uintptr_t	-	std::uintptr_t r_hi = m.base + m.size;
+site	src/hook/exe_host_posix.cpp	223	fmt_place	word	live	(unsigned)best_at	%08X	Log("fence: the largest free run below 16 MB at main is 0x%X bytes at 0x%08X (the image takes 0x%X)", (unsigned)best,
+site	src/hook/exe_host_posix.cpp	236	fmt_place	word	live	(unsigned)(ImageBase() + kSpan)	%08X	Log("fence: the image's span 0x%08X..0x%08X reserved by the start-up before any initialiser, .game and .pool "
+site	src/hook/exe_host_posix.cpp	236	fmt_place	word	live	(unsigned)ImageBase()	%08X	Log("fence: the image's span 0x%08X..0x%08X reserved by the start-up before any initialiser, .game and .pool "
+site	src/hook/exe_host_posix.cpp	237	fmt_place	word	live	(unsigned)(ImageBase() + kSpan)	%08X	"read-write in it; the main thread's stack 0x%08X..0x%08X, its guard page under it (docs/linux-round.md, "
+site	src/hook/exe_host_posix.cpp	237	fmt_place	word	live	(unsigned)ImageBase()	%08X	"read-write in it; the main thread's stack 0x%08X..0x%08X, its guard page under it (docs/linux-round.md, "
+site	src/hook/exe_host_posix.cpp	241	fmt_place	word	live	(unsigned)kImageBase	%08X	Log("fence: the image at its linked base 0x%08X; nothing to fence", (unsigned)kImageBase);
+site	src/hook/exe_host_posix.cpp	245	fmt_place	word	live	(unsigned)(kImageBase + kSpan)	%08X	Log("fence: the image at 0x%08X, moved from 0x%08X: the linked span 0x%08X..0x%08X reserved no-access whole, "
+site	src/hook/exe_host_posix.cpp	245	fmt_place	word	live	(unsigned)ImageBase()	%08X	Log("fence: the image at 0x%08X, moved from 0x%08X: the linked span 0x%08X..0x%08X reserved no-access whole, "
+site	src/hook/exe_host_posix.cpp	245	fmt_place	word	live	(unsigned)kImageBase	%08X	Log("fence: the image at 0x%08X, moved from 0x%08X: the linked span 0x%08X..0x%08X reserved no-access whole, "
+site	src/hook/exe_host_posix.cpp	245	fmt_place	word	live	(unsigned)kImageBase	%08X	Log("fence: the image at 0x%08X, moved from 0x%08X: the linked span 0x%08X..0x%08X reserved no-access whole, "
+site	src/hook/exe_host_posix.cpp	258	fmt_place	word	live	(unsigned)a	%08X	if (!os::MemQuery(At(a), &m)) Fatal("layout: MemQuery(0x%08X) failed, errno %u", (unsigned)a, os::LastError());
+site	src/hook/exe_host_posix.cpp	262	fmt_place	word	live	(unsigned)(a - Img(va) + va)	%08X	Fatal("layout: %s at 0x%08X (VA 0x%08X) is not the start-up's %s mapping (state %u, r%u w%u x%u, private %u)",
+site	src/hook/exe_host_posix.cpp	262	fmt_place	word	live	(unsigned)a	%08X	Fatal("layout: %s at 0x%08X (VA 0x%08X) is not the start-up's %s mapping (state %u, r%u w%u x%u, private %u)",
+site	src/hook/exe_host_posix.cpp	265	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t next = m.base + m.size;
+site	src/hook/exe_host_posix.cpp	266	fmt_place	word	live	(unsigned)a	%08X	if (next <= a) Fatal("layout: MemQuery(0x%08X) answered an empty run", (unsigned)a);
+site	src/hook/exe_host_posix.cpp	275	fmt_place	word	live	(unsigned)kGameVa	%08X	Log("layout: .stub 0x%08X +0x%X no access, .game 0x%08X +0x%X RW, .pool 0x%08X +0x%X RW, as exe_layout.h (VAs; the "
+site	src/hook/exe_host_posix.cpp	275	fmt_place	word	live	(unsigned)kPoolVa	%08X	Log("layout: .stub 0x%08X +0x%X no access, .game 0x%08X +0x%X RW, .pool 0x%08X +0x%X RW, as exe_layout.h (VAs; the "
+site	src/hook/exe_host_posix.cpp	275	fmt_place	word	live	(unsigned)kStubVa	%08X	Log("layout: .stub 0x%08X +0x%X no access, .game 0x%08X +0x%X RW, .pool 0x%08X +0x%X RW, as exe_layout.h (VAs; the "
+site	src/hook/exe_host_posix.cpp	276	fmt_place	word	live	(unsigned)kStubVa	%08X	"image at 0x%08X, an anonymous mapping of the start-up's)",
+site	src/hook/exe_host_posix.cpp	291	fmt_place	word	live	(unsigned)a	%08X	if (!os::MemQuery(At(a), &m)) Fatal("stub: MemQuery(0x%08X) failed, errno %u", (unsigned)a, os::LastError());
+site	src/hook/exe_host_posix.cpp	292	fmt_place	word	live	(unsigned)a	%08X	if (m.readable || m.writable || m.executable) Fatal("stub: 0x%08X is still accessible after the change", (unsigned)a);
+site	src/hook/exe_host_posix.cpp	295	fmt_place	word	live	(unsigned)(kStubVa + kStubSize)	%08X	Log("stub: .stub 0x%08X..0x%08X (VA 0x%08X..0x%08X) is no-access: the trap for a code value that is not bound",
+site	src/hook/exe_host_posix.cpp	295	fmt_place	word	live	(unsigned)Img(kStubVa + kStubSize)	%08X	Log("stub: .stub 0x%08X..0x%08X (VA 0x%08X..0x%08X) is no-access: the trap for a code value that is not bound",
+site	src/hook/exe_host_posix.cpp	295	fmt_place	word	live	(unsigned)Img(kStubVa)	%08X	Log("stub: .stub 0x%08X..0x%08X (VA 0x%08X..0x%08X) is no-access: the trap for a code value that is not bound",
+site	src/hook/exe_host_posix.cpp	295	fmt_place	word	live	(unsigned)kStubVa	%08X	Log("stub: .stub 0x%08X..0x%08X (VA 0x%08X..0x%08X) is no-access: the trap for a code value that is not bound",
+site	src/hook/exe_host_posix.cpp	350	fmt_place	word	live	(unsigned)(kGameVa + i)	%08X	if (game[i]) Fatal("data: .game is not zero at VA 0x%08X before the copy", (unsigned)(kGameVa + i));
+site	src/hook/exe_host_posix.cpp	362	fmt_place	word	live	(unsigned)a	%08X	if (*static_cast<const std::uint8_t*>(Place(a))) Fatal("data: .bss is not zero at VA 0x%08X after the copy", (unsigned)a);
+site	src/hook/exe_host_posix.cpp	363	fmt_place	word	live	(unsigned)kDataVa	%08X	Log("data: .rdata 0x%08X + 0x%X bytes the engine's (none from the file), .data 0x%08X + 0x%X bytes from %s; .bss "
+site	src/hook/exe_host_posix.cpp	363	fmt_place	word	live	(unsigned)kRdataVa	%08X	Log("data: .rdata 0x%08X + 0x%X bytes the engine's (none from the file), .data 0x%08X + 0x%X bytes from %s; .bss "
+site	src/hook/exe_host_posix.cpp	364	fmt_place	word	live	(unsigned)kDataVa	%08X	"zero 0x%08X..0x%08X (virtual end 0x%08X)",
+site	src/hook/exe_host_posix.cpp	364	fmt_place	word	live	(unsigned)kRdataBytes	%08X	"zero 0x%08X..0x%08X (virtual end 0x%08X)",
+site	src/hook/exe_host_posix.cpp	364	fmt_place	word	live	(unsigned)kRdataVa	%08X	"zero 0x%08X..0x%08X (virtual end 0x%08X)",
+site	src/hook/exe_host_posix.cpp	389	fmt_place	word	live	(unsigned)r.pc	%08X	Fatal("rebase: the run 0x%08X x%u lies outside .data's file bytes", (unsigned)r.pc, (unsigned)r.words);
+site	src/hook/exe_host_posix.cpp	395	fmt_place	word	live	(unsigned)v	%08X	Fatal("rebase: the %s pointer word at VA 0x%08X holds 0x%08X, outside 0x%08X..0x%08X: not the pointer "
+site	src/hook/exe_host_posix.cpp	395	fmt_place	word	live	(unsigned)va	%08X	Fatal("rebase: the %s pointer word at VA 0x%08X holds 0x%08X, outside 0x%08X..0x%08X: not the pointer "
+site	src/hook/exe_host_posix.cpp	395	fmt_place	word	live	(unsigned)want.hi	%08X	Fatal("rebase: the %s pointer word at VA 0x%08X holds 0x%08X, outside 0x%08X..0x%08X: not the pointer "
+site	src/hook/exe_host_posix.cpp	395	fmt_place	word	live	(unsigned)want.lo	%08X	Fatal("rebase: the %s pointer word at VA 0x%08X holds 0x%08X, outside 0x%08X..0x%08X: not the pointer "
+site	src/hook/exe_host_posix.cpp	413	fmt_place	word	live	words[rebase::kData]	%08X	"their linked ranges; the data words moved by 0x%X (the image at 0x%08X); the code words bound, %u to their places "
+site	src/hook/exe_host_posix.cpp	432	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t kCurrentProcess = ~static_cast<std::uintptr_t>(0);
+site	src/hook/exe_host_posix.cpp	432	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t kCurrentProcess = ~static_cast<std::uintptr_t>(0);
+site	src/hook/exe_host_posix.cpp	438	long	l	live	long	-	long SlotDirectSoundCreate(const void*, void**, void*) {
+site	src/hook/exe_host_posix.cpp	448	fmt_place	pointer	live	(unsigned)slot	%08X	Fatal("GDI32's %s was called through its import slot 0x%08X, but this system has no GDI and the renderer hands out "
+site	src/hook/exe_host_posix.cpp	528	uintptr	-	live	std::uintptr_t	-	if (reinterpret_cast<std::uintptr_t>(process) != kCurrentProcess)
+site	src/hook/exe_host_posix.cpp	529	fmt_place	pointer	live	process	%p	Fatal("TerminateProcess through its import slot of a process that is not this one (%p)", process);
+site	src/hook/exe_host_posix.cpp	562	uintptr	-	live	std::uintptr_t	-	SDL_Window* parent = hwnd ? SDL_GetWindowFromID(static_cast<SDL_WindowID>(reinterpret_cast<std::uintptr_t>(hwnd))) : nullptr;
+site	src/hook/exe_host_posix.cpp	610	uintptr	-	live	std::uintptr_t	-	if (now != thunk[i] || target != reinterpret_cast<std::uintptr_t>(s.ours))
+site	src/hook/exe_host_posix.cpp	611	fmt_place	pointer	live	(unsigned)s.at	%08X	Fatal("slots: 0x%08X does not read back as the thunk 0x%08X of our %s!%s", (unsigned)s.at, (unsigned)thunk[i], s.dll,
+site	src/hook/exe_host_posix.cpp	611	fmt_place	word	live	(unsigned)thunk[i]	%08X	Fatal("slots: 0x%08X does not read back as the thunk 0x%08X of our %s!%s", (unsigned)s.at, (unsigned)thunk[i], s.dll,
+site	src/hook/exe_host_posix.cpp	617	uintptr	-	live	std::uintptr_t	-	const std::uint32_t through = reinterpret_cast<std::uint32_t(*)()>(static_cast<std::uintptr_t>(tick_word))();
+site	src/hook/exe_host_posix.cpp	621	fmt_place	word	live	(unsigned)thunk[0]	%08X	Log("slots: %u import slots bound to 14-byte thunks at 0x%08X.. of functions of ours (no system library holds "
+site	src/hook/exe_host_posix.cpp	632	asm	cw	live	fnstcw %0	fnstcw	asm volatile("fnstcw %0" : "=m"(before));
+site	src/hook/exe_host_posix.cpp	633	asm	cw	live	fldcw %0	fldcw	asm volatile("fldcw %0" : : "m"(cw));
+site	src/hook/exe_host_posix.cpp	634	asm	cw	live	fnstcw %0	fnstcw	asm volatile("fnstcw %0" : "=m"(after));
+site	src/hook/exe_host_posix.cpp	635	asm	cw	live	stmxcsr %0	stmxcsr	asm volatile("stmxcsr %0" : "=m"(mxcsr));
+site	src/hook/exe_host_posix.cpp	638	fmt_place	word	live	before	%08X	"Capcom's start-up left it); MXCSR 0x%08X, not set", before, after, mxcsr);
+site	src/hook/exe_host_posix.cpp	708	ptr_overlay	unread	live	p	Run	Run& run = *static_cast<Run*>(p);
+site	src/hook/exe_host_posix.cpp	725	fmt_place	pointer	live	hinstance	%p	Log("Engine_Main: hinstance %p, show %d, on thread %u, its stack 0x%llX..0x%llX (the placed stack, row 3)", hinstance,
+site	src/hook/exe_host_posix.cpp	726	long	l	live	long	-	show, os::ThreadId(), static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(stack.limit)),
+site	src/hook/exe_host_posix.cpp	726	uintptr	-	live	std::uintptr_t	-	show, os::ThreadId(), static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(stack.limit)),
+site	src/hook/exe_host_posix.cpp	727	long	l	live	long	-	static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(stack.base)));
+site	src/hook/exe_host_posix.cpp	727	uintptr	-	live	std::uintptr_t	-	static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(stack.base)));
+site	src/hook/exe_host_posix.cpp	778	fmt_place	pointer	live	hinstance	%p	Log("Engine_Main: Game_WinMain(%p, null, \"%s\", %d) on the main thread", hinstance, line, show);
+site	src/hook/exe_host_posix.cpp	802	long	l	live	long	-	Log(" ", os::ProcessId(), static_cast<unsigned long long>(self.base),
+site	src/hook/exe_host_posix.cpp	803	long	l	live	long	-	static_cast<unsigned long long>(self.base + self.extent));
+site	src/hook/exe_host_posix.cpp	826	fmt_place	word	live	(unsigned)kStackHi	%08X	Fatal("start-up: the switch onto the main thread's placed stack 0x%08X..0x%08X failed, errno %u", (unsigned)kStackLo,
+site	src/hook/exe_host_posix.cpp	826	fmt_place	word	live	(unsigned)kStackLo	%08X	Fatal("start-up: the switch onto the main thread's placed stack 0x%08X..0x%08X failed, errno %u", (unsigned)kStackLo,
 site	src/hook/exe_icon.cpp	105	long	ul	live	unsigned long	-	wsprintfA(t, " ", static_cast<unsigned long>(hr));
 site	src/hook/exe_icon_picture.cpp	232	widen	img_place	live	::bof3::Img(menu_windows::at::kIconRects) + kIcon * 4	const std::uint8_t*	const auto* p = reinterpret_cast<const std::uint8_t*>(
 site	src/hook/exe_icon_picture.cpp	233	uintptr	-	live	std::uintptr_t	-	static_cast<std::uintptr_t>(::bof3::Img(menu_windows::at::kIconRects) + kIcon * 4));
@@ -9221,8 +9221,8 @@ site	src/input/sigma.cpp	195	widen	img_place	live	::bof3::Img(kBootDefaults.v)	c
 site	src/input/sigma.cpp	526	low32	object_ours	live	&g_sigma_on	Low32	bof3::PatchBytes(" ", Low32(&g_sigma_on), &was, &is, 1);
 site	src/input/sigma.cpp	527	low32	object_ours	live	&g_by_source	Low32	bof3::PatchBytes(" ", Low32(&g_by_source), &was,
 site	src/launcher/config.cpp	301	long	l	live	long	-	const long v = std::strtol(value.c_str(), &end, 10);
-site	src/launcher/config.cpp	1410	long	l	live	long	-	long long off = 0;
-site	src/launcher/config.cpp	1423	long	l	live	long	-	off += 16 + static_cast<long long>(len);
+site	src/launcher/config.cpp	1411	long	l	live	long	-	long long off = 0;
+site	src/launcher/config.cpp	1424	long	l	live	long	-	off += 16 + static_cast<long long>(len);
 site	src/launcher/launcher.cpp	111	uintptr	-	live	std::uintptr_t	-	if (!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base)), &dos, sizeof dos, nullptr) ||
 site	src/launcher/launcher.cpp	111	widen	param	live	base	LPCVOID	if (!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base)), &dos, sizeof dos, nullptr) ||
 site	src/launcher/launcher.cpp	113	uintptr	-	live	std::uintptr_t	-	!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base + dos.e_lfanew)), &nt, sizeof nt,
@@ -9262,8 +9262,8 @@ site	src/os/heap_arena.cpp	156	uintptr	-	live	std::uintptr_t	-	const std::uintpt
 site	src/os/heap_arena.cpp	156	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t rel = reinterpret_cast<std::uintptr_t>(p) - base_;
 site	src/os/memory.h	58	uintptr	-	live	std::uintptr_t	-	std::uintptr_t base = 0;
 site	src/os/memory.h	59	uintptr	-	live	std::uintptr_t	-	std::uintptr_t alloc_base = 0;
-site	src/os/module.h	27	uintptr	-	live	std::uintptr_t	-	std::uintptr_t lo = 0, hi = 0;
-site	src/os/module.h	33	uintptr	-	live	std::uintptr_t	-	std::uintptr_t base = 0;
+site	src/os/module.h	28	uintptr	-	live	std::uintptr_t	-	std::uintptr_t lo = 0, hi = 0;
+site	src/os/module.h	34	uintptr	-	live	std::uintptr_t	-	std::uintptr_t base = 0;
 site	src/os/placed.h	41	uintptr	-	live	std::uintptr_t	-	std::string MemHolders(std::uintptr_t lo, std::uintptr_t hi);
 site	src/os/placed.h	41	uintptr	-	live	std::uintptr_t	-	std::string MemHolders(std::uintptr_t lo, std::uintptr_t hi);
 site	src/os/posix/env.cpp	44	uintptr	-	live	std::uintptr_t	-	bool ModulePath(const void* inside, std::string* utf8, std::uintptr_t* base) {
@@ -9280,13 +9280,16 @@ site	src/os/posix/memory.cpp	115	uintptr	-	live	std::uintptr_t	-	std::uintptr_t 
 site	src/os/posix/memory.cpp	119	long	l	live	long	-	unsigned long long lo = 0, hi = 0, off = 0, inode = 0;
 site	src/os/posix/memory.cpp	141	uintptr	-	live	std::uintptr_t	-	out->base = std::max<std::uintptr_t>(prev_end, addr & ~(page - 1));
 site	src/os/posix/memory.cpp	151	uintptr	-	live	std::uintptr_t	-	out->base = std::max<std::uintptr_t>(prev_end, addr & ~(page - 1));
-site	src/os/posix/module.cpp	16	uintptr	-	live	std::uintptr_t	-	std::uintptr_t at;
-site	src/os/posix/module.cpp	22	ptr_overlay	unread	live	data	Search	auto* s = static_cast<Search*>(data);
-site	src/os/posix/module.cpp	24	uintptr	-	live	std::uintptr_t	-	std::uintptr_t lo = ~std::uintptr_t{0}, hi = 0;
-site	src/os/posix/module.cpp	24	uintptr	-	live	std::uintptr_t	-	std::uintptr_t lo = ~std::uintptr_t{0}, hi = 0;
-site	src/os/posix/module.cpp	28	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t a = info->dlpi_addr + p.p_vaddr, b = a + p.p_memsz;
-site	src/os/posix/module.cpp	36	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t page = 0x1000;
-site	src/os/posix/module.cpp	57	uintptr	-	live	std::uintptr_t	-	Search s{reinterpret_cast<std::uintptr_t>(inside), out, false};
+site	src/os/posix/module.cpp	18	uintptr	-	live	std::uintptr_t	-	std::uintptr_t at;
+site	src/os/posix/module.cpp	24	ptr_overlay	unread	live	data	Search	auto* s = static_cast<Search*>(data);
+site	src/os/posix/module.cpp	26	uintptr	-	live	std::uintptr_t	-	std::uintptr_t lo = ~std::uintptr_t{0}, hi = 0;
+site	src/os/posix/module.cpp	26	uintptr	-	live	std::uintptr_t	-	std::uintptr_t lo = ~std::uintptr_t{0}, hi = 0;
+site	src/os/posix/module.cpp	30	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t a = info->dlpi_addr + p.p_vaddr, b = a + p.p_memsz;
+site	src/os/posix/module.cpp	38	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t page = 0x1000;
+site	src/os/posix/module.cpp	59	uintptr	-	live	std::uintptr_t	-	Search s{reinterpret_cast<std::uintptr_t>(inside), out, false};
+site	src/os/posix/module.cpp	67	uintptr	-	live	std::uintptr_t	-	std::uintptr_t at;
+site	src/os/posix/module.cpp	73	ptr_overlay	unread	live	data	NoteSearch	auto* s = static_cast<NoteSearch*>(data);
+site	src/os/posix/module.cpp	112	uintptr	-	live	std::uintptr_t	-	NoteSearch s{reinterpret_cast<std::uintptr_t>(inside), hex, false};
 site	src/os/posix/named_event.cpp	67	long	l	live	long	-	until.tv_nsec += static_cast<long>(ms % 1000) * 1000000L;
 site	src/os/posix/own_stack.cpp	27	width_if	asm_pair	live	-	#if !defined(__i386__) && !defined(__x86_64__)	#if !defined(__i386__) && !defined(__x86_64__)
 site	src/os/posix/own_stack.cpp	54	asm	cw	live	fldcw %0	fldcw	if (s->spec->callers_x87) __asm__ volatile("fldcw %0" : : "m"(s->cw));
@@ -15349,8 +15352,8 @@ file	src/os/posix/event.cpp	live	ptr_overlay	unread	1
 file	src/os/posix/event.cpp	live	uintptr	-	2
 file	src/os/posix/memory.cpp	live	long	l	1
 file	src/os/posix/memory.cpp	live	uintptr	-	8
-file	src/os/posix/module.cpp	live	ptr_overlay	unread	1
-file	src/os/posix/module.cpp	live	uintptr	-	6
+file	src/os/posix/module.cpp	live	ptr_overlay	unread	2
+file	src/os/posix/module.cpp	live	uintptr	-	8
 file	src/os/posix/named_event.cpp	live	long	l	1
 file	src/os/posix/own_stack.cpp	live	asm	cw	2
 file	src/os/posix/own_stack.cpp	live	long	l	1
@@ -15405,8 +15408,8 @@ file	symbols.toml	live	ptr_member	ours_render	11
 file	symbols.toml	live	ptr_member	windows_function	14
 file	symbols.toml	live	ptr_member	windows_handle	3
 file	symbols.toml	live	ptr_member	windows_object	10
-#count sites	11368
-#count sites_live	7884
+#count sites	11371
+#count sites_live	7887
 #count sites_fuzz	3484
 #count fuzz_files	250
 #count narrow	357
@@ -15581,13 +15584,13 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count sizeof_ptr_-	17
 #count sizeof_ptr_-_live	17
 #count sizeof_ptr_-_live_files	9
-#count uintptr	1984
-#count uintptr_live	1318
+#count uintptr	1986
+#count uintptr_live	1320
 #count uintptr_live_files	524
 #count uintptr_fuzz	666
 #count uintptr_fuzz_files	249
-#count uintptr_-	1984
-#count uintptr_-_live	1318
+#count uintptr_-	1986
+#count uintptr_-_live	1320
 #count uintptr_-_live_files	524
 #count fmt_place	548
 #count fmt_place_live	478
@@ -15689,8 +15692,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count handle_array_slot_i686	1
 #count handle_array_slot_i686_live	1
 #count handle_array_slot_i686_live_files	1
-#count ptr_overlay	40
-#count ptr_overlay_live	40
+#count ptr_overlay	41
+#count ptr_overlay_live	41
 #count ptr_overlay_live_files	12
 #count ptr_overlay_fuzz	0
 #count ptr_overlay_fuzz_files	0
@@ -15709,8 +15712,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count ptr_overlay_object_ours	1
 #count ptr_overlay_object_ours_live	1
 #count ptr_overlay_object_ours_live_files	1
-#count ptr_overlay_unread	27
-#count ptr_overlay_unread_live	27
+#count ptr_overlay_unread	28
+#count ptr_overlay_unread_live	28
 #count ptr_overlay_unread_live_files	9
 #count width_if	51
 #count width_if_live	51
