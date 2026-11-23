@@ -28,7 +28,8 @@
 # checks it, docs/releases/README.md "Signing"). A Linux failure
 # blocks the release as a Windows one does (the owner, 2026-11-22): the
 # `release` job is skipped, no draft is made and "latest" keeps the files of
-# the last good run. The cost is time: the zips are built after the Linux
+# the last good run. Job `publish` makes the draft or replaces "latest", and
+# a newer push does not cancel it (2026-11-23). The cost is time: the zips are built after the Linux
 # build, not beside it. DXVK-native is built from its
 # pinned source in every release run, with no DXVK cache, so the notices
 # make_release.py copies come from the tree the libraries were built from.
@@ -47,10 +48,9 @@ on:
 permissions:
   contents: write
 
-concurrency:
-  group: release-${{ github.ref }}
-  # a newer push to main supersedes a latest build still running; a tag's never
-  cancel-in-progress: ${{ github.ref_type == 'branch' }}
+# Concurrency is per job, not for the workflow: the two build jobs share a
+# group that a newer push to main cancels (a tag's never), and job `publish`
+# has a group that never cancels (below).
 
 env:
   # Keep in step with build.yml (docs/SCAFFOLDING.md section 4).
@@ -63,6 +63,9 @@ jobs:
     # The tarball first: a failed Linux build skips this job (no release).
     needs: [linux]
     runs-on: ubuntu-24.04
+    concurrency:
+      group: release-build-${{ github.ref }}
+      cancel-in-progress: ${{ github.ref_type == 'branch' }}
     steps:
       - name: The tag
         run: |
@@ -261,59 +264,24 @@ jobs:
           tar -tzf "build/release/bof3x-$TAG-linux-x86_64.tar.gz" > /dev/null
           for z in $SYMBOLS; do test -s "$z"; python -m zipfile -l "$z" > /dev/null; done
 
-      - name: Draft pre-release
-        if: env.TAG != 'latest'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          gh release create "$TAG" "build/release/bof3x-$TAG-win.zip" "build/release/bof3x-$TAG-win-x64.zip" \
-            "build/release/bof3x-$TAG-linux-x86_64.tar.gz" ${MOD_ZIPS:-} $SYMBOLS \
-            --draft --prerelease --verify-tag \
-            --title "Breath of Fire III - bof3x $TAG" \
-            --notes-file "docs/releases/$TAG.md"
-
-      # main: the latest tag moved to this commit, the zip replaced, the notes
-      # naming the commit. Published, not a draft: this is the download link.
-      - name: Latest pre-release
-        if: env.TAG == 'latest'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          git tag -f latest "$GITHUB_SHA"
-          git push -f origin latest
-          notes="$RUNNER_TEMP/latest.md"
-          {
-            echo "**The current build of \`main\`** - commit ${GITHUB_SHA::8}, built $(date -u +'%Y-%m-%d %H:%M UTC')."
-            echo
-            echo "Replaced on every push to main: not a release, not checked by hand. For a release, take a"
-            echo "\`v*\` one. The zip holds no game data: unzip it into a folder with a short path, run"
-            echo "\`bof3x-launcher.exe\` and add your own copy of the game on the Sources page"
-            echo "(docs/releases/README.md; the latest release's notes say more). Take"
-            echo "\`bof3x-latest-win.zip\`: it is the 32-bit build, the default. \`bof3x-latest-win-x64.zip\`"
-            echo "is the 64-bit developer build of the same files; both use the same game copy."
-            echo
-            echo "Linux (x86_64): \`bof3x-latest-linux-x86_64.tar.gz\`. Unpack it and run \`./bof3x-launcher\`."
-            echo "It needs Python 3 and a Vulkan 1.3 driver from the system (README, the Linux section)."
-            echo
-            echo "The files with \`-symbols.zip\` in the name are for developers. They hold the debug"
-            echo "information of the programs. You do not need them to play."
-          } > "$notes"
-          if gh release view latest >/dev/null 2>&1; then
-            gh release upload latest "build/release/bof3x-latest-win.zip" "build/release/bof3x-latest-win-x64.zip" \
-              "build/release/bof3x-latest-linux-x86_64.tar.gz" ${MOD_ZIPS:-} $SYMBOLS --clobber
-            gh release edit latest --prerelease --latest=false --title "Latest build (main)" --notes-file "$notes"
-          else
-            gh release create latest "build/release/bof3x-latest-win.zip" "build/release/bof3x-latest-win-x64.zip" \
-              "build/release/bof3x-latest-linux-x86_64.tar.gz" ${MOD_ZIPS:-} $SYMBOLS \
-              --prerelease --latest=false --verify-tag --title "Latest build (main)" --notes-file "$notes"
-          fi
+      # The files to job `publish`, which a newer push does not cancel.
+      - name: Hand the files to the publish job
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-files
+          path: |
+            build/release/*.zip
+            build/release/*.tar.gz
+          if-no-files-found: error
+          retention-days: 7
 
   # The Linux tarball, built before the `release` job, which needs it.
   linux:
     name: ${{ github.ref_type == 'branch' && 'Latest build' || 'Draft release' }} (Linux tarball)
     runs-on: ubuntu-24.04
+    concurrency:
+      group: release-build-${{ github.ref }}
+      cancel-in-progress: ${{ github.ref_type == 'branch' }}
     # This job's own permissions (they replace the workflow's): the checkout,
     # and what actions/attest needs to sign and store the attestation.
     permissions:
@@ -406,3 +374,127 @@ jobs:
             build/release/bof3x-${{ env.TAG }}-linux-x86_64-symbols.zip
           if-no-files-found: error
           retention-days: 7
+
+  # The release itself (2026-11-23): the draft, or "latest". A job of its own
+  # so that a newer push to main does not cancel it part-way - the tag moved
+  # and the files not yet replaced, or some of the files new and some old. The
+  # two jobs before it are the ones a newer push cancels (their concurrency
+  # group); this one's group never cancels, so a publish that began ends, and
+  # the newer run's publish waits for it.
+  publish:
+    name: ${{ github.ref_type == 'branch' && 'Latest build' || 'Draft release' }} (publish)
+    needs: [release]
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: release-publish-${{ github.ref }}
+      cancel-in-progress: false
+    steps:
+      - name: The tag
+        run: |
+          set -euo pipefail
+          if [ "${{ github.ref_type }}" = branch ]; then
+            echo "TAG=latest" >> "$GITHUB_ENV"
+            echo "REF=$GITHUB_SHA" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          tag="${{ github.event.inputs.tag || github.ref_name }}"
+          case "$tag" in v*) ;; *) echo "::error::not a release tag: $tag"; exit 1;; esac
+          echo "TAG=$tag" >> "$GITHUB_ENV"
+          echo "REF=$tag" >> "$GITHUB_ENV"
+
+      # For the notes file and the push of the latest tag.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.REF }}
+
+      - name: Fetch the files
+        uses: actions/download-artifact@v4
+        with:
+          name: release-files
+          path: build/release
+
+      - name: The files are there
+        run: |
+          set -euo pipefail
+          ls -l build/release
+          symbols=""
+          for f in "bof3x-$TAG-win.zip" "bof3x-$TAG-win-x64.zip" "bof3x-$TAG-linux-x86_64.tar.gz"; do
+            test -s "build/release/$f"
+          done
+          for f in "bof3x-$TAG-win-symbols.zip" "bof3x-$TAG-win-x64-symbols.zip" "bof3x-$TAG-linux-x86_64-symbols.zip"; do
+            test -s "build/release/$f"
+            symbols="$symbols build/release/$f"
+          done
+          echo "SYMBOLS=$symbols" >> "$GITHUB_ENV"
+          echo "MOD_ZIPS=$(ls build/release/furigana-*.zip 2>/dev/null | tr '\n' ' ' || true)" >> "$GITHUB_ENV"
+
+      # A run that waited may be older than what "latest" holds by now (its
+      # build ended after a newer run's publish): it does not put its files
+      # back. GitHub's compare of the latest tag with this commit says
+      # "behind" then. No latest tag yet (the first run): the call fails, and
+      # the run publishes.
+      - name: Is a newer build on "latest" already?
+        if: env.TAG == 'latest'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          status="$(gh api "repos/$GITHUB_REPOSITORY/compare/latest...$GITHUB_SHA" --jq .status 2>/dev/null)" || status=none
+          echo "this commit against the latest tag: $status"
+          if [ "$status" = behind ]; then
+            echo "::notice::\"latest\" already holds a newer commit than ${GITHUB_SHA::8}: not published"
+            echo "STALE=1" >> "$GITHUB_ENV"
+          fi
+
+      - name: Draft pre-release
+        if: env.TAG != 'latest'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create "$TAG" "build/release/bof3x-$TAG-win.zip" "build/release/bof3x-$TAG-win-x64.zip" \
+            "build/release/bof3x-$TAG-linux-x86_64.tar.gz" ${MOD_ZIPS:-} $SYMBOLS \
+            --draft --prerelease --verify-tag \
+            --title "Breath of Fire III - bof3x $TAG" \
+            --notes-file "docs/releases/$TAG.md"
+
+      # main: the files replaced, then the latest tag moved to this commit, then
+      # the notes naming the commit - in that order, so a step that fails at an
+      # upload leaves the tag and the notes with the files of the last build.
+      # Published, not a draft: this is the download link.
+      - name: Latest pre-release
+        if: env.TAG == 'latest' && env.STALE != '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          notes="$RUNNER_TEMP/latest.md"
+          {
+            echo "**The current build of \`main\`** - commit ${GITHUB_SHA::8}, built $(date -u +'%Y-%m-%d %H:%M UTC')."
+            echo
+            echo "Replaced on every push to main: not a release, not checked by hand. For a release, take a"
+            echo "\`v*\` one. The zip holds no game data: unzip it into a folder with a short path, run"
+            echo "\`bof3x-launcher.exe\` and add your own copy of the game on the Sources page"
+            echo "(docs/releases/README.md; the latest release's notes say more). Take"
+            echo "\`bof3x-latest-win.zip\`: it is the 32-bit build, the default. \`bof3x-latest-win-x64.zip\`"
+            echo "is the 64-bit developer build of the same files; both use the same game copy."
+            echo
+            echo "Linux (x86_64): \`bof3x-latest-linux-x86_64.tar.gz\`. Unpack it and run \`./bof3x-launcher\`."
+            echo "It needs Python 3 and a Vulkan 1.3 driver from the system (README, the Linux section)."
+            echo
+            echo "The files with \`-symbols.zip\` in the name are for developers. They hold the debug"
+            echo "information of the programs. You do not need them to play."
+          } > "$notes"
+          if gh release view latest >/dev/null 2>&1; then
+            gh release upload latest "build/release/bof3x-latest-win.zip" "build/release/bof3x-latest-win-x64.zip" \
+              "build/release/bof3x-latest-linux-x86_64.tar.gz" ${MOD_ZIPS:-} $SYMBOLS --clobber
+            git tag -f latest "$GITHUB_SHA"
+            git push -f origin latest
+            gh release edit latest --prerelease --latest=false --title "Latest build (main)" --notes-file "$notes"
+          else
+            git tag -f latest "$GITHUB_SHA"
+            git push -f origin latest
+            gh release create latest "build/release/bof3x-latest-win.zip" "build/release/bof3x-latest-win-x64.zip" \
+              "build/release/bof3x-latest-linux-x86_64.tar.gz" ${MOD_ZIPS:-} $SYMBOLS \
+              --prerelease --latest=false --verify-tag --title "Latest build (main)" --notes-file "$notes"
+          fi
