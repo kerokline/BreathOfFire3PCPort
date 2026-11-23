@@ -18,8 +18,9 @@ So the release keeps both: this tool copies each binary as built into a zip
 (the symbols), then strips the build's own file in place of its .debug_*
 sections (strip --strip-debug: the symbol table stays, so a debugger and
 addr2line still name functions from the player's file). The log's "build:"
-line (src/hook/dllmain.cpp, exe_host_posix.cpp) names the tag, and on Linux
-the GNU build id, which the strip keeps: that is how a log finds its symbols.
+line (src/hook/dllmain.cpp, exe_host_posix.cpp) names the tag and the build
+id - the GNU build id on Linux, bof3x.dll's CodeView GUID and age on Windows
+- which the strip keeps: that is how a log finds its symbols.
 
 Run it after the build and BEFORE the binaries are signed (a strip after
 Authenticode breaks the signature) and before tools/make_release.py, which

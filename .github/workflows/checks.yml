@@ -94,9 +94,9 @@ jobs:
     name: Ledgers and symbols
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.13"
 
@@ -185,7 +185,7 @@ jobs:
     name: Music host suite
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Build
         run: |
@@ -205,7 +205,7 @@ jobs:
     name: Media host suite
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Build
         run: |
@@ -231,11 +231,11 @@ jobs:
     name: OS seam host suite
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Before the build: config_tests' build generates the launcher's suites
       # table with Python 3.11 or later (tools/suites.py).
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.13"
 
@@ -281,11 +281,11 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Cache llvm-mingw
         id: toolchain-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ runner.temp }}/llvm-mingw
           key: llvm-mingw-${{ env.LLVM_MINGW_TAG }}-${{ env.LLVM_MINGW_CRT }}-windows-x86_64
@@ -329,9 +329,9 @@ jobs:
     name: Lifter prototype self-test
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.13"
 

@@ -83,7 +83,7 @@ jobs:
           echo "VERSION=$tag" >> "$GITHUB_ENV"
           echo "REF=$tag" >> "$GITHUB_ENV"
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ env.REF }}
 
@@ -99,7 +99,7 @@ jobs:
 
       - name: Cache llvm-mingw
         id: toolchain-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ runner.temp }}/llvm-mingw
           key: llvm-mingw-${{ env.LLVM_MINGW_TAG }}-${{ env.LLVM_MINGW_CRT }}-ubuntu-x86_64
@@ -124,7 +124,7 @@ jobs:
           "$RUNNER_TEMP/llvm-mingw/bin/i686-w64-mingw32-clang++" --version
           "$RUNNER_TEMP/llvm-mingw/bin/x86_64-w64-mingw32-clang++" --version
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.13"
 
@@ -252,7 +252,7 @@ jobs:
 
       # The tarball job `linux` made and its symbols zip, beside the zips.
       - name: Fetch the Linux tarball
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: linux-tarball
           path: build/release
@@ -266,7 +266,7 @@ jobs:
 
       # The files to job `publish`, which a newer push does not cancel.
       - name: Hand the files to the publish job
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-files
           path: |
@@ -305,11 +305,11 @@ jobs:
           echo "VERSION=$tag" >> "$GITHUB_ENV"
           echo "REF=$tag" >> "$GITHUB_ENV"
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ env.REF }}
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.13"
 
@@ -366,7 +366,7 @@ jobs:
       # A .tar.gz keeps the files' modes inside it; the artifact's own zip
       # only carries it to the next job.
       - name: Hand the tarball to the release job
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: linux-tarball
           path: |
@@ -403,12 +403,12 @@ jobs:
           echo "REF=$tag" >> "$GITHUB_ENV"
 
       # For the notes file and the push of the latest tag.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ env.REF }}
 
       - name: Fetch the files
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: release-files
           path: build/release

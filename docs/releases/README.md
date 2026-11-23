@@ -63,6 +63,21 @@ the three-day certificate. Then `make_exe.py --verify-only` checks the signed
 executable's layout again and that its certificate table is the file's
 trailing blob. The workflow takes:
 
+**Windows did not read `bof3x.exe`'s signature until 2026-11-23.** The signed
+`bof3x.exe` of beta.1 and of "latest" at 3398f7bb answered `NotSigned` to
+`Get-AuthenticodeSignature`, beside a `Valid` `bof3x.dll` and launcher from
+the same jsign call. The cause is the optional header's linker version, which
+`make_exe.py` wrote as 1.0: Windows reads no signature on an image whose
+linker version is below 3.0 (with a minor below about 5). Measured on the
+downloaded file by changing those two bytes alone - the signature's hash
+covers them, so a file Windows reads answers `HashMismatch`: 0.0, 1.0, 1.1,
+2.0, 2.1 `NotSigned`; 1.99, 2.24, 3.0, 4.0, 14.0, 255.0 `HashMismatch`. Twelve
+other header changes (DOS fields, OS version, section flags and pointers,
+sizes, checksum) left it `NotSigned`. `make_exe.py` writes 14.0 now, as lld
+does in `bof3x.dll`, and its verification refuses another value. **Not seen
+yet:** a signed `bof3x.exe` that Windows calls `Valid` - the first is the
+next release run's; read it with `Get-AuthenticodeSignature`.
+
 | Where | Name | What |
 |---|---|---|
 | repository **secrets** | `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET` | an App Registration in the owner's tenant, with a client secret, given the *Trusted Signing Certificate Profile Signer* role on the signing account |
@@ -100,8 +115,13 @@ and **before the signing** (a strip after Authenticode breaks the signature):
 (`--keep-debug` takes it anyway, for a download made by hand).
 
 **How a report finds its symbols:** the log's `build:` line, its second line,
-names the tag (`v0.1.0-beta.2`, or `latest-<commit>`), and on Linux the ELF's
-GNU build id, which the strip keeps. Take that tag's symbols zip; for a
+names the tag (`v0.1.0-beta.2`, or `latest-<commit>`) and the build id, which
+the strip keeps: on Linux the ELF's GNU build id, on Windows `bof3x.dll`'s
+CodeView record - its GUID and age, as one hex string, the GUID's digits in
+the order `llvm-readobj --coff-debug-directory bof3x.dll` prints them (lld
+puts a hash of the linked file in it, so two builds of one tag differ). The
+symbols zip's file shows the same id: that is how to tell which of two builds
+of one tag a log came from. Take that tag's symbols zip; for a
 Linux log, `python tools/crash_report.py --log bof3x.log --elf <the zip's
 bof3x>` names the engine's addresses by `addr2line`; for a Windows log or
 minidump, `--dll <the zip's bof3x.dll>` names the addresses inside

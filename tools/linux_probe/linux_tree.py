@@ -138,7 +138,7 @@ def dxvk_dirs(d):
 
 def clang(f, flags):
     r = subprocess.run(['clang++', '--target=x86_64-linux-gnu', '-std=c++20', '-fsyntax-only', '-ferror-limit=0', '-w',
-                        '-fdeclspec', '-D__cdecl=__attribute__((ms_abi))', *flags, f],
+                        '-fdeclspec', '-D__cdecl=__attribute__((ms_abi))', '-D__stdcall=', *flags, f],
                        capture_output=True, text=True, cwd=ROOT)
     errs = [l for l in r.stderr.splitlines() if ': error: ' in l or ': fatal error: ' in l]
     if r.returncode and not errs:
