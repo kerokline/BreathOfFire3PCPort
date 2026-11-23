@@ -955,7 +955,12 @@ with the mod and its ten behaviours on, 2026-11-12 - "all mod fields and
 behaviors appear to be working as intended" ([`owner-review.md`](owner-review.md);
 which scene showed each is not recorded; D416 parked). `LevelSkillCatchUp`
 and `TownWarp` still have no proof with the game of the kind this section
-holds for the eight.
+holds for the eight. **2026-11-23:** they have one now, at `main`
+`0805b220` ([`hardening-1123.md`](hardening-1123.md)): the self-tests with
+the 1.4 mod on and off at both widths, the suite and the ten routes with
+every behaviour off, `TownWarp`'s stop with no mod, the fuzz with
+`LevelSkillCatchUp` on (the `rest_2e` group stops in the harness for a
+callee it does not list). The checks in play are still owed.
 
 ## 6d. The hack's version 1.4, as run (2026-11-12)
 

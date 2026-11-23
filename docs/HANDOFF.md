@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-11-20: `main` is `e9c1fb41`, the PR #267 merge; `v0.1.0-beta.1` was published on 2026-11-08 from `44fd3204`, the PR #212 merge; merged since the beta: PRs #213, #214, #217..#222, #224 and #227..#267 ([`STATUS.md`](STATUS.md) has a line each), none of it released; the item numbers below were not renumbered by this pass)
+**Status:** IN PROGRESS (2026-11-23: `main` is `0805b220`, the PR #277 merge, and item 00's first bullet is that day's proofs; the rest of this file is as of 2026-11-20: `main` was `e9c1fb41`, the PR #267 merge; `v0.1.0-beta.1` was published on 2026-11-08 from `44fd3204`, the PR #212 merge; merged since the beta: PRs #213, #214, #217..#222, #224 and #227..#267 ([`STATUS.md`](STATUS.md) has a line each), none of it released; the item numbers below were not renumbered by this pass)
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
 than restating it**.
@@ -32,6 +32,18 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
 ## Pick up here
 
 00. **Next, 2026-11-16** (the order is the owner's; these are the candidates):
+   - **The beta.2 hardening proofs ran on 2026-11-23 at `main` `0805b220`** ([`hardening-1123.md`](hardening-1123.md)):
+     the ten routes at both widths, the hosted suite, the self-tests, the three `quit` recipes, a game under
+     `BOF3X_ARENA=1`, the Definitive Edition 1.4 mod on a new US-disc install, and two battles on that install at both
+     widths, all passed or explained. **Where a bullet below says one of these is owed or not run, this is newer:** the
+     smooth-motion fixes' ten routes (with the box clear), PR #246's three recipes, the 64-bit build with a game, the
+     save list on the 64-bit build (every route opens it), the 64-bit battle on a disc-built install, `BOF3X_ARENA=1`,
+     and the romhack behaviours' self-tests, routes off and fuzz off. D431's open item was closed by wave B's B2c
+     ([`linux-round.md`](linux-round.md)). **Left by it:** `BattleFlow_TaskCurrent+0x38` in the skip list or the fold
+     for disc-built installs; `AbilityList_ForType` in the `rest_2e` fuzz group's callees; the ten routes with smooth
+     motion on; the hosted fuzz with `TownWarp` on (no mod layer in a PC folder). The runs' root is
+     `D:of3x-runs\hard1123` (the worktree `wt`, the install `home`, the outputs `p`), removable once read.
+     **The `v0.1.0-beta.2` tag is held** until a person has checked the Linux build once (the owner, 2026-11-22).
    - **D420 is fixed (merged as PR #249, 2026-11-15; the cleanup below merged as PR #248, `main`
      `31925318`):** the state hash's "sound page" noise was the real keyboard's bytes (`Key_State`, typed anywhere on the
      machine) and a late frame's undrawn environments, named from the solo proof's kept runs with the new
