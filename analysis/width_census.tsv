@@ -9312,7 +9312,11 @@ site	src/os/win32/memory.cpp	32	valloc_addr	-	live	at	-	void* MemCommit(void* at
 site	src/os/win32/memory.cpp	34	valloc_addr	-	live	at	-	return VirtualAlloc(at, size, MEM_RESERVE | MEM_COMMIT, Native(prot));
 site	src/os/win32/memory.cpp	54	uintptr	-	live	std::uintptr_t	-	out->base = reinterpret_cast<std::uintptr_t>(m.BaseAddress);
 site	src/os/win32/memory.cpp	55	uintptr	-	live	std::uintptr_t	-	out->alloc_base = reinterpret_cast<std::uintptr_t>(m.AllocationBase);
-site	src/os/win32/module.cpp	16	uintptr	-	live	std::uintptr_t	-	const auto base = reinterpret_cast<std::uintptr_t>(m);
+site	src/os/win32/module.cpp	18	uintptr	-	live	std::uintptr_t	-	const IMAGE_NT_HEADERS* Headers(const void* inside, std::uintptr_t* base_out) {
+site	src/os/win32/module.cpp	24	uintptr	-	live	std::uintptr_t	-	const auto base = reinterpret_cast<std::uintptr_t>(m);
+site	src/os/win32/module.cpp	36	uintptr	-	live	std::uintptr_t	-	std::uintptr_t base = 0;
+site	src/os/win32/module.cpp	70	uintptr	-	live	std::uintptr_t	-	std::uintptr_t base = 0;
+site	src/os/win32/module.cpp	99	fmt_place	word	live	static_cast<unsigned>(data1)	%08x	int n = std::snprintf(buf, sizeof buf, "%08x%04x%04x", static_cast<unsigned>(data1), static_cast<unsigned>(data2),
 site	src/os/win32/own_stack.cpp	29	asm	cw	live	fldcw %0	fldcw	if (s->spec->callers_x87) __asm__ volatile("fldcw %0" : : "m"(s->cw));
 site	src/os/win32/own_stack.cpp	74	asm	cw	live	fnstcw %0	fnstcw	if (spec_.callers_x87) __asm__ volatile("fnstcw %0" : "=m"(s->cw));
 site	src/os/win32/placed.cpp	19	uintptr	-	live	std::uintptr_t	-	std::string MemHolders(std::uintptr_t lo, std::uintptr_t hi) {
@@ -15367,7 +15371,8 @@ file	src/os/sampler.h	live	uintptr	-	2
 file	src/os/win32/env.cpp	live	uintptr	-	2
 file	src/os/win32/memory.cpp	live	uintptr	-	2
 file	src/os/win32/memory.cpp	live	valloc_addr	-	3
-file	src/os/win32/module.cpp	live	uintptr	-	1
+file	src/os/win32/module.cpp	live	fmt_place	word	1
+file	src/os/win32/module.cpp	live	uintptr	-	4
 file	src/os/win32/own_stack.cpp	live	asm	cw	2
 file	src/os/win32/placed.cpp	live	long	l	2
 file	src/os/win32/placed.cpp	live	uintptr	-	5
@@ -15408,8 +15413,8 @@ file	symbols.toml	live	ptr_member	ours_render	11
 file	symbols.toml	live	ptr_member	windows_function	14
 file	symbols.toml	live	ptr_member	windows_handle	3
 file	symbols.toml	live	ptr_member	windows_object	10
-#count sites	11371
-#count sites_live	7887
+#count sites	11375
+#count sites_live	7891
 #count sites_fuzz	3484
 #count fuzz_files	250
 #count narrow	357
@@ -15584,17 +15589,17 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count sizeof_ptr_-	17
 #count sizeof_ptr_-_live	17
 #count sizeof_ptr_-_live_files	9
-#count uintptr	1986
-#count uintptr_live	1320
+#count uintptr	1989
+#count uintptr_live	1323
 #count uintptr_live_files	524
 #count uintptr_fuzz	666
 #count uintptr_fuzz_files	249
-#count uintptr_-	1986
-#count uintptr_-_live	1320
+#count uintptr_-	1989
+#count uintptr_-_live	1323
 #count uintptr_-_live_files	524
-#count fmt_place	548
-#count fmt_place_live	478
-#count fmt_place_live_files	74
+#count fmt_place	549
+#count fmt_place_live	479
+#count fmt_place_live_files	75
 #count fmt_place_fuzz	70
 #count fmt_place_fuzz_files	35
 #count fmt_place_narrowed	24
@@ -15603,9 +15608,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count fmt_place_pointer	124
 #count fmt_place_pointer_live	109
 #count fmt_place_pointer_live_files	34
-#count fmt_place_word	400
-#count fmt_place_word_live	352
-#count fmt_place_word_live_files	60
+#count fmt_place_word	401
+#count fmt_place_word_live	353
+#count fmt_place_word_live_files	61
 #count import_slot	14
 #count import_slot_live	14
 #count import_slot_live_files	1

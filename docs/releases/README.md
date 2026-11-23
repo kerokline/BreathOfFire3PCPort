@@ -100,8 +100,13 @@ and **before the signing** (a strip after Authenticode breaks the signature):
 (`--keep-debug` takes it anyway, for a download made by hand).
 
 **How a report finds its symbols:** the log's `build:` line, its second line,
-names the tag (`v0.1.0-beta.2`, or `latest-<commit>`), and on Linux the ELF's
-GNU build id, which the strip keeps. Take that tag's symbols zip; for a
+names the tag (`v0.1.0-beta.2`, or `latest-<commit>`) and the build id, which
+the strip keeps: on Linux the ELF's GNU build id, on Windows `bof3x.dll`'s
+CodeView record - its GUID and age, as one hex string, the GUID's digits in
+the order `llvm-readobj --coff-debug-directory bof3x.dll` prints them (lld
+puts a hash of the linked file in it, so two builds of one tag differ). The
+symbols zip's file shows the same id: that is how to tell which of two builds
+of one tag a log came from. Take that tag's symbols zip; for a
 Linux log, `python tools/crash_report.py --log bof3x.log --elf <the zip's
 bof3x>` names the engine's addresses by `addr2line`. A `latest` build's
 symbols are replaced with the build, so a report against an older `latest`

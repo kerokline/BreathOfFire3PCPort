@@ -19,6 +19,7 @@
 #include <windows.h>
 
 #include <cwchar>
+#include <string>
 
 #include "hook/calltrace.h"
 #include "hook/crash.h"
@@ -36,6 +37,7 @@
 #include "hook/statehash.h"
 #include "hook/wav_dump.h"
 #include "audio/sound_sdl.h"
+#include "os/module.h"
 #include "version.gen.h"
 
 BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
@@ -45,8 +47,15 @@ BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
         bof3::Log("bof3x attached to process %lu", GetCurrentProcessId());
         // The build a log came from (docs/releases/README.md "Symbols"): the
         // release's binaries carry no debug information, so the log names the
-        // build whose kept symbols name its addresses.
-        bof3::Log("build: %s", BOF3X_VERSION_TAG);
+        // build whose kept symbols name its addresses: the tag, and this
+        // DLL's CodeView build id, which a strip keeps. Two builds of one tag
+        // differ by it. `module` is the DLL's own base in either host, not
+        // the executable that loaded it.
+        {
+            std::string build_id;
+            const bool has = bof3::os::ModuleBuildId(module, &build_id);
+            bof3::Log("build: %s, build id %s", BOF3X_VERSION_TAG, has ? build_id.c_str() : "none");
+        }
         bof3::DetectHost();
         if (bof3::IsExeHost()) return TRUE;   // Engine_Main does the rest
         bof3::VerifyImage();

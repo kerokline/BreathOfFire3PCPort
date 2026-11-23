@@ -52,10 +52,14 @@ void* ModuleExportByOrdinal(const char* name, unsigned ordinal);
 // hex: the name of the one build a file came from, which a strip of its debug
 // information keeps (the log's "build:" line; docs/releases/README.md
 // "Symbols"). POSIX: the linker's GNU build-id note (NT_GNU_BUILD_ID), read
-// from the loaded object's PT_NOTE segments. False when no module holds the
-// address or it carries no such note. On Windows always false: a PE has no
-// such note, and nothing asks for one there - a Windows build is named by its
-// tag and, in a quicksave, by the DLL's file hash (hook/snapshot.cpp).
+// from the loaded object's PT_NOTE segments, its bytes in order. Windows: the
+// CodeView (RSDS) record the PE's debug directory names, as 32 hex digits of
+// its GUID in the order llvm-readobj --coff-debug-directory prints it, then
+// its age - a symbol store's key. lld fills the GUID's first 8 bytes with a
+// hash of the linked file and the last 8 with "LLD PDB." when it writes no
+// PDB, so it is new for every build that differs. False when no module holds
+// the address or it carries no such record. A quicksave also names the
+// Windows build by the DLL's file hash (hook/snapshot.cpp).
 bool ModuleBuildId(const void* inside, std::string* hex);
 
 }  // namespace bof3::os
