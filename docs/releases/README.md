@@ -74,9 +74,10 @@ covers them, so a file Windows reads answers `HashMismatch`: 0.0, 1.0, 1.1,
 2.0, 2.1 `NotSigned`; 1.99, 2.24, 3.0, 4.0, 14.0, 255.0 `HashMismatch`. Twelve
 other header changes (DOS fields, OS version, section flags and pointers,
 sizes, checksum) left it `NotSigned`. `make_exe.py` writes 14.0 now, as lld
-does in `bof3x.dll`, and its verification refuses another value. **Not seen
-yet:** a signed `bof3x.exe` that Windows calls `Valid` - the first is the
-next release run's; read it with `Get-AuthenticodeSignature`.
+does in `bof3x.dll`, and its verification refuses another value. **Seen**
+in run 45263911609 ("latest" at 5e1b6dd6): `bof3x.exe`, `bof3x.dll` and
+`bof3x-launcher.exe` of both zips are `Valid` and timestamped to
+`Get-AuthenticodeSignature`.
 
 | Where | Name | What |
 |---|---|---|

@@ -382,7 +382,9 @@ jobs:
   # group); this one's group never cancels, so a publish that began ends, and
   # the newer run's publish waits for it.
   publish:
-    name: ${{ github.ref_type == 'branch' && 'Latest build' || 'Draft release' }} (publish)
+    # A plain name: a skipped job's name expression is shown as written
+    # (run 45259981400, cancelled before this job).
+    name: Publish
     needs: [release]
     runs-on: ubuntu-24.04
     concurrency:
