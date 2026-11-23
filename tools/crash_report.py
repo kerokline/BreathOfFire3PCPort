@@ -34,6 +34,15 @@ beside one on Windows: each report's lines are printed with the fault's
 address and every stack word named as above, by the VA the line gives. On a
 Linux report the engine is the ELF beside the log (or --elf), and an address
 the report tags as the engine's is named by addr2line from its symbols.
+
+    python tools/crash_report.py DUMP --dll path/to/bof3x.dll
+    python tools/crash_report.py --log bof3x.log --dll path/to/bof3x.dll
+
+--dll names the addresses inside bof3x.dll, by addr2line: give it the DLL of
+the report's own build with its debug information - the one in that build's
+symbols zip (docs/releases/README.md "Symbols"; the log's "build:" line names
+the build). The player's own DLL holds no debug information and names the
+function only.
 """
 import argparse, bisect, glob, json, os, re, shutil, struct, subprocess, sys, tomllib
 
@@ -228,7 +237,48 @@ class ElfNames:
         return {a: self.cache.get(a) for a in addrs}
 
 
-def read_log(path, name, elf=None):
+DLL_AT = re.compile(r'0x([0-9A-Fa-f]+) \(bof3x\.dll\+0x([0-9A-Fa-f]+)\)', re.I)
+
+
+class DllNames:
+    """Addresses inside bof3x.dll, as offsets from where it was loaded, named
+    by addr2line from the DLL of the same build (--dll; with its debug
+    information the answer has the file and the line). Empty with no --dll."""
+
+    def __init__(self, dll):
+        self.dll, self.tool, self.base, self.cache = None, None, 0, {}
+        if not dll:
+            return
+        if not os.path.isfile(dll):
+            sys.exit(f'{dll}: no such file')
+        with open(dll, 'rb') as f:
+            d = f.read(0x400)
+        pe = struct.unpack_from('<I', d, 0x3C)[0] if d[:2] == b'MZ' else None
+        if pe is None or d[pe:pe + 4] != b'PE\0\0':
+            sys.exit(f'{dll}: not a PE file')
+        opt = pe + 24
+        magic, = struct.unpack_from('<H', d, opt)
+        self.base = struct.unpack_from('<Q', d, opt + 24)[0] if magic == 0x20B else struct.unpack_from('<I', d, opt + 28)[0]
+        self.tool = next((t for t in ('llvm-addr2line', 'addr2line') if shutil.which(t)), None)
+        if not self.tool:
+            print(f'{dll}: no llvm-addr2line or addr2line on PATH; its addresses are not named')
+            return
+        self.dll = dll
+
+    def name(self, offset):
+        if not self.dll:
+            return None
+        if offset not in self.cache:
+            r = subprocess.run([self.tool, '-f', '-C', '-e', self.dll, f'0x{self.base + offset:X}'],
+                               capture_output=True, text=True)
+            fn, at = (r.stdout.splitlines() + ['??', '??'])[:2]
+            at = re.sub(r' \(discriminator \d+\)$', '', at)
+            known = at not in ('??:0', '??:?')
+            self.cache[offset] = None if fn == '??' else f'{fn} ({os.path.basename(at)})' if known else fn
+        return self.cache[offset]
+
+
+def read_log(path, name, elf=None, dll=None):
     """Each report's CRASH lines, the fault's address and the stack words named
     by the VA the line gives (" (VA 0x...)" where the image moved); on a Linux
     report, the addresses in the engine's ELF by its symbols (ElfNames)."""
@@ -258,6 +308,10 @@ def read_log(path, name, elf=None):
     if not explicit and engine:
         elf = os.path.join(os.path.dirname(os.path.abspath(path)), engine)
     elf_names = ElfNames(elf, quiet=not explicit) if engine or explicit else ElfNames(None)
+    # A Windows report with --dll: where bof3x.dll was loaded, from any line
+    # that gives an address beside its offset ("0x10049CFC (bof3x.dll+0x49CFC)").
+    dll_names = DllNames(dll)
+    dll_base = next((int(m.group(1), 16) - int(m.group(2), 16) for t in texts for m in [DLL_AT.search(t)] if m), None)
     for n in order:
         print(f'{path}: report {n}')
         rows = []
@@ -276,6 +330,14 @@ def read_log(path, name, elf=None):
                     label = name(int(moved.group(1) if moved else sm.group(1), 16))
                     if not label and engine and f'  ({engine})' in sm.group(2):
                         own = int(sm.group(1), 16)
+            if not label and own is None and dll_base is not None:
+                hit = DLL_AT.search(text)
+                if hit:
+                    label = dll_names.name(int(hit.group(2), 16))
+                elif text.startswith('stack ') and '(bof3x.dll)' in text.lower():
+                    sm = re.match(r'stack \+0x[0-9A-Fa-f]+\s+0x([0-9A-Fa-f]+)', text)
+                    if sm:
+                        label = dll_names.name(int(sm.group(1), 16) - dll_base)
             rows.append((text, label, own))
         named = elf_names.name([own for _, _, own in rows if own is not None])
         for text, label, own in rows:
@@ -298,9 +360,11 @@ def main():
     ap.add_argument('--log', metavar='LOG', help="a log's CRASH lines in place of a dump")
     ap.add_argument('--elf', metavar='ELF', help="with --log: the Linux engine's ELF (default: beside the log, by the "
                                                  "name the report gives)")
+    ap.add_argument('--dll', metavar='DLL', help="bof3x.dll of the report's build, with its debug information (the "
+                                                 "build's symbols zip): names the addresses inside the DLL")
     a = ap.parse_args()
     if a.log:
-        return read_log(a.log, Names(), a.elf)
+        return read_log(a.log, Names(), a.elf, a.dll)
     path = a.dump
     if not path:
         found = sorted(glob.glob(os.path.join(ROOT, 'build', 'bof3x.crash-*.dmp')), key=os.path.getmtime)
@@ -308,6 +372,7 @@ def main():
             sys.exit('no build/bof3x.crash-*.dmp; name a dump')
         path = found[-1]
     dump, name = Dump(path), Names()
+    dll_names = DllNames(a.dll)
 
     def where(v):
         a = va(v, dump.move)   # a place in the moved image, as its VA
@@ -315,7 +380,10 @@ def main():
         if n:
             return n + (f' (VA 0x{a:08X})' if a != v else '')
         m = dump.module(v)
-        return f'{m[0]}+0x{m[1]:X}' if m else ''
+        if not m:
+            return ''
+        fn = dll_names.name(m[1]) if m[0].lower() == 'bof3x.dll' else None
+        return f'{m[0]}+0x{m[1]:X}' + (f'   <- {fn}' if fn else '')
 
     if a.read:
         addr, ln = int(a.read[0], 0), int(a.read[1], 0)
