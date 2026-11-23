@@ -72,6 +72,15 @@ from pe_read import Pe  # noqa: E402
 FILE_ALIGN = 0x200
 SECTION_ALIGN = 0x1000
 HEADERS_SIZE = 0x400
+# The optional header's linker version. Windows does not read an Authenticode
+# signature on an image whose linker version is below 3.0 with a minor below
+# about 5: Get-AuthenticodeSignature answered NotSigned for the signed
+# bof3x.exe of beta.1 and of "latest" at 3398f7bb, which said 1.0, and
+# HashMismatch (the signature read, the changed byte seen) for the same file
+# with 3.0, 14.0 or 1.99 there; 0.0, 1.1, 2.0 and 2.1 stayed NotSigned
+# (2026-11-23, docs/releases/README.md "Signing"). 14.0 is what lld writes in
+# bof3x.dll. Nothing of ours or the loader's reads it.
+LINKER_VERSION = (14, 0)
 
 # Section characteristics.
 CNT_CODE, CNT_INIT, CNT_UNINIT = 0x20, 0x40, 0x80
@@ -475,7 +484,7 @@ def write(layout, out_path, version, tag, base, width=32):
     os_major, os_minor = w['subsystem_version']
     if width == 32:
         opt = struct.pack('<HBBIIIIIIIIIHHHHHHIIIIHHIIIIII',
-                          0x10B, 1, 0,                       # magic, linker version
+                          0x10B, *LINKER_VERSION,           # magic, linker version
                           size_code, size_init, size_uninit,
                           text_rva, text_rva, game_rva,      # entry, BaseOfCode, BaseOfData
                           base, SECTION_ALIGN, FILE_ALIGN,
@@ -487,7 +496,7 @@ def write(layout, out_path, version, tag, base, width=32):
     else:
         # PE32+: no BaseOfData, ImageBase and the four sizes 8 bytes each.
         opt = struct.pack('<HBBIIIIIQIIHHHHHHIIIIHHQQQQII',
-                          0x20B, 1, 0,                       # magic, linker version
+                          0x20B, *LINKER_VERSION,           # magic, linker version
                           size_code, size_init, size_uninit,
                           text_rva, text_rva,                # entry, BaseOfCode
                           base, SECTION_ALIGN, FILE_ALIGN,
@@ -538,6 +547,8 @@ def verify(layout, out_path, dll_path, version, tag, base, width=32):
     check('stack reserve', hex(pe.stack_reserve), hex(layout['StackReserve']))
     check('stack commit', hex(pe.stack_commit), hex(layout['StackCommit']))
     check('subsystem', pe.subsystem, 2)
+    opt = struct.unpack_from('<I', pe.data, 0x3C)[0] + 24
+    check('linker version (below 3.0 Windows reads no signature)', tuple(pe.data[opt + 2:opt + 4]), LINKER_VERSION)
     names = [s['name'] for s in pe.sections]
     check('sections', names, ['.stub', '.game', '.pool', '.text', '.idata', '.rsrc'])
     by = {s['name']: s for s in pe.sections}
