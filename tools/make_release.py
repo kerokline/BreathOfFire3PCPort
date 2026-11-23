@@ -116,6 +116,7 @@ ENTRY = ("importer.py", "player_sources.py")
 # One list with what the measured setup steps record as data (build_reuse.SHIPPED_DATA, HANDOFF 11).
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from build_reuse import SHIPPED_DATA as DATA   # noqa: E402
+from strip_symbols import debug_sections   # noqa: E402
 # Copied beside the launcher.
 TOP = [("LICENSE", "LICENSE"), ("docs/THIRD_PARTY.md", "THIRD_PARTY.md")]
 BUILD_FILES = ("bof3x-launcher.exe", "bof3x.dll", "bof3x.exe", "music-names.tsv", "save-names.tsv")
@@ -407,6 +408,17 @@ def cache_value(build, key):
     return ""
 
 
+def refuse_debug(build, files, keep, linux):
+    """A release's binaries hold no debug information (tools/strip_symbols.py says why, and keeps it)."""
+    found = [f for f in files if debug_sections(os.path.join(build, f))]
+    if found and not keep:
+        raise SystemExit("%s: %s still hold%s debug sections, about three quarters of their size. Run\n"
+                         "  python tools/strip_symbols.py --build %s%s --out <symbols zip>\n"
+                         "first (before any signing), or pass --keep-debug for a download that keeps them."
+                         % (build, ", ".join(found), "s" if len(found) == 1 else "", build, " --linux" if linux else ""))
+    return found
+
+
 def linux_trees(build):
     """{tree name: folder} for LINUX_LICENSES: DXVK as the build's external project fetched it, SDL3 as
     FetchContent did (or the folder -DFETCHCONTENT_SOURCE_DIR_SDL3 named)."""
@@ -556,6 +568,22 @@ def main_linux(a):
     name = "bof3x-%s-linux-x86_64" % a.version
     out = os.path.abspath(a.out or os.path.join(ROOT, "build", "release", name + ".tar.gz"))
 
+    # The tag the ELF carries (src/version.h.in BOF3X_VERSION_TAG; a quicksave's
+    # build identity, src/hook/snapshot.cpp) is the release's: the configure
+    # took it, and the linked program holds it. The first Linux tarballs said
+    # latest-<sha> in the README and v0.1.0 in the program (2026-11-23).
+    tag = cache_value(build, "BOF3X_VERSION_TAG")
+    if tag != a.version:
+        raise SystemExit("%s was configured with BOF3X_VERSION_TAG=%s, and the release is %s: configure with "
+                         "-DBOF3X_VERSION_TAG=%s (BOF3X_VERSION_TAG=%s .github/scripts/linux-build.sh configure) "
+                         "and build again" % (build, tag or "(none)", a.version, a.version, a.version))
+    with open(os.path.join(build, "bof3x"), "rb") as f:
+        if a.version.encode() + bytes(1) not in f.read():
+            raise SystemExit("%s/bof3x does not hold the tag %s: it was not built since the configure. Build again."
+                             % (build, a.version))
+    with_debug = refuse_debug(build, [f for f in LINUX_BUILD_FILES if f in LINUX_PROGRAMS or ".so" in f],
+                              a.keep_debug, True)
+
     # The importer's third-party imports against the requirements files: a
     # Linux player installs them (call 3), so each import a player's setup
     # can reach is in requirements.txt or, named there, in requirements-extra.txt.
@@ -683,6 +711,7 @@ def main_linux(a):
         needed, runpath, _, _ = elf[f]
         print("  %s: NEEDED %s%s" % (f, " ".join(needed), "; RUNPATH " + ":".join(runpath) if runpath else ""))
     print("  needs at least %s, %s (the binaries' version needs)" % (glibc, glibcxx))
+    print("  debug information: %s" % ("kept in " + ", ".join(with_debug) if with_debug else "none (stripped)"))
     print("  licenses: dear-imgui droid-sans tex-gyre-pagella %s" % " ".join(dict.fromkeys(n[0] for n in notices)))
     print("  runtime/tools: %d files and requirements.txt (%s)" % (len(tools), " ".join(tools)))
     print("  the player installs: %s (requirements.txt); for paths a setup does not take by default: %s "
@@ -704,6 +733,8 @@ def main():
     ap.add_argument("--stage", help="lay the release out here and keep it (default a temporary folder)")
     ap.add_argument("--linux", action="store_true",
                     help="the Linux tarball from the linux-x86_64 preset's build, in place of the Windows zip")
+    ap.add_argument("--keep-debug", action="store_true",
+                    help="take binaries that still hold debug sections (default: refuse; tools/strip_symbols.py)")
     a = ap.parse_args()
     if a.linux:
         return main_linux(a)
@@ -716,6 +747,7 @@ def main():
         preset = "x86_64" if folder == "build-x86_64" else "i686"
         raise SystemExit("%s lacks %s: build first (cmake --preset %s && cmake --build %s)"
                          % (a.build, ", ".join(missing), preset, folder if preset == "x86_64" else "build"))
+    with_debug = refuse_debug(a.build, [f for f in BUILD_FILES if f.endswith((".exe", ".dll"))], a.keep_debug, False)
     width = exe_width(os.path.join(a.build, "bof3x.exe"))
     out = os.path.abspath(a.out or os.path.join(ROOT, "build", "release",
                                                 "bof3x-%s-win%s.zip" % (a.version, "-x64" if width == 64 else "")))
@@ -792,6 +824,7 @@ def main():
         if tmp:
             shutil.rmtree(tmp, ignore_errors=True)
     print("%s: %d files, %.1f MB, the %d-bit build from %s" % (out, len(files), os.path.getsize(out) / 1e6, width, a.build))
+    print("  debug information: %s" % ("kept in " + ", ".join(with_debug) if with_debug else "none (stripped)"))
     print("  python %s (%s: %s), %s" % (PYTHON_VERSION, PTH, ", ".join(l for l in pth if l.strip() and not l.startswith("#")),
                                          ", ".join(w[0] for w in WHEELS)))
     print("  runtime/tools: %d files (%s)" % (len(tools), " ".join(tools)))

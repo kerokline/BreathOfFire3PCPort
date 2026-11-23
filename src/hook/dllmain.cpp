@@ -36,12 +36,17 @@
 #include "hook/statehash.h"
 #include "hook/wav_dump.h"
 #include "audio/sound_sdl.h"
+#include "version.gen.h"
 
 BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
     if (reason == DLL_PROCESS_ATTACH) {
         DisableThreadLibraryCalls(module);
         bof3::LogOpen(module);
         bof3::Log("bof3x attached to process %lu", GetCurrentProcessId());
+        // The build a log came from (docs/releases/README.md "Symbols"): the
+        // release's binaries carry no debug information, so the log names the
+        // build whose kept symbols name its addresses.
+        bof3::Log("build: %s", BOF3X_VERSION_TAG);
         bof3::DetectHost();
         if (bof3::IsExeHost()) return TRUE;   // Engine_Main does the rest
         bof3::VerifyImage();

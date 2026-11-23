@@ -59,6 +59,7 @@
 #include "hook/wav_dump.h"
 #include "hook/write_watch.h"
 #include "os/os.h"
+#include "version.gen.h"
 
 #if !defined(__x86_64__)
 #error "exe_host_posix.cpp: the Linux exe host is the 64-bit build alone (the import slots' thunks, bind.h)"
@@ -800,6 +801,14 @@ int main(int argc, char** argv) {
     LogOpen(module);
     Log("bof3x started as process %u (the ELF at 0x%llX..0x%llX)", os::ProcessId(), static_cast<unsigned long long>(self.base),
         static_cast<unsigned long long>(self.base + self.extent));
+    {
+        // The build a log came from (docs/releases/README.md "Symbols"): the
+        // tag, and this ELF's GNU build id, which a strip keeps. Two builds
+        // of one tag differ by it.
+        std::string build_id;
+        const bool has = os::ModuleBuildId(reinterpret_cast<const void*>(&Anchor), &build_id);
+        Log("build: %s, build id %s", BOF3X_VERSION_TAG, has ? build_id.c_str() : "none");
+    }
     // Step 1's proof: ImageBase() is a Fatal when it is read unset
     // (image_base.h), and every namespace-scope table that places an address
     // ran before main; reaching this line means each read the base the

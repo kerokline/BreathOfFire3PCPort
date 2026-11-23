@@ -15,6 +15,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <string>
 #include <vector>
 
 namespace bof3::os {
@@ -46,5 +47,15 @@ bool ModuleImage(const void* inside, ModuleImageInfo* out);
 // asks for one (wav_dump.cpp, for DSOUND.dll's #1) is asking about a Windows
 // module and answers itself from the null.
 void* ModuleExportByOrdinal(const char* name, unsigned ordinal);
+
+// The build id of the module that holds the address `inside`, as lowercase
+// hex: the name of the one build a file came from, which a strip of its debug
+// information keeps (the log's "build:" line; docs/releases/README.md
+// "Symbols"). POSIX: the linker's GNU build-id note (NT_GNU_BUILD_ID), read
+// from the loaded object's PT_NOTE segments. False when no module holds the
+// address or it carries no such note. On Windows always false: a PE has no
+// such note, and nothing asks for one there - a Windows build is named by its
+// tag and, in a quicksave, by the DLL's file hash (hook/snapshot.cpp).
+bool ModuleBuildId(const void* inside, std::string* hex);
 
 }  // namespace bof3::os
