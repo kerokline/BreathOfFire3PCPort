@@ -103,7 +103,14 @@ and **before the signing** (a strip after Authenticode breaks the signature):
 names the tag (`v0.1.0-beta.2`, or `latest-<commit>`), and on Linux the ELF's
 GNU build id, which the strip keeps. Take that tag's symbols zip; for a
 Linux log, `python tools/crash_report.py --log bof3x.log --elf <the zip's
-bof3x>` names the engine's addresses by `addr2line`. A `latest` build's
+bof3x>` names the engine's addresses by `addr2line`; for a Windows log or
+minidump, `--dll <the zip's bof3x.dll>` names the addresses inside
+`bof3x.dll` the same way. Both were tried from the downloads of "latest" at
+3398f7bb (2026-11-23, a fault made with `BOF3X_CRASH_TEST=0`): the symbols
+zip gave the function, the file and the line (`crash_win32.cpp:175`,
+`crash_posix.cpp:296`); the player's stripped file gave the function alone.
+The report of that fault had no stack line inside the DLL, so the naming of
+stack words by `--dll` has not been seen on a real report. A `latest` build's
 symbols are replaced with the build, so a report against an older `latest`
 needs a rebuild of that commit (same toolchain, same tag: the layout is the
 same).
@@ -133,7 +140,12 @@ the zips (`make_release.py --version latest-<commit>`) replace the ones there,
 and the notes name the commit and the time. It is published, not a draft -
 it is the download link for current builds (the owner's ask) - and never
 marked GitHub's latest release, so a published `v*` release keeps that. No
-notes file is needed; a newer push cancels a latest build still running. A
+notes file is needed; a newer push cancels a latest build still running,
+but not one that is publishing: job `publish` (the draft, or the files, the
+tag and the notes of "latest") is outside the group a push cancels, so
+"latest" is never left with one build's tag and another's files
+(2026-11-23). A run whose commit is older than what "latest" holds by then
+does not publish. A
 `v*` tag still makes a draft as in "Cutting one" above. The repository is
 public, so the latest build is too.
 

@@ -37,8 +37,13 @@ run". **What ran on GitHub:** the pull request's checks, the Linux job among the
 (`gh attestation verify`), the layout and the libraries are right, and the launcher's `--check` passes from the unpacked
 tarball in the WSL. One defect, fixed that day: the ELF carried the default tag `v0.1.0`, not the release's
 (`linux-build.sh configure` got no tag). The same day the downloads of both systems lost their debug information to
-symbols zips and the log gained a `build:` line ([`releases/README.md`](releases/README.md) "Symbols"). **Not seen yet:**
-a `release.yml` run with the tag and the strip - read the first one, and its downloads. **Not done:** no person has seen the Linux picture and nothing ran on a GPU, a real desktop or a sound device
+symbols zips and the log gained a `build:` line ([`releases/README.md`](releases/README.md) "Symbols"). **That run, read the same
+day** (45231155748, "latest" at 3398f7bb): the 64-bit strip, the signing after the strip (`bof3x.dll` and the launcher
+`Valid` to Windows) and the three symbols zips; the win zip 45.0 MB where it was 74.6, the tarball 14.2 where it was 39.1;
+a made fault on each system named from its symbols zip ([`releases/README.md`](releases/README.md) "Symbols"). **Found,
+not fixed:** Windows reports `bof3x.exe` (written by `tools/make_exe.py`, signed by jsign) as `NotSigned`, in this
+download and in beta.1's, though `make_exe.py --verify-only` says "signed". **Not seen yet:** `release.yml` with job
+`publish` (2026-11-23: the publish out of a newer push's reach) - read its first run. **Not done:** no person has seen the Linux picture and nothing ran on a GPU, a real desktop or a sound device
 (group D3, with the tarball: frost's machine or a tester's); the banner fault's twin on 64-bit Windows was never looked
 for, and that build ran no route with the fixes; the PSP install in the WSL had no effects, voices or logo movie (no
 `ffmpeg` there); a build on `ubuntu-24.04` needs glibc 2.38 or newer.
