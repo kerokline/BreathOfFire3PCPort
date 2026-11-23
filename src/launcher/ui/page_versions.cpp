@@ -117,12 +117,16 @@ void SuiteRows(Pages& p, std::size_t i, float y, float why_y, float why_h) {
     int shown = choice >= 0 ? choice : s.side == SuiteSide::kPsx ? 0 : s.side == SuiteSide::kPsp ? 1 : -1;
     const std::string id = s.info->id;
     const std::string psx_why = PagesText(s.psx_why), psp_why = PagesText(s.psp_why);
+    // The preset (Preset page) sets this suite at the PSP's side when the game starts.
+    const bool preset = PresetSets(PagesPresetPlan(p), id);
     Place(Dx(50), Dy(y - 1));
-    if (!s.psx_enabled) Grey(psx_why.c_str());
+    if (preset) Grey(kPresetGreyReason);
+    else if (!s.psx_enabled) Grey(psx_why.c_str());
     if (Radio(((s.psp_base ? "PlayStation" : "PlayStation (base)") + std::string("##") + id + "-psx").c_str(), &shown, 0))
         choice = 0;
     Place(Dx(156), Dy(y - 1));
-    if (!s.psp_enabled) Grey(psp_why.c_str());
+    if (preset) Grey(kPresetGreyReason);
+    else if (!s.psp_enabled) Grey(psp_why.c_str());
     if (Radio(((s.psp_base ? "PSP (base)" : "PSP") + std::string("##") + id + "-psp").c_str(), &shown, 1))
         choice = 1;
 

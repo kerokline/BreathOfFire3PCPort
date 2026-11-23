@@ -270,7 +270,7 @@ close box after the same change left the ini byte for byte.
 | (Window size, removed 2026-09-23 evening) | `BOF3X_SCALE`, from `scale=` in the ini whenever it names 2..8, 2 included; an empty `scale=` sends nothing and the game follows the display's scale (DIV-0036). Written back as read, empty when not named. Until 2026-10-28 it was sent only when not 2 and written back as `scale=2` for every player, so the ini could not fix k = 2 (D395) | the first window's size only, until the game saves `bof3x.window` (DIV-0042) |
 | Keep running unfocused (2026-09-23) | `BOF3X_BACKGROUND=0` when off | ours — DIV-0033 |
 | The player's switch (2026-10-28; the ini only, no control of its own; since 2026-11-14 New Game's two boxes, below, edit it for their names): the changes to turn off, by their code names | `off=` in the ini, **empty by default** (none off), kept as written and written back as read; handed over as `BOF3X_OFF` to either host unless the environment sets it | ours - the ledger-fields round's stage D; section 3.2 below |
-| Preset (2026-10-28, Settings, Preset): Recommended, As shipped, Repaired, PlayStation | `preset=recommended` (the default), `shipped`, `repaired` or `playstation` in the ini, always written; another value is the default, said on stderr. Applied at launch on top of the ini, which it does not rewrite: its code names into `BOF3X_OFF` with `off=`, its ini values in place of the ini's, its env values where the environment has none; `BOF3X_PRESET` to the game, which logs it | ours - the ledger-fields round's stage D; section 3.3 below |
+| Preset (2026-10-28, Settings, Preset): Recommended, As shipped, Repaired, PlayStation, PSP (2026-11-23) | `preset=recommended` (the default), `shipped`, `repaired`, `playstation` or `psp` in the ini, always written; another value is the default, said on stderr. Applied at launch on top of the ini, which it does not rewrite: its code names into `BOF3X_OFF` with `off=`, its ini values in place of the ini's, its env values where the environment has none; PSP also sets the 16:9 picture, the three suites and the music; `BOF3X_PRESET` to the game, which logs it | ours - the ledger-fields round's stage D; section 3.3 below |
 | Controls... (2026-09-24): fourteen rows, two key cells and two pad cells each - click a cell and press the key or pad input, Escape cancels, Clear empties - the face-button layout | `key.NAME=action` and `pad.NAME=action` lines in the ini; `BOF3X_KEYS` / `BOF3X_PAD` when they differ from the default | ours — DIV-0050; [`controls.md`](controls.md) §4.2. Unset, the DLL leaves the game's own key table (`BOF3.CFG` lines 3+ or its default) and uses the default pad map |
 | Function keys (2026-11-18, Controls, the third sub-page; the owner's call): nine rows, an action of the game each - labels "Double speed: on or off", "Row above the text: show or hide", "Quicksave list: open or close", "Make a quicksave", "Load the newest quicksave", "Full screen or window", "Pause (twice: go to the title)" (note "Title: exit"), "Save the picture to a file" (note "For tests"), "Save in the first save slot" (note "Capcom's key") - a Keyboard cell and a Pad cell each, the capture of the other two pages (F10 and Alt refused: they never reach the game), Defaults for this page. A key or pad input that does two or more things, on any of the three pages, has red text in every cell that holds it | `fkey.ACTION=KEY` and `fpad.ACTION=INPUT` lines (actions `speed`, `reading_rows`, `quick_menu`, `quicksave`, `quickload`, `window`, `pause`, `picture`, `save_write`; a key name or `none`, a pad input's name or `none`), written only once the ini had one or the page was changed; a line not understood said on stderr and left out. `BOF3X_FKEYS` (the same items, comma-separated) when the table differs from the defaults with `ruby_key=`'s key, unless the environment sets it; not read by the game under `BOF3X_INPUT` or `BOF3X_RECORD`. The page keeps `ruby_key=` in step when it puts the row above the text on an F key or none | ours - the function keys' entry (numbered at its merge); [`controls.md`](controls.md) §7 |
 
@@ -482,9 +482,10 @@ build a code name in both `BOF3X_ORIGINAL` and `BOF3X_OFF` is logged as
 read from the ledger's switch fields ([`DIVERGENCE.md`](DIVERGENCE.md)
 "The switch fields") through the generated table
 `src/launcher/ledger_registry.h`: the owner's call 2 of 2026-10-27, four
-presets ([`ledger-fields-round.md`](ledger-fields-round.md) section 5). A
-preset only ever turns changes **off**, by their `Switch:` names; it never
-turns one on.
+presets ([`ledger-fields-round.md`](ledger-fields-round.md) section 5), and a
+fifth, PSP, of the owner's calls of 2026-11-23. A preset turns changes
+**off**, by their `Switch:` names; it never turns an entry on. PSP alone also
+**sets** settings (below, "What the PSP preset sets").
 
 | Preset | `preset=` | Turns off |
 |---|---|---|
@@ -492,14 +493,15 @@ turns one on.
 | As shipped | `shipped` | every change a player can turn off (`Player: yes`, `Default: on`, `State: active`) |
 | Repaired | `repaired` | those of them whose tier is Sensible or Extension; the repairs (Intent) and Forced stay |
 | PlayStation | `playstation` | those of them whose `Toward:` names a release and not `psx` (today DIV-0123 alone); `Toward: none` stays (the owner, 2026-10-28) |
+| PSP (2026-11-23) | `psp` | those of them whose `Toward:` names a release and not `psp` (10 under `original` on the ledger of 2026-11-23: DIV-0080, 0087, 0150, 0152, 0163, 0164, 0167, 0174, 0175, 0182); `Toward: none` stays, as under PlayStation. It also sets the settings below |
 
 Under every preset: an entry whose `Languages:` omits the language played is
 not used with it and is left; a `Switch: lang` entry follows the language
 box, which no preset changes; a `Player: costly` entry is listed as "this
 build cannot turn it off" (the owner's call 4); a `Player: never` entry
 (Forced, or one-way) stays on; a `Default: off` entry that the preset would
-keep on (Repaired: Intent and Forced; PlayStation: `psx`) is listed as "also
-available", for the player to turn on. `python tools/ledger_registry.py
+keep on (Repaired: Intent and Forced; PlayStation: `psx`; PSP: `psp`) is
+listed as "also available", for the player to turn on. `python tools/ledger_registry.py
 presets [--language <tag>|original]` prints the same lists, and the launcher
 host tests compare the two for `original` and `en-US`
 (`tools/launcher_host/presets_<language>.tsv`, made by its `--tsv`;
@@ -538,6 +540,45 @@ dialog, for the language the game is given:
   value of the same preset decides - `music=pc` sends `BOF3X_MUSIC=pc`, so
   DIV-0150's `BOF3X_MUSIC=seq` is not set (where `music=pc` is not on this
   install, `seq` is).
+
+**What the PSP preset sets** (the owner's calls of 2026-11-23;
+`PresetPspSets` in `src/launcher/config.cpp`, the plan's `sets`). No other
+preset sets a setting. At launch, on top of the ini, after the entries'
+`ini:` values and before their `env:` values:
+
+- **`wide=1`**, the 16:9 picture, 426 x 240 (DIV-0041; not 21:9, `wide=2`,
+  nor 16:10, `wide=3`).
+- **each of the three suites at the PSP's side**, written as the Graphics and
+  audio and the Data pages write that choice: `opt=` through `SuitesOptEdit`
+  and `psp=` through `SuitesPspEdit`, with every suite chosen PSP. `opt=` is
+  edited from the `opt=` the entries left - DIV-0080's `opt=none` over an
+  empty `opt=`, so `area4-walls` stays off - or else from the ini's. A suite
+  on a PSP base is the base already and writes nothing ("already").
+- **`music=psp`**, the Music page's PSP source (DIV-0150). It takes the place
+  of DIV-0087's `music=pc`, whose switch is then listed as kept, and it
+  decides `BOF3X_MUSIC`, so DIV-0150's `BOF3X_MUSIC=seq` is kept too.
+
+A suite whose PSP side this install cannot play (no PSP disc among the cache's
+sources, or its layers not built), and the music where the cache has no PSP
+songs, are left as they are and listed as *not on this install*, with the
+suites' own reason; a member of a set suite that the PSP side cannot play here
+is listed under it. A setting whose variable the environment has
+(`BOF3X_WIDE`, `BOF3X_OPT`, `BOF3X_PSP`, `BOF3X_MUSIC`) is *kept*. Nothing
+here stops the start. The set ones are ini values of the plan, so their
+controls are grey: the Widescreen box, each set suite's two radio buttons,
+and the Music box. The Preset page lists them under "Set when the game
+starts", and stderr has one line for each.
+
+The Preset box greys the PSP entry, with the reason after its label, when the
+install has no PSP source at all: no suite's PSP side and no PSP music
+(`ConfigPresetWhyNot`). An ini that names `preset=psp` there still reads it;
+the sentence under the box then says what is missing, and the launch applies
+what the install can take (the entries and the 16:9 picture).
+
+The preset follows this project's measurements of the PSP version: the
+entries whose `Toward:` names `psp` (the audit of 2026-11-23 in
+[`DIVERGENCE.md`](DIVERGENCE.md)) and the suites the importer builds. Its
+sentence says so.
 
 **`BOF3X_PRESET`** goes to the game with the preset's name; the game logs it
 once, beside the language (`src/game/dat_load.cpp`: `preset      shipped

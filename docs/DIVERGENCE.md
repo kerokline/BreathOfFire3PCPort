@@ -96,7 +96,7 @@ ledger stays trustworthy.
 ### The switch fields
 
 The last six lines are for a tool, not a reader: a preset ("As shipped",
-"Repaired", "Recommended", "PlayStation") is built from them, and
+"Repaired", "Recommended", "PlayStation", "PSP") is built from them, and
 `tools/ledger_check.py` checks them. `Reversible?` stays the prose it is and
 says the same thing for a person. Each field is **one line**, its value
 first; an optional " - <clause>" after the value says why where the value is
@@ -180,7 +180,18 @@ unused loop) or not measured. `psx` cites the entry's "Also in the PSX
 version?" line and rationale; `psp` only a PSP twin read, a PSP round's
 entry, or a capture of the PSP drawing the entry's own case (DIV-0160,
 DIV-0184). The list never claims more than was measured. The "PlayStation"
-preset turns on every entry that lists `psx`.
+preset turns on every entry that lists `psx`, and the "PSP" preset (the
+owner's calls of 2026-11-23) every entry that lists `psp`; each turns off an
+entry whose list names a release and not its own, and leaves `none`.
+
+The list names platforms, not regions. Where a behaviour belongs to one
+region's releases - a localization change the Western discs and PSP-EU
+share and the Japanese releases lack, or a fix the Western PlayStation
+discs alone received - the clause says so and begins that part with
+`region-specific`, naming each release read (the PSP audit of 2026-11-23:
+DIV-0017, DIV-0060, DIV-0061, DIV-0083, DIV-0166; DIV-0152, DIV-0163,
+DIV-0175). A region tag, if the presets ever need one, starts from those
+clauses.
 
 **`Languages:`** the languages under which the entry's new behaviour acts,
 so that the launcher's language pick selects the entries that belong to it
@@ -875,7 +886,7 @@ designed in rather than bolted on.
 - **Switch:** SpriteFarEdge
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=SpriteFarEdge (ini off=)
-- **Toward:** psx - the PlayStation's GPU copies a sprite texel for texel, the last as wide as the first (above)
+- **Toward:** psx, psp - the PlayStation's GPU copies a sprite texel for texel, the last as wide as the first (above); the PSP too by the owner's rule of 2026-11-23: a repair of the port's picture or timing restores what both consoles show (the PSP's own display not read)
 - **Languages:** any
 - **State:** active
 - **Checked:** attract run, no crash, oracle unaffected (render only);
@@ -925,7 +936,7 @@ designed in rather than bolted on.
 - **Switch:** Menu_DrawFrame
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=Menu_DrawFrame (ini off=)
-- **Toward:** psx - the PlayStation draws the frame (above)
+- **Toward:** psx, psp - the PlayStation draws the frame (above); the PSP too (read 2026-11-23): its Config panel (PSP-JP `0xC05AC`, PSP-EU `0xC042C`) and reserve list (PSP-JP `0xC78EC`) call a full frame draw
 - **Languages:** any
 - **State:** active
 - **Checked:** start-up validates both call sites (`retarget ON` lines), and
@@ -1308,7 +1319,7 @@ designed in rather than bolted on.
 - **Switch:** ConfigText
 - **Default:** on - under its languages
 - **Player:** yes - BOF3X_OFF=ConfigText (ini off=)
-- **Toward:** psx - the PlayStation's behaviour (above)
+- **Toward:** psx, psp - the PlayStation's behaviour (above); region-specific, a Western localization change (read 2026-11-23): the US disc and PSP-EU reckon the selected row at 8 a letter through the large text draw (PSP-EU `0xC06D0`); the JP disc and PSP-JP reckon 12 a character, as the PC
 - **Languages:** en-US, en-150, fr-FR, de-DE - `Lang_Latin` (`src/game/config_text.cpp:403`)
 - **State:** active
 - **Checked:** builds and links; the two call sites and both byte patches are
@@ -1786,7 +1797,7 @@ designed in rather than bolted on.
 - **Switch:** GlyphTexelCentres
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=GlyphTexelCentres (ini off=)
-- **Toward:** psx - the PlayStation's GPU samples whole texels and has no such edge (above)
+- **Toward:** psx, psp - the PlayStation's GPU samples whole texels and has no such edge (above); the PSP too by the owner's rule of 2026-11-23: a repair of the port's picture or timing restores what both consoles show (the PSP's own display not read)
 - **Languages:** any
 - **State:** active
 
@@ -2034,7 +2045,7 @@ designed in rather than bolted on.
 - **Switch:** MusicFadePerFrame
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=MusicFadePerFrame (ini off=)
-- **Toward:** psx - the PlayStation counts its fades in frames (above)
+- **Toward:** psx, psp - the PlayStation counts its fades in frames (above); the PSP too (read 2026-11-23): its crescendo and decrescendo take the same count and run it as count / 60 s (PSP-JP `0x9E87C` / `0x9E9EC`, the rate set at PSP-JP `0x94D24`); the ramp's stepping not read. Open, from the audit: a count run at 60 a second is half the time of a step each logic frame, on the PSP and, if the PlayStation's library counts the same way, there too - not settled against this entry's own measurement
 - **Languages:** any
 - **State:** active
 
@@ -3836,7 +3847,7 @@ designed in rather than bolted on.
 - **Switch:** env:BOF3X_FRAME_MS=33.334 - the port's period on the double deadline (`src/game/win_main.cpp` `Game_WinMain`); `Game_WinMain` also restores the float but takes DIV-0048 with it
 - **Default:** on
 - **Player:** yes
-- **Toward:** psx - the rate is the PlayStation's ("Also in the PSX version?" above)
+- **Toward:** psx, psp - the rate is the PlayStation's ("Also in the PSX version?" above); the PSP too by the owner's rule of 2026-11-23: a repair of the port's picture or timing restores what both consoles show (the PSP's own display not read)
 - **Languages:** any
 - **State:** active
 
@@ -4695,7 +4706,7 @@ designed in rather than bolted on.
 - **Switch:** BattleResultExpLayout
 - **Default:** on - under its languages
 - **Player:** yes - BOF3X_OFF=BattleResultExpLayout (ini off=)
-- **Toward:** psx - the US version's layout, read by eye off the owner's photograph
+- **Toward:** psx, psp - the US version's layout, read by eye off the owner's photograph; region-specific, a Western localization change (read 2026-11-23): PSP-EU draws the US order (the EXP at `0x50`, the sentence at `0x85`, the next level at `0x118`; PSP-EU `0x14B340`..`0x14B3D4`), the sentence and the level within 4 units of the by-eye positions, the EXP 26 units right of them; the JP disc and PSP-JP keep the JP layout, as the PC
 - **Languages:** en-US, en-150, fr-FR, de-DE - `Lang_Latin` (`src/game/battle_result.cpp:487`)
 - **State:** active
 
@@ -4750,7 +4761,7 @@ designed in rather than bolted on.
 - **Switch:** BattleBannerCentre
 - **Default:** on - under its languages
 - **Player:** yes - BOF3X_OFF=BattleBannerCentre (ini off=)
-- **Toward:** psx - the US draw centres on the letters' width; the small box stays the port's (the amendment)
+- **Toward:** psx, psp - the US draw centres on the letters' width; the small box stays the port's (the amendment); region-specific, a Western localization change (read 2026-11-23): PSP-EU's banner is the US draw, the medium box always and the text at x + 0x26 - 4 n (PSP-EU `0x1DD774`); the JP disc and PSP-JP have the JP draw, as the PC
 - **Languages:** en-US, en-150, fr-FR, de-DE - `Lang_Latin` (`src/game/battle_win_states.cpp:541`)
 - **State:** active
 
@@ -5387,7 +5398,7 @@ designed in rather than bolted on.
 - **Switch:** BattleEquipLabelsRow - `PatchBytes`, `src/game/battle_e7.cpp` `BattleE7_Inject`; `BattleEquipWin_Draw` (the prose's) leaves the whole window to Capcom
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=BattleEquipLabelsRow (ini off=)
-- **Toward:** psx - ours does what the PlayStation's equip window does ("Also in the PSX version?" above)
+- **Toward:** psx, psp - ours does what the PlayStation's equip window does ("Also in the PSX version?" above); the PSP too (read 2026-11-23): it draws the labels at y + 0x1A + 13 k (PSP-JP `0x14F3E4`, PSP-EU `0x14F34C`)
 - **Languages:** any
 - **State:** active
 
@@ -6296,7 +6307,7 @@ designed in rather than bolted on.
 - **Switch:** SaveSummaryRecord0 - `PatchBytes`, `src/game/rest_2c.cpp` `Rest2C_Inject`; `Save_BuildBlock` (the prose's) leaves the whole builder to Capcom
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=SaveSummaryRecord0 (ini off=)
-- **Toward:** psx - the PlayStation's builder names and levels record 0 ("Also in the PSX version?" above)
+- **Toward:** psx, psp - the PlayStation's builder names and levels record 0 ("Also in the PSX version?" above); the PSP too (read 2026-11-23): its builder names and levels record 0 (PSP-JP `0x1F3D0C`, PSP-EU `0x1F39F8`)
 - **Languages:** any
 - **State:** active
 
@@ -6337,7 +6348,7 @@ designed in rather than bolted on.
 - **Switch:** env:BOF3X_TILE1=0 - read by `src/game/d3d_rest.cpp` `D3dRest_Inject`, which then leaves `Tile1Quad` unpatched
 - **Default:** on
 - **Player:** yes
-- **Toward:** psx - the PlayStation's GPU drew a TILE_1 as one of its own pixels
+- **Toward:** psx, psp - the PlayStation's GPU drew a TILE_1 as one of its own pixels; the PSP too by the owner's rule of 2026-11-23: a repair of the port's picture or timing restores what both consoles show (the PSP's own display not read)
 - **Languages:** any
 - **State:** active
 
@@ -6432,7 +6443,7 @@ designed in rather than bolted on.
 - **Switch:** env:BOF3X_LINES=0 - read by `src/game/d3d_lines.cpp` `Arm`, which then leaves `LinesWide` unpatched
 - **Default:** on
 - **Player:** yes
-- **Toward:** psx - the PlayStation's GPU drew lines in its own pixels
+- **Toward:** psx, psp - the PlayStation's GPU drew lines in its own pixels; the PSP too by the owner's rule of 2026-11-23: a repair of the port's picture or timing restores what both consoles show (the PSP's own display not read)
 - **Languages:** any
 - **State:** active
 
@@ -6554,7 +6565,7 @@ designed in rather than bolted on.
 - **Switch:** ini:opt=none - with the launcher's default list, `area4-walls` alone (`src/launcher/config.h` `kOptDefault`), this takes off this layer and nothing else
 - **Default:** on - wherever the player's Western disc built the layer
 - **Player:** yes
-- **Toward:** psx - the Western PlayStation discs' walls and placement cells; the PSP took the walls but not the placement half
+- **Toward:** psx - the Western PlayStation discs' walls and placement cells; the PSP took the walls but not the placement half; not the PSP in full, by [`region-diff.md`](region-diff.md) 8.1 and 8.2 (cited 2026-11-23, not measured again): it took the walls and not the placement half
 - **Languages:** any
 - **State:** active
 
@@ -6693,7 +6704,7 @@ designed in rather than bolted on.
 - **Switch:** env:BOF3X_MUSIC_LOOPS=0
 - **Default:** on
 - **Player:** yes
-- **Toward:** psx - the disc's sequence loops at these points
+- **Toward:** psx, psp - the disc's sequence loops at these points; the PSP too (read 2026-11-23): its sequences carry their loop markers at the PlayStation's ticks in 157 of 167 songs, 9 have none on either side and song 157 moves with a changed tempo; its player's looping not read
 - **Languages:** any
 - **State:** active
 - **The owner's stance (2026-10-08):** the disc's music by default wherever
@@ -6795,7 +6806,7 @@ designed in rather than bolted on.
 - **Switch:** MasterPupilLabel
 - **Default:** on - under its languages
 - **Player:** yes - BOF3X_OFF=MasterPupilLabel (ini off=)
-- **Toward:** psx - the PlayStation's layout brought back
+- **Toward:** psx, psp - the PlayStation's layout brought back; region-specific, a Western localization change (read 2026-11-23): the US disc and PSP-EU draw no label box (PSP-EU `0x1FF7C0`); the JP disc (JP SHOP `0x801E4D5C`) and PSP-JP (`0x1FFA4C`) draw it, as the PC
 - **Languages:** en-US, en-150, fr-FR, de-DE - `Lang_Latin` (`src/game/rest_2h.cpp:882`)
 - **State:** active
 
@@ -6832,7 +6843,7 @@ designed in rather than bolted on.
 - **Switch:** FormationNameCentre
 - **Default:** on - under its languages
 - **Player:** yes - BOF3X_OFF=FormationNameCentre (ini off=)
-- **Toward:** psx - the PlayStation's own placement brought back
+- **Toward:** psx, psp - the PlayStation's own placement brought back; the PSP too (read 2026-11-23): it centres the same way (PSP-JP `0xBD280`, PSP-EU `0xBD0F8`), and so does the JP disc (JP START `0x801DCC54`)
 - **Languages:** en-US, en-150, fr-FR, de-DE - `Lang_Latin` (`src/game/field_o.cpp:1319`)
 - **State:** active
 
@@ -7150,7 +7161,7 @@ designed in rather than bolted on.
 - **Switch:** ini:music=pc - `music=mp3` is read as `pc` (`src/launcher/config.cpp` `ConfigMusicSource`); an empty `music=` is `psx`
 - **Default:** on - wherever the player has a cache
 - **Player:** yes
-- **Toward:** psx - the PlayStation's player on the PlayStation's data
+- **Toward:** psx - the PlayStation's player on the PlayStation's data; not the PSP, by DIV-0105 and [`psp-music.md`](psp-music.md) (cited 2026-11-23, its player not read): it sequences its own re-authored songs and banks on its own player (DIV-0105)
 - **Languages:** any
 - **State:** active
 
@@ -7603,7 +7614,7 @@ designed in rather than bolted on.
 - **Switch:** AreaTrackFallback
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=AreaTrackFallback (ini off=)
-- **Toward:** psx - the PlayStation resumes the area's song after a battle; after an event battle it starts it from the top, which ours does not ("Also in the PSX version?" above)
+- **Toward:** psx, psp - the PlayStation resumes the area's song after a battle; after an event battle it starts it from the top, which ours does not ("Also in the PSX version?" above); the PSP too (read 2026-11-23): its battle start and end pause, save, restore and replay the field's sequence and fade it in over 8 frames (PSP-JP `0x74D0`, `0x78AC`; PSP-EU `0x7E44`, `0x8220`)
 - **Languages:** any
 - **State:** active
 
@@ -9578,7 +9589,7 @@ designed in rather than bolted on.
 - **Switch:** EncounterOnScreenLowerBounds
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=EncounterOnScreenLowerBounds (ini off=)
-- **Toward:** psx - the PlayStation's unsigned bounds test
+- **Toward:** psx, psp - the PlayStation's unsigned bounds test; the PSP too (read 2026-11-23): it masks the corner to 16 bits before the signed compare, so a negative corner is refused (PSP-JP `0x143278`, PSP-EU `0x143044`)
 - **Languages:** any
 - **State:** active
 
@@ -10077,7 +10088,7 @@ designed in rather than bolted on.
 - **Switch:** env:BOF3X_FBGRAB=0
 - **Default:** on
 - **Player:** yes - read by `src/render/fb_grab.cpp` in both hosts
-- **Toward:** psx - what the PlayStation's GPU draws
+- **Toward:** psx, psp - what the PlayStation's GPU draws; the PSP too by the owner's rule of 2026-11-23: a repair of the port's picture or timing restores what both consoles show (the PSP's own display not read)
 - **Languages:** any
 - **State:** active
 - **Amended 2026-10-25 (issue #142, the owner's `minecartToZombieDragon` recipe):** a
@@ -10145,7 +10156,7 @@ designed in rather than bolted on.
 - **Switch:** DiagonalIdentity
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=DiagonalIdentity (ini off=)
-- **Toward:** psx - the PlayStation twin stores 0x1000
+- **Toward:** psx, psp - the PlayStation twin stores 0x1000; the PSP too (read 2026-11-23): its twin stores 0x1000 on the diagonal (PSP-JP `0x9C568`, PSP-EU `0x9C2F4`)
 - **Languages:** any
 - **State:** active
 
@@ -10540,7 +10551,7 @@ designed in rather than bolted on.
 - **Switch:** FishPanelDuck
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=FishPanelDuck (ini off=)
-- **Toward:** psx - the PlayStation ducks
+- **Toward:** psx, psp - the PlayStation ducks; the PSP too (read 2026-11-23): its panel calls the same decrescendo and crescendo by 20 over 16 (PSP-JP `0xE13E0`, `0xE50DC`, and `0xE5480` in its own fishing mode)
 - **Languages:** any
 - **State:** active
 
@@ -10723,7 +10734,7 @@ designed in rather than bolted on.
 - **Switch:** WorldMapLegend
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=WorldMapLegend (ini off=)
-- **Toward:** psx - the PlayStation draws the glyph of the button the save holds
+- **Toward:** psx, psp - the PlayStation draws the glyph of the button the save holds; the PSP too (read 2026-11-23): its legend draws the glyph of the button the Config holds from its own key sheet (PSP-JP `0x2279B8`, PSP-EU `0x2277D0`)
 - **Languages:** any
 - **State:** active
 
@@ -11301,7 +11312,7 @@ designed in rather than bolted on.
 - **Switch:** SpriteCapture
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=SpriteCapture (ini off=)
-- **Toward:** psx - "Also in the PSX version?" says this is what the PlayStation does
+- **Toward:** psx, psp - "Also in the PSX version?" says this is what the PlayStation does; the PSP too (read 2026-11-23): its `Actor_Task` tests `+0x24` bit 3 and sets the PlayStation's draw area (0x340, 0x100, 0xC0, 0x100) for it (PSP-JP `0x1D40`, PSP-EU `0x26AC`); its off-screen shift is its own, and what its renderer does with the draw area was not read
 - **Languages:** any
 - **State:** active
 
@@ -11364,7 +11375,7 @@ designed in rather than bolted on.
 - **Switch:** AreaKeepStoppingNone
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=AreaKeepStoppingNone (ini off=)
-- **Toward:** psx - "Also in the PSX version?" says this is what the PlayStation does
+- **Toward:** psx, psp - "Also in the PSX version?" says this is what the PlayStation does; the PSP too (read 2026-11-23): its stop leaves the current track alone and its play skips the equal track (PSP-JP `0x951C0`, `0x95B70`; PSP-EU `0x94F38`, `0x958EC`); the scene's own call site not read
 - **Languages:** any
 - **State:** active
 
@@ -11736,7 +11747,7 @@ designed in rather than bolted on.
 - **Switch:** EventBattleKeepsMusic
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=EventBattleKeepsMusic (ini off=)
-- **Toward:** psx - the PlayStation's behaviour brought back ("Also in the PSX version?" above)
+- **Toward:** psx, psp - the PlayStation's behaviour brought back ("Also in the PSX version?" above); the PSP too (read 2026-11-23): its battle start names no song (PSP-JP `0x74D0`); its event-battle records not compared
 - **Languages:** any
 - **State:** active
 
@@ -11818,7 +11829,7 @@ designed in rather than bolted on.
 - **Switch:** env:BOF3X_MUSIC=seq - set before the launcher, which keeps it; no ini value asks for it (`ConfigMusicSource` maps `music=seq` to a source, `src/launcher/config.cpp:781`)
 - **Default:** on
 - **Player:** yes - a variable the launcher sets and the game reads (`src/game/music_seq.cpp:438`)
-- **Toward:** psx - at the launcher's default source the PlayStation's recordings play first, where the PC port played its own
+- **Toward:** psx - at the launcher's default source the PlayStation's recordings play first, where the PC port played its own; not the PSP, by DIV-0105, DIV-0109 and DIV-0110 (cited 2026-11-23, no code read): it plays its own sequences and streams, which is the `psp` source (DIV-0105, DIV-0109, DIV-0110)
 - **Languages:** any
 - **State:** active
 
@@ -11931,7 +11942,7 @@ designed in rather than bolted on.
 - **Switch:** PadReset
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=PadReset (ini off=)
-- **Toward:** psx - the Western discs' pad reset; the Japanese disc has none
+- **Toward:** psx - the Western discs' pad reset; the Japanese disc has none; region-specific on the PlayStation and on no PSP (read 2026-11-23): the four Western discs have the pad reset, the JP disc has none, and neither PSP build has one, PSP-EU included (frame loop PSP-JP `0x280`, PSP-EU `0xBF0`: no 0x900 test, task 0 made from the boot task once)
 - **Languages:** any
 - **State:** active
 
@@ -12580,7 +12591,7 @@ designed in rather than bolted on.
 - **Switch:** DirectOpaque - also disarms DIV-0160, which needs it
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=DirectOpaque (ini off=)
-- **Toward:** psx - the PlayStation draws every non-zero direct-colour texel
+- **Toward:** psx, psp - the PlayStation draws every non-zero direct-colour texel; the PSP too by the owner's rule of 2026-11-23: a repair of the port's picture or timing restores what both consoles show (the PSP's own display not read)
 - **Languages:** any
 - **State:** active
 
@@ -12684,7 +12695,7 @@ designed in rather than bolted on.
 - **Switch:** BattleDrawSigned
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=BattleDrawSigned (ini off=)
-- **Toward:** psx - the PlayStation draws them clipped
+- **Toward:** psx, psp - the PlayStation draws them clipped; the PSP too (read 2026-11-23): it stores the vertices as halfwords into the primitive (PSP-JP `0x14D644`, `0x122CD4`) and its packet translators read them signed (PSP-JP `0x9FF48`..`0xA1174`)
 - **Languages:** any
 - **State:** active
 
@@ -12718,7 +12729,7 @@ designed in rather than bolted on.
 - **Switch:** StoreAskWord
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=StoreAskWord (ini off=)
-- **Toward:** psx - the PlayStation reads the halfword
+- **Toward:** psx, psp - the PlayStation reads the halfword; the PSP too (read 2026-11-23): it reads the answer as a halfword (PSP-JP `0x135FA0`, PSP-EU `0x135CC4`)
 - **Languages:** any
 - **State:** active
 
@@ -12761,7 +12772,7 @@ designed in rather than bolted on.
 - **Switch:** BattleInitPickClear
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=BattleInitPickClear (ini off=)
-- **Toward:** psx - the US disc clears it; the JP disc is as the PC
+- **Toward:** psx - the US disc clears it; the JP disc is as the PC; region-specific on the PlayStation and on no PSP (read 2026-11-23): the US disc clears the flag (the European discs not read); the JP disc and both PSP builds, PSP-EU included, do not, as the PC (`Battle_Init` PSP-JP `0x120130`, PSP-EU `0x11FDA0`)
 - **Languages:** any
 - **State:** active
 ### The two sprite reach stores write the whole dword `+0x70`, as the PlayStation does
@@ -12797,7 +12808,7 @@ designed in rather than bolted on.
 - **Switch:** SpriteReachWord
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=SpriteReachWord (ini off=)
-- **Toward:** psx - the PlayStation stores the whole word
+- **Toward:** psx - the PlayStation stores the whole word; not the PSP (read 2026-11-23): its event op stores the whole word (PSP-JP `0x8B200`) but its bank setter keeps the upper bytes, as the PC (PSP-JP `0x2EA0`..`0x2ED4`)
 - **Languages:** any
 - **State:** active
 
@@ -12829,7 +12840,7 @@ designed in rather than bolted on.
 - **Switch:** MenuSignedXY
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=MenuSignedXY (ini off=)
-- **Toward:** psx - the PlayStation draws the fill to the edge
+- **Toward:** psx, psp - the PlayStation draws the fill to the edge; the PSP too (read 2026-11-23): its box stores x and y as halfwords (PSP-JP `0x9ADA4`) and its packet translators read the vertex signed (PSP-JP `0x9FF48`..`0xA1174`); which one the box reaches not traced
 - **Languages:** any
 - **State:** active
 
@@ -12858,7 +12869,7 @@ designed in rather than bolted on.
 - **Switch:** GeneNameNul
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=GeneNameNul (ini off=)
-- **Toward:** psx - the US disc terminates; the JP disc does not
+- **Toward:** psx, psp - the US disc terminates; the JP disc does not; region-specific, a Western localization change (read 2026-11-23): the US disc terminates the name and PSP-EU clears the 32-byte record before the copy, to the same end (PSP-EU `0x8CBE8`); the JP disc and PSP-JP do not, as the PC; the entry acts under every language
 - **Languages:** any
 - **State:** active
 ### A battle action's effect stops the sound-effect loops the last one left, as the PlayStation's key-off does
@@ -12898,7 +12909,7 @@ designed in rather than bolted on.
 - **Switch:** EffectKeyOff
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=EffectKeyOff (ini off=)
-- **Toward:** psx - the PlayStation's key-off ("Also in the PSX version?" above)
+- **Toward:** psx - the PlayStation's key-off ("Also in the PSX version?" above); not the PSP (read 2026-11-23): it keeps the loop of calls but its `SsUtKeyOffV` is an empty function (PSP-JP `0x9ECFC`, PSP-EU `0x9E9D0`), so it keys nothing off
 - **Languages:** any
 - **State:** active
 
@@ -12932,7 +12943,7 @@ designed in rather than bolted on.
 - **Switch:** MusicPlayRefusesNone
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=MusicPlayRefusesNone (ini off=)
-- **Toward:** psx - the PlayStation's twins refuse it
+- **Toward:** psx, psp - the PlayStation's twins refuse it; the PSP too (read 2026-11-23): both its twins refuse 0xFF (PSP-JP `0x95B90`, `0x95C90`)
 - **Languages:** any
 - **State:** active
 
@@ -13022,7 +13033,7 @@ designed in rather than bolted on.
 - **Switch:** InnNightPause
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=InnNightPause (ini off=)
-- **Toward:** psx - the PlayStation halts and resumes the song ("Also in the PSX version?" above)
+- **Toward:** psx, psp - the PlayStation halts and resumes the song ("Also in the PSX version?" above); the PSP too (read 2026-11-23): its inn night pauses the playing slots and replays them after the morning message (PSP-JP `0x1F1A8C`, `0x1F1CC8`); the resume point not heard
 - **Languages:** any
 - **State:** active
 
@@ -13073,7 +13084,7 @@ designed in rather than bolted on.
 - **Switch:** MoveB8Restart
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=MoveB8Restart (ini off=)
-- **Toward:** psx - the PlayStation's step ("Also in the PSX version?" above)
+- **Toward:** psx, psp - the PlayStation's step ("Also in the PSX version?" above); the PSP too (read 2026-11-23): its B8 makes the same stop, volume and play call (PSP-JP `0x90BE8` to `0x95118`)
 - **Languages:** any
 - **State:** active
 
@@ -13135,7 +13146,7 @@ designed in rather than bolted on.
 - **Switch:** SpriteVoicePosition
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=SpriteVoicePosition (ini off=)
-- **Toward:** psx - the PlayStation's positional sound ("Also in the PSX version?" above)
+- **Toward:** psx, psp - the PlayStation's positional sound ("Also in the PSX version?" above); the PSP too (read 2026-11-23): its screen update applies the same two laws through working replacements of the two Spu calls (PSP-JP `0x96B08`, `0x9EE88`)
 - **Languages:** any
 - **State:** active
 
@@ -13191,7 +13202,7 @@ designed in rather than bolted on.
 - **Switch:** SoundLevelGate
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=SoundLevelGate (ini off=)
-- **Toward:** psx - the PlayStation's step ("Also in the PSX version?" above)
+- **Toward:** psx, psp - the PlayStation's step ("Also in the PSX version?" above); the PSP too (read 2026-11-23): its level and ring calls are the PlayStation's and its queue applies the same cells, the level table the PlayStation's divided by 4 (PSP-JP `0x95564`, `0x9604C`, `0x9598C`)
 - **Languages:** any
 - **State:** active
 
@@ -13290,7 +13301,7 @@ designed in rather than bolted on.
 - **Switch:** StopCuts
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=StopCuts (ini off=)
-- **Toward:** psx - the PlayStation's `SsSepStop` ("Also in the PSX version?" above)
+- **Toward:** psx, psp - the PlayStation's `SsSepStop` ("Also in the PSX version?" above); the PSP too (read 2026-11-23): its fade-stop calls its decrescendo and then its `SsSepStop` at once (PSP-JP `0x952F0`, PSP-EU `0x95068`); the player's release below it not read
 - **Languages:** any
 - **State:** active
 
@@ -13348,7 +13359,7 @@ designed in rather than bolted on.
 - **Switch:** OneShotKeyOff - independent of DIV-0167's `EffectKeyOff`
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=OneShotKeyOff (ini off=)
-- **Toward:** psx - the PlayStation's key-off ("Also in the PSX version?" above)
+- **Toward:** psx - the PlayStation's key-off ("Also in the PSX version?" above); not the PSP (read 2026-11-23): its `SsUtKeyOffV` is an empty function (PSP-JP `0x9ECFC`, PSP-EU `0x9E9D0`), so its preload releases nothing
 - **Languages:** any
 - **State:** active
 
@@ -13394,7 +13405,7 @@ designed in rather than bolted on.
 - **Switch:** WindowResetFull
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=WindowResetFull (ini off=)
-- **Toward:** psx - the US disc clears the whole record; the JP disc is as the PC
+- **Toward:** psx - the US disc clears the whole record; the JP disc is as the PC; region-specific on the PlayStation and on no PSP (read 2026-11-23): the US disc clears the whole record (the European discs not read); the JP disc and both PSP releases, PSP-EU included, clear five fields only, as the PC (PSP-JP `0x13568`, PSP-EU `0x133F4`)
 - **Languages:** any
 - **State:** active
 
@@ -13515,7 +13526,7 @@ designed in rather than bolted on.
 - **Switch:** JingleResume
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=JingleResume (ini off=)
-- **Toward:** psx - the PlayStation's song plays on under its jingles
+- **Toward:** psx, psp - the PlayStation's song plays on under its jingles; the PSP too (read 2026-11-23): its stream start calls no sequence routine, so the song plays on (PSP-JP `0x97FC8`); the stream thread not read
 - **Languages:** any
 - **State:** active
 
@@ -13579,7 +13590,7 @@ designed in rather than bolted on.
 - **Switch:** ApplyMatrixLVExact
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=ApplyMatrixLVExact (ini off=)
-- **Toward:** psx - the PlayStation's GTE computes the product exactly
+- **Toward:** psx, psp - the PlayStation's GTE computes the product exactly; the PSP too by the owner's rule of 2026-11-23 for the port's picture, not by its arithmetic (read 2026-11-23): its replacement (PSP-JP `0x9CB1C`, PSP-EU `0x9C8A4`) does not wrap at the arms' sizes, so the arms rise, but it is not exact - it takes each component as v / 4096 before the product
 - **Languages:** any
 - **State:** active
 
@@ -13790,7 +13801,7 @@ designed in rather than bolted on.
 - **Switch:** CellTextureVram
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=CellTextureVram (ini off=)
-- **Toward:** psx - the PlayStation's GPU samples VRAM at every draw
+- **Toward:** psx, psp - the PlayStation's GPU samples VRAM at every draw; the PSP too by the owner's rule of 2026-11-23: a repair of the port's picture or timing restores what both consoles show (the PSP's own display not read)
 - **Languages:** any
 - **State:** active
 
@@ -13919,7 +13930,7 @@ designed in rather than bolted on.
 - **Switch:** AreaDataReload
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=AreaDataReload (ini off=)
-- **Toward:** psx - the PlayStation's overlay reload put the bytes back
+- **Toward:** psx - the PlayStation's overlay reload put the bytes back; not the PSP in full (read 2026-11-23): area 108 starts fresh - a hook of the PSP's own clears entry 0's flags byte (PSP-JP `0x246DAC`) and its models are loaded data, the reload not traced - but area 52's byte is kept, as the PC (one reader, not checked by the audit), and area 196 was not established
 - **Languages:** any
 - **State:** active
 
@@ -14152,7 +14163,7 @@ designed in rather than bolted on.
 - **Switch:** AshRoom
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=AshRoom (ini off=)
-- **Toward:** psx - the PlayStation's room holds the Gaist's particles
+- **Toward:** psx, psp - the PlayStation's room holds the Gaist's particles; the PSP too (read 2026-11-23): it keeps the PlayStation's layout in its own buffer, the particles at +0xE7500 and the staging at +0xF5000 (PSP-JP `0x32F80`, `0x82C`)
 - **Languages:** any
 - **State:** active
 
@@ -14761,7 +14772,7 @@ designed in rather than bolted on.
 - **Switch:** SaveSlotBlank
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=SaveSlotBlank (ini off=)
-- **Toward:** psx - the US PlayStation release's empty slot
+- **Toward:** psx, psp - the US PlayStation release's empty slot; the PSP too (read 2026-11-23): its slot draw draws no text for an empty slot (PSP-JP `0x1F6BCC`, PSP-EU `0x1F68FC`), and neither does the JP disc (JP SHOP `0x801DDC6C`)
 - **Languages:** any
 - **State:** active
 
@@ -15142,7 +15153,7 @@ designed in rather than bolted on.
 - **Switch:** QuadFarEdge
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=QuadFarEdge (ini off=)
-- **Toward:** psx - the PlayStation's rasteriser never samples a quad's far coordinate
+- **Toward:** psx, psp - the PlayStation's rasteriser never samples a quad's far coordinate; the PSP too by the owner's rule of 2026-11-23: a repair of the port's picture or timing restores what both consoles show (the PSP's own display not read)
 - **Languages:** any
 - **State:** active
 
@@ -15380,7 +15391,7 @@ designed in rather than bolted on.
 - **Switch:** CapcomMovieOnly
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=CapcomMovieOnly (ini off=)
-- **Toward:** psx
+- **Toward:** psx, psp - the PSP too (read 2026-11-23): each PSP disc holds one game movie, Capcom's logo; its start not traced in code
 - **Languages:** any
 - **State:** active
 
@@ -15754,7 +15765,7 @@ designed in rather than bolted on.
 - **Switch:** PixelRoom
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=PixelRoom (ini off=)
-- **Toward:** psx - the PlayStation's rooms hold every member's particles
+- **Toward:** psx, psp - the PlayStation's rooms hold every member's particles; the PSP too (read 2026-11-23): it keeps the PlayStation's rooms in its own buffer, kinds 0xA1 / 0xA3 at +0xEA200 and kind 0x61 at +0xE6800 (PSP-JP `0x5B2A0`, `0x42C50`); kind 0x61's PlayStation twin found by its shape
 - **Languages:** any
 - **State:** active
 
@@ -17695,7 +17706,7 @@ designed in rather than bolted on.
 - **Switch:** NewGameOptions
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=NewGameOptions (ini off=)
-- **Toward:** psx - the PlayStation's options at New Game (above)
+- **Toward:** psx, psp - the PlayStation's options at New Game (above); the PSP too (read 2026-11-23): it enters the options from its New Game (PSP-JP `0xC3034`, PSP-EU `0xC2E34`); the step's target not traced by the audit, and not seen on a PSP
 - **Languages:** any
 - **State:** active
 
@@ -17777,7 +17788,7 @@ designed in rather than bolted on.
 - **Switch:** CommuNameGrid
 - **Default:** on - under its languages, where the layer has the grid chunk
 - **Player:** yes - BOF3X_OFF=CommuNameGrid (ini off=)
-- **Toward:** psx - the PlayStation's renamer has the grid (above)
+- **Toward:** psx, psp - the PlayStation's renamer has the grid (above); the PSP too (read 2026-11-23): its faerie village code calls its grid input step (PSP-JP `0x116EFC`, PSP-EU `0x116BE0`); not seen on a PSP
 - **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - the layers that carry kind 22, as DIV-0231
 - **State:** active
 

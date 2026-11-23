@@ -31,8 +31,13 @@ struct Boxes {
     bool ruby_touched = false;
     unsigned ruby_stamp = 0;
     unsigned ruby_mods = 0;   // Pages::mods_stamp it was made at: the Mods page changed the mods (kMsgModsChanged)
-    // The Preset page's list, made at this stamp.
+    // The Preset page's list, made at this stamp, and the Preset box's
+    // entries: one this install cannot take (ConfigPresetWhyNot) is grey and
+    // says why.
     std::string preset_list;
+    std::vector<std::string> preset_items;
+    std::vector<bool> preset_usable;
+    std::vector<std::wstring> preset_why;
     unsigned preset_stamp = 0;
 };
 Boxes g_boxes;
@@ -91,6 +96,7 @@ constexpr PresetControl kPresetControls[] = {
     {"display", "Display"},
     {"background", "Keep the game running when its window is not active"},
     {"music", "Music (Music page)"},
+    {"wide", "Widescreen"},
 };
 
 // The Preset page's read-only list of what the preset changes when the game
@@ -99,6 +105,15 @@ void PresetRefresh(Pages& p) {
     Boxes& b = g_boxes;
     if (b.preset_stamp == p.stamp) return;
     b.preset_stamp = p.stamp;
+    b.preset_items.clear();
+    b.preset_usable.clear();
+    b.preset_why.clear();
+    for (const PresetInfo& info : kPresets) {
+        const std::wstring why = ConfigPresetWhyNot(p.game_dir, *p.cfg, info.id);
+        b.preset_items.push_back(PagesText(why.empty() ? std::wstring(info.label) : info.label + std::wstring(L" - ") + why));
+        b.preset_usable.push_back(why.empty());
+        b.preset_why.push_back(why);
+    }
     const PresetPlan& plan = PagesPresetPlan(p);
     const std::string& language = plan.language;
     std::string out = "For the language that you selected: ";
@@ -107,15 +122,40 @@ void PresetRefresh(Pages& p) {
     std::vector<const char*> greyed;
     for (const PresetControl& c : kPresetControls)
         if (PresetOverrides(plan, c.key)) greyed.push_back(c.label);
+    std::vector<std::string> suites;   // the suites' radio buttons the preset sets (PSP)
+    for (const PresetPlan::Setting& s : plan.sets)
+        if (s.state == PresetPlan::Setting::State::kSet && s.what != "wide" && s.what != "music")
+            suites.push_back(s.label.substr(0, s.label.find(':')) + " version");
     if (plan.items.empty()) {
         out += "\nThis preset turns off no change.\n";
         b.preset_list = out;
         return;
     }
-    if (!greyed.empty()) {
+    if (!greyed.empty() || !suites.empty()) {
         out += "\nThe preset sets these settings in place of yours (they are grey):";
-        for (std::size_t i = 0; i < greyed.size(); ++i) out += (i ? ", " : " ") + std::string(greyed[i]);
+        std::size_t i = 0;
+        for (const char* g : greyed) out += (i++ ? ", " : " ") + std::string(g);
+        for (const std::string& g : suites) out += (i++ ? ", " : " ") + g;
         out += ".\n";
+    }
+    // The settings the preset sets of its own (PSP): what it sets, and what
+    // this install or the environment does not let it set.
+    std::string set, set_here, set_kept;
+    int n_set = 0, n_set_here = 0, n_set_kept = 0;
+    for (const PresetPlan::Setting& s : plan.sets) {
+        using State = PresetPlan::Setting::State;
+        if (s.state == State::kSet || s.state == State::kBase) {
+            set += "  " + s.label + (s.why.empty() ? "" : " - " + s.why) + "\n";
+            for (const auto& [member, why] : s.members_not_here)
+                set += "    " + member + ": not on this install - " + why + "\n";
+            ++n_set;
+        } else if (s.state == State::kNotHere) {
+            set_here += "  " + s.label + " - " + s.why + "\n";
+            ++n_set_here;
+        } else {
+            set_kept += "  " + s.label + " - " + s.why + "\n";
+            ++n_set_kept;
+        }
     }
 
     std::string off, here, kept, cannot, also;
@@ -161,6 +201,9 @@ void PresetRefresh(Pages& p) {
         out += " (" + std::to_string(n) + "):\n";
         out += lines;
     };
+    section("Set when the game starts", n_set, set);
+    section("Not on this install: the preset cannot set these here", n_set_here, set_here);
+    section("Kept: the environment sets these", n_set_kept, set_kept);
     section("Turned off when the game starts", n_off, off);
     section("Not on this install: the preset cannot turn these off here", n_here, here);
     section("Kept: a setting of yours or of the environment controls these", n_kept, kept);
@@ -285,6 +328,7 @@ void SettingsPage(Pages& p) {
     Label("Widescreen:");
     Place(Dx(77), Dy(88 - up));
     Size(Dx(186));
+    if (PagesPresetSets(p, "wide")) Grey(kPresetGreyReason);
     Combo("wide", &b.wide, {"Off - 4:3, 320 x 240 (original)", "16:9 - 426 x 240", "21:9 - 560 x 240",
                              "16:10 - 384 x 240 (Steam Deck)"});
 
@@ -303,7 +347,7 @@ void SettingsPage(Pages& p) {
     GroupEnd();
 
     // Why a setting of this page is grey.
-    if (PagesPresetSets(p, "display") || PagesPresetSets(p, "background")) {
+    if (PagesPresetSets(p, "display") || PagesPresetSets(p, "background") || PagesPresetSets(p, "wide")) {
         Place(0, Dy(166 - up));
         Label("A grey setting: the preset (Preset page) sets it when the game starts.");
     }
@@ -314,20 +358,21 @@ void PresetPage(Pages& p) {
     GroupBegin("Preset", 0, 0, Dx(346), Dy(166));
     Place(Dx(9), Dy(17));
     Label("Preset:");
-    std::vector<std::string> presets;
-    for (const PresetInfo& info : kPresets) presets.push_back(PagesText(info.label));
     Place(Dx(59), Dy(15));
     Size(Dx(236));
-    if (Combo("preset", &p.preset, presets)) ++p.stamp;
+    if (ComboGreyed("preset", &p.preset, g_boxes.preset_items, g_boxes.preset_usable)) ++p.stamp;
     const int sel = p.preset >= 0 && static_cast<std::size_t>(p.preset) < std::size(kPresets) ? p.preset : 0;
     Place(Dx(9), Dy(32));
     Size(Dx(330));
-    Label(PagesText(kPresets[sel].note).c_str());
-    Place(Dx(9), Dy(52));
+    // bof3x.ini can name a preset whose entry is grey: the sentence then says what is missing
+    const std::wstring& why = g_boxes.preset_why[static_cast<std::size_t>(sel)];
+    Label(PagesText(why.empty() ? std::wstring(kPresets[sel].note) : kPresets[sel].note + std::wstring(L" ") + why).c_str());
+    // three lines for the sentence (PSP's, with what an install lacks), then the list
+    Place(Dx(9), Dy(60));
     Size(Dx(330));
     Label("What the preset changes when the game starts. Your settings in bof3x.ini do not change.");
-    Place(Dx(7), Dy(63));
-    Size(Dx(332), Dy(98));
+    Place(Dx(7), Dy(71));
+    Size(Dx(332), Dy(90));
     ReadText("list", g_boxes.preset_list);
     GroupEnd();
 }

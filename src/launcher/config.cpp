@@ -221,8 +221,8 @@ void ConfigLoad(const std::string& text, Config& cfg, std::string& error) {
                 cfg.preset = p->id;
             } else {
                 cfg.preset = Preset::kRecommended;
-                std::fprintf(stderr, "bof3x-launcher: bof3x.ini's preset=%s is not recommended, shipped, repaired or "
-                             "playstation; the preset is recommended\n", value.c_str());
+                std::fprintf(stderr, "bof3x-launcher: bof3x.ini's preset=%s is not recommended, shipped, repaired, "
+                             "playstation or psp; the preset is recommended\n", value.c_str());
             }
         } else if (key == "cache") {  // DIV-0087: a path; the dll refuses one that is not a directory
             cfg.cache = ConfigCacheFromIni(value);   // UTF-8 (state 3); an older ini's ANSI bytes once
@@ -459,7 +459,8 @@ std::string ConfigText(const Config& cfg) {
     out += "mods_off=" + cfg.mods_off + "\r\n";
     out += "# the preset (docs/launcher-settings.md): recommended (the default, this project's changes) | shipped\r\n";
     out += "# (the PC version as it was released) | repaired (only the repairs of defects) | playstation (as the\r\n";
-    out += "# PlayStation version). It turns off changes when the game starts. It does not change this file\r\n";
+    out += "# PlayStation version) | psp (as the PSP version). It turns off changes when the game starts; psp\r\n";
+    out += "# also sets the wide picture, the three suites and the music then. It does not change this file\r\n";
     out += std::string("preset=") + PresetOf(cfg.preset).name + "\r\n";
     out += "# the importer's cache folder; its base\\bgm songs play through the sequencer (DIV-0087, docs/music-seq-engine.md)\r\n";
     out += "cache=" + cfg.cache + "\r\n";
@@ -1782,6 +1783,10 @@ bool PresetWantsOff(Preset preset, const ledger::Entry& e) {
         // the owner's call of 2026-10-28: Toward none is a generic repair, tied
         // to no release, and stays; an entry naming a release and not psx goes
         return e.toward != 0 && (e.toward & ledger::kTowardPsx) == 0;
+    case Preset::kPsp:
+        // the owner's call of 2026-11-23: PlayStation's rule with the PSP's
+        // name - Toward none stays; an entry naming a release and not psp goes
+        return e.toward != 0 && (e.toward & ledger::kTowardPsp) == 0;
     }
     return false;
 }
@@ -1789,6 +1794,7 @@ bool PresetWantsOff(Preset preset, const ledger::Entry& e) {
 bool PresetWantsOn(Preset preset, const ledger::Entry& e) {
     if (preset == Preset::kRepaired) return e.tier == ledger::Tier::Intent || e.tier == ledger::Tier::Forced;
     if (preset == Preset::kPlayStation) return (e.toward & ledger::kTowardPsx) != 0;
+    if (preset == Preset::kPsp) return (e.toward & ledger::kTowardPsp) != 0;
     return false;
 }
 
@@ -1864,6 +1870,121 @@ void AddOnce(std::vector<std::pair<std::string, std::string>>& list, const std::
     list.emplace_back(k, v);
 }
 
+// `list`'s value for `k`, or nullptr.
+const std::string* ValueOf(const std::vector<std::pair<std::string, std::string>>& list, const std::string& k) {
+    for (const auto& kv : list)
+        if (kv.first == k) return &kv.second;
+    return nullptr;
+}
+
+// The PSP preset's own setting `key`=`value` into the plan's ini values, in
+// place of a value an entry's Switch: put there; that entry's switch is then
+// kept, and says so - unless `built_on_entry`: the value was made from the
+// entry's (opt=, which the suites edit from an entry's opt=none), which it
+// still carries out.
+void PresetSetIni(PresetPlan& plan, const std::string& key, const std::string& value, bool built_on_entry = false) {
+    for (auto& kv : plan.ini) {
+        if (kv.first != key) continue;
+        if (kv.second != value && !built_on_entry)
+            for (PresetPlan::Item& item : plan.items) {
+                if (item.action != PresetAction::kOff) continue;
+                for (const ledger::Switch* s = ledger::SwitchesBegin(*item.entry); s != ledger::SwitchesEnd(*item.entry); ++s)
+                    if (s->form == ledger::SwitchForm::Ini && ledger::Key(*s) == key && ledger::Value(*s) == kv.second)
+                        item.kept.emplace_back(std::string(s->text), "the preset sets " + key + "=" + value +
+                                                                         ", the PSP's side");
+            }
+        kv.second = value;
+        return;
+    }
+    plan.ini.emplace_back(key, value);
+}
+
+// The three suites for this install, as the Graphics and audio and the Data
+// pages evaluate them (page_versions.cpp SuitesRefresh), over the cache the
+// settings name; `opt` the opt= they start from.
+std::vector<SuiteState> PresetSuites(const std::wstring& game_dir, const Config& cfg, const std::string& language,
+                                     const std::string& opt) {
+    const std::wstring cache = ConfigCacheRoot(cfg), data = ConfigCacheDataRoot(cfg);
+    SuiteInputs in;
+    in.manifest = ManifestRead(cache);
+    in.installed = [game_dir, data, cache](const char* layer) { return ConfigOptInstalled(game_dir, layer, data, cache); };
+    in.language = language;
+    in.opt = opt;
+    in.psp = cfg.psp;
+    in.defaults = ConfigOptDefaultInstalled(game_dir, data);
+    return SuitesEvaluate(in);
+}
+
+// The PSP preset's settings (config.h, "PSP alone also sets settings"), after
+// the entries' ini: values and before their env: values, so that music=psp
+// decides BOF3X_MUSIC as an entry's music=pc does.
+void PresetPspSets(PresetPlan& plan, const std::wstring& game_dir, const Config& cfg) {
+    using State = PresetPlan::Setting::State;
+    // The wide picture: wide=1, the 16:9 picture 426 x 240 (DIV-0041).
+    PresetPlan::Setting wide{"wide", "Widescreen: 16:9 - 426 x 240", State::kSet, {}, {}};
+    if (EnvironmentHas("BOF3X_WIDE")) {
+        wide.state = State::kKept;
+        wide.why = "the environment sets BOF3X_WIDE";
+    } else {
+        PresetSetIni(plan, "wide", "1");
+    }
+    plan.sets.push_back(wide);
+
+    // The suites, each at the PSP's side, as the pages write that choice: from
+    // the opt= the entries left (an entry's opt=none, DIV-0080) or bof3x.ini's.
+    const std::string* by_entry = ValueOf(plan.ini, "opt");
+    const std::string opt = by_entry ? *by_entry : cfg.opt;
+    const std::vector<SuiteState> suites = PresetSuites(game_dir, cfg, plan.language, opt);
+    const bool env_opt = EnvironmentHas("BOF3X_OPT"), env_psp = EnvironmentHas("BOF3X_PSP");
+    std::vector<int> choice(suites.size(), -1);
+    bool set_opt = false, set_psp = false;
+    for (std::size_t i = 0; i < suites.size(); ++i) {
+        const SuiteState& su = suites[i];
+        PresetPlan::Setting st{su.info->id, ConfigToUtf8(su.info->label) + ": PSP", State::kSet, {}, {}};
+        if (su.psp_base) {
+            st.state = State::kBase;
+            st.why = "this install's base is the PSP's";
+        } else if (!su.psp_enabled) {
+            st.state = State::kNotHere;
+            st.why = ConfigToUtf8(su.psp_why);
+        } else {
+            std::string env;
+            if (!su.layers_on.empty() && env_opt) env = "BOF3X_OPT";
+            if (!su.codes_on.empty() && env_psp) env += (env.empty() ? "" : " and ") + std::string("BOF3X_PSP");
+            if (!env.empty()) {
+                st.state = State::kKept;
+                st.why = "the environment sets " + env;
+            } else {
+                choice[i] = 1;
+                set_opt = set_opt || !su.layers_on.empty();
+                set_psp = set_psp || !su.codes_on.empty();
+                for (const SuiteMemberState& m : su.members)
+                    if (!m.available && !m.note.empty())
+                        st.members_not_here.emplace_back(ConfigToUtf8(m.info->label), ConfigToUtf8(m.note));
+            }
+        }
+        plan.sets.push_back(st);
+    }
+    if (set_opt)
+        PresetSetIni(plan, "opt",
+                     SuitesOptEdit(opt, ConfigOptDefaultInstalled(game_dir, ConfigCacheDataRoot(cfg)), suites, choice),
+                     true);
+    if (set_psp) PresetSetIni(plan, "psp", SuitesPspEdit(cfg.psp, suites, choice));
+
+    // The music: music=psp, the Music page's PSP source (DIV-0150).
+    PresetPlan::Setting music{"music", "Music: PSP", State::kSet, {}, {}};
+    if (EnvironmentHas("BOF3X_MUSIC")) {
+        music.state = State::kKept;
+        music.why = "the environment sets BOF3X_MUSIC";
+    } else if (const std::string why = IniNotHere(game_dir, cfg, "music", "psp"); !why.empty()) {
+        music.state = State::kNotHere;
+        music.why = why;
+    } else {
+        PresetSetIni(plan, "music", "psp");
+    }
+    plan.sets.push_back(music);
+}
+
 }  // namespace
 
 PresetAction PresetClassify(Preset preset, const ledger::Entry& e, std::uint8_t language) {
@@ -1908,6 +2029,7 @@ PresetPlan ConfigPresetPlan(const std::wstring& game_dir, const Config& cfg, Pre
         }
         plan.items.push_back(std::move(item));
     }
+    if (preset == Preset::kPsp) PresetPspSets(plan, game_dir, cfg);
     // The env: values after every ini: value, so that an ini value of this plan
     // decides its own variable (music=pc and BOF3X_MUSIC=seq: the PC's MP3s).
     for (PresetPlan::Item& item : plan.items) {
@@ -1936,6 +2058,20 @@ bool PresetOverrides(const PresetPlan& plan, std::string_view key) {
     for (const auto& kv : plan.ini)
         if (kv.first == key) return true;
     return false;
+}
+
+bool PresetSets(const PresetPlan& plan, std::string_view what) {
+    for (const PresetPlan::Setting& s : plan.sets)
+        if (s.what == what && s.state == PresetPlan::Setting::State::kSet) return true;
+    return false;
+}
+
+std::wstring ConfigPresetWhyNot(const std::wstring& game_dir, const Config& cfg, Preset preset) {
+    if (preset != Preset::kPsp) return std::wstring();
+    for (const SuiteState& s : PresetSuites(game_dir, cfg, kLanguageOriginal, cfg.opt))
+        if (s.psp_base || s.psp_enabled) return std::wstring();
+    if (IniNotHere(game_dir, cfg, "music", "psp").empty()) return std::wstring();
+    return L"This install has no PSP data. Add a PSP disc on the Sources page.";
 }
 
 Config ConfigPresetApply(const Config& cfg, const PresetPlan& plan) {
@@ -1977,6 +2113,16 @@ void ConfigPresetReport(const PresetPlan& plan) {
     line.clear();
     for (const auto& [k, v] : plan.env) line += (line.empty() ? "" : ", ") + k + "=" + v;
     if (!line.empty()) std::fprintf(stderr, "bof3x-launcher: preset: set where the environment has none: %s\n", line.c_str());
+    for (const PresetPlan::Setting& s : plan.sets) {
+        using State = PresetPlan::Setting::State;
+        const char* how = s.state == State::kSet ? "set" : s.state == State::kBase ? "already" :
+                          s.state == State::kNotHere ? "not on this install" : "kept";
+        std::fprintf(stderr, "bof3x-launcher: preset: %s %s%s%s\n", s.label.c_str(), how, s.why.empty() ? "" : ": ",
+                     s.why.c_str());
+        for (const auto& [member, why] : s.members_not_here)
+            std::fprintf(stderr, "bof3x-launcher: preset: %s, %s not on this install: %s\n", s.label.c_str(),
+                         member.c_str(), why.c_str());
+    }
     for (const PresetPlan::Item& item : plan.items) {
         for (const auto& [sw, why] : item.not_here)
             std::fprintf(stderr, "bof3x-launcher: preset: DIV-%04u %s not on this install: %s\n",
@@ -2005,7 +2151,7 @@ bool ConfigPresetFromEnvironment(Config& cfg, std::string& error) {
     const PresetInfo* p = n < sizeof name ? PresetNamed(name) : nullptr;
     if (!p) {
         error = std::string("BOF3X_PRESET=") + (n < sizeof name ? name : "(too long)") +
-                " is not a preset. Use recommended, shipped, repaired or playstation (docs/launcher-settings.md).";
+                " is not a preset. Use recommended, shipped, repaired, playstation or psp (docs/launcher-settings.md).";
         return false;
     }
     if (p->id != cfg.preset)

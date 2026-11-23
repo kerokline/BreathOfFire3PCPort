@@ -421,3 +421,67 @@ original	playstation	already-off	DIV-0111	ini:opt=	The PSP's level table and con
 original	playstation	already-off	DIV-0112	ini:opt=	Ryu's forms (P8) as a layer	Default off: already off
 original	playstation	already-off	DIV-0113	ini:opt=	The battle chord as the PSP plays it, and a layer's banks in Snd_LoadBankFile	Default off: already off
 original	playstation	off	DIV-0123	env:BOF3X_WIDE_STAGING=0	Case zero takes the PSP's staging in the wide modes	Player yes
+original	psp	cannot	DIV-0002	Save_WriteFile	Refresh the save directory after writing a save	Player costly: the original is only Capcom's function; this build cannot
+original	psp	skipped-language	DIV-0006	lang	Advance the dialogue pen by the glyph's width	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
+original	psp	skipped-language	DIV-0007	lang	Move the system message pool out of the area script's way	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
+original	psp	skipped-language	DIV-0008	lang	Item and ability names, and the system pool, from a language overlay	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
+original	psp	already-off	DIV-0012	ini:filter=linear	Offer point sampling as a choice of look	Default off: already off
+original	psp	skipped-language	DIV-0013	lang	White text in the disc's shades when the text is the disc's	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
+original	psp	skipped-language	DIV-0014	lang	The title menu in the overlay's language, its third row cut from the disc's letters	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
+original	psp	skipped-language	DIV-0015	lang	The in-game Config screen in the overlay's language	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
+original	psp	skipped-language	DIV-0016	lang	The donor's 8 x 8 UI font, and a glyph guard that follows the table	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
+original	psp	skipped-language	DIV-0018	lang	The menu's short verbs - the buttons above a panel - in the overlay's language	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
+original	psp	skipped-language	DIV-0019	lang	The battle's command labels in the overlay's language	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
+original	psp	skipped-language	DIV-0020	lang	The characters' default names in the overlay's language	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
+original	psp	also-available	DIV-0041	ini:wide=0	A 384, 426 or 560 x 240 picture: the view widened by 32, 53 or 120 columns a side	Default off: the preset keeps it on, so switch it on yourself
+original	psp	cannot	DIV-0044	Display_Setup	A primitive's corner at depth 0 is drawn at the nearest depth: the world map's compass needle	Player costly: the original is only Capcom's function; this build cannot
+original	psp	skipped-language	DIV-0051	ConfigController, Config_DrawControllerCell, ConfigJapaneseIcons	The Config screen's controller panel: the PlayStation's one icon column	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
+original	psp	skipped-language	DIV-0052	lang	The battle banner's words and its EX suffix	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
+original	psp	skipped-language	DIV-0053	lang	Enemy names in the overlay's language	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
+original	psp	skipped-language	DIV-0054	lang	French and German overlays, with the discs' accented glyphs	acts only under fr-FR, de-DE
+original	psp	skipped-language	DIV-0055	lang	The world map's place plates from the donor disc	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
+original	psp	skipped-language	DIV-0056	lang	A Japanese overlay, and the layout switch for languages	acts only under ja-JP
+original	psp	skipped-language	DIV-0057	lang	Two kana in one glyph code: pair codes for Japanese names	acts only under ja-JP
+original	psp	skipped-language	DIV-0064	lang	The short labels from a language overlay: status words, stats, item and skill types	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
+original	psp	cannot	DIV-0066	Fmv_Play	A pad press skips an FMV as a key does	Player costly: the original is only Capcom's function; this build cannot
+original	psp	never	DIV-0068	EffectKind64_DrawGlow	Kind 0x64's glow: the rim vertices' depth the centre's	Player never: Forced or one-way
+original	psp	skipped-language	DIV-0069	lang	The fishing minigame's text in the overlay's language, laid out for Latin letters	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
+original	psp	never	DIV-0072	EffectKind18Sub4B_Run	A panel's far corners from the quad's own x, where the original reads a stack word it never wrote	Player never: Forced or one-way
+original	psp	never	DIV-0074	Battle_RandomLiveEnemy	A random enemy from the bytes the function wrote, where the original's four-byte list overflows into stale stack	Player never: Forced or one-way
+original	psp	off	DIV-0080	ini:opt=none	Dauna Mine's minecart map is walled as every later release walled it, from the player's Western disc	Player yes
+original	psp	cannot	DIV-0082	Battle_CopyEnemyData	The enemy AI rows' done bits cleared at spawn (the Volt's EXP bonus)	Player costly: the original is only Capcom's function; this build cannot
+original	psp	also-available	DIV-0086	ini:opt=	Optional layers from the player's PSP disc, walked after the language overlay	Default off: the preset keeps it on, so switch it on yourself
+original	psp	off	DIV-0087	ini:music=pc	The cache's songs synthesised from the disc's sequence, the MP3 the fallback	Player yes
+original	psp	skipped-language	DIV-0088	lang	The faerie village's board buttons from the disc's own paint	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
+original	psp	never	DIV-0096	none	A disc-only cache's party animation scripts are the disc's own	Player never: Forced or one-way
+original	psp	never	DIV-0099	none	A disc-only install shows the disc's Capcom logo movie, converted at import	Player never: Forced or one-way
+original	psp	also-available	DIV-0108	ini:psp=none	The PSP's two battle rules, behind a switch	Default off: the preset keeps it on, so switch it on yourself
+original	psp	also-available	DIV-0109	ini:music=psx	The PSP's music as a layer beside a PlayStation disc's	Default off: the preset keeps it on, so switch it on yourself
+original	psp	also-available	DIV-0110	ini:opt=	The PSP's effects, voices and jingles as a layer	Default off: the preset keeps it on, so switch it on yourself
+original	psp	also-available	DIV-0111	ini:opt=	The PSP's level table and consumable 87 laid over .data	Default off: the preset keeps it on, so switch it on yourself
+original	psp	also-available	DIV-0112	ini:opt=	Ryu's forms (P8) as a layer	Default off: the preset keeps it on, so switch it on yourself
+original	psp	also-available	DIV-0113	ini:opt=	The battle chord as the PSP plays it, and a layer's banks in Snd_LoadBankFile	Default off: the preset keeps it on, so switch it on yourself
+original	psp	never	DIV-0114	none	A disc-only install draws the disc's title page, not the PC port's	Player never: Forced or one-way
+original	psp	never	DIV-0115	none	Prefer the Japanese PlayStation disc's data over a port change the owner has decided; the 27A arenas' held loop first	Player never: Forced or one-way
+original	psp	skipped-language	DIV-0117	lang	The Identify panel's small words: WEAK POINT on the weakness row, the disc's own item word and EXP label	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
+original	psp	skipped-language	DIV-0118	BattleExtra_EquipOpen	Beyd's name from the disc when the battle extra opens its equipment screen	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
+original	psp	skipped-language	DIV-0119	Boss26Fx_DrawCount	Fight 26's turn counter in the disc's words and layout	acts only under en-US, en-150, fr-FR, de-DE
+original	psp	skipped-language	DIV-0120	CommuHiLo_DrawChoice	The hi-lo game's three choices from the disc, centred in their boxes	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
+original	psp	cannot	DIV-0129	Sound_StreamDone	A missing sound stream ends its wait; a PSX-only install has the 11 jingles	Player costly: the original is only Capcom's function; this build cannot
+original	psp	skipped-language	DIV-0141	lang	A PSP-EU layer's Config screen: the PSP's words, and four of ours	acts only under en-150
+original	psp	skipped-language	DIV-0148	lang	The staff roll follows the language: a US or PAL layer rolls its release's credits	acts only under en-US, en-150, fr-FR, de-DE
+original	psp	off	DIV-0150	env:BOF3X_MUSIC=seq	The music comes from a chosen source first: the PlayStation's, the PSP's or the PC's	Player yes
+original	psp	off	DIV-0152	PadReset	Start + Select held a second returns to the title, as on the Western discs	Player yes
+original	psp	off	DIV-0163	BattleInitPickClear	A battle's start clears the target-pick flag, as the US disc	Player yes
+original	psp	off	DIV-0164	SpriteReachWord	The two sprite reach stores write the whole dword `+0x70`, as the PlayStation does	Player yes
+original	psp	off	DIV-0167	EffectKeyOff	A battle action's effect stops the sound-effect loops the last one left, as the PlayStation's key-off does	Player yes
+original	psp	off	DIV-0174	OneShotKeyOff	A battle action's effect also stops the one-shot sound effects the last one left sounding, as the PlayStation's key-off does	Player yes
+original	psp	off	DIV-0175	WindowResetFull	The window reset clears every field of a window record but the last four bytes, as the US disc	Player yes
+original	psp	off	DIV-0182	AreaDataReload	An area's own `.data` is put back when its DAT is loaded, as the PlayStation's overlay reload did	Player yes
+original	psp	skipped-language	DIV-0190	lang	The dock's parts-menu legend words from the disc's own paint	acts only under en-US, en-150, fr-FR, de-DE
+original	psp	never	DIV-0194	none	A European disc-only install takes its disc's own eight area banks	Player never: Forced or one-way
+original	psp	never	DIV-0195	none	A Western PSX disc-built image takes its disc's own regional layout fields	Player never: Forced or one-way
+original	psp	cannot	DIV-0198	EffectKind5E_DrawList	The dock's parts list starts its lines where the image's release puts them	Player costly: the original is only Capcom's function; this build cannot
+original	psp	never	DIV-0212	env:BOF3X_EXEFILE=1	A PC install reads .data from the cache's image and its table files	Player never: Forced or one-way
+original	psp	cannot	DIV-0235	Commu_DrawTiledFrame	The tiled frame keeps its texture windows in the packet pool	Player costly: the original is only Capcom's function; this build cannot
+original	psp	skipped-language	DIV-0236	lang	The name screen's START word and the French panel label come from the language's own disc	acts only under en-US, en-150, fr-FR

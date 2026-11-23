@@ -1322,7 +1322,9 @@ void TestPresetsFixture() {
     } names[] = {{"recommended", bof3x::Preset::kRecommended},
                  {"as-shipped", bof3x::Preset::kShipped},
                  {"repaired", bof3x::Preset::kRepaired},
-                 {"playstation", bof3x::Preset::kPlayStation}};
+                 {"playstation", bof3x::Preset::kPlayStation},
+                 {"psp", bof3x::Preset::kPsp}};
+    static_assert(std::size(names) == std::size(bof3x::kPresets), "a preset the fixture test does not compare");
     for (const char* language : {"original", "en-US"}) {
         const std::string path = std::string(BOF3X_LAUNCHER_HOST_DIR) + "/presets_" + language + ".tsv";
         std::string text;
@@ -1903,6 +1905,122 @@ void TestPresetPlan() {
               "playstation turns off DIV-0123 (Toward psp alone)");
         Check(d12 && d12->action == bof3x::PresetAction::kAlsoAvailable, "playstation offers DIV-0012");
         Check(ps.off.empty() && ps.ini.empty(), "playstation: no code name and no ini value today");
+        Check(ps.sets.empty() && !bof3x::PresetSets(ps, "wide"), "playstation sets no setting of its own");
+    }
+
+    // PSP (the owner's calls of 2026-11-23): the PlayStation's rule for the
+    // PSP, and the settings it sets - the 16:9 picture, the three suites at
+    // the PSP's side as the pages write them, the PSP's music.
+    {
+        auto setting = [](const bof3x::PresetPlan& plan, const char* what) -> const bof3x::PresetPlan::Setting* {
+            for (const auto& s : plan.sets)
+                if (s.what == what) return &s;
+            return nullptr;
+        };
+        using State = bof3x::PresetPlan::Setting::State;
+        // A PC install with a PC + US + PSP-EU cache: audio, data and the music
+        // built; the graphics layers not built.
+        const std::wstring psp_cache = FakeCache(L"bof3x_pr_psp_cache",
+                                                 {{"psp-music", L"bgm"}, {"psp-snd", L"snd"}, {"psp-tables", L"exe"},
+                                                  {"psp-ryu-forms", L"dat"}, {"psp-names-en-150", L"dat"}},
+                                                 kManifestLayers);
+        bof3x::Config mine = cfg;
+        mine.cache = bof3x::ConfigToUtf8(psp_cache);
+        ClearEnv();
+        bof3::os::SetEnv("BOF3X_WIDE", nullptr);
+        const bof3x::PresetPlan plan = bof3x::ConfigPresetPlan(pc, mine, Preset::kPsp, "original");
+        const auto* d80 = item(plan, 80);
+        const auto* d87 = item(plan, 87);
+        const auto* d123 = item(plan, 123);
+        Check(d80 && d80->action == bof3x::PresetAction::kOff && d87 && d87->action == bof3x::PresetAction::kOff,
+              "psp turns off DIV-0080 and DIV-0087 (Toward psx alone)");
+        Check(!d123, "psp keeps DIV-0123 (Toward psp alone)");
+        Check(has(plan.ini, "wide", "1") && bof3x::PresetSets(plan, "wide") && bof3x::PresetOverrides(plan, "wide"),
+              "psp sets wide=1, the 16:9 picture");
+        // opt=: the suites' PSP layers over DIV-0080's opt=none, as the pages write them
+        Check(has(plan.ini, "opt", "psp-snd,psp-tables,psp-names-en-150,psp-ryu-forms"),
+              "psp: opt= the audio and data suites' PSP layers, area4-walls off (DIV-0080)");
+        Check(has(plan.ini, "psp", "duel-loss,myria-item"), "psp: psp= the data suite's two battle rules");
+        Check(has(plan.ini, "music", "pc") == false && has(plan.ini, "music", "psp"), "psp: music=psp, not music=pc");
+        Check(d87 && d87->kept.size() == 1 && d87->kept[0].second.find("music=psp") != std::string::npos,
+              "DIV-0087's music=pc is listed as kept: the preset sets music=psp");
+        Check(d80 && d80->kept.empty(), "DIV-0080 is still carried out: opt= is built on its opt=none");
+        const auto* d150 = item(plan, 150);
+        Check(!has(plan.env, "BOF3X_MUSIC", "seq") && d150 && d150->kept.size() == 1 &&
+                  d150->kept[0].second.find("music=psp") != std::string::npos,
+              "DIV-0150's BOF3X_MUSIC=seq is kept: the preset's music=psp decides");
+        const auto* gfx = setting(plan, "graphics");
+        const auto* aud = setting(plan, "audio");
+        const auto* dat = setting(plan, "data");
+        const auto* mus = setting(plan, "music");
+        Check(gfx && gfx->state == State::kNotHere && !gfx->why.empty() && !bof3x::PresetSets(plan, "graphics"),
+              "psp: the graphics suite is not on this install (its layers are not built)", gfx ? gfx->why : "");
+        Check(aud && aud->state == State::kSet && dat && dat->state == State::kSet && bof3x::PresetSets(plan, "audio") &&
+                  bof3x::PresetSets(plan, "data"),
+              "psp: the audio and data suites are set");
+        Check(dat && !dat->members_not_here.empty(), "psp: the data suite lists the members it cannot play here");
+        Check(mus && mus->state == State::kSet && bof3x::PresetSets(plan, "music"), "psp: the music is set");
+        Check(bof3x::ConfigPresetWhyNot(pc, mine, Preset::kPsp).empty(), "psp: the Preset box offers it on this install");
+        // exactly what the pages write for the PSP's side
+        {
+            bof3x::SuiteInputs in;
+            in.manifest = bof3x::ManifestRead(psp_cache);
+            in.installed = [&](const char* layer) { return bof3x::ConfigOptInstalled(pc, layer, psp_cache, psp_cache); };
+            in.language = "original";
+            in.opt = "none";
+            in.defaults = bof3x::ConfigOptDefaultInstalled(pc, psp_cache);
+            const std::vector<bof3x::SuiteState> v = bof3x::SuitesEvaluate(in);
+            Check(has(plan.ini, "opt", bof3x::SuitesOptEdit("none", in.defaults, v, {1, 1, 1}).c_str()) &&
+                      has(plan.ini, "psp", bof3x::SuitesPspEdit("", v, {1, 1, 1}).c_str()),
+                  "psp: opt= and psp= are SuitesOptEdit's and SuitesPspEdit's for the PSP's side");
+        }
+        bof3x::ConfigPresetReport(plan);   // the stderr block, to read in the run's output
+        const bof3x::Config played = bof3x::ConfigPresetApply(mine, plan);
+        Check(played.wide == 1 && played.music == "psp" && played.psp == "duel-loss,myria-item" &&
+                  played.opt == "psp-snd,psp-tables,psp-names-en-150,psp-ryu-forms" && mine.wide == 0 && mine.opt.empty(),
+              "the game gets the preset's settings; the settings read are not changed");
+
+        // The environment's value is kept
+        bof3::os::SetEnv("BOF3X_WIDE", "2");
+        bof3::os::SetEnv("BOF3X_MUSIC", "pc");
+        bof3::os::SetEnv("BOF3X_PSP", "none");
+        const bof3x::PresetPlan env = bof3x::ConfigPresetPlan(pc, mine, Preset::kPsp, "original");
+        const auto* ew = setting(env, "wide");
+        const auto* em = setting(env, "music");
+        const auto* ed = setting(env, "data");
+        const auto* ea = setting(env, "audio");
+        Check(ew && ew->state == State::kKept && !bof3x::PresetOverrides(env, "wide"), "BOF3X_WIDE in the environment: kept");
+        // (DIV-0087's own music=pc stays in the plan, as under every preset: the environment's BOF3X_MUSIC wins at start)
+        Check(em && em->state == State::kKept && !has(env.ini, "music", "psp"), "BOF3X_MUSIC in the environment: kept");
+        Check(ed && ed->state == State::kKept && ed->why.find("BOF3X_PSP") != std::string::npos &&
+                  !bof3x::PresetOverrides(env, "psp"),
+              "BOF3X_PSP in the environment: the data suite (it has battle rules) is kept");
+        Check(ea && ea->state == State::kSet && has(env.ini, "opt", "psp-snd"),
+              "the audio suite is still set (BOF3X_OPT is not in the environment)");
+        for (const char* v : {"BOF3X_WIDE", "BOF3X_MUSIC", "BOF3X_PSP"}) bof3::os::SetEnv(v, nullptr);
+
+        // An install with no PSP source: the suites and the music are left as
+        // they are, listed "not on this install"; the wide picture and the
+        // entries still apply, and the Preset box greys the entry.
+        const std::wstring psx_cache =
+            FakeCache(L"bof3x_pr_psx_cache", {}, KindManifest("psx", "pc-zh", "pc", "pc-zh", true).c_str());
+        bof3x::Config bare = cfg;
+        bare.cache = bof3x::ConfigToUtf8(psx_cache);
+        bare.opt = "area4-walls";
+        bare.psp = "none";
+        const bof3x::PresetPlan none = bof3x::ConfigPresetPlan(pc, bare, Preset::kPsp, "original");
+        int not_here = 0;
+        for (const auto& s : none.sets) not_here += s.state == State::kNotHere ? 1 : 0;
+        Check(not_here == 4, "no PSP source: the three suites and the music not on this install", std::to_string(not_here));
+        Check(has(none.ini, "wide", "1") && !bof3x::PresetOverrides(none, "opt") && !bof3x::PresetOverrides(none, "psp") &&
+                  has(none.ini, "music", "pc"),
+              "no PSP source: wide=1 set; opt= and psp= left as they are; DIV-0087's music=pc stays");
+        const bof3x::Config left = bof3x::ConfigPresetApply(bare, none);
+        Check(left.opt == "area4-walls" && left.psp == "none", "no PSP source: the game gets opt= and psp= as read");
+        Check(!bof3x::ConfigPresetWhyNot(pc, bare, Preset::kPsp).empty() &&
+                  bof3x::ConfigPresetWhyNot(pc, bare, Preset::kPlayStation).empty(),
+              "no PSP source: the Preset box greys PSP, and only PSP");
+        ClearEnv();
     }
 
     // The language played

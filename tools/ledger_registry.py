@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""The ledger's switch fields as a C++ table, and the four presets read from them.
+"""The ledger's switch fields as a C++ table, and the five presets read from them.
 
     python tools/ledger_registry.py                 # write src/launcher/ledger_registry.h
     python tools/ledger_registry.py --check         # exit 1 when the checked-in header is not what the ledger gives
@@ -40,7 +40,7 @@ TIERS = ('Forced', 'Intent', 'Sensible', 'Extension')
 PLAYERS = ('yes', 'cheap', 'costly', 'never')
 TOWARD = ('psx', 'psp', 'pc')
 LANGUAGES = tuple(language_tags.TAGS) + ('original',)
-PRESETS = ('recommended', 'as-shipped', 'repaired', 'playstation')
+PRESETS = ('recommended', 'as-shipped', 'repaired', 'playstation', 'psp')
 
 # What a preset does with an entry, in the order the summary prints them.
 ACTIONS = ('off', 'skipped-language', 'lang-governed', 'cannot', 'also-available')
@@ -309,16 +309,24 @@ def wants_off(preset, r):
         # tied to no release, and stays; only an entry that names a release
         # and not the PlayStation (`psp` alone, `pc`) is turned off.
         return bool(r['toward']) and 'psx' not in r['toward']
+    if preset == 'psp':
+        # The owner's call of 2026-11-23, the PlayStation's rule with the PSP's
+        # name: `Toward: none` stays; an entry that names a release and not
+        # the PSP (`psx` alone, `pc`) is turned off.
+        return bool(r['toward']) and 'psp' not in r['toward']
     raise ValueError(preset)
 
 
 def wants_on(preset, r):
     """The entries a preset keeps on by its own rule (not merely leaves at the
-    default): Repaired keeps Intent and Forced, PlayStation every `psx`."""
+    default): Repaired keeps Intent and Forced, PlayStation every `psx`, PSP
+    every `psp`."""
     if preset == 'repaired':
         return r['tier'] in ('Intent', 'Forced')
     if preset == 'playstation':
         return 'psx' in r['toward']
+    if preset == 'psp':
+        return 'psp' in r['toward']
     return False
 
 
