@@ -39,14 +39,14 @@ jobs:
     name: i686 (llvm-mingw)
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install ninja
         run: sudo apt-get update -q && sudo apt-get install -y -q ninja-build
 
       - name: Cache llvm-mingw
         id: toolchain-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ runner.temp }}/llvm-mingw
           key: llvm-mingw-${{ env.LLVM_MINGW_TAG }}-${{ env.LLVM_MINGW_CRT }}-ubuntu-x86_64
@@ -121,7 +121,7 @@ jobs:
       # Our own binaries, built from this repository and SDL3 (zlib licence,
       # docs/THIRD_PARTY.md). No game data is in the build tree.
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: bof3x-i686-${{ github.sha }}
           path: |
@@ -143,14 +143,14 @@ jobs:
     name: x86_64 (llvm-mingw)
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install ninja
         run: sudo apt-get update -q && sudo apt-get install -y -q ninja-build
 
       - name: Cache llvm-mingw
         id: toolchain-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ runner.temp }}/llvm-mingw
           key: llvm-mingw-${{ env.LLVM_MINGW_TAG }}-${{ env.LLVM_MINGW_CRT }}-ubuntu-x86_64
@@ -225,7 +225,7 @@ jobs:
 
       # Our own binaries, as the i686 job's. No game data is in the build tree.
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: bof3x-x86_64-${{ github.sha }}
           path: |
@@ -263,9 +263,9 @@ jobs:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CCACHE_MAXSIZE: 500M
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.13"
 
@@ -287,13 +287,13 @@ jobs:
 
       - name: Cache DXVK-native
         id: dxvk-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ steps.dxvk-key.outputs.dir }}
           key: ${{ steps.dxvk-key.outputs.key }}
 
       - name: Cache ccache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ccache-linux-x86_64-${{ github.sha }}
@@ -340,7 +340,7 @@ jobs:
       # Our own binaries and the three libraries a player's folder holds
       # beside them (SDL3 and DXVK, both zlib). No game data is in the build tree.
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: bof3x-linux-x86_64-${{ github.sha }}
           path: |
