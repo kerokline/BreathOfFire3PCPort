@@ -1,6 +1,6 @@
 # Status
 
-**Status:** IN PROGRESS (2026-11-23: `main` is `0805b220`, the PR #277 merge, proved by scripted runs that day, [`hardening-1123.md`](hardening-1123.md); before it 2026-11-20: `main` `e9c1fb41`, the PR #267 merge; `v0.1.0-beta.1` was published on 2026-11-08 from `44fd3204`; everything merged since - PRs #213 to #277 - is unreleased; the state-hash pairs `orig5` are current, [`state-hash.md`](state-hash.md) 6)
+**Status:** IN PROGRESS (2026-11-23: `main` is `1071ec91`, the PR #278 merge, the PSP preset, a change of the launcher and its tests alone; the tip before it, `0805b220`, the PR #277 merge, was proved by scripted runs that day, [`hardening-1123.md`](hardening-1123.md); before it 2026-11-20: `main` `e9c1fb41`, the PR #267 merge; `v0.1.0-beta.1` was published on 2026-11-08 from `44fd3204`; everything merged since - PRs #213 to #278 - is unreleased; the state-hash pairs `orig5` are current, [`state-hash.md`](state-hash.md) 6)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is

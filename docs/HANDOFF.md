@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-11-23: `main` is `0805b220`, the PR #277 merge, and item 00's first bullet is that day's proofs; the rest of this file is as of 2026-11-20: `main` was `e9c1fb41`, the PR #267 merge; `v0.1.0-beta.1` was published on 2026-11-08 from `44fd3204`, the PR #212 merge; merged since the beta: PRs #213, #214, #217..#222, #224 and #227..#267 ([`STATUS.md`](STATUS.md) has a line each), none of it released; the item numbers below were not renumbered by this pass)
+**Status:** IN PROGRESS (2026-11-23: `main` is `1071ec91`, the PR #278 merge, the PSP preset; item 00's first bullet is that day's proofs, run at the tip before it, `0805b220`; the rest of this file is as of 2026-11-20: `main` was `e9c1fb41`, the PR #267 merge; `v0.1.0-beta.1` was published on 2026-11-08 from `44fd3204`, the PR #212 merge; merged since the beta: PRs #213, #214, #217..#222, #224 and #227..#267 ([`STATUS.md`](STATUS.md) has a line each), none of it released; the item numbers below were not renumbered by this pass)
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
 than restating it**.

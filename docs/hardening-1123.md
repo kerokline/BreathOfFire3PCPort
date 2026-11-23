@@ -4,7 +4,9 @@
 away day, the owner's word "Yes, hardening"). Every run below passed or is
 explained. Nothing in `src/` changed. Not played by anyone: these are scripted
 runs. The `v0.1.0-beta.2` tag stays held for a person's check of the Linux
-build (the owner, 2026-11-22).
+build (the owner, 2026-11-22). **Since the runs** `main` took PR #278 (the
+PSP preset, `1071ec91`): `src/launcher` and its tests and docs, no file of
+the game's code; it was not built or run here.
 
 What was owed before a second beta, by [`HANDOFF.md`](HANDOFF.md) as it stood:
 the ten state-hash routes for the smooth-motion fixes (PRs #252, #254, #255)
