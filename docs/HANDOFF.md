@@ -42,7 +42,7 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      ([`linux-round.md`](linux-round.md)). **Left by it:** `BattleFlow_TaskCurrent+0x38` in the skip list or the fold
      for disc-built installs; `AbilityList_ForType` in the `rest_2e` fuzz group's callees; the ten routes with smooth
      motion on; the hosted fuzz with `TownWarp` on (no mod layer in a PC folder). The runs' root is
-     `D:of3x-runs\hard1123` (the worktree `wt`, the install `home`, the outputs `p`), removable once read.
+     `D:\bof3x-runs\hard1123` (the worktree `wt`, the install `home`, the outputs `p`), removable once read.
      **The `v0.1.0-beta.2` tag is held** until a person has checked the Linux build once (the owner, 2026-11-22).
    - **D420 is fixed (merged as PR #249, 2026-11-15; the cleanup below merged as PR #248, `main`
      `31925318`):** the state hash's "sound page" noise was the real keyboard's bytes (`Key_State`, typed anywhere on the
