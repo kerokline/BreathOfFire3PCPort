@@ -190,9 +190,7 @@ Section 3's settings with no language (the ten are run so), the two-line
 install; each route on the 32-bit build, then the 64-bit, one game at a time
 (`suite.py`, 07:33..08:29, 55 minutes). **All twenty ended rc 0 on the first
 attempt, and every route is identical between the two widths on every tick
-both files hold.** `BOF3.CFG` was `0
-1
-` at the end.
+both files hold.** `BOF3.CFG` was `0\r\n1\r\n` at the end.
 
 | Route | Save | End frame | Records, 32 / 64 | 32 against 64 | sha256 of the 32-bit `.sh` (first 16) |
 |---|---|---|---|---|---|
@@ -212,7 +210,7 @@ every 64 ticks and the runner ends the game with `taskkill`
 ([`state-hash.md`](state-hash.md) 1), so one width's file got one flush more.
 The 64-bit sha256s of those two: `926e81e2046194fa`, `3239b26394088694`.
 
-The files are `D:of3x-runs\orig6\suite\cn_<route>_o6w32.sh` and
+The files are `D:\bof3x-runs\orig6\suite\cn_<route>_o6w32.sh` and
 `_o6w64.sh`, each with its `.runlog` and the game's `.log`. `shop` ran with
 `--slot0-hold`, as in the earlier proofs. Not compared with the laptop's
 files here, and not with any Capcom-side run: section 5.6 says what that
