@@ -533,8 +533,27 @@ of the same tick as three runs of bytes a tick behind.
   the same build under the 173-range list, which were windowed at the
   headless default k = 2 already (their `BOF3.CFG` the install's
   launcher-written `0` / `1`): nine routes on every tick, and `shop` but for
-  the same window, where `lx6b` is identical. Not yet recorded: the
-  desktop's pair of ours and Capcom's pair on the `orig6` install.
+  the same window, where `lx6b` is identical.
+
+  **Windows against Linux, the ten routes** (2026-11-24): the desktop's
+  runs of ours under `orig6`, the `latest` release zips at `65b7810f`
+  ([`state-hash-clean-install.md`](state-hash-clean-install.md) 6,
+  `cn_<route>_o6w32` / `_o6w64`), each checked against the laptop's pair
+  (`check cn_R_lx6.sh cn_R_lx6b.sh <desktop run>`): **nine routes exit 0 at
+  both widths, identical on every compared tick** (combat, caughFish,
+  cutsceneAndNue, dragonTransform, field_menu, masterAndManillo,
+  menu_screens, whelpBoss, worldMapAndAreaTransition). `shop` reports 9
+  pages at 2,713..2,756, the jingle window; by `diff` the desktop's run at
+  both widths is identical to both `lx6` and `lx6b` on every tick before
+  2,712 and from 2,757. Inside the window each run places the transition
+  differently (`lx6` from 2,712, `lx6b` and the desktop's from 2,713 on
+  different ticks), so at a few ticks the pair agrees and the third does
+  not - the DIV-0201 timing, which `lx6` against `lx6b` shows on one
+  machine. **So the 32-bit and 64-bit Windows exe hosts and the 64-bit
+  Linux ELF compute the same game on all ten routes, outside that window.**
+  A check of `shop` across machines reads the window as known. Not yet
+  recorded: Capcom's pair on the `orig6` install, which wants the
+  conditions of state-hash-clean-install.md 5.6 first.
 
   **The release against `main` on Linux** (the same night, the laptop): the
   ELF of the "latest" release tarball (built from `e16f999e`) and a build of
