@@ -312,11 +312,15 @@ the caches differ by the key files, the build time and the movie's new
 `game\` files identical**, the caches by the build time only.
 
 **The languages chosen.** Every PlayStation disc's language (its
-`fixtures.toml` tag: `en-US`, `en-150`, `fr-FR`, `de-DE`, `ja-JP`); without a
-PC folder, every PSP disc's too (a disc-only build reads a PSP disc's text,
-[`loc-build-psp.md`](loc-build-psp.md); beside the PC's `DAT\` `loc_build.py`
-reads PSX discs only, so a PC + PSP install gets no PSP language). Each tag
-once, in the list's order. The PC's own Chinese is the PC's `DAT\`.
+`fixtures.toml` tag: `en-US`, `en-150`, `fr-FR`, `de-DE`, `ja-JP`) and every
+PSP disc's, with a PC folder or without one. Until 2026-11-23 a PSP disc's
+text was built only without a PC folder, so a PC + US + PSP-EU install had
+Chinese and `en-US` and no `en-150`; `loc_build.py` reads a PSP disc beside
+the PC's `DAT\` too now ([`loc-build-psp.md`](loc-build-psp.md) 12, the
+owner's request). Each tag once, in the list's order. Where a PlayStation
+disc and a PSP disc carry the same tag (the European disc and PSP-EU, the
+Japan disc and PSP-JP), the layer is the PlayStation disc's
+(`importer.resolve_languages`). The PC's own Chinese is the PC's `DAT\`.
 
 **ffmpeg.** `--ffmpeg`, else `BOF3X_FFMPEG`, else the `PATH`'s (`at3.find_ffmpeg`,
 as `build` resolves it). A given path that is not there is an `error`. With

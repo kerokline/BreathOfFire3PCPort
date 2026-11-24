@@ -326,7 +326,7 @@ const Callees kOriginals = {
     Mp3_Create, Mp3_MemoryIo, Mp3_SetIo, Mp3_Open, Mp3_Start, Mp3_Decode, Mp3_Seek, Mp3_Destroy,
     ImportCreateEvent, ImportCloseHandle, ImportMsgWait,
     Music_LoadFile, Music_SetVolume, Music_Start, Music_FadeInEax, Music_Pump, Music_Stop, Wave_FindData, SndBuf_Write,
-    SndBuf_Play, SndBuf_Stop, SndBuf_CreateFromWave, Music_Release, Music_OpenDecoder, Music_CreateBuffer,
+    PlayVoice, SndBuf_Stop, SndBuf_CreateFromWave, Music_Release, Music_OpenDecoder, Music_CreateBuffer,
     Music_SetNotify, Music_Decode,
 };
 Callees g = kOriginals;
@@ -364,13 +364,16 @@ int Sound_PlayEffectEax(unsigned short id) {
             }
             continue;
         }
+        // The original packs the loop flag into bit 31 of the wave's address
+        // for SndBuf_Play; the flag goes apart here (PlayVoice, sound.h), as a
+        // wave in the Linux build's heap arena has bit 31 set already.
         const std::uint32_t loops = (word & 0xFFFF8000u) << 16;
         void* const playing = reinterpret_cast<void*>(Sound_Channels[channel]);
         if (playing) sound::g.sndbuf_stop(playing);
         const std::uint32_t entry = sound::Address(Sound_Banks) + base + sound::kVoices + voice * 8;
         // DIVERGENCE DIV-0171 / DIV-0172: a buffer sound_sp changed gets its level back first (sound_sp.h).
         if (sound_sp::Routed()) sound_sp::BeforePlay(reinterpret_cast<void*>(sound::Dword(entry + 4)));
-        sound::g.sndbuf_play(sound::Dword(entry) | loops, reinterpret_cast<void*>(sound::Dword(entry + 4)), word >> 16);
+        sound::g.sndbuf_play(sound::Dword(entry), reinterpret_cast<void*>(sound::Dword(entry + 4)), word >> 16, loops ? 1 : 0);
         Sound_Channels[channel] = loops ? sound::Dword(entry + 4) : 0;
         if (!loops) sound_st::NoteOneShot(channel, entry);  // DIV-0174: DLL-side, nothing without its switch
     }

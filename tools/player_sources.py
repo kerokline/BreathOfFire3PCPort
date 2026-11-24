@@ -776,15 +776,17 @@ def needs_layout(row, path):
     return False
 
 
-def languages_for(rows, pc):
-    """The language layers setup builds: every PlayStation disc's language;
-    without the PC game also every PSP disc's (a disc-only build reads a PSP
-    disc's text, docs/loc-build-psp.md; beside the PC's DAT\\ loc_build reads
-    PSX discs only). In the sources' order, each tag once."""
+def languages_for(rows):
+    """The language layers setup builds: every PlayStation disc's language and
+    every PSP disc's, with the PC game or without it (loc_build reads a PSP
+    disc's text over the PC's DAT\\ too since 2026-11-23, DIV-0090's amendment,
+    docs/loc-build-psp.md 12). In the sources' order, each tag once; where a
+    PlayStation disc and a PSP disc carry the same tag the importer builds it
+    from the PlayStation disc (importer.resolve_languages)."""
     imp = _imp()
     out = []
     for r in rows:
-        if r["kind"] == "psx" or (r["kind"] == "psp" and not pc):
+        if r["kind"] in ("psx", "psp"):
             t = imp.tag_of(r["build"])
             if t not in out:
                 out.append(t)
@@ -990,7 +992,7 @@ def run_setup(a, h, log, progress, total):
         pc[IN_PLACE_KEY] = True
     in_place = pc["path"] if pc and pc["kind"] == "pc-folder" and pc.get(IN_PLACE_KEY) else None
     zips = [r for r in rows if r["path"].lower().endswith(".zip")]
-    langs = languages_for(rows, pc)
+    langs = languages_for(rows)
     import mods        # the player's mods (docs/mods.md): built after the language layers
     mod_rows = mods.load_rows(h)
     seconds = len(langs) > 1     # every ordered pair of held text layers gets its reading-row layer

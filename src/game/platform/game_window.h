@@ -87,7 +87,9 @@ void Destroy();
 // port had it). What came in since the last call, in order:
 //   Key       a key going down (a: its Windows virtual-key number)
 //   Click     the left or the right button going down over the window
-//   Activate  the application activated (a 1) or deactivated (a 0)
+//   Activate  the application activated (a 1) or deactivated (a 0); the
+//             last one a movie takes is handed to the game too, first at
+//             the next Pump (WinGame_Activate)
 //   Repaint   the client needs drawing again
 //   Close     the window was closed: the path's close has run (the placement
 //             saved, the quit flag set, the window hidden), and every later

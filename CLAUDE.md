@@ -86,7 +86,10 @@ may be exactly right here — **provided it is in the ledger.**
    sessions cost a rewrite of 185 commits and of every hash the docs cited
    (2026-10-04, `docs/HANDOFF.md` traps) - ask the owner first.
 
-## Related checkouts on this machine
+## Related repositories
+
+Cloned beside this repo where a machine has them (`CLAUDE.local.md` says
+which); clone one beside it if a task needs it.
 
 | Path | What it is |
 |---|---|
@@ -94,22 +97,19 @@ may be exactly right here — **provided it is in the ledger.**
 | `../bof3ext` | TheRealBiggs' hook layer — a **peer** derivative of the same Capcom binary. `src/bof3/*.ixx` cross-checks our symbol table; `docs/` is unusually good. Reference only (rule 5). |
 | `../bof3ext_resources` | 360 files of translated text, fonts, HD textures. Reference only (rule 5). |
 
-## Environment notes (this machine)
+## Environment notes
 
-- **Use `python`, not `python3`** — `python3` does not resolve here; `python` is
-  Anaconda 3.13.9. `capstone` is installed.
-- Both a PowerShell tool and a Git Bash tool are available; `.sh` scripts want
-  bash. `gh` is at `C:\Program Files\GitHub CLI`, authenticated as `kerokline`.
-- **The build uses llvm-mingw, not MSYS2**: `cmake --preset i686 && cmake
-  --build build`, with `i686-w64-mingw32-clang++` already on `PATH` (the
-  `retcomm` toolchain under `~/.local/share`) — [`docs/SCAFFOLDING.md`](docs/SCAFFOLDING.md) §4.
-  The MSYS2 toolchain at `/c/msys64/mingw64/bin` is the sibling repo's; if you
-  ever prepend it, it shadows `python` with an interpreter missing our
-  packages.
+Machine-specific notes are **not in this file**: the interpreter's name, the
+toolchains, where Ghidra and the game data are, what is installed. Each
+machine keeps its own in `CLAUDE.local.md` in the repo root, which is not
+tracked and which Claude Code loads with this file. So a session sees its own
+machine's notes and no other machine's.
 
-- Ghidra is at `D:\Utilities\ghidra_12.1.3_PUBLIC`, projects in
-  `D:\Utilities\GhidraProjects` (project `BoF3PC`, kept separate from the
-  sibling's `BoF3`). Override with `PC_GHIDRA_DIR` / `PC_GHIDRA_PROJECT_DIR`.
+- In a worktree the file is not there: read the main checkout's
+  (`git worktree list` names it first).
+- With none on the machine, say so and check before trusting a tool or a
+  path (`python` or `python3`, which compiler is on `PATH`), then write one.
+- A change to a machine goes in that machine's file, not here.
 
 ## Conventions for agents
 
