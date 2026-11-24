@@ -380,6 +380,13 @@ void __cdecl StubPlay(std::uint32_t sample, void* buffer, unsigned frequency) {
     DisturbCue();
     Disturb();
 }
+// Ours calls sound::PlayVoice with the loop flag apart (sound.h); Capcom's
+// copy calls 0x5A6BB0 with it packed into bit 31. The flag goes back into the
+// wave's bit 31 here, so both sides record the same call: lossless in this
+// 32-bit build, where every wave lies below 2 GB.
+void __cdecl StubPlayVoice(std::uint32_t wave, void* buffer, unsigned frequency, std::uint32_t loops) {
+    StubPlay(wave | (loops ? 0x80000000u : 0u), buffer, frequency);
+}
 void __cdecl StubSndStop(void* buffer) { Record(29, Address(buffer)); DisturbCue(); Disturb(); }
 void* __cdecl StubCreate(const unsigned char* wave) {
     Record(30, Address(wave));
@@ -411,7 +418,7 @@ const Callees kStubs = {
     StubMp3Create, StubMp3MemoryIo, StubMp3SetIo, StubMp3Open, StubMp3Start, StubMp3Decode, StubMp3Seek, StubMp3Destroy,
     StubCreateEvent, StubCloseHandle, StubMsgWait,
     StubLoadFile, Cast<void (__cdecl*)(float)>(&StubSetVolume), StubStart, StubFadeIn, StubPump, StubStop, StubFindData,
-    StubWrite, StubPlay, StubSndStop, StubCreate, StubRelease, StubOpenDecoder, StubCreateBuffer, StubSetNotify, StubDecode,
+    StubWrite, StubPlayVoice, StubSndStop, StubCreate, StubRelease, StubOpenDecoder, StubCreateBuffer, StubSetNotify, StubDecode,
 };
 
 // The copies' import slots: the absolute operands of their Win32 calls moved here.
