@@ -367,6 +367,7 @@ set(_dll_sources
   src/hook/draw_order.cpp
   src/hook/write_watch.cpp
   src/hook/stp_census.cpp
+  src/hook/task_census.cpp
   src/hook/crash.cpp
   # The fault catcher and the stack watch per system (docs/linux-round.md
   # LB7): these two on Windows; crash_posix.cpp and stackwatch_posix.cpp take

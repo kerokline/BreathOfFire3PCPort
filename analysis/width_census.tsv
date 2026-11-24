@@ -2128,42 +2128,42 @@ site	src/game/core/sound.cpp	270	widen	param	live	address	unsigned char*	unsigne
 site	src/game/core/sound.cpp	272	low32	helper_def	live	p	Low32	std::uint32_t Address(const volatile void* p) { return Low32(p); }
 site	src/game/core/sound.cpp	311	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(word));
 site	src/game/core/sound.cpp	311	widen	param	live	word	Fn [fn]	return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(word));
-site	src/game/core/sound.cpp	388	narrow_call	image	live	Sound_Channels	AddrScenaSx2	for (std::uint32_t p = AddrScenaSx2(Sound_Channels); p < ::bof3::Img(scena_sx2::at::kChannelsEnd); p += 4) {
-site	src/game/core/sound.cpp	407	narrow_call	image	live	Sound_Banks	AddrScenaSx2	const std::uint32_t cue_at = AddrScenaSx2(Sound_Banks) + bank + (c & 0xFF) * 16;
-site	src/game/core/sound.cpp	411	narrow_call	image	live	Sound_Banks	AddrScenaSx2	const std::uint32_t buffer = UScenaSx2(LongScenaSx2(AtScenaSx2(AddrScenaSx2(Sound_Banks) + scena_sx2::at::kBankVoices + bank + (voice & 0xFF) * 8)));
-site	src/game/core/sound.cpp	519	widen	img_place	live	::bof3::Img(kLoopingName.v)	const char*	sound::g.sprintf(looping, reinterpret_cast<const char*>(::bof3::Img(kLoopingName.v)), track);
-site	src/game/core/sound.cpp	520	widen	img_place	live	::bof3::Img(kOnceName.v)	const char*	sound::g.sprintf(once, reinterpret_cast<const char*>(::bof3::Img(kOnceName.v)), track);
-site	src/game/core/sound.cpp	559	fmt_place	pointer	live	Music_LoadedTrack	%p	MUSIC_LOG("Music_Play(%u, %d) track %u loaded %d from %p", Frame_Counter, track, frames, (unsigned)Music_Track, Music_LoadedTrack, __builtin_return_address(0));
-site	src/game/core/sound.cpp	584	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_FadeOutStop(%d) track %u from %p", Frame_Counter, frames, (unsigned)Music_Track, __builtin_return_address(0));
-site	src/game/core/sound.cpp	588	asm	x87	live	fildll %[n]	fchs fdivrs fildll fstps	__asm__ volatile(
-site	src/game/core/sound.cpp	607	naked	-	live	Sound_StopMusic	-	extern " " __attribute__((naked)) void __cdecl Sound_StopMusic(void) {
-site	src/game/core/sound.cpp	608	width_if	asm_pair	live	Sound_StopMusic	#if defined(__i386__)	#if defined(__i386__)
-site	src/game/core/sound.cpp	609	asm	stack	live	jmp *(	jmp	__asm__ volatile("jmp *(" BOF3_SYM(SoundRest_g) "+8)");
-site	src/game/core/sound.cpp	611	asm	stack	live	jmp *%c0+	jmp	__asm__ volatile("jmp *%c0+" BOF3_SYM(SoundRest_g) "(%%rip)" : : "i"(offsetof(sound_rest::Callees, halt)));
-site	src/game/core/sound.cpp	618	naked	-	live	Sound_ResumeAll	-	extern " " __attribute__((naked)) void __cdecl Sound_ResumeAll(void) {
-site	src/game/core/sound.cpp	619	width_if	asm_pair	live	Sound_ResumeAll	#if defined(__i386__)	#if defined(__i386__)
-site	src/game/core/sound.cpp	620	asm	stack	live	jmp *(	jmp	__asm__ volatile("jmp *(" BOF3_SYM(SoundRest_g) "+12)");
-site	src/game/core/sound.cpp	622	asm	stack	live	jmp *%c0+	jmp	__asm__ volatile("jmp *%c0+" BOF3_SYM(SoundRest_g) "(%%rip)" : : "i"(offsetof(sound_rest::Callees, resume)));
-site	src/game/core/sound.cpp	632	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_FadeIn(%d) track %u from %p", Frame_Counter, frames, (unsigned)Music_Track, __builtin_return_address(0));
-site	src/game/core/sound.cpp	634	asm	x87	live	flds %[full]	fidivl flds fstps fsubs	__asm__ volatile(
-site	src/game/core/sound.cpp	640	uintptr	-	live	std::uintptr_t	-	: [full] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k127At))), [volume] " "(Music_Volume), [n] " "(frames)
-site	src/game/core/sound.cpp	640	widen	param	live	k127At	const float*	: [full] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k127At))), [volume] " "(Music_Volume), [n] " "(frames)
-site	src/game/core/sound.cpp	650	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_FadeOut(%d) track %u from %p", Frame_Counter, frames, (unsigned)Music_Track, __builtin_return_address(0));
-site	src/game/core/sound.cpp	653	asm	x87	live	fildll %[n]	fchs fdivrs fildll fstps	__asm__ volatile(
-site	src/game/core/sound.cpp	669	naked	-	live	Sound_MusicPlaying	-	extern " " __attribute__((naked)) int __cdecl Sound_MusicPlaying(void) {
-site	src/game/core/sound.cpp	670	width_if	asm_pair	live	Sound_MusicPlaying	#if defined(__i386__)	#if defined(__i386__)
-site	src/game/core/sound.cpp	671	asm	stack	live	jmp *(	jmp	__asm__ volatile("jmp *(" BOF3_SYM(SoundRest_g) "+16)");
-site	src/game/core/sound.cpp	673	asm	stack	live	jmp *%c0+	jmp	__asm__ volatile("jmp *%c0+" BOF3_SYM(SoundRest_g) "(%%rip)" : : "i"(offsetof(sound_rest::Callees, music_playing)));
-site	src/game/core/sound.cpp	712	asm	x87	live	flds %[step]	fadds flds fstps	__asm__ volatile(
-site	src/game/core/sound.cpp	758	narrow_call	image_local	live	payload	Addr	const display_env::U src = Addr(payload);
-site	src/game/core/sound.cpp	761	narrow_call	heap	live	display_env::g.malloc(bytes)	Addr	const display_env::U data = Addr(display_env::g.malloc(bytes));
-site	src/game/core/sound.cpp	771	narrow_call	unread	live	display_env::g.from_wave(display_env::At(sample))	Addr	PutLong(entry + 4, Addr(display_env::g.from_wave(display_env::At(sample))));
-site	src/game/core/sound.cpp	1112	naked	-	live	LoadMenu_Error	-	extern " " __attribute__((naked)) void __cdecl LoadMenu_Error(void) {
-site	src/game/core/sound.cpp	1113	width_if	asm_pair	live	LoadMenu_Error	#if defined(__i386__)	#if defined(__i386__)
-site	src/game/core/sound.cpp	1114	asm	stack	live	push %ecx	call push	__asm__ volatile(
-site	src/game/core/sound.cpp	1120	asm	stack	live	jmp	jmp	__asm__ volatile("jmp " BOF3_SYM(SaveMenu_LoadErrorBody)); // the caller's ecx is the body's first argument already
-site	src/game/core/sound.cpp	1237	uintptr	-	live	std::uintptr_t	-	save_menu::g.task_restart(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(save_menu::at::kGameTask.v))));
-site	src/game/core/sound.cpp	1237	widen	code_place	live	::bof3::Code(save_menu::at::kGameTask.v)	void*	save_menu::g.task_restart(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(save_menu::at::kGameTask.v))));
+site	src/game/core/sound.cpp	391	narrow_call	image	live	Sound_Channels	AddrScenaSx2	for (std::uint32_t p = AddrScenaSx2(Sound_Channels); p < ::bof3::Img(scena_sx2::at::kChannelsEnd); p += 4) {
+site	src/game/core/sound.cpp	410	narrow_call	image	live	Sound_Banks	AddrScenaSx2	const std::uint32_t cue_at = AddrScenaSx2(Sound_Banks) + bank + (c & 0xFF) * 16;
+site	src/game/core/sound.cpp	414	narrow_call	image	live	Sound_Banks	AddrScenaSx2	const std::uint32_t buffer = UScenaSx2(LongScenaSx2(AtScenaSx2(AddrScenaSx2(Sound_Banks) + scena_sx2::at::kBankVoices + bank + (voice & 0xFF) * 8)));
+site	src/game/core/sound.cpp	522	widen	img_place	live	::bof3::Img(kLoopingName.v)	const char*	sound::g.sprintf(looping, reinterpret_cast<const char*>(::bof3::Img(kLoopingName.v)), track);
+site	src/game/core/sound.cpp	523	widen	img_place	live	::bof3::Img(kOnceName.v)	const char*	sound::g.sprintf(once, reinterpret_cast<const char*>(::bof3::Img(kOnceName.v)), track);
+site	src/game/core/sound.cpp	562	fmt_place	pointer	live	Music_LoadedTrack	%p	MUSIC_LOG("Music_Play(%u, %d) track %u loaded %d from %p", Frame_Counter, track, frames, (unsigned)Music_Track, Music_LoadedTrack, __builtin_return_address(0));
+site	src/game/core/sound.cpp	587	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_FadeOutStop(%d) track %u from %p", Frame_Counter, frames, (unsigned)Music_Track, __builtin_return_address(0));
+site	src/game/core/sound.cpp	591	asm	x87	live	fildll %[n]	fchs fdivrs fildll fstps	__asm__ volatile(
+site	src/game/core/sound.cpp	610	naked	-	live	Sound_StopMusic	-	extern " " __attribute__((naked)) void __cdecl Sound_StopMusic(void) {
+site	src/game/core/sound.cpp	611	width_if	asm_pair	live	Sound_StopMusic	#if defined(__i386__)	#if defined(__i386__)
+site	src/game/core/sound.cpp	612	asm	stack	live	jmp *(	jmp	__asm__ volatile("jmp *(" BOF3_SYM(SoundRest_g) "+8)");
+site	src/game/core/sound.cpp	614	asm	stack	live	jmp *%c0+	jmp	__asm__ volatile("jmp *%c0+" BOF3_SYM(SoundRest_g) "(%%rip)" : : "i"(offsetof(sound_rest::Callees, halt)));
+site	src/game/core/sound.cpp	621	naked	-	live	Sound_ResumeAll	-	extern " " __attribute__((naked)) void __cdecl Sound_ResumeAll(void) {
+site	src/game/core/sound.cpp	622	width_if	asm_pair	live	Sound_ResumeAll	#if defined(__i386__)	#if defined(__i386__)
+site	src/game/core/sound.cpp	623	asm	stack	live	jmp *(	jmp	__asm__ volatile("jmp *(" BOF3_SYM(SoundRest_g) "+12)");
+site	src/game/core/sound.cpp	625	asm	stack	live	jmp *%c0+	jmp	__asm__ volatile("jmp *%c0+" BOF3_SYM(SoundRest_g) "(%%rip)" : : "i"(offsetof(sound_rest::Callees, resume)));
+site	src/game/core/sound.cpp	635	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_FadeIn(%d) track %u from %p", Frame_Counter, frames, (unsigned)Music_Track, __builtin_return_address(0));
+site	src/game/core/sound.cpp	637	asm	x87	live	flds %[full]	fidivl flds fstps fsubs	__asm__ volatile(
+site	src/game/core/sound.cpp	643	uintptr	-	live	std::uintptr_t	-	: [full] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k127At))), [volume] " "(Music_Volume), [n] " "(frames)
+site	src/game/core/sound.cpp	643	widen	param	live	k127At	const float*	: [full] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k127At))), [volume] " "(Music_Volume), [n] " "(frames)
+site	src/game/core/sound.cpp	653	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_FadeOut(%d) track %u from %p", Frame_Counter, frames, (unsigned)Music_Track, __builtin_return_address(0));
+site	src/game/core/sound.cpp	656	asm	x87	live	fildll %[n]	fchs fdivrs fildll fstps	__asm__ volatile(
+site	src/game/core/sound.cpp	672	naked	-	live	Sound_MusicPlaying	-	extern " " __attribute__((naked)) int __cdecl Sound_MusicPlaying(void) {
+site	src/game/core/sound.cpp	673	width_if	asm_pair	live	Sound_MusicPlaying	#if defined(__i386__)	#if defined(__i386__)
+site	src/game/core/sound.cpp	674	asm	stack	live	jmp *(	jmp	__asm__ volatile("jmp *(" BOF3_SYM(SoundRest_g) "+16)");
+site	src/game/core/sound.cpp	676	asm	stack	live	jmp *%c0+	jmp	__asm__ volatile("jmp *%c0+" BOF3_SYM(SoundRest_g) "(%%rip)" : : "i"(offsetof(sound_rest::Callees, music_playing)));
+site	src/game/core/sound.cpp	715	asm	x87	live	flds %[step]	fadds flds fstps	__asm__ volatile(
+site	src/game/core/sound.cpp	761	narrow_call	image_local	live	payload	Addr	const display_env::U src = Addr(payload);
+site	src/game/core/sound.cpp	764	narrow_call	heap	live	display_env::g.malloc(bytes)	Addr	const display_env::U data = Addr(display_env::g.malloc(bytes));
+site	src/game/core/sound.cpp	774	narrow_call	unread	live	display_env::g.from_wave(display_env::At(sample))	Addr	PutLong(entry + 4, Addr(display_env::g.from_wave(display_env::At(sample))));
+site	src/game/core/sound.cpp	1115	naked	-	live	LoadMenu_Error	-	extern " " __attribute__((naked)) void __cdecl LoadMenu_Error(void) {
+site	src/game/core/sound.cpp	1116	width_if	asm_pair	live	LoadMenu_Error	#if defined(__i386__)	#if defined(__i386__)
+site	src/game/core/sound.cpp	1117	asm	stack	live	push %ecx	call push	__asm__ volatile(
+site	src/game/core/sound.cpp	1123	asm	stack	live	jmp	jmp	__asm__ volatile("jmp " BOF3_SYM(SaveMenu_LoadErrorBody)); // the caller's ecx is the body's first argument already
+site	src/game/core/sound.cpp	1240	uintptr	-	live	std::uintptr_t	-	save_menu::g.task_restart(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(save_menu::at::kGameTask.v))));
+site	src/game/core/sound.cpp	1240	widen	code_place	live	::bof3::Code(save_menu::at::kGameTask.v)	void*	save_menu::g.task_restart(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(save_menu::at::kGameTask.v))));
 site	src/game/core/task.cpp	18	uintptr	-	live	std::uintptr_t	-	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/core/task.cpp	18	widen	param	live	address	unsigned char*	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/core/task.cpp	48	uintptr	-	live	std::uintptr_t	-	const auto e = reinterpret_cast<std::uintptr_t>(entry);
@@ -6850,27 +6850,27 @@ site	src/game/platform/gte.cpp	617	fmt_place	word	live	Gte_Transformed[0]	%08X	"
 site	src/game/platform/gte.cpp	617	fmt_place	word	live	Gte_Transformed[1]	%08X	"original %08X %08X %08X", Gte_Transformed[0], Gte_Transformed[1], Gte_Transformed[2],
 site	src/game/platform/gte.cpp	617	fmt_place	word	live	Gte_Transformed[2]	%08X	"original %08X %08X %08X", Gte_Transformed[0], Gte_Transformed[1], Gte_Transformed[2],
 site	src/game/platform/gte.cpp	910	low32	object_ours	live	&psx_gte::g_lv_exact	Low32	Low32(&psx_gte::g_lv_exact), was, is, 4);
-site	src/game/platform/magic_080.cpp	122	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	122	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	124	uintptr	-	live	std::uintptr_t	-	std::uint32_t* Longs(U address) { return reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	124	widen	param	live	address	std::uint32_t*	std::uint32_t* Longs(U address) { return reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	126	low32	helper_def	live	p	Low32	U Addr(const volatile void* p) { return Low32(p); }
-site	src/game/platform/magic_080.cpp	165	uintptr	-	live	std::uintptr_t	-	const char* StrWinMain(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	165	widen	param	live	address	const char*	const char* StrWinMain(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	312	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(void*)>(static_cast<std::uintptr_t>(::bof3::Code(kSoundSetup.v))), Port_DroppedCall,
-site	src/game/platform/magic_080.cpp	737	long	l	live	long	-	long long draw_ticks = 0, logic_ticks = 0;
-site	src/game/platform/magic_080.cpp	755	uintptr	-	live	std::uintptr_t	-	Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
-site	src/game/platform/magic_080.cpp	755	widen	code_place	live	::bof3::Code(bof3::addr::Boot_Task)	void*	Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
-site	src/game/platform/magic_080.cpp	907	uintptr	-	live	std::uintptr_t	-	unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride));
-site	src/game/platform/magic_080.cpp	907	widen	img_place	live	::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride	unsigned char*	unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride));
-site	src/game/platform/magic_080.cpp	966	naked	-	live	Cfg_Load	-	extern " " __attribute__((naked)) void __cdecl Cfg_Load(void) {
-site	src/game/platform/magic_080.cpp	967	width_if	asm_pair	live	Cfg_Load	#if defined(__i386__)	#if defined(__i386__)
-site	src/game/platform/magic_080.cpp	968	asm	stack	live	subl $0x3C, %esp	call leal pushl subl	asm("subl $0x3C, %esp\n\t"
-site	src/game/platform/magic_080.cpp	980	asm	stack	live	subq $0x68, %rsp	call leaq subq	asm("subq $0x68, %rsp\n\t"
-site	src/game/platform/magic_080.cpp	1043	low32	image_local	live	pool	Low32	render::interp::ForgetPrims(Low32(pool), Low32(pool) + 0x10000u);
-site	src/game/platform/magic_080.cpp	1043	low32	image_local	live	pool	Low32	render::interp::ForgetPrims(Low32(pool), Low32(pool) + 0x10000u);
-site	src/game/platform/magic_080.cpp	1055	low32	image_local	live	node	Low32	node[1] = Low32(node);
-site	src/game/platform/magic_080.cpp	1072	narrow_call	image	live	Gfx_CurrentEnv	Addr	const U block = Addr(Gfx_CurrentEnv);
+site	src/game/platform/magic_080.cpp	123	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	123	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	125	uintptr	-	live	std::uintptr_t	-	std::uint32_t* Longs(U address) { return reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	125	widen	param	live	address	std::uint32_t*	std::uint32_t* Longs(U address) { return reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	127	low32	helper_def	live	p	Low32	U Addr(const volatile void* p) { return Low32(p); }
+site	src/game/platform/magic_080.cpp	166	uintptr	-	live	std::uintptr_t	-	const char* StrWinMain(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	166	widen	param	live	address	const char*	const char* StrWinMain(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	313	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(void*)>(static_cast<std::uintptr_t>(::bof3::Code(kSoundSetup.v))), Port_DroppedCall,
+site	src/game/platform/magic_080.cpp	738	long	l	live	long	-	long long draw_ticks = 0, logic_ticks = 0;
+site	src/game/platform/magic_080.cpp	756	uintptr	-	live	std::uintptr_t	-	Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
+site	src/game/platform/magic_080.cpp	756	widen	code_place	live	::bof3::Code(bof3::addr::Boot_Task)	void*	Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
+site	src/game/platform/magic_080.cpp	908	uintptr	-	live	std::uintptr_t	-	unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride));
+site	src/game/platform/magic_080.cpp	908	widen	img_place	live	::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride	unsigned char*	unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride));
+site	src/game/platform/magic_080.cpp	968	naked	-	live	Cfg_Load	-	extern " " __attribute__((naked)) void __cdecl Cfg_Load(void) {
+site	src/game/platform/magic_080.cpp	969	width_if	asm_pair	live	Cfg_Load	#if defined(__i386__)	#if defined(__i386__)
+site	src/game/platform/magic_080.cpp	970	asm	stack	live	subl $0x3C, %esp	call leal pushl subl	asm("subl $0x3C, %esp\n\t"
+site	src/game/platform/magic_080.cpp	982	asm	stack	live	subq $0x68, %rsp	call leaq subq	asm("subq $0x68, %rsp\n\t"
+site	src/game/platform/magic_080.cpp	1045	low32	image_local	live	pool	Low32	render::interp::ForgetPrims(Low32(pool), Low32(pool) + 0x10000u);
+site	src/game/platform/magic_080.cpp	1045	low32	image_local	live	pool	Low32	render::interp::ForgetPrims(Low32(pool), Low32(pool) + 0x10000u);
+site	src/game/platform/magic_080.cpp	1057	low32	image_local	live	node	Low32	node[1] = Low32(node);
+site	src/game/platform/magic_080.cpp	1074	narrow_call	image	live	Gfx_CurrentEnv	Addr	const U block = Addr(Gfx_CurrentEnv);
 site	src/game/platform/music.cpp	80	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/platform/music.cpp	80	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/platform/music.cpp	110	uintptr	-	live	std::uintptr_t	-	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
@@ -6878,37 +6878,37 @@ site	src/game/platform/music.cpp	110	widen	param	live	address	unsigned char*	uns
 site	src/game/platform/music.cpp	122	low32	helper_def	live	p	Low32	std::uint32_t Address(const volatile void* p) { return Low32(p); }
 site	src/game/platform/music.cpp	335	uintptr	-	live	std::uintptr_t	-	void* second = reinterpret_cast<void*>(static_cast<std::uintptr_t>(offset));
 site	src/game/platform/music.cpp	335	widen	param	live	offset	void*	void* second = reinterpret_cast<void*>(static_cast<std::uintptr_t>(offset));
-site	src/game/platform/music.cpp	388	asm	x87	live	fildl %[level]	fildl fistpll fldcw fmuls fnstcw fsubs movw orb	__asm__ volatile(
-site	src/game/platform/music.cpp	401	uintptr	-	live	std::uintptr_t	-	: [level] " "(level), [inverse] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(sound::kInverse127At))),
-site	src/game/platform/music.cpp	401	widen	param	live	sound::kInverse127At	const float*	: [level] " "(level), [inverse] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(sound::kInverse127At))),
-site	src/game/platform/music.cpp	402	uintptr	-	live	std::uintptr_t	-	[scale] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(sound::k10000At)))
-site	src/game/platform/music.cpp	402	widen	param	live	sound::k10000At	const float*	[scale] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(sound::k10000At)))
-site	src/game/platform/music.cpp	424	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_Start(%p, %u, %d) track %u from %p", Frame_Counter, file, size, loops, (unsigned)Music_Track, __builtin_return_address(0));
-site	src/game/platform/music.cpp	424	fmt_place	pointer	live	Frame_Counter	%p	MUSIC_LOG("Music_Start(%p, %u, %d) track %u from %p", Frame_Counter, file, size, loops, (unsigned)Music_Track, __builtin_return_address(0));
-site	src/game/platform/music.cpp	486	widen	img_place	live	::bof3::Img(kMemoryName.v)	const char*	sound::g.sprintf(name, reinterpret_cast<const char*>(::bof3::Img(kMemoryName.v)), size, file);
-site	src/game/platform/music.cpp	594	asm	x87	live	flds %[volume]	fistpll fldcw flds fmuls fnstcw fsubs movw orb	__asm__ volatile(
-site	src/game/platform/music.cpp	607	uintptr	-	live	std::uintptr_t	-	: [volume] " "(volume), [inverse] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(kInverse127At))),
-site	src/game/platform/music.cpp	607	widen	param	live	kInverse127At	const float*	: [volume] " "(volume), [inverse] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(kInverse127At))),
-site	src/game/platform/music.cpp	608	uintptr	-	live	std::uintptr_t	-	[scale] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k10000At)))
-site	src/game/platform/music.cpp	608	widen	param	live	k10000At	const float*	[scale] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k10000At)))
-site	src/game/platform/music.cpp	618	naked	-	live	Music_Halt	-	extern " " __attribute__((naked)) int __cdecl Music_Halt(void) {
-site	src/game/platform/music.cpp	619	width_if	asm_pair	live	Music_Halt	#if defined(__i386__)	#if defined(__i386__)
-site	src/game/platform/music.cpp	620	asm	stack	live	push %ecx	call push	__asm__ volatile(
-site	src/game/platform/music.cpp	626	asm	stack	live	jmp	jmp	__asm__ volatile("jmp " BOF3_SYM(SoundRest_HaltBody)); // the caller's ecx is the body's first argument already
-site	src/game/platform/music.cpp	638	naked	-	live	Music_IsPlaying	-	extern " " __attribute__((naked)) int __cdecl Music_IsPlaying(void) {
-site	src/game/platform/music.cpp	639	width_if	asm_pair	live	Music_IsPlaying	#if defined(__i386__)	#if defined(__i386__)
-site	src/game/platform/music.cpp	640	asm	stack	live	push %ecx	call push	__asm__ volatile(
-site	src/game/platform/music.cpp	646	asm	stack	live	jmp	jmp	__asm__ volatile("jmp " BOF3_SYM(SaveMenu_MusicPlayingBody)); // the caller's ecx is the body's first argument already
-site	src/game/platform/music.cpp	657	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_Stop track %u from %p", Frame_Counter, (unsigned)Music_Track, __builtin_return_address(0));
-site	src/game/platform/music.cpp	726	fmt_place	narrowed	live	__builtin_return_address(0)	%p	bof3::Log("music_log f%u SndStream_Play(%p) from %p", Frame_Counter, static_cast<const void*>(wave),
-site	src/game/platform/music.cpp	726	fmt_place	pointer	live	static_cast<const void*>(wave)	%p	bof3::Log("music_log f%u SndStream_Play(%p) from %p", Frame_Counter, static_cast<const void*>(wave),
-site	src/game/platform/music.cpp	761	naked	-	live	SndStream_IsPlaying	-	extern " " __attribute__((naked)) int __cdecl SndStream_IsPlaying(void) {
-site	src/game/platform/music.cpp	762	width_if	asm_pair	live	SndStream_IsPlaying	#if defined(__i386__)	#if defined(__i386__)
-site	src/game/platform/music.cpp	763	asm	stack	live	push %ecx	call push	__asm__ volatile(
-site	src/game/platform/music.cpp	769	asm	stack	live	jmp	jmp	__asm__ volatile("jmp " BOF3_SYM(SoundRest_StreamPlayingBody)); // the caller's ecx is the body's first argument already
-site	src/game/platform/music.cpp	785	width_if	logic	live	Music_Pump	#if defined(__i386__)	#if defined(__i386__)
-site	src/game/platform/music.cpp	786	handle_array	slot_i686	live	Music_Events	g.msg_wait	const unsigned signalled = sound::g.msg_wait(2, Music_Events, 0, 0, 0xFF);
-site	src/game/platform/music.cpp	793	handle_array	native	live	events	g.msg_wait	const unsigned signalled = sound::g.msg_wait(2, events, 0, 0, 0xFF);
+site	src/game/platform/music.cpp	397	asm	x87	live	fildl %[level]	fildl fistpll fldcw fmuls fnstcw fsubs movw orb	__asm__ volatile(
+site	src/game/platform/music.cpp	410	uintptr	-	live	std::uintptr_t	-	: [level] " "(level), [inverse] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(sound::kInverse127At))),
+site	src/game/platform/music.cpp	410	widen	param	live	sound::kInverse127At	const float*	: [level] " "(level), [inverse] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(sound::kInverse127At))),
+site	src/game/platform/music.cpp	411	uintptr	-	live	std::uintptr_t	-	[scale] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(sound::k10000At)))
+site	src/game/platform/music.cpp	411	widen	param	live	sound::k10000At	const float*	[scale] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(sound::k10000At)))
+site	src/game/platform/music.cpp	433	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_Start(%p, %u, %d) track %u from %p", Frame_Counter, file, size, loops, (unsigned)Music_Track, __builtin_return_address(0));
+site	src/game/platform/music.cpp	433	fmt_place	pointer	live	Frame_Counter	%p	MUSIC_LOG("Music_Start(%p, %u, %d) track %u from %p", Frame_Counter, file, size, loops, (unsigned)Music_Track, __builtin_return_address(0));
+site	src/game/platform/music.cpp	495	widen	img_place	live	::bof3::Img(kMemoryName.v)	const char*	sound::g.sprintf(name, reinterpret_cast<const char*>(::bof3::Img(kMemoryName.v)), size, file);
+site	src/game/platform/music.cpp	603	asm	x87	live	flds %[volume]	fistpll fldcw flds fmuls fnstcw fsubs movw orb	__asm__ volatile(
+site	src/game/platform/music.cpp	616	uintptr	-	live	std::uintptr_t	-	: [volume] " "(volume), [inverse] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(kInverse127At))),
+site	src/game/platform/music.cpp	616	widen	param	live	kInverse127At	const float*	: [volume] " "(volume), [inverse] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(kInverse127At))),
+site	src/game/platform/music.cpp	617	uintptr	-	live	std::uintptr_t	-	[scale] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k10000At)))
+site	src/game/platform/music.cpp	617	widen	param	live	k10000At	const float*	[scale] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k10000At)))
+site	src/game/platform/music.cpp	627	naked	-	live	Music_Halt	-	extern " " __attribute__((naked)) int __cdecl Music_Halt(void) {
+site	src/game/platform/music.cpp	628	width_if	asm_pair	live	Music_Halt	#if defined(__i386__)	#if defined(__i386__)
+site	src/game/platform/music.cpp	629	asm	stack	live	push %ecx	call push	__asm__ volatile(
+site	src/game/platform/music.cpp	635	asm	stack	live	jmp	jmp	__asm__ volatile("jmp " BOF3_SYM(SoundRest_HaltBody)); // the caller's ecx is the body's first argument already
+site	src/game/platform/music.cpp	647	naked	-	live	Music_IsPlaying	-	extern " " __attribute__((naked)) int __cdecl Music_IsPlaying(void) {
+site	src/game/platform/music.cpp	648	width_if	asm_pair	live	Music_IsPlaying	#if defined(__i386__)	#if defined(__i386__)
+site	src/game/platform/music.cpp	649	asm	stack	live	push %ecx	call push	__asm__ volatile(
+site	src/game/platform/music.cpp	655	asm	stack	live	jmp	jmp	__asm__ volatile("jmp " BOF3_SYM(SaveMenu_MusicPlayingBody)); // the caller's ecx is the body's first argument already
+site	src/game/platform/music.cpp	666	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_Stop track %u from %p", Frame_Counter, (unsigned)Music_Track, __builtin_return_address(0));
+site	src/game/platform/music.cpp	735	fmt_place	narrowed	live	__builtin_return_address(0)	%p	bof3::Log("music_log f%u SndStream_Play(%p) from %p", Frame_Counter, static_cast<const void*>(wave),
+site	src/game/platform/music.cpp	735	fmt_place	pointer	live	static_cast<const void*>(wave)	%p	bof3::Log("music_log f%u SndStream_Play(%p) from %p", Frame_Counter, static_cast<const void*>(wave),
+site	src/game/platform/music.cpp	770	naked	-	live	SndStream_IsPlaying	-	extern " " __attribute__((naked)) int __cdecl SndStream_IsPlaying(void) {
+site	src/game/platform/music.cpp	771	width_if	asm_pair	live	SndStream_IsPlaying	#if defined(__i386__)	#if defined(__i386__)
+site	src/game/platform/music.cpp	772	asm	stack	live	push %ecx	call push	__asm__ volatile(
+site	src/game/platform/music.cpp	778	asm	stack	live	jmp	jmp	__asm__ volatile("jmp " BOF3_SYM(SoundRest_StreamPlayingBody)); // the caller's ecx is the body's first argument already
+site	src/game/platform/music.cpp	794	width_if	logic	live	Music_Pump	#if defined(__i386__)	#if defined(__i386__)
+site	src/game/platform/music.cpp	795	handle_array	slot_i686	live	Music_Events	g.msg_wait	const unsigned signalled = sound::g.msg_wait(2, Music_Events, 0, 0, 0xFF);
+site	src/game/platform/music.cpp	802	handle_array	native	live	events	g.msg_wait	const unsigned signalled = sound::g.msg_wait(2, events, 0, 0, 0xFF);
 site	src/game/platform/music_seq.cpp	105	uintptr	-	live	std::uintptr_t	-	bool Mono() { return *reinterpret_cast<const volatile unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(Rest4f_Setting3_addr))) != 0; }
 site	src/game/platform/music_seq.cpp	105	widen	img_place	live	::bof3::Img(Rest4f_Setting3_addr)	const volatile unsigned char*	bool Mono() { return *reinterpret_cast<const volatile unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(Rest4f_Setting3_addr))) != 0; }
 site	src/game/platform/music_seq.cpp	145	long	l	live	long	-	const long long size = static_cast<long long>(h.tellg());
@@ -7066,47 +7066,47 @@ site	src/game/platform/sound_fuzz.cpp	360	narrow_call	image_local	fuzz	buffer	Ad
 site	src/game/platform/sound_fuzz.cpp	360	narrow_call	image_local	fuzz	src	Address	Record(27, Address(buffer), Address(src), offset, size);
 site	src/game/platform/sound_fuzz.cpp	373	narrow_call	image_local	fuzz	AnyBuffer(h >> 12)	Address	if (g_entries[i]) SetDword(g_entries[i] + 4, Address(AnyBuffer(h >> 12)));
 site	src/game/platform/sound_fuzz.cpp	379	narrow_call	image_local	fuzz	buffer	Address	Record(28, sample, Address(buffer), frequency);
-site	src/game/platform/sound_fuzz.cpp	383	narrow_call	image_local	fuzz	buffer	Address	void __cdecl StubSndStop(void* buffer) { Record(29, Address(buffer)); DisturbCue(); Disturb(); }
-site	src/game/platform/sound_fuzz.cpp	385	narrow_call	image_local	fuzz	wave	Address	Record(30, Address(wave));
-site	src/game/platform/sound_fuzz.cpp	392	narrow_call	image_local	fuzz	file	Address	Record(32, Address(file), size);
-site	src/game/platform/sound_fuzz.cpp	403	narrow_call	image_local	fuzz	buffer	Address	std::int32_t __cdecl StubSetNotify(void* buffer) { Record(34, Address(buffer)); Disturb(); return static_cast<std::int32_t>(Hash()); }
-site	src/game/platform/sound_fuzz.cpp	404	narrow_call	image_local	fuzz	dst	Address	void __cdecl StubDecode(unsigned char* dst, int size) { Record(35, Address(dst), static_cast<std::uint32_t>(size)); Disturb(); }
-site	src/game/platform/sound_fuzz.cpp	574	asm	cw	fuzz	fnstcw %0	fnstcw	__asm__ volatile("fnstcw %0" : "=m"(cw));
-site	src/game/platform/sound_fuzz.cpp	577	asm	cw	fuzz	fldcw %0	fldcw	void SetControlWord(unsigned short cw) { __asm__ volatile("fldcw %0" : : "m"(cw)); }
-site	src/game/platform/sound_fuzz.cpp	589	narrow_call	object_ours	fuzz	g_out	Address	s.out = Address(g_out);
-site	src/game/platform/sound_fuzz.cpp	637	narrow_call	object_ours	fuzz	g_wave	Address	SetDword(Address(g_wave) + 0x10, fmt);
-site	src/game/platform/sound_fuzz.cpp	642	narrow_call	object_ours	fuzz	g_wave	Address	SetDword(Address(g_wave) + i + 4, 0xD000 + i);
-site	src/game/platform/sound_fuzz.cpp	650	narrow_call	object_ours	fuzz	g_wave	Address	SetDword(Address(g_wave) + at + 4, size);
-site	src/game/platform/sound_fuzz.cpp	654	narrow_call	object_ours	fuzz	g_wave	Address	SetDword(Address(g_wave) + at + 4, Pick({0, 1, 0x7FFFFFFF, 0x80000000u, 0x100}));
-site	src/game/platform/sound_fuzz.cpp	666	narrow_call	image_local	fuzz	AnyBuffer(Next())	Address	for (unsigned i = 0; i < 23; ++i) Sound_Channels[i] = Next() % 2 ? 0 : Next() % 3 ? Address(AnyBuffer(Next())) : Next();
-site	src/game/platform/sound_fuzz.cpp	671	narrow_call	image	fuzz	&Music_Volume	Address	SetDword(Address(&Music_Volume), Volume());
-site	src/game/platform/sound_fuzz.cpp	672	narrow_call	image	fuzz	&Music_FadeStep	Address	SetDword(Address(&Music_FadeStep), Volume());
-site	src/game/platform/sound_fuzz.cpp	694	narrow_call	image	fuzz	Sound_Banks	Address	const std::uint32_t at = Address(Sound_Banks) + (bank - 1) * kBankBytes + cue * 16;
-site	src/game/platform/sound_fuzz.cpp	710	narrow_call	image	fuzz	Sound_Banks	Address	const std::uint32_t entry = Address(Sound_Banks) + (bank - 1) * kBankBytes + kVoices + (word & 0xFF) * 8;
-site	src/game/platform/sound_fuzz.cpp	737	narrow_call	object_ours	fuzz	g_wave	Address	x.a[0] = Address(g_wave);
-site	src/game/platform/sound_fuzz.cpp	741	narrow_call	object_ours	fuzz	g_wave	Address	x.a[0] = Address(g_wave);
-site	src/game/platform/sound_fuzz.cpp	742	narrow_call	object_ours	fuzz	&g_out	Address	x.a[1] = Next() % 4 ? Address(&g_out) : 0;
-site	src/game/platform/sound_fuzz.cpp	748	narrow_call	image_local	fuzz	AnyBuffer(Next())	Address	x.a[0] = Address(AnyBuffer(Next()));
-site	src/game/platform/sound_fuzz.cpp	749	narrow_call	object_ours	fuzz	g_wave	Address	x.a[1] = Address(g_wave);
-site	src/game/platform/sound_fuzz.cpp	754	narrow_call	object_ours	fuzz	g_wave	Address	x.a[0] = Next() % 4 ? (Address(g_wave) | (Next() % 2 ? 0x80000000u : 0)) : Next();
-site	src/game/platform/sound_fuzz.cpp	755	narrow_call	unread	fuzz	Maybe(AnyBuffer(Next()), 6)	Address	x.a[1] = Address(Maybe(AnyBuffer(Next()), 6));
-site	src/game/platform/sound_fuzz.cpp	758	narrow_call	unread	fuzz	Maybe(AnyBuffer(Next()), 5)	Address	x.a[0] = Address(Maybe(AnyBuffer(Next()), 5));
-site	src/game/platform/sound_fuzz.cpp	761	narrow_call	object_ours	fuzz	g_wave	Address	x.a[0] = Address(g_wave);
-site	src/game/platform/sound_fuzz.cpp	766	narrow_call	object_ours	fuzz	g_wave	Address	x.a[0] = Next() % 2 ? Address(g_wave) : Next();
-site	src/game/platform/sound_fuzz.cpp	769	narrow_call	image_local	fuzz	AnyBuffer(Next())	Address	x.a[0] = Address(AnyBuffer(Next()));
-site	src/game/platform/sound_fuzz.cpp	774	narrow_call	object_ours	fuzz	g_dst	Address	x.a[0] = Address(g_dst);
-site	src/game/platform/sound_fuzz.cpp	827	narrow_call	image_local	fuzz	buffer	Address	if (g_keyoff_n < 8) g_keyoff_stops[g_keyoff_n] = Address(buffer);
-site	src/game/platform/sound_fuzz.cpp	849	fmt_place	word	fuzz	result	%08X	bof3::Log("shadow sound self-test MISMATCH: DIV-0168 round %u, Music_Play(%08X) answered %08X, %u calls",
-site	src/game/platform/sound_fuzz.cpp	849	fmt_place	word	fuzz	x.a[0]	%08X	bof3::Log("shadow sound self-test MISMATCH: DIV-0168 round %u, Music_Play(%08X) answered %08X, %u calls",
-site	src/game/platform/sound_fuzz.cpp	964	narrow_call	image	fuzz	Sound_Banks	Address	const std::uint32_t entry = Address(Sound_Banks) + (Next() % 6) * kBankBytes + kVoices + (Next() % 64) * 8;
-site	src/game/platform/sound_fuzz.cpp	965	narrow_call	image_local	fuzz	AnyBuffer(Next())	Address	const std::uint32_t buffer = Next() % 6 ? Address(AnyBuffer(Next())) : Next() % 2 ? 0 : Next();
-site	src/game/platform/sound_fuzz.cpp	1010	narrow_call	image	fuzz	Sound_Banks	Address	const std::uint32_t cue = Address(Sound_Banks);
-site	src/game/platform/sound_fuzz.cpp	1012	narrow_call	object_ours	fuzz	&g_buffers[1]	Address	const std::uint32_t b2 = Address(&g_buffers[1]), b3 = Address(&g_buffers[2]), b4 = Address(&g_buffers[3]);
-site	src/game/platform/sound_fuzz.cpp	1012	narrow_call	object_ours	fuzz	&g_buffers[2]	Address	const std::uint32_t b2 = Address(&g_buffers[1]), b3 = Address(&g_buffers[2]), b4 = Address(&g_buffers[3]);
-site	src/game/platform/sound_fuzz.cpp	1012	narrow_call	object_ours	fuzz	&g_buffers[3]	Address	const std::uint32_t b2 = Address(&g_buffers[1]), b3 = Address(&g_buffers[2]), b4 = Address(&g_buffers[3]);
-site	src/game/platform/sound_fuzz.cpp	1061	narrow_call	func_ours	fuzz	op.ours	Address	disp = Address(op.ours);
-site	src/game/platform/sound_fuzz.cpp	1107	fmt_place	word	fuzz	ours.result	%08X	bof3::Log("shadow sound self-test MISMATCH: round %u, %s, result %08X / %08X, log %u / %u", round,
-site	src/game/platform/sound_fuzz.cpp	1107	fmt_place	word	fuzz	theirs.result	%08X	bof3::Log("shadow sound self-test MISMATCH: round %u, %s, result %08X / %08X, log %u / %u", round,
+site	src/game/platform/sound_fuzz.cpp	390	narrow_call	image_local	fuzz	buffer	Address	void __cdecl StubSndStop(void* buffer) { Record(29, Address(buffer)); DisturbCue(); Disturb(); }
+site	src/game/platform/sound_fuzz.cpp	392	narrow_call	image_local	fuzz	wave	Address	Record(30, Address(wave));
+site	src/game/platform/sound_fuzz.cpp	399	narrow_call	image_local	fuzz	file	Address	Record(32, Address(file), size);
+site	src/game/platform/sound_fuzz.cpp	410	narrow_call	image_local	fuzz	buffer	Address	std::int32_t __cdecl StubSetNotify(void* buffer) { Record(34, Address(buffer)); Disturb(); return static_cast<std::int32_t>(Hash()); }
+site	src/game/platform/sound_fuzz.cpp	411	narrow_call	image_local	fuzz	dst	Address	void __cdecl StubDecode(unsigned char* dst, int size) { Record(35, Address(dst), static_cast<std::uint32_t>(size)); Disturb(); }
+site	src/game/platform/sound_fuzz.cpp	581	asm	cw	fuzz	fnstcw %0	fnstcw	__asm__ volatile("fnstcw %0" : "=m"(cw));
+site	src/game/platform/sound_fuzz.cpp	584	asm	cw	fuzz	fldcw %0	fldcw	void SetControlWord(unsigned short cw) { __asm__ volatile("fldcw %0" : : "m"(cw)); }
+site	src/game/platform/sound_fuzz.cpp	596	narrow_call	object_ours	fuzz	g_out	Address	s.out = Address(g_out);
+site	src/game/platform/sound_fuzz.cpp	644	narrow_call	object_ours	fuzz	g_wave	Address	SetDword(Address(g_wave) + 0x10, fmt);
+site	src/game/platform/sound_fuzz.cpp	649	narrow_call	object_ours	fuzz	g_wave	Address	SetDword(Address(g_wave) + i + 4, 0xD000 + i);
+site	src/game/platform/sound_fuzz.cpp	657	narrow_call	object_ours	fuzz	g_wave	Address	SetDword(Address(g_wave) + at + 4, size);
+site	src/game/platform/sound_fuzz.cpp	661	narrow_call	object_ours	fuzz	g_wave	Address	SetDword(Address(g_wave) + at + 4, Pick({0, 1, 0x7FFFFFFF, 0x80000000u, 0x100}));
+site	src/game/platform/sound_fuzz.cpp	673	narrow_call	image_local	fuzz	AnyBuffer(Next())	Address	for (unsigned i = 0; i < 23; ++i) Sound_Channels[i] = Next() % 2 ? 0 : Next() % 3 ? Address(AnyBuffer(Next())) : Next();
+site	src/game/platform/sound_fuzz.cpp	678	narrow_call	image	fuzz	&Music_Volume	Address	SetDword(Address(&Music_Volume), Volume());
+site	src/game/platform/sound_fuzz.cpp	679	narrow_call	image	fuzz	&Music_FadeStep	Address	SetDword(Address(&Music_FadeStep), Volume());
+site	src/game/platform/sound_fuzz.cpp	701	narrow_call	image	fuzz	Sound_Banks	Address	const std::uint32_t at = Address(Sound_Banks) + (bank - 1) * kBankBytes + cue * 16;
+site	src/game/platform/sound_fuzz.cpp	717	narrow_call	image	fuzz	Sound_Banks	Address	const std::uint32_t entry = Address(Sound_Banks) + (bank - 1) * kBankBytes + kVoices + (word & 0xFF) * 8;
+site	src/game/platform/sound_fuzz.cpp	744	narrow_call	object_ours	fuzz	g_wave	Address	x.a[0] = Address(g_wave);
+site	src/game/platform/sound_fuzz.cpp	748	narrow_call	object_ours	fuzz	g_wave	Address	x.a[0] = Address(g_wave);
+site	src/game/platform/sound_fuzz.cpp	749	narrow_call	object_ours	fuzz	&g_out	Address	x.a[1] = Next() % 4 ? Address(&g_out) : 0;
+site	src/game/platform/sound_fuzz.cpp	755	narrow_call	image_local	fuzz	AnyBuffer(Next())	Address	x.a[0] = Address(AnyBuffer(Next()));
+site	src/game/platform/sound_fuzz.cpp	756	narrow_call	object_ours	fuzz	g_wave	Address	x.a[1] = Address(g_wave);
+site	src/game/platform/sound_fuzz.cpp	761	narrow_call	object_ours	fuzz	g_wave	Address	x.a[0] = Next() % 4 ? (Address(g_wave) | (Next() % 2 ? 0x80000000u : 0)) : Next();
+site	src/game/platform/sound_fuzz.cpp	762	narrow_call	unread	fuzz	Maybe(AnyBuffer(Next()), 6)	Address	x.a[1] = Address(Maybe(AnyBuffer(Next()), 6));
+site	src/game/platform/sound_fuzz.cpp	765	narrow_call	unread	fuzz	Maybe(AnyBuffer(Next()), 5)	Address	x.a[0] = Address(Maybe(AnyBuffer(Next()), 5));
+site	src/game/platform/sound_fuzz.cpp	768	narrow_call	object_ours	fuzz	g_wave	Address	x.a[0] = Address(g_wave);
+site	src/game/platform/sound_fuzz.cpp	773	narrow_call	object_ours	fuzz	g_wave	Address	x.a[0] = Next() % 2 ? Address(g_wave) : Next();
+site	src/game/platform/sound_fuzz.cpp	776	narrow_call	image_local	fuzz	AnyBuffer(Next())	Address	x.a[0] = Address(AnyBuffer(Next()));
+site	src/game/platform/sound_fuzz.cpp	781	narrow_call	object_ours	fuzz	g_dst	Address	x.a[0] = Address(g_dst);
+site	src/game/platform/sound_fuzz.cpp	834	narrow_call	image_local	fuzz	buffer	Address	if (g_keyoff_n < 8) g_keyoff_stops[g_keyoff_n] = Address(buffer);
+site	src/game/platform/sound_fuzz.cpp	856	fmt_place	word	fuzz	result	%08X	bof3::Log("shadow sound self-test MISMATCH: DIV-0168 round %u, Music_Play(%08X) answered %08X, %u calls",
+site	src/game/platform/sound_fuzz.cpp	856	fmt_place	word	fuzz	x.a[0]	%08X	bof3::Log("shadow sound self-test MISMATCH: DIV-0168 round %u, Music_Play(%08X) answered %08X, %u calls",
+site	src/game/platform/sound_fuzz.cpp	971	narrow_call	image	fuzz	Sound_Banks	Address	const std::uint32_t entry = Address(Sound_Banks) + (Next() % 6) * kBankBytes + kVoices + (Next() % 64) * 8;
+site	src/game/platform/sound_fuzz.cpp	972	narrow_call	image_local	fuzz	AnyBuffer(Next())	Address	const std::uint32_t buffer = Next() % 6 ? Address(AnyBuffer(Next())) : Next() % 2 ? 0 : Next();
+site	src/game/platform/sound_fuzz.cpp	1017	narrow_call	image	fuzz	Sound_Banks	Address	const std::uint32_t cue = Address(Sound_Banks);
+site	src/game/platform/sound_fuzz.cpp	1019	narrow_call	object_ours	fuzz	&g_buffers[1]	Address	const std::uint32_t b2 = Address(&g_buffers[1]), b3 = Address(&g_buffers[2]), b4 = Address(&g_buffers[3]);
+site	src/game/platform/sound_fuzz.cpp	1019	narrow_call	object_ours	fuzz	&g_buffers[2]	Address	const std::uint32_t b2 = Address(&g_buffers[1]), b3 = Address(&g_buffers[2]), b4 = Address(&g_buffers[3]);
+site	src/game/platform/sound_fuzz.cpp	1019	narrow_call	object_ours	fuzz	&g_buffers[3]	Address	const std::uint32_t b2 = Address(&g_buffers[1]), b3 = Address(&g_buffers[2]), b4 = Address(&g_buffers[3]);
+site	src/game/platform/sound_fuzz.cpp	1068	narrow_call	func_ours	fuzz	op.ours	Address	disp = Address(op.ours);
+site	src/game/platform/sound_fuzz.cpp	1114	fmt_place	word	fuzz	ours.result	%08X	bof3::Log("shadow sound self-test MISMATCH: round %u, %s, result %08X / %08X, log %u / %u", round,
+site	src/game/platform/sound_fuzz.cpp	1114	fmt_place	word	fuzz	theirs.result	%08X	bof3::Log("shadow sound self-test MISMATCH: round %u, %s, result %08X / %08X, log %u / %u", round,
 site	src/game/platform/sound_in.cpp	194	uintptr	-	live	std::uintptr_t	-	g_trace += " " + std::to_string(reinterpret_cast<std::uintptr_t>(file)) + " " + std::to_string(size) + " " +
 site	src/game/platform/sound_in.cpp	225	uintptr	-	live	std::uintptr_t	-	const std::string file_id = std::to_string(reinterpret_cast<std::uintptr_t>(file));
 site	src/game/platform/sound_in.cpp	405	low32	object_ours	live	&g_inn_pause	Low32	Low32(&g_inn_pause), &was, &is, 1);
@@ -9083,6 +9083,19 @@ site	src/hook/statehash.h	24	long	ul	live	unsigned long	-	void StateHash_SetImag
 site	src/hook/stp_census.cpp	31	uintptr	-	live	std::uintptr_t	-	const unsigned char* At(std::uint32_t a) { return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(a)); }
 site	src/hook/stp_census.cpp	31	widen	param	live	a	const unsigned char*	const unsigned char* At(std::uint32_t a) { return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(a)); }
 site	src/hook/stp_census.cpp	48	long	l	live	long	-	unsigned long long zero = 0, stp = 0, opaque = 0;
+site	src/hook/task_census.cpp	23	uintptr	-	live	std::uintptr_t	-	using Chain = std::vector<std::uintptr_t>;
+site	src/hook/task_census.cpp	45	uintptr	-	live	std::uintptr_t	-	const unsigned char* Native(std::uintptr_t a) { return reinterpret_cast<const unsigned char*>(a); }
+site	src/hook/task_census.cpp	47	uintptr	-	live	std::uintptr_t	-	bool Executable(std::uintptr_t a) {
+site	src/hook/task_census.cpp	57	uintptr	-	live	std::uintptr_t	-	bool AfterCall(std::uintptr_t a) {
+site	src/hook/task_census.cpp	74	long	l	live	long	-	std::fprintf(f, " ", static_cast<unsigned long long>(g_module.base),
+site	src/hook/task_census.cpp	75	long	l	live	long	-	static_cast<unsigned long long>(g_module.extent), g_seen, task_sched::kStackSize);
+site	src/hook/task_census.cpp	88	uintptr	-	live	std::uintptr_t	-	for (std::uintptr_t a : chain) {
+site	src/hook/task_census.cpp	89	long	l	live	long	-	std::fprintf(f, " ", first ? "" : " ", static_cast<unsigned long long>(a));
+site	src/hook/task_census.cpp	111	long	l	live	long	-	static_cast<unsigned long long>(g_module.base), static_cast<unsigned long long>(g_module.extent));
+site	src/hook/task_census.cpp	111	long	l	live	long	-	static_cast<unsigned long long>(g_module.base), static_cast<unsigned long long>(g_module.extent));
+site	src/hook/task_census.cpp	130	fmt_place	word	live	sp	%08X	bof3::Fatal("BOF3X_TASKCENSUS: task %u's saved sp 0x%08X is outside its slice under 0x%08X", k, sp, top);
+site	src/hook/task_census.cpp	130	fmt_place	word	live	top	%08X	bof3::Fatal("BOF3X_TASKCENSUS: task %u's saved sp 0x%08X is outside its slice under 0x%08X", k, sp, top);
+site	src/hook/task_census.cpp	132	uintptr	-	live	std::uintptr_t	-	std::uintptr_t word;
 site	src/hook/wav_dump.cpp	95	long	ul	live	unsigned long	-	constexpr unsigned long kPrimaryBuffer = 0x01, kPositionNotify = 0x100;
 site	src/hook/wav_dump.cpp	96	long	ul	live	unsigned long	-	constexpr unsigned long kLockFromWriteCursor = 0x01, kLockEntireBuffer = 0x02;
 site	src/hook/wav_dump.cpp	97	long	ul	live	unsigned long	-	constexpr unsigned long kPlayLooping = 0x01;
@@ -15312,6 +15325,9 @@ file	src/hook/statehash.h	live	long	ul	1
 file	src/hook/stp_census.cpp	live	long	l	1
 file	src/hook/stp_census.cpp	live	uintptr	-	1
 file	src/hook/stp_census.cpp	live	widen	param	1
+file	src/hook/task_census.cpp	live	fmt_place	word	2
+file	src/hook/task_census.cpp	live	long	l	5
+file	src/hook/task_census.cpp	live	uintptr	-	6
 file	src/hook/wav_dump.cpp	live	fmt_place	pointer	18
 file	src/hook/wav_dump.cpp	live	fmt_place	word	2
 file	src/hook/wav_dump.cpp	live	long	l	39
@@ -15413,8 +15429,8 @@ file	symbols.toml	live	ptr_member	ours_render	11
 file	symbols.toml	live	ptr_member	windows_function	14
 file	symbols.toml	live	ptr_member	windows_handle	3
 file	symbols.toml	live	ptr_member	windows_object	10
-#count sites	11375
-#count sites_live	7891
+#count sites	11388
+#count sites_live	7904
 #count sites_fuzz	3484
 #count fuzz_files	250
 #count narrow	357
@@ -15501,9 +15517,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count widen_word_read	373
 #count widen_word_read_live	364
 #count widen_word_read_live_files	295
-#count long	2332
-#count long_live	2331
-#count long_live_files	53
+#count long	2337
+#count long_live	2336
+#count long_live_files	54
 #count long_fuzz	1
 #count long_fuzz_files	1
 #count long_ctype:long	42
@@ -15515,9 +15531,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count long_ctype:unsigned long *	1
 #count long_ctype:unsigned long *_live	1
 #count long_ctype:unsigned long *_live_files	1
-#count long_l	324
-#count long_l_live	323
-#count long_l_live_files	41
+#count long_l	329
+#count long_l_live	328
+#count long_l_live_files	42
 #count long_ul	219
 #count long_ul_live	219
 #count long_ul_live_files	28
@@ -15589,17 +15605,17 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count sizeof_ptr_-	17
 #count sizeof_ptr_-_live	17
 #count sizeof_ptr_-_live_files	9
-#count uintptr	1989
-#count uintptr_live	1323
-#count uintptr_live_files	524
+#count uintptr	1995
+#count uintptr_live	1329
+#count uintptr_live_files	525
 #count uintptr_fuzz	666
 #count uintptr_fuzz_files	249
-#count uintptr_-	1989
-#count uintptr_-_live	1323
-#count uintptr_-_live_files	524
-#count fmt_place	549
-#count fmt_place_live	479
-#count fmt_place_live_files	75
+#count uintptr_-	1995
+#count uintptr_-_live	1329
+#count uintptr_-_live_files	525
+#count fmt_place	551
+#count fmt_place_live	481
+#count fmt_place_live_files	76
 #count fmt_place_fuzz	70
 #count fmt_place_fuzz_files	35
 #count fmt_place_narrowed	24
@@ -15608,9 +15624,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count fmt_place_pointer	124
 #count fmt_place_pointer_live	109
 #count fmt_place_pointer_live_files	34
-#count fmt_place_word	401
-#count fmt_place_word_live	353
-#count fmt_place_word_live_files	61
+#count fmt_place_word	403
+#count fmt_place_word_live	355
+#count fmt_place_word_live_files	62
 #count import_slot	14
 #count import_slot_live	14
 #count import_slot_live_files	1
@@ -15733,7 +15749,7 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count width_if_logic_live_files	15
 #count asm_live_x87_only_files	42
 #count widen_live_fnptr	472
-#count long_src	543
+#count long_src	548
 #count long_src_game	46
 #count long_src_game_ul	1
 #count long_ctype	1789
@@ -15742,17 +15758,17 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count callconv_CALLBACK_live	7
 #count callconv_WINAPI	11
 #count callconv_WINAPI_live	11
-#count callconv___cdecl	16378
-#count callconv___cdecl_fuzz	2014
-#count callconv___cdecl_live	14364
+#count callconv___cdecl	16382
+#count callconv___cdecl_fuzz	2015
+#count callconv___cdecl_live	14367
 #count callconv___stdcall	366
 #count callconv___stdcall_fuzz	96
 #count callconv___stdcall_live	270
 #count img_place_Code	625
 #count img_place_Code_fuzz	6
 #count img_place_Code_live	619
-#count img_place_Img	16031
+#count img_place_Img	16032
 #count img_place_Img_fuzz	1070
-#count img_place_Img_live	14961
+#count img_place_Img_live	14962
 #count img_place_VaOf	106
 #count img_place_VaOf_live	106

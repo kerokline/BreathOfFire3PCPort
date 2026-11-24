@@ -44,6 +44,7 @@
 #include "hook/snapshot.h"
 #include "hook/stallwatch.h"
 #include "hook/statehash.h"
+#include "hook/task_census.h"
 #include "input/bindings.h"
 #include "input/function_keys.h"
 #include "input/key_codes.h"
@@ -937,6 +938,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                 // done; the next iteration draws what the span then holds.
                 bof3::Snapshot_Pending();
                 bof3::QuickMenu_AfterPoint();   // F5's menu: a load it asked ran, or stays open refused
+                task_census::Frame();           // BOF3X_TASKCENSUS, diagnostic only: reads the task records and slices
             }
         }
     }
