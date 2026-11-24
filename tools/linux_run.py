@@ -413,16 +413,28 @@ def alive(pid):
     return stat[stat.rfind(')') + 2:][:1] not in ('Z', 'X', '')
 
 
-def make_run_game(src, dst, save=None):
+# The BOF3.CFG of a state-hash run (docs/state-hash.md 6, 2026-11-24): line 1
+# windowed (0), line 2 renderer 1, no key lines (the game's own table). With
+# no file Cfg_Load sets Cfg_Fullscreen 1, and fullscreen takes the scale k
+# from the desktop's size; windowed, BOF3X_SCALE pins it, so the render size,
+# D3d_ScaleX/Y and the back buffer's pitch are the same on every machine.
+RUN_CFG = b'0\r\n1\r\n'
+
+
+def make_run_game(src, dst, save=None, only_slot0=False):
     """A game folder for one run, made from the install `src`, which is only
     read: every folder and every file the game only reads a symbolic link
     into `src`; the files a run writes real copies - the saves BISLPS0?.DAT
     (a route that saves writes one; slot 0 is `save` when given, the recipe
     save, else src's) and BOF3.CFG (the launcher writes its display lines).
-    Not taken: the quicksaves BISLPS1?.* and the temporary files (a run makes
-    its own), `.recipe_slot0` (the Windows harness's swap), DXVK's logs.
-    `dst` must not exist, or be a folder this function made (RUN_GAME_MARK),
-    which is removed first - never anything else. Returns (links, copies)."""
+    `only_slot0`: none of src's slots but slot 0 and not src's BOF3.CFG -
+    slot 0 alone (the recipe save, or src's) and RUN_CFG - so a hashed run's
+    inputs are the recipe save, the install's data and RUN_CFG, whatever the
+    install holds: the load menu reads every slot's header into .data (the
+    desktop's orig5 runs carry the owner's slots), and BOF3.CFG decides
+    Cfg_Fullscreen (bridgeWalk, laptop against desktop, 2026-11-24: page
+    0x65D000 on every tick while one side had a launcher-written file and
+    the other none). Returns (links, copies)."""
     import shutil
     src, dst = os.path.abspath(src), os.path.abspath(dst)
     if not os.path.isdir(src):
@@ -444,6 +456,8 @@ def make_run_game(src, dst, save=None):
         if re.fullmatch(r'BISLPS0[0-9A-F]\.DAT', up) or up == 'BOF3.CFG':
             if up == 'BISLPS00.DAT' and save:
                 continue
+            if only_slot0 and up != 'BISLPS00.DAT':
+                continue
             shutil.copyfile(at, to)
             os.chmod(to, 0o644)
             copies.append(name)
@@ -455,6 +469,10 @@ def make_run_game(src, dst, save=None):
         shutil.copyfile(save, to)
         os.chmod(to, 0o644)
         copies.append('BISLPS00.DAT (' + os.path.basename(save) + ')')
+    if only_slot0:
+        with open(os.path.join(dst, 'BOF3.CFG'), 'wb') as f:
+            f.write(RUN_CFG)
+        copies.append('BOF3.CFG (RUN_CFG: windowed, renderer 1)')
     return links, copies
 
 
@@ -557,7 +575,7 @@ def selftest():
 
 
 OPS = {'post': sem_post, 'unlink': sem_unlink, 'busy': pids_of, 'kill': kill, 'alive': alive,
-       'mkgame': lambda src, dst, save=None: make_run_game(src, dst, save)}
+       'mkgame': lambda src, dst, save=None, only_slot0=False: make_run_game(src, dst, save, only_slot0)}
 
 
 def main():

@@ -298,6 +298,11 @@ def main():
                     help="leave New Game's name and options screens as the build has them; by default every run "
                          "turns them off (BOF3X_OFF), so a route that presses New Game plays as before the round, "
                          "unless the recipe has the `# screens new-game` header")
+    ap.add_argument('--only-slot0', action='store_true',
+                    help='--host linux: the run\'s game folder holds slot 0 alone (the recipe save) and the two-line '
+                         'BOF3.CFG of a state-hash run (windowed, renderer 1; linux_run.RUN_CFG), not --game\'s other '
+                         'slots and BOF3.CFG: the load menu reads every slot\'s header into .data and BOF3.CFG decides '
+                         'Cfg_Fullscreen. With BOF3X_SCALE=2, a reference on any machine (docs/state-hash.md 6)')
     ap.add_argument('--slot0-shared', action='store_true',
                     help='swap slot 0 although a game that is not a scripted run is up (one that never opens a '
                          'save or load menu)')
@@ -380,6 +385,8 @@ def main():
         linux_exefile(env, linux_run.local_path(a.game) if a.game.startswith('/') else a.game)
         save = None if a.no_save else linux_save(a.save, recipe, a.game)
         run_dir = a.run_game or (None if linux_run.ON_WINDOWS else os.path.join(os.path.abspath(a.out), 'game'))
+        if a.only_slot0 and not (run_dir and run_dir != 'none'):
+            sys.exit('--only-slot0 shapes the game folder made for the run: not with --run-game none')
         if run_dir and run_dir != 'none':
             a.game_for_run = make_game(a, run_dir, save)
         elif save:
@@ -391,6 +398,8 @@ def main():
         print(f'end: {status}')
         sys.exit(0 if status == 'done' else 1)
 
+    if a.only_slot0:
+        sys.exit('--only-slot0 is --host linux\'s: the Windows hosts swap slot 0 in the install itself')
     # The save the recipe loads goes into slot 0 for the run and the owner's
     # slot 0 comes back after it (recipe_saves.py; docs/input-script.md 1a).
     if recipe_saves is None:
@@ -469,7 +478,7 @@ def make_game(a, run_dir, save):
     if linux_run.ON_WINDOWS:
         helper = linux_run.LinuxGame(a.elf, a.game, {}, os.devnull)
         got = helper._ask('mkgame', linux_run.to_linux(a.game), linux_run.to_linux(run_dir),
-                          linux_run.to_linux(save) if save else None)
+                          linux_run.to_linux(save) if save else None, a.only_slot0)
         helper.close()
         if not got:
             sys.exit(f'the WSL could not make the run\'s game folder {run_dir}')
@@ -477,7 +486,7 @@ def make_game(a, run_dir, save):
         where = linux_run.to_linux(run_dir)
     else:
         try:
-            links, copies = linux_run.make_run_game(a.game, run_dir, save)
+            links, copies = linux_run.make_run_game(a.game, run_dir, save, a.only_slot0)
         except (OSError, ValueError) as e:
             sys.exit(f'the run\'s game folder: {e}')
         where = os.path.abspath(run_dir)
