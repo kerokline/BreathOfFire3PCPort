@@ -413,12 +413,22 @@ def alive(pid):
     return stat[stat.rfind(')') + 2:][:1] not in ('Z', 'X', '')
 
 
-def make_run_game(src, dst, save=None):
+def make_run_game(src, dst, save=None, only_slot0=False):
     """A game folder for one run, made from the install `src`, which is only
     read: every folder and every file the game only reads a symbolic link
     into `src`; the files a run writes real copies - the saves BISLPS0?.DAT
     (a route that saves writes one; slot 0 is `save` when given, the recipe
     save, else src's) and BOF3.CFG (the launcher writes its display lines).
+    `only_slot0`: none of src's slots but slot 0, and no BOF3.CFG - slot 0
+    alone (the recipe save, or src's), as a clean install has it (setup
+    writes no BOF3.CFG; the launcher does, the player's display lines). So a
+    hashed run's inputs are the recipe save and the install's data, whatever
+    the install holds: the load menu reads every slot's header into .data
+    (the desktop's orig5 runs carry the owner's slots), and with no BOF3.CFG
+    Cfg_Load sets Cfg_Fullscreen and Cfg_RenderMode to 1 and the default keys
+    (shell.cpp, Shell_CfgLoadFrame), where a launcher-written file's line 1
+    is the player's (0 windowed) - measured 2026-11-24, `bridgeWalk` on the
+    laptop against the desktop: page 0x65D000 (Cfg_Fullscreen) on every tick.
     Not taken: the quicksaves BISLPS1?.* and the temporary files (a run makes
     its own), `.recipe_slot0` (the Windows harness's swap), DXVK's logs.
     `dst` must not exist, or be a folder this function made (RUN_GAME_MARK),
@@ -443,6 +453,8 @@ def make_run_game(src, dst, save=None):
             continue
         if re.fullmatch(r'BISLPS0[0-9A-F]\.DAT', up) or up == 'BOF3.CFG':
             if up == 'BISLPS00.DAT' and save:
+                continue
+            if only_slot0 and up != 'BISLPS00.DAT':
                 continue
             shutil.copyfile(at, to)
             os.chmod(to, 0o644)
@@ -557,7 +569,7 @@ def selftest():
 
 
 OPS = {'post': sem_post, 'unlink': sem_unlink, 'busy': pids_of, 'kill': kill, 'alive': alive,
-       'mkgame': lambda src, dst, save=None: make_run_game(src, dst, save)}
+       'mkgame': lambda src, dst, save=None, only_slot0=False: make_run_game(src, dst, save, only_slot0)}
 
 
 def main():
