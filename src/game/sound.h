@@ -36,6 +36,13 @@ void UnduckMusic(int frames);
 // Sound_Channels and those buffers' play (through Callees::sndbuf_stop).
 void KeyOffEffectVoices();
 
+// SndBuf_Play's body (music.cpp), the loop flag (0 or 1, DSBPLAY_LOOPING) an
+// argument apart from the wave: the voice's buffer played from the start at
+// `frequency`. The original packs the flag into bit 31 of the wave's address,
+// which a wave in the Linux build's heap arena (at or above 0x80000000) has set
+// already, so every effect looped there. Sound_PlayEffect's callee.
+void __cdecl PlayVoice(std::uint32_t wave, void* buffer, unsigned frequency, std::uint32_t loops);
+
 // BOF3X_MUSIC_LOG=1 (sound.cpp): the music log is on. Read by the voice
 // stream's SndStream_Play (battle_items.cpp) for its own line; no behaviour.
 bool MusicLogOn();

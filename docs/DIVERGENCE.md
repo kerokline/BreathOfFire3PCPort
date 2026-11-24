@@ -3571,6 +3571,19 @@ designed in rather than bolted on.
   works perfect".** A rescale under the SatPixie look ran (three target
   changes, `analysis/shots/resize_satpixie/`); under the CRT look not
   measured (its textures are remade by `CrtResize` the same way).
+- **Amended 2026-11-23 (a scaled desktop):** off Windows, SDL's window is
+  made with `SDL_WINDOW_HIGH_PIXEL_DENSITY`, and `WM_SIZE`'s client size
+  comes from `SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED`, not `_RESIZED`
+  (`src/game/platform/game_window.cpp`), so every size these rules use is
+  the display's own pixels, as `ClientSize` already read. Before, on GNOME
+  at 125 % on Wayland the window's buffer was the scaled size (1173 x 661,
+  where the screen gave the window 1.25 times that) and the compositor stretched it by
+  1.25 after the present: the picture's whole multiples landed as 2.5
+  screen pixels, and the owner reported snap "doesn't seem to be working".
+  The placement (`bof3x.window`, the work area, the window's size and
+  position) stays in the desktop's units, which is what SDL takes for them;
+  at 100 % the two units are one and nothing changes. On Windows the flag
+  is left out: SDL's window there is in pixels already.
 - **Reversible?** `BOF3X_SNAP` unset and the window left at 2x is
   DIV-0036's picture; `BOF3X_ORIGINAL=Game_WndProc` is Capcom's window
   procedure (no `WM_SIZING`, no rescale).
@@ -3970,6 +3983,24 @@ designed in rather than bolted on.
   `BOF3X_BACKGROUND=0` - and the focus on activation is SDL's to take back.
   A hosted `BOF3X_ORIGINAL=Fmv_WndProc` now also keeps the Win32 window
   (the log says so), since Capcom's procedure needs it.
+- **Amended 2026-11-23 (the owner's first Linux run on a desktop):** on
+  SDL's window the last activation a movie takes off the queue is also
+  handed to the game after the movie, first at the loop's next message step
+  (`WinGame_Activate`; `game_window::TakeForMovie` keeps it, `Pump` gives
+  it). Capcom's `Fmv_WndProc` returned 0 on `WM_ACTIVATEAPP` and never
+  passed it on; on Windows that cost nothing, as the port's `ShowWindow`
+  activated the window inside `Create`, before the movie. On Wayland the
+  compositor gives the focus only once the surface has a frame - the
+  movie's first - so the one activation went to the movie, `App_Active`
+  (`0x6BC63B`) stayed 0, and the loop waited at its first pass
+  (`src/game/platform/magic_080.cpp`, `if (!App_Active) continue;`) with the
+  movie's last frame held until the next change of focus: the owner's run,
+  `DIV-0034 frame deadline 85975 ms behind at Frame_Counter 0`, reported as
+  "pressing start stalls the capcom video, not skips it" (an unskipped
+  movie stalls the same way at its end). Under `BOF3X_BACKGROUND=0` a
+  deactivation during a movie now reaches the game too, as `App_Active = 0`
+  and `Sound_PauseAll` - deliberate: the game's state then matches the
+  window's. The Win32 window (`BOF3X_OFF=WindowSdl`) is unchanged.
 - **Reversible?** `BOF3X_BACKGROUND=0`, or `BOF3X_ORIGINAL=Fmv_WndProc`.
 - **Switch:** Fmv_WndProc - the narrowest name; the launcher's `background=0` also turns it off, with DIV-0033 (`src/game/fmv_play.cpp` reads `WinMain_Background()`)
 - **Default:** on

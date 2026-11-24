@@ -898,7 +898,7 @@ unsigned RepairChecks(unsigned rounds) {
 //     entry and a looping holder each spare their one-shot.
 unsigned g_cut_stops;
 void __cdecl CutCountStop() { ++g_cut_stops; }
-void __cdecl QuietPlay(std::uint32_t, void*, unsigned) {}
+void __cdecl QuietPlay(std::uint32_t, void*, unsigned, std::uint32_t) {}
 
 unsigned SoundLayerRoundChecks(unsigned rounds) {
     static State input, out, want;

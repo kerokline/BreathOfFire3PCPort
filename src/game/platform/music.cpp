@@ -346,23 +346,32 @@ extern "C" std::int32_t __cdecl SndBuf_Write(void* buffer, const void* src, unsi
     return sound::Method<ComUnlock>(buffer, kUnlock)(buffer, first, first_bytes, second, second_bytes);
 }
 
-// original 0x5A6BB0: plays a voice's buffer from the start at `frequency`,
-// looping when bit 31 of `sample` is set; the rest of `sample` is the voice's
-// wave, from which a lost buffer is written again (then played again).
-// As the original has it: SetCurrentPosition and SetFrequency results are not
-// looked at, nor the second Play's; the data pointer lands in the argument
-// slot that held `sample`.
-extern "C" void __cdecl SndBuf_Play(unsigned sample, void* buffer, unsigned frequency) {
-    const std::uint32_t wave = sample & 0x7FFFFFFFu;
+// SndBuf_Play's body with the loop flag as an argument of its own (sound.h):
+// plays a voice's buffer from the start at `frequency`, looping when `loops`
+// is 1; `wave` is the voice's wave, from which a lost buffer is written again
+// (then played again). As the original has it: SetCurrentPosition and
+// SetFrequency results are not looked at, nor the second Play's. The data
+// pointer starts as the wave; Wave_FindData always writes it.
+void __cdecl sound::PlayVoice(std::uint32_t wave, void* buffer, unsigned frequency, std::uint32_t loops) {
     if (!buffer) return;
-    const std::uint32_t loops = (sample & 0x80000000u) ? 1 : 0;
     sound::Method<ComValue>(buffer, kSetCurrentPosition)(buffer, 0);
     sound::Method<ComValue>(buffer, kSetFrequency)(buffer, frequency);
     if (sound::Method<ComPlay>(buffer, kPlay)(buffer, 0, 0, loops) != kBufferLost) return;
-    const unsigned char* data = sound::At(sample);
+    const unsigned char* data = sound::At(wave);
     const unsigned size = sound::g.wave_find_data(sound::At(wave), &data);
     sound::g.sndbuf_write(buffer, data, 0, size);
     sound::Method<ComPlay>(buffer, kPlay)(buffer, 0, 0, loops);
+}
+
+// original 0x5A6BB0: PlayVoice with the original's packing - looping when bit
+// 31 of `sample` is set, the rest of `sample` the voice's wave. The packing
+// holds only while every wave lies below 2 GB, as on the 32-bit Windows the
+// original ran on; the heap arena of the Linux build (os/heap.h LowArena) lies
+// in [0x80000000, 4 GB), where bit 31 of every wave is set. So no caller of
+// ours packs: Sound_PlayEffect calls PlayVoice. This entry is kept for the
+// original's contract (the sound fuzz's SndBuf_Play against 0x5A6BB0).
+extern "C" void __cdecl SndBuf_Play(unsigned sample, void* buffer, unsigned frequency) {
+    sound::PlayVoice(sample & 0x7FFFFFFFu, buffer, frequency, (sample & 0x80000000u) ? 1 : 0);
 }
 
 // original 0x5A6C30: stops a buffer that is playing. GetStatus writes into

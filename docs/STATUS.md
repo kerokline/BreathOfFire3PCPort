@@ -8,6 +8,8 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
+**The owner's first Linux run on a desktop, 2026-11-23 (a laptop, GNOME on Wayland, a real sound device; the release tarball `latest-e16f999e`, the PSP preset).** Four reports. Three are fixed on branch `fix/linux-desktop-run`, built and self-tested on the laptop (`BOF3X_SELFTEST_ONLY=1`, exit 0), **not yet seen or heard by the owner**: every sound effect looped, the heap arena above 2 GB setting the bit the original packs the loop flag into ([`known-defects.md`](known-defects.md) D434); the game held on the logo movie's last frame until the focus changed, Wayland giving the one activation to the movie (D435, DIV-0049 amended); and on a desktop scaled by a fraction (125 %) the compositor stretched the snapped picture by 1.25 (DIV-0042 amended: the window's buffer in the display's pixels). The fourth - the PSP's English script not in the language box - is the design as written (`tools/player_sources.py` `languages_for`: beside the PC game only PSX discs give a language), and the owner takes it on the desktop.
+
 **The beta.2 hardening proofs, 2026-11-23 (`main` `0805b220`; [`hardening-1123.md`](hardening-1123.md)).** Scripted runs on a
 quiet machine, nothing in `src/` changed: the ten state-hash routes equal ours of 2026-11-20 and 2026-11-16 (seven on
 every tick, three but for the noise page `0x6C3000`) on the 32-bit exe host, and the 64-bit exe host equals the 32-bit

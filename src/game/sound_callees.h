@@ -105,7 +105,7 @@ struct Callees {
     void (__cdecl* music_stop)();                                             // Music_Stop
     unsigned (__cdecl* wave_find_data)(const unsigned char*, const unsigned char**);   // Wave_FindData
     std::int32_t (__cdecl* sndbuf_write)(void*, const void*, unsigned, unsigned);     // SndBuf_Write
-    void (__cdecl* sndbuf_play)(std::uint32_t, void*, unsigned);              // SndBuf_Play
+    void (__cdecl* sndbuf_play)(std::uint32_t, void*, unsigned, std::uint32_t);   // PlayVoice (sound.h): SndBuf_Play's body, the loop flag apart
     void (__cdecl* sndbuf_stop)(void*);                                       // SndBuf_Stop
     void* (__cdecl* sndbuf_create)(const unsigned char*);                     // SndBuf_CreateFromWave
     void (__cdecl* music_release)();                                          // Music_Release

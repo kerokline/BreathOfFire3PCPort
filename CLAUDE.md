@@ -133,13 +133,19 @@ through Remote Control from a phone or browser, inside tmux. As measured
   installed.
 - Shell is bash only; no PowerShell. `gh` is `/usr/bin/gh`; `git` and `cmake`
   are from the system packages.
-- **No cross toolchain yet**: `i686-w64-mingw32-clang++` is not on `PATH` and
-  there is no `retcomm` under `~/.local/share`, so `cmake --preset i686` will
-  not build here until llvm-mingw is installed.
+- **The build here is the Linux ELF**: `cmake --preset linux-x86_64 && cmake
+  --build build-linux-x86_64 -j 2` (system `clang`/`clang++` and `ninja`). No
+  llvm-mingw: `i686-w64-mingw32-clang++` is not on `PATH`, so the Windows
+  presets (`i686`, `x86_64`) do not build here. `ffmpeg` is installed.
 - **No Ghidra** and no Ghidra projects. Set `PC_GHIDRA_DIR` /
   `PC_GHIDRA_PROJECT_DIR` if one is installed later.
-- **No game data**: `BOF3.exe`, `DAT/` and `BGM/` are not in the checkout.
-  A task that needs them cannot run here until they are copied over.
+- **Game data is in the git-ignored `game/` (a Linux install: the release
+  tarball's `bof3x` and launcher, `game/game/` the game folder, `game/cache/`
+  the importer's cache, `game/bof3x.log` the last run's log) and `CDImage/`
+  (the disc images, zipped)** - not in the repo root.
+- **GNOME on Wayland, at 100 % scaling** (it was 125 % when the laptop was
+  new, 2026-11-23). To test the picture under fractional scaling, set 125 %
+  in Settings > Displays and put it back after.
 - **Memory is tight: at most 2 of anything in parallel.** Build with `-j 2`
   (`cmake --build build -j 2`; `CMAKE_BUILD_PARALLEL_LEVEL=2` and
   `MAKEFLAGS=-j2` are already set for sessions started by Remote Control), run

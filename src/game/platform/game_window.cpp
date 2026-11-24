@@ -203,7 +203,11 @@ bool SDLCALL Watch(void*, SDL_Event* e) {
     case SDL_EVENT_WINDOW_MOVED:
         if (e->window.windowID == id) Post({Got::Moved, e->window.data1, e->window.data2});
         break;
-    case SDL_EVENT_WINDOW_RESIZED:
+    // WM_SIZE's client size is in pixels, as ClientSize's is: the pixel-size
+    // event, not _RESIZED, whose size is in the desktop's scaled units (a
+    // 125 % Wayland desktop: 4/5 of the pixels; DIV-0042). SDL sends this one
+    // after every resize whose pixels changed, and on a change of scale alone.
+    case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
         if (e->window.windowID == id) Post({Got::Sized, e->window.data1, e->window.data2});
         break;
     case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
@@ -247,6 +251,16 @@ bool SDLCALL Watch(void*, SDL_Event* e) {
 }
 
 bool g_closed = false;   // a close was handed to the game
+
+// The last activation a movie took (TakeForMovie), 1 or 0; -1 for none. The
+// movie acts on it (DIV-0049's pause) and the game has not had it: Pump hands
+// it to the game first, at the loop's first message step. On Windows the
+// port's ShowWindow activated the window inside Create, before the movie;
+// on Wayland the focus comes when the window first shows a picture - the
+// movie's first frame - and the game, whose loop does not start until
+// App_Active is set (WinGame_Activate), would wait for the next change of
+// focus.
+int g_movie_activation = -1;
 
 void Close() {
     if (g_closed) return;
@@ -410,7 +424,18 @@ unsigned SystemDpi() { return native::SystemDpi(); }
 void* Create(bool borderless) {
     if (!g_on) return win32::Create(g_hinstance, borderless);
     // DIVERGENCE DIV-0039: the title in English, not GBK bytes.
-    g_window = SDL_CreateWindow(kTitle, 640, 480, SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE);
+    // DIV-0042: off Windows the window's buffer has the display's own pixels.
+    // Without the flag, a desktop scaled by a fraction (GNOME at 125 %) gets a
+    // buffer of the scaled size, and the compositor stretches it by the
+    // fraction after the present: the whole multiples of the picture land as
+    // 2.5 screen pixels, not 2. On Windows the flag is left out: SDL's
+    // window there is in pixels already, as the port's was.
+#ifdef _WIN32
+    constexpr SDL_WindowFlags kDensity = 0;
+#else
+    constexpr SDL_WindowFlags kDensity = SDL_WINDOW_HIGH_PIXEL_DENSITY;
+#endif
+    g_window = SDL_CreateWindow(kTitle, 640, 480, SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE | kDensity);
     if (!g_window) bof3::Fatal("game_window: SDL_CreateWindow failed: %s", SDL_GetError());
     g_handle = native::AfterCreate(g_window, g_hinstance);
     if (!SDL_GetWindowBordersSize(g_window, &g_border_top, &g_border_left, &g_border_bottom, &g_border_right)) {
@@ -481,7 +506,11 @@ void Sized(const Event& e) {
 
 bool Pump() {
     if (!g_on) return win32::Pump();
-    const std::vector<Event> got = TakeQueue();
+    std::vector<Event> got = TakeQueue();
+    if (g_movie_activation >= 0) {
+        got.insert(got.begin(), Event{Got::Activate, g_movie_activation, 0});
+        g_movie_activation = -1;
+    }
     bool quit = false;
     for (const Event& e : got) {
         switch (e.what) {
@@ -565,7 +594,10 @@ std::vector<MovieEvent> TakeForMovie() {
         switch (e.what) {
         case Got::Key: out.push_back({MovieGot::Key, e.a}); break;
         case Got::Click: out.push_back({MovieGot::Click, 0}); break;
-        case Got::Activate: out.push_back({MovieGot::Activate, e.a}); break;
+        case Got::Activate:
+            out.push_back({MovieGot::Activate, e.a});
+            g_movie_activation = e.a != 0 ? 1 : 0;   // the game's too, at Pump
+            break;
         case Got::Exposed: out.push_back({MovieGot::Repaint, 0}); break;
         case Got::Moved: Moved(e); break;
         case Got::Sized: Sized(e); break;
