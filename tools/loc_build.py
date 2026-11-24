@@ -34,7 +34,10 @@ that matches a held PlayStation release gets one overlay set under that
 release's own tag (`en-US.*`, `en-150.*`, `fr-FR.*`, `de-DE.*`, `ja-JP.*`);
 anything else is reported and skipped - an image fixtures.toml does not hold,
 a second copy of a build already built, the PC port's own files, and the
-PSP discs, which `all` has not been validated against. `--lang` is refused
+PSP discs: a PSP disc's tag is a PlayStation disc's too, so `--discs` does not
+choose between them (one `--disc` builds from a PSP disc, over the PC install
+or a cache, docs/loc-build-psp.md 12; the importer builds from it where no
+PlayStation disc of the tag is given). `--lang` is refused
 here: a tag only ever comes from identity. The game directory is checked
 first: `BOF3.exe` must hash as the catalogued port, and its `DAT/` is named
 if it is the shipped tree. `--dry-run` identifies and writes nothing (with one
@@ -5222,7 +5225,11 @@ def relaid_region(tag):
 def check_relaid(game, disc):
     """Against the PC install: the rule gives the port's chunk on every pixel it
     writes, from this disc's section - so a wrong rectangle cannot survive a PC
-    build. [(tag, container)] checked; a SystemExit on a difference."""
+    build. [(tag, container, pixels that differ)] checked; a SystemExit on a
+    difference from a PlayStation disc. A PSP disc's sheet is not the port's
+    source: the PSP repainted an icon of the strip's row (docs/loc-build-psp.md
+    4, 12), so its difference is counted and reported, not refused. Nothing of
+    either sheet is written over the PC install: the port's own stays."""
     done = []
     for tag, name in ((0x1C080200, "STATUS"), (0x1E000200, "ENDKANJI")):
         found = disc.find(name + ".EMI")
@@ -5234,10 +5241,10 @@ def check_relaid(game, disc):
             raise SystemExit("re-laid sheets: %s has no section of dest 0x%X the PC's size" % (name, tag))
         got, want = sheet_pixels(tag, relay_sheet(tag, donor[0])), sheet_pixels(tag, pc[0])
         bad = sum(1 for x, y in relaid_region(tag) if got[y][x] != want[y][x])
-        if bad:
+        if bad and not is_psp(disc):
             raise SystemExit("re-laid sheets: %s 0x%X: the rule differs from the port's sheet in %d pixels"
                              % (name, tag, bad))
-        done.append((tag, name))
+        done.append((tag, name, bad))
     return done
 
 
@@ -6872,9 +6879,10 @@ def identify_discs(paths):
     """[(path, build id or None, tag or None, why)] for each image: the build
     fixtures.toml holds it as (every file hashed, `importer.identify`), and
     whether `all` builds from it. Only a verified PlayStation release is built
-    from, once per build: the PSP discs have not been run through `all`
-    (docs/dialogue-localisation.md section 1), and a second image of a build
-    already listed would overwrite the first's overlays with the same bytes."""
+    from, once per build: a PSP disc's tag is a PlayStation disc's too
+    (en-150, ja-JP), so this mode does not choose between the two (one --disc
+    does, docs/loc-build-psp.md 12), and a second image of a build already
+    listed would overwrite the first's overlays with the same bytes."""
     import importer
     builds = {b["id"]: b for b in importer._fixtures()["build"]}
     out, seen = [], {}
@@ -7203,7 +7211,8 @@ def build_all(args, disc_path):
         else:
             checked = check_relaid(src, disc)
             print("re-laid sheets: the rule is the port's on its pixels (%s)"
-                  % ", ".join("%s 0x%X" % (n, t) for t, n in checked))
+                  % ", ".join("%s 0x%X" % (n, t) + (", but %d the PSP repainted; the port's sheet stays" % bad
+                                                    if bad else "") for t, n, bad in checked))
     if donor_ja and ja_pairs:
         overlays["FIRST.DAT"] = ja_pair_chunks(overlays["FIRST.DAT"])
         print("pair codes: %d from glyph 0x%X (DIV-0057)" % (len(ja_pairs), PAIR_AT))

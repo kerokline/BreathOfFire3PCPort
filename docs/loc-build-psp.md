@@ -6,6 +6,9 @@ both PSP discs; not played (the engine reads a disc-only cache since state 3,
 PSP-only installs started headless in the end batch's V2 / V3, [`psp-end-batch.md`](psp-end-batch.md); not played).
 **Updated 2026-10-17** (D246, branch `fix/psp-config-text`): the Config
 screen's text is built from PSP-EU now (section 3.3).
+**Updated 2026-11-23** (PR #284, branch `fix/linux-desktop-run`): a PSP disc builds its
+layer over the PC install too, where no PlayStation disc of its tag is given
+(section 12). Built and diffed; not played.
 
 The disc-only round made `loc_build.py all --cache` build a language layer
 from a PlayStation disc alone ([`loc-build-disc-only.md`](loc-build-disc-only.md)).
@@ -59,7 +62,8 @@ site in `tools/importer.py`.
 - **`importer.py`**: `resolve_languages(..., psp=True)` from
   `build_languages_disc_only` only, so `importer.py build --source <PSP iso>
   --lang <tag>` builds the layer; a PSX disc of the same tag still wins, and
-  the PC path is unchanged (PSX donors only). Measured: `importer.py build
+  the PC path is unchanged (PSX donors only; a PSP donor there too since
+  2026-11-23, section 12). Measured: `importer.py build
   --lang ja-JP` from PSP-JP and `--lang en-150` from PSP-EU write
   `loc/<tag>/` byte-identical to `loc_build.py all --cache` (254 containers
   each), and `importer.py verify` on the PSP-EU cache reports 0 problems.
@@ -448,6 +452,78 @@ The scratch scripts (`probe_anchors.py`, `probe_strip.py`, `cmp_layers.py`,
 `cells.py`, `pc_path.py`) are not committed; each is a few lines over
 `tools/dat.py` and `loc_build`'s own functions, and the tables above say what
 each counted.
+
+## 12. Over the PC install (2026-11-23)
+
+**Status of this section:** built and diffed, 2026-11-23, PR #284 (branch
+`fix/linux-desktop-run`), the owner's request: a PC + PlayStation + PSP
+install had Chinese and `en-US` only. Not played.
+
+Until this date a PSP disc was a text donor only on a disc-only build
+(section 1: "the PC path is unchanged (PSX donors only)"), because `all
+--game` had not been run against a PSP disc. It is run now, and three places
+changed:
+
+- **`importer.resolve_languages`** takes a PSP disc as a donor on every
+  build. A PSX disc of the same tag still wins, so the European disc beside
+  PSP-EU gives the European disc's `en-150`, and the Japan disc beside PSP-JP
+  the Japan disc's `ja-JP`.
+- **`player_sources.languages_for`** (setup) asks for every disc's tag, PSX
+  or PSP, with a PC folder or without one.
+- **`loc_build.check_relaid`** counts a PSP disc's difference and does not
+  stop on it. The check lays the donor's `STATUS` sheet by `RELAID`'s rule
+  and compares it with the port's sheet, to catch a wrong rectangle. From
+  PSP-EU the laid strip differs from the port's in **121 pixels**: the icon
+  the PSP repainted (section 4). That is the PSP's art, not a wrong rule. A
+  PlayStation disc's difference still stops the build. Nothing of either
+  sheet is written over the PC install; the port's own sheet stays.
+
+**Measured** (the importer, `--source bof3/DAT --source bof3/BOF3.exe` and
+the discs named, `--lang` each tag; `importer.py verify` on the first cache:
+0 problems; scratch `cmp_layers.py`, containers then chunks by kind, tag and
+occurrence):
+
+| Build | Layer | Containers | Against the PSX layer of the tag, built the same way |
+|---|---|---:|---|
+| PC + PSX-US + PSP-EU | `en-US` from `psx-us`, `en-150` from `psp-eu` | 247, 247 | `en-150` against PC + PSX-EU's: **169 of 247** identical |
+| PC + PSP-JP | `ja-JP` from `psp-jp` | 245 | against PC + PSX-JP's: **192 of 245** identical |
+
+Every difference, `en-150` from PSP-EU against PSX-EU's, both over the PC
+install:
+
+| Chunks | What | Named by |
+|---:|---|---|
+| 78 text chunks in 78 containers | the 44 pools and 34 area blocks | section 5.3 |
+| 4 name tables (`FIRST`) | the PSP's renames, PSX-EU's spellings | section 5.3 |
+| font, advances (`FIRST`) | the three cells 0x94..0x96 | section 3.4 |
+| fishing tag 1 (`FIRST`) | line 4's word | section 5.3 |
+| kind 22 (`FIRST`) | the name grid, read off `BOOT.BIN` | `new-game-round.md` 5a |
+| **absent from the PSP layer:** label groups 18, 21, 22, 23; fishing tag 3 (the headings); kind 17 (the staff roll); kind 20 (the save names) | not built from a PSP disc, as on a disc-only build (`convert_labels_psp`; "no headings found"; DIV-0148; no card saves on the disc) | sections 3.1, 3.2 |
+
+`ja-JP` from PSP-JP against PSX-JP's: 53 text chunks (42 battle pools, the 2
+field pools, 9 areas: section 5.2's), the font's one glyph, 2 name tables,
+kind 22; kind 20 absent. Unexplained: none in either.
+
+**Through setup** (`importer.py sources add` the PC folder, the US disc and
+PSP-EU, then `importer.py setup`): `en-150` from `psp-eu` and `en-US` from
+`psx-us`, 247 overlays each in the game's `DAT\`, and the two reading-row
+pairs of the two English layers built.
+
+**What an absent chunk leaves on a PC install.** The port's own bytes, where
+a disc-only install has none: groups 21..23 are the PC's own English words
+(`convert_labels_psp`); group 18 (fight 26's turn counter), the fishing equip
+screen's headings and the staff roll stay as the port has them under
+`original`. **Not seen.** The save editor has no card-save names from this
+layer (kind 20).
+
+**Not done here.**
+- `loc_build.py all --discs DIR` still skips a PSP disc: its tag is a
+  PlayStation disc's too, and that mode builds one set per tag.
+- With the European disc and PSP-EU both given, the PSP's English is not
+  built: both are `en-150`, and one layer holds one of them. The PSP's item
+  and ability names are still offered there by `psp-names-en-150`.
+- The launcher names `en-150` "English (European PlayStation script)"
+  whichever disc built it, as on a PSP-only install.
 
 ## For the other files
 

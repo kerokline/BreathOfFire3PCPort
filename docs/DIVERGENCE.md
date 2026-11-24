@@ -7420,6 +7420,20 @@ designed in rather than bolted on.
   install (D247, D265); the culture label seen in `fairyVillage`, the other
   three on no route yet. The Config screen's text (D246)
   is still not built.
+
+  **Amended 2026-11-23 (the owner's request, [`loc-build-psp.md`](loc-build-psp.md) 12):**
+  "Over the PC install nothing changes" is no longer so for a PSP disc. A PC
+  install with a PSP disc builds that disc's layer too (`en-150` from PSP-EU,
+  `ja-JP` from PSP-JP), where no PlayStation disc of the same tag is among the
+  sources; before, a PC + US disc + PSP-EU install held Chinese and `en-US`
+  only. The layer is the PSP's text over the port's own files: against the
+  PlayStation layer of the tag, built the same way, `en-150` differs in the 78
+  text chunks, 4 name tables, the font's three cells, one fishing line and the
+  name grid, and lacks the chunks a PSP disc never builds (label groups 18 and
+  21..23, the fishing headings, the staff roll, the save names), which stay
+  the port's. The build's sheet check counts the PSP's repainted status icon
+  (121 pixels) where it stopped on it; the port's sheet stays. A layer built
+  from a PlayStation disc is unchanged. Built and diffed; not played.
 - **Switch:** none - the layer is built, not switched: rebuild it with the PC install among the sources (`Reversible?` above)
 - **Default:** on - under its languages, in a disc-only install's layer
 - **Player:** never - a build-time choice of sources, no runtime switch

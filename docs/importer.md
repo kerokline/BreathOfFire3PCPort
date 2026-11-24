@@ -241,7 +241,9 @@ are Sony Europe's terminology (`Memory Card`) and two renamed items. The
 PSP-EU text has the European renames too (`Hourglass` in 55 places and no
 `Quicksilver`, as the European PSX disc).
 
-`--lang` takes a tag, exactly one a given PSX disc carries. The bare codes
+`--lang` takes a tag, exactly one a given disc carries: a PSX disc's, or a
+PSP disc's where no PSX disc of that tag is given (over the PC install too
+since 2026-11-23, [`loc-build-psp.md`](loc-build-psp.md) 12). The bare codes
 (`en`, `fr`, `de`, `ja`) are retired and refused, naming the tag (the owner's
 decision, 2026-10-10, DIV-0005; until then a bare `en` chose `en-US` when the US
 disc was given - [`importer-transforms.md`](importer-transforms.md) section 7). `--lang T` writes

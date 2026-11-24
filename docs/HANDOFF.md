@@ -32,6 +32,11 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
 ## Pick up here
 
 00. **Next, 2026-11-16** (the order is the owner's; these are the candidates):
+   - **A PSP disc's text on a PC install (2026-11-23, [`loc-build-psp.md`](loc-build-psp.md) 12):** built and diffed
+     and run through setup (PC + US disc + PSP-EU). Owed: the owner's play under `en-150` there (fight 26's turn
+     counter, the fishing equip headings and the staff roll stay the port's under that layer; not seen). Open for the
+     owner: the launcher's name for `en-150` says "European PlayStation script" when the PSP built it; and the PSP's
+     English is not offered beside the European disc's (one tag).
    - **The beta.2 hardening proofs ran on 2026-11-23 at `main` `0805b220`** ([`hardening-1123.md`](hardening-1123.md)):
      the ten routes at both widths, the hosted suite, the self-tests, the three `quit` recipes, a game under
      `BOF3X_ARENA=1`, the Definitive Edition 1.4 mod on a new US-disc install, and two battles on that install at both
