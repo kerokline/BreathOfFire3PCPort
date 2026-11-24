@@ -299,10 +299,10 @@ def main():
                          "turns them off (BOF3X_OFF), so a route that presses New Game plays as before the round, "
                          "unless the recipe has the `# screens new-game` header")
     ap.add_argument('--only-slot0', action='store_true',
-                    help='--host linux: the run\'s game folder holds slot 0 alone (the recipe save) and no BOF3.CFG, '
-                         'as a clean install has them, whatever --game holds: the load menu reads every slot\'s '
-                         'header into .data and BOF3.CFG decides Cfg_Fullscreen, so a state-hash reference wants '
-                         'this (docs/state-hash.md 6)')
+                    help='--host linux: the run\'s game folder holds slot 0 alone (the recipe save) and the two-line '
+                         'BOF3.CFG of a state-hash run (windowed, renderer 1; linux_run.RUN_CFG), not --game\'s other '
+                         'slots and BOF3.CFG: the load menu reads every slot\'s header into .data and BOF3.CFG decides '
+                         'Cfg_Fullscreen. With BOF3X_SCALE=2, a reference on any machine (docs/state-hash.md 6)')
     ap.add_argument('--slot0-shared', action='store_true',
                     help='swap slot 0 although a game that is not a scripted run is up (one that never opens a '
                          'save or load menu)')
