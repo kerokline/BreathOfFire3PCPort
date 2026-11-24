@@ -61,12 +61,32 @@ header, sha256's first 16 digits:
 The split is `re.split(r'(?m)^(?=\[|\w+ = \[)', text)` over the text from
 `[cache]`.
 
+**Which blocks differ (the laptop's session, 2026-11-24, the same split):**
+`assets`, `bgm`, the jingles' `files`, `[exe]` and `[fmv]` hash alike on both
+machines. `overlays` (253 lines on the laptop against 500), `opt` (713 against
+1227) and `[psp_layers]`' `rows` (1179 both, `55485bcbf3d73458` on the laptop)
+differ. The laptop's cache was built on 2026-11-23 at 19:15 by the importer of
+the `latest` release, `e16f999e`, before PR #284 brought `9e7a21c1` (a PSP
+disc's text on a PC install, `en-150` from PSP-EU: the 247 more `overlays`
+lines). The base, the music, the jingles, the image and the movie are the same
+bytes; the runs here read none of the differing blocks (`BOF3X_OPT=none`, and
+`en-US`'s overlays are on both).
+
 ## 3. `bridgeWalk`, our code, both widths
 
 Every run: rc 0, `recipe done at recipe frame 2099`, **2049 records** (ticks
 0..2048). The laptop's run has 2074 with the same end frame, so the two sides
 are 25 ticks apart before the first record and a comparison wants `statehash.py
 diff --align recipe`. What makes the 25 ticks was not looked for.
+
+**Corrected by the laptop's session (2026-11-24):** the 25 ticks are after the
+recipe's end, not before the first record. `statehash.py diff` by tick, with
+no `--align`, of `bridgeWalk_w32s2.sh` against the laptop's `bw8.sh` (both
+under 176 ranges): **identical on all 2049 compared ticks**, which it could
+not be if the ticks were shifted. The Linux harness keeps the game hashing
+while it stops it after `recipe done`. So the two sides' tick 1000 is the same
+moment, and the dumps compared on the laptop were the desktop's 1000 against
+the laptop's 1000, not 975.
 
 | Run | Language | `BOF3.CFG` | Scale | Skip list | sha256 of the `.sh` |
 |---|---|---|---|---|---|
