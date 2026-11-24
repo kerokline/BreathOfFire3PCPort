@@ -86,7 +86,11 @@ may be exactly right here — **provided it is in the ledger.**
    sessions cost a rewrite of 185 commits and of every hash the docs cited
    (2026-10-04, `docs/HANDOFF.md` traps) - ask the owner first.
 
-## Related checkouts on this machine
+## Related checkouts
+
+These are on the Windows desktop. They are **not** cloned on the Linux laptop
+(only this repo is under `~/Github` there) - clone them beside it if a task
+needs them.
 
 | Path | What it is |
 |---|---|
@@ -94,7 +98,13 @@ may be exactly right here — **provided it is in the ledger.**
 | `../bof3ext` | TheRealBiggs' hook layer — a **peer** derivative of the same Capcom binary. `src/bof3/*.ixx` cross-checks our symbol table; `docs/` is unusually good. Reference only (rule 5). |
 | `../bof3ext_resources` | 360 files of translated text, fonts, HD textures. Reference only (rule 5). |
 
-## Environment notes (this machine)
+## Environment notes
+
+There are two machines. Check which one you are on (`uname -s`, or the
+working directory: `C:\...` / `/c/...` is the desktop, `/home/kero/...` is the
+laptop) before trusting a path below.
+
+### Windows desktop (primary)
 
 - **Use `python`, not `python3`** — `python3` does not resolve here; `python` is
   Anaconda 3.13.9. `capstone` is installed.
@@ -110,6 +120,36 @@ may be exactly right here — **provided it is in the ledger.**
 - Ghidra is at `D:\Utilities\ghidra_12.1.3_PUBLIC`, projects in
   `D:\Utilities\GhidraProjects` (project `BoF3PC`, kept separate from the
   sibling's `BoF3`). Override with `PC_GHIDRA_DIR` / `PC_GHIDRA_PROJECT_DIR`.
+
+### Linux laptop (`kero-IdeaPad-3-14ADA05`)
+
+Ubuntu, Ryzen 5 3500U (8 threads), **~5.2 GiB RAM usable** (part of the
+physical RAM is reserved for the integrated GPU) plus 4 GiB swap. Often driven
+through Remote Control from a phone or browser, inside tmux. As measured
+2026-11-23:
+
+- **Use `python3`, not `python`** - the reverse of the desktop. `python` does
+  not resolve; `python3` is the system `/usr/bin/python3`. `capstone` is **not**
+  installed.
+- Shell is bash only; no PowerShell. `gh` is `/usr/bin/gh`; `git` and `cmake`
+  are from the system packages.
+- **No cross toolchain yet**: `i686-w64-mingw32-clang++` is not on `PATH` and
+  there is no `retcomm` under `~/.local/share`, so `cmake --preset i686` will
+  not build here until llvm-mingw is installed.
+- **No Ghidra** and no Ghidra projects. Set `PC_GHIDRA_DIR` /
+  `PC_GHIDRA_PROJECT_DIR` if one is installed later.
+- **No game data**: `BOF3.exe`, `DAT/` and `BGM/` are not in the checkout.
+  A task that needs them cannot run here until they are copied over.
+- **Memory is tight: at most 2 of anything in parallel.** Build with `-j 2`
+  (`cmake --build build -j 2`; `CMAKE_BUILD_PARALLEL_LEVEL=2` and
+  `MAKEFLAGS=-j2` are already set for sessions started by Remote Control), run
+  at most 2 subagents or worker processes at once, and do not run two
+  heavyweight tools (Ghidra, a browser, a build) side by side.
+- **Remote Control runs as a user service**, `claude-remote.service`, started
+  at boot (lingering is on). It runs `~/.local/bin/claude-remote-loop` in the
+  tmux session `claude`; the loop waits for the network, starts
+  `claude remote-control --name "BoF3 laptop"` in this repo, and restarts it
+  if it exits. Log: `~/.cache/claude-remote.log`. Neither file is in the repo.
 
 ## Conventions for agents
 
