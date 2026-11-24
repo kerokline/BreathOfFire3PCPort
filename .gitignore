@@ -175,3 +175,6 @@ docs/gitIgnored/
 # took 24 of them by `git add -A` before a validation run.
 /*.log
 /L/
+
+# Each machine's own environment notes (CLAUDE.md "Environment notes")
+CLAUDE.local.md

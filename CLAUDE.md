@@ -86,11 +86,10 @@ may be exactly right here — **provided it is in the ledger.**
    sessions cost a rewrite of 185 commits and of every hash the docs cited
    (2026-10-04, `docs/HANDOFF.md` traps) - ask the owner first.
 
-## Related checkouts
+## Related repositories
 
-These are on the Windows desktop. They are **not** cloned on the Linux laptop
-(only this repo is under `~/Github` there) - clone them beside it if a task
-needs them.
+Cloned beside this repo where a machine has them (`CLAUDE.local.md` says
+which); clone one beside it if a task needs it.
 
 | Path | What it is |
 |---|---|
@@ -100,62 +99,17 @@ needs them.
 
 ## Environment notes
 
-There are two machines. Check which one you are on (`uname -s`, or the
-working directory: `C:\...` / `/c/...` is the desktop, `/home/kero/...` is the
-laptop) before trusting a path below.
+Machine-specific notes are **not in this file**: the interpreter's name, the
+toolchains, where Ghidra and the game data are, what is installed. Each
+machine keeps its own in `CLAUDE.local.md` in the repo root, which is not
+tracked and which Claude Code loads with this file. So a session sees its own
+machine's notes and no other machine's.
 
-### Windows desktop (primary)
-
-- **Use `python`, not `python3`** — `python3` does not resolve here; `python` is
-  Anaconda 3.13.9. `capstone` is installed.
-- Both a PowerShell tool and a Git Bash tool are available; `.sh` scripts want
-  bash. `gh` is at `C:\Program Files\GitHub CLI`, authenticated as `kerokline`.
-- **The build uses llvm-mingw, not MSYS2**: `cmake --preset i686 && cmake
-  --build build`, with `i686-w64-mingw32-clang++` already on `PATH` (the
-  `retcomm` toolchain under `~/.local/share`) — [`docs/SCAFFOLDING.md`](docs/SCAFFOLDING.md) §4.
-  The MSYS2 toolchain at `/c/msys64/mingw64/bin` is the sibling repo's; if you
-  ever prepend it, it shadows `python` with an interpreter missing our
-  packages.
-
-- Ghidra is at `D:\Utilities\ghidra_12.1.3_PUBLIC`, projects in
-  `D:\Utilities\GhidraProjects` (project `BoF3PC`, kept separate from the
-  sibling's `BoF3`). Override with `PC_GHIDRA_DIR` / `PC_GHIDRA_PROJECT_DIR`.
-
-### Linux laptop (`kero-IdeaPad-3-14ADA05`)
-
-Ubuntu, Ryzen 5 3500U (8 threads), **~5.2 GiB RAM usable** (part of the
-physical RAM is reserved for the integrated GPU) plus 4 GiB swap. Often driven
-through Remote Control from a phone or browser, inside tmux. As measured
-2026-11-23:
-
-- **Use `python3`, not `python`** - the reverse of the desktop. `python` does
-  not resolve; `python3` is the system `/usr/bin/python3`. `capstone` is **not**
-  installed.
-- Shell is bash only; no PowerShell. `gh` is `/usr/bin/gh`; `git` and `cmake`
-  are from the system packages.
-- **The build here is the Linux ELF**: `cmake --preset linux-x86_64 && cmake
-  --build build-linux-x86_64 -j 2` (system `clang`/`clang++` and `ninja`). No
-  llvm-mingw: `i686-w64-mingw32-clang++` is not on `PATH`, so the Windows
-  presets (`i686`, `x86_64`) do not build here. `ffmpeg` is installed.
-- **No Ghidra** and no Ghidra projects. Set `PC_GHIDRA_DIR` /
-  `PC_GHIDRA_PROJECT_DIR` if one is installed later.
-- **Game data is in the git-ignored `game/` (a Linux install: the release
-  tarball's `bof3x` and launcher, `game/game/` the game folder, `game/cache/`
-  the importer's cache, `game/bof3x.log` the last run's log) and `CDImage/`
-  (the disc images, zipped)** - not in the repo root.
-- **GNOME on Wayland, at 100 % scaling** (it was 125 % when the laptop was
-  new, 2026-11-23). To test the picture under fractional scaling, set 125 %
-  in Settings > Displays and put it back after.
-- **Memory is tight: at most 2 of anything in parallel.** Build with `-j 2`
-  (`cmake --build build -j 2`; `CMAKE_BUILD_PARALLEL_LEVEL=2` and
-  `MAKEFLAGS=-j2` are already set for sessions started by Remote Control), run
-  at most 2 subagents or worker processes at once, and do not run two
-  heavyweight tools (Ghidra, a browser, a build) side by side.
-- **Remote Control runs as a user service**, `claude-remote.service`, started
-  at boot (lingering is on). It runs `~/.local/bin/claude-remote-loop` in the
-  tmux session `claude`; the loop waits for the network, starts
-  `claude remote-control --name "BoF3 laptop"` in this repo, and restarts it
-  if it exits. Log: `~/.cache/claude-remote.log`. Neither file is in the repo.
+- In a worktree the file is not there: read the main checkout's
+  (`git worktree list` names it first).
+- With none on the machine, say so and check before trusting a tool or a
+  path (`python` or `python3`, which compiler is on `PATH`), then write one.
+- A change to a machine goes in that machine's file, not here.
 
 ## Conventions for agents
 
