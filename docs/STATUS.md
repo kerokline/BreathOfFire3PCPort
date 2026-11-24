@@ -8,6 +8,24 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
+**The beta.2 gates, 2026-11-24 (`main` `a1f7fa47`, the PR #285 merge).** Three things, and the notes
+([`releases/v0.1.0-beta.2.md`](releases/v0.1.0-beta.2.md)) updated for them and for what merged after their draft.
+(1) **The owner's word on the Linux build:** the first scenes played on the laptop; the buttons work, the sounds play
+and the game goes on as expected - so the three fixes of the first desktop run below are heard and seen in play.
+Nothing further has been played on Linux. (2) **Windows and Linux agree** on the ten state-hash routes (`orig6`, PR #285,
+[`state-hash-clean-install.md`](state-hash-clean-install.md); `shop`'s jingle window the one known exception).
+(3) **The beta.1 upgrade path, run for the first time.** Two installs made by the signed `v0.1.0-beta.1` zip and its
+own importer (PC folder + US disc; US disc alone), the signed `latest-e16f999e` zip unzipped over each, the launcher
+driven by `--check --start` (root `D:\bof3x-runs\up1124`): the launcher reads each install as stale and names eight
+parts; **No** starts nothing and leaves every file of `game\` and `cache\` as it was (size and time); **Yes** rebuilds
+(47 s and 84 s), a second start says "not stale" and opens Configure; the 17 save files are the same bytes; a
+beta.1-shaped `bof3x.ini` (a moved key, `ruby_key=f7`, `off=`, `wide=1`, `cheat.exp=2`) is saved back with every value
+kept and the new keys at their defaults; `combat` runs to `done` at frame 2,620 on each upgraded install, no FATAL.
+`BOF3.CFG` is not carried by the rebuild; the launcher writes it from the ini at each start. Also read: beta.2 ships
+every file beta.1 shipped (no orphan after an unzip over), the same Python, and no settings key or switch name of
+beta.1's is gone. **Not covered:** the draft's own zip (six commits of tools newer), the question clicked in the real
+window, a beta.1 quicksave's refusal on this path, an install with a mod, an upgrade from an alpha.
+
 **A PSP disc's text on a PC install, 2026-11-23 (PR #284; [`loc-build-psp.md`](loc-build-psp.md) 12,
 DIV-0090 amended).** Setup builds a PSP disc's language beside the PC game too: a PC + US disc + PSP-EU install now holds
 `en-150` (the PSP's English) with Chinese and `en-US`, and a PC + PSP-JP install holds `ja-JP`. A PlayStation disc of the

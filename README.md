@@ -75,11 +75,11 @@ For the documentation on the scripted process, please refer to [`docs/install_pr
 
 There is a native Linux build for x86-64: `bof3x-<version>-linux-x86_64.tar.gz`,
 on the releases page beside the Windows zips (from the first release made
-after 2026-11-22). It is new. It ran on a computer with no screen and a software graphics
-driver only: the setup from the PC game folder, the install check and the
-game's self-tests passed there. Nobody has played it on a graphics card,
-heard its sound or used a pad with it yet. If you try it, please tell us
-what you see.
+after 2026-11-22). It is new, and only its first scenes have been played: on one laptop the
+picture, the sound and the controls were right. On ten scripted routes it
+computes the same game as the Windows builds. Nobody has played it further,
+or on another desktop or graphics card. If you try it, please tell us what
+you see.
 
 What you need:
 
