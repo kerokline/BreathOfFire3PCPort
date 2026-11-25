@@ -71,7 +71,7 @@ struct Entry {
     std::uint8_t languages;        // kLang* bits, or kLangAny
 };
 
-inline constexpr std::size_t kSwitchCount = 237;
+inline constexpr std::size_t kSwitchCount = 238;
 inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "Save_WriteFile", 0, 14},   // DIV-0002
     {SwitchForm::Name, "File_OpenWrite", 0, 14},   // DIV-0003
@@ -310,9 +310,10 @@ inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Ini, "ini:cheat.faerie=1", 4, 12},   // DIV-0243
     {SwitchForm::Name, "ExamineAlwaysLearns", 0, 19},   // DIV-0244
     {SwitchForm::Name, "FasterFaerieVillage", 0, 19},   // DIV-0245
+    {SwitchForm::Name, "SaveCameFrom", 0, 12},   // DIV-0246
 };
 
-inline constexpr std::size_t kEntryCount = 245;
+inline constexpr std::size_t kEntryCount = 246;
 inline constexpr Entry kEntries[kEntryCount] = {
     {1, "Re-encode `capcom.avi` from Indeo 5 to Cinepak",
      Tier::Intent, State::Active, 0, 0, 0, true, Player::Never, 0, kLangAny},
@@ -804,6 +805,8 @@ inline constexpr Entry kEntries[kEntryCount] = {
      Tier::Extension, State::Active, 0, 235, 1, false, Player::Yes, 0, kLangAny},
     {245, "A mod can run the faerie village at five times its speed",
      Tier::Extension, State::Active, 0, 236, 1, false, Player::Yes, 0, kLangAny},
+    {246, "A save keeps where the party came from: an edge leads back after a load",
+     Tier::Sensible, State::Active, 0, 237, 1, true, Player::Yes, 0, kLangAny},
 };
 
 // The switches of one entry.
