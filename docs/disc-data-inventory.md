@@ -304,7 +304,7 @@ pass changes no output.
    from `AREA112.EMI#13` (`0x801F455C`) on psx-jp, psx-us and psx-eu-en.
    `exe-layout.tsv` makes it data that `0x61FF50` points at. But the
    `AREA111.EMI#13` segment (`0x61FB5C..0x61FBD4`) runs 4 bytes past
-   `Area111_GridStart` and owns them first, so the image holds `AREA111`'s
+   `Area111_SlidingPlatformsStart` and owns them first, so the image holds `AREA111`'s
    zeros where the PC (and `AREA112`'s section) hold three non-zero bytes. All
    five PSX builds. Fix: trim the segment, or let a `twin` row override a
    segment's overreach.

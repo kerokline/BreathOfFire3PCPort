@@ -87,12 +87,15 @@ std::int32_t ActiveMemberExtra() {
     return static_cast<std::int32_t>(Addr(Field_ActiveMember) - ::bof3::Img(Sprite_ObjectsExtra_addr)) / static_cast<std::int32_t>(at::kExtraStride);
 }
 
-// The nibble of the 7 x 7 grid at (col, row): the byte (col >> 1) + row * 4,
+// The sliding platforms' 7 x 7 grid (three platforms the leader rides: one
+// slides until it leaves the grid or meets a blocked cell or another
+// platform; the owner's reading from play, docs/area_w2f.md 1.2).
+// The nibble of the grid at (col, row): the byte (col >> 1) + row * 4,
 // its low nibble for an odd column, its high one for an even column. The
 // originals index by bytes they do not check; every such read stays inside
 // .data (at most 0x675C00 + 0x7F + 0x3FC).
 unsigned char Nibble(unsigned col, unsigned row) {
-    const unsigned char b = B(::bof3::Img(Area111_Grid_addr) + (col >> 1) + row * 4);
+    const unsigned char b = B(::bof3::Img(Area111_SlidingPlatforms_addr) + (col >> 1) + row * 4);
     return (col & 1) != 0 ? static_cast<unsigned char>(b & 0xF) : static_cast<unsigned char>(b >> 4);
 }
 
@@ -180,7 +183,7 @@ extern "C" void __cdecl Area111_CopyExtra6C(void) { rv::Store<std::int32_t>(rv::
 // grid (16-bit tests, 0..6) and their nibble 0, the count + 4 each (a byte);
 // a count: the script object's +7 = count + 1. The object's dword +0x14 = 0,
 // the cell it stopped at (outside or blocked) marked 0, Sound_PlayEffect(0x203).
-extern "C" void __cdecl Area111_SlideMark(void) {
+extern "C" void __cdecl Area111_PlatformSlideMark(void) {
     const unsigned char* const cur = Sprite_Current;
     int z = Floor2(S16(cur + 0x3A) - 0xB1);
     int x = Floor2(S16(cur + 0x36) - 0xB);
@@ -207,16 +210,16 @@ extern "C" void __cdecl Area111_SlideMark(void) {
 // slot + 1, 0x10) with the script position kept across the call; the running
 // object's direction = extra object that's +8 & 7, and Sprite_Kind2's +8 =
 // it.
-extern "C" void __cdecl Area111_AttachAtLeaderCell(void) {
+extern "C" void __cdecl Area111_AttachPlatformAtLeaderCell(void) {
     const Cell c = LeaderCell();
-    const auto block = static_cast<unsigned char>(Nibble(c.col, c.row) - 1);
-    if (block == 0xFF) return;
+    const auto platform = static_cast<unsigned char>(Nibble(c.col, c.row) - 1);
+    if (platform == 0xFF) return;
     const unsigned char slot = FieldStateSlot();
     unsigned char* const object = MoveScript_Object;
     const std::uint16_t position = rv::As<records::ScriptContext>(object)->position;
-    AH_CALL(MoveCmd_Attach)(object, 7, block, slot, 0x10);
+    AH_CALL(MoveCmd_Attach)(object, 7, platform, slot, 0x10);
     rv::Store<unsigned>(rv::As<records::ScriptContext>(MoveScript_Object)->position, position);
-    Sprite_Current[8] = static_cast<unsigned char>(Extra(block)[8] & 7);
+    Sprite_Current[8] = static_cast<unsigned char>(Extra(platform)[8] & 7);
     Sprite_Kind2.direction = Sprite_Current[8];
 }
 
@@ -243,15 +246,15 @@ extern "C" void __cdecl Area111_WaitMemberBit(void) {
 // its two columns: its low nibble first); the key or'd into the object's
 // cell's nibble; Sound_PlayEffect(0x204). The cell is not checked: ours
 // aborts where the byte written would lie outside the 28-byte grid.
-extern "C" void __cdecl Area111_PlaceMemberInGrid(void) {
+extern "C" void __cdecl Area111_PlaceMemberInPlatformGrid(void) {
     const auto key = static_cast<unsigned char>(ActiveMemberExtra() + 1);
     const unsigned char* const cur = Sprite_Current;
     const int x = Half(S16(cur + 0x36) - 0xB);
     const int z = Half(S16(cur + 0x3A) - 0xB1);
     AH_CALL(Area111_MarkCells)(x, z, 0);
-    for (unsigned row = 0; row < at::kArea111GridSide; ++row) {
-        for (unsigned col = 0; col < at::kArea111GridSide; ++col) {
-            unsigned char& b = B(::bof3::Img(Area111_Grid_addr) + (col >> 1) + row * 4);
+    for (unsigned row = 0; row < at::kArea111SlidingPlatformsSide; ++row) {
+        for (unsigned col = 0; col < at::kArea111SlidingPlatformsSide; ++col) {
+            unsigned char& b = B(::bof3::Img(Area111_SlidingPlatforms_addr) + (col >> 1) + row * 4);
             if ((b & 0xF) == key)
                 b = static_cast<unsigned char>(b & 0xF0);
             else if ((b >> 4) == key)
@@ -259,10 +262,10 @@ extern "C" void __cdecl Area111_PlaceMemberInGrid(void) {
         }
     }
     const int offset = Half(static_cast<std::int16_t>(x)) + static_cast<std::int16_t>(z) * 4;
-    if (offset < 0 || offset >= static_cast<int>(at::kArea111GridBytes))
-        bof3::Fatal("Area111_PlaceMemberInGrid: the cell (%d, %d) lies outside the 7 x 7 grid 0x%X", x, z,
-                    static_cast<unsigned>(::bof3::Img(Area111_Grid_addr)));
-    unsigned char& b = B(::bof3::Img(Area111_Grid_addr) + static_cast<U>(offset));
+    if (offset < 0 || offset >= static_cast<int>(at::kArea111SlidingPlatformsBytes))
+        bof3::Fatal("Area111_PlaceMemberInPlatformGrid: the cell (%d, %d) lies outside the 7 x 7 grid 0x%X", x, z,
+                    static_cast<unsigned>(::bof3::Img(Area111_SlidingPlatforms_addr)));
+    unsigned char& b = B(::bof3::Img(Area111_SlidingPlatforms_addr) + static_cast<U>(offset));
     b = static_cast<unsigned char>(b | ((x & 1) != 0 ? key : static_cast<unsigned char>(key << 4)));
     AH_CALL(Sound_PlayEffect)(0x204);
 }
@@ -271,10 +274,10 @@ extern "C" void __cdecl Area111_PlaceMemberInGrid(void) {
 // (k the running object's byte +0x18, unchecked; inside .data) cell, halved
 // toward 0, stepped once by the running object's direction (bytes); outside
 // 0..6 (unsigned): nothing. Its nibble less 1 at 4 or more: nothing. Else
-// MoveCmd_Attach(the script object, 7, that block, Field_State's slot + 1,
-// 0xC) with the script position kept across the call; extra object block's +8
+// MoveCmd_Attach(the script object, 7, that platform, Field_State's slot + 1,
+// 0xC) with the script position kept across the call; that platform's extra object's +8
 // = the running object's direction & 7; the script position - 6.
-extern "C" void __cdecl Area111_AttachAhead(void) {
+extern "C" void __cdecl Area111_AttachPlatformAhead(void) {
     const unsigned char* const cur = Sprite_Current;
     const unsigned char k = cur[0x18];
     const unsigned d = (cur[8] & 7u) * 2;
@@ -282,14 +285,14 @@ extern "C" void __cdecl Area111_AttachAhead(void) {
     const auto col = static_cast<unsigned char>(Half(S16(extra + 0x36) - 0xB) + B(::bof3::Img(at::kCellDelta.v) + d));
     const auto row = static_cast<unsigned char>(Half(S16(extra + 0x3A) - 0xB1) + B(::bof3::Img(at::kCellDelta.v) + d + 1));
     if (col >= 7 || row >= 7) return;
-    const auto block = static_cast<unsigned char>(Nibble(col, row) - 1);
-    if (block >= 4) return;
+    const auto platform = static_cast<unsigned char>(Nibble(col, row) - 1);
+    if (platform >= 4) return;
     const unsigned char slot = FieldStateSlot();
     unsigned char* const object = MoveScript_Object;
     const std::uint16_t position = rv::As<records::ScriptContext>(object)->position;
-    AH_CALL(MoveCmd_Attach)(object, 7, block, slot, 0xC);
+    AH_CALL(MoveCmd_Attach)(object, 7, platform, slot, 0xC);
     rv::Store<unsigned>(rv::As<records::ScriptContext>(MoveScript_Object)->position, position);
-    Extra(block)[8] = static_cast<unsigned char>(Sprite_Current[8] & 7);
+    Extra(platform)[8] = static_cast<unsigned char>(Sprite_Current[8] & 7);
     ScriptStep(-6);
 }
 
@@ -300,7 +303,7 @@ extern "C" void __cdecl Area111_AttachAhead(void) {
 // object's +7 = count + 1, MoveCmd_MoveKind2(the object's direction byte),
 // MoveScript_FAWord 0, the script object's +0 bit 0x40, the running object's
 // dword +0x14 = 0 and word +0x3E = 0xFB00.
-extern "C" void __cdecl Area111_SlideAhead(void) {
+extern "C" void __cdecl Area111_SlidePlatformAhead(void) {
     const unsigned char* const cur = Sprite_Current;
     auto col = static_cast<unsigned char>(static_cast<std::uint16_t>(rv::As<records::SpriteObject>(cur)->x_whole - 0xB) >> 1);
     auto row = static_cast<unsigned char>(static_cast<std::uint16_t>(rv::As<records::SpriteObject>(cur)->z_whole - 0xB1) >> 1);
@@ -498,15 +501,15 @@ extern "C" unsigned char __cdecl Area111_ArriveHook(std::int32_t x, std::int32_t
 // record 0xFF, inside .data); ScriptFlags_Set40.
 extern "C" void __cdecl Area111_ArmTailAtLeaderCell(unsigned char state) {
     const Cell c = LeaderCell();
-    const auto block = static_cast<unsigned char>(Nibble(c.col, c.row) - 1);
-    B(::bof3::Img(AreaW0c_TailSub_addr)) = block;
+    const auto platform = static_cast<unsigned char>(Nibble(c.col, c.row) - 1);
+    B(::bof3::Img(AreaW0c_TailSub_addr)) = platform;
     B(::bof3::Img(AreaW0a_TailKind_addr)) = 0x11;
     B(::bof3::Img(AreaW0c_TailState_addr)) = state;
-    Extra(block)[8] = state;
+    Extra(platform)[8] = state;
     AH_CALL(ScriptFlags_Set40)();
 }
 
-// original 0x4181E0 (called by Area111_SlideMark, Area111_PlaceMemberInGrid,
+// original 0x4181E0 (called by Area111_PlatformSlideMark, Area111_PlaceMemberInPlatformGrid,
 // Area111_Init): the grid cell (x, z)'s four map bytes (2x + 0xB..0xC, 2z +
 // 0xB1..0xB2) set to `value`.
 extern "C" void __cdecl Area111_MarkCells(int x, int z, unsigned value) {
@@ -523,7 +526,7 @@ extern "C" void __cdecl Area111_MarkCells(int x, int z, unsigned value) {
 // original 0x418240 (area 111 +0x40; PSX 0x801F46A8): with Cond_ByteFD 0,
 // story flag 0x28 cleared. Cond_ByteFD (read again) 1: every grid cell marked
 // with its byte of Area111_CellBytes (rows of z, columns of x), the grid
-// copied from Area111_GridStart, and the gate's map bytes (0x11..0x12, 0xAD)
+// copied from Area111_SlidingPlatformsStart, and the gate's map bytes (0x11..0x12, 0xAD)
 // = 0x50 and (.., 0xAE) = 0 without flag 0x28, 0xA1 and 0xC0 with it.
 // Cond_ByteFD 5: the map bytes (0xA..0xB, 8) = 0x50.
 extern "C" void __cdecl Area111_Init(void) {
@@ -532,7 +535,7 @@ extern "C" void __cdecl Area111_Init(void) {
         const unsigned char* bytes = Mem(::bof3::Img(Area111_CellBytes_addr));
         for (int row = 0; row < 7; ++row)
             for (int col = 0; col < 7; ++col) AH_CALL(Area111_MarkCells)(col, row, *bytes++);
-        for (unsigned i = 0; i < at::kArea111GridBytes; ++i) B(::bof3::Img(Area111_Grid_addr) + i) = B(::bof3::Img(Area111_GridStart_addr) + i);
+        for (unsigned i = 0; i < at::kArea111SlidingPlatformsBytes; ++i) B(::bof3::Img(Area111_SlidingPlatforms_addr) + i) = B(::bof3::Img(Area111_SlidingPlatformsStart_addr) + i);
         if (!Test(0x28)) {
             SetByte(0x11, 0xAD, 0x50);
             SetByte(0x12, 0xAD, 0x50);
@@ -556,13 +559,13 @@ void Area111_Inject() {
     BOF3_INJECT(Area111_ChoiceMessage2);
     BOF3_INJECT(Area111_ChoiceStartVar7);
     BOF3_INJECT(Area111_CopyExtra6C);
-    BOF3_INJECT(Area111_SlideMark);
-    BOF3_INJECT(Area111_AttachAtLeaderCell);
+    BOF3_INJECT(Area111_PlatformSlideMark);
+    BOF3_INJECT(Area111_AttachPlatformAtLeaderCell);
     BOF3_INJECT(Area111_Counter3Bit);
     BOF3_INJECT(Area111_WaitMemberBit);
-    BOF3_INJECT(Area111_PlaceMemberInGrid);
-    BOF3_INJECT(Area111_AttachAhead);
-    BOF3_INJECT(Area111_SlideAhead);
+    BOF3_INJECT(Area111_PlaceMemberInPlatformGrid);
+    BOF3_INJECT(Area111_AttachPlatformAhead);
+    BOF3_INJECT(Area111_SlidePlatformAhead);
     BOF3_INJECT(Area111_StepToExtra);
     BOF3_INJECT(Area111_TailGate);
     BOF3_INJECT(Area111_ArriveHook);

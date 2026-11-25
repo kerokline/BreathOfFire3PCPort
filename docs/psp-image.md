@@ -110,7 +110,7 @@ measure`, `pdiff.py` scratch):
 | `Title_Sprites` | 0 | 1 | 1 | one byte of a title sprite's record (a guess: the PSP's title layout) |
 | `Area07_Handlers`, `Area25_Handlers` | 0, 21 | 1, 1 | 1, 1 | one byte each where the PC has zero (PSX-JP's 21 are its known AREA026 shift) |
 | `MeteorStrikeChip_Lifts` | 1 | 1 | 1 | the same byte on every disc: the PC's own value |
-| `Area111_GridStart`, `FieldEquip_SlotCategories`, `EventScript_OpLengths` | 3, 1, 1 | 0 | 0 | PSX-JP only |
+| `Area111_SlidingPlatformsStart`, `FieldEquip_SlotCategories`, `EventScript_OpLengths` | 3, 1, 1 | 0 | 0 | PSX-JP only |
 
 So beyond `exp_table` and consumable 87 the PSP's own differences are the
 message-box placement, one title-sprite byte, three ending-step bytes and

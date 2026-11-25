@@ -1060,7 +1060,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x40E330	Area75_PhasePlay	func	tu_40d850	src/game/area_w1f.cpp	926	934	959	src/game/area/area_75.cpp	d3e6abb3
 0x40E3C0	Area75_PhaseMissed	func	tu_40d850	src/game/area_w1f.cpp	961	963	966	src/game/area/area_75.cpp	d3e6abb3
 0x40E3E0	Area75_PhaseReached	func	tu_40d850	src/game/area_w1f.cpp	968	972	992	src/game/area/area_75.cpp	d3e6abb3
-0x40E480	Area75_OtherPress	func	tu_40d850	src/game/area_w1f.cpp	994	1000	1010	src/game/area/area_75.cpp	d3e6abb3
+0x40E480	Area75_PartnerPress	func	tu_40d850	src/game/area_w1f.cpp	994	1000	1010	src/game/area/area_75.cpp	d3e6abb3
 0x40E520	Area75_PlayerPress	func	tu_40d850	src/game/area_w1f.cpp	1012	1017	1031	src/game/area/area_75.cpp	d3e6abb3
 0x40E5A0	Area75_EarlyPress	func	tu_40d850	src/game/area_w1f.cpp	1033	1037	1046	src/game/area/area_75.cpp	d3e6abb3
 0x40E5F0	Area75_DrawCounters	func	tu_40d850	src/game/area_w1f.cpp	1048	1057	1073	src/game/area/area_75.cpp	d3e6abb3
@@ -1754,13 +1754,13 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x417650	Area111_ChoiceMessage2	func	tu_417580	src/game/area_w2f.cpp	602	604	604	src/game/area/area_111.cpp	d3e6abb3
 0x417670	Area111_ChoiceStartVar7	func	tu_417580	src/game/area_w2f.cpp	606	608	615	src/game/area/area_111.cpp	d3e6abb3
 0x4176A0	Area111_CopyExtra6C	func	tu_4176a0	src/game/area_w2f.cpp	617	619	619	src/game/area/area_111.cpp	d3e6abb3
-0x4176B0	Area111_SlideMark	func	tu_4176a0	src/game/area_w2f.cpp	621	628	647	src/game/area/area_111.cpp	d3e6abb3
-0x417790	Area111_AttachAtLeaderCell	func	tu_4176a0	src/game/area_w2f.cpp	649	655	666	src/game/area/area_111.cpp	d3e6abb3
+0x4176B0	Area111_PlatformSlideMark	func	tu_4176a0	src/game/area_w2f.cpp	621	628	647	src/game/area/area_111.cpp	d3e6abb3
+0x417790	Area111_AttachPlatformAtLeaderCell	func	tu_4176a0	src/game/area_w2f.cpp	649	655	666	src/game/area/area_111.cpp	d3e6abb3
 0x417890	Area111_Counter3Bit	func	tu_4176a0	src/game/area_w2f.cpp	668	671	674	src/game/area/area_111.cpp	d3e6abb3
 0x4178B0	Area111_WaitMemberBit	func	tu_4176a0	src/game/area_w2f.cpp	676	679	682	src/game/area/area_111.cpp	d3e6abb3
-0x4178F0	Area111_PlaceMemberInGrid	func	tu_4176a0	src/game/area_w2f.cpp	684	691	713	src/game/area/area_111.cpp	d3e6abb3
-0x4179F0	Area111_AttachAhead	func	tu_4176a0	src/game/area_w2f.cpp	715	722	739	src/game/area/area_111.cpp	d3e6abb3
-0x417B30	Area111_SlideAhead	func	tu_4176a0	src/game/area_w2f.cpp	741	748	770	src/game/area/area_111.cpp	d3e6abb3
+0x4178F0	Area111_PlaceMemberInPlatformGrid	func	tu_4176a0	src/game/area_w2f.cpp	684	691	713	src/game/area/area_111.cpp	d3e6abb3
+0x4179F0	Area111_AttachPlatformAhead	func	tu_4176a0	src/game/area_w2f.cpp	715	722	739	src/game/area/area_111.cpp	d3e6abb3
+0x417B30	Area111_SlidePlatformAhead	func	tu_4176a0	src/game/area_w2f.cpp	741	748	770	src/game/area/area_111.cpp	d3e6abb3
 0x417C10	Area111_StepToExtra	func	tu_4176a0	src/game/area_w2f.cpp	772	779	804	src/game/area/area_111.cpp	d3e6abb3
 0x417CF0	Area111_TailGate	func	tu_4176a0	src/game/area_w2f.cpp	806	822	877	src/game/area/area_111.cpp	d3e6abb3
 	Edge	local		src/game/area_w2f.cpp	880	884	889	src/game/area/area_111.cpp	d3e6abb3

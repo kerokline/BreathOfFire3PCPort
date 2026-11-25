@@ -107,12 +107,14 @@ area	8	Cedar Woods - pond (fall)				cited	../BreathOfFire3Recomp/names/areas.tom
 area	9	Cedar Woods (fall)				cited	../BreathOfFire3Recomp/names/areas.toml AREA009 "Cedar Woods - Fall"; places.toml id 9 (caption)
 area	10	Cedar Woods - treehouse (fall)				cited	../BreathOfFire3Recomp/names/areas.toml AREA010 "Cedar Woods Treehouse - Fall"
 area	11	Cedar Woods - burning treehouse				cited	../BreathOfFire3Recomp/names/areas.toml AREA011 "Burning Treehouse"; docs/opt-layers.md:172
+area	12	Cedar Woods - treehouse (spring, second map)				measured	enemy table (AREA012.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: links 3 and 6, the spring woods; the enemy table of area 5
 area	13	Farm (spring)				measured	game/game/DAT/en-US.AREA013.DAT caption "Spring on the farm"; ../BreathOfFire3Recomp/names/areas.toml AREA013 "Farm Fields - Spring"
 area	14	Farm (fall)				cited	../BreathOfFire3Recomp/names/areas.toml AREA014 "Farm Fields - Fall"; places.toml id 14 "Farm"
 area	15	McNeil Manor (spring)				measured	game/game/DAT/en-US.AREA015.DAT caption "McNeil Manor, spring"; ../BreathOfFire3Recomp/names/areas.toml AREA015 "Farm (Outside Manor) - Night"
 area	16	World map - Yraall Region (spring)				measured	game/game/DAT/en-US.AREA016.DAT msg 4 "Yraall Region"; season: ../BreathOfFire3Recomp/names/places.toml id 16 (S); world map: docs/worldmap_area.md:232
 area	17	Farm - outside the manor (fall)				cited	../BreathOfFire3Recomp/names/areas.toml AREA017 "Farm (Outside Manor)"; season: places.toml id 17 (A)
-area	19	Yraall Road				cited	../BreathOfFire3Recomp/names/areas.toml AREA019 "Yraall Highway"; US: "Yraall Road"; save tools/recipe_saves/yraallRoad.DAT is in area 19
+area	18	Yraall Road (spring)				measured	enemy table (AREA018.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: links 16, the spring world map; the enemy table of area 19
+area	19	Yraall Road (fall)				measured	enemy table (AREA019.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: links 33, the fall world map; ../BreathOfFire3Recomp/names/areas.toml AREA019 "Yraall Highway"; US: "Yraall Road"; save tools/recipe_saves/yraallRoad.DAT is in area 19
 area	20	Battlefield - Yraall Region / Middle Sea				cited	D:/bof3x-runs/frost/wiki-pr/src/content/docs/data/programs.md:79 (world map 16 -> 20, 121 -> 20)
 area	21	Syn City				cited	../BreathOfFire3Recomp/names/places.toml id 21 en "Syn City"; US: "Syn City"
 area	22	Mt. Glaus - cave				measured	game/game/DAT/en-US.AREA022.DAT caption "Mt. Glaus..."; ../BreathOfFire3Recomp/names/areas.toml AREA022 "Nu Cave"; docs/boss-fights.md:67 (Nue, area 22)
@@ -124,6 +126,7 @@ area	28	McNeil Manor - rooftop				cited	../BreathOfFire3Recomp/names/areas.toml 
 area	29	Battlefield - Yraall Region (fall)				cited	D:/bof3x-runs/frost/wiki-pr/src/content/docs/data/programs.md:79 (33 -> 29)
 area	30	Fishing spot				cited	../BreathOfFire3Recomp/names/areas.toml AREA030 "Fishing"; docs/DIVERGENCE.md:1889 (Manillo, area 30)
 area	31	Dauna Mine - elevator				cited	../BreathOfFire3Recomp/names/areas.toml AREA031 "Dauna Mine - Elevator"
+area	32	Dauna Mine - Worker fight (not seen in play)				cited	enemy table (AREA032.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: one enemy, Worker, as area 2 holds; links 34 alone
 area	33	World map - Yraall Region (fall)				measured	game/game/DAT/en-US.AREA033.DAT msg 4 "Yraall Region"; season: ../BreathOfFire3Recomp/names/areas.toml AREA033
 area	35	Ogre Road				cited	../BreathOfFire3Recomp/names/places.toml id 35 en "Ogre Road"; US: "Ogre Road"
 area	37	Wyndia				cited	../BreathOfFire3Recomp/names/areas.toml AREA037 "Wyndia"; places.toml id 37
@@ -161,34 +164,57 @@ area	72	Battlefield - Rhapala Region				cited	D:/bof3x-runs/frost/wiki-pr/src/co
 area	73	Battlefield - Urkan Region				cited	D:/bof3x-runs/frost/wiki-pr/src/content/docs/data/programs.md:79 (88 -> 73)
 area	74	Urkan Tapa				cited	../BreathOfFire3Recomp/names/places.toml id 74 en "Urkan Tapa"; US: "Urkan Tapa"
 area	75	Steel Beach				cited	../BreathOfFire3Recomp/names/places.toml id 75 en "Steel Beach"; US: "Steel Beach"; tools/recipe_saves/README.md:25 ("area 75, the beach")
+area	76	Lighthouse - outside				measured	enemy table (AREA076.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: links 77 and the Rhapala world map 87
 area	77	Lighthouse				cited	../BreathOfFire3Recomp/names/places.toml id 77 en "Lighthouse"; docs/DIVERGENCE.md:9791 ("the lighthouse (area 77")
+area	79	Contest of Champions - arena (Claw, Patrio)				measured	enemy table (AREA079.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: Claw, Cawer, Patrio, Dodai; links 78, 80, 81
+area	80	Contest of Champions - arena (Garr)				measured	enemy table (AREA080.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: Garr alone; links 79
+area	81	Contest of Champions - arena (Emitai)				measured	enemy table (AREA081.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: Emitai and two Golems; links 79
 area	82	Angel Tower - entrance				cited	memory/angel-tower-areas.md ("82 (entrance)"); link 88 -> 82 measured
 area	83	Angel Tower - block room				cited	tools/recipe_saves/README.md:24 ("Angel Tower's block room (AREA083)"); docs/DIVERGENCE.md:5812
 area	84	Angel Tower - inside				cited	memory/angel-tower-areas.md ("84 and 83 (interior")
-area	85	Angel Tower - top				cited	memory/angel-tower-areas.md ("85 (the top)")
+area	85	Angel Tower - below the pit (Garr fight)				measured	enemy table (AREA085.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: Garr alone; its one link is area 83, the pit room (docs/angel-tower-ledge.md). Was "top" until 2026-11-24
 area	86	Container ship				cited	../BreathOfFire3Recomp/names/areas.toml AREA086 "Container Ship"
 area	87	World map - Rhapala Region				measured	game/game/DAT/en-US.AREA087.DAT msg 0 "Rhapala Region"
 area	88	World map - Urkan Region				measured	game/game/DAT/en-US.AREA088.DAT msg 0 "Urkan Region"
 area	90	Camp				cited	../BreathOfFire3Recomp/names/areas.toml AREA090 "Camp"; docs/campfire-and-crystal.md:61 (AREA090, the field camp)
 area	91	Meryleep's pond				cited	../BreathOfFire3Recomp/names/areas.toml AREA091 "Meryleep's Pond"; US: "Meryleep"
+area	92	Beyd's fights				measured	enemy table (AREA092.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: Beyd twice and Zig; no area links into it
 area	94	Rhapala - docks				cited	../BreathOfFire3Recomp/names/areas.toml AREA094 "Rapala Docks"; US: "Rhapala"
+area	95	Yraall Region - field spot (spring)				measured	enemy table (AREA095.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: links 16, the spring world map, alone; its own enemy table (Man Trap, not in the woods)
+area	96	Yraall Region - field spot (fall)				measured	enemy table (AREA096.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: links 33, the fall world map, alone; the enemy table of area 95
 area	97	Mt. Zublo - cave entrance				cited	docs/door-sweep.md:275 ("Mt. Zublo's cave entrance, the way to Deis's temple", area 97)
 area	98	Deis's temple				cited	../BreathOfFire3Recomp/names/areas.toml AREA098 "Deis's Temple"; docs/door-sweep.md:277; US: "Deis"
 area	99	Boumou Mountain				cited	../BreathOfFire3Recomp/names/areas.toml AREA099 "Boumou Mountain" (US spelling not found)
 area	100	Relay Point B				cited	../BreathOfFire3Recomp/names/areas.toml AREA100 "Relay Point B"; docs/region-diff.md:457; US: "Relay Point"
+area	102	Mt. Zublo - cave, first part				measured	enemy table (AREA102.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: links 97, 103, 195; Lava Man, Vulcan
+area	103	Mt. Zublo - cave, second part				measured	enemy table (AREA103.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: links 102 and the Urkan world map 88; Gisshan, Scylla, Charyb
 area	104	World map (area 104)				code	docs/worldmap_area.md:232 (WorldMap_Records area bytes)
-area	105	Tide Palace				cited	../BreathOfFire3Recomp/names/areas.toml AREA105 "Tide Palace"
+area	105	Tidal Caves - outside				measured	enemy table (AREA105.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: links 106 and the Rhapala world map 87. "Tidal Caves" is the US name (owner, 2026-11-24); ../BreathOfFire3Recomp/names/areas.toml AREA105 had "Tide Palace"
+area	106	Tidal Caves - inside				measured	enemy table (AREA106.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: links 105 and 107; the enemy table of area 105
+area	107	Tidal Caves - inner part				measured	enemy table (AREA107.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: links 106 alone; the enemy table of area 105
 area	108	Dauna Mine - minecart (chapter 8)				cited	docs/known-defects.md:3743 ("the Dauna Mine's area 108 the cart")
+area	109	Dauna Mine - tunnels (chapter 8)				measured	enemy table (AREA109.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: links 108 and 1; the enemy table of area 108 less one
 area	110	Battlefield - Dauna Hills				cited	D:/bof3x-runs/frost/wiki-pr/src/content/docs/data/programs.md:79 (115 -> 110)
-area	111	Steel Tower				cited	../BreathOfFire3Recomp/names/places.toml id 111 en "Steel Tower"; docs/ultrawide-patch-cells.md:231
-area	112	Relay Point A				cited	../BreathOfFire3Recomp/names/areas.toml AREA112 "Relay Point A"; docs/region-diff.md:458
+area	111	Relay Point A - Upper Decks				measured	enemy table (AREA111.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: links 112 alone; the enemy table of area 112; reached from the container ship (86) through 112; the sliding platforms and the antenna alignment's messages are here (the owner, 2026-11-24); ../BreathOfFire3Recomp/names/places.toml id 111 dev label "steel tower, upper" (was "Steel Tower" here until 2026-11-24) The name is the owner's wording, 2026-11-24.
+area	112	Relay Point A - Lower Decks				measured	enemy table (AREA112.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: links 86, the container ship, and 111; en-US.AREA112.DAT has "Relay Point"; ../BreathOfFire3Recomp/names/areas.toml AREA112 "Relay Point A" The name is the owner's wording, 2026-11-24.
 area	115	World map - Dauna Hills				measured	game/game/DAT/en-US.AREA115.DAT msg 0 "Dauna Hills"
+area	117	Research Plant - underground, first part				measured	enemy table (AREA117.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: links 49, the plant, and 118
+area	118	Research Plant - underground, second part				measured	enemy table (AREA118.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: links 117 and 119; the enemy table of area 117
+area	119	Research Plant - underground, last part (HugeSlug, Shroom)				measured	enemy table (AREA119.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: links 118 alone; HugeSlug and Shroom
 area	120	Cliff				cited	../BreathOfFire3Recomp/names/areas.toml AREA120 "Cliff"; places.toml id 120
 area	121	World map - Middle Sea				measured	game/game/DAT/en-US.AREA121.DAT msg 0 "The Middle Sea"
 area	124	Battlefield - Lost Shore				cited	D:/bof3x-runs/frost/wiki-pr/src/content/docs/data/programs.md:79 (151 -> 124)
 area	125	Battlefield - Desert				cited	D:/bof3x-runs/frost/wiki-pr/src/content/docs/data/programs.md:79 (152 -> 125)
+area	126	Black Ship - at Kombinat				measured	enemy table (AREA126.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: links 155 (Kombinat) and the ship's areas 135, 137, 188; en-US.AREA126.DAT has "Black Ship"; no enemy table
 area	128	Dock				cited	../BreathOfFire3Recomp/names/areas.toml AREA128 "Dock"; tools/recipe_saves/README.md:32 ("the dock (area 128)")
-area	134	Freighter				cited	../BreathOfFire3Recomp/names/places.toml id 134 en "Freighter"; US: "freighter"
+area	133	Black Ship - entry				measured	enemy table (AREA133.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: links 135 and 136; en-US.AREA133.DAT has "Black Ship"; no enemy table
+area	134	Black Ship - Ammonite fight				measured	enemy table (AREA134.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: two Ammonite records; links 135, 137, 188. "Black Ship" is the US name (owner, 2026-11-24); ../BreathOfFire3Recomp/names/places.toml id 134 had "Freighter"
+area	135	Black Ship - inside, first part				measured	enemy table (AREA135.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: links 133, 134, 136, 188, 126; Bolt, KingToad
+area	136	Black Ship - inside, second part				measured	enemy table (AREA136.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: links 133 and 135; the enemy table of area 135
+area	137	Black Ship - inside, third part				measured	enemy table (AREA137.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: links 134, 188, 126; BoltLord, GntCrab, as area 134
+area	138	Factory - outside				cited	enemy table (AREA138.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: links 139 and the Lost Shore world map 151; ../BreathOfFire3Recomp/names/places.toml id 138 "pipe dungeon 1"; "Factory" is the US word in areas 143 and 150, not in this area's own text
+area	139	Factory - inside, first part				cited	enemy table (AREA139.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: links 138 and 140; the enemy table of area 140
+area	140	Factory - inside, second part				cited	enemy table (AREA140.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: links 139; GntOrc
 area	141	Ryu's dream 1				cited	../BreathOfFire3Recomp/names/areas.toml AREA141 "Ryu's Dream 1"
 area	142	Ryu's dream 2				cited	../BreathOfFire3Recomp/names/areas.toml AREA142 "Ryu's Dream 2"
 area	143	Dragnier				cited	../BreathOfFire3Recomp/names/places.toml id 143 en "Dragnier"; US: "Dragnier"
@@ -201,10 +227,23 @@ area	150	Oasis				cited	../BreathOfFire3Recomp/names/areas.toml AREA150 "Oasis";
 area	151	World map - Lost Shore				measured	game/game/DAT/en-US.AREA151.DAT msg 0 "Lost Shore"
 area	152	World map - Desert				measured	game/game/DAT/en-US.AREA152.DAT msg 0 "Desert"
 area	155	Kombinat				cited	../BreathOfFire3Recomp/names/places.toml id 155 en "Kombinat"; US: "Kombinat"
+area	157	Station Myria - sample rooms, hall				measured	enemy table (AREA157.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: areas 158..166 and 173 link to it; no enemy table
+area	158	Station Myria - sample room (Sample 1)				measured	enemy table (AREA158.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: the enemy records are named so; links 157
+area	159	Station Myria - sample room (Sample 2)				measured	enemy table (AREA159.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: the enemy records are named so; links 157
+area	160	Station Myria - sample room (Sample 3)				measured	enemy table (AREA160.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: the enemy records are named so; links 157
+area	161	Station Myria - sample room (Sample 4)				measured	enemy table (AREA161.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: the enemy records are named so; links 157
+area	162	Station Myria - sample room (Samples 5, 6)				measured	enemy table (AREA162.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: the enemy records are named so; links 157
+area	163	Station Myria - sample room (Sample 7)				measured	enemy table (AREA163.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: the enemy records are named so; links 157
+area	164	Station Myria - sample room (Sample 8)				measured	enemy table (AREA164.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: the enemy records are named so; links 157
+area	165	Station Myria - sample room (Sample 9)				measured	enemy table (AREA165.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: the enemy records are named so; links 157
+area	166	Station Myria - sample room (Samples 10..12)				measured	enemy table (AREA166.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: the enemy records are named so; links 157
 area	167	Station Myria - outside				cited	../BreathOfFire3Recomp/names/areas.toml AREA167 "Station Myria - Outside"
 area	168	Station Myria				cited	../BreathOfFire3Recomp/names/areas.toml AREA168 "Station Myria"
+area	169	Station Myria - laboratory, first part				measured	enemy table (AREA169.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: links 168 and 170; en-US.AREA168.DAT has "Laboratory"
+area	170	Station Myria - laboratory, second part				measured	enemy table (AREA170.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: links 169 and 197; the enemy table of area 169
 area	171	Station Myria - garden				cited	../BreathOfFire3Recomp/names/areas.toml AREA171 "Station Myria - Garden"
 area	172	Teepo's garden				cited	../BreathOfFire3Recomp/names/areas.toml AREA172 "Teepo's Garden"
+area	173	Station Myria - library				measured	enemy table (AREA173.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: en-US.AREA173.DAT has "library"; links 168, 157, 166, 174
 area	175	Faerie Village				cited	../BreathOfFire3Recomp/names/areas.toml AREA175 "Fairy Village"; US: "Faerie Village"; docs/DIVERGENCE.md:11507
 area	176	Faerie Village				cited	docs/DIVERGENCE.md:14472 ("areas 175..185 (the faerie village)")
 area	177	Faerie Village				cited	docs/DIVERGENCE.md:14472 ("areas 175..185 (the faerie village)")
@@ -216,10 +255,11 @@ area	182	Faerie Village				cited	docs/DIVERGENCE.md:14472 ("areas 175..185 (the 
 area	183	Faerie Village				cited	docs/DIVERGENCE.md:14472 ("areas 175..185 (the faerie village)")
 area	184	Faerie Village				cited	docs/DIVERGENCE.md:14472 ("areas 175..185 (the faerie village)")
 area	185	Faerie Village				cited	docs/DIVERGENCE.md:14472 ("areas 175..185 (the faerie village)")
-area	188	Freighter				cited	../BreathOfFire3Recomp/names/places.toml id 188 en "Freighter" (dev label)
+area	188	Black Ship - inside (Bolt, BoltArch)				measured	enemy table (AREA188.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: links 134, 135, 137, 126; ../BreathOfFire3Recomp/names/places.toml id 188 dev label "Freighter"
 area	189	Desert of Death				cited	tools/recipe_saves/README.md:31 ("the Desert of Death (area 189)"); US: "Desert of Death"
 area	191	Desert camp				cited	tools/recipe_saves/README.md:31 ("the desert camp (area 191)")
 area	195	Mt. Zublo				cited	../BreathOfFire3Recomp/names/areas.toml AREA195 "Zublo Volcano"; US: "Mt. Zublo"
 area	196	Manmo's sand hill				cited	tools/recipe_saves/README.md:31 ("Manmo's sand hill and its fight (area 196"); docs/takeover-queue-round13.md:1028
+area	197	Station Myria - Chimera fight				measured	enemy table (AREA197.DAT, en-US names) and the link lists (Area_Descriptors +0x20, BOF3.exe), read 2026-11-24: Chimera alone; its one link is area 170
 area	198	Myria's chamber				cited	docs/STATUS.md:96 ("Area 198, Myria's chamber")
 area	199	Ending - desert scene				cited	docs/ending-backdrop.md:16; tools/recipe_saves/README.md:34 ("the ending's desert scene")

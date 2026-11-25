@@ -3501,7 +3501,7 @@ indexes ours aborts (each group's doc says which).
   `Area33_Record04Start` `0x404820` (`Area<NN>_Cells` by `+0xB`, then
   `AreaMap_Bytes[width * z + x]` with no bound; kept, the fuzz seeds the width
   small), `Area44_PushParty` `0x4077F0` (`Field_DirectionSteps`,
-  `Sprite_ObjectsExtra`; aborts), `Area111_PlaceMemberInGrid` `0x4178F0`
+  `Sprite_ObjectsExtra`; aborts), `Area111_PlaceMemberInPlatformGrid` `0x4178F0`
   (`0x675C00 + x / 2 + z * 4` for an object off the 28-byte grid; aborts),
   `Area111_StepToExtra` `0x417C10` (the extra objects by a dword `+0x18`;
   aborts outside `.data`), `Area111_ArmTailAtLeaderCell` `0x418130` (a leader
@@ -4098,7 +4098,7 @@ another amount one call in five to tell the two apart). `Area104_BuildMinimap`
   (its three sibling callers return).
 - `Area79_StateSlide` `0x40F430` writes `Field_State`'s word `+0x12E`,
   whatever object is sliding.
-- `Area111_SlideMark` `0x4176B0`'s two map calls mark the start cell `0x10`
+- `Area111_PlatformSlideMark` `0x4176B0`'s two map calls mark the start cell `0x10`
   and the stop cell 0, never the cell the object ends in.
 - `Area170_Trigger56` `0x4274C0` pushes a fourth word (0) to
   `Inventory_Add`, which takes three (harmless under cdecl).
@@ -7737,7 +7737,7 @@ Not seen in play.
 **Established:** the `twin` row `0x61FBD0..0x61FCA8` from `AREA112.EMI#13`
 (psx-jp, psx-us, psx-eu-en) is defeated at its first three bytes by the
 `AREA111.EMI#13` segment (`0x61FB5C..0x61FBD4`), which runs past
-`Area111_GridStart` and owns them first: the image holds `AREA111`'s zeros
+`Area111_SlidingPlatformsStart` and owns them first: the image holds `AREA111`'s zeros
 where the PC and `AREA112`'s section hold three non-zero bytes, on all five
 PSX builds. Not seen in play. With D267 it is the class the inventory names:
 a segment whose end or start lands in a neighbour's data; E1's list of bytes

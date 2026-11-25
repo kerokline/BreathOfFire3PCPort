@@ -951,9 +951,9 @@ site	src/game/area/area_74.cpp	34	at_global	-	at::kMessage	0x7dee48	data	game	ar
 site	src/game/area/area_75.cpp	44	at_global	-	at::kMessage	0x7dee48	data	game	area	base_helper	-	-	void SetMessage(unsigned id) { SetWord(Mem(::bof3::Img(at::kMessage.v)), id); }
 site	src/game/area/area_75.cpp	81	at_global	-	at::kObjectA	0x93c350	data	game	area	base_helper	-	-	const unsigned index = B(::bof3::Img(at::kObjectA.v));
 site	src/game/area/area_75.cpp	130	at_global	-	at::kObjectA	0x93c350	data	game	area	base_helper	-	-	extern " " void __cdecl Area75_MarkObjectA(void) { B(::bof3::Img(at::kObjectA.v)) = ObjectIndex(Field_ActiveMember); }
-site	src/game/area/area_75.cpp	135	at_global	-	at::kOtherEffect	0x93c34e	data	game	area	base_helper	-	-	const unsigned other = B(::bof3::Img(at::kOtherEffect.v));
+site	src/game/area/area_75.cpp	135	at_global	-	at::kPartnerEffect	0x93c34e	data	game	area	base_helper	-	-	const unsigned partner = B(::bof3::Img(at::kPartnerEffect.v));
 site	src/game/area/area_75.cpp	164	at_global	-	at::kScratch	0x903850	data	game	area	base_helper	SharedScratch	-	SetWord(Mem(::bof3::Img(at::kScratch.v)), slot);
-site	src/game/area/area_75.cpp	220	at_global	-	at::kOtherEffect	0x93c34e	data	game	area	base_helper	-	-	unsigned char* e = EffectAt(B(::bof3::Img(at::kOtherEffect.v)));
+site	src/game/area/area_75.cpp	220	at_global	-	at::kPartnerEffect	0x93c34e	data	game	area	base_helper	-	-	unsigned char* e = EffectAt(B(::bof3::Img(at::kPartnerEffect.v)));
 site	src/game/area/area_75.cpp	224	at_global	-	at::kCounter0	0x903848	data	game	area	base_helper	-	-	if (B(::bof3::Img(at::kCounter0.v)) < 0x20) AddWord(MoveScript_Object + 0xA, 0xFFFE);
 site	src/game/area/area_75.cpp	272	at_global	-	at::kCounter0	0x903848	data	game	area	base_helper	-	-	B(::bof3::Img(at::kCounter0.v)) = 0x15;
 site	src/game/area/area_75.cpp	284	at_global	-	at::kTailTimer	0x9039f6	data	game	area	base_helper	-	-	SetWord(Mem(::bof3::Img(at::kTailTimer.v)), 0x1E);
@@ -982,7 +982,7 @@ site	src/game/area/area_75.cpp	480	at_global	-	at::kCounter0	0x903848	data	game	
 site	src/game/area/area_75.cpp	500	at_global	-	at::kCounter3	0x90384b	data	game	area	base_helper	-	-	B(::bof3::Img(at::kCounter3.v)) = 0xA;
 site	src/game/area/area_75.cpp	649	at_global	-	at::kObjectA	0x93c350	data	game	area	base_helper	-	-	const unsigned a = B(::bof3::Img(at::kObjectA.v));
 site	src/game/area/area_75.cpp	663	at_global	-	at::kCounter0	0x903848	data	game	area	base_helper	-	-	B(::bof3::Img(at::kCounter0.v)) = 0x1E;
-site	src/game/area/area_75.cpp	678	at_global	-	at::kOtherEffect	0x93c34e	data	game	area	base_helper	-	-	DrainEffect(B(::bof3::Img(at::kOtherEffect.v)));
+site	src/game/area/area_75.cpp	678	at_global	-	at::kPartnerEffect	0x93c34e	data	game	area	base_helper	-	-	DrainEffect(B(::bof3::Img(at::kPartnerEffect.v)));
 site	src/game/area/area_75.cpp	679	at_global	-	at::kObjectA	0x93c350	data	game	area	base_helper	-	-	Sprite_Current = ObjectAt(B(::bof3::Img(at::kObjectA.v)));
 site	src/game/area/area_75.cpp	734	at_global	-	at::kTextBuffer	0x904ba0	data	game	area	base_helper	-	-	unsigned char* const text = Mem(::bof3::Img(at::kTextBuffer.v));
 site	src/game/area/area_75.cpp	962	code_const	gen_func	bof3::addr::Area75_PhasePlay	0x40e330	code	game	area	call	Area75_PhasePlay	-	if (Cheats_MinigameNoFail() && !bof3::IsEnabled(bof3::addr::Area75_PhasePlay))
@@ -1225,7 +1225,7 @@ site	src/game/area_w1f_callees.h	82	const_def	literal	at::kKind2Z	0x905e60	data	
 site	src/game/area_w1f_callees.h	85	const_def	literal	at::kCondByteFA	0x8034e0	data	game	area	at	Cond_ByteFA	-	constexpr ::bof3::image::Va kCondByteFA{0x8034E0};
 site	src/game/area_w1f_callees.h	88	const_def	literal	at::kTextBuffer	0x904ba0	data	game	area	at	-	-	constexpr ::bof3::image::Va kTextBuffer{0x904BA0};
 site	src/game/area_w1f_callees.h	151	const_def	literal	at::kPhase	0x93c340	data	game	area	at	AreaW1f_Phase	-	constexpr ::bof3::image::Va kPhase{0x93C340};
-site	src/game/area_w1f_callees.h	160	const_def	literal	at::kOtherEffect	0x93c34e	data	game	area	at	-	-	constexpr ::bof3::image::Va kOtherEffect{0x93C34E};
+site	src/game/area_w1f_callees.h	160	const_def	literal	at::kPartnerEffect	0x93c34e	data	game	area	at	-	-	constexpr ::bof3::image::Va kPartnerEffect{0x93C34E};
 site	src/game/area_w1f_callees.h	161	const_def	literal	at::kPlayerEffect	0x93c34f	data	game	area	at	AreaW1f_PlayerEffect	-	constexpr ::bof3::image::Va kPlayerEffect{0x93C34F};
 site	src/game/area_w1f_callees.h	162	const_def	literal	at::kObjectA	0x93c350	data	game	area	at	-	-	constexpr ::bof3::image::Va kObjectA{0x93C350};
 site	src/game/area_w1f_callees.h	171	const_def	literal	at::kFloatOne	0x5c41b8	data	game	area	at	-	-	constexpr rdata::Const kFloatOne{0x5C41B8};
@@ -6098,7 +6098,7 @@ site	src/game/effect/effect.cpp	1566	at_global	-	rest_3c::at::kAttackerAtk	0x939
 site	src/game/effect/effect.cpp	1567	at_global	-	rest_3c::at::kTarget	0x904b54	data	game	effect	base_helper	-	-	const unsigned target = B(::bof3::Img(rest_3c::at::kTarget.v));
 site	src/game/effect/effect.cpp	1568	at_global	-	rest_3c::at::kAttackerAtk	0x939fe4	data	game	effect	base_helper	-	-	SetW(::bof3::Img(rest_3c::at::kAttackerAtk.v), static_cast<U>(static_cast<S32Rest3c>(power * 80) / 100));
 site	src/game/effect/effect.cpp	1576	at_global	-	rest_3c::at::kActor	0x904b34	data	game	effect	base_helper	-	-	const unsigned actor = B(::bof3::Img(rest_3c::at::kActor.v));
-site	src/game/effect/effect.cpp	1577	at_global	-	rest_3c::at::kOtherActor	0x904b44	data	game	effect	base_helper	-	-	const unsigned other = B(::bof3::Img(rest_3c::at::kOtherActor.v));
+site	src/game/effect/effect.cpp	1577	at_global	-	rest_3c::at::kOtherActor	0x904b44	data	game	effect	base_helper	-	-	const unsigned partner = B(::bof3::Img(rest_3c::at::kOtherActor.v));
 site	src/game/effect/effect.cpp	1578	at_global	-	rest_3c::at::kFlags2	0x904aa9	data	game	effect	base_helper	-	-	B(::bof3::Img(rest_3c::at::kFlags2.v)) = static_cast<unsigned char>(B(::bof3::Img(rest_3c::at::kFlags2.v)) | 0x40);
 site	src/game/effect/effect.cpp	1578	at_global	-	rest_3c::at::kFlags2	0x904aa9	data	game	effect	base_helper	-	-	B(::bof3::Img(rest_3c::at::kFlags2.v)) = static_cast<unsigned char>(B(::bof3::Img(rest_3c::at::kFlags2.v)) | 0x40);
 site	src/game/effect/effect.cpp	1589	at_global	-	rest_3c::at::kTarget	0x904b54	data	game	effect	base_helper	-	-	const unsigned t = B(::bof3::Img(rest_3c::at::kTarget.v));

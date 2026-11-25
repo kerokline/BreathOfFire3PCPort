@@ -238,7 +238,7 @@ site	src/game/area/area_111.cpp	45	global	Mem	at::kMessage	0x7dee48	-	none	-	-	0
 site	src/game/area/area_111.cpp	47	global	Mem	Cond_Flags_addr + 0xa0	0x904030	-	inside	Cond_Flags+0xa0	unsigned char	0
 site	src/game/area/area_111.cpp	57	global	Mem	at::kTailTimer	0x9039f6	-	none	-	-	0
 site	src/game/area/area_111.cpp	58	global	Mem	at::kTailTimer	0x9039f6	-	none	-	-	0
-site	src/game/area/area_111.cpp	95	global	B	Area111_Grid_addr + (col >> 1) + row * 4	0x675c00	-	exact	Area111_Grid	unsigned char	0
+site	src/game/area/area_111.cpp	95	global	B	Area111_SlidingPlatforms_addr + (col >> 1) + row * 4	0x675c00	-	exact	Area111_SlidingPlatforms	unsigned char	0
 site	src/game/area/area_111.cpp	106	global	Mem	ObjTrio_addr + 0x36	0x802d76	-	inside	ObjTrio+0x36	records::PartyMember	0
 site	src/game/area/area_111.cpp	106	global	Mem	ObjTrio_addr + 0x3a	0x802d7a	-	inside	ObjTrio+0x3a	records::PartyMember	0
 site	src/game/area/area_111.cpp	119	record	B	weights + chosen	-	-	-	-	-	0
@@ -253,8 +253,8 @@ site	src/game/area/area_111.cpp	191	global	B	at::kCellDelta	0x66971c	-	none	-	-	
 site	src/game/area/area_111.cpp	193	global	B	at::kCellDelta	0x66971c	-	none	-	-	0
 site	src/game/area/area_111.cpp	228	global	B	at::kCounter3	0x90384b	-	none	-	-	0
 site	src/game/area/area_111.cpp	236	global	B	at::kCounter3	0x90384b	-	none	-	-	0
-site	src/game/area/area_111.cpp	254	global	B	Area111_Grid_addr + (col >> 1) + row * 4	0x675c00	-	exact	Area111_Grid	unsigned char	0
-site	src/game/area/area_111.cpp	265	global	B	Area111_Grid_addr + static_cast<U>(offset)	0x675c00	-	exact	Area111_Grid	unsigned char	0
+site	src/game/area/area_111.cpp	254	global	B	Area111_SlidingPlatforms_addr + (col >> 1) + row * 4	0x675c00	-	exact	Area111_SlidingPlatforms	unsigned char	0
+site	src/game/area/area_111.cpp	265	global	B	Area111_SlidingPlatforms_addr + static_cast<U>(offset)	0x675c00	-	exact	Area111_SlidingPlatforms	unsigned char	0
 site	src/game/area/area_111.cpp	282	global	B	at::kCellDelta	0x66971c	-	none	-	-	0
 site	src/game/area/area_111.cpp	283	global	B	at::kCellDelta	0x66971c	-	none	-	-	0
 site	src/game/area/area_111.cpp	308	global	B	at::kCellDelta	0x66971c	-	none	-	-	0
@@ -288,8 +288,8 @@ site	src/game/area/area_111.cpp	502	global	B	AreaW0c_TailSub_addr	0x9039f5	-	exa
 site	src/game/area/area_111.cpp	503	global	B	AreaW0a_TailKind_addr	0x9039f3	-	exact	AreaW0a_TailKind	signed char	0
 site	src/game/area/area_111.cpp	504	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
 site	src/game/area/area_111.cpp	532	global	Mem	Area111_CellBytes_addr	0x61fb7c	-	exact	Area111_CellBytes	unsigned char	0
-site	src/game/area/area_111.cpp	535	global	B	Area111_GridStart_addr + i	0x61fbb0	-	exact	Area111_GridStart	unsigned char	0
-site	src/game/area/area_111.cpp	535	global	B	Area111_Grid_addr + i	0x675c00	-	exact	Area111_Grid	unsigned char	0
+site	src/game/area/area_111.cpp	535	global	B	Area111_SlidingPlatformsStart_addr + i	0x61fbb0	-	exact	Area111_SlidingPlatformsStart	unsigned char	0
+site	src/game/area/area_111.cpp	535	global	B	Area111_SlidingPlatforms_addr + i	0x675c00	-	exact	Area111_SlidingPlatforms	unsigned char	0
 site	src/game/area/area_112.cpp	38	global	Mem	ObjTrio_addr + m * at::kPartyStride	0x802d40	-	exact	ObjTrio	records::PartyMember	0
 site	src/game/area/area_112.cpp	40	global	Mem	at::kMessage	0x7dee48	-	none	-	-	0
 site	src/game/area/area_112.cpp	42	global	Mem	Cond_Flags_addr + 0xa0	0x904030	-	inside	Cond_Flags+0xa0	unsigned char	0
@@ -2347,19 +2347,19 @@ site	src/game/area/area_75.cpp	81	global	B	at::kObjectA	0x93c350	-	none	-	-	0
 site	src/game/area/area_75.cpp	82	global	B	AreaW1f_Phase_addr	0x93c340	-	exact	AreaW1f_Phase	unsigned char	0
 site	src/game/area/area_75.cpp	83	global	B	AreaW1f_Move_addr	0x93c343	-	exact	AreaW1f_Move	unsigned char	0
 site	src/game/area/area_75.cpp	84	global	B	AreaW1f_Row_addr	0x93c349	-	exact	AreaW1f_Row	unsigned char	0
-site	src/game/area/area_75.cpp	108	global	Mem	AreaW1f_OtherCounter_addr	0x93c34c	-	exact	AreaW1f_OtherCounter	unsigned short	0
+site	src/game/area/area_75.cpp	108	global	Mem	AreaW1f_PartnerCounter_addr	0x93c34c	-	exact	AreaW1f_PartnerCounter	unsigned short	0
 site	src/game/area/area_75.cpp	108	global	Mem	AreaW1f_PlayerCounter_addr	0x93c34a	-	exact	AreaW1f_PlayerCounter	unsigned short	0
 site	src/game/area/area_75.cpp	113	global	B	Input_Pressed_addr	0x7e1bec	-	exact	Input_Pressed	unsigned short	0
 site	src/game/area/area_75.cpp	121	global	B	AreaW0a_TailKind_addr	0x9039f3	-	exact	AreaW0a_TailKind	signed char	0
 site	src/game/area/area_75.cpp	122	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
 site	src/game/area/area_75.cpp	127	global	B	AreaW1f_ObjectB_addr	0x93c351	-	exact	AreaW1f_ObjectB	unsigned char	0
 site	src/game/area/area_75.cpp	130	global	B	at::kObjectA	0x93c350	-	none	-	-	0
-site	src/game/area/area_75.cpp	135	global	B	at::kOtherEffect	0x93c34e	-	none	-	-	0
+site	src/game/area/area_75.cpp	135	global	B	at::kPartnerEffect	0x93c34e	-	none	-	-	0
 site	src/game/area/area_75.cpp	136	global	B	AreaW1f_PlayerEffect_addr	0x93c34f	-	exact	AreaW1f_PlayerEffect	unsigned char	0
 site	src/game/area/area_75.cpp	164	global	Mem	at::kScratch	0x903850	-	exact	SharedScratch	records::SharedScratch	0
 site	src/game/area/area_75.cpp	189	global	B	Area75_FlyHeights_addr + cur[0xB]	0x60ab40	-	exact	Area75_FlyHeights	unsigned char	0
 site	src/game/area/area_75.cpp	211	record	Word	cur + 0x14	-	base=Sprite_Current	-	-	-	0
-site	src/game/area/area_75.cpp	220	global	B	at::kOtherEffect	0x93c34e	-	none	-	-	0
+site	src/game/area/area_75.cpp	220	global	B	at::kPartnerEffect	0x93c34e	-	none	-	-	0
 site	src/game/area/area_75.cpp	222	global	B	AreaW1f_PlayerEffect_addr	0x93c34f	-	exact	AreaW1f_PlayerEffect	unsigned char	0
 site	src/game/area/area_75.cpp	224	global	B	at::kCounter0	0x903848	-	none	-	-	0
 site	src/game/area/area_75.cpp	266	global	B	AreaW0c_ChoiceAnswer_addr	0x7dee67	-	exact	AreaW0c_ChoiceAnswer	signed char	0
@@ -2388,7 +2388,7 @@ site	src/game/area/area_75.cpp	339	global	B	AreaW1f_Phase_addr	0x93c340	-	exact	
 site	src/game/area/area_75.cpp	340	global	B	AreaW1f_Move_addr	0x93c343	-	exact	AreaW1f_Move	unsigned char	0
 site	src/game/area/area_75.cpp	341	global	B	AreaW1f_Row_addr	0x93c349	-	exact	AreaW1f_Row	unsigned char	0
 site	src/game/area/area_75.cpp	346	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
-site	src/game/area/area_75.cpp	350	global	Mem	AreaW1f_OtherCounter_addr	0x93c34c	-	exact	AreaW1f_OtherCounter	unsigned short	0
+site	src/game/area/area_75.cpp	350	global	Mem	AreaW1f_PartnerCounter_addr	0x93c34c	-	exact	AreaW1f_PartnerCounter	unsigned short	0
 site	src/game/area/area_75.cpp	352	global	B	AreaW1f_Phase_addr	0x93c340	-	exact	AreaW1f_Phase	unsigned char	0
 site	src/game/area/area_75.cpp	353	global	B	at::kCounter0	0x903848	-	none	-	-	0
 site	src/game/area/area_75.cpp	353	global	B	at::kCounter0	0x903848	-	none	-	-	0
@@ -2410,7 +2410,7 @@ site	src/game/area/area_75.cpp	384	global	B	AreaW0c_TailState_addr	0x9039f4	-	ex
 site	src/game/area/area_75.cpp	389	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
 site	src/game/area/area_75.cpp	390	global	B	at::kCounter0	0x903848	-	none	-	-	0
 site	src/game/area/area_75.cpp	390	global	B	at::kCounter0	0x903848	-	none	-	-	0
-site	src/game/area/area_75.cpp	393	global	Mem	AreaW1f_OtherCounter_addr	0x93c34c	-	exact	AreaW1f_OtherCounter	unsigned short	0
+site	src/game/area/area_75.cpp	393	global	Mem	AreaW1f_PartnerCounter_addr	0x93c34c	-	exact	AreaW1f_PartnerCounter	unsigned short	0
 site	src/game/area/area_75.cpp	395	global	B	AreaW1f_Phase_addr	0x93c340	-	exact	AreaW1f_Phase	unsigned char	0
 site	src/game/area/area_75.cpp	396	global	B	at::kCounter0	0x903848	-	none	-	-	0
 site	src/game/area/area_75.cpp	396	global	B	at::kCounter0	0x903848	-	none	-	-	0
@@ -2451,7 +2451,7 @@ site	src/game/area/area_75.cpp	520	global	B	AreaW1f_EarlyPresses_addr	0x93c347	-
 site	src/game/area/area_75.cpp	521	global	B	AreaW1f_IdleFrames_addr	0x93c348	-	exact	AreaW1f_IdleFrames	unsigned char	0
 site	src/game/area/area_75.cpp	522	global	B	AreaW1f_List_addr	0x93c352	-	exact	AreaW1f_List	unsigned char	0
 site	src/game/area/area_75.cpp	523	global	B	AreaW1f_ListPos_addr	0x93c353	-	exact	AreaW1f_ListPos	unsigned char	0
-site	src/game/area/area_75.cpp	524	global	Mem	AreaW1f_OtherCounter_addr	0x93c34c	-	exact	AreaW1f_OtherCounter	unsigned short	0
+site	src/game/area/area_75.cpp	524	global	Mem	AreaW1f_PartnerCounter_addr	0x93c34c	-	exact	AreaW1f_PartnerCounter	unsigned short	0
 site	src/game/area/area_75.cpp	525	global	Mem	AreaW1f_PlayerCounter_addr	0x93c34a	-	exact	AreaW1f_PlayerCounter	unsigned short	0
 site	src/game/area/area_75.cpp	533	global	B	AreaW1f_Phase_addr	0x93c340	-	exact	AreaW1f_Phase	unsigned char	0
 site	src/game/area/area_75.cpp	539	global	Mem	Area75_Phases_addr + phase * 4	0x60ab50	-	exact	Area75_Phases	unsigned long	0
@@ -2499,7 +2499,7 @@ site	src/game/area/area_75.cpp	663	global	B	at::kCounter0	0x903848	-	none	-	-	0
 site	src/game/area/area_75.cpp	673	global	Mem	AreaW1f_MoveFrames_addr	0x93c344	-	exact	AreaW1f_MoveFrames	unsigned short	0
 site	src/game/area/area_75.cpp	674	global	B	Area75_Rhythm_addr + rem + B(AreaW1f_Row_addr) * 15u	0x60abd0	-	exact	Area75_Rhythm	unsigned char	0
 site	src/game/area/area_75.cpp	674	global	B	AreaW1f_Row_addr	0x93c349	-	exact	AreaW1f_Row	unsigned char	0
-site	src/game/area/area_75.cpp	678	global	B	at::kOtherEffect	0x93c34e	-	none	-	-	0
+site	src/game/area/area_75.cpp	678	global	B	at::kPartnerEffect	0x93c34e	-	none	-	-	0
 site	src/game/area/area_75.cpp	679	global	B	at::kObjectA	0x93c350	-	none	-	-	0
 site	src/game/area/area_75.cpp	691	global	B	AreaW1f_IdleFrames_addr	0x93c348	-	exact	AreaW1f_IdleFrames	unsigned char	0
 site	src/game/area/area_75.cpp	691	global	B	AreaW1f_IdleFrames_addr	0x93c348	-	exact	AreaW1f_IdleFrames	unsigned char	0
@@ -2518,7 +2518,7 @@ site	src/game/area/area_75.cpp	731	global	Mem	AreaW1f_PlayerCounter_addr	0x93c34
 site	src/game/area/area_75.cpp	733	global	B	AreaW1f_PressFlags_addr	0x93c346	-	exact	AreaW1f_PressFlags	unsigned char	0
 site	src/game/area/area_75.cpp	734	global	Mem	at::kTextBuffer	0x904ba0	-	none	-	-	0
 site	src/game/area/area_75.cpp	735	global	Mem	Area75_CounterFormat_addr	0x60abf0	-	exact	Area75_CounterFormat	char	0
-site	src/game/area/area_75.cpp	740	global	Mem	AreaW1f_OtherCounter_addr	0x93c34c	-	exact	AreaW1f_OtherCounter	unsigned short	0
+site	src/game/area/area_75.cpp	740	global	Mem	AreaW1f_PartnerCounter_addr	0x93c34c	-	exact	AreaW1f_PartnerCounter	unsigned short	0
 site	src/game/area/area_75.cpp	767	record	SetWord	rect0 + 2	-	base=Gfx_PacketNext	-	-	-	0
 site	src/game/area/area_75.cpp	768	record	SetWord	rect0 + 4	-	base=Gfx_PacketNext	-	-	-	0
 site	src/game/area/area_75.cpp	769	record	SetWord	rect0 + 6	-	base=Gfx_PacketNext	-	-	-	0
@@ -3122,13 +3122,13 @@ site	src/game/area/area_w1f_fuzz.cpp	252	global	SetPointer	Field_ActiveMember_ad
 site	src/game/area/area_w1f_fuzz.cpp	257	global	SetPointer	AreaW1a_FocusObject_addr	0x903804	-	exact	AreaW1a_FocusObject	unsigned long	1
 site	src/game/area/area_w1f_fuzz.cpp	263	global	B	at::kObjectA	0x93c350	-	none	-	-	1
 site	src/game/area/area_w1f_fuzz.cpp	264	global	B	AreaW1f_ObjectB_addr	0x93c351	-	exact	AreaW1f_ObjectB	unsigned char	1
-site	src/game/area/area_w1f_fuzz.cpp	265	global	B	at::kOtherEffect	0x93c34e	-	none	-	-	1
+site	src/game/area/area_w1f_fuzz.cpp	265	global	B	at::kPartnerEffect	0x93c34e	-	none	-	-	1
 site	src/game/area/area_w1f_fuzz.cpp	266	global	B	AreaW1f_PlayerEffect_addr	0x93c34f	-	exact	AreaW1f_PlayerEffect	unsigned char	1
 site	src/game/area/area_w1f_fuzz.cpp	267	global	B	AreaW1f_PressFlags_addr	0x93c346	-	exact	AreaW1f_PressFlags	unsigned char	1
 site	src/game/area/area_w1f_fuzz.cpp	268	global	B	AreaW1f_Move_addr	0x93c343	-	exact	AreaW1f_Move	unsigned char	1
 site	src/game/area/area_w1f_fuzz.cpp	269	global	B	AreaW1f_List_addr	0x93c352	-	exact	AreaW1f_List	unsigned char	1
 site	src/game/area/area_w1f_fuzz.cpp	270	global	Mem	AreaW1f_PlayerCounter_addr	0x93c34a	-	exact	AreaW1f_PlayerCounter	unsigned short	1
-site	src/game/area/area_w1f_fuzz.cpp	271	global	Mem	AreaW1f_OtherCounter_addr	0x93c34c	-	exact	AreaW1f_OtherCounter	unsigned short	1
+site	src/game/area/area_w1f_fuzz.cpp	271	global	Mem	AreaW1f_PartnerCounter_addr	0x93c34c	-	exact	AreaW1f_PartnerCounter	unsigned short	1
 site	src/game/area/area_w1f_fuzz.cpp	272	global	B	AreaW1f_ListPos_addr	0x93c353	-	exact	AreaW1f_ListPos	unsigned char	1
 site	src/game/area/area_w1f_fuzz.cpp	283	global	B	n & 2 ? AreaW1f_EarlyPresses_addr : AreaW1f_IdleFrames_addr	0x93c347	-	exact	AreaW1f_EarlyPresses	unsigned char	1
 site	src/game/area/area_w1f_fuzz.cpp	289	global	B	at::kObjectA	0x93c350	-	none	-	-	1
@@ -3140,7 +3140,7 @@ site	src/game/area/area_w1f_fuzz.cpp	400	global	SetPointer	MoveScript_Object_add
 site	src/game/area/area_w1f_fuzz.cpp	401	global	SetPointer	AreaW1a_FocusObject_addr	0x903804	-	exact	AreaW1a_FocusObject	unsigned long	1
 site	src/game/area/area_w1f_fuzz.cpp	402	global	B	at::kObjectA	0x93c350	-	none	-	-	1
 site	src/game/area/area_w1f_fuzz.cpp	403	global	B	AreaW1f_ObjectB_addr	0x93c351	-	exact	AreaW1f_ObjectB	unsigned char	1
-site	src/game/area/area_w1f_fuzz.cpp	404	global	B	at::kOtherEffect	0x93c34e	-	none	-	-	1
+site	src/game/area/area_w1f_fuzz.cpp	404	global	B	at::kPartnerEffect	0x93c34e	-	none	-	-	1
 site	src/game/area/area_w1f_fuzz.cpp	405	global	B	AreaW1f_PlayerEffect_addr	0x93c34f	-	exact	AreaW1f_PlayerEffect	unsigned char	1
 site	src/game/area/area_w1f_fuzz.cpp	406	global	B	AreaW1f_List_addr	0x93c352	-	exact	AreaW1f_List	unsigned char	1
 site	src/game/area/area_w1f_fuzz.cpp	407	global	B	AreaW1f_Phase_addr	0x93c340	-	exact	AreaW1f_Phase	unsigned char	1
@@ -3150,7 +3150,7 @@ site	src/game/area/area_w1f_fuzz.cpp	418	global	B	AreaW0c_TailState_addr	0x9039f
 site	src/game/area/area_w1f_fuzz.cpp	419	global	B	at::kCounter0	0x903848	-	none	-	-	1
 site	src/game/area/area_w1f_fuzz.cpp	420	global	SetPointer	Field_ActiveMember_addr	0x9035a4	-	exact	Field_ActiveMember	unsigned char *	1
 site	src/game/area/area_w1f_fuzz.cpp	421	global	SetPointer	MoveScript_Object_addr	0x929e80	-	exact	MoveScript_Object	unsigned char *	1
-site	src/game/area/area_w1f_fuzz.cpp	423	global	Mem	h & 0x100 ? AreaW1f_PlayerCounter_addr : AreaW1f_OtherCounte	0x93c34a	-	exact	AreaW1f_PlayerCounter	unsigned short	1
+site	src/game/area/area_w1f_fuzz.cpp	423	global	Mem	h & 0x100 ? AreaW1f_PlayerCounter_addr : AreaW1f_PartnerCoun	0x93c34a	-	exact	AreaW1f_PlayerCounter	unsigned short	1
 site	src/game/area/area_w1f_fuzz.cpp	424	global	B	Input_Pressed_addr	0x7e1bec	-	exact	Input_Pressed	unsigned short	1
 site	src/game/area/area_w1f_fuzz.cpp	425	global	Mem	Transition_Busy_addr	0x66c810	-	exact	Transition_Busy	unsigned short	1
 site	src/game/area/area_w1f_fuzz.cpp	432	global	B	AreaW0c_ChoiceAnswer_addr	0x7dee67	-	exact	AreaW0c_ChoiceAnswer	signed char	1
@@ -3160,8 +3160,8 @@ site	src/game/area/area_w1f_fuzz.cpp	485	global	B	AreaW1f_FlagByte9C_addr	0x9040
 site	src/game/area/area_w1f_fuzz.cpp	489	global	B	ObjTrio_addr + 0x89	0x802dc9	-	inside	ObjTrio+0x89	records::PartyMember	1
 site	src/game/area/area_w1f_fuzz.cpp	491	global	B	ObjTrio_addr + 0x8	0x802d48	-	inside	ObjTrio+0x8	records::PartyMember	1
 site	src/game/area/area_w1f_fuzz.cpp	491	global	B	ObjTrio_addr + 0x8	0x802d48	-	inside	ObjTrio+0x8	records::PartyMember	1
-site	src/game/area/area_w1f_fuzz.cpp	508	global	Mem	swap ? AreaW1f_PlayerCounter_addr : AreaW1f_OtherCounter_add	0x93c34a	-	exact	AreaW1f_PlayerCounter	unsigned short	1
-site	src/game/area/area_w1f_fuzz.cpp	509	global	Mem	swap ? AreaW1f_OtherCounter_addr : AreaW1f_PlayerCounter_add	0x93c34c	-	exact	AreaW1f_OtherCounter	unsigned short	1
+site	src/game/area/area_w1f_fuzz.cpp	508	global	Mem	swap ? AreaW1f_PlayerCounter_addr : AreaW1f_PartnerCounter_a	0x93c34a	-	exact	AreaW1f_PlayerCounter	unsigned short	1
+site	src/game/area/area_w1f_fuzz.cpp	509	global	Mem	swap ? AreaW1f_PartnerCounter_addr : AreaW1f_PlayerCounter_a	0x93c34c	-	exact	AreaW1f_PartnerCounter	unsigned short	1
 site	src/game/area/area_w1f_fuzz.cpp	523	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	1
 site	src/game/area/area_w1f_fuzz.cpp	527	global	Mem	Transition_Busy_addr	0x66c810	-	exact	Transition_Busy	unsigned short	1
 site	src/game/area/area_w1f_fuzz.cpp	529	global	B	at::kCounter0	0x903848	-	none	-	-	1
@@ -3447,7 +3447,7 @@ site	src/game/area/area_w2e_fuzz.cpp	886	global	SetPointer	MoveScript_Object_add
 site	src/game/area/area_w2e_fuzz.cpp	902	global	Mem	Area104_PlateAnims_addr	0x61b4f0	-	exact	Area104_PlateAnims	unsigned char	1
 site	src/game/area/area_w2f_fuzz.cpp	192	global	Mem	Effect_Objects_addr + slot % at::kEffectCount * at::kEffectS	0x7e11e0	-	exact	Effect_Objects	records::EffectObject	1
 site	src/game/area/area_w2f_fuzz.cpp	193	global	Mem	Sprite_ObjectsExtra_addr + k % at::kExtraCount * at::kExtraS	0x802000	-	exact	Sprite_ObjectsExtra	records::SpriteObject	1
-site	src/game/area/area_w2f_fuzz.cpp	194	global	Mem	Area111_Grid_addr	0x675c00	-	exact	Area111_Grid	unsigned char	1
+site	src/game/area/area_w2f_fuzz.cpp	194	global	Mem	Area111_SlidingPlatforms_addr	0x675c00	-	exact	Area111_SlidingPlatforms	unsigned char	1
 site	src/game/area/area_w2f_fuzz.cpp	237	global	SetPointer	Field_ActiveMember_addr	0x9035a4	-	exact	Field_ActiveMember	unsigned char *	1
 site	src/game/area/area_w2f_fuzz.cpp	243	global	SetPointer	MoveScript_Object_addr	0x929e80	-	exact	MoveScript_Object	unsigned char *	1
 site	src/game/area/area_w2f_fuzz.cpp	245	global	Pointer	MoveScript_Object_addr	0x929e80	-	exact	MoveScript_Object	unsigned char *	1
@@ -27388,7 +27388,7 @@ const	kSub2APlaces	0x6	value	1	src/game/effect_5f_callees.h:58(effect_5f::at)	-	
 const	kSub42PieceCount	0x6	value	1	src/game/effect_5f_callees.h:41(effect_5f::at)	-	-	-	-	at
 const	kTitleCount	0x6	value	1	src/game/effect_1b_callees.h:59(effect_1b::at)	-	-	-	-	at
 const	kTrackStride	0x6	value	1	src/game/effect_6d_callees.h:29(effect_6d::at)	-	-	-	-	at
-const	kArea111GridSide	0x7	value	1	src/game/area_w2f_callees.h:127(area_w2f::at)	-	-	-	-	at
+const	kArea111SlidingPlatformsSide	0x7	value	1	src/game/area_w2f_callees.h:127(area_w2f::at)	-	-	-	-	at
 const	kArea135RouteStride	0x7	value	1	src/game/area_w3d_callees.h:130(area_w3d::at)	-	-	-	-	at
 const	kArea145CellRecordCount	0x7	value	1	src/game/area_w3f_callees.h:124(area_w3f::at)	-	-	-	-	at
 const	kArea49ZoneCount	0x7	value	1	src/game/area_w1c_callees.h:94(area_w1c::at)	-	-	-	-	at
@@ -27570,7 +27570,7 @@ const	kArmourStride	0x1a	value	2	src/game/char_stats_callees.h:57(char_stats::at
 const	kDiscountItem	0x1b	value	1	src/game/save_menu_callees.h:122(save_menu::at)	-	-	-	-	at
 const	kObjectCount	0x1b	value	1	src/game/scena_sc2_callees.h:43(scena_sc2::at)	-	-	-	-	at
 const	kPieceCount	0x1b	value	1	src/game/effect_1c_callees.h:51(effect_1c::at)	-	-	-	-	at
-const	kArea111GridBytes	0x1c	value	1	src/game/area_w2f_callees.h:126(area_w2f::at)	-	-	-	-	at
+const	kArea111SlidingPlatformsBytes	0x1c	value	1	src/game/area_w2f_callees.h:126(area_w2f::at)	-	-	-	-	at
 const	kMoteStride	0x1c	value	1	src/game/effect_3a_callees.h:42(effect_3a::at)	-	-	-	-	at
 const	kPairCount	0x1c	value	1	src/game/area_cell_hook_callees.h:17(area_cell_hook::at)	-	-	-	-	at
 const	kPaneStride	0x1c	value	1	src/game/effect_4b_callees.h:37(effect_4b::at)	-	-	-	-	at

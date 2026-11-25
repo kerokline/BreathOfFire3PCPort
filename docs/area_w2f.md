@@ -148,30 +148,37 @@ and the `.text` targets differ. The shipped weights sum to `0x40`, so the
 | `0x417650` | `Area111_ChoiceMessage2` | `0x17` | choice 0 | kChoice | the message word 3 for an answer, else 2 |
 | `0x417670` | `Area111_ChoiceStartVar7` | `0x26` | choice 1 | kChoice | `0xFFFF`; answer 0: `ScriptFlags_Set40`, `MoveScript_Var7` = 5, the run's step 0 |
 | `0x4176A0` | `Area111_CopyExtra6C` | `0xB` | handler 0 (PSX `0x801F3448`) | kHandler | extra object 0's dword `+0x6C` = extra object 1's |
-| `0x4176B0` | `Area111_SlideMark` | `0xD7` | handler 1 (PSX `0x801F3460`) | kHandler | section 1.2 |
-| `0x417790` | `Area111_AttachAtLeaderCell` | `0xF8` | handler 2 (PSX `0x801F35F4`) | kHandler | section 1.2 |
+| `0x4176B0` | `Area111_PlatformSlideMark` | `0xD7` | handler 1 (PSX `0x801F3460`) | kHandler | section 1.2 |
+| `0x417790` | `Area111_AttachPlatformAtLeaderCell` | `0xF8` | handler 2 (PSX `0x801F35F4`) | kHandler | section 1.2 |
 | `0x417890` | `Area111_Counter3Bit` | `0x13` | handler 3 (PSX `0x801F3768`) | kHandler | counter 3 = the byte `0x10 <<` the running object's dword `+0x18` (an 8-bit `shl`, the count masked to 5 bits) |
 | `0x4178B0` | `Area111_WaitMemberBit` | `0x3D` | handler 4 (PSX `0x801F3790`) | kHandler | unless counter 3 is `0x10 <<` the active member's index among the extra objects (`(member - 0x802000) / 0xA4`, signed; a dword `shl`), the script position `- 2` |
-| `0x4178F0` | `Area111_PlaceMemberInGrid` | `0xF9` | handler 5 (PSX `0x801F3808`) | kHandler | section 1.2 |
-| `0x4179F0` | `Area111_AttachAhead` | `0x13E` | handler 6 (PSX `0x801F39E0`) | kHandler | section 1.2 |
-| `0x417B30` | `Area111_SlideAhead` | `0xD9` | handler 7 (PSX `0x801F3BC0`) | kHandler | section 1.2 |
+| `0x4178F0` | `Area111_PlaceMemberInPlatformGrid` | `0xF9` | handler 5 (PSX `0x801F3808`) | kHandler | section 1.2 |
+| `0x4179F0` | `Area111_AttachPlatformAhead` | `0x13E` | handler 6 (PSX `0x801F39E0`) | kHandler | section 1.2 |
+| `0x417B30` | `Area111_SlidePlatformAhead` | `0xD9` | handler 7 (PSX `0x801F3BC0`) | kHandler | section 1.2 |
 | `0x417C10` | `Area111_StepToExtra` | `0xD3` | handler 8 (PSX `0x801F3D3C`) | kHandler | section 1.2 |
 | `0x417CF0` | `Area111_TailGate` | `0x1E0` | tail kind 17 | kTail | section 1.2 |
 | `0x417ED0` | `Area111_ArriveHook` | `0x25F` | `Area_ArriveHook`'s case for area 111 (`0x56E53B`) | kHook | section 1.2 |
 | `0x418130` | `Area111_ArmTailAtLeaderCell` | `0xAC` | called by the arrive hook | kCallee | `(state)`: the grid's nibble at the leader's cell `- 1` to the sub-kind, tail kind `0x11`, the state `state`, extra object (that byte)'s `+8` = `state`, `ScriptFlags_Set40` |
 | `0x4181E0` | `Area111_MarkCells` | `0x52` | called by handlers 1, 5 and the init | kCallee | `(x, z, value)`: the grid cell's four map bytes (`2x + 0xB..0xC`, `2z + 0xB1..0xB2`) set to `value` |
-| `0x418240` | `Area111_Init` | `0x10C` | init (PSX `0x801F46A8`) | kInit | with `Cond_ByteFD` 0 story flag `0x28` cleared; `Cond_ByteFD` (read again) 1: every grid cell marked with its byte of `Area111_CellBytes` (rows of z, columns of x), `Area111_Grid` copied from `Area111_GridStart`, the gate's map bytes (`0x11..0x12`, `0xAD`) = `0x50` and (`..`, `0xAE`) = 0 without flag `0x28`, `0xA1` / `0xC0` with it; `Cond_ByteFD` 5: the map bytes (`0xA..0xB`, 8) = `0x50` |
+| `0x418240` | `Area111_Init` | `0x10C` | init (PSX `0x801F46A8`) | kInit | with `Cond_ByteFD` 0 story flag `0x28` cleared; `Cond_ByteFD` (read again) 1: every grid cell marked with its byte of `Area111_CellBytes` (rows of z, columns of x), `Area111_SlidingPlatforms` copied from `Area111_SlidingPlatformsStart`, the gate's map bytes (`0x11..0x12`, `0xAD`) = `0x50` and (`..`, `0xAE`) = 0 without flag `0x28`, `0xA1` / `0xC0` with it; `Cond_ByteFD` 5: the map bytes (`0xA..0xB`, 8) = `0x50` |
 
-### 1.2 Area 111's grid
+### 1.2 Area 111's grid: the sliding platforms
 
-`Area111_Grid` (`0x675C00`, 28 bytes at the very end of the image's
+**What it is in play** (the owner, 2026-11-24, from playing it; the names say
+"platform" for it since): a 7 x 7 grid with three platforms. The leader steps
+on one and it slides until it leaves the grid or meets a blocked cell or
+another platform; lined up, they carry the leader to the middle. What the
+middle holds is not settled: the owner remembers an item, the area's text
+names a door-switch terminal, and the code opens a gate.
+
+`Area111_SlidingPlatforms` (`0x675C00`, 28 bytes at the very end of the image's
 initialized `.data`) is 7 x 7 nibbles, four bytes a row: cell (col, row) is
 the byte `(col >> 1) + row * 4`, its low nibble for an odd column. A grid
 cell covers two by two map cells from x `0xB`, z `0xB1`. The init copies
-`Area111_GridStart`; the image's start holds 0, 1, 2, 3 and `0xF` nibbles.
+`Area111_SlidingPlatformsStart`; the image's start holds 0, 1, 2, 3 and `0xF` nibbles.
 The handlers' cell arithmetic differs in rounding, faithfully:
 
-- **`Area111_SlideMark`** (handler 1): the running object's cell ((x high
+- **`Area111_PlatformSlideMark`** (handler 1): the running object's cell ((x high
   word - `0xB`) `>> 1`, the same for z less `0xB1`: rounding down) marked
   `0x10`; then from it, by the object's direction (the cell steps
   `0x66971C`, the direction re-read after the call), cells stepped while
@@ -179,25 +186,25 @@ The handlers' cell arithmetic differs in rounding, faithfully:
   each (a byte). A count: the script object's `+7` = count `+ 1`. The
   object's dword `+0x14` = 0, the cell it **stopped at** (outside the grid
   or blocked) marked 0, `Sound_PlayEffect(0x203)`.
-- **`Area111_AttachAtLeaderCell`** (handler 2): the nibble at the leader's
+- **`Area111_AttachPlatformAtLeaderCell`** (handler 2): the nibble at the leader's
   cell (halved toward 0, then taken as bytes: unchecked) `- 1`; `0xFF` (an
   empty cell): nothing. Else `MoveCmd_Attach(the script object, 7, that,
   Field_State's party slot + 1, 0x10)` with the script position word kept
   across the call; the running object's direction = extra object that's
   `+8 & 7`, and `Sprite_Kind2 +8` the same.
-- **`Area111_PlaceMemberInGrid`** (handler 5): the key = the active
+- **`Area111_PlaceMemberInPlatformGrid`** (handler 5): the key = the active
   member's extra index `+ 1`; the running object's cell (halved toward 0)
   marked 0; every nibble of the grid equal to the key cleared (each byte is
   seen twice, once for each of its columns, its low nibble tested first);
   the key or'd into the object's cell's nibble; `Sound_PlayEffect(0x204)`.
-- **`Area111_AttachAhead`** (handler 6): extra object k's cell (k the
+- **`Area111_AttachPlatformAhead`** (handler 6): extra object k's cell (k the
   running object's byte `+0x18`; halved toward 0), stepped once by the
   running object's direction (bytes); outside 0..6 (unsigned): nothing; its
   nibble `- 1` at 4 or more: nothing. Else `MoveCmd_Attach(the script
-  object, 7, block, slot + 1, 0xC)` keeping the script position, extra
-  object block's `+8` = the running object's direction `& 7`, the script
+  object, 7, platform, slot + 1, 0xC)` keeping the script position, extra
+  object platform's `+8` = the running object's direction `& 7`, the script
   position `- 6`.
-- **`Area111_SlideAhead`** (handler 7): from the running object's cell (the
+- **`Area111_SlidePlatformAhead`** (handler 7): from the running object's cell (the
   16-bit high word less `0xB` / `0xB1`, shifted right once, as bytes) cells
   stepped while inside (signed bytes 0..6) and their nibble not `0xF`, the
   count `+ 4` each. A count: the script object's `+7` = count `+ 1`,
@@ -372,7 +379,7 @@ as areas 63, 64, 72 and 73's were; its call sites are the tool's less
   state and beyond; the arrive hook's cell on one of the eight edges (the
   edge coordinate or one off, the other inside its span or one past either
   end) or the final cell's high words, `Cond_ByteFD` 1 and beside; the
-  helper's leader on a block nibble 1..4. Area 112's member ids at each key
+  helper's leader on a platform nibble 1..4. Area 112's member ids at each key
   and beside, a member count of 0; the step hook's high words on and beside
   their three, `Cond_ByteFD` 3 and beside, the pose at 0 / 7 / 6 and
   others; the cell hook's cell one of four or one off, the pose 3 or not;
@@ -571,59 +578,59 @@ objects. Refused, though thinly: a stronger seed would pair them.
 | C3 | `Area111_ChoiceStartVar7` | step 1 | Area111_ChoiceStartVar7 539 |
 | C4 | `Area111_ChoiceStartVar7` | answer 1 | Area111_ChoiceStartVar7 1080 |
 | C5 | `Area111_CopyExtra6C` | +0x68 | Area111_CopyExtra6C 8000 |
-| C6 | `Area111_SlideMark` | z halved toward 0 | Area111_SlideMark 434 |
-| C7 | `Area111_SlideMark` | x - 0xA | Area111_SlideMark 4076 |
-| C8 | `Area111_SlideMark` | mark 0x11 | Area111_SlideMark 8000 |
-| C9 | `Area111_SlideMark` | direction not read again | Area111_SlideMark 2946 |
-| C10 | `Area111_SlideMark` | x up to 5 | Area111_SlideMark 1072 |
-| C11 | `Area111_SlideMark` | z from 1 | Area111_SlideMark 649 |
-| C12 | `Area111_SlideMark` | stops at nibble not 1 | Area111_SlideMark 3332 |
-| C13 | `Area111_SlideMark` | count + 3 | Area111_SlideMark 3090 |
-| C14 | `Area111_SlideMark` | +7 count + 2 | Area111_SlideMark 3090 |
-| C15 | `Area111_SlideMark` | +0x10 cleared | Area111_SlideMark 8000 |
-| C16 | `Area111_SlideMark` | stop cell 1 | Area111_SlideMark 8000 |
-| C17 | `Area111_SlideMark` | sound 0x202 | Area111_SlideMark 8000 |
-| C18 | `Area111_SlideMark` | z stepped by the x step | a hang (the stepped cell never moves for a direction without that step); variant below refused by a count |
-| C19 | `LeaderCell (111)` | x rounded down | Area111_AttachAtLeaderCell 97 |
-| C20 | `Nibble (111)` | nibbles swapped | Area111_AttachAtLeaderCell 20662 |
-| C21 | `Area111_AttachAtLeaderCell` | empty 0xFE | Area111_AttachAtLeaderCell 2854 |
-| C22 | `Area111_AttachAtLeaderCell` | attach t 0x11 | Area111_AttachAtLeaderCell 5146 |
-| C23 | `FieldStateSlot (111)` | slot + 2 | Area111_AttachAtLeaderCell 6479 |
-| C24 | `Area111_AttachAtLeaderCell` | position + 1 | Area111_AttachAtLeaderCell 5146 |
-| C25 | `Area111_AttachAtLeaderCell` | direction & 3 | Area111_AttachAtLeaderCell 1321 |
-| C26 | `Area111_AttachAtLeaderCell` | Kind2 +9 | Area111_AttachAtLeaderCell 5146 |
-| C27 | `Area111_AttachAtLeaderCell` | script object not read again | Area111_AttachAtLeaderCell 2319 |
+| C6 | `Area111_PlatformSlideMark` | z halved toward 0 | Area111_PlatformSlideMark 434 |
+| C7 | `Area111_PlatformSlideMark` | x - 0xA | Area111_PlatformSlideMark 4076 |
+| C8 | `Area111_PlatformSlideMark` | mark 0x11 | Area111_PlatformSlideMark 8000 |
+| C9 | `Area111_PlatformSlideMark` | direction not read again | Area111_PlatformSlideMark 2946 |
+| C10 | `Area111_PlatformSlideMark` | x up to 5 | Area111_PlatformSlideMark 1072 |
+| C11 | `Area111_PlatformSlideMark` | z from 1 | Area111_PlatformSlideMark 649 |
+| C12 | `Area111_PlatformSlideMark` | stops at nibble not 1 | Area111_PlatformSlideMark 3332 |
+| C13 | `Area111_PlatformSlideMark` | count + 3 | Area111_PlatformSlideMark 3090 |
+| C14 | `Area111_PlatformSlideMark` | +7 count + 2 | Area111_PlatformSlideMark 3090 |
+| C15 | `Area111_PlatformSlideMark` | +0x10 cleared | Area111_PlatformSlideMark 8000 |
+| C16 | `Area111_PlatformSlideMark` | stop cell 1 | Area111_PlatformSlideMark 8000 |
+| C17 | `Area111_PlatformSlideMark` | sound 0x202 | Area111_PlatformSlideMark 8000 |
+| C18 | `Area111_PlatformSlideMark` | z stepped by the x step | a hang (the stepped cell never moves for a direction without that step); variant below refused by a count |
+| C19 | `LeaderCell (111)` | x rounded down | Area111_AttachPlatformAtLeaderCell 97 |
+| C20 | `Nibble (111)` | nibbles swapped | Area111_AttachPlatformAtLeaderCell 20662 |
+| C21 | `Area111_AttachPlatformAtLeaderCell` | empty 0xFE | Area111_AttachPlatformAtLeaderCell 2854 |
+| C22 | `Area111_AttachPlatformAtLeaderCell` | attach t 0x11 | Area111_AttachPlatformAtLeaderCell 5146 |
+| C23 | `FieldStateSlot (111)` | slot + 2 | Area111_AttachPlatformAtLeaderCell 6479 |
+| C24 | `Area111_AttachPlatformAtLeaderCell` | position + 1 | Area111_AttachPlatformAtLeaderCell 5146 |
+| C25 | `Area111_AttachPlatformAtLeaderCell` | direction & 3 | Area111_AttachPlatformAtLeaderCell 1321 |
+| C26 | `Area111_AttachPlatformAtLeaderCell` | Kind2 +9 | Area111_AttachPlatformAtLeaderCell 5146 |
+| C27 | `Area111_AttachPlatformAtLeaderCell` | script object not read again | Area111_AttachPlatformAtLeaderCell 2319 |
 | C28 | `Area111_Counter3Bit` | shift & 7 | Area111_Counter3Bit 733 |
 | C29 | `Area111_Counter3Bit` | 0x20 << | Area111_Counter3Bit 5098 |
 | C30 | `Area111_WaitMemberBit` | 0x08 << | Area111_WaitMemberBit 3177 |
-| C31 | `ActiveMemberExtra (111)` | stride 0xA0 | Area111_PlaceMemberInGrid 1249 |
+| C31 | `ActiveMemberExtra (111)` | stride 0xA0 | Area111_PlaceMemberInPlatformGrid 1249 |
 | C32 | `Area111_WaitMemberBit` | shift & 15 | Area111_WaitMemberBit 2 |
-| C33 | `Area111_PlaceMemberInGrid` | key + 2 | Area111_PlaceMemberInGrid 7741 |
-| C34 | `Area111_PlaceMemberInGrid` | mark 1 | Area111_PlaceMemberInGrid 8000 |
-| C35 | `Area111_PlaceMemberInGrid` | clears & 0xE0 | Area111_PlaceMemberInGrid 3777 |
-| C36 | `Area111_PlaceMemberInGrid` | high nibble key + 1 | Area111_PlaceMemberInGrid 6612 |
-| C37 | `Area111_PlaceMemberInGrid` | six columns | Area111_PlaceMemberInGrid 4630 |
-| C38 | `Area111_PlaceMemberInGrid` | nibble swapped | Area111_PlaceMemberInGrid 7626 |
-| C39 | `Area111_PlaceMemberInGrid` | sound 0x205 | Area111_PlaceMemberInGrid 8000 |
-| C40 | `Area111_PlaceMemberInGrid` | six rows | Area111_PlaceMemberInGrid 3357 |
-| C41 | `Area111_AttachAhead` | k from +0x19 | Area111_AttachAhead 1329 |
-| C42 | `Area111_AttachAhead` | x rounded down | Area111_AttachAhead 79 |
-| C43 | `Area111_AttachAhead` | rows 0..5 | Area111_AttachAhead 182 |
-| C44 | `Area111_AttachAhead` | blocks 0..2 | Area111_AttachAhead 333 |
-| C45 | `Area111_AttachAhead` | mode 6 | Area111_AttachAhead 1333 |
-| C46 | `Area111_AttachAhead` | direction not read again | Area111_AttachAhead 526 |
-| C47 | `Area111_AttachAhead` | script - 4 | Area111_AttachAhead 1333 |
-| C48 | `Area111_AttachAhead` | row stepped by the x step | Area111_AttachAhead 1620 |
-| C49 | `Area111_SlideAhead` | x - 0xA | Area111_SlideAhead 1947 |
-| C50 | `Area111_SlideAhead` | cols up to 5 | Area111_SlideAhead 1368 |
-| C51 | `Area111_SlideAhead` | row by the x step | a hang (the stepped cell never moves for a direction without that step); variant below refused by a count |
-| C52 | `Area111_SlideAhead` | stops at 0xE | Area111_SlideAhead 1287 |
-| C53 | `Area111_SlideAhead` | +7 count + 2 | Area111_SlideAhead 4407 |
-| C54 | `Area111_SlideAhead` | direction & 7 | Area111_SlideAhead 2837 |
-| C55 | `Area111_SlideAhead` | bit 0x20 | Area111_SlideAhead 3268 |
-| C56 | `Area111_SlideAhead` | +0x3E 0xFA00 | Area111_SlideAhead 4407 |
-| C57 | `Area111_SlideAhead` | FAWord 1 | Area111_SlideAhead 4407 |
-| C58 | `Area111_SlideAhead` | count 4 returns | Area111_SlideAhead 4721 |
+| C33 | `Area111_PlaceMemberInPlatformGrid` | key + 2 | Area111_PlaceMemberInPlatformGrid 7741 |
+| C34 | `Area111_PlaceMemberInPlatformGrid` | mark 1 | Area111_PlaceMemberInPlatformGrid 8000 |
+| C35 | `Area111_PlaceMemberInPlatformGrid` | clears & 0xE0 | Area111_PlaceMemberInPlatformGrid 3777 |
+| C36 | `Area111_PlaceMemberInPlatformGrid` | high nibble key + 1 | Area111_PlaceMemberInPlatformGrid 6612 |
+| C37 | `Area111_PlaceMemberInPlatformGrid` | six columns | Area111_PlaceMemberInPlatformGrid 4630 |
+| C38 | `Area111_PlaceMemberInPlatformGrid` | nibble swapped | Area111_PlaceMemberInPlatformGrid 7626 |
+| C39 | `Area111_PlaceMemberInPlatformGrid` | sound 0x205 | Area111_PlaceMemberInPlatformGrid 8000 |
+| C40 | `Area111_PlaceMemberInPlatformGrid` | six rows | Area111_PlaceMemberInPlatformGrid 3357 |
+| C41 | `Area111_AttachPlatformAhead` | k from +0x19 | Area111_AttachPlatformAhead 1329 |
+| C42 | `Area111_AttachPlatformAhead` | x rounded down | Area111_AttachPlatformAhead 79 |
+| C43 | `Area111_AttachPlatformAhead` | rows 0..5 | Area111_AttachPlatformAhead 182 |
+| C44 | `Area111_AttachPlatformAhead` | platforms 0..2 | Area111_AttachPlatformAhead 333 |
+| C45 | `Area111_AttachPlatformAhead` | mode 6 | Area111_AttachPlatformAhead 1333 |
+| C46 | `Area111_AttachPlatformAhead` | direction not read again | Area111_AttachPlatformAhead 526 |
+| C47 | `Area111_AttachPlatformAhead` | script - 4 | Area111_AttachPlatformAhead 1333 |
+| C48 | `Area111_AttachPlatformAhead` | row stepped by the x step | Area111_AttachPlatformAhead 1620 |
+| C49 | `Area111_SlidePlatformAhead` | x - 0xA | Area111_SlidePlatformAhead 1947 |
+| C50 | `Area111_SlidePlatformAhead` | cols up to 5 | Area111_SlidePlatformAhead 1368 |
+| C51 | `Area111_SlidePlatformAhead` | row by the x step | a hang (the stepped cell never moves for a direction without that step); variant below refused by a count |
+| C52 | `Area111_SlidePlatformAhead` | stops at 0xE | Area111_SlidePlatformAhead 1287 |
+| C53 | `Area111_SlidePlatformAhead` | +7 count + 2 | Area111_SlidePlatformAhead 4407 |
+| C54 | `Area111_SlidePlatformAhead` | direction & 7 | Area111_SlidePlatformAhead 2837 |
+| C55 | `Area111_SlidePlatformAhead` | bit 0x20 | Area111_SlidePlatformAhead 3268 |
+| C56 | `Area111_SlidePlatformAhead` | +0x3E 0xFA00 | Area111_SlidePlatformAhead 4407 |
+| C57 | `Area111_SlidePlatformAhead` | FAWord 1 | Area111_SlidePlatformAhead 4407 |
+| C58 | `Area111_SlidePlatformAhead` | count 4 returns | Area111_SlidePlatformAhead 4721 |
 | C59 | `Area111_StepToExtra` | k + 1 | Area111_StepToExtra 5340 |
 | C60 | `Area111_StepToExtra` | x step once | Area111_StepToExtra 6015 |
 | C61 | `Area111_StepToExtra` | dz + 1 | Area111_StepToExtra 202 |
@@ -665,7 +672,7 @@ objects. Refused, though thinly: a stronger seed would pair them.
 | C97 | `Area111_ArriveHook` | span inclusive | Area111_ArriveHook 93 |
 | C98 | `Area111_ArriveHook` | answers 1 | Area111_ArriveHook 1922 |
 | C99 | `Area111_ArriveHook` | direction & 3 | Area111_ArriveHook 346 |
-| C100 | `Area111_ArmTailAtLeaderCell` | sub-kind block + 1 | Area111_ArmTailAtLeaderCell 8000 |
+| C100 | `Area111_ArmTailAtLeaderCell` | sub-kind platform + 1 | Area111_ArmTailAtLeaderCell 8000 |
 | C101 | `Area111_ArmTailAtLeaderCell` | kind 0x12 | Area111_ArmTailAtLeaderCell 8000 |
 | C102 | `Area111_ArmTailAtLeaderCell` | extra +9 | Area111_ArmTailAtLeaderCell 8000 |
 | C103 | `Area111_ArmTailAtLeaderCell` | state + 1 | Area111_ArmTailAtLeaderCell 7963 |
@@ -783,8 +790,8 @@ objects. Refused, though thinly: a stronger seed would pair them.
 | E38 | `Area113_Reward` | default message 0 | Area113_Reward 4313 |
 | E39 | `Area113_Reward` | 0xB tests 0x96 first | Area113_Reward 1217 |
 | E40 | `Area113_Reward` | byte & 0xFE | Area113_Reward 1765 |
-| C18b | `Area111_SlideMark` | z stepped back (the z step negated) | Area111_SlideMark 4589 |
-| C51b | `Area111_SlideAhead` | row stepped back (the z step negated) | Area111_SlideAhead 3761 |
+| C18b | `Area111_PlatformSlideMark` | z stepped back (the z step negated) | Area111_PlatformSlideMark 4589 |
+| C51b | `Area111_SlidePlatformAhead` | row stepped back (the z step negated) | Area111_SlidePlatformAhead 3761 |
 
 ## 5. The tables named
 
@@ -796,7 +803,7 @@ In `symbols.toml` as `[[data]]` with counts (25): `Area108_Choices`
 (16 bytes), `Area108_CellWords` `0x61E64C` (8 words), `Area110_Cells`
 `0x61E7F0` (16), `Area110_Weights` `0x61E800` (8), `Area111_Choices`
 `0x61FB08` (11), `Area111_Handlers` `0x61FB10` (9), `Area111_CellBytes`
-`0x61FB7C` (49), `Area111_GridStart` `0x61FBB0` (28), `Area111_Grid`
+`0x61FB7C` (49), `Area111_SlidingPlatformsStart` `0x61FBB0` (28), `Area111_SlidingPlatforms`
 `0x675C00` (28), `Area112_Handlers` `0x61FF14` (6), `Area112_Choices`
 `0x61FF20` (3), `Area112_MemberKeys` `0x61FF74` (4), `Area112_Messages`
 `0x61FF78` (4 words), `Area112_HookCells` `0x61FF80` (16),
@@ -817,7 +824,7 @@ Described, not fixed:
   `+1`; an index of 2 or more jumps through the bytes after the table. Ours
   aborts with a message there (the owner's rule: no DIVERGENCE entry,
   round9 doc section 6). The band's own states store only 0 and 1.
-- **`Area111_PlaceMemberInGrid` writes by an unchecked cell.** The key is
+- **`Area111_PlaceMemberInPlatformGrid` writes by an unchecked cell.** The key is
   or'd into the byte `0x675C00 + x / 2 + z * 4` for the running object's
   cell, which nothing bounds: an object off the grid writes the bytes
   around it (area 112's and 113's descriptor records follow at
@@ -829,15 +836,15 @@ Described, not fixed:
   original would fault or read the heap). Its sibling handler 6 reads the
   same records by a byte (inside `.data`, kept).
 - **`Area111_ArmTailAtLeaderCell` writes by the nibble.** A leader cell of
-  nibble 0 makes the block `0xFF`, so the sub-kind is `0xFF` and extra
+  nibble 0 makes the platform `0xFF`, so the sub-kind is `0xFF` and extra
   record `0xFF`'s `+8` (`0x80C364`) is written; a wall (`0xF`) writes record
   14's (`0x8028F0`). Both lie inside `.data`: kept. Not measured in play.
-- **`Area111_SlideMark` marks the cell it stopped at**, which is outside
+- **`Area111_PlatformSlideMark` marks the cell it stopped at**, which is outside
   the grid or a blocked cell - its two map calls mark the start cell `0x10`
   and the stop cell 0, never the cell the object ends in. What the script
   does next is not read.
 - **Unchecked reads that stay in `.data`, kept:** the grid read at the
-  leader's cell as bytes (`Area111_AttachAtLeaderCell`,
+  leader's cell as bytes (`Area111_AttachPlatformAtLeaderCell`,
   `Area111_ArmTailAtLeaderCell`: up to `0x675C00 + 0x7F + 0x3FC`); the place
   tables by extra object 1's `+0x83 - 1` (`Area108_PlaceAtCellA` / `B`; a 0
   reads entry `0xFF`); `Character_IndexById` (24 bytes) by the leader's
