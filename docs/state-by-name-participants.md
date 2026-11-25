@@ -1,7 +1,7 @@
 # State by name, group B1: the quicksave's six participants
 
 **Status:** STABLE (2026-11-25, verified the same day on the Linux x86-64
-ELF of `sbn/B1`; section 6 has the measurements). The state-by-name round's group B1
+ELF of `sbn/B1`; sections 6 and 10.4 have the measurements). The state-by-name round's group B1
 ([`state-by-name-round.md`](state-by-name-round.md) 3.6, 4). Built: the
 participants' snapshot functions in `src/render/gfx_snapshot.cpp`,
 `src/game/field/field_7.cpp`, `src/game/platform/sound_ours.cpp`,
@@ -294,6 +294,8 @@ Captures in `~/bof3x-runs/sbn1125/B1/root/` (outside the tree).
 
 ## 8. For other groups
 
+- **Closed by B1b (section 10):** the item below was measured and its
+  classes named.
 - **A1's file (`snapshot.cpp` `NameWord`), not mine:** a word of the span
   that names our module outside Capcom's slots is written raw and makes the
   take no less portable. Measured by reading: `Msgbox_Base` and
@@ -319,3 +321,152 @@ Captures in `~/bof3x-runs/sbn1125/B1/root/` (outside the tree).
 - Version 3 records are refused, not read: a version-3 record can only come
   from another build (the same build writes 4), and no portable load in play
   exists for it to have been restored by.
+
+## 10. B1b: words of the span that name our module (2026-11-25)
+
+Section 8's first item, measured and closed by what the measurement
+supports. Built: `src/hook/snapshot.cpp` (`NameWord`, the WORDS list's
+placing in `Parse`, the not-portable codes, a probe) and
+`src/hook/span_words.h` (`kTextWords`). The captures are outside the tree, in
+`~/bof3x-runs/sbn1125/B1/root/` on the laptop: `qw/` and `qd/` the
+measurement, `qp/` the forced portable loads, `sh/b1b/` the state hashes.
+
+### 10.1 The question, and why a range test cannot answer it
+
+A take writes every word of `.data` / `.bss` raw unless a rule names it
+(A1: a code place, a fold of the moved image, one of the 17 run-time message
+slots, a text slot of Capcom's). A word that holds an address in our module
+outside those rules is the hole: a portable load writes the take's address,
+which names another build's object.
+
+**The probe** (`BOF3X_QSWORDS=<file>`, off by default: each pass of
+`Snapshot_Pending`, the words a take would write raw whose value lies in one
+of our module's sections, written as changes) answers the naive question.
+On `bridgeWalk` (en-US, `--direct`): **28,797 distinct words, on every one of
+2,099 passes**; 26,904 of them fall on a symbol of ours. In this ELF our module
+is `0x10000000..0x1266xxxx`, 38 MB, most of it `.bss` (the harnesses' and the
+log's buffers), so a value in it is mostly game data: script words, pixel
+pairs, coordinates (`0x10FFFF08`, `0x12000101`). This is the state hash's
+finding (`state-hash.md` 7, "why not every word that falls in our image":
+3,635 to 6,187 a tick on Windows) at the take's scale. A "not portable" on
+such a word would mark every take not portable.
+
+**The build differential** separates the two. Each route ran as a state-hash
+run (orig6's conditions, en-US) on this build and on the round base
+(`round/wt`, `1832d217`), with `.data` dumped raw at the same ticks
+(`qd/run.sh`, `qd/diff.py`). Our statics moved by about `0x8000` between the two
+links (`g_warp_message` `0x115C78D0` against `0x115BF8C0`, the message pool
+`0x114F2560` against `0x114EA530`), and the game's state is the same: no word
+outside the skip list differs whose values are not ours, on any route. So a
+word that differs and names our module is a pointer of ours, and a word that
+is equal is a number:
+
+| Route | Ticks | Numbers in our range, a tick | Pointers of ours a take named | Written raw (the probe) |
+|---|--:|--:|--:|--:|
+| `bridgeWalk` | 8 | 3,620..12,434 | 109 | 539 |
+| `combat` | 9 | 3,620..12,362 | 114 | 50 |
+| `shop` | 10 | 3,620..12,575 | 110 | 1,007 |
+| `cutsceneAndNue` | 14 | 9,684..16,567 | 112 | 1,895 |
+| `menu_screens` | 7 | (identical hashes) | - | - |
+| `fairyVillage` | 11 | 3,620..11,845 | 109 | 255 |
+| `masterAndManillo` | 12 | 3,620..15,790 | 109 | 44 |
+
+### 10.2 What the raw pointers are
+
+| Class | Words | Where seen | Its rule |
+|---|---|---|---|
+| a participant's own | `Sound_Banks`' voice buffers, `Sound_Channels`, `Snd_Device`, `Snd_Primary`, `Music_Buffer`, `Music_Notify`, `Music_Events`, `SndStream_Buffer` (our audio layer's objects), and `Music_Staging` (sample bytes, in range on one tick: a number); `PsxRest_Direct3D`, `D3d_Viewport`, `D3d_BackMaterial` (our renderer's) | every route; all in the state hash's skip list | **rebuilt or kept by the participant** after the span: `SOUND`'s `SnapRestore` writes the device words, clears the stream words and remakes every buffer; `GFX` keeps `0x7CC348` and `0x7CC354` live (section 2). Already right |
+| message box text into the pool | `Msgbox_Base`, `MenuWindows_ListText`, `Msgbox_Resume` (the box state's `+0xC`, `+0x10`, `+0x14`) | `shop`: 3, 3 and 7 of 10 ticks; a named word in the pool on 2,593 of 3,157 passes | **re-aimed by name**: written as its offset in DIV-0007's moved message pool (`kWordPool`, the 17 run-time slots' rule), placed at this process's pool |
+| the battle block's text word | `0x93B8FC` (`BattleFlow_TaskCurrent + 0x38`, unnamed in symbols.toml) | `cutsceneAndNue`: pool text on 2 of 14 ticks; at other passes `g_messages+0x5B` / `+0x82`, the banner slots' text | the same, and the next class's |
+| a copy of a text slot's pointer, or a cursor into its text | six words of `Effect_Objects` (`0x7E15B0`, `B4`, `1630`, `34`, `16B0`, `B4`) | `masterAndManillo`: 7 of 12 ticks; about 4,600 passes; `g_lines+0x140` (slot `0x653BC0`'s value) and `g_lines+0x1`, `+0x2`, ... `+0xC1` (DIV-0064's lines, drawn letter by letter) | **re-aimed by its slot**: written as the slot and how far into the slot's text (`kWordTextCopy`, new), placed from the slot as a text slot is placed (the process's own text at a portable load), the offset checked against this process's text |
+| the town warp's page | `Msgbox_Base`, `MenuWindows_ListText` on `g_warp_message` (`field_7.cpp:548-549`) | no route: DIV-0225 wants the Definitive Edition mod's data | **not portable** (`kNpTextOurs`, new): a text word that names our module outside the pool and the slots' texts. The same answer for the reading row's composed copy (`MsgBox_ReadingRowSystem`), which no route reached either |
+
+The state hash's own cross-build differences on these routes are exactly
+the second, third and fourth classes: `shop` page `0x7DE000` from tick 565
+(until now read as the sound page's noise), `cutsceneAndNue` page `0x93B000`
+from 5,506, `masterAndManillo` page `0x7E1000` from 715. The hash reads the
+words raw, as before, so no hash moves; `kTextWords` and the copy rule are
+its next candidates (its section 7's "the place to look when a route
+reports another page of this class").
+
+### 10.3 The false positives, measured
+
+- **The copy rule** names a word only when its value is a text slot's
+  pointer or lies inside that slot's text up to its NUL (`TextExtent`, at
+  most 255 bytes). In the 71 dump pairs, **no number** (a word equal in both
+  builds) equals one of the 83 text starts or lies within 64 bytes past one;
+  within a blind 256-byte window, 7 to 11 do on four routes, which the NUL
+  bound excludes for these short strings. A false positive would rewrite a
+  number at a portable load; none was met.
+- **A value test over the message pool** (any word holding a pool address
+  marks the take not portable) was measured and **not taken**: one word that
+  holds the same value in both builds, `0x8160C8` (past `Gfx_ClutStrip`), lies in
+  this build's pool range on **2,432 of 7,420** `cutsceneAndNue` passes, and
+  `0x7A2370` (inside `Gfx_VramShadow`) on 73 `masterAndManillo` passes. As a
+  refusal it would mark a third of that route's takes not portable for a
+  number; as a re-aim it would corrupt a pixel. Such a word is written raw
+  and **logged at the take** (`take: N word(s) no rule names hold an address
+  in the message pool`), so it is seen, not hidden.
+- **What stays unmeasured**: a pointer of ours that no route stores, outside
+  the named words, the slots' texts and the participants' words. It cannot
+  be told from a number at a take; the probe and the differential are the way
+  to find one.
+
+### 10.4 Proved (the build of `e15d1f3a`)
+
+- **The self-test** (`BOF3X_SELFTEST_ONLY=1`, under the original text and
+  under `en-US`): exit 0, 10,424 and 10,481 log lines, no FAIL. New cases:
+  the box's text word and the battle block's into the pool written as their
+  offsets; a word holding a text slot's pointer, and a cursor 5 bytes in and
+  at the NUL, written as the slot and how far in, one past the NUL not; the
+  box's word on a buffer of ours (DIV-0225's page) makes a take not
+  portable (`kNpTextOurs`), another build refusing it "another build (not
+  portable)" with the save offered and its own build restoring it exactly; a
+  word no rule names holding a pool address written raw, not refused; and end
+  to end, a take with a cursor 3 bytes into the slot's text restored
+  portably (the cursor in this process's text) and exactly (in the take's).
+- **What a take writes now** (`quicksave_check.py make` takes, read back
+  from the files): `shop` at 2,500 (`qp/shopbox`) lists the box's three
+  words as pool offsets (`0xEA2`, `0xEBA`, `0x29A`); `masterAndManillo` at
+  1,600 (`qp/masterbox`) lists the six effect words as cursors (slot
+  `0x653BC0` +13 and +12, `0x653BB8` +16 and +28, `0x653BB0` +0 and +11); both
+  takes portable.
+- **Forced portable loads** (`BOF3X_QSPORTABLE=1`, A1's cross form with
+  `--run-game none`, `quicksave_check.py cross`, orig6's conditions): `combat`
+  (A1's take at 900) **equal, 1,680 ticks** from the restore; `masterbox`
+  **equal, 3,904 ticks**; `shopbox` (on `d8c9917f`, before the cursor rule)
+  **equal, 640 ticks**. Each loaded run logged `restored PORTABLE`. These load
+  in the same build, so a pool or a slot's text sits where it was: they show
+  the names placed back without harm; the re-aim to another place is the
+  self-test's.
+- **No state hash moved**: `bridgeWalk` and `combat`, this build against
+  `round/wt` (`1832d217`), `statehash.py diff`: **identical on all 2,074 and
+  2,602 ticks** (`sh/b1b/`; and the same on `d8c9917f`, `sh/b1b_v1/`).
+- **The re-measure**: the differential again on this build (`qd/run_b1.sh`,
+  the base's dumps reused): the box's words and `0x93B8FC` left `shop`'s and
+  `cutsceneAndNue`'s raw lists (on `d8c9917f`); on `masterAndManillo` (on `e15d1f3a`) the six effect words joined the named (115 named, against 109) and none is raw. What a take still writes raw that names our module, on the three routes, is the participants' own words alone.
+- **The no-data checks** pass; `width_census`, `data_census` and
+  `reloc_census` rose by this change's sites (span VAs spelled as the
+  run-time slots are, the self-test's narrowings, `TextExtent`'s bound) and
+  are regenerated.
+
+### 10.5 Ledger
+
+No draft F. A player meets no new reason: a take with the box on text of
+ours outside the pool is refused in another build as "another build (not
+portable)", and a cursor this build's text cannot hold as "another build (a
+word this build cannot place)", both A1's reasons, with the save offered
+(DIV-0145 as amended). What changes is which quicksaves load portably, and
+that a portable load writes these words by their names.
+
+### 10.6 Not checked
+
+- A load in another build: every portable load here is forced in the build
+  that wrote it, so the re-aim to another pool or another text is the
+  self-test's only.
+- The town warp and the reading row's copy in a live game: no recipe reaches
+  them (the first wants the Definitive Edition mod's data).
+- Routes other than the seven, the player's defaults (the differential ran
+  under orig6's conditions), the original Chinese text (no moved pool, the
+  slots hold BOF3.exe's text), and the 32-bit and Windows builds.
+- A pointer of ours stored where no rule looks (10.3's last point).

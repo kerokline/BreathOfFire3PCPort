@@ -90,6 +90,23 @@ constexpr std::uint32_t kRuntimeSlots = kMsgRingEntries + 1;
 // The run-time slot i (0 .. kRuntimeSlots - 1) as a VA.
 constexpr std::uint32_t RuntimeSlot(std::uint32_t i) { return i < kMsgRingEntries ? kMsgRing + i * kMsgRingStride : kMsgCurrent; }
 
+// The quicksave's text words beyond those (docs/state-by-name-participants.md
+// 10, the build differential of 2026-11-25): words that are not Capcom's
+// slots and hold a text pointer at run time, which under a language overlay
+// names our module - the message box's three (MsgBoxState +0xC, +0x10, +0x14:
+// Msgbox_Base, MenuWindows_ListText, Msgbox_Resume; Msg_OpenSystem and
+// DIV-0225's town warp aim them, measured on the shop route) and the battle
+// block's word 0x93B8FC (the battle result message's block, unnamed in
+// symbols.toml; cutsceneAndNue). Quicksave only: the state hash reads them
+// raw, as before, so no hash changes; they are its next candidates.
+constexpr std::uint32_t kTextWords[] = {0x7DEE4C, 0x7DEE50, 0x7DEE54, 0x93B8FC};
+constexpr std::uint32_t kTextWordCount = sizeof kTextWords / sizeof kTextWords[0];
+constexpr bool IsTextWord(std::uint32_t va) {
+    for (std::uint32_t i = 0; i < kTextWordCount; ++i)
+        if (kTextWords[i] == va) return true;
+    return false;
+}
+
 // A section of ours a pointer can name: every one the loader keeps. The
 // discardable ones (.reloc and the DWARF sections, 41 of the image's 94 MB in
 // the build of 2026-10-10) are mapped but nothing points into them, and a
