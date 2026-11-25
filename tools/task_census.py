@@ -37,6 +37,13 @@ chain and the word are checked against each other, both ways:
     fresh row (created, not yet run) must carry none;
   - it prints the frames per site and task, and every disagreement.
 
+With --callers, the nested rows (a task that is neither fresh nor, by its chain,
+at a site) are tallied over all runs by their whole chain, named from the
+yielding function up to the task body, innermost first, one return address a
+name: where a nested yield's place is, caller by caller (B2,
+docs/state-by-name-sites.md 8). Words above the body are stale and are cut at
+the first task body (BODIES below).
+
 With --list-runs SITE[,SITE...], it also lists the runs of frames (by
 Frame_Counter) on which some task carried one of those sites: where to take a
 quicksave that stands there.
@@ -76,7 +83,37 @@ SITE_FUNCTIONS = {
     7: {"SwingIn", "SwingInOpenLoop", "ResumeSwingInOpen"},
     8: {"SwingIn", "SwingInOpenLoop", "SwingInTurnLoop", "ResumeSwingInTurn"},
 }
+# Field_Task's pass end is its own function since B2; the nested sites' resume entries make it too, and a
+# compiler may inline it into any of them, so each can call Task_YieldAt for site 1.
+NESTED_RESUME = {9: "ResumeWaitEnter", 10: "ResumeWaitToMenu", 11: "ResumeWaitArea", 12: "ResumeWaitMenuBack",
+                 13: "ResumeMenuWaitOpen", 14: "ResumeMenuWaitClose", 15: "ResumeMenuLeaveSleep"}
+SITE_FUNCTIONS[1] = SITE_FUNCTIONS[1] | {"FieldTaskPassEnd"} | set(NESTED_RESUME.values())
+
+# Group B2's nested sites (task_yield.h 9..15; docs/state-by-name-sites.md 8). A wait's own yield is
+# Task_YieldAt called by WaitSleep or by the wait's pass, loop or body (any may be inlined into the next); its
+# kind is the first Field_/Menu_ wait function in the chain, and its caller the first caller function above
+# that (the step, a function of the step's tail, or the resume entry). A resume entry names its site alone.
+# GameMode_Field holds two sites (10, 11): the chain names both, and the return address tells them apart
+# (--callers prints it; the notes pin it against the disassembly).
+FIELD_WAIT = {"FieldWaitPass", "FieldWaitLoop", "Field_WaitTransition"}
+MENU_WAIT = {"MenuWaitPass", "MenuWaitLoop", "Menu_WaitTransition"}
+WAIT_GLUE = {"WaitSleep", "WaitResume"}
+NESTED_WAITS = {   # site -> (the wait's functions, its callers)
+    9: (FIELD_WAIT, {"GameMode_Enter"}),
+    10: (FIELD_WAIT, {"GameMode_Field"}),
+    11: (FIELD_WAIT, {"GameMode_Field"}),
+    12: (FIELD_WAIT, {"GameMode3_Leave", "MenuCloseAfterSleep", "MenuCloseAfterWait", "ResumeMenuWaitClose",
+                      "ResumeMenuLeaveSleep"}),
+    13: (MENU_WAIT, {"GameMode3_Enter"}),
+    14: (MENU_WAIT, {"GameMode3_Leave"}),
+}
+# Site 15, GameMode3_Leave's own sleep: Task_YieldAt called by MenuCloseAfterWait, or by what it is inlined into.
+SLEEP_15 = {"MenuCloseAfterWait", "GameMode3_Leave", "ResumeMenuWaitClose"}
+NESTED_CALLERS = set().union(*(c for _, c in NESTED_WAITS.values())) | set(NESTED_RESUME.values())
 YIELD_AT = "Task_YieldAt"
+# The task bodies and their loops and resume entries: a chain's words past the first of these are above the task's
+# first frame, so stale (--callers cuts there).
+BODIES = (set().union(*SITE_FUNCTIONS.values()) - {"FieldTaskPassEnd"}) | set(NESTED_RESUME.values())
 
 
 def base_name(fn):
@@ -121,11 +158,38 @@ def read(path):
 
 
 def chain_site(fns):
-    """The site a chain's own yield is at, by its names (0: none): Task_Sleep called by Task_YieldAt, called by a
-    function listed for one site. A function listed for two (SwingIn's two loops when inlined) gives a set."""
+    """The sites a chain's own yield can be at, by its names (empty: none). `fns` is the chain innermost first, cut
+    at the task body. Task_Sleep called by Task_YieldAt, called by a function listed for a flat site; or, for a
+    nested site (B2), the wait's functions and its caller as NESTED_WAITS has them. A function listed for two
+    sites (SwingIn's two loops when inlined; GameMode_Field's two waits) gives a set."""
     if len(fns) < 2 or base_name(fns[0]) != YIELD_AT:
         return set()
-    return {sid for sid, names in SITE_FUNCTIONS.items() if base_name(fns[1]) in names}
+    names = [base_name(f) for f in fns]
+    out = {sid for sid, fset in SITE_FUNCTIONS.items() if names[1] in fset}
+    if names[1] in SLEEP_15:
+        out.add(15)
+    # a nested wait: Task_YieldAt called by the wait's glue or its own functions. WaitSleep is often inlined into
+    # the loop, and a stale word (a return address left in the loop's frame by a call it made, Menu_Frame's) can
+    # then lie between Task_YieldAt and the loop: the wait's functions are looked for in the three words above.
+    near = names[1:4]
+    if any(n in WAIT_GLUE | FIELD_WAIT | MENU_WAIT for n in near):
+        kind = next((n for n in names[1:] if n in FIELD_WAIT | MENU_WAIT), None)
+        at = names.index(kind) + 1 if kind else 1
+        caller = next((n for n in names[at:] if n in NESTED_CALLERS), None)
+        for sid, (wait, callers) in NESTED_WAITS.items():
+            if caller == NESTED_RESUME[sid] or (caller in callers and kind in wait):
+                out.add(sid)
+    return out
+
+
+def cut_at_body(fns):
+    """A named chain up to and including its first task body (BODIES): the words above are stale."""
+    out = []
+    for f in fns:
+        out.append(f)
+        if base_name(f) in BODIES:
+            break
+    return out
 
 
 def main():
@@ -134,6 +198,7 @@ def main():
     ap.add_argument("--flat", default="", help="functions whose own yield a resume entry can stand for, by name")
     ap.add_argument("--tsv", help="also write every site of every run as one table")
     ap.add_argument("--sites", action="store_true", help="check the yield word against the chain (the A2 census)")
+    ap.add_argument("--callers", action="store_true", help="tally the nested rows by their whole named chain")
     ap.add_argument("--list-runs", default="", help="list the runs of frames that carry these site ids")
     ap.add_argument("runs", nargs="+")
     a = ap.parse_args()
@@ -145,6 +210,7 @@ def main():
     by_fn = {}
     per_site = collections.Counter()      # (task, site) -> frames, over all runs
     disagree_total = collections.Counter()
+    callers = {}   # (task, named chain) -> {"frames", "routes": Counter, "min", "max", "modes"}
     for path in a.runs:
         meta, sites, frames, ysites, runs = read(path)
         route = os.path.splitext(os.path.basename(path))[0]
@@ -158,12 +224,26 @@ def main():
                 fn = chain[1].rsplit("+", 1)[0]
             fresh = s["fresh"] == s["frames"]
             if a.sites and not flat_names:   # flat by the chain: Task_YieldAt called by a site's function
-                raw = [name_of(addrs, names, x).rsplit("+", 1)[0] if lo <= x < hi else f"{x:#x}" for x in s["chain"][:2]]
-                is_flat = bool(chain_site(raw))
+                raw = [name_of(addrs, names, x).rsplit("+", 1)[0] if lo <= x < hi else f"{x:#x}" for x in s["chain"]]
+                is_flat = bool(chain_site(cut_at_body(raw)))
             else:
                 is_flat = fn in flat_names
             k = "fresh" if fresh else ("flat" if is_flat else "nested")
             kind[(task, sid)] = k
+            if a.callers and k == "nested":
+                named = []
+                for x in s["chain"]:
+                    nm = base_name(name_of(addrs, names, x).rsplit("+", 1)[0]) if lo <= x < hi else f"{x:#x}"
+                    off = f"+{x - addrs[bisect.bisect_right(addrs, x) - 1]:#x}" if lo <= x < hi else ""
+                    named.append(nm + off)
+                    if nm in BODIES:
+                        break
+                c = callers.setdefault((task, tuple(named)), {"frames": 0, "routes": collections.Counter(),
+                                                               "min": s["min"], "max": s["max"], "modes": set()})
+                c["frames"] += s["frames"]
+                c["routes"][route] += s["frames"]
+                c["min"], c["max"] = min(c["min"], s["min"]), max(c["max"], s["max"])
+                c["modes"].update(x for x in s["modes"].split(",") if x)
             y = s["yield"]
             ytext = "" if y is None else f"yield {y}:{ysites.get(y, {}).get('name', '?') if y else '-'}  "
             print(f"  task {task} site {sid:>3} {k:<6} {s['frames']:>7} frames  depth {s['min']:#x}..{s['max']:#x}  "
@@ -186,8 +266,8 @@ def main():
             else:
                 full = {}
                 for (task, sid), s in sites.items():
-                    fns = [name_of(addrs, names, x).rsplit("+", 1)[0] if lo <= x < hi else f"{x:#x}" for x in s["chain"][:2]]
-                    full[(task, sid)] = (chain_site(fns), s["fresh"] == s["frames"], s["fresh"])
+                    fns = [name_of(addrs, names, x).rsplit("+", 1)[0] if lo <= x < hi else f"{x:#x}" for x in s["chain"]]
+                    full[(task, sid)] = (chain_site(cut_at_body(fns)), s["fresh"] == s["frames"], s["fresh"])
                     if s["fresh"] != s["frames"] or s["yield"]:
                         per_site[(task, s["yield"])] += s["frames"] - (s["fresh"] if not s["yield"] else 0)
                 bad = collections.Counter()
@@ -238,6 +318,12 @@ def main():
         for (task, y), n in sorted(per_site.items()):
             print(f"    task {task} site {y}: {n} frames")
         print(f"  disagreements over all runs: {sum(disagree_total.values())}")
+    if a.callers:
+        print("  nested rows by their whole chain (innermost first, cut at the task body):")
+        for (task, named), c in sorted(callers.items(), key=lambda kv: (kv[0][0], -kv[1]["frames"])):
+            routes = ", ".join(f"{r} {n}" for r, n in c["routes"].most_common())
+            print(f"    task {task} {c['frames']:>6} frames  depth {c['min']:#x}..{c['max']:#x}  modes "
+                  f"{','.join(sorted(c['modes'], key=int))}\n      {' < '.join(named)}\n      routes: {routes}")
     if a.tsv:
         with open(a.tsv, "w", encoding="utf-8", newline="\n") as f:
             f.write("# tools/task_census.py: where each task stood at the frame boundary, per run. Names of our "

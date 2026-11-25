@@ -9472,8 +9472,8 @@ src/game/core/transition.cpp	GameMode_Start	global	At	FieldModes_Pending_addr + 
 src/game/core/transition.cpp	GameMode_Start	global	At	FieldModes_Pending_addr + 4	0	0x903a08	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (FieldModes_Pending_addr - -)	c4-tc
 src/game/core/transition.cpp	GameMode_Start	raw	At	0x905B82	0	0x905b82	-	inside-entry	Field_EdgeBits + 2: byte inside a u16 entry	c2-field
 src/game/core/transition.cpp	GameMode_Start	global	At	mode_flow::at::kClock	0	0x9040c8	-	no-entry	at::kClock 0x9040c8 -	b0
-src/game/core/transition.cpp	GameMode_Enter	global	At	mode_flow::at::kKind2XHigh	0	0x905e66	-	inside-entry	at::kKind2XHigh 0x905e66 Field_Kind2X+0x2	b0
-src/game/core/transition.cpp	GameMode_Enter	global	At	mode_flow::at::kKind2ZHigh	0	0x905e62	-	inside-entry	at::kKind2ZHigh 0x905e62 Field_Kind2Z+0x2	b0
+src/game/core/transition.cpp	EnterAfterWait	global	At	mode_flow::at::kKind2XHigh	0	0x905e66	-	inside-entry	at::kKind2XHigh 0x905e66 Field_Kind2X+0x2	b0
+src/game/core/transition.cpp	EnterAfterWait	global	At	mode_flow::at::kKind2ZHigh	0	0x905e62	-	inside-entry	at::kKind2ZHigh 0x905e62 Field_Kind2Z+0x2	b0
 src/game/core/transition.cpp	GameMode_Field	global	At	kBattleBytes	0	0x904aa0	-	no-entry	kBattleBytes 0x904aa0 -	b0
 src/game/core/transition.cpp	GameMode_Field	global	At	kBattleBytes	1	0x904aa0	-	no-entry	kBattleBytes 0x904aa0 -	b0
 src/game/core/transition.cpp	GameMode_Field	global	At	kBattleBytes	2	0x904aa0	-	no-entry	kBattleBytes 0x904aa0 -	b0
@@ -9491,8 +9491,8 @@ src/game/core/transition.cpp	GameMode_Field	global	At	kMode11Bytes	1	0x905da0	-	
 src/game/core/transition.cpp	GameMode_Field	global	At	kMode11Bytes	2	0x905da0	-	name	kMode11Bytes 0x905da0 FieldEvent_Object905DA0	b0
 src/game/core/transition.cpp	GameMode_Field	global	At	kMode11Bytes	3	0x905da0	-	name	kMode11Bytes 0x905da0 FieldEvent_Object905DA0	b0
 src/game/core/transition.cpp	GameMode3_Enter	global	At	mode_rest::at::kMenuTimer	0	0x929f04	-	no-entry	at::kMenuTimer 0x929f04 -	b0
-src/game/core/transition.cpp	GameMode3_Leave	global	At	mode_rest::at::kFacingJitter	0	0x656a80	-	no-entry	at::kFacingJitter 0x656a80 -	b0
-src/game/core/transition.cpp	GameMode3_Leave	global	At	Cond_Flags_addr + 0xa0	0	0x904030	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Cond_Flags_addr - -)	c4-tc
+src/game/core/transition.cpp	MenuCloseAfterFieldWait	global	At	mode_rest::at::kFacingJitter	0	0x656a80	-	no-entry	at::kFacingJitter 0x656a80 -	b0
+src/game/core/transition.cpp	MenuCloseAfterFieldWait	global	At	Cond_Flags_addr + 0xa0	0	0x904030	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Cond_Flags_addr - -)	c4-tc
 src/game/core/transition.cpp	GameMode4_Run	global	At	mode_rest::at::kMessageBits	0	0x7dee44	-	no-entry	at::kMessageBits 0x7dee44 -	b0
 src/game/core/transition.cpp	GameMode5_Turn	global	UL	mode_rest::at::kFormation	0	0x904aac	-	no-entry	at::kFormation 0x904aac -	b0
 src/game/core/transition.cpp	GameMode5_Turn	global	At	mode_rest::at::kApproach	0	0x656aa4	-	no-entry	at::kApproach 0x656aa4 -	b0
