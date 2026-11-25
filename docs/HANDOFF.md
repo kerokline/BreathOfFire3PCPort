@@ -32,7 +32,9 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
 ## Pick up here
 
 00. **Next, 2026-11-16** (the order is the owner's; these are the candidates):
-   - **State by name (IDEAS I54), staged 2026-11-24, to launch on the desktop**
+   - **State by name (IDEAS I54), staged 2026-11-24, LAUNCHED 2026-11-25 on the laptop** (the owner's calls 3 to 8
+     answered as proposed; two agents at a time, branch `sbn/round`, scratch `~/bof3x-runs/sbn1125`: section 4a there.
+     The proof's Windows rows are owed on the desktop. What follows is the staging's text.)
      ([`state-by-name-round.md`](state-by-name-round.md), branch `docs/state-by-name-staging`): the owner's first
      larger change after `v0.1.0-beta.2`. Measured on the laptop: the task census (`BOF3X_TASKCENSUS`, a read-only
      probe; 16 routes on the Linux build). The round is two waves - the quicksave's format 2 and the words written by

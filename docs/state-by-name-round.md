@@ -1,13 +1,16 @@
 # State by name, the first round: a quicksave that outlives its build (IDEAS I54)
 
-**Status: STAGED, 2026-11-24. Not launched; one probe built, nothing else.**
-The owner chose I54 as the first of the larger changes after `v0.1.0-beta.2`
+**Status: LAUNCHED, 2026-11-25, on the laptop (section 4a). Staged
+2026-11-24.** The owner chose I54 as the first of the larger changes after `v0.1.0-beta.2`
 (2026-11-24, by chat) and asked for the investigation and this staging on the
 laptop, the round to launch on the desktop. Section 2 is measured (the task
 census ran here the same day, on the Linux build of `main` `65b7810f` plus the
 probe); section 1 says what that changed in I54's tiers; sections 3 to 6 are a
 plan; section 7 is the owner's calls (1 and 2 answered the same day, 3 to 8
-open); section 9 lists what is not checked.
+on 2026-11-25, all as proposed); section 9 lists what is not checked. The
+desktop is in use, so the round runs on the laptop, two agents at a time
+(section 4a), and the proof's rows that need a Windows build stay owed
+(section 5).
 
 ## 0. The shape in one paragraph
 
@@ -504,6 +507,40 @@ number nothing in the ledger or `known-defects.md`.
   would need.
 - **B3, the proof** (`tools/quicksave_check.py`, recipes): section 5.
 
+### 4a. As launched (2026-11-25, on the laptop)
+
+The owner, by chat: the desktop is in use, so the round runs here, with two
+Opus agents at a time and the session that staged it as the orchestrator.
+Time is not short; memory is (about 5 GiB, and a process that runs out is
+killed with no message). So:
+
+- **Two agents at once, never more, and one heavy process at once.** Every
+  build (`-j 2`) and every run of the game goes through one lock,
+  `~/bof3x-runs/sbn1125/heavy` (a `flock` wrapper), so that two agents never
+  build or play side by side.
+- **The round branch is `sbn/round`**, off `main` with this staging branch
+  merged. Each group has a worktree `~/bof3x-runs/sbn1125/<group>/wt` on a
+  branch `sbn/<group>` off the round's tip, its own build directory, and a
+  harness root `~/bof3x-runs/sbn1125/<group>/root`. The game data is the
+  main checkout's `game/` (`CLAUDE.local.md`), read in place.
+- **The four groups of wave A run as two pairs**, then wave B as a pair and
+  the proof alone:
+
+  | Pair | Groups | Why together |
+  |---|---|---|
+  | 1 | A1 (the format), A3 (the region table) | A1 merges first; A3 is `tools/` and a check of its own, and does not touch `snapshot.cpp` |
+  | 2 | A2 (the yield word), A4 (tier 0) | both stand on A1's `Parse` and `TASKS` record |
+  | 3 | B1 (the participants), B2 (the next sites) | as staged |
+  | 4 | B3 (the proof) | alone: it is all game runs |
+
+- **The calls' work, by group.** Call 8's read (which settings change state
+  a quicksave holds) is A1's first step, and the fingerprint is in A1's
+  header. Call 6's field in the ledger's template and its check in
+  `tools/ledger_check.py` are A3's. Calls 3, 5 and 7 add no work.
+- **Not done before this launch:** the census during the owner's own play
+  on the desktop (section 7's last paragraph), and the 32-bit build's
+  census (section 9). The site list is fixed from the sixteen routes.
+
 ## 5. The proof
 
 The quicksave round's test, across builds ([`quicksave-routes.md`](quicksave-routes.md)):
@@ -518,6 +555,11 @@ process is **another build**:
 | the 32-bit Windows build | the 64-bit Windows build, and back | the width |
 | the 64-bit Windows build | the Linux build, and back | the system |
 | a build of the round's base | a build of its tip | a build changed by real work |
+
+**On the laptop (section 4a) only the first and last rows can run**: it
+builds the Linux ELF and no Windows build. The width and the system rows are
+owed on the desktop, with the round's files as they stand at its end; until
+they run, "32-bit to 64-bit, Windows to Linux" is designed and not shown.
 
 On the six quicksave routes at the frames they have, and on frames chosen
 from the census: one in each flat site, and one on a nested frame, which
@@ -540,7 +582,17 @@ have no entry.
 **Answered 2026-11-24 (the owner, by chat): calls 1 and 2, both as
 proposed.** F6 takes the frame it is given and never waits; a take on a
 nested frame is this build's only. Another build refuses its snapshot and
-offers the save it starts with, after a confirmation. Calls 3 to 8 are open.
+offers the save it starts with, after a confirmation.
+
+**Answered 2026-11-25 (the owner, by chat): calls 3 to 8, all as
+proposed.** 3: no mark on a slot; a quicksave that is not portable says so
+when a load is refused. 4: field by field waits for I53. 5: the probe stays
+as a developer's switch. 6: the ledger's entries carry "Saved state:
+unchanged / changed (revision N)" and `tools/ledger_check.py` fails on an
+entry after this round without it. 7: (a), an older revision falls back to
+its save, and a converter is written when one change is worth it. 8: the
+round's first step reads which settings change state a quicksave holds, and
+the header carries their fingerprint.
 
 1. **A take on a nested frame - answered: (a).** (a) F6 takes the frame it is given and the
    file says "this build only" (proposed: a save state is of the frame the
