@@ -1,7 +1,7 @@
 # State by name, group A1: the quicksave's format 2 and the load's three answers
 
-**Status:** IN PROGRESS (2026-11-25, verified the same day on the Linux
-x86-64 build of `sbn/A1`; section 7 has the measurements). The
+**Status:** STABLE (2026-11-25, verified the same day on the Linux x86-64
+build of `sbn/A1`; section 7 has the measurements). The
 state-by-name round's group A1 ([`state-by-name-round.md`](state-by-name-round.md)
 4, 4a), on the laptop. Built: `src/hook/snapshot.{h,cpp}`, the seam
 `src/hook/task_yield.h`, the shared place `src/hook/span_words.h`. Not played
@@ -158,7 +158,9 @@ unchanged; `statehash.cpp` uses them from there (its `ReadDllImage`,
 and `Section` are the header's now). What the hash computes did not change:
 the same functions over the same values. The bound-word test was already
 shared (`bind.h`). Shown in section 7: the state-hash runs are identical tick
-for tick with the round base's.
+for tick with the round base's. `statehash.cpp`'s `kBase` and `kEnd` take
+their values from `span_words.h`'s `kDataLo` and `kDataHi` (the same
+numbers).
 
 **Capcom's slots for the quicksave** are listed once, before the injects, in
 every run: `span_words::BeforeInjects`, called by `StateHash_BeforeInjects`
@@ -297,9 +299,46 @@ and the span test made format 2):
   `0x400000` nothing folded; a text slot the file's at an exact load and the
   process's at a portable one, refused when the process's is not ours.
 
-## 7. Measured
+## 7. Measured (2026-11-25, the laptop, the Linux x86-64 ELF of `sbn/A1`)
 
-(Filled in below as the runs are made.)
+The captures are outside the tree, in `~/bof3x-runs/sbn1125/A1/root/` on
+the laptop (they hold game data).
+
+- **The build** (`cmake --build build-linux-x86_64 -j 2`): clean, no warning
+  in the files of this change.
+- **The self-test** (`BOF3X_LAUNCHER=1 BOF3X_SELFTEST_ONLY=1`, the two cache
+  variables, `SDL_VIDEO_DRIVER=offscreen SDL_AUDIO_DRIVER=dummy`): exit 0,
+  10,402 log lines; `shadow      snapshot: self-test passed` with every case
+  of section 6, the portable ones included (the code places at
+  `0x7C401000..0x7C5C4000`, a measured top byte). The census line: 17,516
+  aligned words of `.data` hold a pointer into `BOF3.exe`'s image before the
+  injects (`selftest2.log`).
+- **No state hash moved.** `bridgeWalk` (en-US) and `combat` as state-hash
+  runs, `orig6`'s conditions ([`state-hash.md`](state-hash.md) 6:
+  `--only-slot0`, `BOF3X_SCALE=2`, `BOF3X_OPT=none`, `BOF3X_LAYERING=0`, the
+  skip list), on this build and on the round base's (`f6d53766`):
+  `statehash.py diff` **identical on all 2,074 ticks** (`bridgeWalk`) and **on
+  all 2,602 ticks** (`combat`). So the moved tests and the census call left
+  the hash as it was (`sh/`).
+- **The quicksave round's cross test, format 2 written and restored exactly**
+  ([`quicksave-routes.md`](quicksave-routes.md) 3; on Linux the forms are
+  played by `input_run.py`, the cross form with `--run-game none` in the live
+  run's own game folder, which holds its `BISLPS10.DAT`; `qs/`):
+
+  | Route | The take | `inproc` | `cross` |
+  |---|---|---|---|
+  | `combat` (F6 900, F7 1200) | 4,854,524 bytes, format 2, revision 1, 8,785 words by their names, not portable: task 0 stands at no named place | equal: the 300 ticks after the restore equal the 300 after the take | **equal: 1,680 ticks from the restore** (the loaded run at tick 1, `Frame_Counter` 901) |
+  | `worldMapAndAreaTransition` (F6 595, F7 895) | 4,694,081 bytes, format 2, 8,780 words, not portable (task 0) | equal | **equal: 1,536 ticks from the restore** |
+
+  Both takes are "not portable" by the real test, as section 4 says every
+  take in play is until A2's sites exist: task 0 sleeps in `Field_Task`, a
+  yield with no entry.
+- **The no-data checks:** `tools/ledger_check.py` passes;
+  `tools/reloc_census.py`, `tools/width_census.py` and
+  `tools/data_census.py` rose with this change (the quicksave names VAs it
+  compares and reads the task records and the arena raw), and their files in
+  `analysis/` are regenerated as their checks direct; each `--check` passes
+  after.
 
 ## 8. Ledger: draft A (an amendment of DIV-0145)
 
@@ -334,7 +373,7 @@ and the span test made format 2):
   in `snapshot.cpp` changes for a site.
 - **A4:** `Snapshot_LastLoad` and `Snapshot_ReadSaveHalf` (section 5). The
   refusal's `why` is short enough for the menu.
-- **A3:** the keep list (`kKept`) is unchanged. The scheduler's stack words
+- **A3:** the keep list (`kKept`) keeps its row form `{0xVA, bytes, "Name"}` and gains one row (below). The scheduler's stack words
   (`Task_StackTop`, the records' saved stack pointers) are a class of their
   own here, "stack": never named, written fresh by a portable load
   (`snapshot.cpp` `Unnamed`). `Desktop_Bpp` .. `Desktop_Width` `0x939A2C`
