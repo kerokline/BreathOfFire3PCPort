@@ -3,10 +3,13 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <string>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 #include "bof3/symbols.gen.h"
 #include "common/asm_name.h"
@@ -35,8 +38,10 @@
 #include "game/title_states.h"
 #include "hook/behaviour.h"
 #include "hook/detour.h"
+#include "hook/host.h"
 #include "hook/log.h"
 #include "hook/snapshot.h"
+#include "os/env.h"
 
 namespace {
 
@@ -794,7 +799,7 @@ void BehavioursSave(bof3::SnapshotWriter& w) {
 }
 
 void BehavioursRestore(bof3::SnapshotReader& r) {
-    if (r.Get<std::uint32_t>() != kBehavioursVersion) bof3::Fatal("snapshot: BEHAVIOURS' record is another version");
+    if (r.Get<std::uint32_t>() != kBehavioursVersion) bof3::Fatal("snapshot: BEHAVIOURS' record is another version, past its check");
     field_idle::g_ally_close_menu = r.Get<std::uint8_t>();
     field_idle::g_ally_pending = r.Get<std::uint8_t>();
     field_idle::g_smoke_steps = r.Get<std::uint16_t>();
@@ -842,6 +847,145 @@ void BehavioursRestore(bof3::SnapshotReader& r) {
     std::memcpy(g_warp_ids, ids, sizeof ids);
     g_warp_message_bytes = message;
     r.Get(g_warp_message, message);
+}
+
+// The record checked before a byte of the span is written (Snapshot_Register's
+// check): every condition BehavioursRestore fails on - another version, a
+// record of another size, text or a page past its room, a talk or a menu
+// taken under a behaviour this start has off - is a refusal here, so a record
+// that passes reaches none of its Fatals (docs/state-by-name-participants.md 3).
+// The layout is fixed-width bytes and words: the same at both widths and on
+// both systems, so the version stays 4.
+bool BehavioursCheck(bof3::SnapshotReader& r, std::string& why, std::string& detail) {
+    char text[200];
+    const auto damaged = [&](const char* what) {
+        why = "damaged";
+        detail = std::string("BEHAVIOURS' record: ") + what;
+        return false;
+    };
+    const auto setting = [&](const char* name, const char* what) {
+        why = std::string("other settings (") + name + ")";
+        std::snprintf(text, sizeof text, "BEHAVIOURS' record: %s, and %s is off in this start", what, name);
+        detail = text;
+        return false;
+    };
+    if (r.Left() < 4) return damaged("no version word");
+    const std::uint32_t version = r.Get<std::uint32_t>();
+    if (version != kBehavioursVersion) {
+        why = "another behaviours record";
+        std::snprintf(text, sizeof text, "BEHAVIOURS' record is version %u; this build reads %u only", static_cast<unsigned>(version),
+                      static_cast<unsigned>(kBehavioursVersion));
+        detail = text;
+        return false;
+    }
+    if (r.Left() < 1 + 1 + 2 + 4 + 4) return damaged("the talk's bytes run past the record");
+    r.Skip(1 + 1 + 2);
+    const auto pending = r.Get<std::uint8_t>(), active = r.Get<std::uint8_t>(), swapped = r.Get<std::uint8_t>();
+    r.Skip(1);
+    const auto bytes = r.Get<std::uint32_t>();
+    if (bytes > kTextRoom) return damaged("the talk's saved text is past its room");
+    if (r.Left() < std::size_t{bytes} + 7 + kWarpEntries + 4) return damaged("the saved text or the town warp's bytes run past the record");
+    if ((pending | active | swapped) != 0 && !bof3::BehaviourOn(bof3::behaviours::Id::CampMasters))
+        return setting("CampMasters", "taken during a master's talk from the master list (DIV-0223)");
+    r.Skip(bytes);
+    const auto asked = r.Get<std::uint8_t>(), open = r.Get<std::uint8_t>();
+    r.Skip(1);
+    const auto rebuild = r.Get<std::uint8_t>(), chosen = r.Get<std::uint8_t>(), choice = r.Get<std::uint8_t>();
+    const auto count = r.Get<std::uint8_t>();
+    r.Skip(kWarpEntries);
+    const auto message = r.Get<std::uint32_t>();
+    if (message > kWarpMessageRoom || count > kWarpEntries) return damaged("the town warp's page is past its room");
+    if (r.Left() != message) return damaged("the town warp's page is not the rest of the record");
+    if ((asked | open | rebuild | chosen | choice) != 0 && !bof3::BehaviourOn(bof3::behaviours::Id::TownWarp))
+        return setting("TownWarp", "taken while the town warp was asked for or open (DIV-0225)");
+    return true;
+}
+
+// BOF3X_SELFTEST_ONLY (exe host) or BOF3X_SHADOW=behaviours (hosted): a
+// record of set statics read back the same, and the check's refusals on
+// doctored copies. The statics as they were after.
+void BehavioursSelfTest() {
+    int fails = 0, cases = 0;
+    const auto check = [&](bool ok, const char* what) {
+        ++cases;
+        if (ok) return;
+        ++fails;
+        bof3::Log("shadow      behaviours: FAIL %s", what);
+    };
+    const auto answer = [](const std::vector<unsigned char>& rec, std::string& why) {
+        std::string detail;
+        bof3::SnapshotReader rr("BEHAVIOURS", rec.data(), rec.size());
+        const bool ok = BehavioursCheck(rr, why, detail);
+        if (!ok) bof3::Log("shadow      behaviours: refused as the self-test means: %s - %s", why.c_str(), detail.c_str());
+        return ok;
+    };
+    const auto refused = [&answer](const std::vector<unsigned char>& rec, const std::string& want) {
+        std::string why;
+        return !answer(rec, why) && why == want;
+    };
+    std::vector<unsigned char> was;
+    {
+        bof3::SnapshotWriter w(was);
+        BehavioursSave(w);
+    }
+    // A record of statics no behaviour gates: the smoke's count, a page of three entries and its bytes.
+    field_idle::g_smoke_steps = 0x1234;
+    field_idle::g_ally_pending = 1;
+    g_warp_count = 3;
+    for (unsigned i = 0; i < kWarpEntries; ++i) g_warp_ids[i] = static_cast<unsigned char>(0x40 + i);
+    g_warp_message_bytes = 5;
+    std::memcpy(g_warp_message, "ABCDE", 5);
+    std::vector<unsigned char> rec;
+    {
+        bof3::SnapshotWriter w(rec);
+        BehavioursSave(w);
+    }
+    std::string why;
+    check(answer(rec, why), "the check passes a record BehavioursSave wrote");
+    check(rec.size() == 4 + 1 + 1 + 2 + 4 + 4 + 7 + kWarpEntries + 4 + 5, "the record is its fields, the same at both widths");
+    field_idle::g_smoke_steps = 0;
+    field_idle::g_ally_pending = 0;
+    g_warp_count = 0;
+    g_warp_message_bytes = 0;
+    {
+        bof3::SnapshotReader rr("BEHAVIOURS", rec.data(), rec.size());
+        BehavioursRestore(rr);
+        check(rr.Left() == 0, "the record read to its end");
+    }
+    check(field_idle::g_smoke_steps == 0x1234 && field_idle::g_ally_pending == 1 && g_warp_count == 3 && g_warp_ids[2] == 0x42 &&
+              g_warp_message_bytes == 5 && std::memcmp(g_warp_message, "ABCDE", 5) == 0,
+          "the statics back as at the save");
+    const auto put = [](std::vector<unsigned char>& r, std::size_t at, std::uint32_t v) { std::memcpy(r.data() + at, &v, 4); };
+    std::vector<unsigned char> d = rec;
+    put(d, 0, kBehavioursVersion - 1);
+    check(refused(d, "another behaviours record"), "version 3 is refused");
+    put(d, 0, kBehavioursVersion + 1);
+    check(refused(d, "another behaviours record"), "version 5 is refused");
+    d = rec;
+    d.pop_back();
+    check(refused(d, "damaged"), "a record a byte short is refused");
+    d = rec;
+    d.push_back(0);
+    check(refused(d, "damaged"), "a byte past the record's end is refused");
+    d = rec;
+    put(d, 4 + 1 + 1 + 2 + 4, kTextRoom + 1);   // the saved text's count
+    check(refused(d, "damaged"), "saved text past its room is refused");
+    d = rec;
+    d[4 + 1 + 1 + 2] = 1;   // the master pending
+    check(bof3::BehaviourOn(bof3::behaviours::Id::CampMasters) ? answer(d, why) : refused(d, "other settings (CampMasters)"),
+          "a talk from the master list loads only with CampMasters on");
+    d = rec;
+    d[4 + 1 + 1 + 2 + 4 + 4 + 1] = 1;   // the town warp open
+    check(bof3::BehaviourOn(bof3::behaviours::Id::TownWarp) ? answer(d, why) : refused(d, "other settings (TownWarp)"),
+          "an open town warp loads only with TownWarp on");
+    {
+        bof3::SnapshotReader rr("BEHAVIOURS", was.data(), was.size());
+        BehavioursRestore(rr);
+    }
+    if (fails) bof3::Fatal("behaviours self-test: %d check(s) failed (the log has each)", fails);
+    bof3::Log("shadow      behaviours: self-test passed - %d cases: a %u-byte record read back the same, another version, "
+              "a short or long record, text past its room and the CampMasters and TownWarp gates refused by the check",
+              cases, static_cast<unsigned>(rec.size()));
 }
 
 }  // namespace
@@ -1368,7 +1512,9 @@ void Field7_Inject() {
     BOF3_INJECT(Area_ReturnGate);
     BOF3_INJECT(Area_ArriveHook);
     BOF3_INJECT(Area_CellHook);
-    bof3::Snapshot_Register("BEHAVIOURS", &BehavioursSave, &BehavioursRestore);   // field_idle.h
+    if (bof3::IsExeHost() ? bof3::os::GetEnv("BOF3X_SELFTEST_ONLY", nullptr, 0) > 0 : bof3::WantsShadow("behaviours"))
+        BehavioursSelfTest();
+    bof3::Snapshot_Register("BEHAVIOURS", &BehavioursSave, &BehavioursRestore, nullptr, &BehavioursCheck);   // field_idle.h
 }
 
 void Field7FromFieldE2_Inject() {
