@@ -1129,8 +1129,9 @@ def cmd_matrix(a):
                     if os.path.isdir(live_game):
                         shutil.copytree(live_game, src, symlinks=True,
                                         ignore=shutil.ignore_patterns('BISLPS1*', 'bof3x.log'))
-                    else:
-                        os.makedirs(src)
+                    else:      # a take by a Windows build: a run folder from the install, as --only-slot0 makes it
+                        import linux_run
+                        linux_run.make_run_game(a.game_load or a.game, src, None, True)
                     shutil.copy(qs, os.path.join(src, 'BISLPS10.DAT'))
                     extra = ['--game', src, '--run-game', 'none', '--no-save']
                 if os.path.exists(sh):
