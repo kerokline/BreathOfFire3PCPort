@@ -89,7 +89,7 @@
 0x7CC360 0x18   unknown # the end of skip row 0x7CAE38 5440, with SpriteCell_Count: not read for this table
 0x6C9F40 4      unknown # Display_Setup's copy of the desktop's VERTRES: the machine's screen (skip list, 2026-11-24)
 0x7C9F44 4      unknown # Display_DesktopWidth: the desktop's HORZRES (skip list, 2026-11-24)
-0x939A30 8      unknown # Desktop_Height, Desktop_Width: WinMain's GetDeviceCaps (skip list, 2026-11-24)
+0x939A2C 12     process # Desktop_Bpp, Desktop_Height, Desktop_Width: WinMain's GetDeviceCaps; kKept since the round's A1 (docs/state-by-name-format.md)
 
 # --- unknown: the C runtime's words, dead in the exe host (census 5, 7) ----------
 0x93C35C 4      unknown # the multibyte code page word: start-up data the exe host never writes (state3-build.md 3.1)
