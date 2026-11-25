@@ -150,7 +150,7 @@ const ah::Clone kClones75[] = {
     W1F_CLONE(Area75_PhasePlay, 0x40E330, 0x8D, kCalls40E330, AH_N(kCalls40E330), nullptr, 0, 0, kState),
     W1F_CLONE(Area75_PhaseMissed, 0x40E3C0, 0x17, kCalls40E3C0, AH_N(kCalls40E3C0), nullptr, 0, 0, kState),
     W1F_CLONE(Area75_PhaseReached, 0x40E3E0, 0x92, kCalls40E3E0, AH_N(kCalls40E3E0), nullptr, 0, 0, kState),
-    W1F_CLONE(Area75_OtherPress, 0x40E480, 0x96, kCalls40E480, AH_N(kCalls40E480), nullptr, 0, 0, kCallee),
+    W1F_CLONE(Area75_PartnerPress, 0x40E480, 0x96, kCalls40E480, AH_N(kCalls40E480), nullptr, 0, 0, kCallee),
     W1F_CLONE(Area75_PlayerPress, 0x40E520, 0x74, kCalls40E520, AH_N(kCalls40E520), nullptr, 0, 0, kCallee),
     W1F_CLONE(Area75_EarlyPress, 0x40E5A0, 0x48, kCalls40E5A0, AH_N(kCalls40E5A0), nullptr, 0, 0, kCallee),
     W1F_CLONE(Area75_DrawCounters, 0x40E5F0, 0x155, kCalls40E5F0, AH_N(kCalls40E5F0), nullptr, 0, 0, kCallee),
@@ -262,13 +262,13 @@ void MoveCell(U n) {
     switch ((n >> 4) % 10) {
     case 0: B(::bof3::Img(at::kObjectA.v)) = static_cast<unsigned char>((n >> 8) % 30); break;
     case 1: B(AreaW1f_ObjectB_addr) = static_cast<unsigned char>((n >> 8) % 30); break;
-    case 2: B(::bof3::Img(at::kOtherEffect.v)) = static_cast<unsigned char>((n >> 8) % 4); break;
+    case 2: B(::bof3::Img(at::kPartnerEffect.v)) = static_cast<unsigned char>((n >> 8) % 4); break;
     case 3: B(AreaW1f_PlayerEffect_addr) = static_cast<unsigned char>((n >> 8) % 4); break;
     case 4: B(AreaW1f_PressFlags_addr) = static_cast<unsigned char>(n >> 8); break;
     case 5: B(AreaW1f_Move_addr) = static_cast<unsigned char>((n >> 8) % 4); break;
     case 6: B(AreaW1f_List_addr) = static_cast<unsigned char>((n >> 8) % 3); break;
     case 7: SetWord(ah::Mem(AreaW1f_PlayerCounter_addr), n >> 12); break;
-    case 8: SetWord(ah::Mem(AreaW1f_OtherCounter_addr), n >> 12); break;
+    case 8: SetWord(ah::Mem(AreaW1f_PartnerCounter_addr), n >> 12); break;
     default: B(AreaW1f_ListPos_addr) = static_cast<unsigned char>((n >> 8) % 8); break;
     }
 }
@@ -331,7 +331,7 @@ const ah::Callee kCallees[] = {
     {W1F_OURS(Area75_ResetPresses), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &ResetEffect},
     {W1F_OURS(Area75_PhaseRun), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &PhaseRunEffect},
     {W1F_OURS(Area75_DrawCounters), 0, {}, ah::Answer::kPhase, 0, 0},
-    {W1F_OURS(Area75_OtherPress), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MovesCells},
+    {W1F_OURS(Area75_PartnerPress), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MovesCells},
     {W1F_OURS(Area75_PlayerPress), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MovesCells},
     {W1F_OURS(Area75_EarlyPress), 0, {}, ah::Answer::kPhase, 0, 0},
     {W1F_OURS(Area75_DrawWindow), 5, {kAll, kAll, kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
@@ -401,7 +401,7 @@ void Common() {
     ah::SetPointer(AreaW1a_FocusObject_addr, ah::Object(ah::Next()));
     B(::bof3::Img(at::kObjectA.v)) = static_cast<unsigned char>(ah::Next() % 30);
     B(AreaW1f_ObjectB_addr) = static_cast<unsigned char>(ah::Next() % 30);
-    B(::bof3::Img(at::kOtherEffect.v)) = static_cast<unsigned char>(ah::Next() % 4);
+    B(::bof3::Img(at::kPartnerEffect.v)) = static_cast<unsigned char>(ah::Next() % 4);
     B(AreaW1f_PlayerEffect_addr) = static_cast<unsigned char>(ah::Next() % 4);
     B(AreaW1f_List_addr) = static_cast<unsigned char>(ah::Next() % 3);
     B(AreaW1f_Phase_addr) = static_cast<unsigned char>(ah::Next() % at::kArea75PhaseCount);
@@ -420,7 +420,7 @@ void Disturb(U h) {
     case 2: ah::SetPointer(Field_ActiveMember_addr, AnyRecord(h >> 16)); break;
     case 3: ah::SetPointer(MoveScript_Object_addr, ah::Object(h >> 16)); break;
     case 4: MoveCell(h >> 4); break;
-    case 5: SetWord(ah::Mem(h & 0x100 ? AreaW1f_PlayerCounter_addr : AreaW1f_OtherCounter_addr), h >> 12); break;
+    case 5: SetWord(ah::Mem(h & 0x100 ? AreaW1f_PlayerCounter_addr : AreaW1f_PartnerCounter_addr), h >> 12); break;
     case 6: B(Input_Pressed_addr) = v; break;
     default: SetWord(ah::Mem(Transition_Busy_addr), h & 0x100 ? 0 : v); break;
     }
@@ -505,8 +505,8 @@ void SeedGap(U gap) {
     const U base = ah::Next() % 0x5DD;
     const U other = ah::Half() ? base + gap : base - gap;
     const bool swap = ah::Half();
-    SetWord(ah::Mem(swap ? AreaW1f_PlayerCounter_addr : AreaW1f_OtherCounter_addr), base);
-    SetWord(ah::Mem(swap ? AreaW1f_OtherCounter_addr : AreaW1f_PlayerCounter_addr), other);
+    SetWord(ah::Mem(swap ? AreaW1f_PlayerCounter_addr : AreaW1f_PartnerCounter_addr), base);
+    SetWord(ah::Mem(swap ? AreaW1f_PartnerCounter_addr : AreaW1f_PlayerCounter_addr), other);
 }
 void SeedCounterAt(U counter, U edge) {
     SetWord(ah::Mem(counter), ah::Often() ? edge + AH_PICK(0, 0, 1, 0xFFFFFFFFu, 2) : ah::Next());
@@ -531,9 +531,9 @@ void SeedTail() {
     case 9: B(::bof3::Img(at::kCounter0.v)) = static_cast<unsigned char>(on ? 9 : AH_PICK(8, 0xA, 0x89)); break;
     case 0xD: B(::bof3::Img(at::kCounter0.v)) = static_cast<unsigned char>(on ? 0xC : AH_PICK(0xB, 0xD, 0x8C)); break;
     case 0x1F: B(::bof3::Img(at::kCounter0.v)) = static_cast<unsigned char>(on ? 0x1A : AH_PICK(0x19, 0x1B, 0x9A)); break;
-    case 6: SeedCounterAt(AreaW1f_OtherCounter_addr, 0x578); break;
+    case 6: SeedCounterAt(AreaW1f_PartnerCounter_addr, 0x578); break;
     case 8: SeedCounterAt(AreaW1f_PlayerCounter_addr, 0x578); break;
-    case 0xC: SeedCounterAt(AreaW1f_OtherCounter_addr, 0x47E); break;
+    case 0xC: SeedCounterAt(AreaW1f_PartnerCounter_addr, 0x47E); break;
     case 0xB: SeedGap(AH_PICK(0x96, 0x97, 0x95, 0x200, 0)); break;
     case 0xA: case 0x14: case 0x21:
         Field_Request = static_cast<unsigned char>(on ? AH_PICK(0, 1, 5, 3) : 2);

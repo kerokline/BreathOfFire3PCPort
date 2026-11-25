@@ -204,3 +204,10 @@
 0x93D6C0 4       # ours   _nstream (__initstdio)
 # docs/state-hash.md 7 item 4: the looping voice's DirectSound pointers, noise on four of the overlay routes.
 0x6BC8C8 92      # noise  Sound_Channels' 23 words: a looping voice's DirectSound buffer and heap pointers
+# The host's desktop (2026-11-24, docs/state-hash.md 6): bridgeWalk on the desktop's 32-bit exe host against the
+# laptop's Linux ELF, the same cache, save and BOF3.CFG, windowed at BOF3X_SCALE=2 - raw dumps at tick 1000 differ,
+# outside this list and the hash's folds, here alone (3440 x 1440 there, SDL's offscreen 1024 x 768 here); the hash
+# on 0x6C9000, 0x7C9000 and 0x939000 alone, every tick. A property of the machine's screen (linux-round.md B2c).
+0x6C9F40 4       # ours   Display_Setup's copy of the desktop's VERTRES (symbols.toml PsxRest_TexCacheEnd: the cache ends here)
+0x7C9F44 4       # ours   Display_DesktopWidth: Display_Setup's copy of the desktop's HORZRES
+0x939A30 8       # ours   Desktop_Height, Desktop_Width: WinMain's GetDeviceCaps of the desktop DC

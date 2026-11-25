@@ -67057,7 +67057,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/area/area_75.cpp"
-evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40E330..0x40E3BC (0x8D bytes), cdecl: Area75_Phases[2]: by the move 0x93C343 - 0: Area75_OtherPress, Area75_EarlyPress; 1: Area75_PlayerPress; 2: Area75_OtherPress, Area75_PlayerPress; else Area75_EarlyPress; the frames word 0x93C344 less 1, at 0 phase 1 (the flags' bit 8 clear) or the frames 0x2710; without bit 8 phase 3 on more than 3 presses out of turn, more than 0x1E idle frames or the counters more than 0xC8 apart. docs/area_w1f.md."
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40E330..0x40E3BC (0x8D bytes), cdecl: Area75_Phases[2]: by the move 0x93C343 - 0: Area75_PartnerPress, Area75_EarlyPress; 1: Area75_PlayerPress; 2: Area75_PartnerPress, Area75_PlayerPress; else Area75_EarlyPress; the frames word 0x93C344 less 1, at 0 phase 1 (the flags' bit 8 clear) or the frames 0x2710; without bit 8 phase 3 on more than 3 presses out of turn, more than 0x1E idle frames or the counters more than 0xC8 apart. docs/area_w1f.md."
 
 [[func]]
 pc = 0x40E3C0
@@ -67087,7 +67087,7 @@ evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instru
 
 [[func]]
 pc = 0x40E480
-name = "Area75_OtherPress"
+name = "Area75_PartnerPress"
 psx = 0x801F45A8
 psx_overlay = "AREA075.EMI#13"
 psx_status = "hypothesis"
@@ -67392,7 +67392,7 @@ name = "Area75_Rhythm"
 ctype = "unsigned char"
 count = 30
 status = "evidence"
-evidence = "read 2026-09-28 (round ten group AR1F): Area75_OtherPress: [row * 15 + frames % 15]; two rows counted from Area75_Rows' values, the index unchecked. docs/area_w1f.md."
+evidence = "read 2026-09-28 (round ten group AR1F): Area75_PartnerPress: [row * 15 + frames % 15]; two rows counted from Area75_Rows' values, the index unchecked. docs/area_w1f.md."
 
 [[data]]
 pc = 0x60ABF0
@@ -72942,7 +72942,7 @@ evidence = "disasm 2026-09-28 (round ten group AR2F), 0x4176A0..0x4176AA (0xB by
 [[func]]
 pc = 0x4176B0
 psx = 0x801F3460
-name = "Area111_SlideMark"
+name = "Area111_PlatformSlideMark"
 psx_overlay = "AREA111.EMI#13"
 ret = "void"
 params = "void"
@@ -72953,13 +72953,13 @@ evidence = "disasm 2026-09-28 (round ten group AR2F), 0x4176B0..0x417786 (0xD7 b
 [[func]]
 pc = 0x417790
 psx = 0x801F35F4
-name = "Area111_AttachAtLeaderCell"
+name = "Area111_AttachPlatformAtLeaderCell"
 psx_overlay = "AREA111.EMI#13"
 ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/area/area_111.cpp"
-evidence = "disasm 2026-09-28 (round ten group AR2F), 0x417790..0x417887 (0xF8 bytes), cdecl: area 111 +0x3C[2] = +0x34[4]: the Area111_Grid nibble at the leader cell (halved toward 0, bytes, unchecked; inside .data) - 1; not 0xFF: MoveCmd_Attach(MoveScript_Object, 7, it, Field_State slot + 1, 0x10) keeping the script position; Sprite_Current +8 = extra object it +8 & 7; Sprite_Kind2 +8 the same. PSX twin: names/area_records.toml. docs/area_w2f.md."
+evidence = "disasm 2026-09-28 (round ten group AR2F), 0x417790..0x417887 (0xF8 bytes), cdecl: area 111 +0x3C[2] = +0x34[4]: the Area111_SlidingPlatforms nibble at the leader cell (halved toward 0, bytes, unchecked; inside .data) - 1; not 0xFF: MoveCmd_Attach(MoveScript_Object, 7, it, Field_State slot + 1, 0x10) keeping the script position; Sprite_Current +8 = extra object it +8 & 7; Sprite_Kind2 +8 the same. PSX twin: names/area_records.toml. docs/area_w2f.md."
 
 [[func]]
 pc = 0x417890
@@ -72986,7 +72986,7 @@ evidence = "disasm 2026-09-28 (round ten group AR2F), 0x4178B0..0x4178EC (0x3D b
 [[func]]
 pc = 0x4178F0
 psx = 0x801F3808
-name = "Area111_PlaceMemberInGrid"
+name = "Area111_PlaceMemberInPlatformGrid"
 psx_overlay = "AREA111.EMI#13"
 ret = "void"
 params = "void"
@@ -72997,7 +72997,7 @@ evidence = "disasm 2026-09-28 (round ten group AR2F), 0x4178F0..0x4179E8 (0xF9 b
 [[func]]
 pc = 0x4179F0
 psx = 0x801F39E0
-name = "Area111_AttachAhead"
+name = "Area111_AttachPlatformAhead"
 psx_overlay = "AREA111.EMI#13"
 ret = "void"
 params = "void"
@@ -73008,7 +73008,7 @@ evidence = "disasm 2026-09-28 (round ten group AR2F), 0x4179F0..0x417B2D (0x13E 
 [[func]]
 pc = 0x417B30
 psx = 0x801F3BC0
-name = "Area111_SlideAhead"
+name = "Area111_SlidePlatformAhead"
 psx_overlay = "AREA111.EMI#13"
 ret = "void"
 params = "void"
@@ -73069,7 +73069,7 @@ ret = "void"
 params = "int x, int z, unsigned value"
 status = "evidence"
 impl = "src/game/area/area_111.cpp"
-evidence = "disasm 2026-09-28 (round ten group AR2F), 0x4181E0..0x418231 (0x52 bytes), cdecl: called by Area111_SlideMark, Area111_PlaceMemberInGrid, Area111_Init: AreaMap_SetByte of the four map cells (2x + 0xB..0xC, 2z + 0xB1..0xB2) to the value. docs/area_w2f.md."
+evidence = "disasm 2026-09-28 (round ten group AR2F), 0x4181E0..0x418231 (0x52 bytes), cdecl: called by Area111_PlatformSlideMark, Area111_PlaceMemberInPlatformGrid, Area111_Init: AreaMap_SetByte of the four map cells (2x + 0xB..0xC, 2z + 0xB1..0xB2) to the value. docs/area_w2f.md."
 
 [[func]]
 pc = 0x418240
@@ -73080,7 +73080,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/area/area_111.cpp"
-evidence = "disasm 2026-09-28 (round ten group AR2F), 0x418240..0x41834B (0x10C bytes), cdecl: area 111 +0x40: Cond_ByteFD 0: story flag 0x28 cleared; 1: every grid cell marked with Area111_CellBytes, Area111_Grid copied from Area111_GridStart (28 bytes), the gate map bytes 0x50 / 0 or (flag 0x28) 0xA1 / 0xC0; 5: map bytes (0xA..0xB, 8) 0x50. PSX twin: names/area_records.toml. docs/area_w2f.md."
+evidence = "disasm 2026-09-28 (round ten group AR2F), 0x418240..0x41834B (0x10C bytes), cdecl: area 111 +0x40: Cond_ByteFD 0: story flag 0x28 cleared; 1: every grid cell marked with Area111_CellBytes, Area111_SlidingPlatforms copied from Area111_SlidingPlatformsStart (28 bytes), the gate map bytes 0x50 / 0 or (flag 0x28) 0xA1 / 0xC0; 5: map bytes (0xA..0xB, 8) 0x50. PSX twin: names/area_records.toml. docs/area_w2f.md."
 
 [[func]]
 pc = 0x418350
@@ -73370,19 +73370,19 @@ evidence = "read 2026-09-28 (round ten group AR2F): Area111_Init: the map byte e
 
 [[data]]
 pc = 0x61FBB0
-name = "Area111_GridStart"
+name = "Area111_SlidingPlatformsStart"
 ctype = "unsigned char"
 count = 28
 status = "evidence"
-evidence = "read 2026-09-28 (round ten group AR2F): Area111_Init copies it to Area111_Grid: seven rows of four bytes, a nibble a cell. docs/area_w2f.md."
+evidence = "read 2026-09-28 (round ten group AR2F): Area111_Init copies it to Area111_SlidingPlatforms: seven rows of four bytes, a nibble a cell. docs/area_w2f.md."
 
 [[data]]
 pc = 0x675C00
-name = "Area111_Grid"
+name = "Area111_SlidingPlatforms"
 ctype = "unsigned char"
 count = 28
 status = "evidence"
-evidence = "read 2026-09-28 (round ten group AR2F): area 111 7 x 7 grid of nibbles (4 bytes a row, an odd column the low nibble) at the end of the initialized .data; written by Area111_Init and Area111_PlaceMemberInGrid, read by its handlers and Area111_ArmTailAtLeaderCell. docs/area_w2f.md."
+evidence = "read 2026-09-28 (round ten group AR2F): area 111 7 x 7 grid of nibbles (4 bytes a row, an odd column the low nibble) at the end of the initialized .data; written by Area111_Init and Area111_PlaceMemberInPlatformGrid, read by its handlers and Area111_ArmTailAtLeaderCell. docs/area_w2f.md."
 
 [[data]]
 pc = 0x61FF14
@@ -135647,7 +135647,7 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 
 [[data]]
 pc = 0x93C34C
-name = "AreaW1f_OtherCounter"
+name = "AreaW1f_PartnerCounter"
 ctype = "unsigned short"
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 8 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 2-byte: cmp word ptr [0x93c34c], 0x578 at 0x40dcfd; mov edx, dword ptr [0x93c34c] at 0x40de1a; cmp word ptr [0x93c34c], 0x47e at 0x40de59 and 5 more. 4 of them dword loads narrowed before use (and 0xffff x4, e.g. at 0x40de1a). No indexed access with this displacement and no wider store over it, so a scalar. Module names: area_w1f::kOtherCounter."

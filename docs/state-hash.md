@@ -198,7 +198,10 @@ attract_exe.sh` (the exe host, 173 ranges) exits 0, identical on all 10,305
 ticks of the other 865 pages; with `--strict` it exits 1. A left-out page is
 not checked, so a change on one of those three pages needs another reference:
 a pair recorded under the new list, or, across the cutover, the hosted build
-of the same tree under it (state3-build.md 5.1).
+of the same tree under it (state3-build.md 5.1). On 2026-11-24 the list went
+to **176** (hash `929F2913`): the host desktop's size, three ranges on
+`0x6C9000`, `0x7C9000` and `0x939000` (section 6, `orig6`). A run under 176
+against a pair under 173 leaves those three pages out the same way.
 
 ## 5. What the first runs found, and what is open
 
@@ -464,6 +467,101 @@ of the same tick as three runs of bytes a tick behind.
   `_dC1117` (tick 4,250: the window records, every differing byte ours zero).
   A build after `df083903` is checked against these pairs and, the stronger
   test, by `statehash.py diff` against the `m1116` run of its route.
+- **`orig6`: a reference any machine can rebuild (2026-11-24, `main`
+  `65b7810f`; the branch `harness/only-slot0`).** The `orig5` pairs ran on
+  the desktop's PC folder (`BOF3.exe` and `DAT\`, no cache) with the owner's
+  slots and a launcher-written `BOF3.CFG`. A Linux run on the laptop
+  (`kero-IdeaPad-3-14ADA05`) of ours at the same tip differed from our
+  desktop run of 2026-11-23 (`cn_combat_h1123`) on 12 pages, several from
+  the save's load to the end (`Save_Staging`, `Field_MemberCount`,
+  `Field_StepCount`), with the same recipe save (sha256 `0c6696d5...` on
+  both). Three of the run's inputs are not the recipe's and differ by
+  machine: **the other slots** (the load menu reads every slot's header into
+  `.data`), **`BOF3.CFG`** (with no file `Cfg_Load` sets `Cfg_Fullscreen`
+  and `Cfg_RenderMode` to 1 and the default keys, `Shell_CfgLoadFrame`;
+  fullscreen takes the scale k from the desktop's size, DIV-0042) and **the
+  data**. So `orig6` fixes all three:
+
+  | input | `orig6` |
+  |---|---|
+  | install | a fresh `importer.py setup` from the PC folder, the US PlayStation disc and the PSP Europe disc: no `BOF3.exe`, no slots (manifest `target = "pc-zh"`, `base_policy = "psx"`) |
+  | slots | slot 0 alone, the recipe save (`input_run.py --only-slot0` on Linux; on Windows a clean install has no others) |
+  | `BOF3.CFG` | exactly `0\r\n1\r\n`: windowed, renderer 1, the game's own keys (`linux_run.RUN_CFG`, written by `--only-slot0`; put in the install by hand on Windows) |
+  | scale | `BOF3X_SCALE=2`: windowed, the render target 640 x 480 on every desktop |
+  | the rest | the `orig5` conditions: `BOF3X_OPT=none`, `BOF3X_LAYERING=0`, no language (`bridgeWalk` alone under `en-US`, the language it was recorded in), the skip list's 176 ranges (hash `929F2913`) |
+
+  **The measurements that set it,** `bridgeWalk` (2,074 ticks on Linux,
+  2,049 on Windows: the Linux harness keeps hashing for 25 ticks after
+  `recipe done` while it stops the game; the ticks line up from 0, so the
+  shorter run is compared whole):
+  1. Fullscreen on both (no `BOF3.CFG`), the desktop's 32-bit exe host
+     against the laptop's Linux ELF: six pages from tick 0 to the end with
+     the laptop's launcher-written file (line 1 `0`), one of them
+     `0x65D000` (`Cfg_Fullscreen`); five with no file on either side.
+  2. Raw dumps at tick 1000 of that pair (`statehash.py bytes`): 119
+     differing ranges, every one the machine's - the desktop's size
+     (3440 x 1440 there, SDL's offscreen 1024 x 768 here), the scale k it
+     gives (6 against 3: `D3d_ScaleX/Y`, `Gfx_ScreenRect[2..3]` 1920 x 1440
+     against 960 x 720, `Display_BackPitch`), OS handles and heap pointers
+     already on the list or folded by the hash.
+  3. Windowed at `BOF3X_SCALE=2` on both: the dumps differ outside the list
+     and the folds in the desktop's size alone, and the hash on its three
+     pages alone, every tick - `0x6C9000` (`Display_Setup`'s copy of
+     `VERTRES` at `0x6C9F40`; `symbols.toml` calls the word
+     `PsxRest_TexCacheEnd`, the place the texture cache ends), `0x7C9000`
+     (`Display_DesktopWidth`, its `HORZRES`) and `0x939000`
+     (`Desktop_Height`, `Desktop_Width`). Section 3's list takes the three
+     ranges (`ours`, a property of the machine's screen, as
+     [`linux-round.md`](linux-round.md) B2c measured on `shop` and did not
+     skip). `Gfx_WindowRect` (the window centred on the desktop) was on the
+     list already, and the `Music_*` handles too (`0x7DE3B4 40`).
+  4. Under the 176 ranges on both sides: **identical on every page and all
+     2,049 ticks**, the desktop's 32-bit and 64-bit exe hosts (byte-identical
+     files) and the laptop's ELF.
+
+  The 640 x 480 rule beside the desktop's size is Capcom's: WinMain forces
+  `Cfg_Fullscreen = 1` on a 640 x 480 desktop (`symbols.toml`'s WinMain
+  entry; `magic_080.cpp`), so `Cfg_Fullscreen` stays hashed.
+
+  **The laptop's pair:** `cn_<route>_lx6` / `_lx6b`, the ten routes on the
+  Linux ELF of `main` `65b7810f` under `orig6` (in `~/bof3x-runs/lx1123/o6`
+  on that machine; not tracked). Every run ends `done`. The pair agrees with
+  itself on every page and tick of nine routes; `shop` differs in its jingle
+  window alone (9 pages, ticks 2,712..2,755, the DIV-0201 transition a frame
+  apart, `m1116`'s table above), which `check` counts as noise there. `lx6`
+  is also identical, outside the three new ranges, to that night's runs of
+  the same build under the 173-range list, which were windowed at the
+  headless default k = 2 already (their `BOF3.CFG` the install's
+  launcher-written `0` / `1`): nine routes on every tick, and `shop` but for
+  the same window, where `lx6b` is identical.
+
+  **Windows against Linux, the ten routes** (2026-11-24): the desktop's
+  runs of ours under `orig6`, the `latest` release zips at `65b7810f`
+  ([`state-hash-clean-install.md`](state-hash-clean-install.md) 6,
+  `cn_<route>_o6w32` / `_o6w64`), each checked against the laptop's pair
+  (`check cn_R_lx6.sh cn_R_lx6b.sh <desktop run>`): **nine routes exit 0 at
+  both widths, identical on every compared tick** (combat, caughFish,
+  cutsceneAndNue, dragonTransform, field_menu, masterAndManillo,
+  menu_screens, whelpBoss, worldMapAndAreaTransition). `shop` reports 9
+  pages at 2,713..2,756, the jingle window; by `diff` the desktop's run at
+  both widths is identical to both `lx6` and `lx6b` on every tick before
+  2,712 and from 2,757. Inside the window each run places the transition
+  differently (`lx6` from 2,712, `lx6b` and the desktop's from 2,713 on
+  different ticks), so at a few ticks the pair agrees and the third does
+  not - the DIV-0201 timing, which `lx6` against `lx6b` shows on one
+  machine. **So the 32-bit and 64-bit Windows exe hosts and the 64-bit
+  Linux ELF compute the same game on all ten routes, outside that window.**
+  A check of `shop` across machines reads the window as known. Not yet
+  recorded: Capcom's pair on the `orig6` install, which wants the
+  conditions of state-hash-clean-install.md 5.6 first.
+
+  **The release against `main` on Linux** (the same night, the laptop): the
+  ELF of the "latest" release tarball (built from `e16f999e`) and a build of
+  `main` `65b7810f` (PR #284's fixes on top), the ten routes under the
+  `orig5` conditions on the laptop's install: identical on every compared
+  tick of all ten. PR #284's three fixes (D434, D435, DIV-0042's amendment)
+  change nothing the hash sees on them; the picture and the sound device are
+  outside it.
 - **After a merge wave:** one run of ours per route, `check` against the pair.
   Exit 0 is the bar; a reported page goes through section 2's loop.
 - **Known and not skipped:** `Sound_Channels` `0x6BC8C8` (23 DirectSound

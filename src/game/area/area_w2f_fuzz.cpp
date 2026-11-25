@@ -137,13 +137,13 @@ const ah::Clone kClones111[] = {
     W2F_CLONE(Area111_ChoiceMessage2, 0x417650, 0x17, nullptr, 0, nullptr, 0, 0, kChoice),
     W2F_CLONE(Area111_ChoiceStartVar7, 0x417670, 0x26, kCalls417670, AH_N(kCalls417670), nullptr, 0, 0, kChoice),
     W2F_CLONE(Area111_CopyExtra6C, 0x4176A0, 0xB, nullptr, 0, nullptr, 0, 0, kHandler),
-    W2F_CLONE(Area111_SlideMark, 0x4176B0, 0xD7, kCalls4176B0, AH_N(kCalls4176B0), nullptr, 0, 0, kHandler),
-    W2F_CLONE(Area111_AttachAtLeaderCell, 0x417790, 0xF8, kCalls417790, AH_N(kCalls417790), nullptr, 0, 0, kHandler),
+    W2F_CLONE(Area111_PlatformSlideMark, 0x4176B0, 0xD7, kCalls4176B0, AH_N(kCalls4176B0), nullptr, 0, 0, kHandler),
+    W2F_CLONE(Area111_AttachPlatformAtLeaderCell, 0x417790, 0xF8, kCalls417790, AH_N(kCalls417790), nullptr, 0, 0, kHandler),
     W2F_CLONE(Area111_Counter3Bit, 0x417890, 0x13, nullptr, 0, nullptr, 0, 0, kHandler),
     W2F_CLONE(Area111_WaitMemberBit, 0x4178B0, 0x3D, nullptr, 0, nullptr, 0, 0, kHandler),
-    W2F_CLONE(Area111_PlaceMemberInGrid, 0x4178F0, 0xF9, kCalls4178F0, AH_N(kCalls4178F0), nullptr, 0, 0, kHandler),
-    W2F_CLONE(Area111_AttachAhead, 0x4179F0, 0x13E, kCalls4179F0, AH_N(kCalls4179F0), nullptr, 0, 0, kHandler),
-    W2F_CLONE(Area111_SlideAhead, 0x417B30, 0xD9, kCalls417B30, AH_N(kCalls417B30), nullptr, 0, 0, kHandler),
+    W2F_CLONE(Area111_PlaceMemberInPlatformGrid, 0x4178F0, 0xF9, kCalls4178F0, AH_N(kCalls4178F0), nullptr, 0, 0, kHandler),
+    W2F_CLONE(Area111_AttachPlatformAhead, 0x4179F0, 0x13E, kCalls4179F0, AH_N(kCalls4179F0), nullptr, 0, 0, kHandler),
+    W2F_CLONE(Area111_SlidePlatformAhead, 0x417B30, 0xD9, kCalls417B30, AH_N(kCalls417B30), nullptr, 0, 0, kHandler),
     W2F_CLONE(Area111_StepToExtra, 0x417C10, 0xD3, kCalls417C10, AH_N(kCalls417C10), nullptr, 0, 0, kHandler),
     W2F_CLONE(Area111_TailGate, 0x417CF0, 0x1E0, kCalls417CF0, AH_N(kCalls417CF0), kTables417CF0, AH_N(kTables417CF0), 0, kTail),
     W2F_CLONE(Area111_ArriveHook, 0x417ED0, 0x25F, kCalls417ED0, AH_N(kCalls417ED0), nullptr, 0, 0xFF, kHook),
@@ -191,7 +191,7 @@ template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)
 unsigned char& B(U address) { return *ah::Mem(address); }
 unsigned char* EffectRecord(unsigned slot) { return ah::Mem(Effect_Objects_addr + slot % at::kEffectCount * at::kEffectStride); }
 unsigned char* ExtraRecord(unsigned k) { return ah::Mem(Sprite_ObjectsExtra_addr + k % at::kExtraCount * at::kExtraStride); }
-unsigned char* Grid() { return ah::Mem(Area111_Grid_addr); }
+unsigned char* Grid() { return ah::Mem(Area111_SlidingPlatforms_addr); }
 
 // Area 108's model records: the fuzz's own buffer, which the round points
 // Area108_Model's pointer into (the image's points at the area's .data,
@@ -333,8 +333,8 @@ ah::Region g_regions[] = {
     {FieldE1_Rank_addr, 1},
     {Area110_Cells_addr, 16},
     {Area110_Weights_addr, 8},
-    {Area111_Grid_addr, 0x20},
-    {Area111_GridStart_addr, at::kArea111GridBytes},
+    {Area111_SlidingPlatforms_addr, 0x20},
+    {Area111_SlidingPlatformsStart_addr, at::kArea111SlidingPlatformsBytes},
     {at::kArea111CellBytes.v, 49},
 };
 constexpr unsigned kPointRegion = 9;
@@ -493,7 +493,7 @@ void Seed110(unsigned) {
 // A grid of nibbles, each 0 with probability `zero` in 8, else one of the
 // values the handlers test (1..4, 0xF) or anything.
 void SeedGrid(unsigned zero) {
-    for (unsigned i = 0; i < at::kArea111GridBytes; ++i) {
+    for (unsigned i = 0; i < at::kArea111SlidingPlatformsBytes; ++i) {
         unsigned char b = 0;
         for (unsigned half = 0; half < 2; ++half) {
             const U n = ah::Next();

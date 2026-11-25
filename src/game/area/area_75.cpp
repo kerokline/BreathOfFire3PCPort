@@ -103,9 +103,9 @@ void DrainEffect(unsigned slot) {
     tE->work_0c = tE->work_0c - 1;
 }
 
-// |player counter - other counter|, the words as the originals subtract them.
+// |player counter - partner counter|, the words as the originals subtract them.
 int CounterGap() {
-    const int d = static_cast<int>(Word(Mem(::bof3::Img(AreaW1f_PlayerCounter_addr)))) - static_cast<int>(Word(Mem(::bof3::Img(AreaW1f_OtherCounter_addr))));
+    const int d = static_cast<int>(Word(Mem(::bof3::Img(AreaW1f_PlayerCounter_addr)))) - static_cast<int>(Word(Mem(::bof3::Img(AreaW1f_PartnerCounter_addr))));
     return d < 0 ? -d : d;
 }
 
@@ -130,11 +130,11 @@ extern "C" void __cdecl Area75_MarkObjectB(void) { B(::bof3::Img(AreaW1f_ObjectB
 extern "C" void __cdecl Area75_MarkObjectA(void) { B(::bof3::Img(at::kObjectA.v)) = ObjectIndex(Field_ActiveMember); }
 
 // original 0x40D850 (choice 6 = handler 4): the two effect records' +1 = 2
-// (the other's first).
+// (the partner's first).
 extern "C" void __cdecl Area75_ShowEffects(void) {
-    const unsigned other = B(::bof3::Img(at::kOtherEffect.v));
+    const unsigned partner = B(::bof3::Img(at::kPartnerEffect.v));
     const unsigned player = B(::bof3::Img(AreaW1f_PlayerEffect_addr));
-    EffectAt(other)[1] = 2;
+    EffectAt(partner)[1] = 2;
     EffectAt(player)[1] = 2;
 }
 
@@ -213,11 +213,11 @@ extern "C" void __cdecl Area75_FlyStep(void) {
 }
 
 // original 0x40D9F0 (choice 12 = handler 10): one frame in four the two effect
-// records' dwords +0xC less 1 (the other's first); counter 0 below 0x20: the
+// records' dwords +0xC less 1 (the partner's first); counter 0 below 0x20: the
 // script position back by 2.
 extern "C" void __cdecl Area75_DrainEffects(void) {
     const unsigned bit = (Frame_Counter & 3) == 0 ? 1u : 0u;
-    unsigned char* e = EffectAt(B(::bof3::Img(at::kOtherEffect.v)));
+    unsigned char* e = EffectAt(B(::bof3::Img(at::kPartnerEffect.v)));
     rv::Store<std::int32_t>(rv::As<records::EffectWork>(e)->work_0c, static_cast<std::int32_t>(rv::As<records::EffectWork>(e)->work_0c - bit));
     e = EffectAt(B(::bof3::Img(AreaW1f_PlayerEffect_addr)));
     rv::Store<std::int32_t>(rv::As<records::EffectWork>(e)->work_0c, static_cast<std::int32_t>(rv::As<records::EffectWork>(e)->work_0c - bit));
@@ -291,7 +291,7 @@ extern "C" void __cdecl Area75_ChoiceStartF(void) {
 // (the register the original carries to the exit: the new state, or the one it
 // entered with when it waits), and every exit with that state in 6..0xE ends in
 // Area75_PhaseRun (a tail jmp). States 0..4 and 0x1F..0x23 are the scene's
-// fades, area changes and music; 5..0xD three rounds (the other's turn, the
+// fades, area changes and music; 5..0xD three rounds (the partner's turn, the
 // player's, the two at once) by counter 0; 0xF a timer back to 4; 0x14 / 0x15
 // a round of both from a choice; 0x1E the counts' words bumped.
 extern "C" void __cdecl Area75_TailPresses(void) {
@@ -347,7 +347,7 @@ extern "C" void __cdecl Area75_TailPresses(void) {
         break;
     }
     case 6:
-        if (Word(Mem(::bof3::Img(AreaW1f_OtherCounter_addr))) > 0x578) break;
+        if (Word(Mem(::bof3::Img(AreaW1f_PartnerCounter_addr))) > 0x578) break;
         cl = 7;
         B(::bof3::Img(AreaW1f_Phase_addr)) = 0;
         B(::bof3::Img(at::kCounter0.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kCounter0.v)) + 1);
@@ -390,7 +390,7 @@ extern "C" void __cdecl Area75_TailPresses(void) {
         B(::bof3::Img(at::kCounter0.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kCounter0.v)) + 1);
         break;
     case 0xC:
-        if (Word(Mem(::bof3::Img(AreaW1f_OtherCounter_addr))) > 0x47E) break;
+        if (Word(Mem(::bof3::Img(AreaW1f_PartnerCounter_addr))) > 0x47E) break;
         cl = 0xD;
         B(::bof3::Img(AreaW1f_Phase_addr)) = 0;
         B(::bof3::Img(at::kCounter0.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kCounter0.v)) + 1);
@@ -513,7 +513,7 @@ extern "C" unsigned char __cdecl Area75_Trigger41(unsigned char*, unsigned char*
 
 // original 0x40E180 (called by the tail's states 5, 0xD and 0x14): the phase,
 // the flags, the two press counts, the list and its position 0; both counters
-// 0x5DC (the other's first).
+// 0x5DC (the partner's first).
 extern "C" void __cdecl Area75_ResetPresses(void) {
     B(::bof3::Img(AreaW1f_Phase_addr)) = 0;
     B(::bof3::Img(AreaW1f_PressFlags_addr)) = 0;
@@ -521,7 +521,7 @@ extern "C" void __cdecl Area75_ResetPresses(void) {
     B(::bof3::Img(AreaW1f_IdleFrames_addr)) = 0;
     B(::bof3::Img(AreaW1f_List_addr)) = 0;
     B(::bof3::Img(AreaW1f_ListPos_addr)) = 0;
-    SetWord(Mem(::bof3::Img(AreaW1f_OtherCounter_addr)), 0x5DC);
+    SetWord(Mem(::bof3::Img(AreaW1f_PartnerCounter_addr)), 0x5DC);
     SetWord(Mem(::bof3::Img(AreaW1f_PlayerCounter_addr)), 0x5DC);
 }
 
@@ -595,8 +595,8 @@ extern "C" void __cdecl Area75_PhaseDeal(void) {
     B(::bof3::Img(AreaW1f_Phase_addr)) = 2;
 }
 
-// original 0x40E330 (Area75_Phases[2]): by the move - 0: Area75_OtherPress and
-// Area75_EarlyPress; 1: Area75_PlayerPress; 2: Area75_OtherPress and
+// original 0x40E330 (Area75_Phases[2]): by the move - 0: Area75_PartnerPress and
+// Area75_EarlyPress; 1: Area75_PlayerPress; 2: Area75_PartnerPress and
 // Area75_PlayerPress; any other: Area75_EarlyPress. Then the move's frames
 // less 1; at 0, phase 1 unless the flags' bit 8 (then the frames 0x2710).
 // Without bit 8: more than 3 presses out of turn, more than 0x1E idle frames
@@ -606,12 +606,12 @@ extern "C" void __cdecl Area75_PhaseDeal(void) {
 extern "C" void __cdecl Area75_PhasePlay(void) {
     switch (B(::bof3::Img(AreaW1f_Move_addr))) {
     case 0:
-        AH_CALL(Area75_OtherPress)();
+        AH_CALL(Area75_PartnerPress)();
         AH_CALL(Area75_EarlyPress)();
         break;
     case 1: AH_CALL(Area75_PlayerPress)(); break;
     case 2:
-        AH_CALL(Area75_OtherPress)();
+        AH_CALL(Area75_PartnerPress)();
         AH_CALL(Area75_PlayerPress)();
         break;
     default: AH_CALL(Area75_EarlyPress)(); break;
@@ -664,18 +664,18 @@ extern "C" void __cdecl Area75_PhaseReached(void) {
 }
 
 // original 0x40E480 (called by Area75_PhasePlay for moves 0 and 2): the
-// other's press when Area75_Rhythm[row * 15 + frames % 15] is not 0 (the
+// partner's press when Area75_Rhythm[row * 15 + frames % 15] is not 0 (the
 // table read unchecked; it stays in .data): Sound_PlayEffect(0x202); the
-// other's counter less 4 + Rand() % 2; its effect's dword +0xC less 1; object
+// partner's counter less 4 + Rand() % 2; its effect's dword +0xC less 1; object
 // A made Sprite_Current, its +0x4A = 1; jmp Sprite_ScriptTick (its answer the
 // caller's to ignore).
-extern "C" void __cdecl Area75_OtherPress(void) {
+extern "C" void __cdecl Area75_PartnerPress(void) {
     const unsigned rem = Word(Mem(::bof3::Img(AreaW1f_MoveFrames_addr))) % 15;
     if (B(::bof3::Img(Area75_Rhythm_addr) + rem + B(::bof3::Img(AreaW1f_Row_addr)) * 15u) == 0) return;
     AH_CALL(Sound_PlayEffect)(0x202);
     const int r = RandHalf();
-    DropCounter(::bof3::Img(AreaW1f_OtherCounter_addr), r);
-    DrainEffect(B(::bof3::Img(at::kOtherEffect.v)));
+    DropCounter(::bof3::Img(AreaW1f_PartnerCounter_addr), r);
+    DrainEffect(B(::bof3::Img(at::kPartnerEffect.v)));
     Sprite_Current = ObjectAt(B(::bof3::Img(at::kObjectA.v)));
     Sprite_Current[0x4A] = 1;
     AH_CALL(Sprite_ScriptTick)();
@@ -737,7 +737,7 @@ extern "C" void __cdecl Area75_DrawCounters(void) {
     AH_CALL(Crt_sprintf)(reinterpret_cast<char*>(text), format, static_cast<unsigned char>(first / 100),
                          static_cast<unsigned char>(first % 100));
     if (show) AH_CALL(Text_DrawAt)(0x1E, 0x22, static_cast<int>(color), 6, text);
-    const unsigned second = Word(Mem(::bof3::Img(AreaW1f_OtherCounter_addr)));
+    const unsigned second = Word(Mem(::bof3::Img(AreaW1f_PartnerCounter_addr)));
     AH_CALL(Area75_DrawWindow)(0x90, 0x20, 0x54, 0x11, 0);
     AH_CALL(Crt_sprintf)(reinterpret_cast<char*>(text), format, static_cast<unsigned char>(second / 100),
                          static_cast<unsigned char>(second % 100));
@@ -950,7 +950,7 @@ void Area75_Inject() {
     BOF3_INJECT(Area75_PhasePlay);
     BOF3_INJECT(Area75_PhaseMissed);
     BOF3_INJECT(Area75_PhaseReached);
-    BOF3_INJECT(Area75_OtherPress);
+    BOF3_INJECT(Area75_PartnerPress);
     BOF3_INJECT(Area75_PlayerPress);
     BOF3_INJECT(Area75_EarlyPress);
     BOF3_INJECT(Area75_DrawCounters);
