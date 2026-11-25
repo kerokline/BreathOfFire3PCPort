@@ -98,6 +98,17 @@ enum SiteId : std::uint32_t {
     kSiteSwingOut = 6,       // SwingOut, kinds 10 and 17 (0x495270, 0x495450): SwingOutLocals
     kSiteSwingInOpen = 7,    // SwingIn's five frames of fade-in, kinds 11 and 18 (0x4952D0, 0x4954B0): SwingInOpenLocals
     kSiteSwingInTurn = 8,    // SwingIn's turn back: SwingInTurnLocals
+    // Group B2 (docs/state-by-name-sites.md 8): task 0's nested waits, a site for
+    // each (wait, caller) pair. The caller names the site before its call
+    // (transition.cpp WaitAt); the resume entry is the rest of the wait, the
+    // rest of the caller's step, then Field_Task's pass end and its loop.
+    kSiteWaitEnter = 9,      // Field_WaitTransition (0x4967F0) in GameMode_Enter (0x495900), mode 1: WaitLocals
+    kSiteWaitToMenu = 10,    // Field_WaitTransition in GameMode_Field (0x4959F0), Field_Request 1: WaitLocals
+    kSiteWaitArea = 11,      // Field_WaitTransition in GameMode_Field, Field_Request 5 (the area change): WaitLocals
+    kSiteWaitMenuBack = 12,  // Field_WaitTransition in GameMode3_Leave (0x495C50): WaitLocals
+    kSiteMenuWaitOpen = 13,  // Menu_WaitTransition (0x496830) in GameMode3_Enter (0x495BC0): WaitLocals
+    kSiteMenuWaitClose = 14, // Menu_WaitTransition in GameMode3_Leave: WaitLocals
+    kSiteMenuLeaveSleep = 15,// GameMode3_Leave's own sleep after its menu wait: no locals
 };
 
 // A fade's frame: the level (only its low 16 bits are ever written, by
@@ -122,6 +133,16 @@ struct SwingInTurnLocals {
     std::int32_t level;
     std::uint32_t done;   // the tile's last answer, 0 or 1 (a byte in the body)
 };
+// A wait's frame (Field_WaitTransition, Menu_WaitTransition; sites 9..14): its
+// `run` byte (the argument, read once; kept as a word) and which of its two
+// sleeps the task stands in - kWaitTop the loop's first, kWaitLast the one more
+// sleep before the return with the wait word 0 and `run` 0.
+struct WaitLocals {
+    std::uint32_t run;
+    std::uint32_t phase;
+};
+constexpr std::uint32_t kWaitTop = 0, kWaitLast = 1;
+static_assert(sizeof(WaitLocals) == 8, "a wait's locals are two words");
 static_assert(sizeof(FadeLocals) == 16 && sizeof(FadeLocals) <= kLocalsMax, "a fade's locals fill the entry");
 static_assert(sizeof(SwingOutLocals) == 8 && sizeof(SwingInOpenLocals) == 8 && sizeof(SwingInTurnLocals) == 8,
               "the swings' locals are two words");
@@ -135,6 +156,13 @@ void __cdecl ResumeFadeAdd();         // transition.cpp
 void __cdecl ResumeSwingOut();        // transition.cpp
 void __cdecl ResumeSwingInOpen();     // transition.cpp
 void __cdecl ResumeSwingInTurn();     // transition.cpp
+void __cdecl ResumeWaitEnter();       // transition.cpp, sites 9..15
+void __cdecl ResumeWaitToMenu();
+void __cdecl ResumeWaitArea();
+void __cdecl ResumeWaitMenuBack();
+void __cdecl ResumeMenuWaitOpen();
+void __cdecl ResumeMenuWaitClose();
+void __cdecl ResumeMenuLeaveSleep();
 
 // The site list (item 3 above).
 inline constexpr Site kSites[] = {
@@ -147,6 +175,13 @@ inline constexpr Site kSites[] = {
     {kSiteSwingOut, "SwingOut", &ResumeSwingOut, sizeof(SwingOutLocals)},
     {kSiteSwingInOpen, "SwingIn (opening)", &ResumeSwingInOpen, sizeof(SwingInOpenLocals)},
     {kSiteSwingInTurn, "SwingIn (turn)", &ResumeSwingInTurn, sizeof(SwingInTurnLocals)},
+    {kSiteWaitEnter, "Field_WaitTransition (GameMode_Enter)", &ResumeWaitEnter, sizeof(WaitLocals)},
+    {kSiteWaitToMenu, "Field_WaitTransition (GameMode_Field, to the menu)", &ResumeWaitToMenu, sizeof(WaitLocals)},
+    {kSiteWaitArea, "Field_WaitTransition (GameMode_Field, the area change)", &ResumeWaitArea, sizeof(WaitLocals)},
+    {kSiteWaitMenuBack, "Field_WaitTransition (GameMode3_Leave)", &ResumeWaitMenuBack, sizeof(WaitLocals)},
+    {kSiteMenuWaitOpen, "Menu_WaitTransition (GameMode3_Enter)", &ResumeMenuWaitOpen, sizeof(WaitLocals)},
+    {kSiteMenuWaitClose, "Menu_WaitTransition (GameMode3_Leave)", &ResumeMenuWaitClose, sizeof(WaitLocals)},
+    {kSiteMenuLeaveSleep, "GameMode3_Leave (its sleep)", &ResumeMenuLeaveSleep, 0},
 };
 
 // The sleep a body yields through: its own callee table's (the fuzz hands a
