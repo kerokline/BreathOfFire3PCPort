@@ -8802,6 +8802,23 @@ site	src/hook/input_script.cpp	1393	long	ul	live	unsigned long	-	const unsigned 
 site	src/hook/input_script.cpp	1404	long	ul	live	unsigned long	-	std::snprintf(name, sizeof name, " ", static_cast<unsigned long>(bof3::os::ProcessId()));
 site	src/hook/input_script.cpp	1406	long	ul	live	unsigned long	-	if (!g_release) Fatal(" ", static_cast<unsigned long>(bof3::os::LastError()));
 site	src/hook/input_script.h	37	long	l	live	long	-	void InputScript_RecordKey(unsigned vk, long lparam);
+site	src/hook/region_table.cpp	42	fmt_place	word	live	exe_layout::kDataVa	%08X	Fatal("region table: its span is 0x%08X..0x%08X, exe_layout.h's 0x%08X..0x%08X (kDataVa..kOwnVa): "
+site	src/hook/region_table.cpp	42	fmt_place	word	live	exe_layout::kOwnVa	%08X	Fatal("region table: its span is 0x%08X..0x%08X, exe_layout.h's 0x%08X..0x%08X (kDataVa..kOwnVa): "
+site	src/hook/region_table.cpp	42	fmt_place	word	live	rg::kSpanEnd	%08X	Fatal("region table: its span is 0x%08X..0x%08X, exe_layout.h's 0x%08X..0x%08X (kDataVa..kOwnVa): "
+site	src/hook/region_table.cpp	42	fmt_place	word	live	rg::kSpanVa	%08X	Fatal("region table: its span is 0x%08X..0x%08X, exe_layout.h's 0x%08X..0x%08X (kDataVa..kOwnVa): "
+site	src/hook/region_table.cpp	54	fmt_place	word	live	r.va	%08X	Fatal("region table: run %u (0x%08X, 0x%X bytes, class %u, \"%s\") does not follow the run before it, "
+site	src/hook/region_table.cpp	55	fmt_place	word	live	i	%08X	"which ends at 0x%08X",
+site	src/hook/region_table.cpp	61	fmt_place	pointer	live	at	%08X	if (at != rg::kSpanEnd) Fatal("region table: the runs end at 0x%08X, the span at 0x%08X", at, rg::kSpanEnd);
+site	src/hook/region_table.cpp	61	fmt_place	word	live	rg::kSpanEnd	%08X	if (at != rg::kSpanEnd) Fatal("region table: the runs end at 0x%08X, the span at 0x%08X", at, rg::kSpanEnd);
+site	src/hook/region_table.cpp	71	fmt_place	word	live	n.run < rg::kRuns ? rg::kRun[n.run].va : 0u	%08X	Fatal("region table: \"%s\" starts at 0x%08X in the table, at 0x%08X in symbols.gen.h",
+site	src/hook/region_table.cpp	71	fmt_place	word	live	n.va	%08X	Fatal("region table: \"%s\" starts at 0x%08X in the table, at 0x%08X in symbols.gen.h",
+site	src/hook/region_table.cpp	84	fmt_place	word	live	kr.va	%08X	Fatal("region table: keep row 0x%08X (0x%X bytes) holds 0x%08X, in run \"%s\" of class %s, not process",
+site	src/hook/region_table.cpp	84	fmt_place	word	live	va	%08X	Fatal("region table: keep row 0x%08X (0x%X bytes) holds 0x%08X, in run \"%s\" of class %s, not process",
+site	src/hook/region_table.cpp	98	fmt_place	word	live	sr.va	%08X	Fatal("region table: skip row 0x%08X (0x%X bytes) is outside the span", sr.va, sr.bytes);
+site	src/hook/region_table.cpp	102	fmt_place	word	live	sr.va	%08X	Fatal("region table: skip row 0x%08X (0x%X bytes) holds 0x%08X, in run \"%s\", which no row of "
+site	src/hook/region_table.cpp	102	fmt_place	word	live	va	%08X	Fatal("region table: skip row 0x%08X (0x%X bytes) holds 0x%08X, in run \"%s\", which no row of "
+site	src/hook/region_table.cpp	109	fmt_place	word	live	rg::kSpanEnd	%08X	Log("region_table %u runs over 0x%08X..0x%08X: state %u, process %u, derived %u, stack %u, unknown %u bytes; "
+site	src/hook/region_table.cpp	109	fmt_place	word	live	rg::kSpanVa	%08X	Log("region_table %u runs over 0x%08X..0x%08X: state %u, process %u, derived %u, stack %u, unknown %u bytes; "
 site	src/hook/snapshot.cpp	81	sizeof_ptr	-	live	sizeof(void*)	-	constexpr U kSlice = sizeof(void*) == 8 ? 0x8000 : 0x4000;
 site	src/hook/snapshot.cpp	274	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U va) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(va)); }
 site	src/hook/snapshot.cpp	274	widen	param	live	va	unsigned char*	unsigned char* At(U va) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(va)); }
@@ -15321,6 +15338,8 @@ file	src/hook/input_script.cpp	live	uintptr	-	6
 file	src/hook/input_script.cpp	live	widen	img_place	3
 file	src/hook/input_script.cpp	live	widen	param	3
 file	src/hook/input_script.h	live	long	l	1
+file	src/hook/region_table.cpp	live	fmt_place	pointer	1
+file	src/hook/region_table.cpp	live	fmt_place	word	16
 file	src/hook/snapshot.cpp	live	fmt_place	pointer	10
 file	src/hook/snapshot.cpp	live	fmt_place	word	30
 file	src/hook/snapshot.cpp	live	long	ul	8
@@ -15472,8 +15491,8 @@ file	symbols.toml	live	ptr_member	ours_render	11
 file	symbols.toml	live	ptr_member	windows_function	14
 file	symbols.toml	live	ptr_member	windows_handle	3
 file	symbols.toml	live	ptr_member	windows_object	10
-#count sites	11427
-#count sites_live	7943
+#count sites	11444
+#count sites_live	7960
 #count sites_fuzz	3484
 #count fuzz_files	250
 #count narrow	357
@@ -15656,20 +15675,20 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count uintptr_-	2001
 #count uintptr_-_live	1335
 #count uintptr_-_live_files	526
-#count fmt_place	566
-#count fmt_place_live	496
-#count fmt_place_live_files	76
+#count fmt_place	583
+#count fmt_place_live	513
+#count fmt_place_live_files	77
 #count fmt_place_fuzz	70
 #count fmt_place_fuzz_files	35
 #count fmt_place_narrowed	24
 #count fmt_place_narrowed_live	17
 #count fmt_place_narrowed_live_files	8
-#count fmt_place_pointer	125
-#count fmt_place_pointer_live	110
-#count fmt_place_pointer_live_files	34
-#count fmt_place_word	417
-#count fmt_place_word_live	369
-#count fmt_place_word_live_files	62
+#count fmt_place_pointer	126
+#count fmt_place_pointer_live	111
+#count fmt_place_pointer_live_files	35
+#count fmt_place_word	433
+#count fmt_place_word_live	385
+#count fmt_place_word_live_files	63
 #count import_slot	14
 #count import_slot_live	14
 #count import_slot_live_files	1
