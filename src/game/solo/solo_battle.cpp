@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <cstring>
 #include <string>
 #include <vector>
@@ -336,10 +337,57 @@ void SnapSave(bof3::SnapshotWriter& w) {
     w.Put(g_set_back);
 }
 
+// The record after its version word: 3 bytes, the battle, two Bytes, the
+// stale records' bits and indexes, the step-7 record - 29 bytes of uint8_t
+// and one uint32_t, no padding: the same at both widths and on both systems.
+constexpr std::size_t kSnapBody = 3 + 4 + 2 * sizeof(Bytes) + 1 + 3 + sizeof(StepSeven);
+static_assert(sizeof(Bytes) == 6 && sizeof(StepSeven) == 6 && kSnapBody == 29, "SOLOCB's record layout");
+
+// The body read, and whether its bytes agree with one another (the states
+// SoloBattle_Arm and step 7 can leave); false with what does not.
+bool ReadBody(bof3::SnapshotReader& r, Save& s, StepSeven& b, char* bad, std::size_t room) {
+    s = Save{};
+    s.armed = r.Get<std::uint8_t>();
+    s.set_written = r.Get<std::uint8_t>();
+    s.party_written = r.Get<std::uint8_t>();
+    s.battle = r.Get<std::uint32_t>();
+    s.saved = GetBytes(r);
+    s.written = GetBytes(r);
+    s.stale_cleared = r.Get<std::uint8_t>();
+    r.Get(s.stale_index, sizeof s.stale_index);
+    b = r.Get<StepSeven>();
+    if (s.stale_cleared > 7 || (s.stale_cleared && !s.party_written)) {
+        std::snprintf(bad, room, "stale records 0x%X with party %u", s.stale_cleared, s.party_written);
+        return false;
+    }
+    if (b.pending > 1 || b.count_back > 1 || b.set_back > 1 || b.reload > 1 || b.pending != (b.count_back | b.set_back) ||
+        (b.reload && !b.set_back) || (b.count_back && (b.count < 2 || b.count > 3))) {
+        std::snprintf(bad, room, "a step-7 record of pending %u, count %u / %u, set %u / %u / %02X", b.pending, b.count_back,
+                      b.count, b.set_back, b.reload, b.set);
+        return false;
+    }
+    if (s.armed > 1 || s.set_written > 1 || s.party_written > 1 || (!s.armed && (s.set_written || s.party_written))) {
+        std::snprintf(bad, room, "armed %u, set %u, party %u", s.armed, s.set_written, s.party_written);
+        return false;
+    }
+    return true;
+}
+
+// Before a byte of the span is written: another version, a record of another
+// size and one whose bytes disagree are refused, so ReadRecord's Fatals are
+// not reached by a record that passed.
 bool SnapCheck(bof3::SnapshotReader& r, std::string& why, std::string& detail) {
     if (r.Left() < sizeof(std::uint32_t) || r.Get<std::uint32_t>() != kSnapVersion) {
         why = "solo battle record";
         detail = "the SOLOCB record is another version";
+        return false;
+    }
+    char bad[160] = "";
+    Save s;
+    StepSeven b;
+    if (r.Left() != kSnapBody || !ReadBody(r, s, b, bad, sizeof bad)) {
+        why = "damaged";
+        detail = std::string("SOLOCB's record: ") + (bad[0] ? bad : "another size");
         return false;
     }
     return true;
@@ -351,26 +399,8 @@ StepSeven g_snap_set_back{};
 Save ReadRecord(bof3::SnapshotReader& r) {
     if (r.Get<std::uint32_t>() != kSnapVersion) bof3::Fatal("snapshot: SOLOCB's record is another version");
     Save s{};
-    s.armed = r.Get<std::uint8_t>();
-    s.set_written = r.Get<std::uint8_t>();
-    s.party_written = r.Get<std::uint8_t>();
-    s.battle = r.Get<std::uint32_t>();
-    s.saved = GetBytes(r);
-    s.written = GetBytes(r);
-    s.stale_cleared = r.Get<std::uint8_t>();
-    r.Get(s.stale_index, sizeof s.stale_index);
-    if (s.stale_cleared > 7 || (s.stale_cleared && !s.party_written))
-        bof3::Fatal("snapshot: SOLOCB's record holds stale records 0x%X with party %u", s.stale_cleared, s.party_written);
-    g_snap_set_back = r.Get<StepSeven>();
-    {
-        const StepSeven& b = g_snap_set_back;
-        if (b.pending > 1 || b.count_back > 1 || b.set_back > 1 || b.reload > 1 || b.pending != (b.count_back | b.set_back) ||
-            (b.reload && !b.set_back) || (b.count_back && (b.count < 2 || b.count > 3)))
-            bof3::Fatal("snapshot: SOLOCB's record holds a step-7 record of pending %u, count %u / %u, set %u / %u / %02X",
-                        b.pending, b.count_back, b.count, b.set_back, b.reload, b.set);
-    }
-    if (s.armed > 1 || s.set_written > 1 || s.party_written > 1 || (!s.armed && (s.set_written || s.party_written)))
-        bof3::Fatal("snapshot: SOLOCB's record holds armed %u, set %u, party %u", s.armed, s.set_written, s.party_written);
+    char bad[160] = "";
+    if (!ReadBody(r, s, g_snap_set_back, bad, sizeof bad)) bof3::Fatal("snapshot: SOLOCB's record holds %s", bad);
     return s;
 }
 
@@ -836,6 +866,14 @@ void SoloBattle_SelfTest() {
         bad[0] ^= 0xFF;
         bof3::SnapshotReader bp("SOLOCB", bad.data(), bad.size());
         check(!SnapCheck(bp, why, detail), "SnapCheck refuses another version");
+        bad = buf;
+        bad.pop_back();
+        bof3::SnapshotReader bs("SOLOCB", bad.data(), bad.size());
+        check(!SnapCheck(bs, why, detail) && why == "damaged", "SnapCheck refuses a record a byte short");
+        bad = buf;
+        bad[4] = 2;   // armed 2
+        bof3::SnapshotReader ba("SOLOCB", bad.data(), bad.size());
+        check(!SnapCheck(ba, why, detail) && why == "damaged", "SnapCheck refuses a record whose bytes disagree, before ReadRecord");
         g_save = before;
         g_set_back = before_set;
         g_snap_set_back = StepSeven{};

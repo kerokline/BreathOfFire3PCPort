@@ -1580,9 +1580,10 @@ void DoLoad(unsigned slot) {
 // span), DIV-0007's relocated system message pool (MsgPool_Relocate's
 // buffer, under a language overlay), and DIV-0133/0134's "the release's
 // words stand" flag, with sigma's table rebuilt from the restored Config
-// words. A byte copy each; a size that differs at a restore is another
-// build's, which the build check refused already, so it is a Fatal here -
-// except the message pool's, which is the language's (StCheck).
+// words. A byte copy each, in fixed-width words; every way the record can
+// differ from this process's is refused by StCheck before the span is
+// written (another version, the ring's size, the language's pool), so
+// StRestore's Fatals are not reached by a record that passed.
 constexpr U kStVersion = 1;
 
 void StSave(SnapshotWriter& w) {
@@ -1599,33 +1600,64 @@ void StSave(SnapshotWriter& w) {
     w.Put(release_words);
 }
 
-// The message pool is moved (DIV-0007) under any language overlay and not
-// under the original Chinese, and the language is the start's (BOF3X_LANG),
-// not the build's: a quicksave taken in one and loaded in the other passes
-// the build check. Refused here, before the span is written - StRestore's
-// Fatal would come after it. One translation into another is let through:
-// both pools are 0x8000 bytes, and the take's text stands until the game
-// reloads its own (IDEAS I47 reviews that).
+// Checked before a byte of the span is written: every condition StRestore
+// fails on is a refusal here, so a record that passes reaches none of its
+// Fatals (docs/state-by-name-participants.md 3). Another version; a record it
+// cannot walk to its end ("damaged"); the draw-item ring of another size,
+// which is a setting (BOF3X_ORIGINAL=DrawPool keeps the original's 1,024:
+// draw_pool.cpp) that format 2's fingerprint catches first but a format-1
+// file of this build does not. And the language: the message pool is moved
+// (DIV-0007) under any language overlay and not under the original Chinese,
+// and the language is the start's (BOF3X_LANG), not the build's, so a
+// quicksave taken in one and loaded in the other passes the build check. One
+// translation into another is let through: both pools are 0x8000 bytes, and
+// the take's text stands until the game reloads its own (IDEAS I47 reviews
+// that). The record is fixed-width words and u16s: the same at both widths
+// and on both systems.
 bool StCheck(SnapshotReader& r, std::string& why, std::string& detail) {
-    if (r.Left() < 3 * sizeof(U)) return true;   // StRestore's Fatals say what is wrong
-    if (r.Get<U>() != kStVersion) return true;
+    const auto damaged = [&](const char* what) {
+        why = "damaged";
+        detail = std::string("ST's record: ") + what;
+        return false;
+    };
+    if (r.Left() < sizeof(U)) return damaged("no version word");
+    const U version = r.Get<U>();
+    if (version != kStVersion) {
+        why = "another state record";
+        detail = Printf("ST's record is version %u; this build reads %u only", version, kStVersion);
+        return false;
+    }
+    if (r.Left() < 2 * sizeof(U)) return damaged("the seed and the ring's count run past the record");
     r.Get<std::uint32_t>();
     const U ring = r.Get<U>();
-    if (r.Left() < std::size_t{ring} * sizeof(unsigned short) + sizeof(std::uint32_t)) return true;
-    std::vector<unsigned short> skip(ring);
-    if (ring) r.Get(skip.data(), ring * sizeof(unsigned short));
+    if (ring != draw_pool::Count()) {
+        why = "other settings (DrawPool)";
+        detail = Printf("ST's draw-item ring has %u entries, this process %u (BOF3X_ORIGINAL=DrawPool keeps the original's)", ring,
+                        draw_pool::Count());
+        return false;
+    }
+    if (r.Left() < std::size_t{ring} * sizeof(unsigned short) + sizeof(std::uint32_t)) return damaged("the ring runs past the record");
+    r.Skip(std::size_t{ring} * sizeof(unsigned short));
     const std::uint32_t pool_bytes = r.Get<std::uint32_t>();
     std::uint32_t now_bytes = 0;
     MsgPool_Moved(&now_bytes);
-    if ((pool_bytes != 0) == (now_bytes != 0)) return true;
-    why = "another language";
-    detail = pool_bytes ? "taken under a translation (BOF3X_LANG), this game runs the original Chinese text"
-                        : "taken under the original Chinese text, this game runs a translation (BOF3X_LANG)";
-    return false;
+    if ((pool_bytes != 0) != (now_bytes != 0)) {
+        why = "another language";
+        detail = pool_bytes ? "taken under a translation (BOF3X_LANG), this game runs the original Chinese text"
+                            : "taken under the original Chinese text, this game runs a translation (BOF3X_LANG)";
+        return false;
+    }
+    if (pool_bytes != now_bytes) {
+        why = "another language";
+        detail = Printf("the take's message pool is %u bytes, this process's %u", pool_bytes, now_bytes);
+        return false;
+    }
+    if (r.Left() != std::size_t{pool_bytes} + 1) return damaged("the message pool and the flag are not the rest of the record");
+    return true;
 }
 
 void StRestore(SnapshotReader& r) {
-    if (r.Get<U>() != kStVersion) Fatal("snapshot: ST's record is another version");
+    if (r.Get<U>() != kStVersion) Fatal("snapshot: ST's record is another version, past StCheck");
     *crt_rest::RandSeedCell() = r.Get<std::uint32_t>();
     const U ring = r.Get<U>();
     if (ring != draw_pool::Count()) Fatal("snapshot: ST's draw-pool ring has %u entries, this process %u", ring, draw_pool::Count());
@@ -1683,6 +1715,24 @@ void SelfTestStCheck() {
     SnapshotReader swapped("ST", other.data(), other.size());
     Check(!StCheck(swapped, why, detail) && why == "another language",
           "ST's check refuses a record from the original Chinese under a translation, or the reverse");
+    const auto refused = [&why, &detail](const std::vector<unsigned char>& bytes, const char* want) {
+        SnapshotReader reader("ST", bytes.data(), bytes.size());
+        return !StCheck(reader, why, detail) && why == want;
+    };
+    std::vector<unsigned char> d = rec;
+    const U v2 = kStVersion + 1;
+    std::memcpy(d.data(), &v2, sizeof v2);
+    Check(refused(d, "another state record"), "ST's check refuses another version");
+    d = rec;
+    const U ring = draw_pool::Count() == 1024 ? 2048 : 1024;
+    std::memcpy(d.data() + 2 * sizeof(U), &ring, sizeof ring);
+    Check(refused(d, "other settings (DrawPool)"), "ST's check refuses a draw-item ring of another size");
+    d = rec;
+    d.pop_back();
+    Check(refused(d, "damaged"), "ST's check refuses a record a byte short");
+    d = rec;
+    d.push_back(0);
+    Check(refused(d, "damaged"), "ST's check refuses a byte past the record's end");
 }
 
 // A save half of noise whose block sums as a save's (SaveHalfWhole), so a

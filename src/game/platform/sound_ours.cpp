@@ -940,6 +940,13 @@ static_assert(offsetof(SoundBank, voices) == kVoices, "SoundBank::voices");
 static_assert(offsetof(SoundBank, data) == kBankData, "SoundBank::data");
 static_assert(kSnapBanks * sizeof(SoundBank) == Sound_Banks_count, "Sound_Banks' size");
 
+// sound::Resume is written by its size (SnapSave's statics): bool, unsigned,
+// u32, bool, unsigned, u32 - 24 bytes with 3 + 3 of padding on every x86 build
+// of ours, 32-bit and 64-bit, Windows and Linux (unsigned is 32 bits in both
+// data models, a bool one byte). Its padding's bytes are not read.
+static_assert(sizeof(sound::Resume) == 24 && offsetof(sound::Resume, pending_sample) == 20,
+              "sound::Resume's layout is SOUND's record: write it field by field and raise kSnapVersion");
+
 SoundBank* Bank(std::uint32_t record) { return reinterpret_cast<SoundBank*>(At(record)); }
 SoundVoice* Voice(std::uint32_t entry) { return reinterpret_cast<SoundVoice*>(At(entry)); }
 
@@ -1069,32 +1076,63 @@ void SnapDiscard() {
     g_discarded = true;
 }
 
-// The SOUND record checked before anything is written: the music file it
-// names must be the one this process reads for that track. Which file that is
+// The SOUND record checked before anything is written, walked to its end:
+// another version, and a record this check cannot walk or whose words
+// disagree with one another (a bank with data and no bytes, a channel naming
+// no bank, a track stream with no file), are refused - SnapRestore's Fatals
+// for them would come after the span was written. And the music file it names
+// must be the one this process reads for that track: which file that is
 // follows the launch (BOF3X_MUSIC, the cache's layers, the install's BGM),
-// which the build check cannot see; SnapRestore's read-again would otherwise
-// stop the game after the span was written (the review of PR #95). A record
-// this check cannot walk is let through to SnapRestore's own Fatals.
+// which the build check cannot see (the review of PR #95). What remains to
+// SnapRestore's Fatals is the span's agreement with the record (a bank's data
+// word, a voice inside its data) and what a restore reads again or allocates
+// (docs/state-by-name-participants.md 3).
 bool SnapCheck(bof3::SnapshotReader& r, std::string& why, std::string& detail) {
-    if (r.Left() < sizeof(std::uint32_t) || r.Get<std::uint32_t>() != kSnapVersion) return true;
+    const auto damaged = [&](const char* what) {
+        why = "damaged";
+        detail = std::string("SOUND's record: ") + what;
+        return false;
+    };
+    if (r.Left() < sizeof(std::uint32_t)) return damaged("no version word");
+    const std::uint32_t version = r.Get<std::uint32_t>();
+    if (version != kSnapVersion) {
+        why = "another sound record";
+        detail = "SOUND's record is version " + std::to_string(version) + "; this build reads " + std::to_string(kSnapVersion) +
+                 " only";
+        return false;
+    }
     for (unsigned b = 0; b < kSnapBanks; ++b) {
-        if (r.Left() < 8) return true;
-        r.Get<std::uint32_t>();
+        if (r.Left() < 8) return damaged("a bank's words run past the record");
+        const std::uint32_t data = r.Get<std::uint32_t>();
         const std::uint32_t bytes = r.Get<std::uint32_t>();
-        if (r.Left() < bytes) return true;
+        if (data && !bytes) return damaged("a bank with sample data and no bytes of it");
+        if (r.Left() < bytes) return damaged("a bank's samples run past the record");
         r.Skip(bytes);
     }
     constexpr std::size_t kChannel = 3 + 2 * sizeof(std::uint32_t);
-    if (r.Left() < kSnapChannels * kChannel + sizeof(std::uint32_t)) return true;
-    r.Skip(kSnapChannels * kChannel);
+    if (r.Left() < kSnapChannels * kChannel + sizeof(std::uint32_t)) return damaged("the channels run past the record");
+    for (unsigned c = 0; c < kSnapChannels; ++c) {
+        const unsigned char bank = r.Get<unsigned char>();
+        const unsigned char entry = r.Get<unsigned char>();
+        r.Skip(kChannel - 2);
+        if (bank != kNoEntry && (bank >= kSnapBanks || entry >= kSnapEntries)) return damaged("a channel names no bank's entry");
+    }
     const std::uint32_t stream_bytes = r.Get<std::uint32_t>();
     constexpr std::size_t kVoice = 2 + sizeof(std::uint32_t), kFile = 1 + 3 * sizeof(std::int32_t);
-    if (r.Left() < std::size_t{stream_bytes} + kVoice + kFile) return true;
+    if (r.Left() < std::size_t{stream_bytes} + kVoice + kFile) return damaged("the last stream's file runs past the record");
     r.Skip(stream_bytes + kVoice);
     const unsigned char file = r.Get<unsigned char>();
     const std::int32_t file_size = r.Get<std::int32_t>();
     r.Get<std::int32_t>();
     const std::int32_t file_track = r.Get<std::int32_t>();
+    constexpr std::size_t kMusic = 4 + sizeof(std::int32_t) + 3 * sizeof(std::uint32_t);
+    if (r.Left() < kMusic) return damaged("the music stream's words run past the record");
+    const unsigned char kind = r.Get<unsigned char>();
+    r.Skip(3 + sizeof(std::int32_t) + 2 * sizeof(std::uint32_t));
+    const std::uint32_t data_bytes = r.Get<std::uint32_t>();
+    if (kind == kMusicTrack && !file) return damaged("a track stream with no music file");
+    constexpr std::size_t kStatics = sizeof(sound::Resume) + 2 * sizeof(std::uint32_t) + sizeof(float) + 1;
+    if (r.Left() != std::size_t{data_bytes} + kStatics) return damaged("the music data and our statics are not the rest of the record");
     if (!file || file_track < 0) return true;
     const int now = g_snap.music_file_size(static_cast<unsigned>(file_track));
     if (now == file_size) return true;
@@ -1109,7 +1147,7 @@ bool SnapCheck(bof3::SnapshotReader& r, std::string& why, std::string& detail) {
 }
 
 void SnapRestore(bof3::SnapshotReader& r) {
-    if (r.Get<std::uint32_t>() != kSnapVersion) bof3::Fatal("quicksave SOUND: the record is another version");
+    if (r.Get<std::uint32_t>() != kSnapVersion) bof3::Fatal("quicksave SOUND: the record is another version, past SnapCheck");
     if (!g_discarded) bof3::Fatal("quicksave SOUND: a restore without the discard before the span");
     g_discarded = false;
     Snd_Device = g_live_device;
@@ -1787,6 +1825,32 @@ void Music(bool playing) {
         g_snap.music_file_size = [](unsigned) { return -1; };
         bof3::SnapshotReader none("SOUND", record.data(), record.size());
         Check(!SnapCheck(none, why, detail), "SOUND's check refuses a take whose track has no file here");
+        g_snap.music_file_size = [](unsigned track) { return track == 200 ? 1000 : -1; };
+        // Another version, a short or long record and a channel naming no
+        // bank are refusals before the span, not SnapRestore's Fatals.
+        const auto refused = [&why, &detail](const std::vector<unsigned char>& bytes, const char* want) {
+            bof3::SnapshotReader reader("SOUND", bytes.data(), bytes.size());
+            return !SnapCheck(reader, why, detail) && why == want;
+        };
+        std::vector<unsigned char> d = record;
+        const std::uint32_t v2 = kSnapVersion + 1;
+        std::memcpy(d.data(), &v2, sizeof v2);
+        Check(refused(d, "another sound record"), "SOUND's check refuses another version");
+        d = record;
+        d.pop_back();
+        Check(refused(d, "damaged"), "SOUND's check refuses a record a byte short");
+        d = record;
+        d.push_back(0);
+        Check(refused(d, "damaged"), "SOUND's check refuses a byte past the record's end");
+        d = record;
+        std::size_t at = 4;
+        for (unsigned b = 0; b < kSnapBanks; ++b) {
+            std::uint32_t bytes;
+            std::memcpy(&bytes, d.data() + at + 4, sizeof bytes);
+            at += 8 + bytes;
+        }
+        d[at] = kSnapBanks;   // channel 0's bank
+        Check(refused(d, "damaged"), "SOUND's check refuses a channel naming no bank");
         g_snap.music_file_size = kSnapOriginals.music_file_size;
     }
     SpanWords take;
