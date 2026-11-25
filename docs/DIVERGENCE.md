@@ -91,12 +91,14 @@ ledger stays trustworthy.
 - **Toward:** psx, psp, pc (a list) | none
 - **Languages:** any | en-US, en-150, fr-FR, de-DE, ja-JP, original (a list)
 - **State:** active | withdrawn | superseded by DIV-NNNN
+- **Saved state:** unchanged | changed (revision N)
 ```
 
 ### The switch fields
 
-The last six lines are for a tool, not a reader: a preset ("As shipped",
-"Repaired", "Recommended", "PlayStation", "PSP") is built from them, and
+The six lines from `Switch:` to `State:` are for a tool, not a reader: a
+preset ("As shipped", "Repaired", "Recommended", "PlayStation", "PSP") is
+built from them, and
 `tools/ledger_check.py` checks them. `Reversible?` stays the prose it is and
 says the same thing for a person. Each field is **one line**, its value
 first; an optional " - <clause>" after the value says why where the value is
@@ -226,6 +228,35 @@ acts, not what the install holds. The rules, one each:
 **`State:`** `active`; `withdrawn` (the entry stays as the record, nothing
 is left to switch: DIV-0067); or `superseded by DIV-NNNN`, an entry that
 exists. A preset never switches an entry that is not active.
+
+### The saved-state field
+
+**`Saved state:`** `unchanged`, or `changed (revision N)`: whether the entry
+gives a byte that a quicksave holds a new meaning, and if so the quicksave
+state revision that the change raised the header to. One line, its value
+first, an optional " - <clause>" after it, as on the switch fields. Added
+by the state-by-name round, the owner's call 6 of 2026-11-25
+([`state-by-name-round.md`](state-by-name-round.md) 3.4 and 7). Required on
+every entry after DIV-0245, the last entry before the round. Entries up to
+DIV-0245 do not need it; where one has the line, the checker reads it with
+the same grammar.
+
+What it certifies: a quicksave restored in another build is safe only when
+each of its bytes means in that build what it meant in the build that
+wrote it. A change that gives a saved byte a new meaning - a field read
+another way, a value it can now hold, a word moved to another use (the
+round doc's example: the grown view ring's rim, GFX version 2) - raises the
+quicksave's state revision in the same change, and its entry says
+`changed (revision N)` with the revision it raised the header to. A load
+then refuses a file of an older revision and offers its save (call 7)
+instead of restoring bytes that now mean something else. `unchanged` says
+the author asked the question and the answer was no: the entry changes code
+or presentation, and no byte a quicksave holds is read another way. CI holds
+no game data and cannot run a quicksave across builds, so this line is the
+only check: `tools/ledger_check.py` refuses an entry after DIV-0245 without
+it, or with a value not in this grammar (`N` a whole number from 1, with no
+leading zero). Whether the revision named is the header's is for review,
+not the checker.
 
 ### Tiers
 
