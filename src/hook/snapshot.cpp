@@ -208,7 +208,7 @@ enum WordKind : U {
     kWordFold24 = 2,   // a link into the moved image, its low 24 bits so (span_words::Fold24)
     kWordPool = 3,     // a run-time slot into our message pool, written as its offset in the pool
     kWordText = 4,     // a slot of Capcom's holding text of ours: written raw, kept as the process has it
-    kWordTextCopy = 5, // a word holding the value a text slot holds: written as the slot's offset, placed as the slot is
+    kWordTextCopy = 5, // a word inside the text a slot names: (offset in the text << 24) | the slot's offset, placed from the slot
 };
 
 struct Participant {
@@ -625,11 +625,31 @@ void ReadTextSlots(WordPlace& wp) {
     std::sort(wp.texts.begin(), wp.texts.end());
 }
 
-// The slot whose text pointer `w` is, as an offset from kDataLo; false if none.
-bool TextSlotOf(const WordPlace& wp, U w, U* slot) {
-    const auto it = std::lower_bound(wp.texts.begin(), wp.texts.end(), std::pair<U, U>{w, 0});
-    if (it == wp.texts.end() || it->first != w) return false;
+// The bytes of text at `v`, a pointer into a section of ours, up to its NUL
+// (which a cursor at the end names) and at most 255: the extent a copy of the
+// pointer may lie in. 0 when `v` names no content section of ours.
+U TextExtent(U v) {
+    const span_words::Section* s = span_words::g_ours.Named(v);
+    if (!s || !s->content) return 0;
+    const U room = s->hi - v < 255 ? s->hi - v : 255;
+    const auto* p = reinterpret_cast<const char*>(At(v));
+    U n = 0;
+    while (n < room && p[n] != 0) ++n;
+    return n;
+}
+
+// The slot whose text `w` points into - at its start, or inside it up to its
+// NUL, as the effect objects' cursors into DIV-0064's lines do
+// (masterAndManillo) - as an offset from kDataLo, and how far in; false if
+// none. The greatest text start at or below `w` is the one tried.
+bool TextSlotOf(const WordPlace& wp, U w, U* slot, U* delta) {
+    auto it = std::upper_bound(wp.texts.begin(), wp.texts.end(), std::pair<U, U>{w, ~U{0}});
+    if (it == wp.texts.begin()) return false;
+    --it;
+    const U d = w - it->first;
+    if (d > TextExtent(it->first)) return false;
     *slot = it->second;
+    *delta = d;
     return true;
 }
 
@@ -649,10 +669,10 @@ bool NameWord(const WordPlace& wp, U off, U w, U* kind, U* stored, U* np) {
         *stored = w - wp.pool;
         return true;
     }
-    U slot = 0;
-    if (!span_words::IsSlot(off) && TextSlotOf(wp, w, &slot)) {
+    U slot = 0, delta = 0;
+    if (!span_words::IsSlot(off) && TextSlotOf(wp, w, &slot, &delta)) {
         *kind = kWordTextCopy;
-        *stored = slot;
+        *stored = delta << 24 | slot;
         return true;
     }
     if (runtime && span_words::g_ours.Named(w) && !*np) *np = span_words::IsTextWord(va) ? kNpTextOurs : kNpRuntimeSlot;
@@ -1287,18 +1307,26 @@ Parsed Parse(const std::vector<unsigned char>& file, const BuildId& build, const
             return Refuse(p, "damaged", Printf("WORDS entry %u names offset 0x%X, outside the words a take names", i, off));
         U w = 0;
         std::string why;
-        U place_kind = kind, file_value = U32(p.placed.data() + off), live_value = U32(At(data + off));
-        if (kind == kWordTextCopy) {   // placed as the slot it copies: the file's slot at an exact load, the process's at a portable one
-            const U slot = file_value;
+        U place_kind = kind, file_value = U32(p.placed.data() + off), live_value = U32(At(data + off)), delta = 0;
+        if (kind == kWordTextCopy) {   // placed from the slot it points into: the file's slot at an exact load, the process's at a portable one
+            const U slot = file_value & 0xFFFFFFu;
+            delta = file_value >> 24;
             if (!span_words::IsSlot(slot) || slot + 4 > h.span_bytes)
                 return Refuse(p, "damaged", Printf("WORDS entry %u copies offset 0x%X, which is no slot of Capcom's", i, slot));
             place_kind = kWordText;
             file_value = U32(image + slot);
             live_value = U32(At(data + slot));
         }
-        if (!PlaceWord(wp, place_kind, file_value, live_value, portable, &w, why))
+        const auto cannot = [&](const std::string& what) {
             return Refuse(p, reason.empty() ? std::string("a word this process cannot place") : reason + " (a word this build cannot place)",
-                          (detail.empty() ? std::string() : detail + "; ") + Printf("the word at 0x%08X: ", span_words::kDataLo + off) + why);
+                          (detail.empty() ? std::string() : detail + "; ") + Printf("the word at 0x%08X: ", span_words::kDataLo + off) + what);
+        };
+        if (!PlaceWord(wp, place_kind, file_value, live_value, portable, &w, why)) return cannot(why);
+        if (kind == kWordTextCopy) {
+            if (portable && delta > TextExtent(w))
+                return cannot(Printf("it lay 0x%X bytes into a slot's text, and the text here is 0x%X bytes", delta, TextExtent(w)));
+            w += delta;
+        }
         std::memcpy(p.placed.data() + off, &w, sizeof w);
     }
     p.image = p.placed.data();
@@ -2250,7 +2278,7 @@ void SelfTestFormat2() {
             }
             Check(copy != 0, "a word of .data no rule names, to hold a copy");
             set_word(slot, text_a);
-            set_word(copy, text_a);
+            set_word(copy, text_a + 3);   // a cursor three bytes into the slot's text
             std::vector<unsigned char> c;
             OnOwnStack([&] { c = Take(reg, span, top, &FakeSaveHalf); });
             Stamp(c, build);
@@ -2260,7 +2288,7 @@ void SelfTestFormat2() {
             for (U i = 0; i < cx.words; ++i) {
                 const U e = U32(c.data() + WordsAt(c) + std::size_t{i} * sizeof(U));
                 if ((e & 7) == kWordTextCopy && span_words::kDataLo + (e >> 3) * 4 == copy &&
-                    span_words::kDataLo + U32(image + (e >> 3) * 4) == slot)
+                    U32(image + (e >> 3) * 4) == (3u << 24 | (slot - span_words::kDataLo)))
                     ++copies;
             }
             Check(cx.portable == 1 && copies == 1, "a copy of a text slot's pointer is written as that slot, and the take stays portable");
@@ -2270,7 +2298,7 @@ void SelfTestFormat2() {
             Check(q.ok && q.answer == Answer::Portable, "the take with the copy parses as portable in another build");
             if (q.ok) {
                 OnOwnStack([&] { Restore(q, reg); });
-                Check(word(copy) == text_b && word(slot) == text_b, "a portable restore places the copy as its slot: this process's text");
+                Check(word(copy) == text_b + 3 && word(slot) == text_b, "a portable restore places the cursor in its slot's text: this process's");
             }
             set_word(slot, text_b);
             set_word(copy, 0x5A5A5A5A);
@@ -2278,7 +2306,7 @@ void SelfTestFormat2() {
             Check(q.ok && q.answer == Answer::Exact, "and exactly in its own build");
             if (q.ok) {
                 OnOwnStack([&] { Restore(q, reg); });
-                Check(word(copy) == text_a && word(slot) == text_a, "an exact restore places the copy as its slot: the take's text");
+                Check(word(copy) == text_a + 3 && word(slot) == text_a, "an exact restore places the cursor in its slot's text: the take's");
             }
             set_word(copy, 0);
             const U box0 = word(Msgbox_Base_addr);
@@ -2416,6 +2444,11 @@ void SelfTestFormat2() {
         Check(NameWord(wp, plain, Va(kTextA), &kind, &stored, &np) && kind == kWordTextCopy && stored == text_slot && np == 0 &&
                   NameWord(wp, battle, Va(kTextA), &kind, &stored, &np) && kind == kWordTextCopy && stored == text_slot,
               "a word holding a text slot's pointer is written as that slot's offset, a text word's too");
+        const U end = static_cast<U>(sizeof kTextA - 1);
+        Check(NameWord(wp, plain, Va(kTextA) + 5, &kind, &stored, &np) && kind == kWordTextCopy && stored == (5u << 24 | text_slot) &&
+                  NameWord(wp, plain, Va(kTextA) + end, &kind, &stored, &np) && stored == (end << 24 | text_slot) &&
+                  !NameWord(wp, plain, Va(kTextA) + end + 1, &kind, &stored, &np),
+              "a cursor inside the slot's text, up to its NUL, is written as the slot and how far in; one past the NUL is not");
         Check(!NameWord(wp, box, Va(kTextB), &kind, &stored, &np) && np == kNpTextOurs,
               "a message box's text word naming our module elsewhere (the town warp's page) makes the take not portable");
         np = 0;
