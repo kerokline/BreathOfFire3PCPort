@@ -37,8 +37,8 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      larger change after `v0.1.0-beta.2`. Measured on the laptop: the task census (`BOF3X_TASKCENSUS`, a read-only
      probe; 16 routes on the Linux build). The round is two waves - the quicksave's format 2 and the words written by
      what they name, the yield word and its resume entries, the region table, a refused quicksave loading as its
-     save; then the participants, the fade waits, and the cross-build proof. **Before a launch:** the owner's five
-     calls (section 7 there), and section 9's list - the census is from the 64-bit Linux build only.
+     save; then the participants, the fade waits, and the cross-build proof. **Before a launch:** the owner's calls 3
+     to 5 (section 7 there; 1 and 2 answered 2026-11-24), and section 9's list - the census is from the 64-bit Linux build only.
    - **A PSP disc's text on a PC install (2026-11-23, [`loc-build-psp.md`](loc-build-psp.md) 12):** built and diffed
      and run through setup (PC + US disc + PSP-EU). Owed: the owner's play under `en-150` there (fight 26's turn
      counter, the fishing equip headings and the staff roll stay the port's under that layer; not seen). Open for the

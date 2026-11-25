@@ -6,7 +6,8 @@ The owner chose I54 as the first of the larger changes after `v0.1.0-beta.2`
 laptop, the round to launch on the desktop. Section 2 is measured (the task
 census ran here the same day, on the Linux build of `main` `65b7810f` plus the
 probe); section 1 says what that changed in I54's tiers; sections 3 to 6 are a
-plan; section 7 is the owner's calls; section 9 lists what is not checked.
+plan; section 7 is the owner's calls (1 and 2 answered the same day, 3 to 5
+open); section 9 lists what is not checked.
 
 ## 0. The shape in one paragraph
 
@@ -486,11 +487,16 @@ have no entry.
 
 ## 7. The owner's calls
 
-1. **A take on a nested frame.** (a) F6 takes the frame it is given and the
+**Answered 2026-11-24 (the owner, by chat): calls 1 and 2, both as
+proposed.** F6 takes the frame it is given and never waits; a take on a
+nested frame is this build's only. Another build refuses its snapshot and
+offers the save it starts with, after a confirmation. Calls 3 to 5 are open.
+
+1. **A take on a nested frame - answered: (a).** (a) F6 takes the frame it is given and the
    file says "this build only" (proposed: a save state is of the frame the
    key was pressed on); (b) F6 waits for the next flat frame, up to a
    bound, and takes that one, so that nearly every quicksave is portable.
-2. **Tier 0's question.** A refused quicksave: ask before loading its save
+2. **Tier 0's question - answered: ask.** A refused quicksave: ask before loading its save
    (proposed), or load it at once with a line saying so.
 3. **How the menu marks a quicksave that is not portable**, if at all: a
    mark on the slot, or nothing until a load is refused (proposed: nothing;
