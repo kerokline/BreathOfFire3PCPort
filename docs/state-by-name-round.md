@@ -288,6 +288,18 @@ this round builds (3.4).
 - The load menu lists `BISLPS0?.DAT` only (`save_menu::ListFiles`, the
   quicksave round's narrowing of the original's `BISLPS??.DAT`), so a
   quicksave is not offered there.
+- **The save half is an F12 save, with an F12 save's hazards** (the owner,
+  2026-11-24). `GameSaveHalf` builds it as `Save_QuickWrite` does: anywhere,
+  any time. The save block holds the area and the place in it, not where
+  the party came from. In an encounter field a step onto the map's edge goes
+  back to the area and position `Area_Enter` recorded on the way in
+  (`AreaW2c_LastArea` `0x802290`, the position `0x7E091C` / `0x7E0920`);
+  `GameMode_Start` makes that word `0xFFFF` for a loaded game, so the edge
+  holds (DIV-0121, in place of the original's crash) and "the party may then
+  have no way out of the field". A save loaded where the game never saves
+  has crashed in one other measured place, repaired (DIV-0180, area 135).
+  A quicksave restored exactly or as portable has none of this: the span
+  holds the three words. Tier 0 is the road that would meet it.
 
 ## 3. The design
 
@@ -404,6 +416,16 @@ save half is whole:
   through `LoadMenu_Apply` and `TitleFlow_EnterGame` unchanged. The game's
   own code applies the save; ours chooses the file and skips the menu.
 
+**The way back out.** A quicksave holds the whole span, so tier 0 has what
+an F12 save lacks. After the save is applied and the area entered, the
+loader puts back `AreaW2c_LastArea` and the two position words from the
+quicksave's span (read by their addresses, which are Capcom's and the same
+in every build), when the take stood in an area whose `Field_InputFlags`
+has bit 1 and the word in the file is not `0xFFFF`. The map's edge then
+leads where it led at the take, and DIV-0121's hold is not reached. F12's
+own saves are as DIV-0121 leaves them; this is the quicksave's save half
+only.
+
 The other road - applying the save in place, at the quicksave point - means
 running `LoadMenu_Apply`'s waits outside a task and clearing by hand what a
 restart clears. It is not proposed.
@@ -444,7 +466,12 @@ number nothing in the ledger or `known-defects.md`.
   start-up as `kKept` is checked today, the `unknown` count in CI.
 - **A4, tier 0** (`src/game/menu/quick_menu.cpp`, the title's load path):
   3.5, with a recipe that refuses a doctored build stamp and takes the
-  save.
+  save; the way back out of an encounter field, proved by `stallion.txt`'s
+  walk to the edge (DIV-0121's verification) from a quicksave taken in area
+  29 and loaded as its save: the party leaves to where it came from. And a
+  read of what else a save half taken off a save point lands in: a take in
+  a battle, in a scene, in a minigame, each loaded as its save once and
+  written down.
 
 ### Wave B (after A merges; three groups)
 
@@ -530,6 +557,10 @@ offers the save it starts with, after a confirmation. Calls 3 to 5 are open.
   for `GFX` only (it writes a struct by `sizeof`), not compared.
 - The `TitleFlow` entry at `LoadMenu_Read` for tier 0 is read from the
   source, not tried.
+- What a save half taken in a battle, a scene or a minigame loads as. The
+  owner's test of F12 in a battle (IDEAS I18): the save loads in the field
+  where the party stood. A scene and a minigame are not tried; A4 tries
+  them.
 - That no code of the game reads a task's stack through a pointer kept in
   the span (a local's address stored in a record) at a flat site. The state
   hash's stack-address rows are the place to look; `Transition_DrawTile` is
