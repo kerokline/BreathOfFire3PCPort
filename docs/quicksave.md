@@ -85,6 +85,7 @@ checked against `symbols.toml` at start-up):
 | `DInput_Object` .. `Gpu_DispEnv` `0x7DE928` (952) | the input objects |
 | `Font_GlyphData` `0x7CC35C` | a heap block made once a launch |
 | `Gfx_WindowRect` .. `Dd_CellBackdrop` `0x6BE1D0` (2,096), `Gfx_ClutRows` `0x6C2A40` (4,096), `D3d_DeviceDesc` `0x7CC238` (252), `Dd_DirectDraw` `0x7CC334`, `Dd_StageSurface` `0x7CC344`, `D3d_Device` `0x7CC350` | the display's window rectangle, mode list, row pointers and objects; what the caches and rows **hold** is SP-G's to clear and reconvert |
+| `Desktop_Bpp`, `Desktop_Height`, `Desktop_Width` `0x939A2C` (12) | this machine's desktop, read once at start (added 2026-11-25 for loads from another machine, [`state-by-name-format.md`](state-by-name-format.md) 1a) |
 
 `Overlay_Text` / `Overlay_Frames` are in the span: the "Quickload" line is
 written after it.
@@ -95,6 +96,27 @@ F6 and F7 are refused while `BOF3X_GAPWATCH` is set (its guard pages and
 bookkeeping are over the span).
 
 ## 4. The file `BISLPS1X.DAT`
+
+> **Amended 2026-11-25 (the state-by-name round's group A1,
+> [`state-by-name-format.md`](state-by-name-format.md)):** a take writes
+> **format 2**: the table below with `format` 2 and `header_bytes` `0xD0`,
+> then a 12-word extension (the state revision, portable, the settings'
+> fingerprint, the sections' sizes, the code places' table, the bound VAs'
+> fingerprint, the image's base), and after the arena three sections - the
+> `TASKS` record (where each task stood), the settings' lines, and the
+> `WORDS` list (the words of `.data` written by what they name: a code place
+> as its VA, a message slot as its offset in the pool, a moved image's
+> pointers as at `0x400000`). A load has three answers: **exact** in the build
+> and process that wrote it, as below; **portable** in another build or
+> process when every task stood at a named place, each task started again
+> there and the arena not read; otherwise **refused**, its reason shown, and
+> the save half offered when its block sums as a save's. "Another build" and
+> "another process" below are refusals only for a file that is not portable.
+> New refusals: another state revision, other settings (the setting named),
+> damaged settings, other functions bound, a task at a place this build does
+> not know, a word this build cannot place. Format 1 (the table below as it
+> was) still loads exactly in its own build and is refused, its save offered,
+> in any other.
 
 In the game directory, beside the saves; `X` = `0`..`F`. Little-endian.
 

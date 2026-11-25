@@ -14,6 +14,7 @@
 #include "hook/exe_layout.h"
 #include "hook/input_script.h"
 #include "hook/log.h"
+#include "hook/span_words.h"
 #include "os/os.h"
 
 // The file (little-endian, read by tools/statehash.py):
@@ -122,12 +123,26 @@
 namespace bof3 {
 namespace {
 
+// The tests shared with the quicksave (span_words.h; moved from this file
+// unchanged, 2026-11-25): the fold, the run-time slots, our module's sections.
+using span_words::Fold;
+using span_words::Fold24;
+using span_words::kExeHi;
+using span_words::kExeLo;
+using span_words::kImageExtent;
+using span_words::kMsgCurrent;
+using span_words::kMsgRing;
+using span_words::kMsgRingEntries;
+using span_words::kMsgRingStride;
+using span_words::Section;
+span_words::OurImage& g_ours = span_words::g_ours;
+
 // BOF3.exe's .data, from its section header: 0x5DA000, virtual size 0x3636EC,
 // which the loader maps to the end of its last page. Addresses as at the
 // image's own base 0x400000 (the skip list's, the file's base, the run-time
 // slots'); g_data is where .data is read.
-constexpr std::uint32_t kBase = 0x5DA000;
-constexpr std::uint32_t kEnd = 0x93E000;
+constexpr std::uint32_t kBase = span_words::kDataLo;   // 0x5DA000 (span_words.h)
+constexpr std::uint32_t kEnd = span_words::kDataHi;     // 0x93E000
 constexpr std::uint32_t kPage = 0x1000;
 constexpr std::uint32_t kPages = (kEnd - kBase) / kPage;
 
@@ -146,21 +161,6 @@ bool g_seen = false;
 std::uint32_t g_last_frame = 0;
 std::uint32_t g_tick = 0;
 
-// BOF3.exe's image from its PE header: ImageBase 0x400000, SizeOfImage
-// 0x53F000 (VerifyImage has checked the timestamp before any of this runs).
-// A word of .data holding a value in it when the loader has mapped the image
-// is a pointer slot of Capcom's: a table entry, a record's string pointer.
-constexpr std::uint32_t kExeLo = 0x400000;
-constexpr std::uint32_t kExeHi = 0x93F000;
-// A folded range's extent (the file's comment): the image to the end of
-// .pool, which bof3x.exe carries after Capcom's range (exe_layout.h: .pool
-// begins at kExeHi) and which moves with the image - 0x587000, as host.cpp's
-// fence and input_script.cpp's AsVa reckon the image. Recorded in the header
-// (BOF3SH5); tools/statehash.py reads the same constants and asserts the
-// value. No static_assert here: tools/reloc_census.py counts each comparison
-// of an image address as a site, and the layout is checked where it lives.
-constexpr std::uint32_t kImageExtent = exe_layout::kPoolVa + exe_layout::kPoolSize - exe_layout::kImageBase;
-
 // Where the image lies (StateHash_SetImageBase), where its .data is read, and
 // the folded ranges: the image's base when it is not kExeLo, and the
 // BOF3X_STATEHASH_FOLD address (the file's comment). At most two.
@@ -177,38 +177,8 @@ unsigned g_nfolds = 0;
 constexpr std::uint32_t kTagCode = 0x80000000u;
 constexpr std::uint32_t kContentMax = 256;
 
-// Words Capcom's code fills at run time with Msg_SystemPtr's result, zero
-// when the census runs and so not slots of his: the battle message ring
-// 0x93C2C4 (16 entries of 8 bytes, +0 the text pointer; battle_actor_copies.cpp
-// queues the item under the cursor's description there) and the battle
-// result's current message 0x93B8E4 (battle_result.cpp). Under a language
-// overlay the pointer names MsgPool_Relocate's static pool in our DLL
-// (DIV-0007), at the same offset in every build and a different address:
-// two builds of ours on the combat route differed on those two pages from
-// the first battle message on (docs/state-hash.md section 7, measured 3,
-// 2026-10-11), so they join the slots. Without an overlay they hold a
-// pointer into MessagePools in BOF3.exe, hashed raw as before.
-constexpr std::uint32_t kMsgRing = 0x93C2C4;
-constexpr std::uint32_t kMsgRingEntries = 16;
-constexpr std::uint32_t kMsgRingStride = 8;
-constexpr std::uint32_t kMsgCurrent = 0x93B8E4;
-
-// A section of ours a pointer can name: every one the loader keeps. The
-// discardable ones (.reloc and the DWARF sections, 41 of the image's 94 MB in
-// the build of 2026-10-10) are mapped but nothing points into them, and a
-// language overlay's text written in place over one of Capcom's slots can
-// look like an address there (docs/state-hash.md section 7: "Para" at
-// 0x65D1D0), so a value inside one is hashed raw.
-struct Section {
-    std::uint32_t lo, hi;
-    bool content;   // readable and not executable: hashed by its bytes
-};
-
 bool g_census = false;           // BeforeInjects ran (BOF3X_STATEHASH was set)
 bool g_normalise = false;        // and BOF3X_STATEHASH_RAW was not 1
-std::uint32_t g_dll_lo = 0, g_dll_hi = 0;      // the whole image, for the census
-std::uint32_t g_named_lo = 0, g_named_hi = 0;  // the span of g_sections, a quick reject
-std::vector<Section> g_sections;
 std::vector<std::uint32_t> g_sites;        // byte offsets from kBase of Capcom's pointer slots, ascending
 std::vector<std::uint32_t> g_page_sites;   // kPages + 1: page i's slots are [g_page_sites[i], g_page_sites[i + 1])
 std::uint32_t g_last_normalised = 0xFFFFFFFFu;
@@ -220,28 +190,7 @@ inline std::uint32_t WordAt(std::uint32_t va) {
     return w;
 }
 
-inline bool InDll(std::uint32_t v) { return v >= g_dll_lo && v < g_dll_hi; }
-
-// A value in a folded range, as it would read with the image at 0x400000.
-inline bool Fold(const std::uint32_t* folds, unsigned n, std::uint32_t v, std::uint32_t* out) {
-    for (unsigned i = 0; i < n; ++i)
-        if (v - folds[i] < kImageExtent) {
-            *out = kExeLo + (v - folds[i]);
-            return true;
-        }
-    return false;
-}
-
-// A word whose low 24 bits lie in a folded range (an ordering-table link into
-// the moved image, its length byte on top), as it would read with the image
-// at 0x400000: those 24 bits folded, the top byte kept. Tried only when the
-// whole word is not folded.
-inline bool Fold24(const std::uint32_t* folds, unsigned n, std::uint32_t v, std::uint32_t* out) {
-    std::uint32_t c;
-    if ((v & 0xFF000000u) == 0 || !Fold(folds, n, v & 0xFFFFFFu, &c) || c > 0xFFFFFFu) return false;
-    *out = (v & 0xFF000000u) | c;
-    return true;
-}
+inline bool InDll(std::uint32_t v) { return g_ours.InImage(v); }
 
 // A Capcom slot is a word whose value at the census lies in the image: at
 // 0x400000, or in a folded range (where a moved image's rebased words lie; a
@@ -256,14 +205,6 @@ inline bool InImage(std::uint32_t v) {
     // the extent here would list only data words, alike on both sides. The
     // folded half takes the whole extent, as Fold does everywhere.
     return (v >= kExeLo && v < kExeHi) || Fold(g_folds, g_nfolds, v, &c);
-}
-
-// The section of ours a value names, or null.
-const Section* Named(std::uint32_t v) {
-    if (v < g_named_lo || v >= g_named_hi) return nullptr;
-    for (const Section& s : g_sections)
-        if (v >= s.lo && v < s.hi) return &s;
-    return nullptr;
 }
 
 // What a word holding a pointer of ours is hashed as (the file's comment):
@@ -282,30 +223,6 @@ std::uint32_t Identity(const Section& s, std::uint32_t target) {
     return 0x80000000u | (h == 0 ? 1 : h);   // never the code tag
 }
 
-void ReadDllImage(void* module) {
-    // The loader's image of the module (os/module.h): the PE headers on
-    // Windows - every section but the discardable ones - the PT_LOAD
-    // segments on POSIX. `module` is the module's handle, its base, on
-    // Windows; any address inside it will do.
-    os::ModuleImageInfo image;
-    if (!os::ModuleImage(module, &image))
-        Fatal("statehash: our module at %p has no image headers the loader mapped", module);
-    const auto base = Low32(reinterpret_cast<const void*>(image.base));
-    g_dll_lo = base;
-    g_dll_hi = base + static_cast<std::uint32_t>(image.extent);
-    g_named_lo = g_dll_hi;
-    g_named_hi = g_dll_lo;
-    for (const os::ModulePart& s : image.parts) {
-        const bool content = s.readable && !s.executable;
-        const std::uint32_t lo = base + static_cast<std::uint32_t>(s.lo - image.base), hi = lo + static_cast<std::uint32_t>(s.hi - s.lo);
-        g_sections.push_back({lo, hi, content});
-        if (lo < g_named_lo) g_named_lo = lo;
-        if (hi > g_named_hi) g_named_hi = hi;
-    }
-    if (g_sections.empty())
-        Fatal("statehash: our module at 0x%08lX has no section a pointer can name", (unsigned long)base);
-}
-
 // The census: every aligned word of .data whose value lies in our image; of
 // those, the ones in a section a pointer can name; of those, the ones in
 // Capcom's pointer slots - what the hash normalises - each named.
@@ -318,14 +235,14 @@ void Census(const char* when) {
         const std::uint32_t w = WordAt(g_data + off);
         if (!InDll(w)) continue;
         ++all;
-        if (!Named(w)) continue;
+        if (!g_ours.Named(w)) continue;
         ++named;
         if (k < g_sites.size() && g_sites[k] == off) listed.push_back(off);
     }
     Log("statehash   census %s: %lu aligned words of .data lie in our image 0x%08lX..0x%08lX, %lu of them in a "
         "section a pointer can name 0x%08lX..0x%08lX, %lu of those in Capcom's pointer slots (normalised)",
-        when, (unsigned long)all, (unsigned long)g_dll_lo, (unsigned long)g_dll_hi, (unsigned long)named,
-        (unsigned long)g_named_lo, (unsigned long)g_named_hi, (unsigned long)listed.size());
+        when, (unsigned long)all, (unsigned long)g_ours.lo, (unsigned long)g_ours.hi, (unsigned long)named,
+        (unsigned long)g_ours.named_lo, (unsigned long)g_ours.named_hi, (unsigned long)listed.size());
     for (std::size_t i = 0; i < listed.size() && i < 32; ++i)
         Log("statehash     slot 0x%06lX = 0x%08lX", (unsigned long)(kBase + listed[i]),
             (unsigned long)WordAt(g_data + listed[i]));
@@ -381,7 +298,7 @@ std::uint32_t HashNormalised(const unsigned char* page, const std::vector<Skip>&
             const std::uint32_t at = sites[k];
             std::uint32_t w;
             std::memcpy(&w, p + at, 4);
-            const Section* named = Named(w);
+            const Section* named = g_ours.Named(w);
             if (!named) continue;
             if (p == page) {
                 std::memcpy(scratch, page, kPage);
@@ -694,13 +611,14 @@ void StateHash_SetImageBase(unsigned long base) {
 
 void StateHash_BeforeInjects(void* dll_module) {
     if (bof3::os::GetEnv("BOF3X_SELFTEST_ONLY", nullptr, 0) > 0) SelfTest();
+    span_words::BeforeInjects(dll_module);   // the quicksave's slots and our image, in every run (span_words.h)
     if (bof3::os::GetEnv("BOF3X_STATEHASH", nullptr, 0) == 0) return;
     char raw[8];
     const std::uint32_t rn = bof3::os::GetEnv("BOF3X_STATEHASH_RAW", raw, sizeof raw);
     if (rn >= sizeof raw || (rn > 0 && std::strcmp(raw, "0") != 0 && std::strcmp(raw, "1") != 0))
         Fatal("BOF3X_STATEHASH_RAW: wants 1 (hash our pointers raw, as BOF3SH2 did) or 0");
     g_normalise = !(rn > 0 && raw[0] == '1');
-    ReadDllImage(dll_module);
+    g_ours.Read(dll_module);
     // The folded ranges (the file's comment): the image's own base when it
     // moved, and BOF3X_STATEHASH_FOLD - on a run at 0x400000, the moved run's
     // base, so both sides fold the same range.
@@ -724,10 +642,10 @@ void StateHash_BeforeInjects(void* dll_module) {
     // A folded range names the image: our DLL must not lie in one, or a
     // pointer of ours would read as one of the image's.
     for (unsigned i = 0; i < g_nfolds; ++i)
-        if (g_folds[i] < g_dll_hi && g_folds[i] + kImageExtent > g_dll_lo)
+        if (g_folds[i] < g_ours.hi && g_folds[i] + kImageExtent > g_ours.lo)
             Fatal("statehash: the folded range 0x%08lX..0x%08lX overlaps our image 0x%08lX..0x%08lX; set "
                   "BOF3X_STATEHASH_FOLD (and the image's base) elsewhere", (unsigned long)g_folds[i],
-                  (unsigned long)(g_folds[i] + kImageExtent), (unsigned long)g_dll_lo, (unsigned long)g_dll_hi);
+                  (unsigned long)(g_folds[i] + kImageExtent), (unsigned long)g_ours.lo, (unsigned long)g_ours.hi);
     // The table of code places (bind.cpp) under a top byte the dumps did not
     // measure: a data word may read as a place and be renamed. Said here, so a
     // proof run on such a machine is read with it in mind.
@@ -749,9 +667,9 @@ void StateHash_BeforeInjects(void* dll_module) {
     // which is why the word's index is mixed into the page hash as well.
     Log("statehash   our image 0x%08lX..0x%08lX, %u sections a pointer can name in 0x%08lX..0x%08lX; the game's "
         "image to .pool's end 0x%06lX..0x%06lX; identities 0x80000000.. %s both",
-        (unsigned long)g_dll_lo, (unsigned long)g_dll_hi, (unsigned)g_sections.size(), (unsigned long)g_named_lo,
-        (unsigned long)g_named_hi, (unsigned long)g_image, (unsigned long)(g_image + kImageExtent),
-        g_dll_hi <= 0x80000000u ? "lie above" : "OVERLAP our image - the index mix still keeps them apart -");
+        (unsigned long)g_ours.lo, (unsigned long)g_ours.hi, (unsigned)g_ours.sections.size(), (unsigned long)g_ours.named_lo,
+        (unsigned long)g_ours.named_hi, (unsigned long)g_image, (unsigned long)(g_image + kImageExtent),
+        g_ours.hi <= 0x80000000u ? "lie above" : "OVERLAP our image - the index mix still keeps them apart -");
     g_page_sites.assign(kPages + 1, 0);
     for (std::uint32_t off = 0; off < kEnd - kBase; off += 4) {
         const std::uint32_t w = WordAt(g_data + off);
