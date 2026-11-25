@@ -246,6 +246,8 @@ original	as-shipped	never	DIV-0242	env:BOF3X_EXEFILE=1	BOF3.exe is not read afte
 original	as-shipped	already-off	DIV-0243	ini:cheat.faerie=1	The faerie village's speed: a Cheats slider	Default off: already off
 original	as-shipped	already-off	DIV-0244	ExamineAlwaysLearns	A mod can make an examining member always learn the enemy's skill	Default off: already off
 original	as-shipped	already-off	DIV-0245	FasterFaerieVillage	A mod can run the faerie village at five times its speed	Default off: already off
+original	as-shipped	off	DIV-0246	env:BOF3X_LAYERING=0	Rei's tail is drawn over Bunyan's table while he swings it at the plate	Player yes
+original	as-shipped	off	DIV-0247	env:BOF3X_LAYERING=0	The plate on Bunyan's table is drawn whole, over the table's faces	Player yes
 original	repaired	skipped-language	DIV-0005	lang	Walk a language overlay after each `DAT` file	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
 original	repaired	skipped-language	DIV-0006	lang	Advance the dialogue pen by the glyph's width	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
 original	repaired	skipped-language	DIV-0007	lang	Move the system message pool out of the area script's way	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
