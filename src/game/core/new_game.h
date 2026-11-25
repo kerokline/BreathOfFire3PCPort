@@ -38,6 +38,14 @@ bool NewGame_Sequence();
 // of START, which is what resets its name buffer and page (M1).
 void NewGame_TitleBegins();
 
+// TitleFlow_EnterGame's, once the Config screen's fade is over and the cursor
+// is not the title's third row: true when the port's rest of TitleFlow_NewGame
+// (TitleFlow_NewGameRest below) has not run yet - the options are on and this
+// is a New Game - so the caller runs it now, after the Config screen, where
+// the PlayStation starts the scenario. False with the options off (the rest
+// ran in TitleFlow_NewGame, the port's place) and after a load.
+bool NewGame_RestOwed();
+
 // InjectAll, after every module's self-test (save_menu's fuzz compares
 // Capcom's TitleFlow_NewGame with both switches 0): the two PatchBytes and
 // the snapshot participant "NEWGAME". BOF3X_SHADOW=new_game runs the self-test
@@ -50,6 +58,7 @@ void Arm();
 // sequence enters it: the records (NewGame_InitCharacters and DIV-0228's
 // stamp), and the rest - 0x9039F2, Game_AreaNumber, Scenario_Start(0), the
 // Cond_Flags words - then Transition_Start(0) when `fade`, then Game_Step =
-// `step` (5 the port's, 4 the Config screen's title path).
+// `step` (5 the port's). With the options on the rest runs from
+// TitleFlow_EnterGame instead (NewGame_RestOwed), with no fade and step 5.
 void TitleFlow_NewGameRecords();
 void TitleFlow_NewGameRest(bool fade, unsigned step);

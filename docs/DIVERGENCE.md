@@ -17753,23 +17753,24 @@ designed in rather than bolted on.
   The machine's every "mode 2" test of the PlayStation is a "`Game_Step` 4"
   test on the PC, branch for branch (round doc 3a M1).
 - **New behaviour:** after New Game's records and its name screen (DIV-0231,
-  where it runs), the port's rest of `TitleFlow_NewGame` runs (the byte
-  `0x9039F2`, the area number, `Scenario_Start(0)`, the `Cond_Flags` words),
-  then `Game_Step` 4 with the screen black and no fade running, as the
-  title's third row enters it. The Config screen is the port's, unchanged;
-  its closing sets `Game_Step` 5, and `TitleFlow_EnterGame` finds the cursor
-  0 (nothing of ours writes `0x6BDF85`), rolls the growth and starts the
-  game. In every language, the original Chinese included, where New Game has
-  no name screen. **The order is the port's:** the scenario is started
-  before the options and the growth is rolled after them, where the
-  PlayStation rolls the growth in EnterGame, then shows the options, counts
-  30 frames after their fade and starts the scenario in their closing (M1).
-  The title's third row is unchanged.
+  where it runs), `Game_Step` 4 with the screen black and no fade running,
+  as the title's third row enters it. The Config screen is the port's,
+  unchanged; its closing sets `Game_Step` 5, and `TitleFlow_EnterGame` finds
+  the cursor 0 (nothing of ours writes `0x6BDF85`), runs the port's rest of
+  `TitleFlow_NewGame` (the byte `0x9039F2`, the area number,
+  `Scenario_Start(0)`, the `Cond_Flags` words), rolls the growth and starts
+  the game. In every language, the original Chinese included, where New Game
+  has no name screen. **The scenario starts after the options, as on the
+  PlayStation** (the amendment of 2026-11-25 below); the growth is rolled
+  after both, where the PlayStation rolls the growth in EnterGame, then shows
+  the options, counts 30 frames after their fade and starts the scenario in
+  their closing (M1). The title's third row is unchanged.
 - **Rationale:** the owner, 2026-11-12: the options screen back in the New
   Game sequence; the title's third row kept (A2). For the original Chinese
   the owner confirmed on 2026-11-14 (round doc 4e) that New Game keeps the
-  options screen there and has no name screen. Keeping the port's order
-  needs no change to `TitleFlow_EnterGame` or to the Config screen.
+  options screen there and has no name screen. The Config screen is not
+  changed; `TitleFlow_EnterGame` gets one call of ours (the amendment of
+  2026-11-25).
 - **Also in the PSX version?** No: the PlayStation shows its options screen
   at New Game, after the name (`Game_Mode` 2, `0x801E1520`, round doc 3a
   M1); the new behaviour is the PlayStation's but for the order above.
@@ -17790,6 +17791,43 @@ designed in rather than bolted on.
   New Game where it turned it off; "As shipped" still turns it off, and
   "PlayStation" kept it before and keeps it. The original behaviour above is
   unchanged.
+- **Amended 2026-11-25 (the scenario starts after the options):** as written
+  on 2026-11-14 the port's rest of `TitleFlow_NewGame` ran before the Config
+  screen ("the order is the port's"). The owner reported on 2026-11-25 that
+  the Config screen at New Game played several other sound effects where the
+  screen in play has its beep. The cause, read from the source and the data:
+  `Scenario_Start(0)` runs chapter 0's start `Scena00_Start` `0x537F30`, whose
+  `Scena16_PartyReset` `0x519890` calls `PartySet_Load(0xA, 0xFF, 0xFF, 0)`,
+  and that loads the party set's file `PL27A.DAT` (`Dat_FileNames` index
+  `0x2C2` + 11). The file carries a kind-2 chunk with tag 1, so
+  `Snd_LoadBank` `0x587CD0` puts it over sound bank 1, which the title's
+  `START.DAT` had filled. The Config screen plays cues `0x100`..`0x106`, bank
+  1's cues 0..6; in `PL27A.DAT`'s bank all of cues 0..7 name other waves
+  than `START.DAT`'s (hashed per cue, 2026-11-25, the cache's base and the
+  install's `DAT`; the same holds for all 19 `PL*.DAT` files). The title's
+  third row never ran `Scenario_Start`, so its Config screen was right. Now
+  the New Game sequence sets `Game_Step` 4 only, and `TitleFlow_EnterGame`
+  runs the rest when `NewGameOptions` is on and the title cursor is 0
+  (`new_game::NewGame_RestOwed`): after the Config screen's fade, before the
+  growth roll. No cell of ours carries it, so a quicksave on that Config
+  screen needs nothing new. With `NewGameOptions` off nothing changes: the
+  rest runs in `TitleFlow_NewGame`, the port's place. **Measured 2026-11-25**
+  (`newGameOriginal.txt`, the original Chinese, `BOF3X_DATLOG=1`, the build
+  of `main` `8a7c4954` against this one, harness root `ngcfg`): before,
+  `PL27A.DAT` is walked at frame 561 and the Config screen opens at 562;
+  now the screen runs frames 562 to 635 with no file walked and `PL27A.DAT`
+  is walked at 640, then `AREA024.DAT` at 642 on both. The state hash of the
+  two runs differs on 88 pages in ticks 562..641 only and is identical on
+  all 2,047 ticks from 642 to the opening's battle, so the game starts in
+  the state it started in. The shadow self-tests of `save_menu` (66,000
+  rounds, `TitleFlow_EnterGame` among them, the switches 0), `title_states`,
+  `rest_2f`, `rest_4f` and `new_game` pass; the whole suite stops in the
+  sound module's `SndBuf_Play` rounds on this build and on `main`'s alike
+  (55 of 2,000), which this change does not touch. The owner played this
+  build on 2026-11-25: "The sounds sound right to me". **Not verified:** the
+  route under a language with the name screen; a quickload of a take made on
+  that Config screen by a build from before this change, which would run the
+  rest a second time.
 - **Reversible?** `BOF3X_OFF=NewGameOptions` (ini `off=`; the launcher's box
   "Show the options screen at New Game, before the game starts", Mods,
   Extras, Page 2), or hosted `BOF3X_ORIGINAL=NewGameOptions`: New Game then
