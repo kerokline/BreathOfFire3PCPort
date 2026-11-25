@@ -1026,6 +1026,13 @@ Parsed ParseFormat1(Parsed p, const std::vector<unsigned char>& file, const Buil
     return p;
 }
 
+// BOF3X_QSPORTABLE=1, the developer's switch (docs/state-by-name-sites.md 4):
+// F7 takes a file it could restore exactly down the portable road instead, so
+// that one build shows its resume entries equal to its stacks (the proof's
+// first row, docs/state-by-name-round.md 5). Set by DoLoad alone, so the
+// self-test's Parse calls never see it.
+bool g_force_portable = false;
+
 // Everything a restore needs, checked before a byte is written: a refusal
 // here leaves the game exactly as it was. Format 2's order: the revision, the
 // host, the settings, the span, the records; then exact when the build and
@@ -1106,6 +1113,10 @@ Parsed Parse(const std::vector<unsigned char>& file, const BuildId& build, const
     } else if (x.image_base != ImageBase()) {
         reason = "another process";
         detail = Printf("the image lay at 0x%08X, here at 0x%08X", x.image_base, ImageBase());
+    }
+    if (reason.empty() && g_force_portable) {   // BOF3X_QSPORTABLE (DoLoad): the developer's proof of the resume entries
+        reason = "forced portable";
+        detail = "BOF3X_QSPORTABLE=1: a file this build and process could restore exactly, taken the portable road";
     }
     if (reason.empty()) {
         p.answer = Answer::Exact;
@@ -1189,14 +1200,16 @@ void PlaceTasks(const Parsed& p) {
             const task_yield::Site* site = task_yield::FindSite(t.name);
             if (t.kind != kTaskSite || !site) Fatal("snapshot: task %u stands at site %u (kind %u), checked before the restore began", k, t.name, t.kind);
             entry = reinterpret_cast<void*>(site->resume);
+        }
+        unsigned char* rec = TaskRecord(k);
+        const std::uint16_t state = U16(rec + task_sched::kState);
+        ::Task_Create(static_cast<int>(k), entry);   // which clears the slot's entry (task_yield.h item 2)
+        std::memcpy(rec + task_sched::kState, &state, sizeof state);
+        if (t.kind == kTaskSite) {   // so the site's entry is written after it, for the resume entry to read
             task_yield::g_entries[k].site = t.name;
             task_yield::g_entries[k].bytes = t.bytes;
             std::memcpy(task_yield::g_entries[k].locals, t.locals, t.bytes);
         }
-        unsigned char* rec = TaskRecord(k);
-        const std::uint16_t state = U16(rec + task_sched::kState);
-        ::Task_Create(static_cast<int>(k), entry);
-        std::memcpy(rec + task_sched::kState, &state, sizeof state);
     }
 }
 
@@ -1502,7 +1515,12 @@ void DoLoad(unsigned slot) {
         return;
     }
     const U top = static_cast<U>(Task_StackTop);
+    {
+        char v[4] = {};
+        g_force_portable = bof3::os::GetEnv("BOF3X_QSPORTABLE", v, sizeof v) == 1 && v[0] == '1';
+    }
     const Parsed p = Parse(file, build, CurrentSpan(), top, g_registry);
+    g_force_portable = false;
     if (!p.ok) {
         Log("quicksave   F7 %s refused: %s - %s%s", SlotName(slot).c_str(), p.why.c_str(), p.detail.c_str(),
             p.offer_save ? " (the save half is whole: it can be loaded as a save)" : " (no whole save half)");

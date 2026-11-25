@@ -36,6 +36,7 @@
 #include "hook/code_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "hook/task_yield.h"
 #include "input/sigma.h"
 
 namespace {
@@ -92,17 +93,21 @@ unsigned char SlotByte(const unsigned char& argument) { return *reinterpret_cast
 // (subtractive, slot 0). Each frame the tile is not yet done, the yaw and the
 // angle word turn by 11 and the distance shrinks by 50, the map view asked to
 // redraw; the frame the fade finishes, nothing moves.
-void SwingOut(int step) {
-    std::int32_t level = 0;
-    while (mode_flow::g.draw_tile(reinterpret_cast<short*>(&level), step, 1, 0, 2) == 0) {
+//
+// The yield word (docs/state-by-name-sites.md): the loop is entered from its
+// test, fresh with the level 0 and from site 6 with the take's level and step.
+using bof3::task_yield::SwingOutLocals;
+void SwingOutLoop(SwingOutLocals l) {
+    while (mode_flow::g.draw_tile(reinterpret_cast<short*>(&l.level), l.step, 1, 0, 2) == 0) {
         AddWord(::bof3::Img(kCameraYaw), 0xB);
         AddWord(::bof3::Img(kCameraAngle), 0xB);
         Camera_Distance = static_cast<short>(Camera_Distance - 0x32);
         MapView_Redraw = 2;
-        mode_flow::g.sleep(1);
+        Task_YieldAt(bof3::task_yield::kSiteSwingOut, 1, &l, sizeof l, mode_flow::g.sleep);
     }
     mode_flow::g.task_exit();
 }
+void SwingOut(int step) { SwingOutLoop({0, step}); }
 
 // Kinds 11 and 18: the mirror. The camera is put at yaw 0xFEAB, angle 0x355;
 // five frames of fade-in from black whatever the tile says; then every frame
@@ -114,16 +119,18 @@ void SwingOut(int step) {
 // add, as 16 bits - a distance that does not come to 0x5DC in steps of 50
 // turns the camera for ever; the stop is tested before the frame's sleep, so
 // the last frame's turn is not slept on.
-void SwingIn() {
-    std::int32_t level = 0x7FFF;
-    Camera_Angles[0] = 0xFEAB;
-    mode_flow::SetWord(mode_flow::At(::bof3::Img(Cond_AngleFB_addr)), 0x355);
-    MapView_Redraw = 2;
-    for (int i = 0; i < 5; ++i) {
-        mode_flow::g.draw_tile(reinterpret_cast<short*>(&level), -0x400, 1, 0, 2);
-        mode_flow::g.sleep(1);
-    }
-    unsigned char done = mode_flow::g.draw_tile(reinterpret_cast<short*>(&level), -0x400, 1, 0, 2);
+//
+// The yield word (docs/state-by-name-sites.md): two loops, two sites. The
+// opening is entered from its test with the frame to draw next (site 7 stands
+// after frame `frame` slept, so its resume entry goes on with frame + 1); the
+// turn is entered from its top, and its yield is mid-pass, so site 8's resume
+// entry runs the rest of that pass (SwingInTurnRest) and then the loop.
+using bof3::task_yield::SwingInOpenLocals;
+using bof3::task_yield::SwingInTurnLocals;
+void SwingInTurnRest(SwingInTurnLocals& l) {
+    if (l.done == 0) l.done = mode_flow::g.draw_tile(reinterpret_cast<short*>(&l.level), -0x400, 1, 0, 2);
+}
+void SwingInTurnLoop(SwingInTurnLocals l) {
     for (;;) {
         const auto distance = static_cast<std::uint16_t>(Camera_Distance + 0x32);
         AddWord(::bof3::Img(kCameraYaw), -0xB);
@@ -131,13 +138,27 @@ void SwingIn() {
         Camera_Distance = static_cast<short>(distance);
         MapView_Redraw = 2;
         if (distance == 0x5DC) break;
-        mode_flow::g.sleep(1);
-        if (done == 0) done = mode_flow::g.draw_tile(reinterpret_cast<short*>(&level), -0x400, 1, 0, 2);
+        Task_YieldAt(bof3::task_yield::kSiteSwingInTurn, 1, &l, sizeof l, mode_flow::g.sleep);
+        SwingInTurnRest(l);
     }
     Camera_Angles[0] = 0xFD56;
     mode_flow::SetWord(mode_flow::At(::bof3::Img(Cond_AngleFB_addr)), 0x200);
     MapView_Redraw = 2;
     mode_flow::g.task_exit();
+}
+void SwingInOpenLoop(SwingInOpenLocals l) {
+    for (; l.frame < 5; ++l.frame) {
+        mode_flow::g.draw_tile(reinterpret_cast<short*>(&l.level), -0x400, 1, 0, 2);
+        Task_YieldAt(bof3::task_yield::kSiteSwingInOpen, 1, &l, sizeof l, mode_flow::g.sleep);
+    }
+    const unsigned char done = mode_flow::g.draw_tile(reinterpret_cast<short*>(&l.level), -0x400, 1, 0, 2);
+    SwingInTurnLoop({l.level, done});
+}
+void SwingIn() {
+    Camera_Angles[0] = 0xFEAB;
+    mode_flow::SetWord(mode_flow::At(::bof3::Img(Cond_AngleFB_addr)), 0x355);
+    MapView_Redraw = 2;
+    SwingInOpenLoop({0x7FFF, 0});
 }
 
 // A countdown: frames 29..0, then seconds and minutes 59..0, then hours.
@@ -226,6 +247,28 @@ void BattleFrames() {
 }
 
 }  // namespace
+
+// The swings' resume entries (task_yield.h sites 6, 7, 8): the locals back,
+// the entry cleared, then the loop from where the yield left it.
+void __cdecl bof3::task_yield::ResumeSwingOut() {
+    SwingOutLocals l;
+    Task_YieldResume(kSiteSwingOut, &l, sizeof l);
+    SwingOutLoop(l);
+}
+
+void __cdecl bof3::task_yield::ResumeSwingInOpen() {
+    SwingInOpenLocals l;
+    Task_YieldResume(kSiteSwingInOpen, &l, sizeof l);
+    ++l.frame;   // the loop's step, which the sleep's return would have reached next
+    SwingInOpenLoop(l);
+}
+
+void __cdecl bof3::task_yield::ResumeSwingInTurn() {
+    SwingInTurnLocals l;
+    Task_YieldResume(kSiteSwingInTurn, &l, sizeof l);
+    SwingInTurnRest(l);   // the rest of the pass the yield stood in
+    SwingInTurnLoop(l);
+}
 
 namespace mode_states {
 
@@ -484,25 +527,52 @@ extern "C" void __cdecl Transition_Kind20(void) {
 // push dwords); the level lives in the argument slot of the step and only its
 // low word is read or written by Transition_DrawTile; the task ends with a
 // call to Task_Exit (which never returns in game).
+//
+// The yield word (docs/state-by-name-sites.md): the loop is entered from its
+// test, fresh with the start's level and from site 4 with the take's level
+// and arguments (FadeLocals); whether the fade goes out is the step's sign.
+namespace {
+using bof3::task_yield::FadeLocals;
+void FadeSubLoop(FadeLocals l) {
+    while (mode_flow::g.draw_tile(reinterpret_cast<short*>(&l.level), l.step, l.semi, l.slot, 2) == 0)
+        Task_YieldAt(bof3::task_yield::kSiteFadeSub, 1, &l, sizeof l, mode_flow::g.sleep);
+    if (static_cast<short>(l.step) > 0) SetFadeHold(0);
+    mode_flow::g.task_exit();
+}
+void FadeAddLoop(FadeLocals l) {
+    while (mode_flow::g.draw_tile(reinterpret_cast<short*>(&l.level), l.step, l.semi, l.slot, 1) == 0)
+        Task_YieldAt(bof3::task_yield::kSiteFadeAdd, 1, &l, sizeof l, mode_flow::g.sleep);
+    if (static_cast<short>(l.step) > 0) SetFadeHold(0xFF);
+    mode_flow::g.task_exit();
+}
+}  // namespace
+
 extern "C" void __cdecl Transition_FadeSub(int step, unsigned semi, unsigned slot) {
     const bool out = static_cast<short>(step) > 0;
-    std::int32_t level = out ? 0 : 0x7FFF;
-    while (mode_flow::g.draw_tile(reinterpret_cast<short*>(&level), step, semi, slot, 2) == 0) mode_flow::g.sleep(1);
-    if (out) SetFadeHold(0);
-    mode_flow::g.task_exit();
+    FadeSubLoop({out ? 0 : 0x7FFF, step, semi, slot});
+}
+
+void __cdecl bof3::task_yield::ResumeFadeSub() {
+    FadeLocals l;
+    Task_YieldResume(kSiteFadeSub, &l, sizeof l);
+    FadeSubLoop(l);
 }
 
 // original 0x4956A0: the same through an additive tile (blend mode 1), so
 // through white. A fade in (step <= 0) zeroes the hold bytes before the
 // first frame; a fade out sets them to 0xFF after the last. A tail jump to
 // Task_Exit.
+// The yield word: as FadeSub's, site 5.
 extern "C" void __cdecl Transition_FadeAdd(int step, unsigned semi, unsigned slot) {
     const bool out = static_cast<short>(step) > 0;
-    std::int32_t level = out ? 0 : 0x7FFF;
     if (!out) SetFadeHold(0);
-    while (mode_flow::g.draw_tile(reinterpret_cast<short*>(&level), step, semi, slot, 1) == 0) mode_flow::g.sleep(1);
-    if (out) SetFadeHold(0xFF);
-    mode_flow::g.task_exit();
+    FadeAddLoop({out ? 0 : 0x7FFF, step, semi, slot});
+}
+
+void __cdecl bof3::task_yield::ResumeFadeAdd() {
+    FadeLocals l;
+    Task_YieldResume(kSiteFadeAdd, &l, sizeof l);
+    FadeAddLoop(l);
 }
 
 // original 0x495750: one frame of a fade - a draw mode under tpage
@@ -549,16 +619,31 @@ extern "C" unsigned char __cdecl Transition_DrawTile(short* level, int step, uns
 // As the original has it: Game_Mode indexes the table unchecked, read afresh
 // every frame (the handlers change it); the table is read from memory each
 // time.
+//
+// The yield word (docs/state-by-name-sites.md): the sleep ends the loop's
+// pass, so the loop's top is where site 1 stands, and its resume entry is the
+// loop. Nothing is alive across the sleep: the mode is Game_Mode, in the span.
+namespace {
+[[noreturn]] void FieldTaskLoop() {
+    for (;;) {
+        reinterpret_cast<mode_flow::Handler>(GameMode_Handlers[Game_Mode].Native())();
+        mode_flow::g.clock_tick();
+        Task_YieldAt(bof3::task_yield::kSiteFieldTask, 1, nullptr, 0, mode_flow::g.sleep);
+    }
+}
+}  // namespace
+
 extern "C" void __cdecl Field_Task(void) {
     Game_Mode = 0;
     Game_Step = 0;
     mode_flow::g.clear_private();
     mode_flow::g.window_reset();
-    for (;;) {
-        reinterpret_cast<mode_flow::Handler>(GameMode_Handlers[Game_Mode].Native())();
-        mode_flow::g.clock_tick();
-        mode_flow::g.sleep(1);
-    }
+    FieldTaskLoop();
+}
+
+void __cdecl bof3::task_yield::ResumeFieldTask() {
+    Task_YieldResume(kSiteFieldTask, nullptr, 0);
+    FieldTaskLoop();
 }
 
 namespace mode_flow {

@@ -5524,161 +5524,161 @@ site	src/game/core/sound.cpp	1416	at_global	-	save_menu::at::kPieces	0x66726c	da
 site	src/game/core/sound.cpp	1426	at_global	-	save_menu::at::kSlotTop	0x8034d0	data	game	engine	base_helper	MoveScript_PartyRecords+0x50	-	save_menu::DrawSlotsOver(x, y, highlight, AtSaveMenu(::bof3::Img(save_menu::at::kSummaries.v)), reinterpret_cast<const volatile save_menu::U*>(AtSaveMenu(::bof3
 site	src/game/core/sound.cpp	1426	at_global	-	save_menu::at::kSummaries	0x905bc0	data	game	engine	base_helper	-	-	save_menu::DrawSlotsOver(x, y, highlight, AtSaveMenu(::bof3::Img(save_menu::at::kSummaries.v)), reinterpret_cast<const volatile save_menu::U*>(AtSaveMenu(::bof3
 site	src/game/core/sound.cpp	1436	at_global	-	save_menu::at::kSummaries	0x905bc0	data	game	engine	base_helper	-	-	save_menu::ReadSummaries(AtSaveMenu(::bof3::Img(Save_Directory_addr)), AtSaveMenu(::bof3::Img(save_menu::at::kSummaries.v)), &StagedRead, nullptr);
-site	src/game/core/sound.cpp	1453	at_global	-	shop_states2::at::kGameMode	0x66c7e8	data	game	engine	base_helper	Game_Mode	-	Entry(::bof3::Img(TitleTask_Modes_addr), LongShopStates2(::bof3::Img(shop_states2::at::kGameMode.v)) & 0xFFFF, " ")();
-site	src/game/core/title.cpp	110	const_def	literal	kPoolLimit	0x7f1bac	data	game	ui	module	Gfx_PacketPools+0xffac	-	constexpr std::uint32_t kPoolLimit = 0x7F1BAC;
-site	src/game/core/title.cpp	155	const_def	literal	kPages	0x675fd8	data	game	ui	module	-	-	constexpr ::bof3::image::Va kPages{0x675FD8};
-site	src/game/core/title.cpp	157	const_def	literal	kPage	0x675fdb	data	game	ui	module	CommuList_Page	-	constexpr ::bof3::image::Va kPage{0x675FDB};
-site	src/game/core/title.cpp	159	const_def	literal	kEntryNames	0x9048f0	data	game	ui	module	-	-	constexpr ::bof3::image::Va kEntryNames{0x9048F0};
-site	src/game/core/title.cpp	167	const_def	literal	kListAEntries	0x9039c0	data	game	ui	module	-	-	constexpr ::bof3::image::Va kListAEntries{0x9039C0};
-site	src/game/core/title.cpp	170	const_def	literal	kListBEntries	0x904f00	data	game	ui	module	-	-	constexpr ::bof3::image::Va kListBEntries{0x904F00};
-site	src/game/core/title.cpp	173	const_def	literal	kListCPairs	0x904ca0	data	game	ui	module	-	-	constexpr ::bof3::image::Va kListCPairs{0x904CA0};
-site	src/game/core/title.cpp	177	module_const	-	kEntryNames	0x9048f0	data	game	ui	base_helper	-	file	const unsigned char* const slot = move_script::At(::bof3::Img(kEntryNames.v) + 5 * e);
-site	src/game/core/title.cpp	182	const_def	literal	kWin0	0x803160	data	game	ui	module	WindowRecords	-	constexpr ::bof3::image::Va kWin0{0x803160};
-site	src/game/core/title.cpp	184	const_def	literal	kWin1	0x803184	data	game	ui	module	Window1	-	constexpr ::bof3::image::Va kWin1{0x803184};
-site	src/game/core/title.cpp	187	const_def	derived	kTop	0x80316b	data	game	ui	module	WindowRecords+0xb	-	constexpr ::bof3::image::Va kTop{WindowRecords_addr + 0xB};
-site	src/game/core/title.cpp	191	const_def	derived	kScroll	0x803172	data	game	ui	module	WindowRecords+0x12	-	constexpr ::bof3::image::Va kScroll{WindowRecords_addr + 0x12};
-site	src/game/core/title.cpp	193	const_def	literal	kTextRecords	0x904ce0	data	game	ui	module	Text_Records	-	constexpr ::bof3::image::Va kTextRecords{0x904CE0};
-site	src/game/core/title.cpp	195	const_def	literal	kTextBuffer	0x904ba0	data	game	ui	module	-	-	constexpr ::bof3::image::Va kTextBuffer{0x904BA0};
-site	src/game/core/title.cpp	197	const_def	literal	kScriptPool	0x803580	data	game	ui	module	-	-	constexpr ::bof3::image::Va kScriptPool{0x803580};
-site	src/game/core/title.cpp	199	const_def	literal	kPairMessages	0x653180	data	game	ui	module	-	-	constexpr ::bof3::image::Va kPairMessages{0x653180};
-site	src/game/core/title.cpp	201	const_def	literal	kTilesTop	0x6531a0	data	game	ui	module	-	-	constexpr ::bof3::image::Va kTilesTop{0x6531A0};
-site	src/game/core/title.cpp	203	const_def	literal	kTilesBottom	0x6531c0	data	game	ui	module	-	-	constexpr ::bof3::image::Va kTilesBottom{0x6531C0};
-site	src/game/core/title.cpp	205	const_def	literal	kTilesSide	0x6531e0	data	game	ui	module	-	-	constexpr ::bof3::image::Va kTilesSide{0x6531E0};
-site	src/game/core/title.cpp	207	const_def	literal	kPageFormat	0x6531f4	data	game	ui	module	-	-	constexpr ::bof3::image::Va kPageFormat{0x6531F4};
-site	src/game/core/title.cpp	209	const_def	literal	kOneGlyph	0x669f08	data	game	ui	module	-	-	constexpr ::bof3::image::Va kOneGlyph{0x669F08};
-site	src/game/core/title.cpp	229	module_const	-	kScriptPool	0x803580	data	game	ui	base_helper	-	file	const unsigned char* Message(unsigned id) { return move_script::At(::bof3::Img(kScriptPool.v) + W(::bof3::Img(kScriptPool.v) + 2 * id)); }
-site	src/game/core/title.cpp	229	module_const	-	kScriptPool	0x803580	data	game	ui	base_helper	-	file	const unsigned char* Message(unsigned id) { return move_script::At(::bof3::Img(kScriptPool.v) + W(::bof3::Img(kScriptPool.v) + 2 * id)); }
-site	src/game/core/title.cpp	287	code_const	module	kInventoryAdd	0x590bb0	code	game	ui	base_helper	Inventory_Add	include	Fn<unsigned char (__cdecl*)(unsigned, unsigned, unsigned, unsigned)>(::bof3::Code(kInventoryAdd.v)),
-site	src/game/core/title.cpp	289	code_const	module	kSystemChoice	0x498a30	code	game	ui	base_helper	MsgBox_SystemChoice	include	Fn<void (__cdecl*)()>(::bof3::Code(kSystemChoice.v)),
-site	src/game/core/title.cpp	360	module_const	-	kTextBuffer	0x904ba0	data	game	ui	base_helper	-	file	SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(::bof3::Img(kTextBuffer.v))),
-site	src/game/core/title.cpp	371	module_const	-	kTextBuffer	0x904ba0	data	game	ui	base_helper	-	file	SH_CALL(Text_DrawFont12)(cx, y + 0x14, 0, At(::bof3::Img(kTextBuffer.v)));
-site	src/game/core/title.cpp	380	module_const	-	kOneGlyph	0x669f08	data	game	ui	base_helper	-	file	SH_CALL(Text_DrawAt)(x + 0x84, y + 0x14, 0, 1, At(::bof3::Img(kOneGlyph.v)));
-site	src/game/core/title.cpp	440	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	const U d = LRest4f(::bof3::Img(rest_4f::at::kCounter.v));
-site	src/game/core/title.cpp	453	at_global	-	rest_4f::at::kButtons	0x903580	data	game	ui	base_helper	Gfx_UnpackScratch+0x1f000	-	SetWRest4f(::bof3::Img(rest_4f::at::kButtons.v), 0x23);
-site	src/game/core/title.cpp	454	at_global	-	rest_4f::at::kButtons	0x903580	data	game	ui	base_helper	Gfx_UnpackScratch+0x1f000	-	SetWRest4f(::bof3::Img(rest_4f::at::kButtons.v) + 2, 0x80);
-site	src/game/core/title.cpp	455	at_global	-	rest_4f::at::kButtons	0x903580	data	game	ui	base_helper	Gfx_UnpackScratch+0x1f000	-	SetWRest4f(::bof3::Img(rest_4f::at::kButtons.v) + 0xC, 0x40);
-site	src/game/core/title.cpp	456	at_global	-	rest_4f::at::kButtons	0x903580	data	game	ui	base_helper	Gfx_UnpackScratch+0x1f000	-	SetWRest4f(::bof3::Img(rest_4f::at::kButtons.v) + 4, 0x10);
-site	src/game/core/title.cpp	457	at_global	-	rest_4f::at::kButtons	0x903580	data	game	ui	base_helper	Gfx_UnpackScratch+0x1f000	-	SetWRest4f(::bof3::Img(rest_4f::at::kButtons.v) + 6, 8);
-site	src/game/core/title.cpp	458	at_global	-	rest_4f::at::kButtons	0x903580	data	game	ui	base_helper	Gfx_UnpackScratch+0x1f000	-	SetWRest4f(::bof3::Img(rest_4f::at::kButtons.v) + 8, 4);
-site	src/game/core/title.cpp	465	at_global	-	rest_4f::at::kPressedDword	0x7e1bec	data	game	ui	base_helper	Input_Pressed	-	const U p = LRest4f(::bof3::Img(rest_4f::at::kPressedDword.v));
-site	src/game/core/title.cpp	489	const_def	literal	kPlayClock	0x9040c8	data	game	ui	module	-	-	constexpr ::bof3::image::Va kPlayClock{0x9040C8};
-site	src/game/core/title.cpp	495	const_def	derived	kDemoEntry	0x495800	code	game	ui	module	Field_Task	-	constexpr ::bof3::image::CodeVa kDemoEntry{bof3::addr::Field_Task};
-site	src/game/core/title.cpp	497	const_def	derived	kMenuEntry	0x588e70	code	game	ui	module	TitleTask_Run	-	constexpr ::bof3::image::CodeVa kMenuEntry{bof3::addr::TitleTask_Run};
-site	src/game/core/title.cpp	568	module_const	-	kWin0	0x803160	data	game	ui	base_helper	WindowRecords	file	const U window_x = L(::bof3::Img(kWin0.v) + 4);
-site	src/game/core/title.cpp	570	module_const	-	kWin1	0x803184	data	game	ui	base_helper	Window1	file	SetW(::bof3::Img(kWin1.v) + 4, window_x + 7);
-site	src/game/core/title.cpp	571	module_const	-	kTop	0x80316b	data	game	ui	base_helper	WindowRecords+0xb	file	SetW(::bof3::Img(kWin1.v) + 6, 13u * (static_cast<std::uint32_t>(Window0_Cursor) - BRest4e(::bof3::Img(kTop.v)) + 2u) + static_cast<std::uint32_t>(WindowRecords
-site	src/game/core/title.cpp	571	module_const	-	kWin1	0x803184	data	game	ui	base_helper	Window1	file	SetW(::bof3::Img(kWin1.v) + 6, 13u * (static_cast<std::uint32_t>(Window0_Cursor) - BRest4e(::bof3::Img(kTop.v)) + 2u) + static_cast<std::uint32_t>(WindowRecords
-site	src/game/core/title.cpp	590	module_const	-	kScroll	0x803172	data	game	ui	base_helper	WindowRecords+0x12	file	if (row < BRest4e(::bof3::Img(kTop.v))) SetW(::bof3::Img(kScroll.v), 0xF0);
-site	src/game/core/title.cpp	590	module_const	-	kTop	0x80316b	data	game	ui	base_helper	WindowRecords+0xb	file	if (row < BRest4e(::bof3::Img(kTop.v))) SetW(::bof3::Img(kScroll.v), 0xF0);
-site	src/game/core/title.cpp	593	module_const	-	kScroll	0x803172	data	game	ui	base_helper	WindowRecords+0x12	file	if (Window0_Cursor >= static_cast<int>(BRest4e(::bof3::Img(kTop.v))) + 9) SetW(::bof3::Img(kScroll.v), 0x10);
-site	src/game/core/title.cpp	593	module_const	-	kTop	0x80316b	data	game	ui	base_helper	WindowRecords+0xb	file	if (Window0_Cursor >= static_cast<int>(BRest4e(::bof3::Img(kTop.v))) + 9) SetW(::bof3::Img(kScroll.v), 0x10);
-site	src/game/core/title.cpp	595	module_const	-	kTop	0x80316b	data	game	ui	base_helper	WindowRecords+0xb	file	const unsigned char top = BRest4e(::bof3::Img(kTop.v));
-site	src/game/core/title.cpp	601	module_const	-	kTop	0x80316b	data	game	ui	base_helper	WindowRecords+0xb	file	BRest4e(::bof3::Img(kTop.v)) = 0;
-site	src/game/core/title.cpp	606	module_const	-	kTop	0x80316b	data	game	ui	base_helper	WindowRecords+0xb	file	BRest4e(::bof3::Img(kTop.v)) = static_cast<unsigned char>(top - 9);
-site	src/game/core/title.cpp	609	module_const	-	kTop	0x80316b	data	game	ui	base_helper	WindowRecords+0xb	file	const unsigned char top = BRest4e(::bof3::Img(kTop.v));
-site	src/game/core/title.cpp	614	module_const	-	kTop	0x80316b	data	game	ui	base_helper	WindowRecords+0xb	file	BRest4e(::bof3::Img(kTop.v)) = 0x77;
-site	src/game/core/title.cpp	620	module_const	-	kTop	0x80316b	data	game	ui	base_helper	WindowRecords+0xb	file	BRest4e(::bof3::Img(kTop.v)) = static_cast<unsigned char>(top + 9);
-site	src/game/core/title.cpp	624	module_const	-	kScroll	0x803172	data	game	ui	base_helper	WindowRecords+0x12	file	if (W(::bof3::Img(kScroll.v)) != 0) return;
-site	src/game/core/title.cpp	694	module_const	-	kTextRecords	0x904ce0	data	game	ui	base_helper	Text_Records	file	std::memcpy(move_script::At(::bof3::Img(kTextRecords.v)), name, 16);
-site	src/game/core/title.cpp	733	module_const	-	kWin0	0x803160	data	game	ui	base_helper	WindowRecords	file	BRest4e(::bof3::Img(kWin0.v) + 0xA) = 0;
-site	src/game/core/title.cpp	734	module_const	-	kWin0	0x803160	data	game	ui	base_helper	WindowRecords	file	BRest4e(::bof3::Img(kWin0.v) + 0xB) = 0;
-site	src/game/core/title.cpp	735	module_const	-	kWin0	0x803160	data	game	ui	base_helper	WindowRecords	file	BRest4e(::bof3::Img(kWin0.v) + 0xC) = 0;
-site	src/game/core/title.cpp	736	module_const	-	kWin0	0x803160	data	game	ui	base_helper	WindowRecords	file	BRest4e(::bof3::Img(kWin0.v) + 0xD) = 0xFF;
-site	src/game/core/title.cpp	737	module_const	-	kWin0	0x803160	data	game	ui	base_helper	WindowRecords	file	BRest4e(::bof3::Img(kWin0.v) + 8) = 0;
-site	src/game/core/title.cpp	738	module_const	-	kWin0	0x803160	data	game	ui	base_helper	WindowRecords	file	BRest4e(::bof3::Img(kWin0.v) + 9) = 0;
-site	src/game/core/title.cpp	739	module_const	-	kWin0	0x803160	data	game	ui	base_helper	WindowRecords	file	SetW(::bof3::Img(kWin0.v) + 0x10, 0);
-site	src/game/core/title.cpp	740	module_const	-	kWin0	0x803160	data	game	ui	base_helper	WindowRecords	file	SetW(::bof3::Img(kWin0.v) + 0x12, 0);
-site	src/game/core/title.cpp	741	module_const	-	kWin1	0x803184	data	game	ui	base_helper	Window1	file	BRest4e(::bof3::Img(kWin1.v) + 1) = 2;
-site	src/game/core/title.cpp	742	module_const	-	kWin1	0x803184	data	game	ui	base_helper	Window1	file	BRest4e(::bof3::Img(kWin1.v) + 2) = 1;
-site	src/game/core/title.cpp	743	module_const	-	kWin1	0x803184	data	game	ui	base_helper	Window1	file	BRest4e(::bof3::Img(kWin1.v) + 3) = 0;
-site	src/game/core/title.cpp	762	module_const	-	kPages	0x675fd8	data	game	ui	base_helper	-	file	BRest4e(::bof3::Img(kPages.v)) = pages(Rest4a_RemovedCount, 7);
-site	src/game/core/title.cpp	763	module_const	-	kPages	0x675fd8	data	game	ui	base_helper	-	file	BRest4e(::bof3::Img(kPages.v) + 1) = pages(Rest4b_BusyA, 20);
-site	src/game/core/title.cpp	765	module_const	-	kPages	0x675fd8	data	game	ui	base_helper	-	file	BRest4e(::bof3::Img(kPages.v) + 2) = pages(Rest4b_BusyB, 8);
-site	src/game/core/title.cpp	785	module_const	-	kPages	0x675fd8	data	game	ui	base_helper	-	file	static_cast<unsigned char>(CommuList_Page), BRest4e(::bof3::Img(kPages.v)), BRest4e(::bof3::Img(kPages.v) + 1), BRest4e(::bof3::Img(kPages.v) + 2));
-site	src/game/core/title.cpp	785	module_const	-	kPages	0x675fd8	data	game	ui	base_helper	-	file	static_cast<unsigned char>(CommuList_Page), BRest4e(::bof3::Img(kPages.v)), BRest4e(::bof3::Img(kPages.v) + 1), BRest4e(::bof3::Img(kPages.v) + 2));
-site	src/game/core/title.cpp	785	module_const	-	kPages	0x675fd8	data	game	ui	base_helper	-	file	static_cast<unsigned char>(CommuList_Page), BRest4e(::bof3::Img(kPages.v)), BRest4e(::bof3::Img(kPages.v) + 1), BRest4e(::bof3::Img(kPages.v) + 2));
-site	src/game/core/title.cpp	786	module_const	-	kPages	0x675fd8	data	game	ui	base_helper	-	file	const unsigned char count = BRest4e(::bof3::Img(kPages.v) + list);
-site	src/game/core/title.cpp	798	module_const	-	kPages	0x675fd8	data	game	ui	base_helper	-	file	const auto total = static_cast<unsigned char>(BRest4e(::bof3::Img(kPages.v) + 2) + BRest4e(::bof3::Img(kPages.v) + 1) + BRest4e(::bof3::Img(kPages.v)));
-site	src/game/core/title.cpp	798	module_const	-	kPages	0x675fd8	data	game	ui	base_helper	-	file	const auto total = static_cast<unsigned char>(BRest4e(::bof3::Img(kPages.v) + 2) + BRest4e(::bof3::Img(kPages.v) + 1) + BRest4e(::bof3::Img(kPages.v)));
-site	src/game/core/title.cpp	798	module_const	-	kPages	0x675fd8	data	game	ui	base_helper	-	file	const auto total = static_cast<unsigned char>(BRest4e(::bof3::Img(kPages.v) + 2) + BRest4e(::bof3::Img(kPages.v) + 1) + BRest4e(::bof3::Img(kPages.v)));
-site	src/game/core/title.cpp	808	module_const	-	kPage	0x675fdb	data	game	ui	base_helper	CommuList_Page	file	if (static_cast<signed char>(page) < 0) BRest4e(::bof3::Img(kPage.v)) = static_cast<unsigned char>(total - 1);
-site	src/game/core/title.cpp	810	module_const	-	kPageFormat	0x6531f4	data	game	ui	base_helper	-	file	SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(move_script::At(::bof3::Img(kTextBuffer.v))), reinterpret_cast<const char*>(move_script::At(::bof3::Img(kPageFormat
-site	src/game/core/title.cpp	810	module_const	-	kTextBuffer	0x904ba0	data	game	ui	base_helper	-	file	SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(move_script::At(::bof3::Img(kTextBuffer.v))), reinterpret_cast<const char*>(move_script::At(::bof3::Img(kPageFormat
-site	src/game/core/title.cpp	812	module_const	-	kTextBuffer	0x904ba0	data	game	ui	base_helper	-	file	SH_CALL(Text_DrawFont8)(0xEE, 0x2C, 0, move_script::At(::bof3::Img(kTextBuffer.v)));
-site	src/game/core/title.cpp	842	module_const	-	kListAEntries	0x9039c0	data	game	ui	base_helper	-	file	SH_CALL(Text_DrawAt)(x + 0x14, row, 0, 5, SlotName(BRest4e(::bof3::Img(kListAEntries.v) + base + i) & 0x7F));
-site	src/game/core/title.cpp	843	module_const	-	kListAEntries	0x9039c0	data	game	ui	base_helper	-	file	const unsigned id = BRest4e(::bof3::Img(kListAEntries.v) + base + i) & 0x80 ? 0x3A : 0x39;
-site	src/game/core/title.cpp	877	module_const	-	kListBEntries	0x904f00	data	game	ui	base_helper	-	file	const unsigned entry = BRest4e(::bof3::Img(kListBEntries.v) + 15 * p + i);
-site	src/game/core/title.cpp	896	module_const	-	kListCPairs	0x904ca0	data	game	ui	base_helper	-	file	const unsigned char* const pair = move_script::At(::bof3::Img(kListCPairs.v) + 16 * p + 2 * i);
-site	src/game/core/title.cpp	898	module_const	-	kPairMessages	0x653180	data	game	ui	base_helper	-	file	if (W(::bof3::Img(kPairMessages.v) + 4 * kind + 2) != 0) {
-site	src/game/core/title.cpp	899	module_const	-	kTextRecords	0x904ce0	data	game	ui	base_helper	Text_Records	file	BRest4e(::bof3::Img(kTextRecords.v) + 5) = 0;
-site	src/game/core/title.cpp	901	module_const	-	kEntryNames	0x9048f0	data	game	ui	base_helper	-	file	SetL(::bof3::Img(kTextRecords.v), L(::bof3::Img(kEntryNames.v) + 5 * n));
-site	src/game/core/title.cpp	901	module_const	-	kTextRecords	0x904ce0	data	game	ui	base_helper	Text_Records	file	SetL(::bof3::Img(kTextRecords.v), L(::bof3::Img(kEntryNames.v) + 5 * n));
-site	src/game/core/title.cpp	902	module_const	-	kEntryNames	0x9048f0	data	game	ui	base_helper	-	file	BRest4e(::bof3::Img(kTextRecords.v) + 4) = BRest4e(::bof3::Img(kEntryNames.v) + 5 * n + 4);
-site	src/game/core/title.cpp	902	module_const	-	kTextRecords	0x904ce0	data	game	ui	base_helper	Text_Records	file	BRest4e(::bof3::Img(kTextRecords.v) + 4) = BRest4e(::bof3::Img(kEntryNames.v) + 5 * n + 4);
-site	src/game/core/title.cpp	905	module_const	-	kPairMessages	0x653180	data	game	ui	base_helper	-	file	Message(W(::bof3::Img(kPairMessages.v) + 4 * kind)));
-site	src/game/core/title.cpp	917	module_const	-	kTilesTop	0x6531a0	data	game	ui	base_helper	-	file	const unsigned char* const t = move_script::At(::bof3::Img(kTilesTop.v) + 2 * i);
-site	src/game/core/title.cpp	924	module_const	-	kTilesSide	0x6531e0	data	game	ui	base_helper	-	file	const unsigned char a = BRest4e(::bof3::Img(kTilesSide.v) + 2 * r);
-site	src/game/core/title.cpp	927	module_const	-	kTilesSide	0x6531e0	data	game	ui	base_helper	-	file	const unsigned char b = BRest4e(::bof3::Img(kTilesSide.v) + 2 * r + 1);
-site	src/game/core/title.cpp	933	module_const	-	kTilesBottom	0x6531c0	data	game	ui	base_helper	-	file	const unsigned char* const t = move_script::At(::bof3::Img(kTilesBottom.v) + 2 * i);
-site	src/game/core/title.cpp	990	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) = 0;
-site	src/game/core/title.cpp	1000	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	const unsigned char c0 = BRest4f(::bof3::Img(rest_4f::at::kCounter.v));
-site	src/game/core/title.cpp	1004	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	TitleBox(0x10 - static_cast<int>(BRest4f(::bof3::Img(rest_4f::at::kCounter.v))) * 16);
-site	src/game/core/title.cpp	1005	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	SH_CALL(Config_DrawPanel)(static_cast<int>(BRest4f(::bof3::Img(rest_4f::at::kCounter.v))) * 64 + 0x1C, 0x40);
-site	src/game/core/title.cpp	1006	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	SH_CALL(ConfigScreen_DrawButtons)(0xFF, 0x70, 0x26 - static_cast<int>(BRest4f(::bof3::Img(rest_4f::at::kCounter.v))) * 16);
-site	src/game/core/title.cpp	1007	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	const unsigned char n = static_cast<unsigned char>(BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) - 1);
-site	src/game/core/title.cpp	1008	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) = n;
-site	src/game/core/title.cpp	1011	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) = 0;
-site	src/game/core/title.cpp	1029	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) = 0;
-site	src/game/core/title.cpp	1055	at_global	-	rest_4f::at::kPressedDword	0x7e1bec	data	game	ui	base_helper	Input_Pressed	-	const U pressed = LRest4f(::bof3::Img(rest_4f::at::kPressedDword.v));
-site	src/game/core/title.cpp	1064	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) = 0;
-site	src/game/core/title.cpp	1082	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) = 0;
-site	src/game/core/title.cpp	1105	at_global	-	rest_4f::at::kPressedDword	0x7e1bec	data	game	ui	base_helper	Input_Pressed	-	const U held = LRest4f(::bof3::Img(rest_4f::at::kPressedDword.v));
-site	src/game/core/title.cpp	1145	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) = 1;
-site	src/game/core/title.cpp	1157	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) = 1;
-site	src/game/core/title.cpp	1167	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	const unsigned char n = BRest4f(::bof3::Img(rest_4f::at::kCounter.v));
-site	src/game/core/title.cpp	1168	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	if (n < 3) BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) = static_cast<unsigned char>(n + 1);
-site	src/game/core/title.cpp	1196	at_global	-	rest_4f::at::kButtons	0x903580	data	game	ui	base_helper	Gfx_UnpackScratch+0x1f000	-	SetWRest4f(::bof3::Img(rest_4f::at::kButtons.v), WRest4f(::bof3::Img(rest_4f::at::kButtons.v)) & 0xFFFC);
-site	src/game/core/title.cpp	1196	at_global	-	rest_4f::at::kButtons	0x903580	data	game	ui	base_helper	Gfx_UnpackScratch+0x1f000	-	SetWRest4f(::bof3::Img(rest_4f::at::kButtons.v), WRest4f(::bof3::Img(rest_4f::at::kButtons.v)) & 0xFFFC);
-site	src/game/core/title.cpp	1205	at_global	-	rest_4f::at::kButtons	0x903580	data	game	ui	base_helper	Gfx_UnpackScratch+0x1f000	-	if (WRest4f(::bof3::Img(rest_4f::at::kButtons.v) + 2u * BRest4f(::bof3::Img(rest_4f::at::kPadRows.v) + r)) & bits) break;
-site	src/game/core/title.cpp	1205	at_global	-	rest_4f::at::kPadRows	0x6536f0	data	game	ui	base_helper	-	-	if (WRest4f(::bof3::Img(rest_4f::at::kButtons.v) + 2u * BRest4f(::bof3::Img(rest_4f::at::kPadRows.v) + r)) & bits) break;
-site	src/game/core/title.cpp	1207	at_global	-	rest_4f::at::kPadRowsByCursor	0x6536e8	data	game	ui	base_helper	-	-	const U by_cursor = ::bof3::Img(rest_4f::at::kPadRowsByCursor.v) + static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(c)));
-site	src/game/core/title.cpp	1210	at_global	-	rest_4f::at::kPadRows	0x6536f0	data	game	ui	base_helper	-	-	const U to = ::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000 + 2u * BRest4f(::bof3::Img(rest_4f::at::kPadRows.v) + r);
-site	src/game/core/title.cpp	1213	at_global	-	rest_4f::at::kButtons	0x903580	data	game	ui	base_helper	Gfx_UnpackScratch+0x1f000	-	SetWRest4f(::bof3::Img(rest_4f::at::kButtons.v) + 2u * BRest4f(by_cursor), bits);
-site	src/game/core/title.cpp	1214	at_global	-	rest_4f::at::kButtons	0x903580	data	game	ui	base_helper	Gfx_UnpackScratch+0x1f000	-	SetWRest4f(::bof3::Img(rest_4f::at::kButtons.v), WRest4f(::bof3::Img(rest_4f::at::kButtons.v)) | 3);
-site	src/game/core/title.cpp	1214	at_global	-	rest_4f::at::kButtons	0x903580	data	game	ui	base_helper	Gfx_UnpackScratch+0x1f000	-	SetWRest4f(::bof3::Img(rest_4f::at::kButtons.v), WRest4f(::bof3::Img(rest_4f::at::kButtons.v)) | 3);
-site	src/game/core/title.cpp	1240	at_global	-	rest_4f::at::kPressedDword	0x7e1bec	data	game	ui	base_helper	Input_Pressed	-	const U p = LRest4f(::bof3::Img(rest_4f::at::kPressedDword.v));
-site	src/game/core/title.cpp	1271	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	TitleBox(0x10 - static_cast<int>(BRest4f(::bof3::Img(rest_4f::at::kCounter.v))) * 16);
-site	src/game/core/title.cpp	1272	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	SH_CALL(Config_DrawPanel)(static_cast<int>(BRest4f(::bof3::Img(rest_4f::at::kCounter.v))) * 64 + 0x1C, 0x40);
-site	src/game/core/title.cpp	1273	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	SH_CALL(ConfigScreen_DrawButtons)(0, 0x70, 0x26 - static_cast<int>(BRest4f(::bof3::Img(rest_4f::at::kCounter.v))) * 16);
-site	src/game/core/title.cpp	1274	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	const unsigned char n = static_cast<unsigned char>(BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) + 1);
-site	src/game/core/title.cpp	1275	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) = n;
-site	src/game/core/title.cpp	1374	at_global	-	rest_4f::at::kOptionFirst	0x653808	data	game	ui	base_helper	-	-	const U first = BRest4f(::bof3::Img(rest_4f::at::kOptionFirst.v) + r);
-site	src/game/core/title.cpp	1375	at_global	-	rest_4f::at::kOptionCount	0x653810	data	game	ui	base_helper	-	-	if (BRest4f(::bof3::Img(rest_4f::at::kOptionCount.v) + r) == 0) return;
-site	src/game/core/title.cpp	1376	at_global	-	rest_4f::at::kOptionRecords	0x6536f8	data	game	ui	base_helper	-	-	U rec = ::bof3::Img(rest_4f::at::kOptionRecords.v) + first * 16;
-site	src/game/core/title.cpp	1394	at_global	-	rest_4f::at::kOptionCount	0x653810	data	game	ui	base_helper	-	-	if (static_cast<std::int16_t>(i) >= static_cast<std::int16_t>(BRest4f(::bof3::Img(rest_4f::at::kOptionCount.v) + r))) break;
-site	src/game/core/title.cpp	1413	at_global	-	rest_4f::at::kButtons	0x903580	data	game	ui	base_helper	Gfx_UnpackScratch+0x1f000	-	const U word = WRest4f(::bof3::Img(rest_4f::at::kButtons.v) + 2u * kWords[row]);
-site	src/game/core/title.cpp	1435	at_global	-	rest_4f::at::kPadNames	0x66a368	data	game	ui	call	-	-	(unsigned)r, (unsigned)rest_4f::at::kPadNames.v);
-site	src/game/core/title.cpp	1436	at_global	-	rest_4f::at::kPadNames	0x66a368	data	game	ui	base_helper	-	-	const auto* const name = move_script::At(LRest4f(::bof3::Img(rest_4f::at::kPadNames.v) + 4 * r));
-site	src/game/core/title.cpp	1507	raw_literal	-	0x653824	0x653824	data	game	ui	init	-	-	{0x20, 2, 0x65382C, 3}, {0x40, 1, 0x653828, 3}, {0x10, 6, 0x653824, 3},
-site	src/game/core/title.cpp	1507	raw_literal	-	0x653828	0x653828	data	game	ui	init	-	-	{0x20, 2, 0x65382C, 3}, {0x40, 1, 0x653828, 3}, {0x10, 6, 0x653824, 3},
-site	src/game/core/title.cpp	1507	raw_literal	-	0x65382C	0x65382c	data	game	ui	init	-	-	{0x20, 2, 0x65382C, 3}, {0x40, 1, 0x653828, 3}, {0x10, 6, 0x653824, 3},
-site	src/game/core/title.cpp	1508	raw_literal	-	0x653818	0x653818	data	game	ui	init	-	-	{0x80, 5, 0x653820, 3}, {0x04, 0, 0x65381C, 4}, {0x08, 0, 0x653818, 3},
-site	src/game/core/title.cpp	1508	raw_literal	-	0x65381C	0x65381c	data	game	ui	init	-	-	{0x80, 5, 0x653820, 3}, {0x04, 0, 0x65381C, 4}, {0x08, 0, 0x653818, 3},
-site	src/game/core/title.cpp	1508	raw_literal	-	0x653820	0x653820	data	game	ui	init	-	-	{0x80, 5, 0x653820, 3}, {0x04, 0, 0x65381C, 4}, {0x08, 0, 0x653818, 3},
-site	src/game/core/title.cpp	1510	const_def	literal	kGlyphPointers	0x66a2fc	data	game	ui	module	-	-	constexpr ::bof3::image::Va kGlyphPointers{0x66A2FC};
-site	src/game/core/title.cpp	1515	module_const	-	kGlyphPointers	0x66a2fc	data	game	ui	base_helper	-	file	*reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(kGlyphPointers.v) + 4 * i))));
-site	src/game/core/title.cpp	1565	module_const	-	kPoolLimit	0x7f1bac	data	game	ui	base_helper	Gfx_PacketPools+0xffac	file	const std::uint32_t limit = (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16) + ::bof3::Img(kPoolLimit);
-site	src/game/core/title.cpp	1594	at_global	-	item_use::at::kRepeatLatch	0x7e01b8	data	game	ui	base_helper	-	-	item_use::SetWord(item_use::At(::bof3::Img(item_use::at::kRepeatLatch.v)), held);
-site	src/game/core/title.cpp	1597	at_global	-	item_use::at::kRepeatLatch	0x7e01b8	data	game	ui	base_helper	-	-	if ((item_use::Word(item_use::At(::bof3::Img(item_use::at::kRepeatLatch.v))) & held & 0xFFFF) != 0) {
-site	src/game/core/title.cpp	1602	at_global	-	item_use::at::kRepeatLatch	0x7e01b8	data	game	ui	base_helper	-	-	item_use::SetWord(item_use::At(::bof3::Img(item_use::at::kRepeatLatch.v)), held);
-site	src/game/core/title.cpp	1751	const_def	derived	kModeDispatch	0x56d690	code	game	ui	module	Field_ModeDispatch	-	constexpr ::bof3::image::CodeVa kModeDispatch{bof3::addr::Field_ModeDispatch};
-site	src/game/core/title.cpp	1757	abs_call	fnptr	kModeDispatch	0x56d690	code	game	ui	base_helper	Field_ModeDispatch	file	Field_LoadingFrame, reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(::bof3::Code(kModeDispatch.v))),
-site	src/game/core/title.cpp	1840	module_const	-	kPlayClock	0x9040c8	data	game	ui	base_helper	-	file	move_script::At(::bof3::Img(kPlayClock.v))[3] = 0;
-site	src/game/core/title.cpp	1841	module_const	-	kPlayClock	0x9040c8	data	game	ui	base_helper	-	file	move_script::At(::bof3::Img(kPlayClock.v))[2] = 0;
-site	src/game/core/title.cpp	1842	module_const	-	kPlayClock	0x9040c8	data	game	ui	base_helper	-	file	move_script::At(::bof3::Img(kPlayClock.v))[1] = 0;
-site	src/game/core/title.cpp	1843	module_const	-	kPlayClock	0x9040c8	data	game	ui	base_helper	-	file	move_script::At(::bof3::Img(kPlayClock.v))[0] = 0;
-site	src/game/core/title.cpp	1846	code_const	module	kDemoEntry	0x495800	code	game	ui	base_helper	Field_Task	file	title_states::gTitleStates.task_create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kDemoEntry.v))));
-site	src/game/core/title.cpp	1903	code_const	module	kMenuEntry	0x588e70	code	game	ui	base_helper	TitleTask_Run	file	title_states::gTitleStates.task_create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kMenuEntry.v))));
+site	src/game/core/sound.cpp	1454	at_global	-	shop_states2::at::kGameMode	0x66c7e8	data	game	engine	base_helper	Game_Mode	-	Entry(::bof3::Img(TitleTask_Modes_addr), LongShopStates2(::bof3::Img(shop_states2::at::kGameMode.v)) & 0xFFFF, " ")();
+site	src/game/core/title.cpp	111	const_def	literal	kPoolLimit	0x7f1bac	data	game	ui	module	Gfx_PacketPools+0xffac	-	constexpr std::uint32_t kPoolLimit = 0x7F1BAC;
+site	src/game/core/title.cpp	156	const_def	literal	kPages	0x675fd8	data	game	ui	module	-	-	constexpr ::bof3::image::Va kPages{0x675FD8};
+site	src/game/core/title.cpp	158	const_def	literal	kPage	0x675fdb	data	game	ui	module	CommuList_Page	-	constexpr ::bof3::image::Va kPage{0x675FDB};
+site	src/game/core/title.cpp	160	const_def	literal	kEntryNames	0x9048f0	data	game	ui	module	-	-	constexpr ::bof3::image::Va kEntryNames{0x9048F0};
+site	src/game/core/title.cpp	168	const_def	literal	kListAEntries	0x9039c0	data	game	ui	module	-	-	constexpr ::bof3::image::Va kListAEntries{0x9039C0};
+site	src/game/core/title.cpp	171	const_def	literal	kListBEntries	0x904f00	data	game	ui	module	-	-	constexpr ::bof3::image::Va kListBEntries{0x904F00};
+site	src/game/core/title.cpp	174	const_def	literal	kListCPairs	0x904ca0	data	game	ui	module	-	-	constexpr ::bof3::image::Va kListCPairs{0x904CA0};
+site	src/game/core/title.cpp	178	module_const	-	kEntryNames	0x9048f0	data	game	ui	base_helper	-	file	const unsigned char* const slot = move_script::At(::bof3::Img(kEntryNames.v) + 5 * e);
+site	src/game/core/title.cpp	183	const_def	literal	kWin0	0x803160	data	game	ui	module	WindowRecords	-	constexpr ::bof3::image::Va kWin0{0x803160};
+site	src/game/core/title.cpp	185	const_def	literal	kWin1	0x803184	data	game	ui	module	Window1	-	constexpr ::bof3::image::Va kWin1{0x803184};
+site	src/game/core/title.cpp	188	const_def	derived	kTop	0x80316b	data	game	ui	module	WindowRecords+0xb	-	constexpr ::bof3::image::Va kTop{WindowRecords_addr + 0xB};
+site	src/game/core/title.cpp	192	const_def	derived	kScroll	0x803172	data	game	ui	module	WindowRecords+0x12	-	constexpr ::bof3::image::Va kScroll{WindowRecords_addr + 0x12};
+site	src/game/core/title.cpp	194	const_def	literal	kTextRecords	0x904ce0	data	game	ui	module	Text_Records	-	constexpr ::bof3::image::Va kTextRecords{0x904CE0};
+site	src/game/core/title.cpp	196	const_def	literal	kTextBuffer	0x904ba0	data	game	ui	module	-	-	constexpr ::bof3::image::Va kTextBuffer{0x904BA0};
+site	src/game/core/title.cpp	198	const_def	literal	kScriptPool	0x803580	data	game	ui	module	-	-	constexpr ::bof3::image::Va kScriptPool{0x803580};
+site	src/game/core/title.cpp	200	const_def	literal	kPairMessages	0x653180	data	game	ui	module	-	-	constexpr ::bof3::image::Va kPairMessages{0x653180};
+site	src/game/core/title.cpp	202	const_def	literal	kTilesTop	0x6531a0	data	game	ui	module	-	-	constexpr ::bof3::image::Va kTilesTop{0x6531A0};
+site	src/game/core/title.cpp	204	const_def	literal	kTilesBottom	0x6531c0	data	game	ui	module	-	-	constexpr ::bof3::image::Va kTilesBottom{0x6531C0};
+site	src/game/core/title.cpp	206	const_def	literal	kTilesSide	0x6531e0	data	game	ui	module	-	-	constexpr ::bof3::image::Va kTilesSide{0x6531E0};
+site	src/game/core/title.cpp	208	const_def	literal	kPageFormat	0x6531f4	data	game	ui	module	-	-	constexpr ::bof3::image::Va kPageFormat{0x6531F4};
+site	src/game/core/title.cpp	210	const_def	literal	kOneGlyph	0x669f08	data	game	ui	module	-	-	constexpr ::bof3::image::Va kOneGlyph{0x669F08};
+site	src/game/core/title.cpp	230	module_const	-	kScriptPool	0x803580	data	game	ui	base_helper	-	file	const unsigned char* Message(unsigned id) { return move_script::At(::bof3::Img(kScriptPool.v) + W(::bof3::Img(kScriptPool.v) + 2 * id)); }
+site	src/game/core/title.cpp	230	module_const	-	kScriptPool	0x803580	data	game	ui	base_helper	-	file	const unsigned char* Message(unsigned id) { return move_script::At(::bof3::Img(kScriptPool.v) + W(::bof3::Img(kScriptPool.v) + 2 * id)); }
+site	src/game/core/title.cpp	288	code_const	module	kInventoryAdd	0x590bb0	code	game	ui	base_helper	Inventory_Add	include	Fn<unsigned char (__cdecl*)(unsigned, unsigned, unsigned, unsigned)>(::bof3::Code(kInventoryAdd.v)),
+site	src/game/core/title.cpp	290	code_const	module	kSystemChoice	0x498a30	code	game	ui	base_helper	MsgBox_SystemChoice	include	Fn<void (__cdecl*)()>(::bof3::Code(kSystemChoice.v)),
+site	src/game/core/title.cpp	361	module_const	-	kTextBuffer	0x904ba0	data	game	ui	base_helper	-	file	SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(::bof3::Img(kTextBuffer.v))),
+site	src/game/core/title.cpp	372	module_const	-	kTextBuffer	0x904ba0	data	game	ui	base_helper	-	file	SH_CALL(Text_DrawFont12)(cx, y + 0x14, 0, At(::bof3::Img(kTextBuffer.v)));
+site	src/game/core/title.cpp	381	module_const	-	kOneGlyph	0x669f08	data	game	ui	base_helper	-	file	SH_CALL(Text_DrawAt)(x + 0x84, y + 0x14, 0, 1, At(::bof3::Img(kOneGlyph.v)));
+site	src/game/core/title.cpp	441	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	const U d = LRest4f(::bof3::Img(rest_4f::at::kCounter.v));
+site	src/game/core/title.cpp	454	at_global	-	rest_4f::at::kButtons	0x903580	data	game	ui	base_helper	Gfx_UnpackScratch+0x1f000	-	SetWRest4f(::bof3::Img(rest_4f::at::kButtons.v), 0x23);
+site	src/game/core/title.cpp	455	at_global	-	rest_4f::at::kButtons	0x903580	data	game	ui	base_helper	Gfx_UnpackScratch+0x1f000	-	SetWRest4f(::bof3::Img(rest_4f::at::kButtons.v) + 2, 0x80);
+site	src/game/core/title.cpp	456	at_global	-	rest_4f::at::kButtons	0x903580	data	game	ui	base_helper	Gfx_UnpackScratch+0x1f000	-	SetWRest4f(::bof3::Img(rest_4f::at::kButtons.v) + 0xC, 0x40);
+site	src/game/core/title.cpp	457	at_global	-	rest_4f::at::kButtons	0x903580	data	game	ui	base_helper	Gfx_UnpackScratch+0x1f000	-	SetWRest4f(::bof3::Img(rest_4f::at::kButtons.v) + 4, 0x10);
+site	src/game/core/title.cpp	458	at_global	-	rest_4f::at::kButtons	0x903580	data	game	ui	base_helper	Gfx_UnpackScratch+0x1f000	-	SetWRest4f(::bof3::Img(rest_4f::at::kButtons.v) + 6, 8);
+site	src/game/core/title.cpp	459	at_global	-	rest_4f::at::kButtons	0x903580	data	game	ui	base_helper	Gfx_UnpackScratch+0x1f000	-	SetWRest4f(::bof3::Img(rest_4f::at::kButtons.v) + 8, 4);
+site	src/game/core/title.cpp	466	at_global	-	rest_4f::at::kPressedDword	0x7e1bec	data	game	ui	base_helper	Input_Pressed	-	const U p = LRest4f(::bof3::Img(rest_4f::at::kPressedDword.v));
+site	src/game/core/title.cpp	490	const_def	literal	kPlayClock	0x9040c8	data	game	ui	module	-	-	constexpr ::bof3::image::Va kPlayClock{0x9040C8};
+site	src/game/core/title.cpp	496	const_def	derived	kDemoEntry	0x495800	code	game	ui	module	Field_Task	-	constexpr ::bof3::image::CodeVa kDemoEntry{bof3::addr::Field_Task};
+site	src/game/core/title.cpp	498	const_def	derived	kMenuEntry	0x588e70	code	game	ui	module	TitleTask_Run	-	constexpr ::bof3::image::CodeVa kMenuEntry{bof3::addr::TitleTask_Run};
+site	src/game/core/title.cpp	569	module_const	-	kWin0	0x803160	data	game	ui	base_helper	WindowRecords	file	const U window_x = L(::bof3::Img(kWin0.v) + 4);
+site	src/game/core/title.cpp	571	module_const	-	kWin1	0x803184	data	game	ui	base_helper	Window1	file	SetW(::bof3::Img(kWin1.v) + 4, window_x + 7);
+site	src/game/core/title.cpp	572	module_const	-	kTop	0x80316b	data	game	ui	base_helper	WindowRecords+0xb	file	SetW(::bof3::Img(kWin1.v) + 6, 13u * (static_cast<std::uint32_t>(Window0_Cursor) - BRest4e(::bof3::Img(kTop.v)) + 2u) + static_cast<std::uint32_t>(WindowRecords
+site	src/game/core/title.cpp	572	module_const	-	kWin1	0x803184	data	game	ui	base_helper	Window1	file	SetW(::bof3::Img(kWin1.v) + 6, 13u * (static_cast<std::uint32_t>(Window0_Cursor) - BRest4e(::bof3::Img(kTop.v)) + 2u) + static_cast<std::uint32_t>(WindowRecords
+site	src/game/core/title.cpp	591	module_const	-	kScroll	0x803172	data	game	ui	base_helper	WindowRecords+0x12	file	if (row < BRest4e(::bof3::Img(kTop.v))) SetW(::bof3::Img(kScroll.v), 0xF0);
+site	src/game/core/title.cpp	591	module_const	-	kTop	0x80316b	data	game	ui	base_helper	WindowRecords+0xb	file	if (row < BRest4e(::bof3::Img(kTop.v))) SetW(::bof3::Img(kScroll.v), 0xF0);
+site	src/game/core/title.cpp	594	module_const	-	kScroll	0x803172	data	game	ui	base_helper	WindowRecords+0x12	file	if (Window0_Cursor >= static_cast<int>(BRest4e(::bof3::Img(kTop.v))) + 9) SetW(::bof3::Img(kScroll.v), 0x10);
+site	src/game/core/title.cpp	594	module_const	-	kTop	0x80316b	data	game	ui	base_helper	WindowRecords+0xb	file	if (Window0_Cursor >= static_cast<int>(BRest4e(::bof3::Img(kTop.v))) + 9) SetW(::bof3::Img(kScroll.v), 0x10);
+site	src/game/core/title.cpp	596	module_const	-	kTop	0x80316b	data	game	ui	base_helper	WindowRecords+0xb	file	const unsigned char top = BRest4e(::bof3::Img(kTop.v));
+site	src/game/core/title.cpp	602	module_const	-	kTop	0x80316b	data	game	ui	base_helper	WindowRecords+0xb	file	BRest4e(::bof3::Img(kTop.v)) = 0;
+site	src/game/core/title.cpp	607	module_const	-	kTop	0x80316b	data	game	ui	base_helper	WindowRecords+0xb	file	BRest4e(::bof3::Img(kTop.v)) = static_cast<unsigned char>(top - 9);
+site	src/game/core/title.cpp	610	module_const	-	kTop	0x80316b	data	game	ui	base_helper	WindowRecords+0xb	file	const unsigned char top = BRest4e(::bof3::Img(kTop.v));
+site	src/game/core/title.cpp	615	module_const	-	kTop	0x80316b	data	game	ui	base_helper	WindowRecords+0xb	file	BRest4e(::bof3::Img(kTop.v)) = 0x77;
+site	src/game/core/title.cpp	621	module_const	-	kTop	0x80316b	data	game	ui	base_helper	WindowRecords+0xb	file	BRest4e(::bof3::Img(kTop.v)) = static_cast<unsigned char>(top + 9);
+site	src/game/core/title.cpp	625	module_const	-	kScroll	0x803172	data	game	ui	base_helper	WindowRecords+0x12	file	if (W(::bof3::Img(kScroll.v)) != 0) return;
+site	src/game/core/title.cpp	695	module_const	-	kTextRecords	0x904ce0	data	game	ui	base_helper	Text_Records	file	std::memcpy(move_script::At(::bof3::Img(kTextRecords.v)), name, 16);
+site	src/game/core/title.cpp	734	module_const	-	kWin0	0x803160	data	game	ui	base_helper	WindowRecords	file	BRest4e(::bof3::Img(kWin0.v) + 0xA) = 0;
+site	src/game/core/title.cpp	735	module_const	-	kWin0	0x803160	data	game	ui	base_helper	WindowRecords	file	BRest4e(::bof3::Img(kWin0.v) + 0xB) = 0;
+site	src/game/core/title.cpp	736	module_const	-	kWin0	0x803160	data	game	ui	base_helper	WindowRecords	file	BRest4e(::bof3::Img(kWin0.v) + 0xC) = 0;
+site	src/game/core/title.cpp	737	module_const	-	kWin0	0x803160	data	game	ui	base_helper	WindowRecords	file	BRest4e(::bof3::Img(kWin0.v) + 0xD) = 0xFF;
+site	src/game/core/title.cpp	738	module_const	-	kWin0	0x803160	data	game	ui	base_helper	WindowRecords	file	BRest4e(::bof3::Img(kWin0.v) + 8) = 0;
+site	src/game/core/title.cpp	739	module_const	-	kWin0	0x803160	data	game	ui	base_helper	WindowRecords	file	BRest4e(::bof3::Img(kWin0.v) + 9) = 0;
+site	src/game/core/title.cpp	740	module_const	-	kWin0	0x803160	data	game	ui	base_helper	WindowRecords	file	SetW(::bof3::Img(kWin0.v) + 0x10, 0);
+site	src/game/core/title.cpp	741	module_const	-	kWin0	0x803160	data	game	ui	base_helper	WindowRecords	file	SetW(::bof3::Img(kWin0.v) + 0x12, 0);
+site	src/game/core/title.cpp	742	module_const	-	kWin1	0x803184	data	game	ui	base_helper	Window1	file	BRest4e(::bof3::Img(kWin1.v) + 1) = 2;
+site	src/game/core/title.cpp	743	module_const	-	kWin1	0x803184	data	game	ui	base_helper	Window1	file	BRest4e(::bof3::Img(kWin1.v) + 2) = 1;
+site	src/game/core/title.cpp	744	module_const	-	kWin1	0x803184	data	game	ui	base_helper	Window1	file	BRest4e(::bof3::Img(kWin1.v) + 3) = 0;
+site	src/game/core/title.cpp	763	module_const	-	kPages	0x675fd8	data	game	ui	base_helper	-	file	BRest4e(::bof3::Img(kPages.v)) = pages(Rest4a_RemovedCount, 7);
+site	src/game/core/title.cpp	764	module_const	-	kPages	0x675fd8	data	game	ui	base_helper	-	file	BRest4e(::bof3::Img(kPages.v) + 1) = pages(Rest4b_BusyA, 20);
+site	src/game/core/title.cpp	766	module_const	-	kPages	0x675fd8	data	game	ui	base_helper	-	file	BRest4e(::bof3::Img(kPages.v) + 2) = pages(Rest4b_BusyB, 8);
+site	src/game/core/title.cpp	786	module_const	-	kPages	0x675fd8	data	game	ui	base_helper	-	file	static_cast<unsigned char>(CommuList_Page), BRest4e(::bof3::Img(kPages.v)), BRest4e(::bof3::Img(kPages.v) + 1), BRest4e(::bof3::Img(kPages.v) + 2));
+site	src/game/core/title.cpp	786	module_const	-	kPages	0x675fd8	data	game	ui	base_helper	-	file	static_cast<unsigned char>(CommuList_Page), BRest4e(::bof3::Img(kPages.v)), BRest4e(::bof3::Img(kPages.v) + 1), BRest4e(::bof3::Img(kPages.v) + 2));
+site	src/game/core/title.cpp	786	module_const	-	kPages	0x675fd8	data	game	ui	base_helper	-	file	static_cast<unsigned char>(CommuList_Page), BRest4e(::bof3::Img(kPages.v)), BRest4e(::bof3::Img(kPages.v) + 1), BRest4e(::bof3::Img(kPages.v) + 2));
+site	src/game/core/title.cpp	787	module_const	-	kPages	0x675fd8	data	game	ui	base_helper	-	file	const unsigned char count = BRest4e(::bof3::Img(kPages.v) + list);
+site	src/game/core/title.cpp	799	module_const	-	kPages	0x675fd8	data	game	ui	base_helper	-	file	const auto total = static_cast<unsigned char>(BRest4e(::bof3::Img(kPages.v) + 2) + BRest4e(::bof3::Img(kPages.v) + 1) + BRest4e(::bof3::Img(kPages.v)));
+site	src/game/core/title.cpp	799	module_const	-	kPages	0x675fd8	data	game	ui	base_helper	-	file	const auto total = static_cast<unsigned char>(BRest4e(::bof3::Img(kPages.v) + 2) + BRest4e(::bof3::Img(kPages.v) + 1) + BRest4e(::bof3::Img(kPages.v)));
+site	src/game/core/title.cpp	799	module_const	-	kPages	0x675fd8	data	game	ui	base_helper	-	file	const auto total = static_cast<unsigned char>(BRest4e(::bof3::Img(kPages.v) + 2) + BRest4e(::bof3::Img(kPages.v) + 1) + BRest4e(::bof3::Img(kPages.v)));
+site	src/game/core/title.cpp	809	module_const	-	kPage	0x675fdb	data	game	ui	base_helper	CommuList_Page	file	if (static_cast<signed char>(page) < 0) BRest4e(::bof3::Img(kPage.v)) = static_cast<unsigned char>(total - 1);
+site	src/game/core/title.cpp	811	module_const	-	kPageFormat	0x6531f4	data	game	ui	base_helper	-	file	SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(move_script::At(::bof3::Img(kTextBuffer.v))), reinterpret_cast<const char*>(move_script::At(::bof3::Img(kPageFormat
+site	src/game/core/title.cpp	811	module_const	-	kTextBuffer	0x904ba0	data	game	ui	base_helper	-	file	SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(move_script::At(::bof3::Img(kTextBuffer.v))), reinterpret_cast<const char*>(move_script::At(::bof3::Img(kPageFormat
+site	src/game/core/title.cpp	813	module_const	-	kTextBuffer	0x904ba0	data	game	ui	base_helper	-	file	SH_CALL(Text_DrawFont8)(0xEE, 0x2C, 0, move_script::At(::bof3::Img(kTextBuffer.v)));
+site	src/game/core/title.cpp	843	module_const	-	kListAEntries	0x9039c0	data	game	ui	base_helper	-	file	SH_CALL(Text_DrawAt)(x + 0x14, row, 0, 5, SlotName(BRest4e(::bof3::Img(kListAEntries.v) + base + i) & 0x7F));
+site	src/game/core/title.cpp	844	module_const	-	kListAEntries	0x9039c0	data	game	ui	base_helper	-	file	const unsigned id = BRest4e(::bof3::Img(kListAEntries.v) + base + i) & 0x80 ? 0x3A : 0x39;
+site	src/game/core/title.cpp	878	module_const	-	kListBEntries	0x904f00	data	game	ui	base_helper	-	file	const unsigned entry = BRest4e(::bof3::Img(kListBEntries.v) + 15 * p + i);
+site	src/game/core/title.cpp	897	module_const	-	kListCPairs	0x904ca0	data	game	ui	base_helper	-	file	const unsigned char* const pair = move_script::At(::bof3::Img(kListCPairs.v) + 16 * p + 2 * i);
+site	src/game/core/title.cpp	899	module_const	-	kPairMessages	0x653180	data	game	ui	base_helper	-	file	if (W(::bof3::Img(kPairMessages.v) + 4 * kind + 2) != 0) {
+site	src/game/core/title.cpp	900	module_const	-	kTextRecords	0x904ce0	data	game	ui	base_helper	Text_Records	file	BRest4e(::bof3::Img(kTextRecords.v) + 5) = 0;
+site	src/game/core/title.cpp	902	module_const	-	kEntryNames	0x9048f0	data	game	ui	base_helper	-	file	SetL(::bof3::Img(kTextRecords.v), L(::bof3::Img(kEntryNames.v) + 5 * n));
+site	src/game/core/title.cpp	902	module_const	-	kTextRecords	0x904ce0	data	game	ui	base_helper	Text_Records	file	SetL(::bof3::Img(kTextRecords.v), L(::bof3::Img(kEntryNames.v) + 5 * n));
+site	src/game/core/title.cpp	903	module_const	-	kEntryNames	0x9048f0	data	game	ui	base_helper	-	file	BRest4e(::bof3::Img(kTextRecords.v) + 4) = BRest4e(::bof3::Img(kEntryNames.v) + 5 * n + 4);
+site	src/game/core/title.cpp	903	module_const	-	kTextRecords	0x904ce0	data	game	ui	base_helper	Text_Records	file	BRest4e(::bof3::Img(kTextRecords.v) + 4) = BRest4e(::bof3::Img(kEntryNames.v) + 5 * n + 4);
+site	src/game/core/title.cpp	906	module_const	-	kPairMessages	0x653180	data	game	ui	base_helper	-	file	Message(W(::bof3::Img(kPairMessages.v) + 4 * kind)));
+site	src/game/core/title.cpp	918	module_const	-	kTilesTop	0x6531a0	data	game	ui	base_helper	-	file	const unsigned char* const t = move_script::At(::bof3::Img(kTilesTop.v) + 2 * i);
+site	src/game/core/title.cpp	925	module_const	-	kTilesSide	0x6531e0	data	game	ui	base_helper	-	file	const unsigned char a = BRest4e(::bof3::Img(kTilesSide.v) + 2 * r);
+site	src/game/core/title.cpp	928	module_const	-	kTilesSide	0x6531e0	data	game	ui	base_helper	-	file	const unsigned char b = BRest4e(::bof3::Img(kTilesSide.v) + 2 * r + 1);
+site	src/game/core/title.cpp	934	module_const	-	kTilesBottom	0x6531c0	data	game	ui	base_helper	-	file	const unsigned char* const t = move_script::At(::bof3::Img(kTilesBottom.v) + 2 * i);
+site	src/game/core/title.cpp	991	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) = 0;
+site	src/game/core/title.cpp	1001	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	const unsigned char c0 = BRest4f(::bof3::Img(rest_4f::at::kCounter.v));
+site	src/game/core/title.cpp	1005	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	TitleBox(0x10 - static_cast<int>(BRest4f(::bof3::Img(rest_4f::at::kCounter.v))) * 16);
+site	src/game/core/title.cpp	1006	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	SH_CALL(Config_DrawPanel)(static_cast<int>(BRest4f(::bof3::Img(rest_4f::at::kCounter.v))) * 64 + 0x1C, 0x40);
+site	src/game/core/title.cpp	1007	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	SH_CALL(ConfigScreen_DrawButtons)(0xFF, 0x70, 0x26 - static_cast<int>(BRest4f(::bof3::Img(rest_4f::at::kCounter.v))) * 16);
+site	src/game/core/title.cpp	1008	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	const unsigned char n = static_cast<unsigned char>(BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) - 1);
+site	src/game/core/title.cpp	1009	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) = n;
+site	src/game/core/title.cpp	1012	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) = 0;
+site	src/game/core/title.cpp	1030	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) = 0;
+site	src/game/core/title.cpp	1056	at_global	-	rest_4f::at::kPressedDword	0x7e1bec	data	game	ui	base_helper	Input_Pressed	-	const U pressed = LRest4f(::bof3::Img(rest_4f::at::kPressedDword.v));
+site	src/game/core/title.cpp	1065	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) = 0;
+site	src/game/core/title.cpp	1083	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) = 0;
+site	src/game/core/title.cpp	1106	at_global	-	rest_4f::at::kPressedDword	0x7e1bec	data	game	ui	base_helper	Input_Pressed	-	const U held = LRest4f(::bof3::Img(rest_4f::at::kPressedDword.v));
+site	src/game/core/title.cpp	1146	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) = 1;
+site	src/game/core/title.cpp	1158	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) = 1;
+site	src/game/core/title.cpp	1168	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	const unsigned char n = BRest4f(::bof3::Img(rest_4f::at::kCounter.v));
+site	src/game/core/title.cpp	1169	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	if (n < 3) BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) = static_cast<unsigned char>(n + 1);
+site	src/game/core/title.cpp	1197	at_global	-	rest_4f::at::kButtons	0x903580	data	game	ui	base_helper	Gfx_UnpackScratch+0x1f000	-	SetWRest4f(::bof3::Img(rest_4f::at::kButtons.v), WRest4f(::bof3::Img(rest_4f::at::kButtons.v)) & 0xFFFC);
+site	src/game/core/title.cpp	1197	at_global	-	rest_4f::at::kButtons	0x903580	data	game	ui	base_helper	Gfx_UnpackScratch+0x1f000	-	SetWRest4f(::bof3::Img(rest_4f::at::kButtons.v), WRest4f(::bof3::Img(rest_4f::at::kButtons.v)) & 0xFFFC);
+site	src/game/core/title.cpp	1206	at_global	-	rest_4f::at::kButtons	0x903580	data	game	ui	base_helper	Gfx_UnpackScratch+0x1f000	-	if (WRest4f(::bof3::Img(rest_4f::at::kButtons.v) + 2u * BRest4f(::bof3::Img(rest_4f::at::kPadRows.v) + r)) & bits) break;
+site	src/game/core/title.cpp	1206	at_global	-	rest_4f::at::kPadRows	0x6536f0	data	game	ui	base_helper	-	-	if (WRest4f(::bof3::Img(rest_4f::at::kButtons.v) + 2u * BRest4f(::bof3::Img(rest_4f::at::kPadRows.v) + r)) & bits) break;
+site	src/game/core/title.cpp	1208	at_global	-	rest_4f::at::kPadRowsByCursor	0x6536e8	data	game	ui	base_helper	-	-	const U by_cursor = ::bof3::Img(rest_4f::at::kPadRowsByCursor.v) + static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(c)));
+site	src/game/core/title.cpp	1211	at_global	-	rest_4f::at::kPadRows	0x6536f0	data	game	ui	base_helper	-	-	const U to = ::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000 + 2u * BRest4f(::bof3::Img(rest_4f::at::kPadRows.v) + r);
+site	src/game/core/title.cpp	1214	at_global	-	rest_4f::at::kButtons	0x903580	data	game	ui	base_helper	Gfx_UnpackScratch+0x1f000	-	SetWRest4f(::bof3::Img(rest_4f::at::kButtons.v) + 2u * BRest4f(by_cursor), bits);
+site	src/game/core/title.cpp	1215	at_global	-	rest_4f::at::kButtons	0x903580	data	game	ui	base_helper	Gfx_UnpackScratch+0x1f000	-	SetWRest4f(::bof3::Img(rest_4f::at::kButtons.v), WRest4f(::bof3::Img(rest_4f::at::kButtons.v)) | 3);
+site	src/game/core/title.cpp	1215	at_global	-	rest_4f::at::kButtons	0x903580	data	game	ui	base_helper	Gfx_UnpackScratch+0x1f000	-	SetWRest4f(::bof3::Img(rest_4f::at::kButtons.v), WRest4f(::bof3::Img(rest_4f::at::kButtons.v)) | 3);
+site	src/game/core/title.cpp	1241	at_global	-	rest_4f::at::kPressedDword	0x7e1bec	data	game	ui	base_helper	Input_Pressed	-	const U p = LRest4f(::bof3::Img(rest_4f::at::kPressedDword.v));
+site	src/game/core/title.cpp	1272	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	TitleBox(0x10 - static_cast<int>(BRest4f(::bof3::Img(rest_4f::at::kCounter.v))) * 16);
+site	src/game/core/title.cpp	1273	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	SH_CALL(Config_DrawPanel)(static_cast<int>(BRest4f(::bof3::Img(rest_4f::at::kCounter.v))) * 64 + 0x1C, 0x40);
+site	src/game/core/title.cpp	1274	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	SH_CALL(ConfigScreen_DrawButtons)(0, 0x70, 0x26 - static_cast<int>(BRest4f(::bof3::Img(rest_4f::at::kCounter.v))) * 16);
+site	src/game/core/title.cpp	1275	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	const unsigned char n = static_cast<unsigned char>(BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) + 1);
+site	src/game/core/title.cpp	1276	at_global	-	rest_4f::at::kCounter	0x929f04	data	game	ui	base_helper	-	-	BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) = n;
+site	src/game/core/title.cpp	1375	at_global	-	rest_4f::at::kOptionFirst	0x653808	data	game	ui	base_helper	-	-	const U first = BRest4f(::bof3::Img(rest_4f::at::kOptionFirst.v) + r);
+site	src/game/core/title.cpp	1376	at_global	-	rest_4f::at::kOptionCount	0x653810	data	game	ui	base_helper	-	-	if (BRest4f(::bof3::Img(rest_4f::at::kOptionCount.v) + r) == 0) return;
+site	src/game/core/title.cpp	1377	at_global	-	rest_4f::at::kOptionRecords	0x6536f8	data	game	ui	base_helper	-	-	U rec = ::bof3::Img(rest_4f::at::kOptionRecords.v) + first * 16;
+site	src/game/core/title.cpp	1395	at_global	-	rest_4f::at::kOptionCount	0x653810	data	game	ui	base_helper	-	-	if (static_cast<std::int16_t>(i) >= static_cast<std::int16_t>(BRest4f(::bof3::Img(rest_4f::at::kOptionCount.v) + r))) break;
+site	src/game/core/title.cpp	1414	at_global	-	rest_4f::at::kButtons	0x903580	data	game	ui	base_helper	Gfx_UnpackScratch+0x1f000	-	const U word = WRest4f(::bof3::Img(rest_4f::at::kButtons.v) + 2u * kWords[row]);
+site	src/game/core/title.cpp	1436	at_global	-	rest_4f::at::kPadNames	0x66a368	data	game	ui	call	-	-	(unsigned)r, (unsigned)rest_4f::at::kPadNames.v);
+site	src/game/core/title.cpp	1437	at_global	-	rest_4f::at::kPadNames	0x66a368	data	game	ui	base_helper	-	-	const auto* const name = move_script::At(LRest4f(::bof3::Img(rest_4f::at::kPadNames.v) + 4 * r));
+site	src/game/core/title.cpp	1508	raw_literal	-	0x653824	0x653824	data	game	ui	init	-	-	{0x20, 2, 0x65382C, 3}, {0x40, 1, 0x653828, 3}, {0x10, 6, 0x653824, 3},
+site	src/game/core/title.cpp	1508	raw_literal	-	0x653828	0x653828	data	game	ui	init	-	-	{0x20, 2, 0x65382C, 3}, {0x40, 1, 0x653828, 3}, {0x10, 6, 0x653824, 3},
+site	src/game/core/title.cpp	1508	raw_literal	-	0x65382C	0x65382c	data	game	ui	init	-	-	{0x20, 2, 0x65382C, 3}, {0x40, 1, 0x653828, 3}, {0x10, 6, 0x653824, 3},
+site	src/game/core/title.cpp	1509	raw_literal	-	0x653818	0x653818	data	game	ui	init	-	-	{0x80, 5, 0x653820, 3}, {0x04, 0, 0x65381C, 4}, {0x08, 0, 0x653818, 3},
+site	src/game/core/title.cpp	1509	raw_literal	-	0x65381C	0x65381c	data	game	ui	init	-	-	{0x80, 5, 0x653820, 3}, {0x04, 0, 0x65381C, 4}, {0x08, 0, 0x653818, 3},
+site	src/game/core/title.cpp	1509	raw_literal	-	0x653820	0x653820	data	game	ui	init	-	-	{0x80, 5, 0x653820, 3}, {0x04, 0, 0x65381C, 4}, {0x08, 0, 0x653818, 3},
+site	src/game/core/title.cpp	1511	const_def	literal	kGlyphPointers	0x66a2fc	data	game	ui	module	-	-	constexpr ::bof3::image::Va kGlyphPointers{0x66A2FC};
+site	src/game/core/title.cpp	1516	module_const	-	kGlyphPointers	0x66a2fc	data	game	ui	base_helper	-	file	*reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(kGlyphPointers.v) + 4 * i))));
+site	src/game/core/title.cpp	1566	module_const	-	kPoolLimit	0x7f1bac	data	game	ui	base_helper	Gfx_PacketPools+0xffac	file	const std::uint32_t limit = (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16) + ::bof3::Img(kPoolLimit);
+site	src/game/core/title.cpp	1595	at_global	-	item_use::at::kRepeatLatch	0x7e01b8	data	game	ui	base_helper	-	-	item_use::SetWord(item_use::At(::bof3::Img(item_use::at::kRepeatLatch.v)), held);
+site	src/game/core/title.cpp	1598	at_global	-	item_use::at::kRepeatLatch	0x7e01b8	data	game	ui	base_helper	-	-	if ((item_use::Word(item_use::At(::bof3::Img(item_use::at::kRepeatLatch.v))) & held & 0xFFFF) != 0) {
+site	src/game/core/title.cpp	1603	at_global	-	item_use::at::kRepeatLatch	0x7e01b8	data	game	ui	base_helper	-	-	item_use::SetWord(item_use::At(::bof3::Img(item_use::at::kRepeatLatch.v)), held);
+site	src/game/core/title.cpp	1772	const_def	derived	kModeDispatch	0x56d690	code	game	ui	module	Field_ModeDispatch	-	constexpr ::bof3::image::CodeVa kModeDispatch{bof3::addr::Field_ModeDispatch};
+site	src/game/core/title.cpp	1778	abs_call	fnptr	kModeDispatch	0x56d690	code	game	ui	base_helper	Field_ModeDispatch	file	Field_LoadingFrame, reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(::bof3::Code(kModeDispatch.v))),
+site	src/game/core/title.cpp	1861	module_const	-	kPlayClock	0x9040c8	data	game	ui	base_helper	-	file	move_script::At(::bof3::Img(kPlayClock.v))[3] = 0;
+site	src/game/core/title.cpp	1862	module_const	-	kPlayClock	0x9040c8	data	game	ui	base_helper	-	file	move_script::At(::bof3::Img(kPlayClock.v))[2] = 0;
+site	src/game/core/title.cpp	1863	module_const	-	kPlayClock	0x9040c8	data	game	ui	base_helper	-	file	move_script::At(::bof3::Img(kPlayClock.v))[1] = 0;
+site	src/game/core/title.cpp	1864	module_const	-	kPlayClock	0x9040c8	data	game	ui	base_helper	-	file	move_script::At(::bof3::Img(kPlayClock.v))[0] = 0;
+site	src/game/core/title.cpp	1867	code_const	module	kDemoEntry	0x495800	code	game	ui	base_helper	Field_Task	file	title_states::gTitleStates.task_create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kDemoEntry.v))));
+site	src/game/core/title.cpp	1924	code_const	module	kMenuEntry	0x588e70	code	game	ui	base_helper	TitleTask_Run	file	title_states::gTitleStates.task_create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kMenuEntry.v))));
 site	src/game/core/title_menu.cpp	37	code_literal	literal	0x5888E4	0x5888e4	code	game	ui	init	-	-	constexpr std::uint32_t kInsnAt[kRowCount] = {0x5888E4, 0x5888E9, 0x5888EE};
 site	src/game/core/title_menu.cpp	37	code_literal	literal	0x5888E9	0x5888e9	code	game	ui	init	-	-	constexpr std::uint32_t kInsnAt[kRowCount] = {0x5888E4, 0x5888E9, 0x5888EE};
 site	src/game/core/title_menu.cpp	37	code_literal	literal	0x5888EE	0x5888ee	code	game	ui	init	-	-	constexpr std::uint32_t kInsnAt[kRowCount] = {0x5888E4, 0x5888E9, 0x5888EE};
@@ -5816,83 +5816,83 @@ site	src/game/core/title_states.cpp	290	base_offset	-	0x904EFC	0x904efc	data	gam
 site	src/game/core/title_states.cpp	416	base_offset	-	0x66C7F8	0x66c7f8	data	game	ui	base_helper	Title_BadgeOn	-	const std::uint32_t aState = ::bof3::Img(0x66C808), aBadge = ::bof3::Img(0x66C7F8), aBlink = ::bof3::Img(0x66C806);
 site	src/game/core/title_states.cpp	416	base_offset	-	0x66C806	0x66c806	data	game	ui	base_helper	Title_BlinkCount	-	const std::uint32_t aState = ::bof3::Img(0x66C808), aBadge = ::bof3::Img(0x66C7F8), aBlink = ::bof3::Img(0x66C806);
 site	src/game/core/title_states.cpp	416	base_offset	-	0x66C808	0x66c808	data	game	ui	base_helper	Title_State	-	const std::uint32_t aState = ::bof3::Img(0x66C808), aBadge = ::bof3::Img(0x66C7F8), aBlink = ::bof3::Img(0x66C806);
-site	src/game/core/transition.cpp	80	const_def	literal	kCameraYaw	0x929ec8	data	game	engine	module	Camera_Angles	-	constexpr std::uint32_t kCameraYaw = 0x929EC8;
-site	src/game/core/transition.cpp	82	const_def	literal	kCameraAngle	0x929ecc	data	game	engine	module	Cond_AngleFB	-	constexpr std::uint32_t kCameraAngle = 0x929ECC;
-site	src/game/core/transition.cpp	98	module_const	-	kCameraYaw	0x929ec8	data	game	engine	base_helper	Camera_Angles	file	AddWord(::bof3::Img(kCameraYaw), 0xB);
-site	src/game/core/transition.cpp	99	module_const	-	kCameraAngle	0x929ecc	data	game	engine	base_helper	Cond_AngleFB	file	AddWord(::bof3::Img(kCameraAngle), 0xB);
-site	src/game/core/transition.cpp	129	module_const	-	kCameraYaw	0x929ec8	data	game	engine	base_helper	Camera_Angles	file	AddWord(::bof3::Img(kCameraYaw), -0xB);
-site	src/game/core/transition.cpp	130	module_const	-	kCameraAngle	0x929ecc	data	game	engine	base_helper	Cond_AngleFB	file	AddWord(::bof3::Img(kCameraAngle), -0xB);
-site	src/game/core/transition.cpp	253	const_def	literal	kPitch	0x929ecc	data	game	engine	module	Cond_AngleFB	-	constexpr std::uint32_t kYaw = 0x929EC8, kPitch = 0x929ECC, kYawCopy = 0x7E0680, kPitchCopy = 0x7E0684;
-site	src/game/core/transition.cpp	253	const_def	literal	kPitchCopy	0x7e0684	data	game	engine	module	Light_AnglesCopy+0x4	-	constexpr std::uint32_t kYaw = 0x929EC8, kPitch = 0x929ECC, kYawCopy = 0x7E0680, kPitchCopy = 0x7E0684;
-site	src/game/core/transition.cpp	253	const_def	literal	kYaw	0x929ec8	data	game	engine	module	Camera_Angles	-	constexpr std::uint32_t kYaw = 0x929EC8, kPitch = 0x929ECC, kYawCopy = 0x7E0680, kPitchCopy = 0x7E0684;
-site	src/game/core/transition.cpp	253	const_def	literal	kYawCopy	0x7e0680	data	game	engine	module	Light_AnglesCopy	-	constexpr std::uint32_t kYaw = 0x929EC8, kPitch = 0x929ECC, kYawCopy = 0x7E0680, kPitchCopy = 0x7E0684;
-site	src/game/core/transition.cpp	270	const_def	literal	kBattleBytes	0x904aa0	data	game	engine	module	-	-	constexpr std::uint32_t kBattleBytes = 0x904AA0;
-site	src/game/core/transition.cpp	277	const_def	literal	kMode11Bytes	0x905da0	data	game	engine	module	FieldEvent_Object905DA0	-	constexpr std::uint32_t kMode11Bytes = 0x905DA0;
-site	src/game/core/transition.cpp	367	code_literal	literal	0x4981F1	0x4981f1	code	game	engine	init	-	-	{0x4981F1, 0x4983F1},
-site	src/game/core/transition.cpp	367	code_literal	literal	0x4983F1	0x4983f1	code	game	engine	init	-	-	{0x4981F1, 0x4983F1},
-site	src/game/core/transition.cpp	370	code_const	module	kAfterShop	0x4560d0	code	game	engine	base_helper	CommuSim_RollOffers	include	Snd_LoadBankFile, Fn<void (__cdecl*)()>(::bof3::Code(kAfterShop.v)), Text_EmitGlyph,
-site	src/game/core/transition.cpp	372	code_const	module	kMenuStates	0x589970	code	game	engine	base_helper	FieldMenu_Run	include	MoveScript_TintFrame, Field_DrawFrame, Field_ModeDispatch, Fn<void (__cdecl*)()>(::bof3::Code(kMenuStates.v)),
-site	src/game/core/transition.cpp	373	code_const	module	kShopStates	0x57f500	code	game	engine	base_helper	ShopMode_Dispatch	include	Field_RunTaskRecords, Fn<void (__cdecl*)()>(::bof3::Code(kShopStates.v)),
-site	src/game/core/transition.cpp	393	code_const	module	kTransitionEntry	0x495070	code	game	engine	base_helper	Transition_Task	include	mode_flow::g.task_create(2, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kTransitionEntry.v))));
-site	src/game/core/transition.cpp	406	const_def	derived	kind	0x904ee0	data	game	engine	module	ModeFlow_AreaTransition	-	const unsigned kind = ModeFlow_TransitionKind;
-site	src/game/core/transition.cpp	596	base_offset	-	0x905B82	0x905b82	data	game	engine	base_helper	EventOps_BlockByte	-	mode_flow::At(::bof3::Img(0x905B82))[0] = 0;
-site	src/game/core/transition.cpp	606	at_global	-	mode_flow::at::kClock	0x9040c8	data	game	engine	base_helper	-	-	const unsigned char* const clock = mode_flow::At(::bof3::Img(mode_flow::at::kClock));
-site	src/game/core/transition.cpp	644	const_def	derived	kind	0x904ee0	data	game	engine	module	ModeFlow_AreaTransition	-	const unsigned char kind = Area_EnterTransition;
-site	src/game/core/transition.cpp	650	at_global	-	mode_flow::at::kKind2XHigh	0x905e66	data	game	engine	base_helper	Field_Kind2X+0x2	-	if (Field_InputFlags & 1) mode_flow::g.entry_point(mode_flow::Word(mode_flow::At(::bof3::Img(mode_flow::at::kKind2XHigh))), mode_flow::Word(mode_flow::At(::bof3
-site	src/game/core/transition.cpp	650	at_global	-	mode_flow::at::kKind2ZHigh	0x905e62	data	game	engine	base_helper	Field_Kind2Z+0x2	-	if (Field_InputFlags & 1) mode_flow::g.entry_point(mode_flow::Word(mode_flow::At(::bof3::Img(mode_flow::at::kKind2XHigh))), mode_flow::Word(mode_flow::At(::bof3
-site	src/game/core/transition.cpp	690	module_const	-	kBattleBytes	0x904aa0	data	game	engine	base_helper	-	file	move_script::At(::bof3::Img(kBattleBytes))[0] = 0;
-site	src/game/core/transition.cpp	691	module_const	-	kBattleBytes	0x904aa0	data	game	engine	base_helper	-	file	move_script::At(::bof3::Img(kBattleBytes))[1] = 0;
-site	src/game/core/transition.cpp	692	module_const	-	kBattleBytes	0x904aa0	data	game	engine	base_helper	-	file	move_script::At(::bof3::Img(kBattleBytes))[2] = 0;
-site	src/game/core/transition.cpp	710	const_def	derived	kind	0x904ee0	data	game	engine	module	ModeFlow_AreaTransition	-	const unsigned char kind = ModeFlow_AreaTransition;
-site	src/game/core/transition.cpp	738	module_const	-	kMode11Bytes	0x905da0	data	game	engine	base_helper	FieldEvent_Object905DA0	file	move_script::At(::bof3::Img(kMode11Bytes))[1] = 0;
-site	src/game/core/transition.cpp	739	module_const	-	kMode11Bytes	0x905da0	data	game	engine	base_helper	FieldEvent_Object905DA0	file	move_script::At(::bof3::Img(kMode11Bytes))[2] = 0;
-site	src/game/core/transition.cpp	740	module_const	-	kMode11Bytes	0x905da0	data	game	engine	base_helper	FieldEvent_Object905DA0	file	move_script::At(::bof3::Img(kMode11Bytes))[3] = 0;
-site	src/game/core/transition.cpp	741	module_const	-	kMode11Bytes	0x905da0	data	game	engine	base_helper	FieldEvent_Object905DA0	file	move_script::At(::bof3::Img(kMode11Bytes))[4] = 0;
-site	src/game/core/transition.cpp	768	at_global	-	mode_rest::at::kMenuTimer	0x929f04	data	game	engine	base_helper	-	-	move_script::At(::bof3::Img(mode_rest::at::kMenuTimer))[0] = 3;
-site	src/game/core/transition.cpp	835	at_global	-	mode_rest::at::kFacingJitter	0x656a80	data	game	engine	base_helper	-	-	static_cast<unsigned char>((move_script::At(::bof3::Img(mode_rest::at::kFacingJitter))[r & 3] + ObjTrio[0].direction) & 0xF);
-site	src/game/core/transition.cpp	847	code_const	at	mode_rest::at::kAreaAskedX	0x430000	code	game	engine	call	-	-	SH_CALL(Field_ChangeArea)(ModeRest_AreaAsked, I(mode_rest::at::kAreaAskedX), I(mode_rest::at::kAreaAskedZ), 4);
-site	src/game/core/transition.cpp	861	at_global	-	mode_rest::at::kMessageBits	0x7dee44	data	game	engine	base_helper	-	-	if (move_script::At(::bof3::Img(mode_rest::at::kMessageBits))[0] & 2) {
-site	src/game/core/transition.cpp	901	at_global	-	mode_rest::at::kFormation	0x904aac	data	game	engine	base_helper	-	-	U formation = UL(::bof3::Img(mode_rest::at::kFormation));
-site	src/game/core/transition.cpp	906	at_global	-	mode_rest::at::kApproach	0x656aa4	data	game	engine	base_helper	-	-	const unsigned dx = static_cast<std::uint16_t>(static_cast<signed char>(move_script::At(::bof3::Img(mode_rest::at::kApproach))[i]));
-site	src/game/core/transition.cpp	907	at_global	-	mode_rest::at::kApproach	0x656aa4	data	game	engine	base_helper	-	-	const unsigned dz = static_cast<std::uint16_t>(static_cast<signed char>(move_script::At(::bof3::Img(mode_rest::at::kApproach))[i + 1]));
-site	src/game/core/transition.cpp	908	at_global	-	mode_rest::at::kKind2ZHigh	0x905e62	data	game	engine	base_helper	Field_Kind2Z+0x2	-	move_script::SetWord(move_script::At(::bof3::Img(mode_rest::at::kKind2ZHigh)), move_script::Word(move_script::At(::bof3::Img(mode_rest::at::kKind2ZHigh))) + dz)
-site	src/game/core/transition.cpp	908	at_global	-	mode_rest::at::kKind2ZHigh	0x905e62	data	game	engine	base_helper	Field_Kind2Z+0x2	-	move_script::SetWord(move_script::At(::bof3::Img(mode_rest::at::kKind2ZHigh)), move_script::Word(move_script::At(::bof3::Img(mode_rest::at::kKind2ZHigh))) + dz)
-site	src/game/core/transition.cpp	910	at_global	-	mode_rest::at::kKind2XHigh	0x905e66	data	game	engine	base_helper	Field_Kind2X+0x2	-	move_script::SetWord(move_script::At(::bof3::Img(mode_rest::at::kKind2XHigh)), move_script::Word(move_script::At(::bof3::Img(mode_rest::at::kKind2XHigh))) + dx)
-site	src/game/core/transition.cpp	910	at_global	-	mode_rest::at::kKind2XHigh	0x905e66	data	game	engine	base_helper	Field_Kind2X+0x2	-	move_script::SetWord(move_script::At(::bof3::Img(mode_rest::at::kKind2XHigh)), move_script::Word(move_script::At(::bof3::Img(mode_rest::at::kKind2XHigh))) + dx)
-site	src/game/core/transition.cpp	922	at_global	-	mode_rest::at::kFormation	0x904aac	data	game	engine	base_helper	-	-	formation = UL(::bof3::Img(mode_rest::at::kFormation));
-site	src/game/core/transition.cpp	969	at_global	-	mode_rest::at::kEventAsset	0x64ddef	data	game	engine	base_helper	-	-	const unsigned asset = move_script::At(::bof3::Img(mode_rest::at::kEventAsset))[EventBattle_Id * 4u];
-site	src/game/core/transition.cpp	970	at_global	-	mode_rest::at::kEventTrack	0x64dece	data	game	engine	base_helper	-	-	keep = move_script::Word(move_script::At(::bof3::Img(mode_rest::at::kEventTrack) + asset * 4u)) == 0xFF;
-site	src/game/core/transition.cpp	976	at_global	-	mode_rest::at::kEventAsset	0x64ddef	data	game	engine	base_helper	-	-	const unsigned asset = move_script::At(::bof3::Img(mode_rest::at::kEventAsset))[event * 4u];
-site	src/game/core/transition.cpp	977	at_global	-	mode_rest::at::kEventFile	0x64decc	data	game	engine	base_helper	-	-	SH_CALL(LoadDatFile)(static_cast<int>(move_script::Word(move_script::At(::bof3::Img(mode_rest::at::kEventFile) + asset * 4u))));
-site	src/game/core/transition.cpp	978	at_global	-	mode_rest::at::kEventAsset	0x64ddef	data	game	engine	base_helper	-	-	const unsigned again = move_script::At(::bof3::Img(mode_rest::at::kEventAsset))[EventBattle_Id * 4u];
-site	src/game/core/transition.cpp	979	at_global	-	mode_rest::at::kEventTrack	0x64dece	data	game	engine	base_helper	-	-	track = move_script::Word(move_script::At(::bof3::Img(mode_rest::at::kEventTrack) + again * 4u));
-site	src/game/core/transition.cpp	995	at_global	-	mode_rest::at::kBattleWord	0x904aa8	data	game	engine	base_helper	-	-	move_script::SetWord(move_script::At(::bof3::Img(mode_rest::at::kBattleWord)), 0);
-site	src/game/core/transition.cpp	996	at_global	-	mode_rest::at::kBattleBytes	0x904aa0	data	game	engine	base_helper	-	-	for (unsigned k = 0; k < 5; ++k) move_script::At(::bof3::Img(mode_rest::at::kBattleBytes))[k] = 0;
-site	src/game/core/transition.cpp	1009	at_global	-	mode_rest::at::kBattleBytes	0x904aa0	data	game	engine	base_helper	-	-	for (unsigned k = 0; k < 5; ++k) move_script::At(::bof3::Img(mode_rest::at::kBattleBytes))[k] = 0;
-site	src/game/core/transition.cpp	1012	at_global	-	mode_rest::at::kMemberCount	0x904ab0	data	game	engine	base_helper	-	-	move_script::At(::bof3::Img(mode_rest::at::kMemberCount))[0] = static_cast<unsigned char>(count);
-site	src/game/core/transition.cpp	1258	at_global	-	rest_3g::at::kReturnZ	0x7e0920	data	game	engine	base_helper	MoveScript_TintRecords+0x220	-	const U z = ULRest3g(::bof3::Img(rest_3g::at::kReturnZ.v));
-site	src/game/core/transition.cpp	1259	at_global	-	rest_3g::at::kReturnX	0x7e091c	data	game	engine	base_helper	MoveScript_TintRecords+0x21c	-	const U x = ULRest3g(::bof3::Img(rest_3g::at::kReturnX.v));
-site	src/game/core/transition.cpp	1384	at_global	-	mode_flow::at::kClock	0x9040c8	data	game	engine	base_helper	-	-	unsigned char* const c = mode_flow::At(::bof3::Img(mode_flow::at::kClock));
-site	src/game/core/transition.cpp	1427	module_const	-	kPitch	0x929ecc	data	game	engine	base_helper	Cond_AngleFB	file	const short pitch = Signed16(::bof3::Img(kPitch));
-site	src/game/core/transition.cpp	1438	module_const	-	kYaw	0x929ec8	data	game	engine	base_helper	Camera_Angles	file	AddWordModeStates(::bof3::Img(kYaw), -0x16);
-site	src/game/core/transition.cpp	1439	module_const	-	kYawCopy	0x7e0680	data	game	engine	base_helper	Light_AnglesCopy	file	AddWordModeStates(::bof3::Img(kYawCopy), -0x16);
-site	src/game/core/transition.cpp	1442	module_const	-	kYaw	0x929ec8	data	game	engine	base_helper	Camera_Angles	file	AddWordModeStates(::bof3::Img(kYaw), 0x16);
-site	src/game/core/transition.cpp	1443	module_const	-	kYawCopy	0x7e0680	data	game	engine	base_helper	Light_AnglesCopy	file	AddWordModeStates(::bof3::Img(kYawCopy), 0x16);
-site	src/game/core/transition.cpp	1445	module_const	-	kPitch	0x929ecc	data	game	engine	base_helper	Cond_AngleFB	file	if ((buttons & 0x20) != 0 && Signed16(::bof3::Img(kPitch)) < 0x355) {
-site	src/game/core/transition.cpp	1446	module_const	-	kPitch	0x929ecc	data	game	engine	base_helper	Cond_AngleFB	file	AddWordModeStates(::bof3::Img(kPitch), 0x16);
-site	src/game/core/transition.cpp	1447	module_const	-	kPitchCopy	0x7e0684	data	game	engine	base_helper	Light_AnglesCopy+0x4	file	AddWordModeStates(::bof3::Img(kPitchCopy), 0x16);
-site	src/game/core/transition.cpp	1449	module_const	-	kPitch	0x929ecc	data	game	engine	base_helper	Cond_AngleFB	file	if ((buttons & 0x80) != 0 && Signed16(::bof3::Img(kPitch)) > 0xAA) {
-site	src/game/core/transition.cpp	1450	module_const	-	kPitch	0x929ecc	data	game	engine	base_helper	Cond_AngleFB	file	AddWordModeStates(::bof3::Img(kPitch), -0x16);
-site	src/game/core/transition.cpp	1451	module_const	-	kPitchCopy	0x7e0684	data	game	engine	base_helper	Light_AnglesCopy+0x4	file	AddWordModeStates(::bof3::Img(kPitchCopy), -0x16);
-site	src/game/core/transition.cpp	1466	module_const	-	kYaw	0x929ec8	data	game	engine	base_helper	Camera_Angles	file	AddWordModeStates(::bof3::Img(kYaw), -0x16);
-site	src/game/core/transition.cpp	1467	module_const	-	kYawCopy	0x7e0680	data	game	engine	base_helper	Light_AnglesCopy	file	AddWordModeStates(::bof3::Img(kYawCopy), -0x16);
-site	src/game/core/transition.cpp	1472	module_const	-	kPitch	0x929ecc	data	game	engine	base_helper	Cond_AngleFB	file	const short pitch = Signed16(::bof3::Img(kPitch));
-site	src/game/core/transition.cpp	1480	module_const	-	kPitchCopy	0x7e0684	data	game	engine	base_helper	Light_AnglesCopy+0x4	file	AddWordModeStates(::bof3::Img(kPitchCopy), -0x16);
-site	src/game/core/transition.cpp	1489	module_const	-	kPitchCopy	0x7e0684	data	game	engine	base_helper	Light_AnglesCopy+0x4	file	AddWordModeStates(::bof3::Img(kPitchCopy), 0x16);
-site	src/game/core/transition.cpp	1517	at_global	-	mode_flow::at::kBootClear	0x9039e0	data	game	engine	base_helper	-	-	std::memset(mode_flow::At(::bof3::Img(mode_flow::at::kBootClear)), 0, mode_flow::at::kBootClearBytes);
-site	src/game/core/transition.cpp	1534	base_offset	-	0x8B3580	0x8b3580	data	game	engine	base_helper	-	-	BattleE2_AnimSet = ::bof3::Img(0x8B3580);
-site	src/game/core/transition.cpp	1535	base_offset	-	0x8C3584	0x8c3584	data	game	engine	base_helper	-	-	mode_flow::SetLong(mode_flow::At(::bof3::Img(MoveScript_TintRecords_addr) + 0x180), ::bof3::Img(0x8C3584));
-site	src/game/core/transition.cpp	1538	code_const	module	kTitleLoadEntry	0x496c90	code	game	engine	base_helper	Title_LoadTask	include	mode_flow::g.task_create(1, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kTitleLoadEntry.v))));
+site	src/game/core/transition.cpp	81	const_def	literal	kCameraYaw	0x929ec8	data	game	engine	module	Camera_Angles	-	constexpr std::uint32_t kCameraYaw = 0x929EC8;
+site	src/game/core/transition.cpp	83	const_def	literal	kCameraAngle	0x929ecc	data	game	engine	module	Cond_AngleFB	-	constexpr std::uint32_t kCameraAngle = 0x929ECC;
+site	src/game/core/transition.cpp	102	module_const	-	kCameraYaw	0x929ec8	data	game	engine	base_helper	Camera_Angles	file	AddWord(::bof3::Img(kCameraYaw), 0xB);
+site	src/game/core/transition.cpp	103	module_const	-	kCameraAngle	0x929ecc	data	game	engine	base_helper	Cond_AngleFB	file	AddWord(::bof3::Img(kCameraAngle), 0xB);
+site	src/game/core/transition.cpp	136	module_const	-	kCameraYaw	0x929ec8	data	game	engine	base_helper	Camera_Angles	file	AddWord(::bof3::Img(kCameraYaw), -0xB);
+site	src/game/core/transition.cpp	137	module_const	-	kCameraAngle	0x929ecc	data	game	engine	base_helper	Cond_AngleFB	file	AddWord(::bof3::Img(kCameraAngle), -0xB);
+site	src/game/core/transition.cpp	296	const_def	literal	kPitch	0x929ecc	data	game	engine	module	Cond_AngleFB	-	constexpr std::uint32_t kYaw = 0x929EC8, kPitch = 0x929ECC, kYawCopy = 0x7E0680, kPitchCopy = 0x7E0684;
+site	src/game/core/transition.cpp	296	const_def	literal	kPitchCopy	0x7e0684	data	game	engine	module	Light_AnglesCopy+0x4	-	constexpr std::uint32_t kYaw = 0x929EC8, kPitch = 0x929ECC, kYawCopy = 0x7E0680, kPitchCopy = 0x7E0684;
+site	src/game/core/transition.cpp	296	const_def	literal	kYaw	0x929ec8	data	game	engine	module	Camera_Angles	-	constexpr std::uint32_t kYaw = 0x929EC8, kPitch = 0x929ECC, kYawCopy = 0x7E0680, kPitchCopy = 0x7E0684;
+site	src/game/core/transition.cpp	296	const_def	literal	kYawCopy	0x7e0680	data	game	engine	module	Light_AnglesCopy	-	constexpr std::uint32_t kYaw = 0x929EC8, kPitch = 0x929ECC, kYawCopy = 0x7E0680, kPitchCopy = 0x7E0684;
+site	src/game/core/transition.cpp	313	const_def	literal	kBattleBytes	0x904aa0	data	game	engine	module	-	-	constexpr std::uint32_t kBattleBytes = 0x904AA0;
+site	src/game/core/transition.cpp	320	const_def	literal	kMode11Bytes	0x905da0	data	game	engine	module	FieldEvent_Object905DA0	-	constexpr std::uint32_t kMode11Bytes = 0x905DA0;
+site	src/game/core/transition.cpp	410	code_literal	literal	0x4981F1	0x4981f1	code	game	engine	init	-	-	{0x4981F1, 0x4983F1},
+site	src/game/core/transition.cpp	410	code_literal	literal	0x4983F1	0x4983f1	code	game	engine	init	-	-	{0x4981F1, 0x4983F1},
+site	src/game/core/transition.cpp	413	code_const	module	kAfterShop	0x4560d0	code	game	engine	base_helper	CommuSim_RollOffers	include	Snd_LoadBankFile, Fn<void (__cdecl*)()>(::bof3::Code(kAfterShop.v)), Text_EmitGlyph,
+site	src/game/core/transition.cpp	415	code_const	module	kMenuStates	0x589970	code	game	engine	base_helper	FieldMenu_Run	include	MoveScript_TintFrame, Field_DrawFrame, Field_ModeDispatch, Fn<void (__cdecl*)()>(::bof3::Code(kMenuStates.v)),
+site	src/game/core/transition.cpp	416	code_const	module	kShopStates	0x57f500	code	game	engine	base_helper	ShopMode_Dispatch	include	Field_RunTaskRecords, Fn<void (__cdecl*)()>(::bof3::Code(kShopStates.v)),
+site	src/game/core/transition.cpp	436	code_const	module	kTransitionEntry	0x495070	code	game	engine	base_helper	Transition_Task	include	mode_flow::g.task_create(2, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kTransitionEntry.v))));
+site	src/game/core/transition.cpp	449	const_def	derived	kind	0x904ee0	data	game	engine	module	ModeFlow_AreaTransition	-	const unsigned kind = ModeFlow_TransitionKind;
+site	src/game/core/transition.cpp	681	base_offset	-	0x905B82	0x905b82	data	game	engine	base_helper	EventOps_BlockByte	-	mode_flow::At(::bof3::Img(0x905B82))[0] = 0;
+site	src/game/core/transition.cpp	691	at_global	-	mode_flow::at::kClock	0x9040c8	data	game	engine	base_helper	-	-	const unsigned char* const clock = mode_flow::At(::bof3::Img(mode_flow::at::kClock));
+site	src/game/core/transition.cpp	729	const_def	derived	kind	0x904ee0	data	game	engine	module	ModeFlow_AreaTransition	-	const unsigned char kind = Area_EnterTransition;
+site	src/game/core/transition.cpp	735	at_global	-	mode_flow::at::kKind2XHigh	0x905e66	data	game	engine	base_helper	Field_Kind2X+0x2	-	if (Field_InputFlags & 1) mode_flow::g.entry_point(mode_flow::Word(mode_flow::At(::bof3::Img(mode_flow::at::kKind2XHigh))), mode_flow::Word(mode_flow::At(::bof3
+site	src/game/core/transition.cpp	735	at_global	-	mode_flow::at::kKind2ZHigh	0x905e62	data	game	engine	base_helper	Field_Kind2Z+0x2	-	if (Field_InputFlags & 1) mode_flow::g.entry_point(mode_flow::Word(mode_flow::At(::bof3::Img(mode_flow::at::kKind2XHigh))), mode_flow::Word(mode_flow::At(::bof3
+site	src/game/core/transition.cpp	775	module_const	-	kBattleBytes	0x904aa0	data	game	engine	base_helper	-	file	move_script::At(::bof3::Img(kBattleBytes))[0] = 0;
+site	src/game/core/transition.cpp	776	module_const	-	kBattleBytes	0x904aa0	data	game	engine	base_helper	-	file	move_script::At(::bof3::Img(kBattleBytes))[1] = 0;
+site	src/game/core/transition.cpp	777	module_const	-	kBattleBytes	0x904aa0	data	game	engine	base_helper	-	file	move_script::At(::bof3::Img(kBattleBytes))[2] = 0;
+site	src/game/core/transition.cpp	795	const_def	derived	kind	0x904ee0	data	game	engine	module	ModeFlow_AreaTransition	-	const unsigned char kind = ModeFlow_AreaTransition;
+site	src/game/core/transition.cpp	823	module_const	-	kMode11Bytes	0x905da0	data	game	engine	base_helper	FieldEvent_Object905DA0	file	move_script::At(::bof3::Img(kMode11Bytes))[1] = 0;
+site	src/game/core/transition.cpp	824	module_const	-	kMode11Bytes	0x905da0	data	game	engine	base_helper	FieldEvent_Object905DA0	file	move_script::At(::bof3::Img(kMode11Bytes))[2] = 0;
+site	src/game/core/transition.cpp	825	module_const	-	kMode11Bytes	0x905da0	data	game	engine	base_helper	FieldEvent_Object905DA0	file	move_script::At(::bof3::Img(kMode11Bytes))[3] = 0;
+site	src/game/core/transition.cpp	826	module_const	-	kMode11Bytes	0x905da0	data	game	engine	base_helper	FieldEvent_Object905DA0	file	move_script::At(::bof3::Img(kMode11Bytes))[4] = 0;
+site	src/game/core/transition.cpp	853	at_global	-	mode_rest::at::kMenuTimer	0x929f04	data	game	engine	base_helper	-	-	move_script::At(::bof3::Img(mode_rest::at::kMenuTimer))[0] = 3;
+site	src/game/core/transition.cpp	920	at_global	-	mode_rest::at::kFacingJitter	0x656a80	data	game	engine	base_helper	-	-	static_cast<unsigned char>((move_script::At(::bof3::Img(mode_rest::at::kFacingJitter))[r & 3] + ObjTrio[0].direction) & 0xF);
+site	src/game/core/transition.cpp	932	code_const	at	mode_rest::at::kAreaAskedX	0x430000	code	game	engine	call	-	-	SH_CALL(Field_ChangeArea)(ModeRest_AreaAsked, I(mode_rest::at::kAreaAskedX), I(mode_rest::at::kAreaAskedZ), 4);
+site	src/game/core/transition.cpp	946	at_global	-	mode_rest::at::kMessageBits	0x7dee44	data	game	engine	base_helper	-	-	if (move_script::At(::bof3::Img(mode_rest::at::kMessageBits))[0] & 2) {
+site	src/game/core/transition.cpp	986	at_global	-	mode_rest::at::kFormation	0x904aac	data	game	engine	base_helper	-	-	U formation = UL(::bof3::Img(mode_rest::at::kFormation));
+site	src/game/core/transition.cpp	991	at_global	-	mode_rest::at::kApproach	0x656aa4	data	game	engine	base_helper	-	-	const unsigned dx = static_cast<std::uint16_t>(static_cast<signed char>(move_script::At(::bof3::Img(mode_rest::at::kApproach))[i]));
+site	src/game/core/transition.cpp	992	at_global	-	mode_rest::at::kApproach	0x656aa4	data	game	engine	base_helper	-	-	const unsigned dz = static_cast<std::uint16_t>(static_cast<signed char>(move_script::At(::bof3::Img(mode_rest::at::kApproach))[i + 1]));
+site	src/game/core/transition.cpp	993	at_global	-	mode_rest::at::kKind2ZHigh	0x905e62	data	game	engine	base_helper	Field_Kind2Z+0x2	-	move_script::SetWord(move_script::At(::bof3::Img(mode_rest::at::kKind2ZHigh)), move_script::Word(move_script::At(::bof3::Img(mode_rest::at::kKind2ZHigh))) + dz)
+site	src/game/core/transition.cpp	993	at_global	-	mode_rest::at::kKind2ZHigh	0x905e62	data	game	engine	base_helper	Field_Kind2Z+0x2	-	move_script::SetWord(move_script::At(::bof3::Img(mode_rest::at::kKind2ZHigh)), move_script::Word(move_script::At(::bof3::Img(mode_rest::at::kKind2ZHigh))) + dz)
+site	src/game/core/transition.cpp	995	at_global	-	mode_rest::at::kKind2XHigh	0x905e66	data	game	engine	base_helper	Field_Kind2X+0x2	-	move_script::SetWord(move_script::At(::bof3::Img(mode_rest::at::kKind2XHigh)), move_script::Word(move_script::At(::bof3::Img(mode_rest::at::kKind2XHigh))) + dx)
+site	src/game/core/transition.cpp	995	at_global	-	mode_rest::at::kKind2XHigh	0x905e66	data	game	engine	base_helper	Field_Kind2X+0x2	-	move_script::SetWord(move_script::At(::bof3::Img(mode_rest::at::kKind2XHigh)), move_script::Word(move_script::At(::bof3::Img(mode_rest::at::kKind2XHigh))) + dx)
+site	src/game/core/transition.cpp	1007	at_global	-	mode_rest::at::kFormation	0x904aac	data	game	engine	base_helper	-	-	formation = UL(::bof3::Img(mode_rest::at::kFormation));
+site	src/game/core/transition.cpp	1054	at_global	-	mode_rest::at::kEventAsset	0x64ddef	data	game	engine	base_helper	-	-	const unsigned asset = move_script::At(::bof3::Img(mode_rest::at::kEventAsset))[EventBattle_Id * 4u];
+site	src/game/core/transition.cpp	1055	at_global	-	mode_rest::at::kEventTrack	0x64dece	data	game	engine	base_helper	-	-	keep = move_script::Word(move_script::At(::bof3::Img(mode_rest::at::kEventTrack) + asset * 4u)) == 0xFF;
+site	src/game/core/transition.cpp	1061	at_global	-	mode_rest::at::kEventAsset	0x64ddef	data	game	engine	base_helper	-	-	const unsigned asset = move_script::At(::bof3::Img(mode_rest::at::kEventAsset))[event * 4u];
+site	src/game/core/transition.cpp	1062	at_global	-	mode_rest::at::kEventFile	0x64decc	data	game	engine	base_helper	-	-	SH_CALL(LoadDatFile)(static_cast<int>(move_script::Word(move_script::At(::bof3::Img(mode_rest::at::kEventFile) + asset * 4u))));
+site	src/game/core/transition.cpp	1063	at_global	-	mode_rest::at::kEventAsset	0x64ddef	data	game	engine	base_helper	-	-	const unsigned again = move_script::At(::bof3::Img(mode_rest::at::kEventAsset))[EventBattle_Id * 4u];
+site	src/game/core/transition.cpp	1064	at_global	-	mode_rest::at::kEventTrack	0x64dece	data	game	engine	base_helper	-	-	track = move_script::Word(move_script::At(::bof3::Img(mode_rest::at::kEventTrack) + again * 4u));
+site	src/game/core/transition.cpp	1080	at_global	-	mode_rest::at::kBattleWord	0x904aa8	data	game	engine	base_helper	-	-	move_script::SetWord(move_script::At(::bof3::Img(mode_rest::at::kBattleWord)), 0);
+site	src/game/core/transition.cpp	1081	at_global	-	mode_rest::at::kBattleBytes	0x904aa0	data	game	engine	base_helper	-	-	for (unsigned k = 0; k < 5; ++k) move_script::At(::bof3::Img(mode_rest::at::kBattleBytes))[k] = 0;
+site	src/game/core/transition.cpp	1094	at_global	-	mode_rest::at::kBattleBytes	0x904aa0	data	game	engine	base_helper	-	-	for (unsigned k = 0; k < 5; ++k) move_script::At(::bof3::Img(mode_rest::at::kBattleBytes))[k] = 0;
+site	src/game/core/transition.cpp	1097	at_global	-	mode_rest::at::kMemberCount	0x904ab0	data	game	engine	base_helper	-	-	move_script::At(::bof3::Img(mode_rest::at::kMemberCount))[0] = static_cast<unsigned char>(count);
+site	src/game/core/transition.cpp	1343	at_global	-	rest_3g::at::kReturnZ	0x7e0920	data	game	engine	base_helper	MoveScript_TintRecords+0x220	-	const U z = ULRest3g(::bof3::Img(rest_3g::at::kReturnZ.v));
+site	src/game/core/transition.cpp	1344	at_global	-	rest_3g::at::kReturnX	0x7e091c	data	game	engine	base_helper	MoveScript_TintRecords+0x21c	-	const U x = ULRest3g(::bof3::Img(rest_3g::at::kReturnX.v));
+site	src/game/core/transition.cpp	1469	at_global	-	mode_flow::at::kClock	0x9040c8	data	game	engine	base_helper	-	-	unsigned char* const c = mode_flow::At(::bof3::Img(mode_flow::at::kClock));
+site	src/game/core/transition.cpp	1512	module_const	-	kPitch	0x929ecc	data	game	engine	base_helper	Cond_AngleFB	file	const short pitch = Signed16(::bof3::Img(kPitch));
+site	src/game/core/transition.cpp	1523	module_const	-	kYaw	0x929ec8	data	game	engine	base_helper	Camera_Angles	file	AddWordModeStates(::bof3::Img(kYaw), -0x16);
+site	src/game/core/transition.cpp	1524	module_const	-	kYawCopy	0x7e0680	data	game	engine	base_helper	Light_AnglesCopy	file	AddWordModeStates(::bof3::Img(kYawCopy), -0x16);
+site	src/game/core/transition.cpp	1527	module_const	-	kYaw	0x929ec8	data	game	engine	base_helper	Camera_Angles	file	AddWordModeStates(::bof3::Img(kYaw), 0x16);
+site	src/game/core/transition.cpp	1528	module_const	-	kYawCopy	0x7e0680	data	game	engine	base_helper	Light_AnglesCopy	file	AddWordModeStates(::bof3::Img(kYawCopy), 0x16);
+site	src/game/core/transition.cpp	1530	module_const	-	kPitch	0x929ecc	data	game	engine	base_helper	Cond_AngleFB	file	if ((buttons & 0x20) != 0 && Signed16(::bof3::Img(kPitch)) < 0x355) {
+site	src/game/core/transition.cpp	1531	module_const	-	kPitch	0x929ecc	data	game	engine	base_helper	Cond_AngleFB	file	AddWordModeStates(::bof3::Img(kPitch), 0x16);
+site	src/game/core/transition.cpp	1532	module_const	-	kPitchCopy	0x7e0684	data	game	engine	base_helper	Light_AnglesCopy+0x4	file	AddWordModeStates(::bof3::Img(kPitchCopy), 0x16);
+site	src/game/core/transition.cpp	1534	module_const	-	kPitch	0x929ecc	data	game	engine	base_helper	Cond_AngleFB	file	if ((buttons & 0x80) != 0 && Signed16(::bof3::Img(kPitch)) > 0xAA) {
+site	src/game/core/transition.cpp	1535	module_const	-	kPitch	0x929ecc	data	game	engine	base_helper	Cond_AngleFB	file	AddWordModeStates(::bof3::Img(kPitch), -0x16);
+site	src/game/core/transition.cpp	1536	module_const	-	kPitchCopy	0x7e0684	data	game	engine	base_helper	Light_AnglesCopy+0x4	file	AddWordModeStates(::bof3::Img(kPitchCopy), -0x16);
+site	src/game/core/transition.cpp	1551	module_const	-	kYaw	0x929ec8	data	game	engine	base_helper	Camera_Angles	file	AddWordModeStates(::bof3::Img(kYaw), -0x16);
+site	src/game/core/transition.cpp	1552	module_const	-	kYawCopy	0x7e0680	data	game	engine	base_helper	Light_AnglesCopy	file	AddWordModeStates(::bof3::Img(kYawCopy), -0x16);
+site	src/game/core/transition.cpp	1557	module_const	-	kPitch	0x929ecc	data	game	engine	base_helper	Cond_AngleFB	file	const short pitch = Signed16(::bof3::Img(kPitch));
+site	src/game/core/transition.cpp	1565	module_const	-	kPitchCopy	0x7e0684	data	game	engine	base_helper	Light_AnglesCopy+0x4	file	AddWordModeStates(::bof3::Img(kPitchCopy), -0x16);
+site	src/game/core/transition.cpp	1574	module_const	-	kPitchCopy	0x7e0684	data	game	engine	base_helper	Light_AnglesCopy+0x4	file	AddWordModeStates(::bof3::Img(kPitchCopy), 0x16);
+site	src/game/core/transition.cpp	1602	at_global	-	mode_flow::at::kBootClear	0x9039e0	data	game	engine	base_helper	-	-	std::memset(mode_flow::At(::bof3::Img(mode_flow::at::kBootClear)), 0, mode_flow::at::kBootClearBytes);
+site	src/game/core/transition.cpp	1619	base_offset	-	0x8B3580	0x8b3580	data	game	engine	base_helper	-	-	BattleE2_AnimSet = ::bof3::Img(0x8B3580);
+site	src/game/core/transition.cpp	1620	base_offset	-	0x8C3584	0x8c3584	data	game	engine	base_helper	-	-	mode_flow::SetLong(mode_flow::At(::bof3::Img(MoveScript_TintRecords_addr) + 0x180), ::bof3::Img(0x8C3584));
+site	src/game/core/transition.cpp	1623	code_const	module	kTitleLoadEntry	0x496c90	code	game	engine	base_helper	Title_LoadTask	include	mode_flow::g.task_create(1, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kTitleLoadEntry.v))));
 site	src/game/crt_rest.cpp	85	range_cmp	<	0x58F000u	0x58f000	code	game	engine	-	AbilityMenu_InitRecord17	symbol	if (at - ::bof3::ImageBase() < 0x58F000u)
 site	src/game/crt_rest.cpp	122	code_const	gen_func	bof3::addr::Rand	0x5b93d2	code	game	engine	call	Rand	-	static std::uint32_t* const cell = bof3::IsEnabled(bof3::addr::Rand)
 site	src/game/crt_rest.cpp	124	abs_call	theirs	Crt_GetPtd	0x5bad64	code	game	engine	cast	Crt_GetPtd	-	: reinterpret_cast<std::uint32_t*>(Crt_GetPtd() + 0x14);
@@ -19301,22 +19301,22 @@ site	src/hook/snapshot.cpp	809	range_cmp	<	span_words::kDataHi	0x93e000	data	pla
 site	src/hook/snapshot.cpp	810	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	call	-	include	if (Unnamed(span_words::kDataLo + off)) continue;
 site	src/hook/snapshot.cpp	866	addr_eq	==	exe_layout::kDataVa	0x5da000	data	platform	hook	static_assert	-	include	static_assert(span_words::kDataLo == exe_layout::kDataVa, " ");
 site	src/hook/snapshot.cpp	866	addr_eq	==	span_words::kDataLo	0x5da000	data	platform	hook	static_assert	-	include	static_assert(span_words::kDataLo == exe_layout::kDataVa, " ");
-site	src/hook/snapshot.cpp	1152	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	base_helper	-	include	const U data = Img(span_words::kDataLo);
-site	src/hook/snapshot.cpp	1156	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	call	-	include	if (off + 4 > span_words::kDataHi - span_words::kDataLo || off + 4 > h.span_bytes || Unnamed(span_words::kDataLo + off))
-site	src/hook/snapshot.cpp	1156	ptr_sub	two_constants	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	if (off + 4 > span_words::kDataHi - span_words::kDataLo || off + 4 > h.span_bytes || Unnamed(span_words::kDataLo + off))
-site	src/hook/snapshot.cpp	1156	range_cmp	>	span_words::kDataHi	0x93e000	data	platform	hook	-	-	include	if (off + 4 > span_words::kDataHi - span_words::kDataLo || off + 4 > h.span_bytes || Unnamed(span_words::kDataLo + off))
-site	src/hook/snapshot.cpp	1162	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	call	-	include	(detail.empty() ? std::string() : detail + " ") + Printf(" ", span_words::kDataLo + off) + why);
-site	src/hook/snapshot.cpp	1924	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U va = span_words::kDataLo + at;
-site	src/hook/snapshot.cpp	1954	code_const	gen_func	bof3::addr::Boot_Task	0x496b60	code	platform	hook	call	Boot_Task	-	const bool can = IsExeHost() && Bind_Active() && Bind_TableMeasured() && Bind_Rows() > 0 && Bind_Ours(bof3::addr::Boot_Task);
-site	src/hook/snapshot.cpp	1964	code_const	gen_func	bof3::addr::Boot_Task	0x496b60	code	platform	hook	base_helper	Boot_Task	-	::Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
-site	src/hook/snapshot.cpp	1967	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U va = span_words::kDataLo + off;
-site	src/hook/snapshot.cpp	1993	addr_eq	==	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	if ((e & 7) == kWordText && span_words::kDataLo + (e >> 3) * 4 == slot) ++text_words;
-site	src/hook/snapshot.cpp	1996	addr_eq	==	bof3::addr::Boot_Task	0x496b60	code	platform	hook	call	Boot_Task	-	Check(t[0].kind == kTaskCreated && t[0].name == bof3::addr::Boot_Task && t[1].kind == kTaskFree,
-site	src/hook/snapshot.cpp	2023	code_const	gen_func	bof3::addr::Boot_Task	0x496b60	code	platform	hook	base_helper	Boot_Task	-	entry == static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task)) &&
-site	src/hook/snapshot.cpp	2127	ptr_sub	runtime_left	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U ring = span_words::RuntimeSlot(3) - span_words::kDataLo;
-site	src/hook/snapshot.cpp	2137	addr_eq	==	0x401234	0x401234	code	platform	hook	call	-	-	Check(NameWord(wp, plain, 0x70001234, &kind, &stored, &np) && kind == kWordFold && stored == 0x401234,
-site	src/hook/snapshot.cpp	2144	module_const	-	span_words::kExeLo	0x400000	base	platform	hook	-	-	include	wp.image_base = span_words::kExeLo;
-site	src/hook/snapshot.cpp	2145	module_const	-	span_words::kExeLo	0x400000	base	platform	hook	call	-	include	Check(!NameWord(wp, plain, span_words::kExeLo + 0x1234, &kind, &stored, &np), " ");
+site	src/hook/snapshot.cpp	1163	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	base_helper	-	include	const U data = Img(span_words::kDataLo);
+site	src/hook/snapshot.cpp	1167	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	call	-	include	if (off + 4 > span_words::kDataHi - span_words::kDataLo || off + 4 > h.span_bytes || Unnamed(span_words::kDataLo + off))
+site	src/hook/snapshot.cpp	1167	ptr_sub	two_constants	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	if (off + 4 > span_words::kDataHi - span_words::kDataLo || off + 4 > h.span_bytes || Unnamed(span_words::kDataLo + off))
+site	src/hook/snapshot.cpp	1167	range_cmp	>	span_words::kDataHi	0x93e000	data	platform	hook	-	-	include	if (off + 4 > span_words::kDataHi - span_words::kDataLo || off + 4 > h.span_bytes || Unnamed(span_words::kDataLo + off))
+site	src/hook/snapshot.cpp	1173	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	call	-	include	(detail.empty() ? std::string() : detail + " ") + Printf(" ", span_words::kDataLo + off) + why);
+site	src/hook/snapshot.cpp	1942	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U va = span_words::kDataLo + at;
+site	src/hook/snapshot.cpp	1972	code_const	gen_func	bof3::addr::Boot_Task	0x496b60	code	platform	hook	call	Boot_Task	-	const bool can = IsExeHost() && Bind_Active() && Bind_TableMeasured() && Bind_Rows() > 0 && Bind_Ours(bof3::addr::Boot_Task);
+site	src/hook/snapshot.cpp	1982	code_const	gen_func	bof3::addr::Boot_Task	0x496b60	code	platform	hook	base_helper	Boot_Task	-	::Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
+site	src/hook/snapshot.cpp	1985	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U va = span_words::kDataLo + off;
+site	src/hook/snapshot.cpp	2011	addr_eq	==	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	if ((e & 7) == kWordText && span_words::kDataLo + (e >> 3) * 4 == slot) ++text_words;
+site	src/hook/snapshot.cpp	2014	addr_eq	==	bof3::addr::Boot_Task	0x496b60	code	platform	hook	call	Boot_Task	-	Check(t[0].kind == kTaskCreated && t[0].name == bof3::addr::Boot_Task && t[1].kind == kTaskFree,
+site	src/hook/snapshot.cpp	2041	code_const	gen_func	bof3::addr::Boot_Task	0x496b60	code	platform	hook	base_helper	Boot_Task	-	entry == static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task)) &&
+site	src/hook/snapshot.cpp	2145	ptr_sub	runtime_left	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U ring = span_words::RuntimeSlot(3) - span_words::kDataLo;
+site	src/hook/snapshot.cpp	2155	addr_eq	==	0x401234	0x401234	code	platform	hook	call	-	-	Check(NameWord(wp, plain, 0x70001234, &kind, &stored, &np) && kind == kWordFold && stored == 0x401234,
+site	src/hook/snapshot.cpp	2162	module_const	-	span_words::kExeLo	0x400000	base	platform	hook	-	-	include	wp.image_base = span_words::kExeLo;
+site	src/hook/snapshot.cpp	2163	module_const	-	span_words::kExeLo	0x400000	base	platform	hook	call	-	include	Check(!NameWord(wp, plain, span_words::kExeLo + 0x1234, &kind, &stored, &np), " ");
 site	src/hook/span_words.h	35	const_def	literal	kExeLo	0x400000	base	platform	hook	module	-	-	constexpr std::uint32_t kExeLo = 0x400000;
 site	src/hook/span_words.h	36	const_def	literal	kExeHi	0x93f000	end	platform	hook	module	-	-	constexpr std::uint32_t kExeHi = 0x93F000;
 site	src/hook/span_words.h	45	const_def	derived	kImageExtent	0x587000	code	platform	hook	module	-	-	constexpr std::uint32_t kImageExtent = exe_layout::kPoolVa + exe_layout::kPoolSize - exe_layout::kImageBase;
@@ -21852,10 +21852,10 @@ range	src/hook/snapshot.cpp	671	range_cmp	>=	span_words::kImageExtent	0x587000	c
 range	src/hook/snapshot.cpp	809	range_cmp	<	span_words::kDataHi	0x93e000	data	platform	for (U off = 0; off < span_words::kDataHi - span_words::kDataLo; off += 4) {
 range	src/hook/snapshot.cpp	866	addr_eq	==	exe_layout::kDataVa	0x5da000	data	platform	static_assert(span_words::kDataLo == exe_layout::kDataVa, " ");
 range	src/hook/snapshot.cpp	866	addr_eq	==	span_words::kDataLo	0x5da000	data	platform	static_assert(span_words::kDataLo == exe_layout::kDataVa, " ");
-range	src/hook/snapshot.cpp	1156	range_cmp	>	span_words::kDataHi	0x93e000	data	platform	if (off + 4 > span_words::kDataHi - span_words::kDataLo || off + 4 > h.span_bytes || Unnamed(span_words::kDataLo + off))
-range	src/hook/snapshot.cpp	1993	addr_eq	==	span_words::kDataLo	0x5da000	data	platform	if ((e & 7) == kWordText && span_words::kDataLo + (e >> 3) * 4 == slot) ++text_words;
-range	src/hook/snapshot.cpp	1996	addr_eq	==	bof3::addr::Boot_Task	0x496b60	code	platform	Check(t[0].kind == kTaskCreated && t[0].name == bof3::addr::Boot_Task && t[1].kind == kTaskFree,
-range	src/hook/snapshot.cpp	2137	addr_eq	==	0x401234	0x401234	code	platform	Check(NameWord(wp, plain, 0x70001234, &kind, &stored, &np) && kind == kWordFold && stored == 0x401234,
+range	src/hook/snapshot.cpp	1167	range_cmp	>	span_words::kDataHi	0x93e000	data	platform	if (off + 4 > span_words::kDataHi - span_words::kDataLo || off + 4 > h.span_bytes || Unnamed(span_words::kDataLo + off))
+range	src/hook/snapshot.cpp	2011	addr_eq	==	span_words::kDataLo	0x5da000	data	platform	if ((e & 7) == kWordText && span_words::kDataLo + (e >> 3) * 4 == slot) ++text_words;
+range	src/hook/snapshot.cpp	2014	addr_eq	==	bof3::addr::Boot_Task	0x496b60	code	platform	Check(t[0].kind == kTaskCreated && t[0].name == bof3::addr::Boot_Task && t[1].kind == kTaskFree,
+range	src/hook/snapshot.cpp	2155	addr_eq	==	0x401234	0x401234	code	platform	Check(NameWord(wp, plain, 0x70001234, &kind, &stored, &np) && kind == kWordFold && stored == 0x401234,
 range	src/hook/span_words.h	56	range_cmp	<	kImageExtent	0x587000	code	platform	if (v - folds[i] < kImageExtent) {
 range	src/hook/span_words.h	170	range_cmp	<	kDataHi	0x93e000	data	platform	for (std::uint32_t off = 0; off < kDataHi - kDataLo; off += 4) {
 range	src/hook/statehash.cpp	207	range_cmp	<	kExeHi	0x93f000	end	platform	return (v >= kExeLo && v < kExeHi) || Fold(g_folds, g_nfolds, v, &c);
@@ -23779,7 +23779,7 @@ file	src/game/core/sound.cpp	game	engine	at_global	97
 file	src/game/core/sound.cpp	game	engine	code_const	1
 file	src/game/core/sound.cpp	game	engine	inject	48
 file	src/game/core/sound.cpp	game	engine	module_const	4
-file	src/game/core/task.cpp	game	field	accessor	2
+file	src/game/core/task.cpp	game	field	accessor	4
 file	src/game/core/task.cpp	game	field	accessor_addr	2
 file	src/game/core/task.cpp	game	field	inject	8
 file	src/game/core/task_sched_fuzz.cpp	fuzz	field	accessor	8
@@ -27899,7 +27899,7 @@ file	src/hook/statehash.cpp	platform	hook	module_const	26
 file	src/hook/statehash.cpp	platform	hook	ptr_sub	8
 file	src/hook/statehash.cpp	platform	hook	range_cmp	16
 file	src/hook/stp_census.cpp	platform	hook	accessor	9
-file	src/hook/task_census.cpp	platform	hook	accessor	3
+file	src/hook/task_census.cpp	platform	hook	accessor	4
 file	src/hook/task_census.cpp	platform	hook	accessor_addr	1
 file	src/hook/wav_dump.cpp	platform	hook	accessor	2
 file	src/hook/wav_dump.cpp	platform	hook	accessor_addr	3
@@ -27922,15 +27922,15 @@ file	src/launcher/ui/main.cpp	launcher	launcher	addr_eq	1
 file	src/render/gfx_snapshot.cpp	platform	render	accessor	30
 file	src/render/gfx_snapshot.cpp	platform	render	base_offset	22
 file	src/render/render_shim.cpp	platform	render	accessor	8
-#count sites	126027
-#count sites_game	57327
-#count sites_platform	801
+#count sites	126030
+#count sites_game	57329
+#count sites_platform	802
 #count sites_hosted	302
 #count sites_fuzz	67580
 #count sites_launcher	17
-#count class_accessor	27378
-#count class_accessor_game	23752
-#count class_accessor_platform	184
+#count class_accessor	27381
+#count class_accessor_game	23754
+#count class_accessor_platform	185
 #count class_accessor_hosted	0
 #count class_accessor_fuzz	3441
 #count class_accessor_launcher	1

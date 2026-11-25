@@ -9335,7 +9335,7 @@ src/game/core/sound.cpp	TitleMenu_DrawPiece	record	Byte	e + 2	0	-	table=0x66726c
 src/game/core/sound.cpp	SaveMenu_DrawSlots	global	AtSaveMenu	save_menu::at::kSlotTop	0	0x8034d0	-	width	at::kSlotTop 0x8034d0 MoveScript_PartyRecords+0x50	b0
 src/game/core/sound.cpp	SaveMenu_DrawSlots	global	AtSaveMenu	save_menu::at::kSummaries	0	0x905bc0	-	no-entry	at::kSummaries 0x905bc0 -	b0
 src/game/core/sound.cpp	Save_ReadSummaries	global	AtSaveMenu	save_menu::at::kSummaries	0	0x905bc0	-	no-entry	at::kSummaries 0x905bc0 -	b0
-src/game/core/sound.cpp	TitleTask_Run	global	LongShopStates2	shop_states2::at::kGameMode	0	0x66c7e8	-	width	at::kGameMode 0x66c7e8 Game_Mode	b0
+src/game/core/sound.cpp	TitleTaskRunPass	global	LongShopStates2	shop_states2::at::kGameMode	0	0x66c7e8	-	width	at::kGameMode 0x66c7e8 Game_Mode	b0
 src/game/core/task.cpp	Task_Create	record	At	bof3::addr::Task_Records + k * kRecordSize	0	-	base=Task_Records	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (base=Task_Records)	b1-scen_ui
 src/game/core/task.cpp	Task_Create	record	SetWord	record + kState	0	-	base=Task_Records;stride=0x20	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (base=Task_Records;stride=0x20)	b1-scen_ui
 src/game/core/task.cpp	Task_Create	record	SetLong	record + kSavedEsp	0	-	base=Task_Records;stride=0x20	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (base=Task_Records;stride=0x20)	b1-scen_ui
@@ -9459,7 +9459,7 @@ src/game/core/title.cpp	Title_Sprite	record	Word	entry + 8	0	-	base=Title_Sprite
 src/game/core/transition.cpp	SetFadeHold	global	At	ModeFlow_FadeHoldA_addr	0	0x90393d	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (ModeFlow_FadeHoldA_addr - -)	c4-tc
 src/game/core/transition.cpp	SetFadeHold	global	At	ModeFlow_FadeHoldB_addr	0	0x9038ad	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (ModeFlow_FadeHoldB_addr - -)	c4-tc
 src/game/core/transition.cpp	SwingIn	global	At	Cond_AngleFB_addr	0	0x929ecc	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Cond_AngleFB_addr - -)	c4-tc
-src/game/core/transition.cpp	SwingIn	global	At	Cond_AngleFB_addr	1	0x929ecc	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Cond_AngleFB_addr - -)	c4-tc
+src/game/core/transition.cpp	SwingInTurnLoop	global	At	Cond_AngleFB_addr	0	0x929ecc	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Cond_AngleFB_addr - -)	c4-tc
 src/game/core/transition.cpp	UL	record	UL	table + 4 * step	0	-	-	computed	offset computed at run time: table + 4 * step	b1-field
 src/game/core/transition.cpp	Entry	record	At	table + 4u * static_cast<std::uint32_t>(index)	0	-	param	computed	computed offset or index (param)	b1-scen_ui
 src/game/core/transition.cpp	Transition_Kind13	global	At	Cond_AngleFB_addr	0	0x929ecc	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Cond_AngleFB_addr - -)	c4-tc

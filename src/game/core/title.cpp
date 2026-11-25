@@ -48,6 +48,7 @@
 #include "hook/detour.h"
 #include "hook/draw_order.h"
 #include "hook/log.h"
+#include "hook/task_yield.h"
 #include "input/sigma.h"
 #include "os/os.h"
 
@@ -1731,17 +1732,37 @@ extern "C" void __cdecl Gfx_UploadLzss(const void* packed, const short* rect) {
 //
 // As the original has it: the state word indexes Title_States unchecked,
 // read afresh after Title_CheckStart (which may have moved it).
+//
+// The yield word (docs/state-by-name-sites.md): the sleep opens the loop's
+// pass, so site 3's resume entry runs the rest of that pass (TitleTaskPass)
+// and then the loop. Nothing is alive across the sleep: the state is the
+// record's private words, in the span.
+namespace {
+void TitleTaskPass() {
+    mode_tasks::g.check_start();
+    reinterpret_cast<void (__cdecl*)()>(Title_States[Title_State].Native())();
+    mode_tasks::g.backdrop();
+    mode_tasks::g.logo();
+}
+[[noreturn]] void TitleTaskLoop() {
+    for (;;) {
+        Task_YieldAt(bof3::task_yield::kSiteTitleTask, 1, nullptr, 0, mode_tasks::g.sleep);
+        TitleTaskPass();
+    }
+}
+}  // namespace
+
 extern "C" void __cdecl Title_Task(void) {
     Title_State = 0;
     Title_Step = 0;
     mode_tasks::g.clear_private();
-    for (;;) {
-        mode_tasks::g.sleep(1);
-        mode_tasks::g.check_start();
-        reinterpret_cast<void (__cdecl*)()>(Title_States[Title_State].Native())();
-        mode_tasks::g.backdrop();
-        mode_tasks::g.logo();
-    }
+    TitleTaskLoop();
+}
+
+void __cdecl bof3::task_yield::ResumeTitleTask() {
+    Task_YieldResume(kSiteTitleTask, nullptr, 0);
+    TitleTaskPass();
+    TitleTaskLoop();
 }
 
 // title_states's gTitleStates, moved here from title_states.cpp (docs/source-layout-round.md 5): the
