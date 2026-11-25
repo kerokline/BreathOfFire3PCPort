@@ -309,11 +309,26 @@ load: A1's format reads it, or not, at its merge.
 - The table and its counts: `python3 tools/region_table.py` on the round
   base `f6d53766` with this change (sections 3, 4); the refusals and the
   ratchet tried on perturbed copies of the files (sections 2, 6).
-- The self-test's line: SELFTEST_LINE.
-- The state hash unmoved: STATEHASH_LINE.
+- The self-test (the Linux ELF, `BOF3X_LAUNCHER=1 BOF3X_SELFTEST_ONLY=1`,
+  offscreen, the laptop's cache): exit 0, 10,402 log lines (10,401 at
+  `65b7810f`, and this one), line 10,356: `region_table 3898 runs over
+  0x005DA000..0x00987000: state 1969050, process 7569, derived 246736,
+  stack 20, unknown 1630961 bytes; 3023 names at their places, 17 keep rows
+  process, 176 skip rows classed`.
+- The state hash unmoved: `bridgeWalk`, headless, `--direct`, `en-US`,
+  `--only-slot0`, `BOF3X_SCALE=2`, the committed skip list (176 ranges,
+  hash `929F2913`), once on the round base's ELF and once on this change's:
+  `tools/statehash.py diff` says **identical on all 2074 compared ticks**
+  (files in `~/bof3x-runs/sbn1125/A3/root/bw_base`, `bw_a3` on the laptop;
+  both runs `end: done`).
+- The no-data checks this touches, locally: `ledger_check.py --verbose`,
+  `ledger_switches.py --check`, `ledger_registry.py --check`,
+  `gen_symbols.py`, `region_table.py --check`: all pass.
 - **Not checked:** the classes of the rows rest on the census's reading,
   not on a load across builds (that is the proof's, B3). The 32-bit
   Windows build compiles `region_table.cpp` in CI, not here (no Windows
-  toolchain on the laptop). Whether the 84 length-less `[[data]]` entries'
+  toolchain on the laptop). `RegionTable_Check`'s `Fatal` paths were not
+  driven by a doctored header (each would need a rebuild); the refusals
+  before them, in the generator, were. Whether the 84 length-less `[[data]]` entries'
   gaps are theirs to the next member, as the `~Name` labels read, is not
   claimed: a label marks a start, not a length.
