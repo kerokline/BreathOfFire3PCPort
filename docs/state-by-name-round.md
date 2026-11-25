@@ -416,15 +416,33 @@ save half is whole:
   through `LoadMenu_Apply` and `TitleFlow_EnterGame` unchanged. The game's
   own code applies the save; ours chooses the file and skips the menu.
 
-**The way back out.** A quicksave holds the whole span, so tier 0 has what
-an F12 save lacks. After the save is applied and the area entered, the
-loader puts back `AreaW2c_LastArea` and the two position words from the
-quicksave's span (read by their addresses, which are Capcom's and the same
-in every build), when the take stood in an area whose `Field_InputFlags`
-has bit 1 and the word in the file is not `0xFFFF`. The map's edge then
-leads where it led at the take, and DIV-0121's hold is not reached. F12's
-own saves are as DIV-0121 leaves them; this is the quicksave's save half
-only.
+**The way back out: the came-from place in the save file's tail** (the
+owner, 2026-11-24: fix DIV-0121's cause in the save, so that a fall-back
+save is used as it is). A save file is `0x12B0` bytes: the `0x10B0`-byte
+game block and `0x200` bytes after it that are zero in every PC save
+measured ([`save-interchange.md`](save-interchange.md) 2;
+[`save-editor-spec.md`](save-editor-spec.md): 67 of 67 files). The load reads
+all `0x12B0` into `Save_Staging` and sums and copies the first `0x10B0`
+only (`LoadMenu_Read`, `save_menu_callees.h` `kFileBytes`, `kBlockBytes`),
+so the tail is outside the checksum and nothing reads it.
+
+- **Written by every save** - a save point's, F12's, a quicksave's save
+  half: a tag of ours, then the area the party came from and the position
+  there, which is the three words `Area_Enter` records and the map's edge
+  hands to `Field_ChangeArea` (`AreaW2c_LastArea` `0x802290`, `0x7E091C`,
+  `0x7E0920`). The position is needed with the area: the place a field is
+  entered from on the world map is not fixed.
+- **Read by a load**: when the tag is there and the area is not `0xFFFF`,
+  the three words are put back after `GameMode_Start` has entered the
+  loaded area. The edge then leads where it led when the save was made.
+- **A save without the tag** (every save made before this, a PlayStation
+  save converted) loads as today: DIV-0121's hold.
+- **Other readers:** the original `BOF3.exe` and an older build of ours
+  read the tail into the staging buffer and use none of it. The save
+  editor writes the tail as zero today and must keep it instead.
+
+So tier 0 needs nothing of the quicksave's span: its save half carries its
+own way out, and F12's saves gain the same.
 
 The other road - applying the save in place, at the quicksave point - means
 running `LoadMenu_Apply`'s waits outside a task and clearing by hand what a
@@ -466,9 +484,12 @@ number nothing in the ledger or `known-defects.md`.
   start-up as `kKept` is checked today, the `unknown` count in CI.
 - **A4, tier 0** (`src/game/menu/quick_menu.cpp`, the title's load path):
   3.5, with a recipe that refuses a doctored build stamp and takes the
-  save; the way back out of an encounter field, proved by `stallion.txt`'s
-  walk to the edge (DIV-0121's verification) from a quicksave taken in area
-  29 and loaded as its save: the party leaves to where it came from. And a
+  save; the came-from place in the save's tail (written by `Save_BuildBlock`'s
+  callers, read at the load, kept by the save editor), proved by
+  `stallion.txt`'s walk to the edge (DIV-0121's verification) from an F12
+  save and from a quicksave's save half, both made in area 29: the party
+  leaves to where it came from; and a save without the tag holds at the
+  edge as before. And a
   read of what else a save half taken off a save point lands in: a take in
   a battle, in a scene, in a minigame, each loaded as its save once and
   written down.
@@ -509,7 +530,9 @@ show the yield word moved nothing; the hosted shadow suite; the self-tests.
 DIV-0145's refusal rule changes: a quicksave from another build is restored
 when it is portable, and otherwise offered as its save. An amendment of
 DIV-0145 and DIV-0147 (the menu's question), drafted by A1 and A4, numbered
-at the merge. The yield word and the region table change no behaviour and
+at the merge. The came-from place in a save's tail is a behaviour change
+of its own: a new entry, drafted by A4, with DIV-0121 amended to say when
+its hold is still reached (a save without the tag). The yield word and the region table change no behaviour and
 have no entry.
 
 ## 7. The owner's calls
@@ -557,6 +580,12 @@ offers the save it starts with, after a confirmation. Calls 3 to 5 are open.
   for `GFX` only (it writes a struct by `sizeof`), not compared.
 - The `TitleFlow` entry at `LoadMenu_Read` for tier 0 is read from the
   source, not tried.
+- That the area and the two position words are all a return through the
+  map's edge needs. They are what the edge passes to `Field_ChangeArea`
+  (DIV-0121's reading); a walk out after a load is the check.
+- The save's tail is read from the docs and the load's code as unread and
+  outside the checksum; the write path (`Save_WriteFile` of the staging
+  buffer) and a PlayStation-side converter's treatment of it are not read.
 - What a save half taken in a battle, a scene or a minigame loads as. The
   owner's test of F12 in a battle (IDEAS I18): the save loads in the field
   where the party stood. A scene and a minigame are not tried; A4 tries
