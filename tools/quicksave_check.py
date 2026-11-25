@@ -64,7 +64,8 @@ tier0   A refused quicksave loaded as its save (the state-by-name round's
           load   from the title, F5, confirm on slot 0, Yes: the load is
                  refused and the menu asks whether to load the save; Yes:
                  the restart and the title's load of the save half; then,
-                 once Game_Mode is 2, --after frames and the peeks;
+                 once Game_Mode is past 1 (the field, a mode-8 area),
+                 --after frames and the peeks;
           ref    the same save half as slot 0 through the title's own load
                  menu (combat.txt's presses: start, start, r2 three times), then the
                  same wait and peeks.
@@ -591,7 +592,8 @@ SAVE_HALF = 0x12B0
 
 
 def tier0_tail(after):
-    out = [f'until {GAME_MODE} u16 == 2 timeout 5400', f'wait {after}']
+    # any mode past the start and the entry (0, 1): the field (2), a mode-8 area (8), ...
+    out = [f'until {GAME_MODE} u16 & 0xE timeout 5400', f'wait {after}']
     out += [f'peek {a} {t} t0_{n}' for a, t, n in TIER0_PEEKS]
     out += ['shot t0_up 1', 'wait 2']
     return out
@@ -642,7 +644,9 @@ def cmd_tier0(a):
     # 1. the take
     take = os.path.join(out, 't0_take.txt')
     lines = [f'# tier0 take at {f} from {os.path.basename(a.route)} (quicksave_check.py tier0)'] + save
-    emit(r[:f] + [('KEY', 'f6')], lines)
+    emit(r[:f], lines)
+    lines += [f'peek {GAME_MODE} u16 t0_take_mode', 'peek 0x904EFC u16 t0_take_area']   # no frame of their own
+    emit([('KEY', 'f6')], lines)
     lines += ['wait 30']
     open(take, 'w', newline='\n').write('\n'.join(lines) + '\n')
     print('take:')
@@ -666,7 +670,7 @@ def cmd_tier0(a):
     load = os.path.join(out, 't0_load.txt')
     lines = ['# tier0 load: F5 on the title, slot 0, Yes, then Yes to the save (quicksave_check.py tier0)',
              'wait 150', 'key f5', 'wait 20', 'hold r2 3', 'wait 20', 'hold r2 3', 'wait 30', 'shot t0_question 1',
-             'wait 10', 'hold r2 3'] + tier0_tail(a.after)
+             'wait 10', 'hold r2 3', 'every 300'] + tier0_tail(a.after)
     open(load, 'w', newline='\n').write('\n'.join(lines) + '\n')
     print('load:')
     rc_load, log_load = run_input(a, load, os.path.join(out, 'load'), ['--run-game', 'none', '--game', game, '--no-save'])
@@ -685,6 +689,8 @@ def cmd_tier0(a):
     seen = open(log_load, errors='replace').read() if os.path.exists(log_load) else ''
     road = [(w, w in seen) for w in want]
     pl, pr = peeks_of(log_load), peeks_of(log_ref)
+    pt = peeks_of(log)
+    print(f'the take: mode {pt.get("t0_take_mode")}, area {pt.get("t0_take_area")}')
     print('the road (the load run\'s log):')
     for w, ok in road:
         print(f'  {"yes" if ok else "NO "}  {w}')
@@ -694,7 +700,7 @@ def cmd_tier0(a):
         x, y = pl.get('t0_' + n), pr.get('t0_' + n)
         # equal and read; an area 0 is no game (a take on the title comes up there)
         same = same and x is not None and x == y and not (n == 'area' and x == '0x0')
-        print(f'  {n:12s} {str(x):>16s} {str(y):>16s}  {"equal" if x == y else "DIFFERENT"}')
+        print(f'  {n:12s} {str(x):>16s} {str(y):>16s}  {"missing" if x is None or y is None else "equal" if x == y else "DIFFERENT"}')
     shots = [os.path.join(out, k) for k in ('load', 'ref')]
     pics = [shot_bytes(d, 't0_up') for d in shots]
     pic = pics[0] is not None and pics[0] == pics[1]

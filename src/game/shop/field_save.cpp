@@ -639,7 +639,7 @@ extern "C" void __cdecl FieldSave_Write(void) {
     MessageRest2c(0x99);
     SH_CALL(SaveMenu_DrawSlots)(0x20, 0x30, 0);
     SH_CALL(Save_BuildBlock)();
-    bof3::SaveTail_Write(AtRest2c(::bof3::Img(Save_Staging_addr)) + save_tail::kBlockBytes);   // draft C
+    bof3::SaveTail_Write(Save_Staging + save_tail::kBlockBytes);   // draft C
     SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath.v))), reinterpret_cast<const char*>(AtRest2c(::bof3::Img(rest_2c::at::kPathFormat.v))), Rest2c_Slot);
     const int written = SH_CALL(Save_WriteFile)(reinterpret_cast<const char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath.v))), rest_2c::at::kSaveSize);
     if (written == -1) return;
@@ -1029,7 +1029,7 @@ extern "C" void __cdecl Save_QuickWrite(void) {
     Rest2c_Slot = 0;
     SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath.v))), reinterpret_cast<const char*>(AtRest2c(::bof3::Img(rest_2c::at::kPathFormat.v))), 0u);
     SH_CALL(Save_BuildBlock)();
-    bof3::SaveTail_Write(AtRest2c(::bof3::Img(Save_Staging_addr)) + save_tail::kBlockBytes);   // draft C
+    bof3::SaveTail_Write(Save_Staging + save_tail::kBlockBytes);   // draft C
     SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath.v))), reinterpret_cast<const char*>(AtRest2c(::bof3::Img(rest_2c::at::kPathFormat.v))), Rest2c_Slot);
     const int written = SH_CALL(Save_WriteFile)(reinterpret_cast<const char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath.v))), rest_2c::at::kSaveSize);
     if (written == -1) return;

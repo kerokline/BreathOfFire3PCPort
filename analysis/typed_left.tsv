@@ -9241,6 +9241,8 @@ src/game/core/sound.cpp	Snd_LoadBank	record	At	src + kBankHeader	0	-	via=Addr	pl
 src/game/core/sound.cpp	Snd_LoadBank	record	Long	record + kBankHeader	1	-	stride=0x384	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (stride=0x384)	b1-scen_ui
 src/game/core/sound.cpp	Snd_LoadBank	record	PutLong	entry + 4	0	-	stride=0x8	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (stride=0x8)	b1-scen_ui
 src/game/core/sound.cpp	TitleFlow_Step	global	LongSaveMenu	save_menu::at::kStepTable	0	0x6671f4	-	no-entry	at::kStepTable 0x6671f4 -	b0
+src/game/core/sound.cpp	TitleFlow_ToSaveHalf	global	AtSaveMenu	save_menu::at::kSummaries	0	0x905bc0	-	no-entry	at::kSummaries 0x905bc0 -	b0
+src/game/core/sound.cpp	TitleFlow_ToSaveHalf	global	PutLongSaveMenu	save_menu::at::kSlotTop	0	0x8034d0	-	width	at::kSlotTop 0x8034d0 MoveScript_PartyRecords+0x50	b0
 src/game/core/sound.cpp	TitleFlow_Begin	global	PutLongSaveMenu	save_menu::at::kFieldState	0	0x905d98	-	type	at::kFieldState 0x905d98 Field_State	b0
 src/game/core/sound.cpp	TitleFlow_Begin	global	PutLongSaveMenu	save_menu::at::kSpriteCurrent	0	0x937f88	-	type	at::kSpriteCurrent 0x937f88 Sprite_Current	b0
 src/game/core/sound.cpp	TitleFlow_Menu	global	LongSaveMenu	save_menu::at::kMenuTable	0	0x66720c	-	no-entry	at::kMenuTable 0x66720c -	b0
@@ -27137,7 +27139,11 @@ src/game/text/tex.cpp	Font_UnpackGlyph	record	Word	table + 2 * index	0	-	-	platf
 src/game/text/text.cpp	Text_DrawSmall	global	At	mode_states::at::kSmallUV	0	0x65f5a8	-	no-entry	at::kSmallUV 0x65f5a8 -	b0
 src/hook/exe_icon_picture.cpp	ReadRecord	global	-	menu_windows::at::kIconRects	0	0x66367c	-	no-entry	menu_windows::at::kIconRects 0x66367c -	b0
 src/hook/snapshot.cpp	ArenaCommitted	record	At	lo - 1	0	-	-	platform	outside src/game: platform or tooling code (the strict rule covers src/game)	c4-rule
+src/hook/snapshot.cpp	TaskRecord	record	At	Img(bof3::addr::Task_Records) + k * task_sched::kRecordSize	0	-	via=Img	-	-	-
+src/hook/snapshot.cpp	FirstFrame	record	At	sp + task_sched::kEntrySlot	0	-	-	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (base=Task_StackTop;stride=0x4000)	b1-scen_ui
+src/hook/snapshot.cpp	Take	record	At	data + off	0	-	via=Img	-	-	-
 src/hook/snapshot.cpp	Take	record	At	arena_top - arena	0	-	-	platform	outside src/game: platform or tooling code (the strict rule covers src/game)	c4-rule
+src/hook/snapshot.cpp	Parse	record	At	data + off	0	-	via=Img	-	-	-
 src/hook/snapshot.cpp	Restore	record	At	Img(kKept[i].at) + kKept[i].bytes	0	-	via=Img	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (hook file, by width since the 64-bit round)	x64-b1
 src/hook/snapshot.cpp	Restore	record	At	h.arena_top - h.arena_bytes	0	-	-	platform	outside src/game: platform or tooling code (the strict rule covers src/game)	c4-rule
 src/hook/snapshot.cpp	Same	record	At	top - kArenaBytes	0	-	via=Va	platform	outside src/game: platform or tooling code (the strict rule covers src/game)	c4-rule
@@ -27145,6 +27151,7 @@ src/hook/snapshot.cpp	Same	record	At	top - kArenaBytes	1	-	via=Va	platform	outsi
 src/hook/snapshot.cpp	Same	record	At	top - kArenaBytes	2	-	via=Va	platform	outside src/game: platform or tooling code (the strict rule covers src/game)	c4-rule
 src/hook/snapshot.cpp	Same	record	At	at + kKept[i].bytes	0	-	via=Img	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (hook file, by width since the 64-bit round)	x64-b1
 src/hook/snapshot.cpp	Same	record	At	top - kArenaBytes	3	-	via=Va	platform	outside src/game: platform or tooling code (the strict rule covers src/game)	c4-rule
+src/hook/snapshot.cpp	SelfTestFormat2	record	At	top - kArenaBytes	0	-	via=Va	platform	outside src/game: platform or tooling code (the strict rule covers src/game)	c4-rule
 src/hook/stackwatch_win32.cpp	StackWatch_Start	record	Word	g_teb + kTebStackBase	0	-	via=TebOf	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (hook file, by width since the 64-bit round)	x64-b1
 src/hook/stackwatch_win32.cpp	StackWatch_Start	record	Word	g_teb + kTebStackLimit	0	-	via=TebOf	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (hook file, by width since the 64-bit round)	x64-b1
 src/hook/stackwatch_win32.cpp	StackWatch_Start	record	Word	g_teb + kTebDeallocationStack	0	-	via=TebOf	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (hook file, by width since the 64-bit round)	x64-b1

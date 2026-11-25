@@ -121,15 +121,15 @@ bool g_armed = false;
 CameFrom g_from;
 std::uint16_t g_saved_area = 0;
 
-unsigned char* At(std::uint32_t va) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(va))); }
-
-constexpr std::uint32_t kFromX = 0x21C, kFromZ = 0x220;   // MoveScript_TintRecords + : 0x7E091C, 0x7E0920
+// The two position dwords: MoveScript_TintRecords + 0x21C, + 0x220 (0x7E091C, 0x7E0920).
+constexpr std::uint32_t kFromX = 0x21C, kFromZ = 0x220;
+unsigned char* Tint() { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(MoveScript_TintRecords_addr))); }
 
 CameFrom Live() {
     CameFrom f;
     f.area = AreaW2c_LastArea;
-    f.x = static_cast<std::int32_t>(Get32(At(MoveScript_TintRecords_addr) + kFromX));
-    f.z = static_cast<std::int32_t>(Get32(At(MoveScript_TintRecords_addr) + kFromZ));
+    f.x = static_cast<std::int32_t>(Get32(Tint() + kFromX));
+    f.z = static_cast<std::int32_t>(Get32(Tint() + kFromZ));
     return f;
 }
 
@@ -139,8 +139,8 @@ void SelfTest() {
     unsigned char tail[kTailBytes];
     CameFrom from, got;
     from.area = 0x2A;
-    from.x = 0x00123456;
-    from.z = -0x00654321;
+    from.x = 0x001F8000;
+    from.z = -0x0021C000;
     bool has = false;
     const char* why = "";
     // Every save measured before this: 0x200 zero bytes. No tag.
@@ -252,8 +252,8 @@ void SaveTail_Frame() {
         return;
     }
     AreaW2c_LastArea = g_from.area;
-    std::memcpy(At(MoveScript_TintRecords_addr) + kFromX, &g_from.x, 4);
-    std::memcpy(At(MoveScript_TintRecords_addr) + kFromZ, &g_from.z, 4);
+    std::memcpy(Tint() + kFromX, &g_from.x, 4);
+    std::memcpy(Tint() + kFromZ, &g_from.z, 4);
     Log("save        tail: put back at Frame_Counter %u in area 0x%X (mode %u): came from area 0x%X at (0x%X, 0x%X)",
         static_cast<unsigned>(Frame_Counter), Game_AreaNumber, static_cast<unsigned>(Game_Mode), g_from.area,
         static_cast<unsigned>(g_from.x), static_cast<unsigned>(g_from.z));

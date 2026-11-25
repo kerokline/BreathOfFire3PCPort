@@ -363,7 +363,7 @@ void Tier0Frame() {
 // Right after the point, where the core has just put its line in Overlay_Text:
 // the line is copied with the addition into ours, and Overlay_Text names ours.
 void F7Line() {
-    if (g_open) return;   // the menu's own refusal: it shows its reason and asks itself
+    if (g_open || g_tier0 != Tier0::None) return;   // the menu's own refusal, or its road under way
     const char* const line = bof3::Snapshot_LastLine();
     const char* const shown = Overlay_Text;
     constexpr char kRefused[] = "Quickload refused: ";
@@ -658,6 +658,10 @@ void QuickMenu_AfterPoint() {
         for (char* c = g_refusal; *c; ++c)
             if (*c >= 'a' && *c <= 'z') *c = static_cast<char>(*c - 'a' + 'A');
         bof3::Log("quickmenu   BISLPS%02X.DAT not loaded (%s); the menu stays open", g_loading_slot, line);
+        // The line stays the core's text, in a buffer of ours, so F7Line (which
+        // acts on the core's own buffer) does not take the menu's refusal for F7's.
+        std::snprintf(g_f7_line, sizeof g_f7_line, "%s", line);
+        Overlay_Text = g_f7_line;
         // Draft B: its save half is whole - ask whether to load it.
         const SnapshotLoadResult& r = Snapshot_LastLoad();
         if (r.answer == SnapshotAnswer::RefusedSaveOffered && r.slot == g_loading_slot) {

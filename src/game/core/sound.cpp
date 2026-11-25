@@ -1116,7 +1116,7 @@ extern "C" void __cdecl LoadMenu_Read(void) {
     save_menu::g.sprintf(reinterpret_cast<char*>(AtSaveMenu(::bof3::Img(save_menu::at::kPath.v))), reinterpret_cast<const char*>(AtSaveMenu(::bof3::Img(save_menu::at::kSaveName.v))), slot);
     const unsigned char* const half = bof3::QuickMenu_SaveHalfForRead();
     if (half) {
-        std::memcpy(AtSaveMenu(::bof3::Img(save_menu::at::kStaging.v)), half, save_menu::at::kFileBytes);
+        std::memcpy(Save_Staging, half, save_menu::at::kFileBytes);
     } else if (save_menu::g.read_file(reinterpret_cast<const char*>(AtSaveMenu(::bof3::Img(save_menu::at::kPath.v))), save_menu::at::kFileBytes, 0) == -1) {
         SaveMenu_ErrorKind = 2;
         SetState(5);
@@ -1137,7 +1137,7 @@ extern "C" void __cdecl LoadMenu_Read(void) {
         // read again until a save menu lists the slots.
         if (half) bof3::Log("save        loaded the save half of BISLPS%02X.DAT (draft B)", bof3::QuickMenu_SaveHalfSlot());
         else bof3::Log("save        loaded slot %X (%s)", (unsigned)slot, reinterpret_cast<const char*>(AtSaveMenu(::bof3::Img(save_menu::at::kPath.v))));
-        bof3::SaveTail_Loaded(AtSaveMenu(::bof3::Img(save_menu::at::kStaging.v)), static_cast<std::uint16_t>(WordSaveMenu(::bof3::Img(save_menu::at::kStaging.v) + 0x24)));
+        bof3::SaveTail_Loaded(Save_Staging, FieldModes_Pending);   // the block's +0x24, copied: the area the save resumes in
         SetState(6);
         return;
     }

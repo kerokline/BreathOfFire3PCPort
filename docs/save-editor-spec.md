@@ -91,7 +91,21 @@ card" plus the release, and the file extension is the player's choice.
 - One file per slot in the install's game folder, `BISLPS%02X.DAT`, slots `00`..`0F`. READ:
   [`save-files.md`](save-files.md) section 2.
 - Exactly `0x12B0` bytes. The block sits at file offset 0, followed by `0x200`
-  zero bytes. MEASURED: 67 of 67 files.
+  bytes, the tail: zero in every save of the original port. MEASURED: 67 of 67
+  files (and 76 of 76 recipe saves on the laptop, 2026-11-25).
+- **The tail since the state-by-name round** (group A4, ledger draft C;
+  [`state-by-name-tier0.md`](state-by-name-tier0.md) 3): a save this project
+  writes - a save point's, F12's, a quicksave's save half - holds a tag
+  (`BOF3XTL`, a version, the records' length and FNV-1a) and the area and
+  position the party came from, which a load puts back so that an encounter
+  field's edge and a mode-8 area's leave lead back there. The game neither sums
+  nor copies the tail. **The editor keeps it**: a PC file's tail is read with
+  the block and written back with it (`save::KeptTail`, `src/launcher/save/block.h`),
+  unless the edit changed the area the save resumes in (`+0x24`), when the tail
+  is written zero (the came-from place is the way out of the old area; the
+  game then holds at an edge as for any untagged save, DIV-0121). A card holds
+  no PC tail: a save converted from a card gets a zero tail, and one converted
+  to a card leaves its tail behind.
 - **`BISLPS10`..`1F` are quicksaves**, a different format
   ([`quicksave.md`](quicksave.md) section 4). They match the same `BISLPS??.DAT`
   pattern. The editor lists and writes `00`..`0F` only, and never touches `1X`.
