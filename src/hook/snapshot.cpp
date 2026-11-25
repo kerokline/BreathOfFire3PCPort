@@ -8,6 +8,7 @@
 // since DIV-0040), its F6 nothing.
 #include "hook/snapshot.h"
 
+#include <algorithm>
 #include <cerrno>
 #include <cstdarg>
 #include <cstdio>
@@ -17,6 +18,7 @@
 #include <functional>
 #include <string>
 #include <system_error>
+#include <utility>
 #include <vector>
 
 #include "bof3/symbols.gen.h"
@@ -181,6 +183,7 @@ enum NotPortable : U {
     kNpTaskEntry = 4,        // a task created and not yet run whose entry names no VA
     kNpSlotCode = 5,         // a slot of Capcom's holds a function of ours by its address
     kNpRuntimeSlot = 6,      // a run-time slot names our module outside the message pool
+    kNpTextOurs = 7,         // a text word (span_words::kTextWords) names our module outside the pool and the text slots
 };
 
 const char* NotPortableText(U code) {
@@ -192,6 +195,7 @@ const char* NotPortableText(U code) {
     case kNpTaskEntry: return "a new task's entry names no VA";
     case kNpSlotCode: return "a slot holds a function of ours";
     case kNpRuntimeSlot: return "a message slot names our module";
+    case kNpTextOurs: return "a message box's text is ours outside the message pool";
     default: return "a reason this build does not know";
     }
 }
@@ -204,6 +208,7 @@ enum WordKind : U {
     kWordFold24 = 2,   // a link into the moved image, its low 24 bits so (span_words::Fold24)
     kWordPool = 3,     // a run-time slot into our message pool, written as its offset in the pool
     kWordText = 4,     // a slot of Capcom's holding text of ours: written raw, kept as the process has it
+    kWordTextCopy = 5, // a word holding the value a text slot holds: written as the slot's offset, placed as the slot is
 };
 
 struct Participant {
@@ -572,6 +577,10 @@ struct WordPlace {
     U pool = 0, pool_bytes = 0;   // MsgPool_Moved: the system messages under a translation
     U image_base = span_words::kExeLo;
     bool code = false;            // code places to name: bof3x.exe, the table under a measured top byte
+    // At a take (ReadTextSlots): (value, offset from kDataLo) of each of
+    // Capcom's slots holding text of ours, by value - a word holding one of
+    // these values is a copy of that slot's pointer (kWordTextCopy).
+    std::vector<std::pair<U, U>> texts;
 };
 
 WordPlace LiveWordPlace() {
@@ -598,22 +607,55 @@ bool Unnamed(U va) {
     return false;
 }
 
+static_assert(span_words::kTextWords[0] == Msgbox_Base_addr && span_words::kTextWords[1] == MenuWindows_ListText_addr &&
+                  span_words::kTextWords[2] == Msgbox_Resume_addr && span_words::kTextWords[3] == BattleFlow_TaskCurrent_addr + 0x38,
+              "span_words::kTextWords against symbols.toml (the box state's three, the battle block's +0x38)");
+
+// The text slots as they stand, into wp.texts (a take's, and the probe's).
+void ReadTextSlots(WordPlace& wp) {
+    wp.texts.clear();
+    const U data = Img(span_words::kDataLo);
+    for (const U off : span_words::g_slots) {
+        if (Unnamed(span_words::kDataLo + off)) continue;
+        U w;
+        std::memcpy(&w, At(data + off), sizeof w);
+        const span_words::Section* s = span_words::g_ours.Named(w);
+        if (s && s->content) wp.texts.push_back({w, off});
+    }
+    std::sort(wp.texts.begin(), wp.texts.end());
+}
+
+// The slot whose text pointer `w` is, as an offset from kDataLo; false if none.
+bool TextSlotOf(const WordPlace& wp, U w, U* slot) {
+    const auto it = std::lower_bound(wp.texts.begin(), wp.texts.end(), std::pair<U, U>{w, 0});
+    if (it == wp.texts.end() || it->first != w) return false;
+    *slot = it->second;
+    return true;
+}
+
 // The word at `off` (bytes from .data's start) holding `w`, at a take: true
 // with its kind and the value the file holds for it when it is written by
 // its name; false to write it raw. `np` is set (when 0) to the reason the
 // word makes the take this build's only.
 bool NameWord(const WordPlace& wp, U off, U w, U* kind, U* stored, U* np) {
     const U va = span_words::kDataLo + off;
-    for (U i = 0; i < span_words::kRuntimeSlots; ++i) {
-        if (va != span_words::RuntimeSlot(i)) continue;
-        if (wp.pool_bytes && w - wp.pool < wp.pool_bytes) {
-            *kind = kWordPool;
-            *stored = w - wp.pool;
-            return true;
-        }
-        if (span_words::g_ours.Named(w) && !*np) *np = kNpRuntimeSlot;
-        break;
+    // A run-time slot or a text word into the message pool: by its offset in
+    // the pool. A copy of a text slot's pointer, in any word that is not a
+    // slot itself: by that slot (B1b; docs/state-by-name-participants.md 10).
+    bool runtime = span_words::IsTextWord(va);
+    for (U i = 0; i < span_words::kRuntimeSlots && !runtime; ++i) runtime = va == span_words::RuntimeSlot(i);
+    if (runtime && wp.pool_bytes && w - wp.pool < wp.pool_bytes) {
+        *kind = kWordPool;
+        *stored = w - wp.pool;
+        return true;
     }
+    U slot = 0;
+    if (!span_words::IsSlot(off) && TextSlotOf(wp, w, &slot)) {
+        *kind = kWordTextCopy;
+        *stored = slot;
+        return true;
+    }
+    if (runtime && span_words::g_ours.Named(w) && !*np) *np = span_words::IsTextWord(va) ? kNpTextOurs : kNpRuntimeSlot;
     if (wp.code) {
         if (const U named = Bind_VaOf(w)) {
             *kind = kWordCode;
@@ -775,6 +817,69 @@ void GameSaveHalf(unsigned char* to) {
     SaveTail_Write(to + save_tail::kBlockBytes);
 }
 
+// --- BOF3X_QSWORDS: the census of words that name our module ---------------
+//
+// A measurement (docs/state-by-name-participants.md 10): with BOF3X_QSWORDS
+// naming a file, at every pass of Snapshot_Pending - the take's point between
+// two logic frames, whether or not a take is asked - the aligned words of the
+// span that a take would write raw and whose value lies in one of our
+// module's sections (span_words::g_ours.Named). Written as changes, so a word
+// that holds one number all run is one line: a pass is "F <Frame_Counter>
+// <words now>", then "+ <va> <value> <k>" for a word that came or changed and
+// "- <va>" for one that went; k = 0 for .data / .bss (NameWord left it raw),
+// 1 for the span's tail past .data (our end of .game and the pool, which no
+// rule names). Nothing in the game is changed; off when the variable is unset.
+std::FILE* g_words_probe = nullptr;
+bool g_words_probe_read = false;
+std::vector<U> g_words_last;   // the last pass's (va, value, k), ascending by va
+
+void WordsProbe() {
+    if (!g_words_probe_read) {
+        g_words_probe_read = true;
+        char path[512];
+        const U n = bof3::os::GetEnv("BOF3X_QSWORDS", path, sizeof path);
+        if (n == 0 || n >= sizeof path) return;
+        g_words_probe = std::fopen(path, "w");
+        if (!g_words_probe) Fatal("quicksave: BOF3X_QSWORDS=%s cannot be written", path);
+        Log("quicksave   BOF3X_QSWORDS: the words that name our module, each pass, to %s", path);
+    }
+    if (!g_words_probe || !span_words::g_slots_taken) return;
+    WordPlace wp = LiveWordPlace();
+    ReadTextSlots(wp);
+    const U data = Img(span_words::kDataLo);
+    std::vector<U> now;
+    for (U off = 0; off < span_words::kDataHi - span_words::kDataLo; off += 4) {
+        if (Unnamed(span_words::kDataLo + off)) continue;
+        const U w = U32(At(data + off));
+        if (!span_words::g_ours.Named(w)) continue;
+        U kind = 0, value = 0, np = 0;
+        if (NameWord(wp, off, w, &kind, &value, &np)) continue;
+        now.insert(now.end(), {span_words::kDataLo + off, w, 0});
+    }
+    for (U va = span_words::kDataHi; va < exe_layout::kPoolVa + exe_layout::kPoolSize; va += 4) {
+        const U w = U32(At(Img(va)));
+        if (span_words::g_ours.Named(w)) now.insert(now.end(), {va, w, 1});
+    }
+    std::fprintf(g_words_probe, "F %u %u\n", static_cast<unsigned>(Frame_Counter), static_cast<unsigned>(now.size() / 3));
+    std::size_t i = 0, j = 0;
+    const std::vector<U>& was = g_words_last;
+    while (i < now.size() || j < was.size()) {
+        if (j >= was.size() || (i < now.size() && now[i] < was[j])) {
+            std::fprintf(g_words_probe, "+ %08X %08X %u\n", now[i], now[i + 1], now[i + 2]);
+            i += 3;
+        } else if (i >= now.size() || was[j] < now[i]) {
+            std::fprintf(g_words_probe, "- %08X\n", was[j]);
+            j += 3;
+        } else {
+            if (now[i + 1] != was[j + 1]) std::fprintf(g_words_probe, "+ %08X %08X %u\n", now[i], now[i + 1], now[i + 2]);
+            i += 3;
+            j += 3;
+        }
+    }
+    std::fflush(g_words_probe);
+    g_words_last.swap(now);
+}
+
 // The file's bytes, the build fields left for Stamp. Between frames, on the
 // main thread: participants first, then the span and the arena copied, then
 // the save half built and the span written back over what building it wrote
@@ -804,15 +909,29 @@ std::vector<unsigned char> Take(const Registry& registry, const Span& span, U ar
         if (!IsExeHost() || !Bind_Active()) np = kNpHosted;
         else if (!Bind_TableMeasured()) np = kNpTableUnmeasured;
         for (U k = 0; k < task_yield::kTasks; ++k) tasks[k] = TaskPlace(k, arena_top, &np);
-        const WordPlace wp = LiveWordPlace();
+        WordPlace wp = LiveWordPlace();
+        ReadTextSlots(wp);
         const U data = Img(span_words::kDataLo);
+        // A word no rule names that holds an address in the message pool is
+        // written raw, and logged: as a refusal it would cost a take whose
+        // number happens to fall there (docs/state-by-name-participants.md
+        // 10: one word, on 2,432 of cutsceneAndNue's 7,420 passes).
+        U pool_raw = 0, pool_first = 0;
         for (U off = 0; off < span_words::kDataHi - span_words::kDataLo; off += 4) {
             if (Unnamed(span_words::kDataLo + off)) continue;
             U kind = 0, value = 0;
-            if (!NameWord(wp, off, U32(At(data + off)), &kind, &value, &np)) continue;
+            const U w = U32(At(data + off));
+            if (!NameWord(wp, off, w, &kind, &value, &np)) {
+                if (wp.pool_bytes && w - wp.pool < wp.pool_bytes && !pool_raw++) pool_first = span_words::kDataLo + off;
+                continue;
+            }
             words.push_back((off >> 2) << 3 | kind);
             stored.push_back(value);
         }
+        if (pool_raw)
+            Log("quicksave   take: %u word(s) no rule names hold an address in the message pool, written raw (the first "
+                "0x%08X); a portable load writes them as the take had them",
+                pool_raw, pool_first);
         settings = Settings();
         ext.state_revision = kStateRevision;
         ext.portable = np == kIsPortable ? 1 : 0;
@@ -1168,7 +1287,16 @@ Parsed Parse(const std::vector<unsigned char>& file, const BuildId& build, const
             return Refuse(p, "damaged", Printf("WORDS entry %u names offset 0x%X, outside the words a take names", i, off));
         U w = 0;
         std::string why;
-        if (!PlaceWord(wp, kind, U32(p.placed.data() + off), U32(At(data + off)), portable, &w, why))
+        U place_kind = kind, file_value = U32(p.placed.data() + off), live_value = U32(At(data + off));
+        if (kind == kWordTextCopy) {   // placed as the slot it copies: the file's slot at an exact load, the process's at a portable one
+            const U slot = file_value;
+            if (!span_words::IsSlot(slot) || slot + 4 > h.span_bytes)
+                return Refuse(p, "damaged", Printf("WORDS entry %u copies offset 0x%X, which is no slot of Capcom's", i, slot));
+            place_kind = kWordText;
+            file_value = U32(image + slot);
+            live_value = U32(At(data + slot));
+        }
+        if (!PlaceWord(wp, place_kind, file_value, live_value, portable, &w, why))
             return Refuse(p, reason.empty() ? std::string("a word this process cannot place") : reason + " (a word this build cannot place)",
                           (detail.empty() ? std::string() : detail + "; ") + Printf("the word at 0x%08X: ", span_words::kDataLo + off) + why);
         std::memcpy(p.placed.data() + off, &w, sizeof w);
@@ -1950,6 +2078,7 @@ void SelfTestSpan(const fs::path& dir) {
 // back from raw copies at the end.
 const char kTextA[] = "state-by-name: the take's text";
 const char kTextB[] = "state-by-name: this process's text";
+unsigned char g_test_warp_page[0x40];   // B1b: a stand-in for DIV-0225's page, a buffer of ours the message box reads
 
 void SelfTestFormat2() {
     const Span span = CurrentSpan();
@@ -2107,6 +2236,67 @@ void SelfTestFormat2() {
                   "an exact restore of format 2: the span (the text slot the take's) and the arena as at the take");
         }
 
+        // (2b) B1b: a word holding the text slot's pointer (as an effect
+        // object copies a slot's, masterAndManillo) follows that slot; the
+        // message box aimed at a buffer of ours (DIV-0225's town warp page)
+        // makes the take not portable.
+        if (slot) {
+            U copy = 0;
+            for (U off = 0; off < span_words::kDataHi - span_words::kDataLo && !copy; off += 4) {
+                const U va = span_words::kDataLo + off;
+                bool runtime = span_words::IsTextWord(va);
+                for (U i = 0; i < span_words::kRuntimeSlots; ++i) runtime = runtime || va == span_words::RuntimeSlot(i);
+                if (!span_words::IsSlot(off) && !Unnamed(va) && !runtime && word(va) == 0) copy = va;
+            }
+            Check(copy != 0, "a word of .data no rule names, to hold a copy");
+            set_word(slot, text_a);
+            set_word(copy, text_a);
+            std::vector<unsigned char> c;
+            OnOwnStack([&] { c = Take(reg, span, top, &FakeSaveHalf); });
+            Stamp(c, build);
+            const HeaderExt cx = ExtOf(c);
+            U copies = 0;
+            const unsigned char* image = c.data() + kSaveHalf + sizeof(Header) + sizeof(HeaderExt);
+            for (U i = 0; i < cx.words; ++i) {
+                const U e = U32(c.data() + WordsAt(c) + std::size_t{i} * sizeof(U));
+                if ((e & 7) == kWordTextCopy && span_words::kDataLo + (e >> 3) * 4 == copy &&
+                    span_words::kDataLo + U32(image + (e >> 3) * 4) == slot)
+                    ++copies;
+            }
+            Check(cx.portable == 1 && copies == 1, "a copy of a text slot's pointer is written as that slot, and the take stays portable");
+            set_word(slot, text_b);
+            set_word(copy, 0x5A5A5A5A);
+            q = Parse(c, other, span, top, reg);
+            Check(q.ok && q.answer == Answer::Portable, "the take with the copy parses as portable in another build");
+            if (q.ok) {
+                OnOwnStack([&] { Restore(q, reg); });
+                Check(word(copy) == text_b && word(slot) == text_b, "a portable restore places the copy as its slot: this process's text");
+            }
+            set_word(slot, text_b);
+            set_word(copy, 0x5A5A5A5A);
+            q = Parse(c, build, span, top, reg);
+            Check(q.ok && q.answer == Answer::Exact, "and exactly in its own build");
+            if (q.ok) {
+                OnOwnStack([&] { Restore(q, reg); });
+                Check(word(copy) == text_a && word(slot) == text_a, "an exact restore places the copy as its slot: the take's text");
+            }
+            set_word(copy, 0);
+            const U box0 = word(Msgbox_Base_addr);
+            set_word(Msgbox_Base_addr, Va(g_test_warp_page));
+            std::vector<unsigned char> d;
+            OnOwnStack([&] { d = Take(reg, span, top, &FakeSaveHalf); });
+            Stamp(d, build);
+            const HeaderExt dx = ExtOf(d);
+            Check(dx.portable == 0 && (dx.not_portable & 0xFF) == kNpTextOurs,
+                  "the message box aimed at a buffer of ours (the town warp's page): the take is not portable");
+            q = Parse(d, other, span, top, reg);
+            Check(!q.ok && q.why == "another build (not portable)" && q.offer_save,
+                  "another build refuses it, not portable, its save half offered");
+            q = Parse(d, build, span, top, reg);
+            Check(q.ok && q.answer == Answer::Exact, "its own build restores it exactly");
+            set_word(Msgbox_Base_addr, box0);
+        }
+
         // (3) Not portable: task 1 asleep inside a body, at no site.
         {
             unsigned char* rec = TaskRecord(1);
@@ -2215,6 +2405,23 @@ void SelfTestFormat2() {
                   PlaceWord(wp, kWordText, Va(kTextA), Va(kTextB), false, &w, why) && w == Va(kTextA) &&
                   !PlaceWord(wp, kWordText, Va(kTextA), 0x1234, true, &w, why),
               "a text slot: the file's at an exact load, the process's at a portable one, refused when the process's is not ours");
+        // B1b: the text words, a copy of a text slot's pointer, and a word no rule names.
+        const U box = Msgbox_Base_addr - span_words::kDataLo, battle = span_words::kTextWords[3] - span_words::kDataLo;
+        Check(NameWord(wp, box, wp.pool + 0x272, &kind, &stored, &np) && kind == kWordPool && stored == 0x272 && np == 0 &&
+                  NameWord(wp, battle, wp.pool + 0x399, &kind, &stored, &np) && kind == kWordPool && stored == 0x399 && np == 0,
+              "a message box's text word into the pool, and the battle block's, are written as their offsets in it");
+        U text_slot = 0;
+        while (!span_words::IsSlot(text_slot)) text_slot += 4;
+        wp.texts = {{Va(kTextA), text_slot}};
+        Check(NameWord(wp, plain, Va(kTextA), &kind, &stored, &np) && kind == kWordTextCopy && stored == text_slot && np == 0 &&
+                  NameWord(wp, battle, Va(kTextA), &kind, &stored, &np) && kind == kWordTextCopy && stored == text_slot,
+              "a word holding a text slot's pointer is written as that slot's offset, a text word's too");
+        Check(!NameWord(wp, box, Va(kTextB), &kind, &stored, &np) && np == kNpTextOurs,
+              "a message box's text word naming our module elsewhere (the town warp's page) makes the take not portable");
+        np = 0;
+        Check(!NameWord(wp, plain, wp.pool + 0x40, &kind, &stored, &np) && np == 0,
+              "a word no rule names holding a pool address is written raw (logged at the take), not refused");
+        wp.texts.clear();
     }
 
     WriteRange(span.image.base, image0.data(), span.image.bytes);
@@ -2330,6 +2537,7 @@ void SelfTest() {
         "and a truncated file refused; format 2: a format-1 file exact, a portable file of another build restored "
         "portably and exactly in its own, one not portable, an unknown site, another state revision, other settings, "
         "damaged settings, an unbound code word and other bound functions refused with the save offered, the word kinds; "
+        "the text words into the pool, a copy of a text slot placed as its slot, the message box on a buffer of ours not portable; "
         "an empty slot; the "
         "rotation over sixteen files, a gapped set, a failed rename and an empty slot file a crash left",
         span.image.base, span.image.bytes, span.pool.base, span.pool.bytes);
@@ -2394,6 +2602,7 @@ bool Snapshot_ReadSaveHalf(unsigned slot, std::vector<unsigned char>& out, std::
 }
 
 void Snapshot_Pending() {
+    WordsProbe();
     const Request request = g_request;
     if (request == Request::None) return;
     g_request = Request::None;
