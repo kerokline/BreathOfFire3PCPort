@@ -5405,124 +5405,126 @@ site	src/game/core/save_menu.cpp	377	at_global	-	at::kGameStep	0x66c7ea	data	gam
 site	src/game/core/save_menu.cpp	399	at_global	-	at::kStreamTables	0x6653b0	data	game	ui	base_helper	-	-	const U table = LongSaveMenu(::bof3::Img(at::kStreamTables.v) + 1 * 4);
 site	src/game/core/save_menu.cpp	424	const_def	derived	kind	0x6bde40	data	game	ui	module	SaveMenu_StreamKind	-	const U kind = SaveMenu_StreamKind;
 site	src/game/core/save_menu.cpp	499	const_def	derived	kind	0x6bde40	data	game	ui	module	SaveMenu_StreamKind	-	const U kind = SaveMenu_StreamKind;
-site	src/game/core/sound.cpp	168	at_global	-	save_menu::at::kStaging	0x92a0e0	data	game	engine	base_helper	Save_Staging	-	for (save_menu::U i = 0; i < 7; ++i) PutLongSaveMenu(AddrSaveMenu(summary) + i * 4, LongSaveMenu(::bof3::Img(save_menu::at::kStaging.v) + i * 4));
-site	src/game/core/sound.cpp	326	abs_call	theirs	Mp3_Create	0x5adf00	code	game	engine	init	Mp3_Create	-	Mp3_Create, Mp3_MemoryIo, Mp3_SetIo, Mp3_Open, Mp3_Start, Mp3_Decode, Mp3_Seek, Mp3_Destroy,
-site	src/game/core/sound.cpp	326	abs_call	theirs	Mp3_Decode	0x5afc40	code	game	engine	init	Mp3_Decode	-	Mp3_Create, Mp3_MemoryIo, Mp3_SetIo, Mp3_Open, Mp3_Start, Mp3_Decode, Mp3_Seek, Mp3_Destroy,
-site	src/game/core/sound.cpp	326	abs_call	theirs	Mp3_Destroy	0x5b0630	code	game	engine	init	Mp3_Destroy	-	Mp3_Create, Mp3_MemoryIo, Mp3_SetIo, Mp3_Open, Mp3_Start, Mp3_Decode, Mp3_Seek, Mp3_Destroy,
-site	src/game/core/sound.cpp	326	abs_call	theirs	Mp3_MemoryIo	0x5b0d50	code	game	engine	init	Mp3_MemoryIo	-	Mp3_Create, Mp3_MemoryIo, Mp3_SetIo, Mp3_Open, Mp3_Start, Mp3_Decode, Mp3_Seek, Mp3_Destroy,
-site	src/game/core/sound.cpp	326	abs_call	theirs	Mp3_Open	0x5ae6a0	code	game	engine	init	Mp3_Open	-	Mp3_Create, Mp3_MemoryIo, Mp3_SetIo, Mp3_Open, Mp3_Start, Mp3_Decode, Mp3_Seek, Mp3_Destroy,
-site	src/game/core/sound.cpp	326	abs_call	theirs	Mp3_Seek	0x5aeba0	code	game	engine	init	Mp3_Seek	-	Mp3_Create, Mp3_MemoryIo, Mp3_SetIo, Mp3_Open, Mp3_Start, Mp3_Decode, Mp3_Seek, Mp3_Destroy,
-site	src/game/core/sound.cpp	326	abs_call	theirs	Mp3_SetIo	0x5ae160	code	game	engine	init	Mp3_SetIo	-	Mp3_Create, Mp3_MemoryIo, Mp3_SetIo, Mp3_Open, Mp3_Start, Mp3_Decode, Mp3_Seek, Mp3_Destroy,
-site	src/game/core/sound.cpp	326	abs_call	theirs	Mp3_Start	0x5ae820	code	game	engine	init	Mp3_Start	-	Mp3_Create, Mp3_MemoryIo, Mp3_SetIo, Mp3_Open, Mp3_Start, Mp3_Decode, Mp3_Seek, Mp3_Destroy,
-site	src/game/core/sound.cpp	391	at_global	-	scena_sx2::at::kChannelsEnd	0x6bc924	data	game	engine	base_helper	-	-	for (std::uint32_t p = AddrScenaSx2(Sound_Channels); p < ::bof3::Img(scena_sx2::at::kChannelsEnd); p += 4) {
-site	src/game/core/sound.cpp	415	abs_call	via=SH_AT	scena_sx2::at::kSndBufVolume	0x5a6c60	code	game	engine	call	SndBuf_SetVolume	-	SH_AT(void (__cdecl*)(void*, int), scena_sx2::at::kSndBufVolume.v)(AtScenaSx2(buffer), static_cast<int>(level));
-site	src/game/core/sound.cpp	444	at_global	-	save_menu::at::kStreamTables	0x6653b0	data	game	engine	base_helper	-	-	const save_menu::U table = LongSaveMenu(::bof3::Img(save_menu::at::kStreamTables.v) + kind * 4);
-site	src/game/core/sound.cpp	452	at_global	-	save_menu::at::kStreamFormat	0x666f9c	data	game	engine	base_helper	-	-	if (!cache) save_menu::g.sprintf(path, reinterpret_cast<const char*>(AtSaveMenu(::bof3::Img(save_menu::at::kStreamFormat.v))), text);
-site	src/game/core/sound.cpp	522	module_const	-	kLoopingName	0x666fb8	data	game	engine	base_helper	-	include	sound::g.sprintf(looping, reinterpret_cast<const char*>(::bof3::Img(kLoopingName.v)), track);
-site	src/game/core/sound.cpp	523	module_const	-	kOnceName	0x666fa8	data	game	engine	base_helper	-	include	sound::g.sprintf(once, reinterpret_cast<const char*>(::bof3::Img(kOnceName.v)), track);
-site	src/game/core/sound.cpp	596	asm_operand	=m	Music_FadeStep	0x6bde60	data	game	engine	-	Music_FadeStep	value	: [step] " "(Music_FadeStep)
-site	src/game/core/sound.cpp	597	asm_operand	m	Music_Volume	0x6bde5c	data	game	engine	-	Music_Volume	value	: [n] " "(wide), [volume] " "(Music_Volume)
-site	src/game/core/sound.cpp	642	asm_operand	=m	Music_FadeStep	0x6bde60	data	game	engine	-	Music_FadeStep	value	: [step] " "(Music_FadeStep)
-site	src/game/core/sound.cpp	643	asm_operand	m	Music_Volume	0x6bde5c	data	game	engine	-	Music_Volume	value	: [full] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k127At))), [volume] " "(Music_Volume), [n] " "(frames)
-site	src/game/core/sound.cpp	643	asm_operand	m	k127At	0x5c427c	data	game	engine	cast	Sound_FullVolume	include	: [full] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k127At))), [volume] " "(Music_Volume), [n] " "(frames)
-site	src/game/core/sound.cpp	661	asm_operand	=m	Music_FadeStep	0x6bde60	data	game	engine	-	Music_FadeStep	value	: [step] " "(Music_FadeStep)
-site	src/game/core/sound.cpp	662	asm_operand	m	Music_Volume	0x6bde5c	data	game	engine	-	Music_Volume	value	: [n] " "(wide), [volume] " "(Music_Volume)
-site	src/game/core/sound.cpp	693	module_const	-	sound_rest::kChannelsEnd	0x6bc924	data	game	engine	base_helper	-	include	for (std::uint32_t p = sound_rest::Address(Sound_Channels); p < ::bof3::Img(sound_rest::kChannelsEnd); p += 4) {
-site	src/game/core/sound.cpp	719	asm_operand	+m	Music_Volume	0x6bde5c	data	game	engine	-	Music_Volume	value	: [volume] " "(Music_Volume)
-site	src/game/core/sound.cpp	720	asm_operand	m	Music_FadeStep	0x6bde60	data	game	engine	-	Music_FadeStep	value	: [step] " "(Music_FadeStep)
-site	src/game/core/sound.cpp	757	module_const	-	display_env::kChannelsEnd	0x6bc924	data	game	engine	base_helper	-	include	for (display_env::U c = ::bof3::Img(Sound_Channels_addr); c < ::bof3::Img(display_env::kChannelsEnd); c += 4)
-site	src/game/core/sound.cpp	784	at_global	call_through	save_menu::at::kStepTable	0x6671f4	data	game	engine	base_helper	-	-	const Step step = reinterpret_cast<Step>(AtSaveMenu(LongSaveMenu(::bof3::Img(save_menu::at::kStepTable.v) + static_cast<std::uint32_t>(Game_Step) * 4)));
-site	src/game/core/sound.cpp	803	at_global	-	save_menu::at::kFieldState	0x905d98	data	game	engine	base_helper	Field_State	-	PutLongSaveMenu(::bof3::Img(save_menu::at::kFieldState.v), ::bof3::Img(ObjTrio_addr));
-site	src/game/core/sound.cpp	804	at_global	-	save_menu::at::kSpriteCurrent	0x937f88	data	game	engine	base_helper	Sprite_Current	-	PutLongSaveMenu(::bof3::Img(save_menu::at::kSpriteCurrent.v), ::bof3::Img(ObjTrio_addr));
-site	src/game/core/sound.cpp	833	at_global	call_through	save_menu::at::kMenuTable	0x66720c	data	game	engine	base_helper	-	-	const Step step = reinterpret_cast<Step>(AtSaveMenu(LongSaveMenu(::bof3::Img(save_menu::at::kMenuTable.v) + State() * 4)));
-site	src/game/core/sound.cpp	842	at_global	-	save_menu::at::kCounter	0x929f04	data	game	engine	base_helper	-	-	PutByte(::bof3::Img(save_menu::at::kCounter.v), 2);
-site	src/game/core/sound.cpp	850	at_global	-	save_menu::at::kCounter	0x929f04	data	game	engine	base_helper	-	-	const save_menu::U c = (Byte(::bof3::Img(save_menu::at::kCounter.v)) - 1) & 0xFF;
-site	src/game/core/sound.cpp	851	at_global	-	save_menu::at::kCounter	0x929f04	data	game	engine	base_helper	-	-	PutByte(::bof3::Img(save_menu::at::kCounter.v), c);
-site	src/game/core/sound.cpp	858	at_global	-	save_menu::at::kMenuFlags	0x7dee44	data	game	engine	base_helper	-	-	PutByte(::bof3::Img(save_menu::at::kMenuFlags.v), Byte(::bof3::Img(save_menu::at::kMenuFlags.v)) | 2);
-site	src/game/core/sound.cpp	858	at_global	-	save_menu::at::kMenuFlags	0x7dee44	data	game	engine	base_helper	-	-	PutByte(::bof3::Img(save_menu::at::kMenuFlags.v), Byte(::bof3::Img(save_menu::at::kMenuFlags.v)) | 2);
-site	src/game/core/sound.cpp	865	at_global	-	save_menu::at::kCounter	0x929f04	data	game	engine	base_helper	-	-	PutByte(::bof3::Img(save_menu::at::kCounter.v), 0);
-site	src/game/core/sound.cpp	866	at_global	-	save_menu::at::kRowBright	0x6bdf90	data	game	engine	base_helper	-	-	PutLongSaveMenu(::bof3::Img(save_menu::at::kRowBright.v), 0);
-site	src/game/core/sound.cpp	879	at_global	-	save_menu::at::kCounter	0x929f04	data	game	engine	base_helper	-	-	PutByte(::bof3::Img(save_menu::at::kCounter.v), Byte(::bof3::Img(save_menu::at::kCounter.v)) + 0x10);
-site	src/game/core/sound.cpp	879	at_global	-	save_menu::at::kCounter	0x929f04	data	game	engine	base_helper	-	-	PutByte(::bof3::Img(save_menu::at::kCounter.v), Byte(::bof3::Img(save_menu::at::kCounter.v)) + 0x10);
-site	src/game/core/sound.cpp	882	at_global	-	save_menu::at::kRowBright	0x6bdf90	data	game	engine	base_helper	-	-	const save_menu::U b = (Byte(::bof3::Img(save_menu::at::kRowBright.v) + i) + 8) & 0xFF;
-site	src/game/core/sound.cpp	883	at_global	-	save_menu::at::kRowBright	0x6bdf90	data	game	engine	base_helper	-	-	PutByte(::bof3::Img(save_menu::at::kRowBright.v) + i, cursor != i && b > 0x40 ? 0x40 : b);
-site	src/game/core/sound.cpp	885	at_global	-	save_menu::at::kCounter	0x929f04	data	game	engine	base_helper	-	-	if (Byte(::bof3::Img(save_menu::at::kCounter.v)) == 0) SetState(State() + 1);
-site	src/game/core/sound.cpp	899	at_global	-	save_menu::at::kMenuFlags	0x7dee44	data	game	engine	base_helper	-	-	if ((Byte(::bof3::Img(save_menu::at::kMenuFlags.v)) & 2) == 0) return;
-site	src/game/core/sound.cpp	900	at_global	-	save_menu::at::kPressed	0x7e1bec	data	game	engine	base_helper	Input_Pressed	-	const save_menu::U pressed = LongSaveMenu(::bof3::Img(save_menu::at::kPressed.v));
-site	src/game/core/sound.cpp	917	at_global	-	save_menu::at::kRowBright	0x6bdf90	data	game	engine	base_helper	-	-	const save_menu::U a = ::bof3::Img(save_menu::at::kRowBright.v) + static_cast<save_menu::U>(i);
-site	src/game/core/sound.cpp	964	at_global	-	save_menu::at::kCondFlagsEnd	0x904030	data	game	engine	base_helper	Cond_Flags+0xa0	-	for (save_menu::U a = ::bof3::Img(Cond_Flags_addr); a < ::bof3::Img(save_menu::at::kCondFlagsEnd.v); a += 8) PutLongSaveMenu(a, 0);
-site	src/game/core/sound.cpp	981	at_global	call_through	save_menu::at::kLoadTable	0x667228	data	game	engine	base_helper	-	-	const Step step = reinterpret_cast<Step>(AtSaveMenu(LongSaveMenu(::bof3::Img(save_menu::at::kLoadTable.v) + State() * 4)));
-site	src/game/core/sound.cpp	993	at_global	-	save_menu::at::kSlotTop	0x8034d0	data	game	engine	base_helper	MoveScript_PartyRecords+0x50	-	PutLongSaveMenu(::bof3::Img(save_menu::at::kSlotTop.v), 0);
-site	src/game/core/sound.cpp	1026	at_global	-	save_menu::at::kSlot	0x9036d4	data	game	engine	base_helper	Rest2c_Slot	-	save_menu::U slot = LongSaveMenu(::bof3::Img(save_menu::at::kSlot.v));
-site	src/game/core/sound.cpp	1031	at_global	-	save_menu::at::kSlotTop	0x8034d0	data	game	engine	base_helper	MoveScript_PartyRecords+0x50	-	const save_menu::U top = LongSaveMenu(::bof3::Img(save_menu::at::kSlotTop.v));
-site	src/game/core/sound.cpp	1032	at_global	-	save_menu::at::kSlotTop	0x8034d0	data	game	engine	base_helper	MoveScript_PartyRecords+0x50	-	if (static_cast<int>(slot) < static_cast<int>(top)) PutLongSaveMenu(::bof3::Img(save_menu::at::kSlotTop.v), top - 1);
-site	src/game/core/sound.cpp	1036	at_global	-	save_menu::at::kSlotTop	0x8034d0	data	game	engine	base_helper	MoveScript_PartyRecords+0x50	-	if (static_cast<int>(slot) > static_cast<int>(LongSaveMenu(::bof3::Img(save_menu::at::kSlotTop.v)) + 2)) PutLongSaveMenu(::bof3::Img(save_menu::at::kSlotTop.v),
-site	src/game/core/sound.cpp	1036	at_global	-	save_menu::at::kSlotTop	0x8034d0	data	game	engine	base_helper	MoveScript_PartyRecords+0x50	-	if (static_cast<int>(slot) > static_cast<int>(LongSaveMenu(::bof3::Img(save_menu::at::kSlotTop.v)) + 2)) PutLongSaveMenu(::bof3::Img(save_menu::at::kSlotTop.v),
-site	src/game/core/sound.cpp	1036	at_global	-	save_menu::at::kSlotTop	0x8034d0	data	game	engine	base_helper	MoveScript_PartyRecords+0x50	-	if (static_cast<int>(slot) > static_cast<int>(LongSaveMenu(::bof3::Img(save_menu::at::kSlotTop.v)) + 2)) PutLongSaveMenu(::bof3::Img(save_menu::at::kSlotTop.v),
-site	src/game/core/sound.cpp	1044	at_global	-	save_menu::at::kSummaries	0x905bc0	data	game	engine	base_helper	-	-	if (Byte(::bof3::Img(save_menu::at::kSummaries.v) + slot * save_menu::at::kSummaryBytes + 0x15) != 0xFF) {
-site	src/game/core/sound.cpp	1084	at_global	-	save_menu::at::kStaging	0x92a0e0	data	game	engine	base_helper	Save_Staging	-	for (save_menu::U i = 0; i < save_menu::at::kClearBytes; i += 4) PutLongSaveMenu(::bof3::Img(save_menu::at::kStaging.v) + i, 0);
-site	src/game/core/sound.cpp	1085	at_global	-	save_menu::at::kPath	0x904ba0	data	game	engine	base_helper	-	-	save_menu::g.sprintf(reinterpret_cast<char*>(AtSaveMenu(::bof3::Img(save_menu::at::kPath.v))), reinterpret_cast<const char*>(AtSaveMenu(::bof3::Img(save_menu::a
-site	src/game/core/sound.cpp	1085	at_global	-	save_menu::at::kSaveName	0x664068	data	game	engine	base_helper	-	-	save_menu::g.sprintf(reinterpret_cast<char*>(AtSaveMenu(::bof3::Img(save_menu::at::kPath.v))), reinterpret_cast<const char*>(AtSaveMenu(::bof3::Img(save_menu::a
-site	src/game/core/sound.cpp	1086	at_global	-	save_menu::at::kPath	0x904ba0	data	game	engine	base_helper	-	-	if (save_menu::g.read_file(reinterpret_cast<const char*>(AtSaveMenu(::bof3::Img(save_menu::at::kPath.v))), save_menu::at::kFileBytes, 0) == -1) {
-site	src/game/core/sound.cpp	1091	at_global	-	save_menu::at::kChecksum	0x92a150	data	game	engine	base_helper	Save_Staging+0x70	-	const save_menu::U stored = LongSaveMenu(::bof3::Img(save_menu::at::kChecksum.v));
-site	src/game/core/sound.cpp	1092	at_global	-	save_menu::at::kChecksum	0x92a150	data	game	engine	base_helper	Save_Staging+0x70	-	PutWord(::bof3::Img(save_menu::at::kChecksum.v), 0);
-site	src/game/core/sound.cpp	1095	at_global	-	save_menu::at::kStaging	0x92a0e0	data	game	engine	base_helper	Save_Staging	-	const save_menu::U c = Byte(::bof3::Img(save_menu::at::kStaging.v) + i);
-site	src/game/core/sound.cpp	1096	at_global	-	save_menu::at::kGameBlock	0x9039e0	data	game	engine	base_helper	-	-	PutByte(::bof3::Img(save_menu::at::kGameBlock.v) + i, c);
-site	src/game/core/sound.cpp	1104	at_global	-	save_menu::at::kPath	0x904ba0	data	game	engine	base_helper	-	-	bof3::Log(" ", (unsigned)slot, reinterpret_cast<const char*>(AtSaveMenu(::bof3::Img(save_menu::at::kPath.v))));
-site	src/game/core/sound.cpp	1160	at_global	-	save_menu::at::kSavedButtons	0x90469c	data	game	engine	base_helper	SaveMenu_SavedButtons	-	const save_menu::U map_4 = LongSaveMenu(::bof3::Img(save_menu::at::kSavedButtons.v) + 4), map_0 = SaveMenu_SavedButtons, map_8 = LongSaveMenu(::bof3::Img(save_m
-site	src/game/core/sound.cpp	1160	at_global	-	save_menu::at::kSavedButtons	0x90469c	data	game	engine	base_helper	SaveMenu_SavedButtons	-	const save_menu::U map_4 = LongSaveMenu(::bof3::Img(save_menu::at::kSavedButtons.v) + 4), map_0 = SaveMenu_SavedButtons, map_8 = LongSaveMenu(::bof3::Img(save_m
-site	src/game/core/sound.cpp	1161	at_global	-	save_menu::at::kButtons	0x903580	data	game	engine	base_helper	Gfx_UnpackScratch+0x1f000	-	PutLongSaveMenu(::bof3::Img(save_menu::at::kButtons.v) + 4, map_4);
-site	src/game/core/sound.cpp	1162	at_global	-	save_menu::at::kSavedButtons	0x90469c	data	game	engine	base_helper	SaveMenu_SavedButtons	-	const save_menu::U map_10 = WordSaveMenu(::bof3::Img(save_menu::at::kSavedButtons.v) + 0x10);
-site	src/game/core/sound.cpp	1163	at_global	-	save_menu::at::kButtons	0x903580	data	game	engine	base_helper	Gfx_UnpackScratch+0x1f000	-	PutLongSaveMenu(::bof3::Img(save_menu::at::kButtons.v), map_0);
-site	src/game/core/sound.cpp	1164	at_global	-	save_menu::at::kSavedButtons	0x90469c	data	game	engine	base_helper	SaveMenu_SavedButtons	-	const save_menu::U map_c = LongSaveMenu(::bof3::Img(save_menu::at::kSavedButtons.v) + 0xC);
-site	src/game/core/sound.cpp	1165	at_global	-	save_menu::at::kButtons	0x903580	data	game	engine	base_helper	Gfx_UnpackScratch+0x1f000	-	PutWord(::bof3::Img(save_menu::at::kButtons.v) + 0x10, map_10);
-site	src/game/core/sound.cpp	1166	at_global	-	save_menu::at::kButtons	0x903580	data	game	engine	base_helper	Gfx_UnpackScratch+0x1f000	-	PutLongSaveMenu(::bof3::Img(save_menu::at::kButtons.v) + 8, map_8);
-site	src/game/core/sound.cpp	1167	at_global	-	save_menu::at::kButtons	0x903580	data	game	engine	base_helper	Gfx_UnpackScratch+0x1f000	-	PutLongSaveMenu(::bof3::Img(save_menu::at::kButtons.v) + 0xC, map_c);
-site	src/game/core/sound.cpp	1170	at_global	-	save_menu::at::kButtons	0x903580	data	game	engine	base_helper	Gfx_UnpackScratch+0x1f000	-	PutWord(::bof3::Img(save_menu::at::kButtons.v), 0x20);
-site	src/game/core/sound.cpp	1171	at_global	-	save_menu::at::kButtons	0x903580	data	game	engine	base_helper	Gfx_UnpackScratch+0x1f000	-	PutWord(::bof3::Img(save_menu::at::kButtons.v) + 2, 0x80);
-site	src/game/core/sound.cpp	1172	at_global	-	save_menu::at::kButtons	0x903580	data	game	engine	base_helper	Gfx_UnpackScratch+0x1f000	-	PutWord(::bof3::Img(save_menu::at::kButtons.v) + 0xC, 0x40);
-site	src/game/core/sound.cpp	1173	at_global	-	save_menu::at::kButtons	0x903580	data	game	engine	base_helper	Gfx_UnpackScratch+0x1f000	-	PutWord(::bof3::Img(save_menu::at::kButtons.v) + 4, 0x10);
-site	src/game/core/sound.cpp	1174	at_global	-	save_menu::at::kButtons	0x903580	data	game	engine	base_helper	Gfx_UnpackScratch+0x1f000	-	PutWord(::bof3::Img(save_menu::at::kButtons.v) + 6, 8);
-site	src/game/core/sound.cpp	1175	at_global	-	save_menu::at::kButtons	0x903580	data	game	engine	base_helper	Gfx_UnpackScratch+0x1f000	-	PutWord(::bof3::Img(save_menu::at::kButtons.v) + 8, 4);
-site	src/game/core/sound.cpp	1176	at_global	-	save_menu::at::kButtons	0x903580	data	game	engine	base_helper	Gfx_UnpackScratch+0x1f000	-	PutWord(::bof3::Img(save_menu::at::kButtons.v) + 0xE, 0x20);
-site	src/game/core/sound.cpp	1177	at_global	-	save_menu::at::kButtons	0x903580	data	game	engine	base_helper	Gfx_UnpackScratch+0x1f000	-	PutWord(::bof3::Img(save_menu::at::kButtons.v) + 0x10, 0x40);
-site	src/game/core/sound.cpp	1178	at_global	-	save_menu::at::kButtons	0x903580	data	game	engine	base_helper	Gfx_UnpackScratch+0x1f000	-	PutWord(::bof3::Img(save_menu::at::kButtons.v) + 0xA, 0x100);
-site	src/game/core/sound.cpp	1191	at_global	-	save_menu::at::kGameBlock	0x9039e0	data	game	engine	base_helper	-	-	const save_menu::U d8 = LongSaveMenu(::bof3::Img(save_menu::at::kGameBlock.v) + 8), d0 = LongSaveMenu(::bof3::Img(save_menu::at::kGameBlock.v)), d4 = LongSaveMe
-site	src/game/core/sound.cpp	1191	at_global	-	save_menu::at::kGameBlock	0x9039e0	data	game	engine	base_helper	-	-	const save_menu::U d8 = LongSaveMenu(::bof3::Img(save_menu::at::kGameBlock.v) + 8), d0 = LongSaveMenu(::bof3::Img(save_menu::at::kGameBlock.v)), d4 = LongSaveMe
-site	src/game/core/sound.cpp	1191	at_global	-	save_menu::at::kGameBlock	0x9039e0	data	game	engine	base_helper	-	-	const save_menu::U d8 = LongSaveMenu(::bof3::Img(save_menu::at::kGameBlock.v) + 8), d0 = LongSaveMenu(::bof3::Img(save_menu::at::kGameBlock.v)), d4 = LongSaveMe
-site	src/game/core/sound.cpp	1192	at_global	-	save_menu::at::kPosition	0x8034e0	data	game	engine	base_helper	Cond_ByteFA	-	PutLongSaveMenu(::bof3::Img(save_menu::at::kPosition.v) + 8, d8);
-site	src/game/core/sound.cpp	1193	at_global	-	save_menu::at::kPosition	0x8034e0	data	game	engine	base_helper	Cond_ByteFA	-	PutLongSaveMenu(::bof3::Img(save_menu::at::kPosition.v) + 4, d4);
-site	src/game/core/sound.cpp	1194	at_global	-	save_menu::at::kGameBlock	0x9039e0	data	game	engine	base_helper	-	-	const save_menu::U dc = LongSaveMenu(::bof3::Img(save_menu::at::kGameBlock.v) + 0xC);
-site	src/game/core/sound.cpp	1195	at_global	-	save_menu::at::kPosition	0x8034e0	data	game	engine	base_helper	Cond_ByteFA	-	PutLongSaveMenu(::bof3::Img(save_menu::at::kPosition.v), d0);
-site	src/game/core/sound.cpp	1196	at_global	-	save_menu::at::kPosition	0x8034e0	data	game	engine	base_helper	Cond_ByteFA	-	PutLongSaveMenu(::bof3::Img(save_menu::at::kPosition.v) + 0xC, dc);
-site	src/game/core/sound.cpp	1197	at_global	-	save_menu::at::kGameBlock	0x9039e0	data	game	engine	base_helper	-	-	const save_menu::U c0 = Byte(::bof3::Img(save_menu::at::kGameBlock.v) + 0x20);
-site	src/game/core/sound.cpp	1199	at_global	-	save_menu::at::kGameBlock	0x9039e0	data	game	engine	base_helper	-	-	const save_menu::U c1 = Byte(::bof3::Img(save_menu::at::kGameBlock.v) + 0x21);
-site	src/game/core/sound.cpp	1201	at_global	-	save_menu::at::kGameBlock	0x9039e0	data	game	engine	base_helper	-	-	const save_menu::U c2 = Byte(::bof3::Img(save_menu::at::kGameBlock.v) + 0x22);
-site	src/game/core/sound.cpp	1202	at_global	-	save_menu::at::kCounters	0x903848	data	game	engine	base_helper	-	-	PutByte(::bof3::Img(save_menu::at::kCounters.v), c0);
-site	src/game/core/sound.cpp	1203	at_global	-	save_menu::at::kGameBlock	0x9039e0	data	game	engine	base_helper	-	-	const save_menu::U c3 = Byte(::bof3::Img(save_menu::at::kGameBlock.v) + 0x23);
-site	src/game/core/sound.cpp	1204	at_global	-	save_menu::at::kCounters	0x903848	data	game	engine	base_helper	-	-	PutByte(::bof3::Img(save_menu::at::kCounters.v) + 1, c1);
-site	src/game/core/sound.cpp	1205	at_global	-	save_menu::at::kCounters	0x903848	data	game	engine	base_helper	-	-	PutByte(::bof3::Img(save_menu::at::kCounters.v) + 2, c2);
-site	src/game/core/sound.cpp	1206	at_global	-	save_menu::at::kCounters	0x903848	data	game	engine	base_helper	-	-	PutByte(::bof3::Img(save_menu::at::kCounters.v) + 3, c3);
-site	src/game/core/sound.cpp	1213	at_global	-	save_menu::at::kHeld	0x7e1be8	data	game	engine	base_helper	Input_Held	-	if (LongSaveMenu(::bof3::Img(save_menu::at::kHeld.v)) & 0x800) SaveMenu_DefaultPad = 1;
-site	src/game/core/sound.cpp	1229	at_global	-	save_menu::at::kMenuStates	0x929f02	data	game	engine	base_helper	FieldS_Step	-	PutByte(::bof3::Img(save_menu::at::kMenuStates.v) + 1, 0);
-site	src/game/core/sound.cpp	1230	at_global	-	save_menu::at::kMenuStates	0x929f02	data	game	engine	base_helper	FieldS_Step	-	PutByte(::bof3::Img(save_menu::at::kMenuStates.v) + 3, 0);
-site	src/game/core/sound.cpp	1240	code_const	at	save_menu::at::kGameTask	0x495800	code	game	engine	base_helper	Field_Task	-	save_menu::g.task_restart(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(save_menu::at::kGameTask.v))));
-site	src/game/core/sound.cpp	1295	at_global	-	save_menu::at::kRowBright	0x6bdf90	data	game	engine	base_helper	-	-	rv::Store<save_menu::U>(s->r, Byte(::bof3::Img(save_menu::at::kRowBright.v) + r) << 1);
-site	src/game/core/sound.cpp	1296	at_global	-	save_menu::at::kRowBright	0x6bdf90	data	game	engine	base_helper	-	-	rv::Store<save_menu::U>(s->g, Byte(::bof3::Img(save_menu::at::kRowBright.v) + r) << 1);
-site	src/game/core/sound.cpp	1297	at_global	-	save_menu::at::kRowBright	0x6bdf90	data	game	engine	base_helper	-	-	rv::Store<save_menu::U>(s->b, Byte(::bof3::Img(save_menu::at::kRowBright.v) + r) << 1);
-site	src/game/core/sound.cpp	1314	at_global	-	save_menu::at::kRowBright	0x6bdf90	data	game	engine	base_helper	-	-	rv::Store<save_menu::U>(s->r, Byte(::bof3::Img(save_menu::at::kRowBright.v) + r));
-site	src/game/core/sound.cpp	1315	at_global	-	save_menu::at::kRowBright	0x6bdf90	data	game	engine	base_helper	-	-	rv::Store<save_menu::U>(s->g, Byte(::bof3::Img(save_menu::at::kRowBright.v) + r));
-site	src/game/core/sound.cpp	1316	at_global	-	save_menu::at::kRowBright	0x6bdf90	data	game	engine	base_helper	-	-	rv::Store<save_menu::U>(s->b, Byte(::bof3::Img(save_menu::at::kRowBright.v) + r));
-site	src/game/core/sound.cpp	1328	at_global	-	save_menu::at::kGrowthTable	0x667248	data	game	engine	base_helper	NewGame_GrowthRolls	-	const save_menu::U lo = Byte(::bof3::Img(save_menu::at::kGrowthTable.v) + m * 3), hi = Byte(::bof3::Img(save_menu::at::kGrowthTable.v) + m * 3 + 1),
-site	src/game/core/sound.cpp	1328	at_global	-	save_menu::at::kGrowthTable	0x667248	data	game	engine	base_helper	NewGame_GrowthRolls	-	const save_menu::U lo = Byte(::bof3::Img(save_menu::at::kGrowthTable.v) + m * 3), hi = Byte(::bof3::Img(save_menu::at::kGrowthTable.v) + m * 3 + 1),
-site	src/game/core/sound.cpp	1329	at_global	-	save_menu::at::kGrowthTable	0x667248	data	game	engine	base_helper	NewGame_GrowthRolls	-	n = Byte(::bof3::Img(save_menu::at::kGrowthTable.v) + m * 3 + 2);
-site	src/game/core/sound.cpp	1330	at_global	-	save_menu::at::kGrowth	0x903640	data	game	engine	base_helper	-	-	const save_menu::U out = ::bof3::Img(save_menu::at::kGrowth.v) + m * 5;
-site	src/game/core/sound.cpp	1331	at_global	-	save_menu::at::kGrowthValues	0x667260	data	game	engine	base_helper	NewGame_GrowthValues	-	for (save_menu::U k = 0; k < 4; ++k) PutByte(out + k, Byte(::bof3::Img(save_menu::at::kGrowthValues.v) + save_menu::g.roll_sum(lo, hi, n)));
-site	src/game/core/sound.cpp	1380	at_global	-	save_menu::at::kPieces	0x66726c	data	game	engine	base_helper	-	-	const save_menu::U e = ::bof3::Img(save_menu::at::kPieces.v) + (index & 0xFF) * 10;
-site	src/game/core/sound.cpp	1390	at_global	-	save_menu::at::kSlotTop	0x8034d0	data	game	engine	base_helper	MoveScript_PartyRecords+0x50	-	save_menu::DrawSlotsOver(x, y, highlight, AtSaveMenu(::bof3::Img(save_menu::at::kSummaries.v)), reinterpret_cast<const volatile save_menu::U*>(AtSaveMenu(::bof3
-site	src/game/core/sound.cpp	1390	at_global	-	save_menu::at::kSummaries	0x905bc0	data	game	engine	base_helper	-	-	save_menu::DrawSlotsOver(x, y, highlight, AtSaveMenu(::bof3::Img(save_menu::at::kSummaries.v)), reinterpret_cast<const volatile save_menu::U*>(AtSaveMenu(::bof3
-site	src/game/core/sound.cpp	1400	at_global	-	save_menu::at::kSummaries	0x905bc0	data	game	engine	base_helper	-	-	save_menu::ReadSummaries(AtSaveMenu(::bof3::Img(Save_Directory_addr)), AtSaveMenu(::bof3::Img(save_menu::at::kSummaries.v)), &StagedRead, nullptr);
-site	src/game/core/sound.cpp	1417	at_global	-	shop_states2::at::kGameMode	0x66c7e8	data	game	engine	base_helper	Game_Mode	-	Entry(::bof3::Img(TitleTask_Modes_addr), LongShopStates2(::bof3::Img(shop_states2::at::kGameMode.v)) & 0xFFFF, " ")();
+site	src/game/core/sound.cpp	170	at_global	-	save_menu::at::kStaging	0x92a0e0	data	game	engine	base_helper	Save_Staging	-	for (save_menu::U i = 0; i < 7; ++i) PutLongSaveMenu(AddrSaveMenu(summary) + i * 4, LongSaveMenu(::bof3::Img(save_menu::at::kStaging.v) + i * 4));
+site	src/game/core/sound.cpp	328	abs_call	theirs	Mp3_Create	0x5adf00	code	game	engine	init	Mp3_Create	-	Mp3_Create, Mp3_MemoryIo, Mp3_SetIo, Mp3_Open, Mp3_Start, Mp3_Decode, Mp3_Seek, Mp3_Destroy,
+site	src/game/core/sound.cpp	328	abs_call	theirs	Mp3_Decode	0x5afc40	code	game	engine	init	Mp3_Decode	-	Mp3_Create, Mp3_MemoryIo, Mp3_SetIo, Mp3_Open, Mp3_Start, Mp3_Decode, Mp3_Seek, Mp3_Destroy,
+site	src/game/core/sound.cpp	328	abs_call	theirs	Mp3_Destroy	0x5b0630	code	game	engine	init	Mp3_Destroy	-	Mp3_Create, Mp3_MemoryIo, Mp3_SetIo, Mp3_Open, Mp3_Start, Mp3_Decode, Mp3_Seek, Mp3_Destroy,
+site	src/game/core/sound.cpp	328	abs_call	theirs	Mp3_MemoryIo	0x5b0d50	code	game	engine	init	Mp3_MemoryIo	-	Mp3_Create, Mp3_MemoryIo, Mp3_SetIo, Mp3_Open, Mp3_Start, Mp3_Decode, Mp3_Seek, Mp3_Destroy,
+site	src/game/core/sound.cpp	328	abs_call	theirs	Mp3_Open	0x5ae6a0	code	game	engine	init	Mp3_Open	-	Mp3_Create, Mp3_MemoryIo, Mp3_SetIo, Mp3_Open, Mp3_Start, Mp3_Decode, Mp3_Seek, Mp3_Destroy,
+site	src/game/core/sound.cpp	328	abs_call	theirs	Mp3_Seek	0x5aeba0	code	game	engine	init	Mp3_Seek	-	Mp3_Create, Mp3_MemoryIo, Mp3_SetIo, Mp3_Open, Mp3_Start, Mp3_Decode, Mp3_Seek, Mp3_Destroy,
+site	src/game/core/sound.cpp	328	abs_call	theirs	Mp3_SetIo	0x5ae160	code	game	engine	init	Mp3_SetIo	-	Mp3_Create, Mp3_MemoryIo, Mp3_SetIo, Mp3_Open, Mp3_Start, Mp3_Decode, Mp3_Seek, Mp3_Destroy,
+site	src/game/core/sound.cpp	328	abs_call	theirs	Mp3_Start	0x5ae820	code	game	engine	init	Mp3_Start	-	Mp3_Create, Mp3_MemoryIo, Mp3_SetIo, Mp3_Open, Mp3_Start, Mp3_Decode, Mp3_Seek, Mp3_Destroy,
+site	src/game/core/sound.cpp	393	at_global	-	scena_sx2::at::kChannelsEnd	0x6bc924	data	game	engine	base_helper	-	-	for (std::uint32_t p = AddrScenaSx2(Sound_Channels); p < ::bof3::Img(scena_sx2::at::kChannelsEnd); p += 4) {
+site	src/game/core/sound.cpp	417	abs_call	via=SH_AT	scena_sx2::at::kSndBufVolume	0x5a6c60	code	game	engine	call	SndBuf_SetVolume	-	SH_AT(void (__cdecl*)(void*, int), scena_sx2::at::kSndBufVolume.v)(AtScenaSx2(buffer), static_cast<int>(level));
+site	src/game/core/sound.cpp	446	at_global	-	save_menu::at::kStreamTables	0x6653b0	data	game	engine	base_helper	-	-	const save_menu::U table = LongSaveMenu(::bof3::Img(save_menu::at::kStreamTables.v) + kind * 4);
+site	src/game/core/sound.cpp	454	at_global	-	save_menu::at::kStreamFormat	0x666f9c	data	game	engine	base_helper	-	-	if (!cache) save_menu::g.sprintf(path, reinterpret_cast<const char*>(AtSaveMenu(::bof3::Img(save_menu::at::kStreamFormat.v))), text);
+site	src/game/core/sound.cpp	524	module_const	-	kLoopingName	0x666fb8	data	game	engine	base_helper	-	include	sound::g.sprintf(looping, reinterpret_cast<const char*>(::bof3::Img(kLoopingName.v)), track);
+site	src/game/core/sound.cpp	525	module_const	-	kOnceName	0x666fa8	data	game	engine	base_helper	-	include	sound::g.sprintf(once, reinterpret_cast<const char*>(::bof3::Img(kOnceName.v)), track);
+site	src/game/core/sound.cpp	598	asm_operand	=m	Music_FadeStep	0x6bde60	data	game	engine	-	Music_FadeStep	value	: [step] " "(Music_FadeStep)
+site	src/game/core/sound.cpp	599	asm_operand	m	Music_Volume	0x6bde5c	data	game	engine	-	Music_Volume	value	: [n] " "(wide), [volume] " "(Music_Volume)
+site	src/game/core/sound.cpp	644	asm_operand	=m	Music_FadeStep	0x6bde60	data	game	engine	-	Music_FadeStep	value	: [step] " "(Music_FadeStep)
+site	src/game/core/sound.cpp	645	asm_operand	m	Music_Volume	0x6bde5c	data	game	engine	-	Music_Volume	value	: [full] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k127At))), [volume] " "(Music_Volume), [n] " "(frames)
+site	src/game/core/sound.cpp	645	asm_operand	m	k127At	0x5c427c	data	game	engine	cast	Sound_FullVolume	include	: [full] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k127At))), [volume] " "(Music_Volume), [n] " "(frames)
+site	src/game/core/sound.cpp	663	asm_operand	=m	Music_FadeStep	0x6bde60	data	game	engine	-	Music_FadeStep	value	: [step] " "(Music_FadeStep)
+site	src/game/core/sound.cpp	664	asm_operand	m	Music_Volume	0x6bde5c	data	game	engine	-	Music_Volume	value	: [n] " "(wide), [volume] " "(Music_Volume)
+site	src/game/core/sound.cpp	695	module_const	-	sound_rest::kChannelsEnd	0x6bc924	data	game	engine	base_helper	-	include	for (std::uint32_t p = sound_rest::Address(Sound_Channels); p < ::bof3::Img(sound_rest::kChannelsEnd); p += 4) {
+site	src/game/core/sound.cpp	721	asm_operand	+m	Music_Volume	0x6bde5c	data	game	engine	-	Music_Volume	value	: [volume] " "(Music_Volume)
+site	src/game/core/sound.cpp	722	asm_operand	m	Music_FadeStep	0x6bde60	data	game	engine	-	Music_FadeStep	value	: [step] " "(Music_FadeStep)
+site	src/game/core/sound.cpp	759	module_const	-	display_env::kChannelsEnd	0x6bc924	data	game	engine	base_helper	-	include	for (display_env::U c = ::bof3::Img(Sound_Channels_addr); c < ::bof3::Img(display_env::kChannelsEnd); c += 4)
+site	src/game/core/sound.cpp	786	at_global	call_through	save_menu::at::kStepTable	0x6671f4	data	game	engine	base_helper	-	-	const Step step = reinterpret_cast<Step>(AtSaveMenu(LongSaveMenu(::bof3::Img(save_menu::at::kStepTable.v) + static_cast<std::uint32_t>(Game_Step) * 4)));
+site	src/game/core/sound.cpp	812	at_global	-	save_menu::at::kSummaries	0x905bc0	data	game	engine	base_helper	-	-	unsigned char* const sums = AtSaveMenu(::bof3::Img(save_menu::at::kSummaries.v));
+site	src/game/core/sound.cpp	817	at_global	-	save_menu::at::kSlotTop	0x8034d0	data	game	engine	base_helper	MoveScript_PartyRecords+0x50	-	PutLongSaveMenu(::bof3::Img(save_menu::at::kSlotTop.v), 0);
+site	src/game/core/sound.cpp	827	at_global	-	save_menu::at::kFieldState	0x905d98	data	game	engine	base_helper	Field_State	-	PutLongSaveMenu(::bof3::Img(save_menu::at::kFieldState.v), ::bof3::Img(ObjTrio_addr));
+site	src/game/core/sound.cpp	828	at_global	-	save_menu::at::kSpriteCurrent	0x937f88	data	game	engine	base_helper	Sprite_Current	-	PutLongSaveMenu(::bof3::Img(save_menu::at::kSpriteCurrent.v), ::bof3::Img(ObjTrio_addr));
+site	src/game/core/sound.cpp	858	at_global	call_through	save_menu::at::kMenuTable	0x66720c	data	game	engine	base_helper	-	-	const Step step = reinterpret_cast<Step>(AtSaveMenu(LongSaveMenu(::bof3::Img(save_menu::at::kMenuTable.v) + State() * 4)));
+site	src/game/core/sound.cpp	867	at_global	-	save_menu::at::kCounter	0x929f04	data	game	engine	base_helper	-	-	PutByte(::bof3::Img(save_menu::at::kCounter.v), 2);
+site	src/game/core/sound.cpp	875	at_global	-	save_menu::at::kCounter	0x929f04	data	game	engine	base_helper	-	-	const save_menu::U c = (Byte(::bof3::Img(save_menu::at::kCounter.v)) - 1) & 0xFF;
+site	src/game/core/sound.cpp	876	at_global	-	save_menu::at::kCounter	0x929f04	data	game	engine	base_helper	-	-	PutByte(::bof3::Img(save_menu::at::kCounter.v), c);
+site	src/game/core/sound.cpp	883	at_global	-	save_menu::at::kMenuFlags	0x7dee44	data	game	engine	base_helper	-	-	PutByte(::bof3::Img(save_menu::at::kMenuFlags.v), Byte(::bof3::Img(save_menu::at::kMenuFlags.v)) | 2);
+site	src/game/core/sound.cpp	883	at_global	-	save_menu::at::kMenuFlags	0x7dee44	data	game	engine	base_helper	-	-	PutByte(::bof3::Img(save_menu::at::kMenuFlags.v), Byte(::bof3::Img(save_menu::at::kMenuFlags.v)) | 2);
+site	src/game/core/sound.cpp	890	at_global	-	save_menu::at::kCounter	0x929f04	data	game	engine	base_helper	-	-	PutByte(::bof3::Img(save_menu::at::kCounter.v), 0);
+site	src/game/core/sound.cpp	891	at_global	-	save_menu::at::kRowBright	0x6bdf90	data	game	engine	base_helper	-	-	PutLongSaveMenu(::bof3::Img(save_menu::at::kRowBright.v), 0);
+site	src/game/core/sound.cpp	904	at_global	-	save_menu::at::kCounter	0x929f04	data	game	engine	base_helper	-	-	PutByte(::bof3::Img(save_menu::at::kCounter.v), Byte(::bof3::Img(save_menu::at::kCounter.v)) + 0x10);
+site	src/game/core/sound.cpp	904	at_global	-	save_menu::at::kCounter	0x929f04	data	game	engine	base_helper	-	-	PutByte(::bof3::Img(save_menu::at::kCounter.v), Byte(::bof3::Img(save_menu::at::kCounter.v)) + 0x10);
+site	src/game/core/sound.cpp	907	at_global	-	save_menu::at::kRowBright	0x6bdf90	data	game	engine	base_helper	-	-	const save_menu::U b = (Byte(::bof3::Img(save_menu::at::kRowBright.v) + i) + 8) & 0xFF;
+site	src/game/core/sound.cpp	908	at_global	-	save_menu::at::kRowBright	0x6bdf90	data	game	engine	base_helper	-	-	PutByte(::bof3::Img(save_menu::at::kRowBright.v) + i, cursor != i && b > 0x40 ? 0x40 : b);
+site	src/game/core/sound.cpp	910	at_global	-	save_menu::at::kCounter	0x929f04	data	game	engine	base_helper	-	-	if (Byte(::bof3::Img(save_menu::at::kCounter.v)) == 0) SetState(State() + 1);
+site	src/game/core/sound.cpp	924	at_global	-	save_menu::at::kMenuFlags	0x7dee44	data	game	engine	base_helper	-	-	if ((Byte(::bof3::Img(save_menu::at::kMenuFlags.v)) & 2) == 0) return;
+site	src/game/core/sound.cpp	925	at_global	-	save_menu::at::kPressed	0x7e1bec	data	game	engine	base_helper	Input_Pressed	-	const save_menu::U pressed = LongSaveMenu(::bof3::Img(save_menu::at::kPressed.v));
+site	src/game/core/sound.cpp	942	at_global	-	save_menu::at::kRowBright	0x6bdf90	data	game	engine	base_helper	-	-	const save_menu::U a = ::bof3::Img(save_menu::at::kRowBright.v) + static_cast<save_menu::U>(i);
+site	src/game/core/sound.cpp	989	at_global	-	save_menu::at::kCondFlagsEnd	0x904030	data	game	engine	base_helper	Cond_Flags+0xa0	-	for (save_menu::U a = ::bof3::Img(Cond_Flags_addr); a < ::bof3::Img(save_menu::at::kCondFlagsEnd.v); a += 8) PutLongSaveMenu(a, 0);
+site	src/game/core/sound.cpp	1006	at_global	call_through	save_menu::at::kLoadTable	0x667228	data	game	engine	base_helper	-	-	const Step step = reinterpret_cast<Step>(AtSaveMenu(LongSaveMenu(::bof3::Img(save_menu::at::kLoadTable.v) + State() * 4)));
+site	src/game/core/sound.cpp	1018	at_global	-	save_menu::at::kSlotTop	0x8034d0	data	game	engine	base_helper	MoveScript_PartyRecords+0x50	-	PutLongSaveMenu(::bof3::Img(save_menu::at::kSlotTop.v), 0);
+site	src/game/core/sound.cpp	1051	at_global	-	save_menu::at::kSlot	0x9036d4	data	game	engine	base_helper	Rest2c_Slot	-	save_menu::U slot = LongSaveMenu(::bof3::Img(save_menu::at::kSlot.v));
+site	src/game/core/sound.cpp	1056	at_global	-	save_menu::at::kSlotTop	0x8034d0	data	game	engine	base_helper	MoveScript_PartyRecords+0x50	-	const save_menu::U top = LongSaveMenu(::bof3::Img(save_menu::at::kSlotTop.v));
+site	src/game/core/sound.cpp	1057	at_global	-	save_menu::at::kSlotTop	0x8034d0	data	game	engine	base_helper	MoveScript_PartyRecords+0x50	-	if (static_cast<int>(slot) < static_cast<int>(top)) PutLongSaveMenu(::bof3::Img(save_menu::at::kSlotTop.v), top - 1);
+site	src/game/core/sound.cpp	1061	at_global	-	save_menu::at::kSlotTop	0x8034d0	data	game	engine	base_helper	MoveScript_PartyRecords+0x50	-	if (static_cast<int>(slot) > static_cast<int>(LongSaveMenu(::bof3::Img(save_menu::at::kSlotTop.v)) + 2)) PutLongSaveMenu(::bof3::Img(save_menu::at::kSlotTop.v),
+site	src/game/core/sound.cpp	1061	at_global	-	save_menu::at::kSlotTop	0x8034d0	data	game	engine	base_helper	MoveScript_PartyRecords+0x50	-	if (static_cast<int>(slot) > static_cast<int>(LongSaveMenu(::bof3::Img(save_menu::at::kSlotTop.v)) + 2)) PutLongSaveMenu(::bof3::Img(save_menu::at::kSlotTop.v),
+site	src/game/core/sound.cpp	1061	at_global	-	save_menu::at::kSlotTop	0x8034d0	data	game	engine	base_helper	MoveScript_PartyRecords+0x50	-	if (static_cast<int>(slot) > static_cast<int>(LongSaveMenu(::bof3::Img(save_menu::at::kSlotTop.v)) + 2)) PutLongSaveMenu(::bof3::Img(save_menu::at::kSlotTop.v),
+site	src/game/core/sound.cpp	1069	at_global	-	save_menu::at::kSummaries	0x905bc0	data	game	engine	base_helper	-	-	if (Byte(::bof3::Img(save_menu::at::kSummaries.v) + slot * save_menu::at::kSummaryBytes + 0x15) != 0xFF) {
+site	src/game/core/sound.cpp	1115	at_global	-	save_menu::at::kStaging	0x92a0e0	data	game	engine	base_helper	Save_Staging	-	for (save_menu::U i = 0; i < save_menu::at::kClearBytes; i += 4) PutLongSaveMenu(::bof3::Img(save_menu::at::kStaging.v) + i, 0);
+site	src/game/core/sound.cpp	1116	at_global	-	save_menu::at::kPath	0x904ba0	data	game	engine	base_helper	-	-	save_menu::g.sprintf(reinterpret_cast<char*>(AtSaveMenu(::bof3::Img(save_menu::at::kPath.v))), reinterpret_cast<const char*>(AtSaveMenu(::bof3::Img(save_menu::a
+site	src/game/core/sound.cpp	1116	at_global	-	save_menu::at::kSaveName	0x664068	data	game	engine	base_helper	-	-	save_menu::g.sprintf(reinterpret_cast<char*>(AtSaveMenu(::bof3::Img(save_menu::at::kPath.v))), reinterpret_cast<const char*>(AtSaveMenu(::bof3::Img(save_menu::a
+site	src/game/core/sound.cpp	1120	at_global	-	save_menu::at::kPath	0x904ba0	data	game	engine	base_helper	-	-	} else if (save_menu::g.read_file(reinterpret_cast<const char*>(AtSaveMenu(::bof3::Img(save_menu::at::kPath.v))), save_menu::at::kFileBytes, 0) == -1) {
+site	src/game/core/sound.cpp	1125	at_global	-	save_menu::at::kChecksum	0x92a150	data	game	engine	base_helper	Save_Staging+0x70	-	const save_menu::U stored = LongSaveMenu(::bof3::Img(save_menu::at::kChecksum.v));
+site	src/game/core/sound.cpp	1126	at_global	-	save_menu::at::kChecksum	0x92a150	data	game	engine	base_helper	Save_Staging+0x70	-	PutWord(::bof3::Img(save_menu::at::kChecksum.v), 0);
+site	src/game/core/sound.cpp	1129	at_global	-	save_menu::at::kStaging	0x92a0e0	data	game	engine	base_helper	Save_Staging	-	const save_menu::U c = Byte(::bof3::Img(save_menu::at::kStaging.v) + i);
+site	src/game/core/sound.cpp	1130	at_global	-	save_menu::at::kGameBlock	0x9039e0	data	game	engine	base_helper	-	-	PutByte(::bof3::Img(save_menu::at::kGameBlock.v) + i, c);
+site	src/game/core/sound.cpp	1139	at_global	-	save_menu::at::kPath	0x904ba0	data	game	engine	base_helper	-	-	else bof3::Log(" ", (unsigned)slot, reinterpret_cast<const char*>(AtSaveMenu(::bof3::Img(save_menu::at::kPath.v))));
+site	src/game/core/sound.cpp	1196	at_global	-	save_menu::at::kSavedButtons	0x90469c	data	game	engine	base_helper	SaveMenu_SavedButtons	-	const save_menu::U map_4 = LongSaveMenu(::bof3::Img(save_menu::at::kSavedButtons.v) + 4), map_0 = SaveMenu_SavedButtons, map_8 = LongSaveMenu(::bof3::Img(save_m
+site	src/game/core/sound.cpp	1196	at_global	-	save_menu::at::kSavedButtons	0x90469c	data	game	engine	base_helper	SaveMenu_SavedButtons	-	const save_menu::U map_4 = LongSaveMenu(::bof3::Img(save_menu::at::kSavedButtons.v) + 4), map_0 = SaveMenu_SavedButtons, map_8 = LongSaveMenu(::bof3::Img(save_m
+site	src/game/core/sound.cpp	1197	at_global	-	save_menu::at::kButtons	0x903580	data	game	engine	base_helper	Gfx_UnpackScratch+0x1f000	-	PutLongSaveMenu(::bof3::Img(save_menu::at::kButtons.v) + 4, map_4);
+site	src/game/core/sound.cpp	1198	at_global	-	save_menu::at::kSavedButtons	0x90469c	data	game	engine	base_helper	SaveMenu_SavedButtons	-	const save_menu::U map_10 = WordSaveMenu(::bof3::Img(save_menu::at::kSavedButtons.v) + 0x10);
+site	src/game/core/sound.cpp	1199	at_global	-	save_menu::at::kButtons	0x903580	data	game	engine	base_helper	Gfx_UnpackScratch+0x1f000	-	PutLongSaveMenu(::bof3::Img(save_menu::at::kButtons.v), map_0);
+site	src/game/core/sound.cpp	1200	at_global	-	save_menu::at::kSavedButtons	0x90469c	data	game	engine	base_helper	SaveMenu_SavedButtons	-	const save_menu::U map_c = LongSaveMenu(::bof3::Img(save_menu::at::kSavedButtons.v) + 0xC);
+site	src/game/core/sound.cpp	1201	at_global	-	save_menu::at::kButtons	0x903580	data	game	engine	base_helper	Gfx_UnpackScratch+0x1f000	-	PutWord(::bof3::Img(save_menu::at::kButtons.v) + 0x10, map_10);
+site	src/game/core/sound.cpp	1202	at_global	-	save_menu::at::kButtons	0x903580	data	game	engine	base_helper	Gfx_UnpackScratch+0x1f000	-	PutLongSaveMenu(::bof3::Img(save_menu::at::kButtons.v) + 8, map_8);
+site	src/game/core/sound.cpp	1203	at_global	-	save_menu::at::kButtons	0x903580	data	game	engine	base_helper	Gfx_UnpackScratch+0x1f000	-	PutLongSaveMenu(::bof3::Img(save_menu::at::kButtons.v) + 0xC, map_c);
+site	src/game/core/sound.cpp	1206	at_global	-	save_menu::at::kButtons	0x903580	data	game	engine	base_helper	Gfx_UnpackScratch+0x1f000	-	PutWord(::bof3::Img(save_menu::at::kButtons.v), 0x20);
+site	src/game/core/sound.cpp	1207	at_global	-	save_menu::at::kButtons	0x903580	data	game	engine	base_helper	Gfx_UnpackScratch+0x1f000	-	PutWord(::bof3::Img(save_menu::at::kButtons.v) + 2, 0x80);
+site	src/game/core/sound.cpp	1208	at_global	-	save_menu::at::kButtons	0x903580	data	game	engine	base_helper	Gfx_UnpackScratch+0x1f000	-	PutWord(::bof3::Img(save_menu::at::kButtons.v) + 0xC, 0x40);
+site	src/game/core/sound.cpp	1209	at_global	-	save_menu::at::kButtons	0x903580	data	game	engine	base_helper	Gfx_UnpackScratch+0x1f000	-	PutWord(::bof3::Img(save_menu::at::kButtons.v) + 4, 0x10);
+site	src/game/core/sound.cpp	1210	at_global	-	save_menu::at::kButtons	0x903580	data	game	engine	base_helper	Gfx_UnpackScratch+0x1f000	-	PutWord(::bof3::Img(save_menu::at::kButtons.v) + 6, 8);
+site	src/game/core/sound.cpp	1211	at_global	-	save_menu::at::kButtons	0x903580	data	game	engine	base_helper	Gfx_UnpackScratch+0x1f000	-	PutWord(::bof3::Img(save_menu::at::kButtons.v) + 8, 4);
+site	src/game/core/sound.cpp	1212	at_global	-	save_menu::at::kButtons	0x903580	data	game	engine	base_helper	Gfx_UnpackScratch+0x1f000	-	PutWord(::bof3::Img(save_menu::at::kButtons.v) + 0xE, 0x20);
+site	src/game/core/sound.cpp	1213	at_global	-	save_menu::at::kButtons	0x903580	data	game	engine	base_helper	Gfx_UnpackScratch+0x1f000	-	PutWord(::bof3::Img(save_menu::at::kButtons.v) + 0x10, 0x40);
+site	src/game/core/sound.cpp	1214	at_global	-	save_menu::at::kButtons	0x903580	data	game	engine	base_helper	Gfx_UnpackScratch+0x1f000	-	PutWord(::bof3::Img(save_menu::at::kButtons.v) + 0xA, 0x100);
+site	src/game/core/sound.cpp	1227	at_global	-	save_menu::at::kGameBlock	0x9039e0	data	game	engine	base_helper	-	-	const save_menu::U d8 = LongSaveMenu(::bof3::Img(save_menu::at::kGameBlock.v) + 8), d0 = LongSaveMenu(::bof3::Img(save_menu::at::kGameBlock.v)), d4 = LongSaveMe
+site	src/game/core/sound.cpp	1227	at_global	-	save_menu::at::kGameBlock	0x9039e0	data	game	engine	base_helper	-	-	const save_menu::U d8 = LongSaveMenu(::bof3::Img(save_menu::at::kGameBlock.v) + 8), d0 = LongSaveMenu(::bof3::Img(save_menu::at::kGameBlock.v)), d4 = LongSaveMe
+site	src/game/core/sound.cpp	1227	at_global	-	save_menu::at::kGameBlock	0x9039e0	data	game	engine	base_helper	-	-	const save_menu::U d8 = LongSaveMenu(::bof3::Img(save_menu::at::kGameBlock.v) + 8), d0 = LongSaveMenu(::bof3::Img(save_menu::at::kGameBlock.v)), d4 = LongSaveMe
+site	src/game/core/sound.cpp	1228	at_global	-	save_menu::at::kPosition	0x8034e0	data	game	engine	base_helper	Cond_ByteFA	-	PutLongSaveMenu(::bof3::Img(save_menu::at::kPosition.v) + 8, d8);
+site	src/game/core/sound.cpp	1229	at_global	-	save_menu::at::kPosition	0x8034e0	data	game	engine	base_helper	Cond_ByteFA	-	PutLongSaveMenu(::bof3::Img(save_menu::at::kPosition.v) + 4, d4);
+site	src/game/core/sound.cpp	1230	at_global	-	save_menu::at::kGameBlock	0x9039e0	data	game	engine	base_helper	-	-	const save_menu::U dc = LongSaveMenu(::bof3::Img(save_menu::at::kGameBlock.v) + 0xC);
+site	src/game/core/sound.cpp	1231	at_global	-	save_menu::at::kPosition	0x8034e0	data	game	engine	base_helper	Cond_ByteFA	-	PutLongSaveMenu(::bof3::Img(save_menu::at::kPosition.v), d0);
+site	src/game/core/sound.cpp	1232	at_global	-	save_menu::at::kPosition	0x8034e0	data	game	engine	base_helper	Cond_ByteFA	-	PutLongSaveMenu(::bof3::Img(save_menu::at::kPosition.v) + 0xC, dc);
+site	src/game/core/sound.cpp	1233	at_global	-	save_menu::at::kGameBlock	0x9039e0	data	game	engine	base_helper	-	-	const save_menu::U c0 = Byte(::bof3::Img(save_menu::at::kGameBlock.v) + 0x20);
+site	src/game/core/sound.cpp	1235	at_global	-	save_menu::at::kGameBlock	0x9039e0	data	game	engine	base_helper	-	-	const save_menu::U c1 = Byte(::bof3::Img(save_menu::at::kGameBlock.v) + 0x21);
+site	src/game/core/sound.cpp	1237	at_global	-	save_menu::at::kGameBlock	0x9039e0	data	game	engine	base_helper	-	-	const save_menu::U c2 = Byte(::bof3::Img(save_menu::at::kGameBlock.v) + 0x22);
+site	src/game/core/sound.cpp	1238	at_global	-	save_menu::at::kCounters	0x903848	data	game	engine	base_helper	-	-	PutByte(::bof3::Img(save_menu::at::kCounters.v), c0);
+site	src/game/core/sound.cpp	1239	at_global	-	save_menu::at::kGameBlock	0x9039e0	data	game	engine	base_helper	-	-	const save_menu::U c3 = Byte(::bof3::Img(save_menu::at::kGameBlock.v) + 0x23);
+site	src/game/core/sound.cpp	1240	at_global	-	save_menu::at::kCounters	0x903848	data	game	engine	base_helper	-	-	PutByte(::bof3::Img(save_menu::at::kCounters.v) + 1, c1);
+site	src/game/core/sound.cpp	1241	at_global	-	save_menu::at::kCounters	0x903848	data	game	engine	base_helper	-	-	PutByte(::bof3::Img(save_menu::at::kCounters.v) + 2, c2);
+site	src/game/core/sound.cpp	1242	at_global	-	save_menu::at::kCounters	0x903848	data	game	engine	base_helper	-	-	PutByte(::bof3::Img(save_menu::at::kCounters.v) + 3, c3);
+site	src/game/core/sound.cpp	1249	at_global	-	save_menu::at::kHeld	0x7e1be8	data	game	engine	base_helper	Input_Held	-	if (LongSaveMenu(::bof3::Img(save_menu::at::kHeld.v)) & 0x800) SaveMenu_DefaultPad = 1;
+site	src/game/core/sound.cpp	1265	at_global	-	save_menu::at::kMenuStates	0x929f02	data	game	engine	base_helper	FieldS_Step	-	PutByte(::bof3::Img(save_menu::at::kMenuStates.v) + 1, 0);
+site	src/game/core/sound.cpp	1266	at_global	-	save_menu::at::kMenuStates	0x929f02	data	game	engine	base_helper	FieldS_Step	-	PutByte(::bof3::Img(save_menu::at::kMenuStates.v) + 3, 0);
+site	src/game/core/sound.cpp	1276	code_const	at	save_menu::at::kGameTask	0x495800	code	game	engine	base_helper	Field_Task	-	save_menu::g.task_restart(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(save_menu::at::kGameTask.v))));
+site	src/game/core/sound.cpp	1331	at_global	-	save_menu::at::kRowBright	0x6bdf90	data	game	engine	base_helper	-	-	rv::Store<save_menu::U>(s->r, Byte(::bof3::Img(save_menu::at::kRowBright.v) + r) << 1);
+site	src/game/core/sound.cpp	1332	at_global	-	save_menu::at::kRowBright	0x6bdf90	data	game	engine	base_helper	-	-	rv::Store<save_menu::U>(s->g, Byte(::bof3::Img(save_menu::at::kRowBright.v) + r) << 1);
+site	src/game/core/sound.cpp	1333	at_global	-	save_menu::at::kRowBright	0x6bdf90	data	game	engine	base_helper	-	-	rv::Store<save_menu::U>(s->b, Byte(::bof3::Img(save_menu::at::kRowBright.v) + r) << 1);
+site	src/game/core/sound.cpp	1350	at_global	-	save_menu::at::kRowBright	0x6bdf90	data	game	engine	base_helper	-	-	rv::Store<save_menu::U>(s->r, Byte(::bof3::Img(save_menu::at::kRowBright.v) + r));
+site	src/game/core/sound.cpp	1351	at_global	-	save_menu::at::kRowBright	0x6bdf90	data	game	engine	base_helper	-	-	rv::Store<save_menu::U>(s->g, Byte(::bof3::Img(save_menu::at::kRowBright.v) + r));
+site	src/game/core/sound.cpp	1352	at_global	-	save_menu::at::kRowBright	0x6bdf90	data	game	engine	base_helper	-	-	rv::Store<save_menu::U>(s->b, Byte(::bof3::Img(save_menu::at::kRowBright.v) + r));
+site	src/game/core/sound.cpp	1364	at_global	-	save_menu::at::kGrowthTable	0x667248	data	game	engine	base_helper	NewGame_GrowthRolls	-	const save_menu::U lo = Byte(::bof3::Img(save_menu::at::kGrowthTable.v) + m * 3), hi = Byte(::bof3::Img(save_menu::at::kGrowthTable.v) + m * 3 + 1),
+site	src/game/core/sound.cpp	1364	at_global	-	save_menu::at::kGrowthTable	0x667248	data	game	engine	base_helper	NewGame_GrowthRolls	-	const save_menu::U lo = Byte(::bof3::Img(save_menu::at::kGrowthTable.v) + m * 3), hi = Byte(::bof3::Img(save_menu::at::kGrowthTable.v) + m * 3 + 1),
+site	src/game/core/sound.cpp	1365	at_global	-	save_menu::at::kGrowthTable	0x667248	data	game	engine	base_helper	NewGame_GrowthRolls	-	n = Byte(::bof3::Img(save_menu::at::kGrowthTable.v) + m * 3 + 2);
+site	src/game/core/sound.cpp	1366	at_global	-	save_menu::at::kGrowth	0x903640	data	game	engine	base_helper	-	-	const save_menu::U out = ::bof3::Img(save_menu::at::kGrowth.v) + m * 5;
+site	src/game/core/sound.cpp	1367	at_global	-	save_menu::at::kGrowthValues	0x667260	data	game	engine	base_helper	NewGame_GrowthValues	-	for (save_menu::U k = 0; k < 4; ++k) PutByte(out + k, Byte(::bof3::Img(save_menu::at::kGrowthValues.v) + save_menu::g.roll_sum(lo, hi, n)));
+site	src/game/core/sound.cpp	1416	at_global	-	save_menu::at::kPieces	0x66726c	data	game	engine	base_helper	-	-	const save_menu::U e = ::bof3::Img(save_menu::at::kPieces.v) + (index & 0xFF) * 10;
+site	src/game/core/sound.cpp	1426	at_global	-	save_menu::at::kSlotTop	0x8034d0	data	game	engine	base_helper	MoveScript_PartyRecords+0x50	-	save_menu::DrawSlotsOver(x, y, highlight, AtSaveMenu(::bof3::Img(save_menu::at::kSummaries.v)), reinterpret_cast<const volatile save_menu::U*>(AtSaveMenu(::bof3
+site	src/game/core/sound.cpp	1426	at_global	-	save_menu::at::kSummaries	0x905bc0	data	game	engine	base_helper	-	-	save_menu::DrawSlotsOver(x, y, highlight, AtSaveMenu(::bof3::Img(save_menu::at::kSummaries.v)), reinterpret_cast<const volatile save_menu::U*>(AtSaveMenu(::bof3
+site	src/game/core/sound.cpp	1436	at_global	-	save_menu::at::kSummaries	0x905bc0	data	game	engine	base_helper	-	-	save_menu::ReadSummaries(AtSaveMenu(::bof3::Img(Save_Directory_addr)), AtSaveMenu(::bof3::Img(save_menu::at::kSummaries.v)), &StagedRead, nullptr);
+site	src/game/core/sound.cpp	1453	at_global	-	shop_states2::at::kGameMode	0x66c7e8	data	game	engine	base_helper	Game_Mode	-	Entry(::bof3::Img(TitleTask_Modes_addr), LongShopStates2(::bof3::Img(shop_states2::at::kGameMode.v)) & 0xFFFF, " ")();
 site	src/game/core/title.cpp	110	const_def	literal	kPoolLimit	0x7f1bac	data	game	ui	module	Gfx_PacketPools+0xffac	-	constexpr std::uint32_t kPoolLimit = 0x7F1BAC;
 site	src/game/core/title.cpp	155	const_def	literal	kPages	0x675fd8	data	game	ui	module	-	-	constexpr ::bof3::image::Va kPages{0x675FD8};
 site	src/game/core/title.cpp	157	const_def	literal	kPage	0x675fdb	data	game	ui	module	CommuList_Page	-	constexpr ::bof3::image::Va kPage{0x675FDB};
@@ -17637,127 +17639,127 @@ site	src/game/shell_callees.h	34	const_def	derived	kBlocks	0x903880	data	game	en
 site	src/game/shell_callees.h	55	const_def	derived	kSoundSetup	0x5a6830	code	game	engine	module	Snd_Init	-	constexpr ::bof3::image::CodeVa kSoundSetup{bof3::addr::Snd_Init};
 site	src/game/shop/field_s.cpp	94	at_global	-	field_s::at::kPrintBuf	0x904ba0	data	game	field	base_helper	-	-	char* PrintBuf() { return reinterpret_cast<char*>(At(::bof3::Img(field_s::at::kPrintBuf))); }
 site	src/game/shop/field_s.cpp	117	abs_call	via=SH_AT	field_s::at::kSwapBytes	0x58bd50	code	game	field	call	FieldMenu_SwapBytes	-	void SwapBytes(U a, U b) { SH_AT(void (__cdecl*)(unsigned char*, unsigned char*), field_s::at::kSwapBytes.v)(At(a), At(b)); }
-site	src/game/shop/field_save.cpp	107	at_global	-	rest_2c::at::kSummaries	0x905bc0	data	game	field	-	-	-	rest_2c::at::kSlotCount, static_cast<unsigned>((rest_2c::at::kSummaries + slot * rest_2c::at::kSummaryBytes).v));
-site	src/game/shop/field_save.cpp	108	at_global	-	rest_2c::at::kSummaries	0x905bc0	data	game	field	base_helper	-	-	return ::bof3::Img(rest_2c::at::kSummaries.v) + slot * rest_2c::at::kSummaryBytes;
-site	src/game/shop/field_save.cpp	114	at_global	-	rest_2c::at::kSummary	0x904680	data	game	field	base_helper	-	-	for (U i = 0; i < 7; ++i) PutL(to + 4 * i, LRest2c(::bof3::Img(rest_2c::at::kSummary.v) + 4 * i));
-site	src/game/shop/field_save.cpp	216	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	BShopStates(::bof3::Img(shop_states::at::kCount.v)) = 4;
-site	src/game/shop/field_save.cpp	251	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	const int y = 0x12 - 20 * static_cast<int>(BShopStates(::bof3::Img(shop_states::at::kCount.v)));
-site	src/game/shop/field_save.cpp	253	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	const auto count = static_cast<unsigned char>(BShopStates(::bof3::Img(shop_states::at::kCount.v)) - 1);
-site	src/game/shop/field_save.cpp	254	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	BShopStates(::bof3::Img(shop_states::at::kCount.v)) = count;
-site	src/game/shop/field_save.cpp	271	at_global	-	shop_states::at::kFormatD	0x5e10c0	data	game	field	base_helper	Area08_MessageFormat	-	shop_states::g.sprintf_(reinterpret_cast<char*>(AtShopStates(::bof3::Img(shop_states::at::kText.v))), reinterpret_cast<const char*>(AtShopStates(::bof3::Img(sho
-site	src/game/shop/field_save.cpp	271	at_global	-	shop_states::at::kText	0x904ba0	data	game	field	base_helper	-	-	shop_states::g.sprintf_(reinterpret_cast<char*>(AtShopStates(::bof3::Img(shop_states::at::kText.v))), reinterpret_cast<const char*>(AtShopStates(::bof3::Img(sho
-site	src/game/shop/field_save.cpp	273	at_global	-	shop_states::at::kText	0x904ba0	data	game	field	base_helper	-	-	shop_states::g.text_record(0, 8, AtShopStates(::bof3::Img(shop_states::at::kText.v)));
-site	src/game/shop/field_save.cpp	277	at_global	-	shop_states::at::kMsgFlags	0x7dee44	data	game	field	base_helper	-	-	if ((BShopStates(::bof3::Img(shop_states::at::kMsgFlags.v)) & 2) == 0) return;
-site	src/game/shop/field_save.cpp	279	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	BShopStates(::bof3::Img(shop_states::at::kCount.v)) = 6;
-site	src/game/shop/field_save.cpp	288	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	shop_states::g.choices(0x6E - 48 * static_cast<int>(BShopStates(::bof3::Img(shop_states::at::kCount.v))), 0x4C);
-site	src/game/shop/field_save.cpp	294	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	const auto count = static_cast<unsigned char>(BShopStates(::bof3::Img(shop_states::at::kCount.v)) - 1);
-site	src/game/shop/field_save.cpp	295	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	BShopStates(::bof3::Img(shop_states::at::kCount.v)) = count;
-site	src/game/shop/field_save.cpp	320	at_global	-	shop_states::at::kPressed	0x7e1bec	data	game	field	base_helper	Input_Pressed	-	shop_states::U pad = LongShopStates(::bof3::Img(shop_states::at::kPressed.v));
-site	src/game/shop/field_save.cpp	344	at_global	-	shop_states::at::kPressed	0x7e1bec	data	game	field	base_helper	Input_Pressed	-	pad = LongShopStates(::bof3::Img(shop_states::at::kPressed.v));
-site	src/game/shop/field_save.cpp	347	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	BShopStates(::bof3::Img(shop_states::at::kCount.v)) = 0;
-site	src/game/shop/field_save.cpp	367	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	BShopStates(::bof3::Img(shop_states::at::kCount.v)) = 0;
-site	src/game/shop/field_save.cpp	391	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	shop_states::g.choices(0x6E + 48 * static_cast<int>(BShopStates(::bof3::Img(shop_states::at::kCount.v))), 0x4C);
-site	src/game/shop/field_save.cpp	394	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	const auto count = static_cast<unsigned char>(BShopStates(::bof3::Img(shop_states::at::kCount.v)) + 1);
-site	src/game/shop/field_save.cpp	395	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	BShopStates(::bof3::Img(shop_states::at::kCount.v)) = count;
-site	src/game/shop/field_save.cpp	399	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	BShopStates(::bof3::Img(shop_states::at::kCount.v)) = 0;
-site	src/game/shop/field_save.cpp	405	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	BShopStates(::bof3::Img(shop_states::at::kCount.v)) = cursor != 0 ? 0 : 0x2D;
-site	src/game/shop/field_save.cpp	428	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	const auto count = static_cast<unsigned char>(BShopStates(::bof3::Img(shop_states::at::kCount.v)) - 1);
-site	src/game/shop/field_save.cpp	429	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	BShopStates(::bof3::Img(shop_states::at::kCount.v)) = count;
-site	src/game/shop/field_save.cpp	456	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	BShopStates(::bof3::Img(shop_states::at::kCount.v)) = 0x96;
-site	src/game/shop/field_save.cpp	465	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	unsigned char count = BShopStates(::bof3::Img(shop_states::at::kCount.v));
-site	src/game/shop/field_save.cpp	468	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	BShopStates(::bof3::Img(shop_states::at::kCount.v)) = count;
-site	src/game/shop/field_save.cpp	493	at_global	-	shop_states::at::kRepeatLatch	0x7e01b8	data	game	field	base_helper	-	-	PutWordShopStates(::bof3::Img(shop_states::at::kRepeatLatch.v), 0);
-site	src/game/shop/field_save.cpp	505	at_global	-	shop_states::at::kMsgFlags	0x7dee44	data	game	field	base_helper	-	-	if (BShopStates(::bof3::Img(shop_states::at::kMsgFlags.v)) & 2) FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
-site	src/game/shop/field_save.cpp	518	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	BShopStates(::bof3::Img(shop_states::at::kCount.v)) = 0;
-site	src/game/shop/field_save.cpp	538	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	BShopStates(::bof3::Img(shop_states::at::kCount.v)) = 4;
-site	src/game/shop/field_save.cpp	540	at_global	-	shop_states::at::kSlotTop	0x8034d0	data	game	field	base_helper	MoveScript_PartyRecords+0x50	-	PutLong(::bof3::Img(shop_states::at::kSlotTop.v), 0);
-site	src/game/shop/field_save.cpp	553	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	if (BShopStates(::bof3::Img(shop_states::at::kCount.v)) == 4) shop_states::g.play(0x102);
-site	src/game/shop/field_save.cpp	555	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	shop_states::g.slots(0x20 - 80 * static_cast<int>(BShopStates(::bof3::Img(shop_states::at::kCount.v))), 0x30, 1);
-site	src/game/shop/field_save.cpp	556	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	const auto count = static_cast<unsigned char>(BShopStates(::bof3::Img(shop_states::at::kCount.v)) - 1);
-site	src/game/shop/field_save.cpp	557	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	BShopStates(::bof3::Img(shop_states::at::kCount.v)) = count;
-site	src/game/shop/field_save.cpp	575	at_global	-	shop_states::at::kSlot	0x9036d4	data	game	field	base_helper	Rest2c_Slot	-	shop_states::U slot = LongShopStates(::bof3::Img(shop_states::at::kSlot.v));
-site	src/game/shop/field_save.cpp	578	at_global	-	shop_states::at::kSlotTop	0x8034d0	data	game	field	base_helper	MoveScript_PartyRecords+0x50	-	const shop_states::U top = LongShopStates(::bof3::Img(shop_states::at::kSlotTop.v));
-site	src/game/shop/field_save.cpp	581	at_global	-	shop_states::at::kSlotTop	0x8034d0	data	game	field	base_helper	MoveScript_PartyRecords+0x50	-	if (static_cast<int>(slot) < static_cast<int>(top)) PutLong(::bof3::Img(shop_states::at::kSlotTop.v), top - 1);
-site	src/game/shop/field_save.cpp	583	at_global	-	shop_states::at::kSlotTop	0x8034d0	data	game	field	base_helper	MoveScript_PartyRecords+0x50	-	const shop_states::U limit = LongShopStates(::bof3::Img(shop_states::at::kSlotTop.v)) + 2;
-site	src/game/shop/field_save.cpp	586	at_global	-	shop_states::at::kSlotTop	0x8034d0	data	game	field	base_helper	MoveScript_PartyRecords+0x50	-	if (static_cast<int>(slot) > static_cast<int>(limit)) PutLong(::bof3::Img(shop_states::at::kSlotTop.v), LongShopStates(::bof3::Img(shop_states::at::kSlotTop.v))
-site	src/game/shop/field_save.cpp	586	at_global	-	shop_states::at::kSlotTop	0x8034d0	data	game	field	base_helper	MoveScript_PartyRecords+0x50	-	if (static_cast<int>(slot) > static_cast<int>(limit)) PutLong(::bof3::Img(shop_states::at::kSlotTop.v), LongShopStates(::bof3::Img(shop_states::at::kSlotTop.v))
-site	src/game/shop/field_save.cpp	638	at_global	-	rest_2c::at::kPath	0x904ba0	data	game	field	base_helper	-	-	SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath.v))), reinterpret_cast<const char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath
-site	src/game/shop/field_save.cpp	638	at_global	-	rest_2c::at::kPathFormat	0x664068	data	game	field	base_helper	-	-	SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath.v))), reinterpret_cast<const char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath
-site	src/game/shop/field_save.cpp	639	at_global	-	rest_2c::at::kPath	0x904ba0	data	game	field	base_helper	-	-	const int written = SH_CALL(Save_WriteFile)(reinterpret_cast<const char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath.v))), rest_2c::at::kSaveSize);
-site	src/game/shop/field_save.cpp	643	at_global	-	rest_2c::at::kTimer	0x929f04	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(rest_2c::at::kTimer.v)) = 0x1E;
-site	src/game/shop/field_save.cpp	660	at_global	-	rest_2c::at::kTimer	0x929f04	data	game	field	base_helper	-	-	const auto timer = static_cast<unsigned char>(BRest2c(::bof3::Img(rest_2c::at::kTimer.v)) - 1);
-site	src/game/shop/field_save.cpp	661	at_global	-	rest_2c::at::kTimer	0x929f04	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(rest_2c::at::kTimer.v)) = timer;
-site	src/game/shop/field_save.cpp	664	at_global	-	rest_2c::at::kTimer	0x929f04	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(rest_2c::at::kTimer.v)) = 0;
-site	src/game/shop/field_save.cpp	674	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	shop_states::g.slots(0x20 + 80 * static_cast<int>(BShopStates(::bof3::Img(shop_states::at::kCount.v))), 0x30, 0);
-site	src/game/shop/field_save.cpp	675	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	const auto count = static_cast<unsigned char>(BShopStates(::bof3::Img(shop_states::at::kCount.v)) + 1);
-site	src/game/shop/field_save.cpp	676	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	BShopStates(::bof3::Img(shop_states::at::kCount.v)) = count;
-site	src/game/shop/field_save.cpp	696	at_global	-	shop_states::at::kRepeatLatch	0x7e01b8	data	game	field	base_helper	-	-	PutWordShopStates(::bof3::Img(shop_states::at::kRepeatLatch.v), 0);
-site	src/game/shop/field_save.cpp	703	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	BShopStates(::bof3::Img(shop_states::at::kCount.v)) = 0;
-site	src/game/shop/field_save.cpp	713	at_global	-	rest_2c::at::kMsgFlags	0x7dee44	data	game	field	base_helper	-	-	if ((BRest2c(::bof3::Img(rest_2c::at::kMsgFlags.v)) & 2) == 0) return;
-site	src/game/shop/field_save.cpp	715	at_global	-	rest_2c::at::kTimer	0x929f04	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(rest_2c::at::kTimer.v)) = 0;
-site	src/game/shop/field_save.cpp	730	at_global	-	rest_2c::at::kTimer	0x929f04	data	game	field	base_helper	-	-	const int y = 0x12 - 20 * static_cast<int>(BRest2c(::bof3::Img(rest_2c::at::kTimer.v)));
-site	src/game/shop/field_save.cpp	732	at_global	-	rest_2c::at::kTimer	0x929f04	data	game	field	base_helper	-	-	const auto timer = static_cast<unsigned char>(BRest2c(::bof3::Img(rest_2c::at::kTimer.v)) + 1);
-site	src/game/shop/field_save.cpp	733	at_global	-	rest_2c::at::kTimer	0x929f04	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(rest_2c::at::kTimer.v)) = timer;
-site	src/game/shop/field_save.cpp	813	at_global	-	field_s::at::kPlaceTable	0x663fd8	data	game	field	base_helper	-	-	const U row = ::bof3::Img(field_s::at::kPlaceTable) + 16 * (3 * kind + i);
-site	src/game/shop/field_save.cpp	827	at_global	-	field_s::at::kAreaDescriptors	0x667590	data	game	field	base_helper	Area_Descriptors	-	const U descriptor = L(::bof3::Img(field_s::at::kAreaDescriptors) + 4 * static_cast<std::uint32_t>(Game_AreaNumber));
-site	src/game/shop/field_save.cpp	840	at_global	-	rest_2c::at::kTimer	0x929f04	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(rest_2c::at::kTimer.v)) = 0x96;
-site	src/game/shop/field_save.cpp	849	at_global	-	rest_2c::at::kTimer	0x929f04	data	game	field	base_helper	-	-	const unsigned char timer = BRest2c(::bof3::Img(rest_2c::at::kTimer.v));
-site	src/game/shop/field_save.cpp	851	at_global	-	rest_2c::at::kTimer	0x929f04	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(rest_2c::at::kTimer.v)) = static_cast<unsigned char>(timer - 1);
-site	src/game/shop/field_save.cpp	876	at_global	-	rest_2c::at::kMsgFlags	0x7dee44	data	game	field	base_helper	-	-	if ((BRest2c(::bof3::Img(rest_2c::at::kMsgFlags.v)) & 2) == 0) return;
-site	src/game/shop/field_save.cpp	906	at_global	-	save_menu::at::kFlagsA	0x904654	data	game	field	base_helper	-	-	if (save_menu::g.flags_test(AtSaveMenu(::bof3::Img(save_menu::at::kFlagsA.v)), 4) == 0) return;
-site	src/game/shop/field_save.cpp	907	at_global	-	save_menu::at::kFlagsB	0x904657	data	game	field	base_helper	-	-	if (save_menu::g.flags_test(AtSaveMenu(::bof3::Img(save_menu::at::kFlagsB.v)), 4) != 0) return;
-site	src/game/shop/field_save.cpp	932	at_global	-	rest_2c::at::kBlock	0x9039e0	data	game	field	base_helper	-	-	PutL(::bof3::Img(rest_2c::at::kBlock.v), LRest2c(::bof3::Img(0x8034E0)));
-site	src/game/shop/field_save.cpp	932	base_offset	-	0x8034E0	0x8034e0	data	game	field	base_helper	Cond_ByteFA	-	PutL(::bof3::Img(rest_2c::at::kBlock.v), LRest2c(::bof3::Img(0x8034E0)));
-site	src/game/shop/field_save.cpp	933	at_global	-	rest_2c::at::kBlock	0x9039e0	data	game	field	base_helper	-	-	PutL(::bof3::Img(rest_2c::at::kBlock.v) + 4, LRest2c(::bof3::Img(0x8034E4)));
-site	src/game/shop/field_save.cpp	933	base_offset	-	0x8034E4	0x8034e4	data	game	field	base_helper	MoveScript_Var7	-	PutL(::bof3::Img(rest_2c::at::kBlock.v) + 4, LRest2c(::bof3::Img(0x8034E4)));
-site	src/game/shop/field_save.cpp	934	at_global	-	rest_2c::at::kBlock	0x9039e0	data	game	field	base_helper	-	-	PutL(::bof3::Img(rest_2c::at::kBlock.v) + 0xC, LRest2c(::bof3::Img(0x8034EC)));
-site	src/game/shop/field_save.cpp	934	base_offset	-	0x8034EC	0x8034ec	data	game	field	base_helper	MoveScript_PartyRecords+0x6c	-	PutL(::bof3::Img(rest_2c::at::kBlock.v) + 0xC, LRest2c(::bof3::Img(0x8034EC)));
-site	src/game/shop/field_save.cpp	935	base_offset	-	0x903848	0x903848	data	game	field	base_helper	-	-	const U counters = LRest2c(::bof3::Img(0x903848));
-site	src/game/shop/field_save.cpp	936	at_global	-	rest_2c::at::kBlock	0x9039e0	data	game	field	base_helper	-	-	PutL(::bof3::Img(rest_2c::at::kBlock.v) + 8, LRest2c(::bof3::Img(0x8034E8)));
-site	src/game/shop/field_save.cpp	936	base_offset	-	0x8034E8	0x8034e8	data	game	field	base_helper	Field_StepCountPrev	-	PutL(::bof3::Img(rest_2c::at::kBlock.v) + 8, LRest2c(::bof3::Img(0x8034E8)));
-site	src/game/shop/field_save.cpp	937	base_offset	-	0x903A00	0x903a00	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(0x903A00)) = static_cast<unsigned char>(counters);
-site	src/game/shop/field_save.cpp	938	base_offset	-	0x903A01	0x903a01	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(0x903A01)) = static_cast<unsigned char>(counters >> 8);
-site	src/game/shop/field_save.cpp	939	base_offset	-	0x90384A	0x90384a	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(0x903A02)) = BRest2c(::bof3::Img(0x90384A));
-site	src/game/shop/field_save.cpp	939	base_offset	-	0x903A02	0x903a02	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(0x903A02)) = BRest2c(::bof3::Img(0x90384A));
-site	src/game/shop/field_save.cpp	940	base_offset	-	0x802D74	0x802d74	data	game	field	base_helper	ObjTrio+0x34	-	PutL(::bof3::Img(0x903A08), LRest2c(::bof3::Img(0x802D74)));
-site	src/game/shop/field_save.cpp	940	base_offset	-	0x903A08	0x903a08	data	game	field	base_helper	-	-	PutL(::bof3::Img(0x903A08), LRest2c(::bof3::Img(0x802D74)));
-site	src/game/shop/field_save.cpp	941	base_offset	-	0x802D78	0x802d78	data	game	field	base_helper	ObjTrio+0x38	-	PutL(::bof3::Img(0x903A0C), LRest2c(::bof3::Img(0x802D78)));
-site	src/game/shop/field_save.cpp	941	base_offset	-	0x903A0C	0x903a0c	data	game	field	base_helper	-	-	PutL(::bof3::Img(0x903A0C), LRest2c(::bof3::Img(0x802D78)));
-site	src/game/shop/field_save.cpp	942	base_offset	-	0x903A07	0x903a07	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(0x903A07)) = ObjTrio[0].direction;
-site	src/game/shop/field_save.cpp	943	base_offset	-	0x903580	0x903580	data	game	field	base_helper	Gfx_UnpackScratch+0x1f000	-	SaveMenu_SavedButtons = LRest2c(::bof3::Img(0x903580));
-site	src/game/shop/field_save.cpp	944	base_offset	-	0x903588	0x903588	data	game	field	base_helper	Gfx_UnpackScratch+0x1f008	-	PutL(::bof3::Img(0x9046A4), LRest2c(::bof3::Img(0x903588)));
-site	src/game/shop/field_save.cpp	944	base_offset	-	0x9046A4	0x9046a4	data	game	field	base_helper	-	-	PutL(::bof3::Img(0x9046A4), LRest2c(::bof3::Img(0x903588)));
-site	src/game/shop/field_save.cpp	945	base_offset	-	0x90384B	0x90384b	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(0x903A03)) = BRest2c(::bof3::Img(0x90384B));
-site	src/game/shop/field_save.cpp	945	base_offset	-	0x903A03	0x903a03	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(0x903A03)) = BRest2c(::bof3::Img(0x90384B));
-site	src/game/shop/field_save.cpp	946	base_offset	-	0x90358C	0x90358c	data	game	field	base_helper	Gfx_UnpackScratch+0x1f00c	-	PutL(::bof3::Img(0x9046A8), LRest2c(::bof3::Img(0x90358C)));
-site	src/game/shop/field_save.cpp	946	base_offset	-	0x9046A8	0x9046a8	data	game	field	base_helper	-	-	PutL(::bof3::Img(0x9046A8), LRest2c(::bof3::Img(0x90358C)));
-site	src/game/shop/field_save.cpp	948	base_offset	-	0x903584	0x903584	data	game	field	base_helper	Field_MenuButton	-	PutL(::bof3::Img(0x9046A0), LRest2c(::bof3::Img(0x903584)));
-site	src/game/shop/field_save.cpp	948	base_offset	-	0x9046A0	0x9046a0	data	game	field	base_helper	-	-	PutL(::bof3::Img(0x9046A0), LRest2c(::bof3::Img(0x903584)));
-site	src/game/shop/field_save.cpp	949	at_global	-	rest_2c::at::kMemberRecord	0x66972c	data	game	field	base_helper	Character_IndexById	-	const unsigned record = BRest2c(::bof3::Img(rest_2c::at::kMemberRecord.v) + Cond_Flags[0xd2]);
-site	src/game/shop/field_save.cpp	950	base_offset	-	0x9046AC	0x9046ac	data	game	field	base_helper	-	-	PutW(::bof3::Img(0x9046AC), Field_CancelButtons);
-site	src/game/shop/field_save.cpp	951	base_offset	-	0x903A50	0x903a50	data	game	field	base_helper	-	-	PutW(::bof3::Img(0x903A50), 0);
-site	src/game/shop/field_save.cpp	953	at_global	-	rest_2c::at::kSummary	0x904680	data	game	field	base_helper	-	-	SH_CALL(Crt_strncpy)(reinterpret_cast<char*>(AtRest2c(::bof3::Img(rest_2c::at::kSummary.v))), reinterpret_cast<const char*>(AtRest2c(name)), 5);
-site	src/game/shop/field_save.cpp	954	base_offset	-	0x904696	0x904696	data	game	field	base_helper	-	-	SH_CALL(Crt_strncpy)(reinterpret_cast<char*>(AtRest2c(::bof3::Img(0x904696))), reinterpret_cast<const char*>(AtRest2c(name + 5)), 4);
-site	src/game/shop/field_save.cpp	955	at_global	-	rest_2c::at::kPartyList	0x904062	data	game	field	base_helper	Cond_Flags+0xd2	-	for (unsigned i = 0; i < 3; ++i) BRest2c(::bof3::Img(rest_2c::at::kPartyList.v) + 0x623 + i) = FormOf(BRest2c(::bof3::Img(rest_2c::at::kPartyList.v) + i));
-site	src/game/shop/field_save.cpp	955	at_global	-	rest_2c::at::kPartyList	0x904062	data	game	field	base_helper	Cond_Flags+0xd2	-	for (unsigned i = 0; i < 3; ++i) BRest2c(::bof3::Img(rest_2c::at::kPartyList.v) + 0x623 + i) = FormOf(BRest2c(::bof3::Img(rest_2c::at::kPartyList.v) + i));
-site	src/game/shop/field_save.cpp	956	base_offset	-	0x903A7A	0x903a7a	data	game	field	base_helper	CharacterRecords+0xa	-	BRest2c(::bof3::Img(0x904688)) = BRest2c(::bof3::Img(0x903A7A));
-site	src/game/shop/field_save.cpp	956	base_offset	-	0x904688	0x904688	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(0x904688)) = BRest2c(::bof3::Img(0x903A7A));
-site	src/game/shop/field_save.cpp	957	base_offset	-	0x9040C8	0x9040c8	data	game	field	base_helper	-	-	PutL(::bof3::Img(0x90468C), LRest2c(::bof3::Img(0x9040C8)));
-site	src/game/shop/field_save.cpp	957	base_offset	-	0x90468C	0x90468c	data	game	field	base_helper	-	-	PutL(::bof3::Img(0x90468C), LRest2c(::bof3::Img(0x9040C8)));
-site	src/game/shop/field_save.cpp	958	base_offset	-	0x904689	0x904689	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(0x904689)) = static_cast<unsigned char>(Config_WindowColour);
-site	src/game/shop/field_save.cpp	959	base_offset	-	0x90468A	0x90468a	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(0x90468A)) = Config_Background;
-site	src/game/shop/field_save.cpp	960	base_offset	-	0x903A7C	0x903a7c	data	game	field	base_helper	CharacterRecords+0xc	-	PutL(::bof3::Img(0x904690), LRest2c(::bof3::Img(0x903A7C)));
-site	src/game/shop/field_save.cpp	960	base_offset	-	0x904690	0x904690	data	game	field	base_helper	-	-	PutL(::bof3::Img(0x904690), LRest2c(::bof3::Img(0x903A7C)));
-site	src/game/shop/field_save.cpp	962	base_offset	-	0x904694	0x904694	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(0x904694)) = flag;
-site	src/game/shop/field_save.cpp	963	base_offset	-	0x9039A2	0x9039a2	data	game	field	base_helper	Field_ScriptFlags	-	SaveMenu_ScriptFlagsSaved = BRest2c(::bof3::Img(0x9039A2));
-site	src/game/shop/field_save.cpp	966	at_global	-	rest_2c::at::kBlock	0x9039e0	data	game	field	base_helper	-	-	const unsigned char v = BRest2c(::bof3::Img(rest_2c::at::kBlock.v) + i);
-site	src/game/shop/field_save.cpp	967	at_global	-	rest_2c::at::kStaging	0x92a0e0	data	game	field	base_helper	Save_Staging	-	BRest2c(::bof3::Img(rest_2c::at::kStaging.v) + i) = v;
-site	src/game/shop/field_save.cpp	971	at_global	-	rest_2c::at::kChecksum	0x92a150	data	game	field	base_helper	Save_Staging+0x70	-	PutW(::bof3::Img(rest_2c::at::kChecksum.v), sum);
-site	src/game/shop/field_save.cpp	1023	at_global	-	rest_2c::at::kPath	0x904ba0	data	game	field	base_helper	-	-	SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath.v))), reinterpret_cast<const char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath
-site	src/game/shop/field_save.cpp	1023	at_global	-	rest_2c::at::kPathFormat	0x664068	data	game	field	base_helper	-	-	SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath.v))), reinterpret_cast<const char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath
-site	src/game/shop/field_save.cpp	1025	at_global	-	rest_2c::at::kPath	0x904ba0	data	game	field	base_helper	-	-	SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath.v))), reinterpret_cast<const char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath
-site	src/game/shop/field_save.cpp	1025	at_global	-	rest_2c::at::kPathFormat	0x664068	data	game	field	base_helper	-	-	SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath.v))), reinterpret_cast<const char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath
-site	src/game/shop/field_save.cpp	1026	at_global	-	rest_2c::at::kPath	0x904ba0	data	game	field	base_helper	-	-	const int written = SH_CALL(Save_WriteFile)(reinterpret_cast<const char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath.v))), rest_2c::at::kSaveSize);
+site	src/game/shop/field_save.cpp	108	at_global	-	rest_2c::at::kSummaries	0x905bc0	data	game	field	-	-	-	rest_2c::at::kSlotCount, static_cast<unsigned>((rest_2c::at::kSummaries + slot * rest_2c::at::kSummaryBytes).v));
+site	src/game/shop/field_save.cpp	109	at_global	-	rest_2c::at::kSummaries	0x905bc0	data	game	field	base_helper	-	-	return ::bof3::Img(rest_2c::at::kSummaries.v) + slot * rest_2c::at::kSummaryBytes;
+site	src/game/shop/field_save.cpp	115	at_global	-	rest_2c::at::kSummary	0x904680	data	game	field	base_helper	-	-	for (U i = 0; i < 7; ++i) PutL(to + 4 * i, LRest2c(::bof3::Img(rest_2c::at::kSummary.v) + 4 * i));
+site	src/game/shop/field_save.cpp	217	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	BShopStates(::bof3::Img(shop_states::at::kCount.v)) = 4;
+site	src/game/shop/field_save.cpp	252	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	const int y = 0x12 - 20 * static_cast<int>(BShopStates(::bof3::Img(shop_states::at::kCount.v)));
+site	src/game/shop/field_save.cpp	254	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	const auto count = static_cast<unsigned char>(BShopStates(::bof3::Img(shop_states::at::kCount.v)) - 1);
+site	src/game/shop/field_save.cpp	255	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	BShopStates(::bof3::Img(shop_states::at::kCount.v)) = count;
+site	src/game/shop/field_save.cpp	272	at_global	-	shop_states::at::kFormatD	0x5e10c0	data	game	field	base_helper	Area08_MessageFormat	-	shop_states::g.sprintf_(reinterpret_cast<char*>(AtShopStates(::bof3::Img(shop_states::at::kText.v))), reinterpret_cast<const char*>(AtShopStates(::bof3::Img(sho
+site	src/game/shop/field_save.cpp	272	at_global	-	shop_states::at::kText	0x904ba0	data	game	field	base_helper	-	-	shop_states::g.sprintf_(reinterpret_cast<char*>(AtShopStates(::bof3::Img(shop_states::at::kText.v))), reinterpret_cast<const char*>(AtShopStates(::bof3::Img(sho
+site	src/game/shop/field_save.cpp	274	at_global	-	shop_states::at::kText	0x904ba0	data	game	field	base_helper	-	-	shop_states::g.text_record(0, 8, AtShopStates(::bof3::Img(shop_states::at::kText.v)));
+site	src/game/shop/field_save.cpp	278	at_global	-	shop_states::at::kMsgFlags	0x7dee44	data	game	field	base_helper	-	-	if ((BShopStates(::bof3::Img(shop_states::at::kMsgFlags.v)) & 2) == 0) return;
+site	src/game/shop/field_save.cpp	280	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	BShopStates(::bof3::Img(shop_states::at::kCount.v)) = 6;
+site	src/game/shop/field_save.cpp	289	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	shop_states::g.choices(0x6E - 48 * static_cast<int>(BShopStates(::bof3::Img(shop_states::at::kCount.v))), 0x4C);
+site	src/game/shop/field_save.cpp	295	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	const auto count = static_cast<unsigned char>(BShopStates(::bof3::Img(shop_states::at::kCount.v)) - 1);
+site	src/game/shop/field_save.cpp	296	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	BShopStates(::bof3::Img(shop_states::at::kCount.v)) = count;
+site	src/game/shop/field_save.cpp	321	at_global	-	shop_states::at::kPressed	0x7e1bec	data	game	field	base_helper	Input_Pressed	-	shop_states::U pad = LongShopStates(::bof3::Img(shop_states::at::kPressed.v));
+site	src/game/shop/field_save.cpp	345	at_global	-	shop_states::at::kPressed	0x7e1bec	data	game	field	base_helper	Input_Pressed	-	pad = LongShopStates(::bof3::Img(shop_states::at::kPressed.v));
+site	src/game/shop/field_save.cpp	348	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	BShopStates(::bof3::Img(shop_states::at::kCount.v)) = 0;
+site	src/game/shop/field_save.cpp	368	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	BShopStates(::bof3::Img(shop_states::at::kCount.v)) = 0;
+site	src/game/shop/field_save.cpp	392	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	shop_states::g.choices(0x6E + 48 * static_cast<int>(BShopStates(::bof3::Img(shop_states::at::kCount.v))), 0x4C);
+site	src/game/shop/field_save.cpp	395	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	const auto count = static_cast<unsigned char>(BShopStates(::bof3::Img(shop_states::at::kCount.v)) + 1);
+site	src/game/shop/field_save.cpp	396	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	BShopStates(::bof3::Img(shop_states::at::kCount.v)) = count;
+site	src/game/shop/field_save.cpp	400	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	BShopStates(::bof3::Img(shop_states::at::kCount.v)) = 0;
+site	src/game/shop/field_save.cpp	406	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	BShopStates(::bof3::Img(shop_states::at::kCount.v)) = cursor != 0 ? 0 : 0x2D;
+site	src/game/shop/field_save.cpp	429	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	const auto count = static_cast<unsigned char>(BShopStates(::bof3::Img(shop_states::at::kCount.v)) - 1);
+site	src/game/shop/field_save.cpp	430	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	BShopStates(::bof3::Img(shop_states::at::kCount.v)) = count;
+site	src/game/shop/field_save.cpp	457	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	BShopStates(::bof3::Img(shop_states::at::kCount.v)) = 0x96;
+site	src/game/shop/field_save.cpp	466	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	unsigned char count = BShopStates(::bof3::Img(shop_states::at::kCount.v));
+site	src/game/shop/field_save.cpp	469	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	BShopStates(::bof3::Img(shop_states::at::kCount.v)) = count;
+site	src/game/shop/field_save.cpp	494	at_global	-	shop_states::at::kRepeatLatch	0x7e01b8	data	game	field	base_helper	-	-	PutWordShopStates(::bof3::Img(shop_states::at::kRepeatLatch.v), 0);
+site	src/game/shop/field_save.cpp	506	at_global	-	shop_states::at::kMsgFlags	0x7dee44	data	game	field	base_helper	-	-	if (BShopStates(::bof3::Img(shop_states::at::kMsgFlags.v)) & 2) FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
+site	src/game/shop/field_save.cpp	519	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	BShopStates(::bof3::Img(shop_states::at::kCount.v)) = 0;
+site	src/game/shop/field_save.cpp	539	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	BShopStates(::bof3::Img(shop_states::at::kCount.v)) = 4;
+site	src/game/shop/field_save.cpp	541	at_global	-	shop_states::at::kSlotTop	0x8034d0	data	game	field	base_helper	MoveScript_PartyRecords+0x50	-	PutLong(::bof3::Img(shop_states::at::kSlotTop.v), 0);
+site	src/game/shop/field_save.cpp	554	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	if (BShopStates(::bof3::Img(shop_states::at::kCount.v)) == 4) shop_states::g.play(0x102);
+site	src/game/shop/field_save.cpp	556	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	shop_states::g.slots(0x20 - 80 * static_cast<int>(BShopStates(::bof3::Img(shop_states::at::kCount.v))), 0x30, 1);
+site	src/game/shop/field_save.cpp	557	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	const auto count = static_cast<unsigned char>(BShopStates(::bof3::Img(shop_states::at::kCount.v)) - 1);
+site	src/game/shop/field_save.cpp	558	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	BShopStates(::bof3::Img(shop_states::at::kCount.v)) = count;
+site	src/game/shop/field_save.cpp	576	at_global	-	shop_states::at::kSlot	0x9036d4	data	game	field	base_helper	Rest2c_Slot	-	shop_states::U slot = LongShopStates(::bof3::Img(shop_states::at::kSlot.v));
+site	src/game/shop/field_save.cpp	579	at_global	-	shop_states::at::kSlotTop	0x8034d0	data	game	field	base_helper	MoveScript_PartyRecords+0x50	-	const shop_states::U top = LongShopStates(::bof3::Img(shop_states::at::kSlotTop.v));
+site	src/game/shop/field_save.cpp	582	at_global	-	shop_states::at::kSlotTop	0x8034d0	data	game	field	base_helper	MoveScript_PartyRecords+0x50	-	if (static_cast<int>(slot) < static_cast<int>(top)) PutLong(::bof3::Img(shop_states::at::kSlotTop.v), top - 1);
+site	src/game/shop/field_save.cpp	584	at_global	-	shop_states::at::kSlotTop	0x8034d0	data	game	field	base_helper	MoveScript_PartyRecords+0x50	-	const shop_states::U limit = LongShopStates(::bof3::Img(shop_states::at::kSlotTop.v)) + 2;
+site	src/game/shop/field_save.cpp	587	at_global	-	shop_states::at::kSlotTop	0x8034d0	data	game	field	base_helper	MoveScript_PartyRecords+0x50	-	if (static_cast<int>(slot) > static_cast<int>(limit)) PutLong(::bof3::Img(shop_states::at::kSlotTop.v), LongShopStates(::bof3::Img(shop_states::at::kSlotTop.v))
+site	src/game/shop/field_save.cpp	587	at_global	-	shop_states::at::kSlotTop	0x8034d0	data	game	field	base_helper	MoveScript_PartyRecords+0x50	-	if (static_cast<int>(slot) > static_cast<int>(limit)) PutLong(::bof3::Img(shop_states::at::kSlotTop.v), LongShopStates(::bof3::Img(shop_states::at::kSlotTop.v))
+site	src/game/shop/field_save.cpp	643	at_global	-	rest_2c::at::kPath	0x904ba0	data	game	field	base_helper	-	-	SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath.v))), reinterpret_cast<const char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath
+site	src/game/shop/field_save.cpp	643	at_global	-	rest_2c::at::kPathFormat	0x664068	data	game	field	base_helper	-	-	SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath.v))), reinterpret_cast<const char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath
+site	src/game/shop/field_save.cpp	644	at_global	-	rest_2c::at::kPath	0x904ba0	data	game	field	base_helper	-	-	const int written = SH_CALL(Save_WriteFile)(reinterpret_cast<const char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath.v))), rest_2c::at::kSaveSize);
+site	src/game/shop/field_save.cpp	648	at_global	-	rest_2c::at::kTimer	0x929f04	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(rest_2c::at::kTimer.v)) = 0x1E;
+site	src/game/shop/field_save.cpp	665	at_global	-	rest_2c::at::kTimer	0x929f04	data	game	field	base_helper	-	-	const auto timer = static_cast<unsigned char>(BRest2c(::bof3::Img(rest_2c::at::kTimer.v)) - 1);
+site	src/game/shop/field_save.cpp	666	at_global	-	rest_2c::at::kTimer	0x929f04	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(rest_2c::at::kTimer.v)) = timer;
+site	src/game/shop/field_save.cpp	669	at_global	-	rest_2c::at::kTimer	0x929f04	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(rest_2c::at::kTimer.v)) = 0;
+site	src/game/shop/field_save.cpp	679	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	shop_states::g.slots(0x20 + 80 * static_cast<int>(BShopStates(::bof3::Img(shop_states::at::kCount.v))), 0x30, 0);
+site	src/game/shop/field_save.cpp	680	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	const auto count = static_cast<unsigned char>(BShopStates(::bof3::Img(shop_states::at::kCount.v)) + 1);
+site	src/game/shop/field_save.cpp	681	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	BShopStates(::bof3::Img(shop_states::at::kCount.v)) = count;
+site	src/game/shop/field_save.cpp	701	at_global	-	shop_states::at::kRepeatLatch	0x7e01b8	data	game	field	base_helper	-	-	PutWordShopStates(::bof3::Img(shop_states::at::kRepeatLatch.v), 0);
+site	src/game/shop/field_save.cpp	708	at_global	-	shop_states::at::kCount	0x929f04	data	game	field	base_helper	-	-	BShopStates(::bof3::Img(shop_states::at::kCount.v)) = 0;
+site	src/game/shop/field_save.cpp	718	at_global	-	rest_2c::at::kMsgFlags	0x7dee44	data	game	field	base_helper	-	-	if ((BRest2c(::bof3::Img(rest_2c::at::kMsgFlags.v)) & 2) == 0) return;
+site	src/game/shop/field_save.cpp	720	at_global	-	rest_2c::at::kTimer	0x929f04	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(rest_2c::at::kTimer.v)) = 0;
+site	src/game/shop/field_save.cpp	735	at_global	-	rest_2c::at::kTimer	0x929f04	data	game	field	base_helper	-	-	const int y = 0x12 - 20 * static_cast<int>(BRest2c(::bof3::Img(rest_2c::at::kTimer.v)));
+site	src/game/shop/field_save.cpp	737	at_global	-	rest_2c::at::kTimer	0x929f04	data	game	field	base_helper	-	-	const auto timer = static_cast<unsigned char>(BRest2c(::bof3::Img(rest_2c::at::kTimer.v)) + 1);
+site	src/game/shop/field_save.cpp	738	at_global	-	rest_2c::at::kTimer	0x929f04	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(rest_2c::at::kTimer.v)) = timer;
+site	src/game/shop/field_save.cpp	818	at_global	-	field_s::at::kPlaceTable	0x663fd8	data	game	field	base_helper	-	-	const U row = ::bof3::Img(field_s::at::kPlaceTable) + 16 * (3 * kind + i);
+site	src/game/shop/field_save.cpp	832	at_global	-	field_s::at::kAreaDescriptors	0x667590	data	game	field	base_helper	Area_Descriptors	-	const U descriptor = L(::bof3::Img(field_s::at::kAreaDescriptors) + 4 * static_cast<std::uint32_t>(Game_AreaNumber));
+site	src/game/shop/field_save.cpp	845	at_global	-	rest_2c::at::kTimer	0x929f04	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(rest_2c::at::kTimer.v)) = 0x96;
+site	src/game/shop/field_save.cpp	854	at_global	-	rest_2c::at::kTimer	0x929f04	data	game	field	base_helper	-	-	const unsigned char timer = BRest2c(::bof3::Img(rest_2c::at::kTimer.v));
+site	src/game/shop/field_save.cpp	856	at_global	-	rest_2c::at::kTimer	0x929f04	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(rest_2c::at::kTimer.v)) = static_cast<unsigned char>(timer - 1);
+site	src/game/shop/field_save.cpp	881	at_global	-	rest_2c::at::kMsgFlags	0x7dee44	data	game	field	base_helper	-	-	if ((BRest2c(::bof3::Img(rest_2c::at::kMsgFlags.v)) & 2) == 0) return;
+site	src/game/shop/field_save.cpp	911	at_global	-	save_menu::at::kFlagsA	0x904654	data	game	field	base_helper	-	-	if (save_menu::g.flags_test(AtSaveMenu(::bof3::Img(save_menu::at::kFlagsA.v)), 4) == 0) return;
+site	src/game/shop/field_save.cpp	912	at_global	-	save_menu::at::kFlagsB	0x904657	data	game	field	base_helper	-	-	if (save_menu::g.flags_test(AtSaveMenu(::bof3::Img(save_menu::at::kFlagsB.v)), 4) != 0) return;
+site	src/game/shop/field_save.cpp	937	at_global	-	rest_2c::at::kBlock	0x9039e0	data	game	field	base_helper	-	-	PutL(::bof3::Img(rest_2c::at::kBlock.v), LRest2c(::bof3::Img(0x8034E0)));
+site	src/game/shop/field_save.cpp	937	base_offset	-	0x8034E0	0x8034e0	data	game	field	base_helper	Cond_ByteFA	-	PutL(::bof3::Img(rest_2c::at::kBlock.v), LRest2c(::bof3::Img(0x8034E0)));
+site	src/game/shop/field_save.cpp	938	at_global	-	rest_2c::at::kBlock	0x9039e0	data	game	field	base_helper	-	-	PutL(::bof3::Img(rest_2c::at::kBlock.v) + 4, LRest2c(::bof3::Img(0x8034E4)));
+site	src/game/shop/field_save.cpp	938	base_offset	-	0x8034E4	0x8034e4	data	game	field	base_helper	MoveScript_Var7	-	PutL(::bof3::Img(rest_2c::at::kBlock.v) + 4, LRest2c(::bof3::Img(0x8034E4)));
+site	src/game/shop/field_save.cpp	939	at_global	-	rest_2c::at::kBlock	0x9039e0	data	game	field	base_helper	-	-	PutL(::bof3::Img(rest_2c::at::kBlock.v) + 0xC, LRest2c(::bof3::Img(0x8034EC)));
+site	src/game/shop/field_save.cpp	939	base_offset	-	0x8034EC	0x8034ec	data	game	field	base_helper	MoveScript_PartyRecords+0x6c	-	PutL(::bof3::Img(rest_2c::at::kBlock.v) + 0xC, LRest2c(::bof3::Img(0x8034EC)));
+site	src/game/shop/field_save.cpp	940	base_offset	-	0x903848	0x903848	data	game	field	base_helper	-	-	const U counters = LRest2c(::bof3::Img(0x903848));
+site	src/game/shop/field_save.cpp	941	at_global	-	rest_2c::at::kBlock	0x9039e0	data	game	field	base_helper	-	-	PutL(::bof3::Img(rest_2c::at::kBlock.v) + 8, LRest2c(::bof3::Img(0x8034E8)));
+site	src/game/shop/field_save.cpp	941	base_offset	-	0x8034E8	0x8034e8	data	game	field	base_helper	Field_StepCountPrev	-	PutL(::bof3::Img(rest_2c::at::kBlock.v) + 8, LRest2c(::bof3::Img(0x8034E8)));
+site	src/game/shop/field_save.cpp	942	base_offset	-	0x903A00	0x903a00	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(0x903A00)) = static_cast<unsigned char>(counters);
+site	src/game/shop/field_save.cpp	943	base_offset	-	0x903A01	0x903a01	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(0x903A01)) = static_cast<unsigned char>(counters >> 8);
+site	src/game/shop/field_save.cpp	944	base_offset	-	0x90384A	0x90384a	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(0x903A02)) = BRest2c(::bof3::Img(0x90384A));
+site	src/game/shop/field_save.cpp	944	base_offset	-	0x903A02	0x903a02	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(0x903A02)) = BRest2c(::bof3::Img(0x90384A));
+site	src/game/shop/field_save.cpp	945	base_offset	-	0x802D74	0x802d74	data	game	field	base_helper	ObjTrio+0x34	-	PutL(::bof3::Img(0x903A08), LRest2c(::bof3::Img(0x802D74)));
+site	src/game/shop/field_save.cpp	945	base_offset	-	0x903A08	0x903a08	data	game	field	base_helper	-	-	PutL(::bof3::Img(0x903A08), LRest2c(::bof3::Img(0x802D74)));
+site	src/game/shop/field_save.cpp	946	base_offset	-	0x802D78	0x802d78	data	game	field	base_helper	ObjTrio+0x38	-	PutL(::bof3::Img(0x903A0C), LRest2c(::bof3::Img(0x802D78)));
+site	src/game/shop/field_save.cpp	946	base_offset	-	0x903A0C	0x903a0c	data	game	field	base_helper	-	-	PutL(::bof3::Img(0x903A0C), LRest2c(::bof3::Img(0x802D78)));
+site	src/game/shop/field_save.cpp	947	base_offset	-	0x903A07	0x903a07	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(0x903A07)) = ObjTrio[0].direction;
+site	src/game/shop/field_save.cpp	948	base_offset	-	0x903580	0x903580	data	game	field	base_helper	Gfx_UnpackScratch+0x1f000	-	SaveMenu_SavedButtons = LRest2c(::bof3::Img(0x903580));
+site	src/game/shop/field_save.cpp	949	base_offset	-	0x903588	0x903588	data	game	field	base_helper	Gfx_UnpackScratch+0x1f008	-	PutL(::bof3::Img(0x9046A4), LRest2c(::bof3::Img(0x903588)));
+site	src/game/shop/field_save.cpp	949	base_offset	-	0x9046A4	0x9046a4	data	game	field	base_helper	-	-	PutL(::bof3::Img(0x9046A4), LRest2c(::bof3::Img(0x903588)));
+site	src/game/shop/field_save.cpp	950	base_offset	-	0x90384B	0x90384b	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(0x903A03)) = BRest2c(::bof3::Img(0x90384B));
+site	src/game/shop/field_save.cpp	950	base_offset	-	0x903A03	0x903a03	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(0x903A03)) = BRest2c(::bof3::Img(0x90384B));
+site	src/game/shop/field_save.cpp	951	base_offset	-	0x90358C	0x90358c	data	game	field	base_helper	Gfx_UnpackScratch+0x1f00c	-	PutL(::bof3::Img(0x9046A8), LRest2c(::bof3::Img(0x90358C)));
+site	src/game/shop/field_save.cpp	951	base_offset	-	0x9046A8	0x9046a8	data	game	field	base_helper	-	-	PutL(::bof3::Img(0x9046A8), LRest2c(::bof3::Img(0x90358C)));
+site	src/game/shop/field_save.cpp	953	base_offset	-	0x903584	0x903584	data	game	field	base_helper	Field_MenuButton	-	PutL(::bof3::Img(0x9046A0), LRest2c(::bof3::Img(0x903584)));
+site	src/game/shop/field_save.cpp	953	base_offset	-	0x9046A0	0x9046a0	data	game	field	base_helper	-	-	PutL(::bof3::Img(0x9046A0), LRest2c(::bof3::Img(0x903584)));
+site	src/game/shop/field_save.cpp	954	at_global	-	rest_2c::at::kMemberRecord	0x66972c	data	game	field	base_helper	Character_IndexById	-	const unsigned record = BRest2c(::bof3::Img(rest_2c::at::kMemberRecord.v) + Cond_Flags[0xd2]);
+site	src/game/shop/field_save.cpp	955	base_offset	-	0x9046AC	0x9046ac	data	game	field	base_helper	-	-	PutW(::bof3::Img(0x9046AC), Field_CancelButtons);
+site	src/game/shop/field_save.cpp	956	base_offset	-	0x903A50	0x903a50	data	game	field	base_helper	-	-	PutW(::bof3::Img(0x903A50), 0);
+site	src/game/shop/field_save.cpp	958	at_global	-	rest_2c::at::kSummary	0x904680	data	game	field	base_helper	-	-	SH_CALL(Crt_strncpy)(reinterpret_cast<char*>(AtRest2c(::bof3::Img(rest_2c::at::kSummary.v))), reinterpret_cast<const char*>(AtRest2c(name)), 5);
+site	src/game/shop/field_save.cpp	959	base_offset	-	0x904696	0x904696	data	game	field	base_helper	-	-	SH_CALL(Crt_strncpy)(reinterpret_cast<char*>(AtRest2c(::bof3::Img(0x904696))), reinterpret_cast<const char*>(AtRest2c(name + 5)), 4);
+site	src/game/shop/field_save.cpp	960	at_global	-	rest_2c::at::kPartyList	0x904062	data	game	field	base_helper	Cond_Flags+0xd2	-	for (unsigned i = 0; i < 3; ++i) BRest2c(::bof3::Img(rest_2c::at::kPartyList.v) + 0x623 + i) = FormOf(BRest2c(::bof3::Img(rest_2c::at::kPartyList.v) + i));
+site	src/game/shop/field_save.cpp	960	at_global	-	rest_2c::at::kPartyList	0x904062	data	game	field	base_helper	Cond_Flags+0xd2	-	for (unsigned i = 0; i < 3; ++i) BRest2c(::bof3::Img(rest_2c::at::kPartyList.v) + 0x623 + i) = FormOf(BRest2c(::bof3::Img(rest_2c::at::kPartyList.v) + i));
+site	src/game/shop/field_save.cpp	961	base_offset	-	0x903A7A	0x903a7a	data	game	field	base_helper	CharacterRecords+0xa	-	BRest2c(::bof3::Img(0x904688)) = BRest2c(::bof3::Img(0x903A7A));
+site	src/game/shop/field_save.cpp	961	base_offset	-	0x904688	0x904688	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(0x904688)) = BRest2c(::bof3::Img(0x903A7A));
+site	src/game/shop/field_save.cpp	962	base_offset	-	0x9040C8	0x9040c8	data	game	field	base_helper	-	-	PutL(::bof3::Img(0x90468C), LRest2c(::bof3::Img(0x9040C8)));
+site	src/game/shop/field_save.cpp	962	base_offset	-	0x90468C	0x90468c	data	game	field	base_helper	-	-	PutL(::bof3::Img(0x90468C), LRest2c(::bof3::Img(0x9040C8)));
+site	src/game/shop/field_save.cpp	963	base_offset	-	0x904689	0x904689	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(0x904689)) = static_cast<unsigned char>(Config_WindowColour);
+site	src/game/shop/field_save.cpp	964	base_offset	-	0x90468A	0x90468a	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(0x90468A)) = Config_Background;
+site	src/game/shop/field_save.cpp	965	base_offset	-	0x903A7C	0x903a7c	data	game	field	base_helper	CharacterRecords+0xc	-	PutL(::bof3::Img(0x904690), LRest2c(::bof3::Img(0x903A7C)));
+site	src/game/shop/field_save.cpp	965	base_offset	-	0x904690	0x904690	data	game	field	base_helper	-	-	PutL(::bof3::Img(0x904690), LRest2c(::bof3::Img(0x903A7C)));
+site	src/game/shop/field_save.cpp	967	base_offset	-	0x904694	0x904694	data	game	field	base_helper	-	-	BRest2c(::bof3::Img(0x904694)) = flag;
+site	src/game/shop/field_save.cpp	968	base_offset	-	0x9039A2	0x9039a2	data	game	field	base_helper	Field_ScriptFlags	-	SaveMenu_ScriptFlagsSaved = BRest2c(::bof3::Img(0x9039A2));
+site	src/game/shop/field_save.cpp	971	at_global	-	rest_2c::at::kBlock	0x9039e0	data	game	field	base_helper	-	-	const unsigned char v = BRest2c(::bof3::Img(rest_2c::at::kBlock.v) + i);
+site	src/game/shop/field_save.cpp	972	at_global	-	rest_2c::at::kStaging	0x92a0e0	data	game	field	base_helper	Save_Staging	-	BRest2c(::bof3::Img(rest_2c::at::kStaging.v) + i) = v;
+site	src/game/shop/field_save.cpp	976	at_global	-	rest_2c::at::kChecksum	0x92a150	data	game	field	base_helper	Save_Staging+0x70	-	PutW(::bof3::Img(rest_2c::at::kChecksum.v), sum);
+site	src/game/shop/field_save.cpp	1030	at_global	-	rest_2c::at::kPath	0x904ba0	data	game	field	base_helper	-	-	SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath.v))), reinterpret_cast<const char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath
+site	src/game/shop/field_save.cpp	1030	at_global	-	rest_2c::at::kPathFormat	0x664068	data	game	field	base_helper	-	-	SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath.v))), reinterpret_cast<const char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath
+site	src/game/shop/field_save.cpp	1033	at_global	-	rest_2c::at::kPath	0x904ba0	data	game	field	base_helper	-	-	SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath.v))), reinterpret_cast<const char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath
+site	src/game/shop/field_save.cpp	1033	at_global	-	rest_2c::at::kPathFormat	0x664068	data	game	field	base_helper	-	-	SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath.v))), reinterpret_cast<const char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath
+site	src/game/shop/field_save.cpp	1034	at_global	-	rest_2c::at::kPath	0x904ba0	data	game	field	base_helper	-	-	const int written = SH_CALL(Save_WriteFile)(reinterpret_cast<const char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath.v))), rest_2c::at::kSaveSize);
 site	src/game/shop/menu_draw_helpers.cpp	127	code_const	at	at::kSlideLeftBound	0x59b446	code	game	ui	call	-	-	static_cast<int>(Widescreen_SlideBound(at::kSlideLeftBound)));
 site	src/game/shop/rest_2h.cpp	102	at_global	-	rest_2h::at::kMemberMap	0x66972c	data	game	rest	base_helper	Character_IndexById	-	U RecordOf(U id) { return BRest2h(::bof3::Img(rest_2h::at::kMemberMap.v) + (id & 0xFF)); }
 site	src/game/shop/rest_2h.cpp	104	at_global	-	rest_2h::at::kPrintBuf	0x904ba0	data	game	rest	base_helper	-	-	char* PrintBuf() { return reinterpret_cast<char*>(AtRest2h(::bof3::Img(rest_2h::at::kPrintBuf.v))); }
@@ -19254,65 +19256,67 @@ site	src/hook/log.cpp	36	module_const	-	kQueue	0x400000	base	platform	hook	subsc
 site	src/hook/log.cpp	38	module_const	-	kQueue	0x400000	base	platform	hook	subscript	-	file	char g_flight[kQueue];
 site	src/hook/log.cpp	102	range_cmp	>	kQueue	0x400000	base	platform	hook	-	-	file	if (g_queued + n > kQueue) {
 site	src/hook/log.cpp	107	range_cmp	>	kQueue	0x400000	base	platform	hook	-	-	file	if (g_queued + n > kQueue) {
-site	src/hook/snapshot.cpp	253	raw_literal	-	0x66C854	0x66c854	data	platform	hook	init	Task_SchedulerEsp	symbol	{0x66C854, 4, " "},
-site	src/hook/snapshot.cpp	254	raw_literal	-	0x6BC620	0x6bc620	data	platform	hook	init	Game_Hwnd	symbol	{0x6BC620, 4, " "},
-site	src/hook/snapshot.cpp	255	raw_literal	-	0x6BC624	0x6bc624	data	platform	hook	init	Game_HInstance	symbol	{0x6BC624, 4, " "},
-site	src/hook/snapshot.cpp	256	raw_literal	-	0x6BC628	0x6bc628	data	platform	hook	init	Frame_Deadline	symbol	{0x6BC628, 4, " "},
-site	src/hook/snapshot.cpp	257	raw_literal	-	0x6BC634	0x6bc634	data	platform	hook	init	Fps_Shown	symbol	{0x6BC634, 4, " "},
-site	src/hook/snapshot.cpp	258	raw_literal	-	0x6BC63B	0x6bc63b	data	platform	hook	init	App_Active	symbol	{0x6BC63B, 1, " "},
-site	src/hook/snapshot.cpp	259	raw_literal	-	0x65DA44	0x65da44	data	platform	hook	init	Cfg_Fullscreen	symbol	{0x65DA44, 4, " "},
-site	src/hook/snapshot.cpp	260	raw_literal	-	0x65DA48	0x65da48	data	platform	hook	init	Cfg_RenderMode	symbol	{0x65DA48, 4, " "},
-site	src/hook/snapshot.cpp	261	raw_literal	-	0x7DE7A8	0x7de7a8	data	platform	hook	init	Key_Table	symbol	{0x7DE7A8, 128, " "},
-site	src/hook/snapshot.cpp	262	raw_literal	-	0x7DE928	0x7de928	data	platform	hook	init	DInput_Object	symbol	{0x7DE928, 952, " "},
-site	src/hook/snapshot.cpp	263	raw_literal	-	0x7CC35C	0x7cc35c	data	platform	hook	init	Font_GlyphData	symbol	{0x7CC35C, 4, " "},
-site	src/hook/snapshot.cpp	264	raw_literal	-	0x6BE1D0	0x6be1d0	data	platform	hook	init	Gfx_WindowRect	symbol	{0x6BE1D0, 2096, " "},
-site	src/hook/snapshot.cpp	265	raw_literal	-	0x6C2A40	0x6c2a40	data	platform	hook	init	Gfx_ClutRows	symbol	{0x6C2A40, 0x1000, " "},
-site	src/hook/snapshot.cpp	266	raw_literal	-	0x7CC238	0x7cc238	data	platform	hook	init	D3d_DeviceDesc	symbol	{0x7CC238, 0xFC, " "},
-site	src/hook/snapshot.cpp	267	raw_literal	-	0x7CC334	0x7cc334	data	platform	hook	init	Dd_DirectDraw	symbol	{0x7CC334, 4, " "},
-site	src/hook/snapshot.cpp	268	raw_literal	-	0x7CC344	0x7cc344	data	platform	hook	init	Dd_StageSurface	symbol	{0x7CC344, 4, " "},
-site	src/hook/snapshot.cpp	269	raw_literal	-	0x7CC350	0x7cc350	data	platform	hook	init	D3d_Device	symbol	{0x7CC350, 4, " "},
-site	src/hook/snapshot.cpp	270	raw_literal	-	0x939A2C	0x939a2c	data	platform	hook	init	Desktop_Bpp	symbol	{0x939A2C, 12, " "},
-site	src/hook/snapshot.cpp	297	module_const	-	exe_layout::kDataVa	0x5da000	data	platform	hook	init	-	include	Range Rdata() { return {Img(exe_layout::kRdataVa), exe_layout::kDataVa - exe_layout::kRdataVa}; }
-site	src/hook/snapshot.cpp	297	module_const	-	exe_layout::kRdataVa	0x5c4000	data	platform	hook	base_helper	Imp_DirectDrawEnumerateA	include	Range Rdata() { return {Img(exe_layout::kRdataVa), exe_layout::kDataVa - exe_layout::kRdataVa}; }
-site	src/hook/snapshot.cpp	297	ptr_sub	two_constants	exe_layout::kRdataVa	0x5c4000	data	platform	hook	init	Imp_DirectDrawEnumerateA	include	Range Rdata() { return {Img(exe_layout::kRdataVa), exe_layout::kDataVa - exe_layout::kRdataVa}; }
-site	src/hook/snapshot.cpp	310	module_const	-	exe_layout::kDataVa	0x5da000	data	platform	hook	base_helper	-	include	if (IsExeHost()) return {{Img(exe_layout::kDataVa), exe_layout::kOwnVa - exe_layout::kDataVa}, {}};
-site	src/hook/snapshot.cpp	310	ptr_sub	runtime_left	exe_layout::kDataVa	0x5da000	data	platform	hook	init	-	include	if (IsExeHost()) return {{Img(exe_layout::kDataVa), exe_layout::kOwnVa - exe_layout::kDataVa}, {}};
-site	src/hook/snapshot.cpp	313	module_const	-	exe_layout::kBssEnd	0x93d6ec	data	platform	hook	-	-	include	const U end = (exe_layout::kBssEnd + kPage - 1) & ~(kPage - 1);
-site	src/hook/snapshot.cpp	314	module_const	-	exe_layout::kDataVa	0x5da000	data	platform	hook	base_helper	-	include	const Range image{Img(exe_layout::kDataVa), end - exe_layout::kDataVa};
-site	src/hook/snapshot.cpp	314	ptr_sub	runtime_left	exe_layout::kDataVa	0x5da000	data	platform	hook	init	-	include	const Range image{Img(exe_layout::kDataVa), end - exe_layout::kDataVa};
-site	src/hook/snapshot.cpp	572	module_const	-	span_words::kExeLo	0x400000	base	platform	hook	-	-	include	U image_base = span_words::kExeLo;
-site	src/hook/snapshot.cpp	594	addr_eq	==	Task_StackTop_addr	0x66c858	data	platform	hook	-	Task_StackTop	-	if (va == Task_StackTop_addr) return true;
-site	src/hook/snapshot.cpp	596	addr_eq	==	bof3::addr::Task_Records	0x66c7d0	data	platform	hook	-	Task_Records	-	if (va == bof3::addr::Task_Records + k * task_sched::kRecordSize + task_sched::kSavedEsp) return true;
-site	src/hook/snapshot.cpp	605	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U va = span_words::kDataLo + off;
-site	src/hook/snapshot.cpp	623	addr_eq	!=	span_words::kExeLo	0x400000	base	platform	hook	-	-	include	if (wp.image_base != span_words::kExeLo) {
-site	src/hook/snapshot.cpp	665	range_cmp	>=	span_words::kExeLo	0x400000	base	platform	hook	-	-	include	if (stored - span_words::kExeLo >= span_words::kImageExtent) break;
-site	src/hook/snapshot.cpp	665	range_cmp	>=	span_words::kImageExtent	0x587000	code	platform	hook	-	-	include	if (stored - span_words::kExeLo >= span_words::kImageExtent) break;
-site	src/hook/snapshot.cpp	666	ptr_sub	runtime_left	span_words::kExeLo	0x400000	base	platform	hook	-	-	include	*w = wp.image_base + (stored - span_words::kExeLo);
-site	src/hook/snapshot.cpp	669	ptr_sub	runtime_left	span_words::kExeLo	0x400000	base	platform	hook	-	-	include	const U low = (stored & 0xFFFFFFu) - span_words::kExeLo;
-site	src/hook/snapshot.cpp	670	range_cmp	>=	span_words::kImageExtent	0x587000	code	platform	hook	-	-	include	if (low >= span_words::kImageExtent || wp.image_base + low > 0xFFFFFFu) break;
-site	src/hook/snapshot.cpp	769	abs_call	orig	orig::Save_BuildBlock	0x5806f0	code	platform	hook	-	Save_BuildBlock	-	orig::Save_BuildBlock();
-site	src/hook/snapshot.cpp	803	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	base_helper	-	include	const U data = Img(span_words::kDataLo);
-site	src/hook/snapshot.cpp	804	ptr_sub	two_constants	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	for (U off = 0; off < span_words::kDataHi - span_words::kDataLo; off += 4) {
-site	src/hook/snapshot.cpp	804	range_cmp	<	span_words::kDataHi	0x93e000	data	platform	hook	-	-	include	for (U off = 0; off < span_words::kDataHi - span_words::kDataLo; off += 4) {
-site	src/hook/snapshot.cpp	805	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	call	-	include	if (Unnamed(span_words::kDataLo + off)) continue;
-site	src/hook/snapshot.cpp	861	addr_eq	==	exe_layout::kDataVa	0x5da000	data	platform	hook	static_assert	-	include	static_assert(span_words::kDataLo == exe_layout::kDataVa, " ");
-site	src/hook/snapshot.cpp	861	addr_eq	==	span_words::kDataLo	0x5da000	data	platform	hook	static_assert	-	include	static_assert(span_words::kDataLo == exe_layout::kDataVa, " ");
-site	src/hook/snapshot.cpp	1147	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	base_helper	-	include	const U data = Img(span_words::kDataLo);
-site	src/hook/snapshot.cpp	1151	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	call	-	include	if (off + 4 > span_words::kDataHi - span_words::kDataLo || off + 4 > h.span_bytes || Unnamed(span_words::kDataLo + off))
-site	src/hook/snapshot.cpp	1151	ptr_sub	two_constants	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	if (off + 4 > span_words::kDataHi - span_words::kDataLo || off + 4 > h.span_bytes || Unnamed(span_words::kDataLo + off))
-site	src/hook/snapshot.cpp	1151	range_cmp	>	span_words::kDataHi	0x93e000	data	platform	hook	-	-	include	if (off + 4 > span_words::kDataHi - span_words::kDataLo || off + 4 > h.span_bytes || Unnamed(span_words::kDataLo + off))
-site	src/hook/snapshot.cpp	1157	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	call	-	include	(detail.empty() ? std::string() : detail + " ") + Printf(" ", span_words::kDataLo + off) + why);
-site	src/hook/snapshot.cpp	1919	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U va = span_words::kDataLo + at;
-site	src/hook/snapshot.cpp	1949	code_const	gen_func	bof3::addr::Boot_Task	0x496b60	code	platform	hook	call	Boot_Task	-	const bool can = IsExeHost() && Bind_Active() && Bind_TableMeasured() && Bind_Rows() > 0 && Bind_Ours(bof3::addr::Boot_Task);
-site	src/hook/snapshot.cpp	1959	code_const	gen_func	bof3::addr::Boot_Task	0x496b60	code	platform	hook	base_helper	Boot_Task	-	::Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
-site	src/hook/snapshot.cpp	1962	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U va = span_words::kDataLo + off;
-site	src/hook/snapshot.cpp	1988	addr_eq	==	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	if ((e & 7) == kWordText && span_words::kDataLo + (e >> 3) * 4 == slot) ++text_words;
-site	src/hook/snapshot.cpp	1991	addr_eq	==	bof3::addr::Boot_Task	0x496b60	code	platform	hook	call	Boot_Task	-	Check(t[0].kind == kTaskCreated && t[0].name == bof3::addr::Boot_Task && t[1].kind == kTaskFree,
-site	src/hook/snapshot.cpp	2018	code_const	gen_func	bof3::addr::Boot_Task	0x496b60	code	platform	hook	base_helper	Boot_Task	-	entry == static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task)) &&
-site	src/hook/snapshot.cpp	2122	ptr_sub	runtime_left	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U ring = span_words::RuntimeSlot(3) - span_words::kDataLo;
-site	src/hook/snapshot.cpp	2132	addr_eq	==	0x401234	0x401234	code	platform	hook	call	-	-	Check(NameWord(wp, plain, 0x70001234, &kind, &stored, &np) && kind == kWordFold && stored == 0x401234,
-site	src/hook/snapshot.cpp	2139	module_const	-	span_words::kExeLo	0x400000	base	platform	hook	-	-	include	wp.image_base = span_words::kExeLo;
-site	src/hook/snapshot.cpp	2140	module_const	-	span_words::kExeLo	0x400000	base	platform	hook	call	-	include	Check(!NameWord(wp, plain, span_words::kExeLo + 0x1234, &kind, &stored, &np), " ");
+site	src/hook/region_table.cpp	41	addr_eq	!=	exe_layout::kDataVa	0x5da000	data	platform	hook	-	-	include	if (rg::kSpanVa != exe_layout::kDataVa || rg::kSpanEnd != exe_layout::kOwnVa)
+site	src/hook/region_table.cpp	44	module_const	-	exe_layout::kDataVa	0x5da000	data	platform	hook	call	-	include	rg::kSpanVa, rg::kSpanEnd, exe_layout::kDataVa, exe_layout::kOwnVa);
+site	src/hook/snapshot.cpp	254	raw_literal	-	0x66C854	0x66c854	data	platform	hook	init	Task_SchedulerEsp	symbol	{0x66C854, 4, " "},
+site	src/hook/snapshot.cpp	255	raw_literal	-	0x6BC620	0x6bc620	data	platform	hook	init	Game_Hwnd	symbol	{0x6BC620, 4, " "},
+site	src/hook/snapshot.cpp	256	raw_literal	-	0x6BC624	0x6bc624	data	platform	hook	init	Game_HInstance	symbol	{0x6BC624, 4, " "},
+site	src/hook/snapshot.cpp	257	raw_literal	-	0x6BC628	0x6bc628	data	platform	hook	init	Frame_Deadline	symbol	{0x6BC628, 4, " "},
+site	src/hook/snapshot.cpp	258	raw_literal	-	0x6BC634	0x6bc634	data	platform	hook	init	Fps_Shown	symbol	{0x6BC634, 4, " "},
+site	src/hook/snapshot.cpp	259	raw_literal	-	0x6BC63B	0x6bc63b	data	platform	hook	init	App_Active	symbol	{0x6BC63B, 1, " "},
+site	src/hook/snapshot.cpp	260	raw_literal	-	0x65DA44	0x65da44	data	platform	hook	init	Cfg_Fullscreen	symbol	{0x65DA44, 4, " "},
+site	src/hook/snapshot.cpp	261	raw_literal	-	0x65DA48	0x65da48	data	platform	hook	init	Cfg_RenderMode	symbol	{0x65DA48, 4, " "},
+site	src/hook/snapshot.cpp	262	raw_literal	-	0x7DE7A8	0x7de7a8	data	platform	hook	init	Key_Table	symbol	{0x7DE7A8, 128, " "},
+site	src/hook/snapshot.cpp	263	raw_literal	-	0x7DE928	0x7de928	data	platform	hook	init	DInput_Object	symbol	{0x7DE928, 952, " "},
+site	src/hook/snapshot.cpp	264	raw_literal	-	0x7CC35C	0x7cc35c	data	platform	hook	init	Font_GlyphData	symbol	{0x7CC35C, 4, " "},
+site	src/hook/snapshot.cpp	265	raw_literal	-	0x6BE1D0	0x6be1d0	data	platform	hook	init	Gfx_WindowRect	symbol	{0x6BE1D0, 2096, " "},
+site	src/hook/snapshot.cpp	266	raw_literal	-	0x6C2A40	0x6c2a40	data	platform	hook	init	Gfx_ClutRows	symbol	{0x6C2A40, 0x1000, " "},
+site	src/hook/snapshot.cpp	267	raw_literal	-	0x7CC238	0x7cc238	data	platform	hook	init	D3d_DeviceDesc	symbol	{0x7CC238, 0xFC, " "},
+site	src/hook/snapshot.cpp	268	raw_literal	-	0x7CC334	0x7cc334	data	platform	hook	init	Dd_DirectDraw	symbol	{0x7CC334, 4, " "},
+site	src/hook/snapshot.cpp	269	raw_literal	-	0x7CC344	0x7cc344	data	platform	hook	init	Dd_StageSurface	symbol	{0x7CC344, 4, " "},
+site	src/hook/snapshot.cpp	270	raw_literal	-	0x7CC350	0x7cc350	data	platform	hook	init	D3d_Device	symbol	{0x7CC350, 4, " "},
+site	src/hook/snapshot.cpp	271	raw_literal	-	0x939A2C	0x939a2c	data	platform	hook	init	Desktop_Bpp	symbol	{0x939A2C, 12, " "},
+site	src/hook/snapshot.cpp	298	module_const	-	exe_layout::kDataVa	0x5da000	data	platform	hook	init	-	include	Range Rdata() { return {Img(exe_layout::kRdataVa), exe_layout::kDataVa - exe_layout::kRdataVa}; }
+site	src/hook/snapshot.cpp	298	module_const	-	exe_layout::kRdataVa	0x5c4000	data	platform	hook	base_helper	Imp_DirectDrawEnumerateA	include	Range Rdata() { return {Img(exe_layout::kRdataVa), exe_layout::kDataVa - exe_layout::kRdataVa}; }
+site	src/hook/snapshot.cpp	298	ptr_sub	two_constants	exe_layout::kRdataVa	0x5c4000	data	platform	hook	init	Imp_DirectDrawEnumerateA	include	Range Rdata() { return {Img(exe_layout::kRdataVa), exe_layout::kDataVa - exe_layout::kRdataVa}; }
+site	src/hook/snapshot.cpp	311	module_const	-	exe_layout::kDataVa	0x5da000	data	platform	hook	base_helper	-	include	if (IsExeHost()) return {{Img(exe_layout::kDataVa), exe_layout::kOwnVa - exe_layout::kDataVa}, {}};
+site	src/hook/snapshot.cpp	311	ptr_sub	runtime_left	exe_layout::kDataVa	0x5da000	data	platform	hook	init	-	include	if (IsExeHost()) return {{Img(exe_layout::kDataVa), exe_layout::kOwnVa - exe_layout::kDataVa}, {}};
+site	src/hook/snapshot.cpp	314	module_const	-	exe_layout::kBssEnd	0x93d6ec	data	platform	hook	-	-	include	const U end = (exe_layout::kBssEnd + kPage - 1) & ~(kPage - 1);
+site	src/hook/snapshot.cpp	315	module_const	-	exe_layout::kDataVa	0x5da000	data	platform	hook	base_helper	-	include	const Range image{Img(exe_layout::kDataVa), end - exe_layout::kDataVa};
+site	src/hook/snapshot.cpp	315	ptr_sub	runtime_left	exe_layout::kDataVa	0x5da000	data	platform	hook	init	-	include	const Range image{Img(exe_layout::kDataVa), end - exe_layout::kDataVa};
+site	src/hook/snapshot.cpp	573	module_const	-	span_words::kExeLo	0x400000	base	platform	hook	-	-	include	U image_base = span_words::kExeLo;
+site	src/hook/snapshot.cpp	595	addr_eq	==	Task_StackTop_addr	0x66c858	data	platform	hook	-	Task_StackTop	-	if (va == Task_StackTop_addr) return true;
+site	src/hook/snapshot.cpp	597	addr_eq	==	bof3::addr::Task_Records	0x66c7d0	data	platform	hook	-	Task_Records	-	if (va == bof3::addr::Task_Records + k * task_sched::kRecordSize + task_sched::kSavedEsp) return true;
+site	src/hook/snapshot.cpp	606	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U va = span_words::kDataLo + off;
+site	src/hook/snapshot.cpp	624	addr_eq	!=	span_words::kExeLo	0x400000	base	platform	hook	-	-	include	if (wp.image_base != span_words::kExeLo) {
+site	src/hook/snapshot.cpp	666	range_cmp	>=	span_words::kExeLo	0x400000	base	platform	hook	-	-	include	if (stored - span_words::kExeLo >= span_words::kImageExtent) break;
+site	src/hook/snapshot.cpp	666	range_cmp	>=	span_words::kImageExtent	0x587000	code	platform	hook	-	-	include	if (stored - span_words::kExeLo >= span_words::kImageExtent) break;
+site	src/hook/snapshot.cpp	667	ptr_sub	runtime_left	span_words::kExeLo	0x400000	base	platform	hook	-	-	include	*w = wp.image_base + (stored - span_words::kExeLo);
+site	src/hook/snapshot.cpp	670	ptr_sub	runtime_left	span_words::kExeLo	0x400000	base	platform	hook	-	-	include	const U low = (stored & 0xFFFFFFu) - span_words::kExeLo;
+site	src/hook/snapshot.cpp	671	range_cmp	>=	span_words::kImageExtent	0x587000	code	platform	hook	-	-	include	if (low >= span_words::kImageExtent || wp.image_base + low > 0xFFFFFFu) break;
+site	src/hook/snapshot.cpp	773	abs_call	orig	orig::Save_BuildBlock	0x5806f0	code	platform	hook	-	Save_BuildBlock	-	orig::Save_BuildBlock();
+site	src/hook/snapshot.cpp	808	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	base_helper	-	include	const U data = Img(span_words::kDataLo);
+site	src/hook/snapshot.cpp	809	ptr_sub	two_constants	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	for (U off = 0; off < span_words::kDataHi - span_words::kDataLo; off += 4) {
+site	src/hook/snapshot.cpp	809	range_cmp	<	span_words::kDataHi	0x93e000	data	platform	hook	-	-	include	for (U off = 0; off < span_words::kDataHi - span_words::kDataLo; off += 4) {
+site	src/hook/snapshot.cpp	810	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	call	-	include	if (Unnamed(span_words::kDataLo + off)) continue;
+site	src/hook/snapshot.cpp	866	addr_eq	==	exe_layout::kDataVa	0x5da000	data	platform	hook	static_assert	-	include	static_assert(span_words::kDataLo == exe_layout::kDataVa, " ");
+site	src/hook/snapshot.cpp	866	addr_eq	==	span_words::kDataLo	0x5da000	data	platform	hook	static_assert	-	include	static_assert(span_words::kDataLo == exe_layout::kDataVa, " ");
+site	src/hook/snapshot.cpp	1152	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	base_helper	-	include	const U data = Img(span_words::kDataLo);
+site	src/hook/snapshot.cpp	1156	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	call	-	include	if (off + 4 > span_words::kDataHi - span_words::kDataLo || off + 4 > h.span_bytes || Unnamed(span_words::kDataLo + off))
+site	src/hook/snapshot.cpp	1156	ptr_sub	two_constants	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	if (off + 4 > span_words::kDataHi - span_words::kDataLo || off + 4 > h.span_bytes || Unnamed(span_words::kDataLo + off))
+site	src/hook/snapshot.cpp	1156	range_cmp	>	span_words::kDataHi	0x93e000	data	platform	hook	-	-	include	if (off + 4 > span_words::kDataHi - span_words::kDataLo || off + 4 > h.span_bytes || Unnamed(span_words::kDataLo + off))
+site	src/hook/snapshot.cpp	1162	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	call	-	include	(detail.empty() ? std::string() : detail + " ") + Printf(" ", span_words::kDataLo + off) + why);
+site	src/hook/snapshot.cpp	1924	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U va = span_words::kDataLo + at;
+site	src/hook/snapshot.cpp	1954	code_const	gen_func	bof3::addr::Boot_Task	0x496b60	code	platform	hook	call	Boot_Task	-	const bool can = IsExeHost() && Bind_Active() && Bind_TableMeasured() && Bind_Rows() > 0 && Bind_Ours(bof3::addr::Boot_Task);
+site	src/hook/snapshot.cpp	1964	code_const	gen_func	bof3::addr::Boot_Task	0x496b60	code	platform	hook	base_helper	Boot_Task	-	::Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
+site	src/hook/snapshot.cpp	1967	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U va = span_words::kDataLo + off;
+site	src/hook/snapshot.cpp	1993	addr_eq	==	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	if ((e & 7) == kWordText && span_words::kDataLo + (e >> 3) * 4 == slot) ++text_words;
+site	src/hook/snapshot.cpp	1996	addr_eq	==	bof3::addr::Boot_Task	0x496b60	code	platform	hook	call	Boot_Task	-	Check(t[0].kind == kTaskCreated && t[0].name == bof3::addr::Boot_Task && t[1].kind == kTaskFree,
+site	src/hook/snapshot.cpp	2023	code_const	gen_func	bof3::addr::Boot_Task	0x496b60	code	platform	hook	base_helper	Boot_Task	-	entry == static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task)) &&
+site	src/hook/snapshot.cpp	2127	ptr_sub	runtime_left	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U ring = span_words::RuntimeSlot(3) - span_words::kDataLo;
+site	src/hook/snapshot.cpp	2137	addr_eq	==	0x401234	0x401234	code	platform	hook	call	-	-	Check(NameWord(wp, plain, 0x70001234, &kind, &stored, &np) && kind == kWordFold && stored == 0x401234,
+site	src/hook/snapshot.cpp	2144	module_const	-	span_words::kExeLo	0x400000	base	platform	hook	-	-	include	wp.image_base = span_words::kExeLo;
+site	src/hook/snapshot.cpp	2145	module_const	-	span_words::kExeLo	0x400000	base	platform	hook	call	-	include	Check(!NameWord(wp, plain, span_words::kExeLo + 0x1234, &kind, &stored, &np), " ");
 site	src/hook/span_words.h	35	const_def	literal	kExeLo	0x400000	base	platform	hook	module	-	-	constexpr std::uint32_t kExeLo = 0x400000;
 site	src/hook/span_words.h	36	const_def	literal	kExeHi	0x93f000	end	platform	hook	module	-	-	constexpr std::uint32_t kExeHi = 0x93F000;
 site	src/hook/span_words.h	45	const_def	derived	kImageExtent	0x587000	code	platform	hook	module	-	-	constexpr std::uint32_t kImageExtent = exe_layout::kPoolVa + exe_layout::kPoolSize - exe_layout::kImageBase;
@@ -21838,19 +21842,20 @@ range	src/hook/host_win32.cpp	81	addr_eq	!=	image::kBase	0x400000	base	platform	
 range	src/hook/input_script.cpp	303	range_cmp	<	kPoolVa	0x93f000	end	platform	const bool in_image = place >= base && place - base < kPoolVa + kPoolSize - kImageBase;
 range	src/hook/log.cpp	102	range_cmp	>	kQueue	0x400000	base	platform	if (g_queued + n > kQueue) {
 range	src/hook/log.cpp	107	range_cmp	>	kQueue	0x400000	base	platform	if (g_queued + n > kQueue) {
-range	src/hook/snapshot.cpp	594	addr_eq	==	Task_StackTop_addr	0x66c858	data	platform	if (va == Task_StackTop_addr) return true;
-range	src/hook/snapshot.cpp	596	addr_eq	==	bof3::addr::Task_Records	0x66c7d0	data	platform	if (va == bof3::addr::Task_Records + k * task_sched::kRecordSize + task_sched::kSavedEsp) return true;
-range	src/hook/snapshot.cpp	623	addr_eq	!=	span_words::kExeLo	0x400000	base	platform	if (wp.image_base != span_words::kExeLo) {
-range	src/hook/snapshot.cpp	665	range_cmp	>=	span_words::kExeLo	0x400000	base	platform	if (stored - span_words::kExeLo >= span_words::kImageExtent) break;
-range	src/hook/snapshot.cpp	665	range_cmp	>=	span_words::kImageExtent	0x587000	code	platform	if (stored - span_words::kExeLo >= span_words::kImageExtent) break;
-range	src/hook/snapshot.cpp	670	range_cmp	>=	span_words::kImageExtent	0x587000	code	platform	if (low >= span_words::kImageExtent || wp.image_base + low > 0xFFFFFFu) break;
-range	src/hook/snapshot.cpp	804	range_cmp	<	span_words::kDataHi	0x93e000	data	platform	for (U off = 0; off < span_words::kDataHi - span_words::kDataLo; off += 4) {
-range	src/hook/snapshot.cpp	861	addr_eq	==	exe_layout::kDataVa	0x5da000	data	platform	static_assert(span_words::kDataLo == exe_layout::kDataVa, " ");
-range	src/hook/snapshot.cpp	861	addr_eq	==	span_words::kDataLo	0x5da000	data	platform	static_assert(span_words::kDataLo == exe_layout::kDataVa, " ");
-range	src/hook/snapshot.cpp	1151	range_cmp	>	span_words::kDataHi	0x93e000	data	platform	if (off + 4 > span_words::kDataHi - span_words::kDataLo || off + 4 > h.span_bytes || Unnamed(span_words::kDataLo + off))
-range	src/hook/snapshot.cpp	1988	addr_eq	==	span_words::kDataLo	0x5da000	data	platform	if ((e & 7) == kWordText && span_words::kDataLo + (e >> 3) * 4 == slot) ++text_words;
-range	src/hook/snapshot.cpp	1991	addr_eq	==	bof3::addr::Boot_Task	0x496b60	code	platform	Check(t[0].kind == kTaskCreated && t[0].name == bof3::addr::Boot_Task && t[1].kind == kTaskFree,
-range	src/hook/snapshot.cpp	2132	addr_eq	==	0x401234	0x401234	code	platform	Check(NameWord(wp, plain, 0x70001234, &kind, &stored, &np) && kind == kWordFold && stored == 0x401234,
+range	src/hook/region_table.cpp	41	addr_eq	!=	exe_layout::kDataVa	0x5da000	data	platform	if (rg::kSpanVa != exe_layout::kDataVa || rg::kSpanEnd != exe_layout::kOwnVa)
+range	src/hook/snapshot.cpp	595	addr_eq	==	Task_StackTop_addr	0x66c858	data	platform	if (va == Task_StackTop_addr) return true;
+range	src/hook/snapshot.cpp	597	addr_eq	==	bof3::addr::Task_Records	0x66c7d0	data	platform	if (va == bof3::addr::Task_Records + k * task_sched::kRecordSize + task_sched::kSavedEsp) return true;
+range	src/hook/snapshot.cpp	624	addr_eq	!=	span_words::kExeLo	0x400000	base	platform	if (wp.image_base != span_words::kExeLo) {
+range	src/hook/snapshot.cpp	666	range_cmp	>=	span_words::kExeLo	0x400000	base	platform	if (stored - span_words::kExeLo >= span_words::kImageExtent) break;
+range	src/hook/snapshot.cpp	666	range_cmp	>=	span_words::kImageExtent	0x587000	code	platform	if (stored - span_words::kExeLo >= span_words::kImageExtent) break;
+range	src/hook/snapshot.cpp	671	range_cmp	>=	span_words::kImageExtent	0x587000	code	platform	if (low >= span_words::kImageExtent || wp.image_base + low > 0xFFFFFFu) break;
+range	src/hook/snapshot.cpp	809	range_cmp	<	span_words::kDataHi	0x93e000	data	platform	for (U off = 0; off < span_words::kDataHi - span_words::kDataLo; off += 4) {
+range	src/hook/snapshot.cpp	866	addr_eq	==	exe_layout::kDataVa	0x5da000	data	platform	static_assert(span_words::kDataLo == exe_layout::kDataVa, " ");
+range	src/hook/snapshot.cpp	866	addr_eq	==	span_words::kDataLo	0x5da000	data	platform	static_assert(span_words::kDataLo == exe_layout::kDataVa, " ");
+range	src/hook/snapshot.cpp	1156	range_cmp	>	span_words::kDataHi	0x93e000	data	platform	if (off + 4 > span_words::kDataHi - span_words::kDataLo || off + 4 > h.span_bytes || Unnamed(span_words::kDataLo + off))
+range	src/hook/snapshot.cpp	1993	addr_eq	==	span_words::kDataLo	0x5da000	data	platform	if ((e & 7) == kWordText && span_words::kDataLo + (e >> 3) * 4 == slot) ++text_words;
+range	src/hook/snapshot.cpp	1996	addr_eq	==	bof3::addr::Boot_Task	0x496b60	code	platform	Check(t[0].kind == kTaskCreated && t[0].name == bof3::addr::Boot_Task && t[1].kind == kTaskFree,
+range	src/hook/snapshot.cpp	2137	addr_eq	==	0x401234	0x401234	code	platform	Check(NameWord(wp, plain, 0x70001234, &kind, &stored, &np) && kind == kWordFold && stored == 0x401234,
 range	src/hook/span_words.h	56	range_cmp	<	kImageExtent	0x587000	code	platform	if (v - folds[i] < kImageExtent) {
 range	src/hook/span_words.h	170	range_cmp	<	kDataHi	0x93e000	data	platform	for (std::uint32_t off = 0; off < kDataHi - kDataLo; off += 4) {
 range	src/hook/statehash.cpp	207	range_cmp	<	kExeHi	0x93f000	end	platform	return (v >= kExeLo && v < kExeHi) || Fold(g_folds, g_nfolds, v, &c);
@@ -23764,11 +23769,13 @@ file	src/game/core/save_menu_fuzz.cpp	fuzz	ui	code_literal	181
 file	src/game/core/save_menu_fuzz.cpp	fuzz	ui	module_const	2
 file	src/game/core/save_menu_fuzz.cpp	fuzz	ui	range_cmp	2
 file	src/game/core/save_menu_fuzz.cpp	fuzz	ui	raw_literal	26
+file	src/game/core/save_tail.cpp	game	ui	accessor	12
+file	src/game/core/save_tail.cpp	game	ui	accessor_addr	1
 file	src/game/core/sound.cpp	game	engine	abs_call	9
-file	src/game/core/sound.cpp	game	engine	accessor	137
+file	src/game/core/sound.cpp	game	engine	accessor	143
 file	src/game/core/sound.cpp	game	engine	accessor_addr	13
 file	src/game/core/sound.cpp	game	engine	asm_operand	9
-file	src/game/core/sound.cpp	game	engine	at_global	95
+file	src/game/core/sound.cpp	game	engine	at_global	97
 file	src/game/core/sound.cpp	game	engine	code_const	1
 file	src/game/core/sound.cpp	game	engine	inject	48
 file	src/game/core/sound.cpp	game	engine	module_const	4
@@ -26832,7 +26839,7 @@ file	src/game/menu/menu_windows_fuzz.cpp	fuzz	ui	value_literal	1
 file	src/game/menu/name_grid.cpp	game	ui	accessor	4
 file	src/game/menu/name_grid.cpp	game	ui	const_def_literal	2
 file	src/game/menu/name_grid.cpp	game	ui	module_const	2
-file	src/game/menu/quick_menu.cpp	game	ui	accessor	13
+file	src/game/menu/quick_menu.cpp	game	ui	accessor	26
 file	src/game/menu/rest_2g_fuzz.cpp	fuzz	rest	accessor_addr	26
 file	src/game/menu/rest_2g_fuzz.cpp	fuzz	rest	at_global	5
 file	src/game/menu/rest_2g_fuzz.cpp	fuzz	rest	code_const	29
@@ -27613,7 +27620,7 @@ file	src/game/shop/field_s_fuzz.cpp	fuzz	field	code_const	50
 file	src/game/shop/field_s_fuzz.cpp	fuzz	field	code_literal	352
 file	src/game/shop/field_s_fuzz.cpp	fuzz	field	ptr_sub	1
 file	src/game/shop/field_s_fuzz.cpp	fuzz	field	raw_literal	33
-file	src/game/shop/field_save.cpp	game	field	accessor	201
+file	src/game/shop/field_save.cpp	game	field	accessor	203
 file	src/game/shop/field_save.cpp	game	field	accessor_addr	12
 file	src/game/shop/field_save.cpp	game	field	at_global	85
 file	src/game/shop/field_save.cpp	game	field	base_offset	36
@@ -27866,6 +27873,8 @@ file	src/hook/input_script.cpp	platform	hook	range_cmp	1
 file	src/hook/log.cpp	platform	hook	const_def_derived	1
 file	src/hook/log.cpp	platform	hook	module_const	2
 file	src/hook/log.cpp	platform	hook	range_cmp	2
+file	src/hook/region_table.cpp	platform	hook	addr_eq	1
+file	src/hook/region_table.cpp	platform	hook	module_const	1
 file	src/hook/snapshot.cpp	platform	hook	abs_call	1
 file	src/hook/snapshot.cpp	platform	hook	accessor	31
 file	src/hook/snapshot.cpp	platform	hook	accessor_addr	8
@@ -27913,33 +27922,33 @@ file	src/launcher/ui/main.cpp	launcher	launcher	addr_eq	1
 file	src/render/gfx_snapshot.cpp	platform	render	accessor	30
 file	src/render/gfx_snapshot.cpp	platform	render	base_offset	22
 file	src/render/render_shim.cpp	platform	render	accessor	8
-#count sites	125989
-#count sites_game	57291
-#count sites_platform	799
+#count sites	126027
+#count sites_game	57327
+#count sites_platform	801
 #count sites_hosted	302
 #count sites_fuzz	67580
 #count sites_launcher	17
-#count class_accessor	27345
-#count class_accessor_game	23719
+#count class_accessor	27378
+#count class_accessor_game	23752
 #count class_accessor_platform	184
 #count class_accessor_hosted	0
 #count class_accessor_fuzz	3441
 #count class_accessor_launcher	1
-#count class_accessor_addr	13497
-#count class_accessor_addr_game	6174
+#count class_accessor_addr	13498
+#count class_accessor_addr_game	6175
 #count class_accessor_addr_platform	29
 #count class_accessor_addr_hosted	0
 #count class_accessor_addr_fuzz	7286
 #count class_accessor_addr_launcher	8
-#count class_at_global	7109
-#count class_at_global_game	5488
+#count class_at_global	7111
+#count class_at_global_game	5490
 #count class_at_global_platform	1
 #count class_at_global_hosted	0
 #count class_at_global_fuzz	1620
 #count class_at_global_launcher	0
-#count class_module_const	3573
+#count class_module_const	3574
 #count class_module_const_game	2309
-#count class_module_const_platform	161
+#count class_module_const_platform	162
 #count class_module_const_hosted	0
 #count class_module_const_fuzz	1101
 #count class_module_const_launcher	2
@@ -27985,9 +27994,9 @@ file	src/render/render_shim.cpp	platform	render	accessor	8
 #count class_range_cmp_hosted	0
 #count class_range_cmp_fuzz	114
 #count class_range_cmp_launcher	0
-#count class_addr_eq	2131
+#count class_addr_eq	2132
 #count class_addr_eq_game	60
-#count class_addr_eq_platform	38
+#count class_addr_eq_platform	39
 #count class_addr_eq_hosted	172
 #count class_addr_eq_fuzz	1858
 #count class_addr_eq_launcher	3
@@ -28044,13 +28053,13 @@ file	src/render/render_shim.cpp	platform	render	accessor	8
 #count constexpr_context_refs_nonfuzz	185
 #count ptr_sub_two_constants	64
 #count range_helper_calls	17
-#count files_with_sites	1241
-#count files_with_sites_nonfuzz	971
+#count files_with_sites	1243
+#count files_with_sites_nonfuzz	973
 #count gate_asm_operand	66
 #count gate_asm_text	0
 #count gate_abs_call	1414
 #count gate_range_cmp	95
-#count gate_addr_eq	98
+#count gate_addr_eq	99
 #count gate_ptr_sub	59
 #count gate_const_def_literal	3012
 #count gate_raw_literal	686
@@ -28059,7 +28068,7 @@ file	src/render/render_shim.cpp	platform	render	accessor	8
 #gate asm_text	0
 #gate abs_call	1414
 #gate range_cmp	95
-#gate addr_eq	98
+#gate addr_eq	99
 #gate ptr_sub	59
 #gate const_def_literal	3012
 #gate raw_literal	686

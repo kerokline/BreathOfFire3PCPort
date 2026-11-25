@@ -26,6 +26,7 @@
 #include "game/draw_pool_room.h"
 #include "game/msg_pool.h"
 #include "game/psp_code.h"
+#include "game/save_tail.h"
 #include "game/task_sched_callees.h"
 #include "hook/bind.h"
 #include "hook/detour.h"
@@ -764,10 +765,14 @@ using SaveHalfFn = void (*)(unsigned char* to);
 // summary into this slot's list entry and ours aborts past 16 (rest_2c.cpp
 // SummaryOf); F12's Save_QuickWrite sets it to 0 first, and so does the take
 // (the span is put back afterwards, so the game never sees either write).
+// The state-by-name round's A4 (ledger draft C, game/save_tail.h): the tail
+// after the block holds the came-from place, as F12's save and a save point's
+// hold it, written in the copy (the take's live words are the game's).
 void GameSaveHalf(unsigned char* to) {
     Rest2c_Slot = 0;
     orig::Save_BuildBlock();
     std::memcpy(to, Save_Staging, kSaveHalf);
+    SaveTail_Write(to + save_tail::kBlockBytes);
 }
 
 // The file's bytes, the build fields left for Stamp. Between frames, on the

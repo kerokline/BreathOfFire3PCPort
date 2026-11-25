@@ -511,6 +511,21 @@ The switch: `SaveLists`, a `PatchBytes` of a flag of ours set by
   overlay line alone would not show: with our back buffer the loop's
   `Overlay` writes it to the log, not the screen.
 
+- **Amended 2026-11-25 (the state-by-name round's group A4, ledger draft B;
+  [`state-by-name-tier0.md`](state-by-name-tier0.md) 2): a refusal whose
+  save half is whole asks a second question.** When the core refuses a load
+  for its build or process and the file's save half sums as a save
+  (`Snapshot_LastLoad()` answers `RefusedSaveOffered`), the menu stays on the
+  refused slot with the game's Yes / No in the title box (the hand on Yes) and,
+  below the slots in the 8 x 8 font, the reason and `LOAD THE SAVE IN THIS
+  QUICKSAVE?`. No or cancel goes back to the slots, the game untouched. Yes
+  reads the save half (`Snapshot_ReadSaveHalf`), asks the restart F9's second
+  press asks (`Game_RestartFlag`), puts the title's task to its state 7 once it
+  has begun (where Start on the logo leads), and the title menu's first step
+  goes to `LoadMenu_Read` with the save half as the bytes read; the rest is the
+  title's load of a save. F7 asks nothing: its line adds "- use F5 to load the
+  save in it". No slot is marked before a load is tried (the owner's call 3).
+
 `Snapshot_LastLine` is the one addition to SN's files: an accessor of the
 line `Show` last wrote (`g_overlay`).
 

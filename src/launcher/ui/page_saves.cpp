@@ -100,6 +100,7 @@ struct State {
     Entry opened;                 // where the open save came from
     std::wstring opened_path;     // its file, for kPcFile and kCardSave
     std::vector<std::uint8_t> opened_header;   // a card save's 0x200 bytes before the block: its icon goes with it
+    save::Tail opened_tail{};     // a PC file's 0x200 bytes after the block (the came-from place): kept on a write
     save::Block original{}, block{};
 
     // The memory card that the two file boxes show. One at a time.
@@ -467,6 +468,7 @@ bool AttachCard(State& s, const std::wstring& path, bool may_be_new) {
 // open.
 void Open(State& s, const Entry& entry, const std::wstring& path, std::function<void(bool)> done = {}) {
     save::Block b;
+    save::Tail tail{};   // zero for a card's save: the card holds no PC tail
     std::string why;
     bool ok = false;
     std::vector<std::uint8_t> header;
@@ -480,11 +482,11 @@ void Open(State& s, const Entry& entry, const std::wstring& path, std::function<
             }
         if (ok) header.assign(save::CardHeader(s.card, entry.slot), save::CardHeader(s.card, entry.slot) + 0x200);
     } else {
-        ok = save::ReadPcFile(path, b, why);
+        ok = save::ReadPcFile(path, b, tail, why);
         if (!ok && entry.kind == Kind::kPcSlot && !Exists(path)) why = "This slot is empty.";
     }
     const std::wstring card_path = s.card_path;
-    auto finish = [&s, entry, path, opened, b, header = std::move(header), card_path, done](bool good) mutable {
+    auto finish = [&s, entry, path, opened, b, tail, header = std::move(header), card_path, done](bool good) mutable {
         if (!good) {
             s.source_sel = OpenedRow(s, s.sources);
             if (done) done(false);
@@ -494,6 +496,7 @@ void Open(State& s, const Entry& entry, const std::wstring& path, std::function<
         s.opened = opened;
         s.opened_path = entry.kind == Kind::kCardSave ? card_path : path;
         s.opened_header = std::move(header);
+        s.opened_tail = tail;
         s.original = s.block = b;
         const Entry same{opened.kind, opened.slot, {}, -1};
         FillSlots(s, &same);
@@ -604,6 +607,7 @@ struct SaveJob {
     bool to_card = false, from_card = false;
     std::wstring path;
     save::Block out{};
+    save::Tail tail{};   // a PC target's tail: the opened file's, kept (save::KeptTail)
 };
 
 // The write, after the questions.
@@ -639,7 +643,7 @@ void SaveWrite(State& s, const SaveJob& job) {
             }
         header.assign(save::CardHeader(s.card, slot), save::CardHeader(s.card, slot) + 0x200);
     } else {
-        if (!save::WritePcFile(job.path, job.out, backups, backup, why)) {
+        if (!save::WritePcFile(job.path, job.out, job.tail, backups, backup, why)) {
             Tell(s, why, true);
             return;
         }
@@ -649,6 +653,7 @@ void SaveWrite(State& s, const SaveJob& job) {
     s.opened = now;
     s.opened_path = job.path;
     s.opened_header = std::move(header);
+    s.opened_tail = job.tail;
     const Entry same = RowOf(now);
     FillSlots(s, &same);
     Refresh(s);
@@ -715,6 +720,10 @@ void Save(State& s) {
         if (names_to) renamed = save::TranslateNames(out, s.name_sets, *names_to);
     }
     save::Finish(s.original, out, s.table);
+    // The tail after the block (the came-from place, src/game/save_tail.h): a
+    // PC file's goes with its block to a PC target, unless the edit moved the
+    // save to another area; a card holds none.
+    job->tail = from_card || to_card ? save::Tail{} : save::KeptTail(s.original, out, s.opened_tail);
     std::string errors, warnings;
     for (const save::Issue& i : save::Check(s.original, out, s.table)) (i.error ? errors : warnings) += "- " + i.text + "\n";
     std::string why;
