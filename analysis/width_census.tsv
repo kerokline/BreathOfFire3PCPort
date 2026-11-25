@@ -4072,25 +4072,25 @@ site	src/game/field/field_6.cpp	2313	naked	-	live	Scenario_CallB	-	extern " " __
 site	src/game/field/field_6.cpp	2314	width_if	asm_pair	live	Scenario_CallB	#if defined(__i386__)	#if defined(__i386__)
 site	src/game/field/field_6.cpp	2318	asm	other	live	movl	movl	asm("movl " BOF3_SYM(Bof3_ImageMove) ", %%edx\n\t"
 site	src/game/field/field_6.cpp	2333	asm	other	live	movslq	movslq	asm("movslq " BOF3_SYM(Bof3_ImageMove) "(%%rip), %%r10\n\t"
-site	src/game/field/field_7.cpp	154	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(field_modes::Long(field_modes::At(table + 4u * static_cast<std::uint32_t>
-site	src/game/field/field_7.cpp	154	widen	word_read	live	static_cast<std::uint32_t>(field_modes::Long(field_modes::At(table + 4u * static_cast<std::uint32_t>(index))))	VoidFn [fn]	return reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(field_modes::Long(field_modes::At(table + 4u * static_cast<std::uint32_t>
-site	src/game/field/field_7.cpp	174	low32	image	live	Cond_Flags	Low32	const std::uint32_t kCondFlags = Low32(Cond_Flags);
-site	src/game/field/field_7.cpp	243	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(unsigned char*)>(static_cast<std::uintptr_t>(entry))(object);
-site	src/game/field/field_7.cpp	258	uintptr	-	live	std::uintptr_t	-	int r = static_cast<signed char>(reinterpret_cast<Hook>(static_cast<std::uintptr_t>(record->step))(x, z));
-site	src/game/field/field_7.cpp	258	widen	param	live	record->step	Hook [fn]	int r = static_cast<signed char>(reinterpret_cast<Hook>(static_cast<std::uintptr_t>(record->step))(x, z));
-site	src/game/field/field_7.cpp	269	uintptr	-	live	std::uintptr_t	-	int r = static_cast<signed char>(reinterpret_cast<Hook>(static_cast<std::uintptr_t>(record->arrive))(x, z));
-site	src/game/field/field_7.cpp	269	widen	param	live	record->arrive	Hook [fn]	int r = static_cast<signed char>(reinterpret_cast<Hook>(static_cast<std::uintptr_t>(record->arrive))(x, z));
-site	src/game/field/field_7.cpp	287	uintptr	-	live	std::uintptr_t	-	const unsigned char answer = reinterpret_cast<unsigned char (__cdecl*)(unsigned, unsigned)>(static_cast<std::uintptr_t>(entry))(x, z);
-site	src/game/field/field_7.cpp	543	low32	image_local	live	out	Low32	Msgbox_Base = Low32(out);
-site	src/game/field/field_7.cpp	544	low32	image_local	live	out	Low32	MenuWindows_ListText = Low32(out);
-site	src/game/field/field_7.cpp	560	fmt_place	word	live	static_cast<unsigned>(TownWarp_Visited)	%08X	bof3::Log("DIV-0225 TownWarp: the menu opens in area %u (visited 0x%08X)", static_cast<unsigned>(Game_AreaNumber),
-site	src/game/field/field_7.cpp	683	widen	img_place	live	::bof3::Img(bof3::addr::MessagePools)	unsigned char*	unsigned char* TextArena() { return reinterpret_cast<unsigned char*>(::bof3::Img(bof3::addr::MessagePools)); }
-site	src/game/field/field_7.cpp	1164	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAtFieldE2(::bof3::Img(WorldMap_FieldHooks_addr), index, " ")))();
-site	src/game/field/field_7.cpp	1164	widen	other	live	CodeAtFieldE2(::bof3::Img(WorldMap_FieldHooks_addr), index, " ")	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAtFieldE2(::bof3::Img(WorldMap_FieldHooks_addr), index, " ")))();
-site	src/game/field/field_7.cpp	1269	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(unsigned char*, unsigned char*)>(static_cast<std::uintptr_t>(entry))(object, move_script::At(::bof3::Img(Cond_Flags_addr) + 0xa
-site	src/game/field/field_7.cpp	1340	uintptr	-	live	std::uintptr_t	-	const auto handler = reinterpret_cast<area_harness::Hook>(static_cast<std::uintptr_t>(
-site	src/game/field/field_7.cpp	1340	widen	word_read	live	static_cast<std::uint32_t>(move_script::Long(area_harness::Mem(::bof3::Img(Area_CellHooks_addr) + at::kPairStride * i + 	area_harness::Hook	const auto handler = reinterpret_cast<area_harness::Hook>(static_cast<std::uintptr_t>(
-site	src/game/field/field_7.cpp	1378	low32	object_ours	live	&field_e2::g_name_nul	Low32	bof3::PatchBytes(" ", Low32(&field_e2::g_name_nul), &was, &is, 1);
+site	src/game/field/field_7.cpp	159	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(field_modes::Long(field_modes::At(table + 4u * static_cast<std::uint32_t>
+site	src/game/field/field_7.cpp	159	widen	word_read	live	static_cast<std::uint32_t>(field_modes::Long(field_modes::At(table + 4u * static_cast<std::uint32_t>(index))))	VoidFn [fn]	return reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(field_modes::Long(field_modes::At(table + 4u * static_cast<std::uint32_t>
+site	src/game/field/field_7.cpp	179	low32	image	live	Cond_Flags	Low32	const std::uint32_t kCondFlags = Low32(Cond_Flags);
+site	src/game/field/field_7.cpp	248	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(unsigned char*)>(static_cast<std::uintptr_t>(entry))(object);
+site	src/game/field/field_7.cpp	263	uintptr	-	live	std::uintptr_t	-	int r = static_cast<signed char>(reinterpret_cast<Hook>(static_cast<std::uintptr_t>(record->step))(x, z));
+site	src/game/field/field_7.cpp	263	widen	param	live	record->step	Hook [fn]	int r = static_cast<signed char>(reinterpret_cast<Hook>(static_cast<std::uintptr_t>(record->step))(x, z));
+site	src/game/field/field_7.cpp	274	uintptr	-	live	std::uintptr_t	-	int r = static_cast<signed char>(reinterpret_cast<Hook>(static_cast<std::uintptr_t>(record->arrive))(x, z));
+site	src/game/field/field_7.cpp	274	widen	param	live	record->arrive	Hook [fn]	int r = static_cast<signed char>(reinterpret_cast<Hook>(static_cast<std::uintptr_t>(record->arrive))(x, z));
+site	src/game/field/field_7.cpp	292	uintptr	-	live	std::uintptr_t	-	const unsigned char answer = reinterpret_cast<unsigned char (__cdecl*)(unsigned, unsigned)>(static_cast<std::uintptr_t>(entry))(x, z);
+site	src/game/field/field_7.cpp	548	low32	image_local	live	out	Low32	Msgbox_Base = Low32(out);
+site	src/game/field/field_7.cpp	549	low32	image_local	live	out	Low32	MenuWindows_ListText = Low32(out);
+site	src/game/field/field_7.cpp	565	fmt_place	word	live	static_cast<unsigned>(TownWarp_Visited)	%08X	bof3::Log("DIV-0225 TownWarp: the menu opens in area %u (visited 0x%08X)", static_cast<unsigned>(Game_AreaNumber),
+site	src/game/field/field_7.cpp	688	widen	img_place	live	::bof3::Img(bof3::addr::MessagePools)	unsigned char*	unsigned char* TextArena() { return reinterpret_cast<unsigned char*>(::bof3::Img(bof3::addr::MessagePools)); }
+site	src/game/field/field_7.cpp	1308	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAtFieldE2(::bof3::Img(WorldMap_FieldHooks_addr), index, " ")))();
+site	src/game/field/field_7.cpp	1308	widen	other	live	CodeAtFieldE2(::bof3::Img(WorldMap_FieldHooks_addr), index, " ")	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAtFieldE2(::bof3::Img(WorldMap_FieldHooks_addr), index, " ")))();
+site	src/game/field/field_7.cpp	1413	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(unsigned char*, unsigned char*)>(static_cast<std::uintptr_t>(entry))(object, move_script::At(::bof3::Img(Cond_Flags_addr) + 0xa
+site	src/game/field/field_7.cpp	1484	uintptr	-	live	std::uintptr_t	-	const auto handler = reinterpret_cast<area_harness::Hook>(static_cast<std::uintptr_t>(
+site	src/game/field/field_7.cpp	1484	widen	word_read	live	static_cast<std::uint32_t>(move_script::Long(area_harness::Mem(::bof3::Img(Area_CellHooks_addr) + at::kPairStride * i + 	area_harness::Hook	const auto handler = reinterpret_cast<area_harness::Hook>(static_cast<std::uintptr_t>(
+site	src/game/field/field_7.cpp	1524	low32	object_ours	live	&field_e2::g_name_nul	Low32	bof3::PatchBytes(" ", Low32(&field_e2::g_name_nul), &was, &is, 1);
 site	src/game/field/field_ability.cpp	178	uintptr	-	live	std::uintptr_t	-	const auto handler = reinterpret_cast<Effect>(static_cast<std::uintptr_t>(static_cast<U>(Long(move_script::At(::bof3::Img(FieldAbility_Effects_addr) + 4 * index
 site	src/game/field/field_ability.cpp	178	widen	word_read	live	static_cast<U>(Long(move_script::At(::bof3::Img(FieldAbility_Effects_addr) + 4 * index)))	Effect [fn]	const auto handler = reinterpret_cast<Effect>(static_cast<std::uintptr_t>(static_cast<U>(Long(move_script::At(::bof3::Img(FieldAbility_Effects_addr) + 4 * index
 site	src/game/field/field_ability.cpp	205	low32	object_ours	live	&rest_2d::g_field_heal_party	Low32	bof3::PatchBytes(" ", Low32(&rest_2d::g_field_heal_party), &was, &is, 1);
@@ -7122,36 +7122,36 @@ site	src/game/platform/sound_ours.cpp	824	narrow_call	object_ours	live	&sound::g
 site	src/game/platform/sound_ours.cpp	893	widen	img_place	live	::bof3::Img(kLoopingName.v)	const char*	g.sprintf(looping, reinterpret_cast<const char*>(::bof3::Img(kLoopingName.v)), track);
 site	src/game/platform/sound_ours.cpp	894	widen	img_place	live	::bof3::Img(kOnceName.v)	const char*	g.sprintf(once, reinterpret_cast<const char*>(::bof3::Img(kOnceName.v)), track);
 site	src/game/platform/sound_ours.cpp	922	narrow_call	image	live	Sound_Banks	Address	std::uint32_t BankRecord(unsigned b) { return Address(Sound_Banks) + b * kBankBytes; }
-site	src/game/platform/sound_ours.cpp	975	fmt_place	word	live	buffer	%08X	bof3::Log("quicksave SOUND: channel %u names buffer %08X, which no bank's entry holds: silent after a restore",
-site	src/game/platform/sound_ours.cpp	1121	narrow_call	image	live	Music_Events	Address	const std::uint32_t scratch_at = Address(Snd_BufferDesc), scratch_end = Address(Music_Events);
-site	src/game/platform/sound_ours.cpp	1121	narrow_call	image	live	Snd_BufferDesc	Address	const std::uint32_t scratch_at = Address(Snd_BufferDesc), scratch_end = Address(Music_Events);
-site	src/game/platform/sound_ours.cpp	1142	fmt_place	word	live	Bank(record)->data	%08X	bof3::Fatal("quicksave SOUND: bank %u's data word is %08X in the span, %08X in the record", b + 1,
-site	src/game/platform/sound_ours.cpp	1142	fmt_place	word	live	old	%08X	bof3::Fatal("quicksave SOUND: bank %u's data word is %08X in the span, %08X in the record", b + 1,
-site	src/game/platform/sound_ours.cpp	1149	narrow_call	image_local	live	block	Address	Bank(record)->data = Address(block);
-site	src/game/platform/sound_ours.cpp	1154	fmt_place	word	live	old	%08X	bof3::Fatal("quicksave SOUND: bank %u entry %u's sample %08X lies outside its data %08X+%u", b + 1, e,
-site	src/game/platform/sound_ours.cpp	1154	fmt_place	word	live	sample	%08X	bof3::Fatal("quicksave SOUND: bank %u entry %u's sample %08X lies outside its data %08X+%u", b + 1, e,
-site	src/game/platform/sound_ours.cpp	1156	narrow_call	image_local	live	block	Address	const std::uint32_t moved = Address(block) + (sample - old);
-site	src/game/platform/sound_ours.cpp	1158	narrow_call	object_ours	live	g_snap.from_wave(At(moved))	Address	SetDword(EntryAt(b, e) + 4, Address(g_snap.from_wave(At(moved))));
-site	src/game/platform/sound_ours.cpp	1191	narrow_call	image_local	live	block	Address	SaveMenu_StreamData = Address(block);
-site	src/game/platform/sound_ours.cpp	1207	fmt_place	pointer	live	Music_File.Native()	%p	bof3::Fatal("quicksave SOUND: track %d read again is not the take's (file %p, %d bytes looping %d, track %d; "
-site	src/game/platform/sound_ours.cpp	1236	narrow_call	image	live	&Music_Volume	Address	SetVolumeBits(Dword(Address(&Music_Volume)));
-site	src/game/platform/sound_ours.cpp	1298	narrow_call	object_ours	live	&sound::g_play_refuses_none	Address	bof3::PatchBytes(" ", Address(&sound::g_play_refuses_none), &was, &is, 1);
-site	src/game/platform/sound_ours.cpp	1343	ptr_overlay	image_local	live	p	FakeBuf	FakeBuf* Self(void* p) { return static_cast<FakeBuf*>(p); }
-site	src/game/platform/sound_ours.cpp	1612	ptr_overlay	image_local	live	static_cast<void*>(At(Dword(EntryAt(b, e) + 4)))	FakeBuf	FakeBuf* EntryBuffer(unsigned b, unsigned e) { return static_cast<FakeBuf*>(static_cast<void*>(At(Dword(EntryAt(b, e) + 4)))); }
-site	src/game/platform/sound_ours.cpp	1619	ptr_overlay	image_local	live	FakeCreate(wave)	FakeBuf	FakeBuf* const f = static_cast<FakeBuf*>(FakeCreate(wave));
-site	src/game/platform/sound_ours.cpp	1633	narrow_call	image_local	live	loop_a	Address	Sound_Channels[5] = Address(loop_a);
-site	src/game/platform/sound_ours.cpp	1634	narrow_call	image_local	live	loop_b	Address	Sound_Channels[9] = Address(loop_b);
-site	src/game/platform/sound_ours.cpp	1635	narrow_call	image_local	live	quiet	Address	Sound_Channels[7] = Address(quiet);
-site	src/game/platform/sound_ours.cpp	1644	narrow_call	crt	live	stream	Address	SaveMenu_StreamData = Address(stream);
-site	src/game/platform/sound_ours.cpp	1646	ptr_overlay	crt	live	FakeCreate(static_cast<const unsigned char*>(stream))	FakeBuf	FakeBuf* const voice_buffer = static_cast<FakeBuf*>(FakeCreate(static_cast<const unsigned char*>(stream)));
-site	src/game/platform/sound_ours.cpp	1698	narrow_call	image_local	live	a	Address	bool channels = Sound_Channels[5] == Address(a) && Sound_Channels[9] == Address(b) && Sound_Channels[7] == Address(q);
-site	src/game/platform/sound_ours.cpp	1698	narrow_call	image_local	live	b	Address	bool channels = Sound_Channels[5] == Address(a) && Sound_Channels[9] == Address(b) && Sound_Channels[7] == Address(q);
-site	src/game/platform/sound_ours.cpp	1698	narrow_call	image_local	live	q	Address	bool channels = Sound_Channels[5] == Address(a) && Sound_Channels[9] == Address(b) && Sound_Channels[7] == Address(q);
-site	src/game/platform/sound_ours.cpp	1706	ptr_overlay	image	live	SndStream_Buffer	FakeBuf	FakeBuf* const v = static_cast<FakeBuf*>(SndStream_Buffer);
-site	src/game/platform/sound_ours.cpp	1749	ptr_overlay	image_local	live	FakeCreate(nullptr)	FakeBuf	FakeBuf* const old = static_cast<FakeBuf*>(FakeCreate(nullptr));
-site	src/game/platform/sound_ours.cpp	1769	narrow_call	crt	live	stream	Address	SaveMenu_StreamData = Address(stream);
-site	src/game/platform/sound_ours.cpp	1771	ptr_overlay	crt	live	FakeCreate(static_cast<const unsigned char*>(stream))	FakeBuf	FakeBuf* const voice_buffer = static_cast<FakeBuf*>(FakeCreate(static_cast<const unsigned char*>(stream)));
-site	src/game/platform/sound_ours.cpp	1816	ptr_overlay	image	live	SndStream_Buffer	FakeBuf	FakeBuf* const v = static_cast<FakeBuf*>(SndStream_Buffer);
+site	src/game/platform/sound_ours.cpp	982	fmt_place	word	live	buffer	%08X	bof3::Log("quicksave SOUND: channel %u names buffer %08X, which no bank's entry holds: silent after a restore",
+site	src/game/platform/sound_ours.cpp	1159	narrow_call	image	live	Music_Events	Address	const std::uint32_t scratch_at = Address(Snd_BufferDesc), scratch_end = Address(Music_Events);
+site	src/game/platform/sound_ours.cpp	1159	narrow_call	image	live	Snd_BufferDesc	Address	const std::uint32_t scratch_at = Address(Snd_BufferDesc), scratch_end = Address(Music_Events);
+site	src/game/platform/sound_ours.cpp	1180	fmt_place	word	live	Bank(record)->data	%08X	bof3::Fatal("quicksave SOUND: bank %u's data word is %08X in the span, %08X in the record", b + 1,
+site	src/game/platform/sound_ours.cpp	1180	fmt_place	word	live	old	%08X	bof3::Fatal("quicksave SOUND: bank %u's data word is %08X in the span, %08X in the record", b + 1,
+site	src/game/platform/sound_ours.cpp	1187	narrow_call	image_local	live	block	Address	Bank(record)->data = Address(block);
+site	src/game/platform/sound_ours.cpp	1192	fmt_place	word	live	old	%08X	bof3::Fatal("quicksave SOUND: bank %u entry %u's sample %08X lies outside its data %08X+%u", b + 1, e,
+site	src/game/platform/sound_ours.cpp	1192	fmt_place	word	live	sample	%08X	bof3::Fatal("quicksave SOUND: bank %u entry %u's sample %08X lies outside its data %08X+%u", b + 1, e,
+site	src/game/platform/sound_ours.cpp	1194	narrow_call	image_local	live	block	Address	const std::uint32_t moved = Address(block) + (sample - old);
+site	src/game/platform/sound_ours.cpp	1196	narrow_call	object_ours	live	g_snap.from_wave(At(moved))	Address	SetDword(EntryAt(b, e) + 4, Address(g_snap.from_wave(At(moved))));
+site	src/game/platform/sound_ours.cpp	1229	narrow_call	image_local	live	block	Address	SaveMenu_StreamData = Address(block);
+site	src/game/platform/sound_ours.cpp	1245	fmt_place	pointer	live	Music_File.Native()	%p	bof3::Fatal("quicksave SOUND: track %d read again is not the take's (file %p, %d bytes looping %d, track %d; "
+site	src/game/platform/sound_ours.cpp	1274	narrow_call	image	live	&Music_Volume	Address	SetVolumeBits(Dword(Address(&Music_Volume)));
+site	src/game/platform/sound_ours.cpp	1336	narrow_call	object_ours	live	&sound::g_play_refuses_none	Address	bof3::PatchBytes(" ", Address(&sound::g_play_refuses_none), &was, &is, 1);
+site	src/game/platform/sound_ours.cpp	1381	ptr_overlay	image_local	live	p	FakeBuf	FakeBuf* Self(void* p) { return static_cast<FakeBuf*>(p); }
+site	src/game/platform/sound_ours.cpp	1650	ptr_overlay	image_local	live	static_cast<void*>(At(Dword(EntryAt(b, e) + 4)))	FakeBuf	FakeBuf* EntryBuffer(unsigned b, unsigned e) { return static_cast<FakeBuf*>(static_cast<void*>(At(Dword(EntryAt(b, e) + 4)))); }
+site	src/game/platform/sound_ours.cpp	1657	ptr_overlay	image_local	live	FakeCreate(wave)	FakeBuf	FakeBuf* const f = static_cast<FakeBuf*>(FakeCreate(wave));
+site	src/game/platform/sound_ours.cpp	1671	narrow_call	image_local	live	loop_a	Address	Sound_Channels[5] = Address(loop_a);
+site	src/game/platform/sound_ours.cpp	1672	narrow_call	image_local	live	loop_b	Address	Sound_Channels[9] = Address(loop_b);
+site	src/game/platform/sound_ours.cpp	1673	narrow_call	image_local	live	quiet	Address	Sound_Channels[7] = Address(quiet);
+site	src/game/platform/sound_ours.cpp	1682	narrow_call	crt	live	stream	Address	SaveMenu_StreamData = Address(stream);
+site	src/game/platform/sound_ours.cpp	1684	ptr_overlay	crt	live	FakeCreate(static_cast<const unsigned char*>(stream))	FakeBuf	FakeBuf* const voice_buffer = static_cast<FakeBuf*>(FakeCreate(static_cast<const unsigned char*>(stream)));
+site	src/game/platform/sound_ours.cpp	1736	narrow_call	image_local	live	a	Address	bool channels = Sound_Channels[5] == Address(a) && Sound_Channels[9] == Address(b) && Sound_Channels[7] == Address(q);
+site	src/game/platform/sound_ours.cpp	1736	narrow_call	image_local	live	b	Address	bool channels = Sound_Channels[5] == Address(a) && Sound_Channels[9] == Address(b) && Sound_Channels[7] == Address(q);
+site	src/game/platform/sound_ours.cpp	1736	narrow_call	image_local	live	q	Address	bool channels = Sound_Channels[5] == Address(a) && Sound_Channels[9] == Address(b) && Sound_Channels[7] == Address(q);
+site	src/game/platform/sound_ours.cpp	1744	ptr_overlay	image	live	SndStream_Buffer	FakeBuf	FakeBuf* const v = static_cast<FakeBuf*>(SndStream_Buffer);
+site	src/game/platform/sound_ours.cpp	1787	ptr_overlay	image_local	live	FakeCreate(nullptr)	FakeBuf	FakeBuf* const old = static_cast<FakeBuf*>(FakeCreate(nullptr));
+site	src/game/platform/sound_ours.cpp	1807	narrow_call	crt	live	stream	Address	SaveMenu_StreamData = Address(stream);
+site	src/game/platform/sound_ours.cpp	1809	ptr_overlay	crt	live	FakeCreate(static_cast<const unsigned char*>(stream))	FakeBuf	FakeBuf* const voice_buffer = static_cast<FakeBuf*>(FakeCreate(static_cast<const unsigned char*>(stream)));
+site	src/game/platform/sound_ours.cpp	1880	ptr_overlay	image	live	SndStream_Buffer	FakeBuf	FakeBuf* const v = static_cast<FakeBuf*>(SndStream_Buffer);
 site	src/game/platform/sound_rest.cpp	35	uintptr	-	live	std::uintptr_t	-	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/platform/sound_rest.cpp	35	widen	param	live	address	unsigned char*	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/platform/sound_rest.cpp	36	low32	helper_def	live	p	Low32	std::uint32_t Address(const volatile void* p) { return Low32(p); }
@@ -8878,50 +8878,50 @@ site	src/hook/snapshot.cpp	1483	fmt_place	word	live	h->frame_counter	%08X	"setti
 site	src/hook/snapshot.cpp	1517	fmt_place	word	live	top	%08X	Log("quicksave F7 %s refused: the task arena 0x%08X-0x%X is not committed", SlotName(slot).c_str(), top,
 site	src/hook/snapshot.cpp	1528	fmt_place	word	live	p.header.rdata_fnv	%08X	Log("quicksave F7 %s: .rdata fnv %08X now, %08X at the take - written in play, and not copied (the census's "
 site	src/hook/snapshot.cpp	1528	fmt_place	word	live	rdata	%08X	Log("quicksave F7 %s: .rdata fnv %08X now, %08X at the take - written in play, and not copied (the census's "
-site	src/hook/snapshot.cpp	1730	narrow_call	object_ours	live	arena_block.data()	Va	const U top = (Va(arena_block.data()) + kArenaBytes + kPage - 1) & ~(kPage - 1);
-site	src/hook/snapshot.cpp	1731	narrow_call	object_ours	live	arena_block.data()	Va	if (top - kArenaBytes < Va(arena_block.data())) Fatal(" ");
-site	src/hook/snapshot.cpp	1736	narrow_call	image	live	&Task_StackTop	Va	WriteRange(Va(&Task_StackTop), reinterpret_cast<const unsigned char*>(&t), 4);
-site	src/hook/snapshot.cpp	1795	fmt_place	pointer	live	span.image.base + at	%08X	Log("shadow snapshot: span byte 0x%08X is 0x%02X after the restore, 0x%02X at the take", span.image.base + at,
-site	src/hook/snapshot.cpp	1892	narrow_call	object_ours	live	arena_block.data()	Va	const U top = (Va(arena_block.data()) + kArenaBytes + kPage - 1) & ~(kPage - 1);
-site	src/hook/snapshot.cpp	1893	narrow_call	object_ours	live	arena_block.data()	Va	if (top - kArenaBytes < Va(arena_block.data())) Fatal(" ");
-site	src/hook/snapshot.cpp	1928	fmt_place	pointer	live	span.image.base + at	%08X	Log("shadow snapshot: %s: span byte 0x%08X is 0x%02X, 0x%02X wanted", what, span.image.base + at,
-site	src/hook/snapshot.cpp	1964	uintptr	-	live	std::uintptr_t	-	::Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
-site	src/hook/snapshot.cpp	1964	widen	code_place	live	::bof3::Code(bof3::addr::Boot_Task)	void*	::Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
-site	src/hook/snapshot.cpp	1977	narrow_call	unread	live	kTextA	Va	const U text_a = Va(kTextA), text_b = Va(kTextB);
-site	src/hook/snapshot.cpp	1977	narrow_call	unread	live	kTextB	Va	const U text_a = Va(kTextA), text_b = Va(kTextB);
-site	src/hook/snapshot.cpp	2020	uintptr	-	live	std::uintptr_t	-	std::uintptr_t entry = 0;
-site	src/hook/snapshot.cpp	2023	uintptr	-	live	std::uintptr_t	-	entry == static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task)) &&
-site	src/hook/snapshot.cpp	2146	narrow_call	unread	live	kTextA	Va	Check(PlaceWord(wp, kWordText, Va(kTextA), Va(kTextB), true, &w, why) && w == Va(kTextB) &&
-site	src/hook/snapshot.cpp	2146	narrow_call	unread	live	kTextB	Va	Check(PlaceWord(wp, kWordText, Va(kTextA), Va(kTextB), true, &w, why) && w == Va(kTextB) &&
-site	src/hook/snapshot.cpp	2146	narrow_call	unread	live	kTextB	Va	Check(PlaceWord(wp, kWordText, Va(kTextA), Va(kTextB), true, &w, why) && w == Va(kTextB) &&
-site	src/hook/snapshot.cpp	2147	narrow_call	unread	live	kTextA	Va	PlaceWord(wp, kWordText, Va(kTextA), Va(kTextB), false, &w, why) && w == Va(kTextA) &&
-site	src/hook/snapshot.cpp	2147	narrow_call	unread	live	kTextA	Va	PlaceWord(wp, kWordText, Va(kTextA), Va(kTextB), false, &w, why) && w == Va(kTextA) &&
-site	src/hook/snapshot.cpp	2147	narrow_call	unread	live	kTextB	Va	PlaceWord(wp, kWordText, Va(kTextA), Va(kTextB), false, &w, why) && w == Va(kTextA) &&
-site	src/hook/snapshot.cpp	2148	narrow_call	unread	live	kTextA	Va	!PlaceWord(wp, kWordText, Va(kTextA), 0x1234, true, &w, why),
-site	src/hook/snapshot.cpp	2249	long	ul	live	unsigned long	-	const fs::path dir = temp / Printf(" ", static_cast<unsigned long>(bof3::os::ProcessId()));
-site	src/hook/snapshot.cpp	2260	fmt_place	pointer	live	span.image.base	%08X	Log("shadow snapshot: self-test passed - span 0x%08X+0x%X and pool 0x%08X+0x%X copied, scribbled and restored equal; "
-site	src/hook/snapshot.cpp	2260	fmt_place	pointer	live	span.pool.base	%08X	Log("shadow snapshot: self-test passed - span 0x%08X+0x%X and pool 0x%08X+0x%X copied, scribbled and restored equal; "
-site	src/hook/snapshot.cpp	2355	narrow_call	image	live	&Frame_Deadline	Va	const U names[] = {Va(&Task_SchedulerEsp), Va(&Game_Hwnd), Va(&Game_HInstance), Va(&Frame_Deadline),
-site	src/hook/snapshot.cpp	2355	narrow_call	image	live	&Game_HInstance	Va	const U names[] = {Va(&Task_SchedulerEsp), Va(&Game_Hwnd), Va(&Game_HInstance), Va(&Frame_Deadline),
-site	src/hook/snapshot.cpp	2355	narrow_call	image	live	&Game_Hwnd	Va	const U names[] = {Va(&Task_SchedulerEsp), Va(&Game_Hwnd), Va(&Game_HInstance), Va(&Frame_Deadline),
-site	src/hook/snapshot.cpp	2355	narrow_call	image	live	&Task_SchedulerEsp	Va	const U names[] = {Va(&Task_SchedulerEsp), Va(&Game_Hwnd), Va(&Game_HInstance), Va(&Frame_Deadline),
-site	src/hook/snapshot.cpp	2356	narrow_call	image	live	&App_Active	Va	Va(&Fps_Shown), Va(&App_Active), Va(&Cfg_Fullscreen), Va(&Cfg_RenderMode),
-site	src/hook/snapshot.cpp	2356	narrow_call	image	live	&Cfg_Fullscreen	Va	Va(&Fps_Shown), Va(&App_Active), Va(&Cfg_Fullscreen), Va(&Cfg_RenderMode),
-site	src/hook/snapshot.cpp	2356	narrow_call	image	live	&Cfg_RenderMode	Va	Va(&Fps_Shown), Va(&App_Active), Va(&Cfg_Fullscreen), Va(&Cfg_RenderMode),
-site	src/hook/snapshot.cpp	2356	narrow_call	image	live	&Fps_Shown	Va	Va(&Fps_Shown), Va(&App_Active), Va(&Cfg_Fullscreen), Va(&Cfg_RenderMode),
-site	src/hook/snapshot.cpp	2357	narrow_call	image	live	&DInput_Object	Va	Va(Key_Table), Va(&DInput_Object), Va(&Font_GlyphData), Va(Gfx_WindowRect),
-site	src/hook/snapshot.cpp	2357	narrow_call	image	live	&Font_GlyphData	Va	Va(Key_Table), Va(&DInput_Object), Va(&Font_GlyphData), Va(Gfx_WindowRect),
-site	src/hook/snapshot.cpp	2357	narrow_call	image	live	Gfx_WindowRect	Va	Va(Key_Table), Va(&DInput_Object), Va(&Font_GlyphData), Va(Gfx_WindowRect),
-site	src/hook/snapshot.cpp	2357	narrow_call	image	live	Key_Table	Va	Va(Key_Table), Va(&DInput_Object), Va(&Font_GlyphData), Va(Gfx_WindowRect),
-site	src/hook/snapshot.cpp	2358	narrow_call	image	live	&Dd_DirectDraw	Va	Va(Gfx_ClutRows), Va(D3d_DeviceDesc), Va(&Dd_DirectDraw), Va(&Dd_StageSurface),
-site	src/hook/snapshot.cpp	2358	narrow_call	image	live	&Dd_StageSurface	Va	Va(Gfx_ClutRows), Va(D3d_DeviceDesc), Va(&Dd_DirectDraw), Va(&Dd_StageSurface),
-site	src/hook/snapshot.cpp	2358	narrow_call	image	live	D3d_DeviceDesc	Va	Va(Gfx_ClutRows), Va(D3d_DeviceDesc), Va(&Dd_DirectDraw), Va(&Dd_StageSurface),
-site	src/hook/snapshot.cpp	2358	narrow_call	image	live	Gfx_ClutRows	Va	Va(Gfx_ClutRows), Va(D3d_DeviceDesc), Va(&Dd_DirectDraw), Va(&Dd_StageSurface),
-site	src/hook/snapshot.cpp	2359	narrow_call	image	live	&D3d_Device	Va	Va(&D3d_Device), Va(&Desktop_Bpp)};
-site	src/hook/snapshot.cpp	2359	narrow_call	image	live	&Desktop_Bpp	Va	Va(&D3d_Device), Va(&Desktop_Bpp)};
-site	src/hook/snapshot.cpp	2363	fmt_place	pointer	live	kKept[i].at	%08X	Fatal("snapshot: kKept's %s is 0x%08X, symbols.toml's at 0x%08X (VA 0x%08X)", kKept[i].name, kKept[i].at,
-site	src/hook/snapshot.cpp	2363	fmt_place	pointer	live	names[i] - Img(kKept[i].at) + kKept[i].at	%08X	Fatal("snapshot: kKept's %s is 0x%08X, symbols.toml's at 0x%08X (VA 0x%08X)", kKept[i].name, kKept[i].at,
-site	src/hook/snapshot.cpp	2363	fmt_place	word	live	names[i]	%08X	Fatal("snapshot: kKept's %s is 0x%08X, symbols.toml's at 0x%08X (VA 0x%08X)", kKept[i].name, kKept[i].at,
+site	src/hook/snapshot.cpp	1780	narrow_call	object_ours	live	arena_block.data()	Va	const U top = (Va(arena_block.data()) + kArenaBytes + kPage - 1) & ~(kPage - 1);
+site	src/hook/snapshot.cpp	1781	narrow_call	object_ours	live	arena_block.data()	Va	if (top - kArenaBytes < Va(arena_block.data())) Fatal(" ");
+site	src/hook/snapshot.cpp	1786	narrow_call	image	live	&Task_StackTop	Va	WriteRange(Va(&Task_StackTop), reinterpret_cast<const unsigned char*>(&t), 4);
+site	src/hook/snapshot.cpp	1845	fmt_place	pointer	live	span.image.base + at	%08X	Log("shadow snapshot: span byte 0x%08X is 0x%02X after the restore, 0x%02X at the take", span.image.base + at,
+site	src/hook/snapshot.cpp	1942	narrow_call	object_ours	live	arena_block.data()	Va	const U top = (Va(arena_block.data()) + kArenaBytes + kPage - 1) & ~(kPage - 1);
+site	src/hook/snapshot.cpp	1943	narrow_call	object_ours	live	arena_block.data()	Va	if (top - kArenaBytes < Va(arena_block.data())) Fatal(" ");
+site	src/hook/snapshot.cpp	1978	fmt_place	pointer	live	span.image.base + at	%08X	Log("shadow snapshot: %s: span byte 0x%08X is 0x%02X, 0x%02X wanted", what, span.image.base + at,
+site	src/hook/snapshot.cpp	2014	uintptr	-	live	std::uintptr_t	-	::Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
+site	src/hook/snapshot.cpp	2014	widen	code_place	live	::bof3::Code(bof3::addr::Boot_Task)	void*	::Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
+site	src/hook/snapshot.cpp	2027	narrow_call	unread	live	kTextA	Va	const U text_a = Va(kTextA), text_b = Va(kTextB);
+site	src/hook/snapshot.cpp	2027	narrow_call	unread	live	kTextB	Va	const U text_a = Va(kTextA), text_b = Va(kTextB);
+site	src/hook/snapshot.cpp	2070	uintptr	-	live	std::uintptr_t	-	std::uintptr_t entry = 0;
+site	src/hook/snapshot.cpp	2073	uintptr	-	live	std::uintptr_t	-	entry == static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task)) &&
+site	src/hook/snapshot.cpp	2196	narrow_call	unread	live	kTextA	Va	Check(PlaceWord(wp, kWordText, Va(kTextA), Va(kTextB), true, &w, why) && w == Va(kTextB) &&
+site	src/hook/snapshot.cpp	2196	narrow_call	unread	live	kTextB	Va	Check(PlaceWord(wp, kWordText, Va(kTextA), Va(kTextB), true, &w, why) && w == Va(kTextB) &&
+site	src/hook/snapshot.cpp	2196	narrow_call	unread	live	kTextB	Va	Check(PlaceWord(wp, kWordText, Va(kTextA), Va(kTextB), true, &w, why) && w == Va(kTextB) &&
+site	src/hook/snapshot.cpp	2197	narrow_call	unread	live	kTextA	Va	PlaceWord(wp, kWordText, Va(kTextA), Va(kTextB), false, &w, why) && w == Va(kTextA) &&
+site	src/hook/snapshot.cpp	2197	narrow_call	unread	live	kTextA	Va	PlaceWord(wp, kWordText, Va(kTextA), Va(kTextB), false, &w, why) && w == Va(kTextA) &&
+site	src/hook/snapshot.cpp	2197	narrow_call	unread	live	kTextB	Va	PlaceWord(wp, kWordText, Va(kTextA), Va(kTextB), false, &w, why) && w == Va(kTextA) &&
+site	src/hook/snapshot.cpp	2198	narrow_call	unread	live	kTextA	Va	!PlaceWord(wp, kWordText, Va(kTextA), 0x1234, true, &w, why),
+site	src/hook/snapshot.cpp	2299	long	ul	live	unsigned long	-	const fs::path dir = temp / Printf(" ", static_cast<unsigned long>(bof3::os::ProcessId()));
+site	src/hook/snapshot.cpp	2310	fmt_place	pointer	live	span.image.base	%08X	Log("shadow snapshot: self-test passed - span 0x%08X+0x%X and pool 0x%08X+0x%X copied, scribbled and restored equal; "
+site	src/hook/snapshot.cpp	2310	fmt_place	pointer	live	span.pool.base	%08X	Log("shadow snapshot: self-test passed - span 0x%08X+0x%X and pool 0x%08X+0x%X copied, scribbled and restored equal; "
+site	src/hook/snapshot.cpp	2405	narrow_call	image	live	&Frame_Deadline	Va	const U names[] = {Va(&Task_SchedulerEsp), Va(&Game_Hwnd), Va(&Game_HInstance), Va(&Frame_Deadline),
+site	src/hook/snapshot.cpp	2405	narrow_call	image	live	&Game_HInstance	Va	const U names[] = {Va(&Task_SchedulerEsp), Va(&Game_Hwnd), Va(&Game_HInstance), Va(&Frame_Deadline),
+site	src/hook/snapshot.cpp	2405	narrow_call	image	live	&Game_Hwnd	Va	const U names[] = {Va(&Task_SchedulerEsp), Va(&Game_Hwnd), Va(&Game_HInstance), Va(&Frame_Deadline),
+site	src/hook/snapshot.cpp	2405	narrow_call	image	live	&Task_SchedulerEsp	Va	const U names[] = {Va(&Task_SchedulerEsp), Va(&Game_Hwnd), Va(&Game_HInstance), Va(&Frame_Deadline),
+site	src/hook/snapshot.cpp	2406	narrow_call	image	live	&App_Active	Va	Va(&Fps_Shown), Va(&App_Active), Va(&Cfg_Fullscreen), Va(&Cfg_RenderMode),
+site	src/hook/snapshot.cpp	2406	narrow_call	image	live	&Cfg_Fullscreen	Va	Va(&Fps_Shown), Va(&App_Active), Va(&Cfg_Fullscreen), Va(&Cfg_RenderMode),
+site	src/hook/snapshot.cpp	2406	narrow_call	image	live	&Cfg_RenderMode	Va	Va(&Fps_Shown), Va(&App_Active), Va(&Cfg_Fullscreen), Va(&Cfg_RenderMode),
+site	src/hook/snapshot.cpp	2406	narrow_call	image	live	&Fps_Shown	Va	Va(&Fps_Shown), Va(&App_Active), Va(&Cfg_Fullscreen), Va(&Cfg_RenderMode),
+site	src/hook/snapshot.cpp	2407	narrow_call	image	live	&DInput_Object	Va	Va(Key_Table), Va(&DInput_Object), Va(&Font_GlyphData), Va(Gfx_WindowRect),
+site	src/hook/snapshot.cpp	2407	narrow_call	image	live	&Font_GlyphData	Va	Va(Key_Table), Va(&DInput_Object), Va(&Font_GlyphData), Va(Gfx_WindowRect),
+site	src/hook/snapshot.cpp	2407	narrow_call	image	live	Gfx_WindowRect	Va	Va(Key_Table), Va(&DInput_Object), Va(&Font_GlyphData), Va(Gfx_WindowRect),
+site	src/hook/snapshot.cpp	2407	narrow_call	image	live	Key_Table	Va	Va(Key_Table), Va(&DInput_Object), Va(&Font_GlyphData), Va(Gfx_WindowRect),
+site	src/hook/snapshot.cpp	2408	narrow_call	image	live	&Dd_DirectDraw	Va	Va(Gfx_ClutRows), Va(D3d_DeviceDesc), Va(&Dd_DirectDraw), Va(&Dd_StageSurface),
+site	src/hook/snapshot.cpp	2408	narrow_call	image	live	&Dd_StageSurface	Va	Va(Gfx_ClutRows), Va(D3d_DeviceDesc), Va(&Dd_DirectDraw), Va(&Dd_StageSurface),
+site	src/hook/snapshot.cpp	2408	narrow_call	image	live	D3d_DeviceDesc	Va	Va(Gfx_ClutRows), Va(D3d_DeviceDesc), Va(&Dd_DirectDraw), Va(&Dd_StageSurface),
+site	src/hook/snapshot.cpp	2408	narrow_call	image	live	Gfx_ClutRows	Va	Va(Gfx_ClutRows), Va(D3d_DeviceDesc), Va(&Dd_DirectDraw), Va(&Dd_StageSurface),
+site	src/hook/snapshot.cpp	2409	narrow_call	image	live	&D3d_Device	Va	Va(&D3d_Device), Va(&Desktop_Bpp)};
+site	src/hook/snapshot.cpp	2409	narrow_call	image	live	&Desktop_Bpp	Va	Va(&D3d_Device), Va(&Desktop_Bpp)};
+site	src/hook/snapshot.cpp	2413	fmt_place	pointer	live	kKept[i].at	%08X	Fatal("snapshot: kKept's %s is 0x%08X, symbols.toml's at 0x%08X (VA 0x%08X)", kKept[i].name, kKept[i].at,
+site	src/hook/snapshot.cpp	2413	fmt_place	pointer	live	names[i] - Img(kKept[i].at) + kKept[i].at	%08X	Fatal("snapshot: kKept's %s is 0x%08X, symbols.toml's at 0x%08X (VA 0x%08X)", kKept[i].name, kKept[i].at,
+site	src/hook/snapshot.cpp	2413	fmt_place	word	live	names[i]	%08X	Fatal("snapshot: kKept's %s is 0x%08X, symbols.toml's at 0x%08X (VA 0x%08X)", kKept[i].name, kKept[i].at,
 site	src/hook/span_words.h	122	fmt_place	pointer	live	module	%p	Fatal("statehash: our module at %p has no image headers the loader mapped", module);
 site	src/hook/span_words.h	123	low32	unread	live	reinterpret_cast<const void*>(image.base)	Low32	const auto base = Low32(reinterpret_cast<const void*>(image.base));
 site	src/hook/span_words.h	136	long	ul	live	unsigned long	-	if (sections.empty()) Fatal(" ", (unsigned long)base);
@@ -9403,35 +9403,40 @@ site	src/os/win32/thread.cpp	41	uintptr	-	live	std::uintptr_t	-	bool SampleThrea
 site	src/os/win32/thread.cpp	52	width_if	logic	live	-	#if defined(__x86_64__)	#if defined(__x86_64__)
 site	src/os/win32/thread_start.cpp	18	ptr_overlay	unread	live	p	Start	const Start s = *static_cast<Start*>(p);
 site	src/os/win32/thread_start.cpp	19	ptr_overlay	unread	live	p	Start	delete static_cast<Start*>(p);
-site	src/render/gfx_snapshot.cpp	30	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/render/gfx_snapshot.cpp	30	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/render/gfx_snapshot.cpp	33	low32	helper_def	live	p	Low32	return Low32(p);
-site	src/render/gfx_snapshot.cpp	90	narrow_call	image	live	Gfx_TexCache	Va	U TexEntry(U page, U i) { return Va(Gfx_TexCache) + (page * kPageEntries + i) * kTexEntry; }
-site	src/render/gfx_snapshot.cpp	91	narrow_call	image	live	Font_TexCache	Va	U FontEntry(U i) { return Va(Font_TexCache) + i * kFontEntry; }
-site	src/render/gfx_snapshot.cpp	92	narrow_call	image	live	D3d_CellTexCache	Va	U CellEntry(U i) { return Va(D3d_CellTexCache) + i * kCellEntry; }
-site	src/render/gfx_snapshot.cpp	93	narrow_call	image	live	Gfx_ClutRows	Va	U RowAt(U y) { return Va(Gfx_ClutRows) + y * 8; }
-site	src/render/gfx_snapshot.cpp	135	uintptr	-	live	std::uintptr_t	-	void* Object(U slot) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(Long(slot))); }
-site	src/render/gfx_snapshot.cpp	135	widen	word_read	live	Long(slot)	void*	void* Object(U slot) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(Long(slot))); }
-site	src/render/gfx_snapshot.cpp	229	narrow_call	unread	live	made	Va	live = Va(made);
-site	src/render/gfx_snapshot.cpp	335	narrow_call	unread	live	b	Va	Row(y)->block = Va(b);
-site	src/render/gfx_snapshot.cpp	362	narrow_call	unread	live	page	Va	Tex(TexEntry(5, 0))->surface = Va(page);
-site	src/render/gfx_snapshot.cpp	363	narrow_call	unread	live	&page->texture_vtable	Va	Tex(TexEntry(5, 0))->texture = Va(&page->texture_vtable);
-site	src/render/gfx_snapshot.cpp	364	narrow_call	unread	live	glyph	Va	Font(FontEntry(9))->surface = Va(glyph);
-site	src/render/gfx_snapshot.cpp	365	narrow_call	unread	live	&glyph->texture_vtable	Va	Font(FontEntry(9))->texture = Va(&glyph->texture_vtable);
-site	src/render/gfx_snapshot.cpp	366	narrow_call	unread	live	cell	Va	Cell(CellEntry(77))->surface = Va(cell);
-site	src/render/gfx_snapshot.cpp	367	narrow_call	unread	live	&cell->texture_vtable	Va	Cell(CellEntry(77))->texture = Va(&cell->texture_vtable);
-site	src/render/gfx_snapshot.cpp	437	narrow_call	image	live	&D3d_BackMaterialHandle	Va	{::bof3::Img(0x66B710), Va(Gfx_ScreenRect) + 8}, {::bof3::Img(0x6BEA00), Va(&Dd_CellBackdrop)}, {::bof3::Img(0x6C3A40), Va(&D3d_BackMaterialHandle)},
-site	src/render/gfx_snapshot.cpp	437	narrow_call	image	live	&Dd_CellBackdrop	Va	{::bof3::Img(0x66B710), Va(Gfx_ScreenRect) + 8}, {::bof3::Img(0x6BEA00), Va(&Dd_CellBackdrop)}, {::bof3::Img(0x6C3A40), Va(&D3d_BackMaterialHandle)},
-site	src/render/gfx_snapshot.cpp	437	narrow_call	image	live	Gfx_ScreenRect	Va	{::bof3::Img(0x66B710), Va(Gfx_ScreenRect) + 8}, {::bof3::Img(0x6BEA00), Va(&Dd_CellBackdrop)}, {::bof3::Img(0x6C3A40), Va(&D3d_BackMaterialHandle)},
-site	src/render/gfx_snapshot.cpp	438	narrow_call	image	live	&D3d_CaptureSurface	Va	{::bof3::Img(0x6C3A48), Va(&Gfx_RenderFlags) - 4}, {::bof3::Img(0x7C9F44), Va(&D3d_ScaleY) - 4}, {::bof3::Img(0x7CADF8), Va(&D3d_CaptureSurface)},
-site	src/render/gfx_snapshot.cpp	438	narrow_call	image	live	&D3d_ScaleY	Va	{::bof3::Img(0x6C3A48), Va(&Gfx_RenderFlags) - 4}, {::bof3::Img(0x7C9F44), Va(&D3d_ScaleY) - 4}, {::bof3::Img(0x7CADF8), Va(&D3d_CaptureSurface)},
-site	src/render/gfx_snapshot.cpp	438	narrow_call	image	live	&Gfx_RenderFlags	Va	{::bof3::Img(0x6C3A48), Va(&Gfx_RenderFlags) - 4}, {::bof3::Img(0x7C9F44), Va(&D3d_ScaleY) - 4}, {::bof3::Img(0x7CADF8), Va(&D3d_CaptureSurface)},
-site	src/render/gfx_snapshot.cpp	439	narrow_call	image	live	&D3d_Viewport	Va	{::bof3::Img(0x7CC338), Va(&DDraw_Primary)}, {::bof3::Img(0x7CC354), Va(&D3d_Viewport)}, {::bof3::Img(0x7DED5C), Va(Gfx_PixelFormat) - 4},
-site	src/render/gfx_snapshot.cpp	439	narrow_call	image	live	&DDraw_Primary	Va	{::bof3::Img(0x7CC338), Va(&DDraw_Primary)}, {::bof3::Img(0x7CC354), Va(&D3d_Viewport)}, {::bof3::Img(0x7DED5C), Va(Gfx_PixelFormat) - 4},
-site	src/render/gfx_snapshot.cpp	439	narrow_call	image	live	Gfx_PixelFormat	Va	{::bof3::Img(0x7CC338), Va(&DDraw_Primary)}, {::bof3::Img(0x7CC354), Va(&D3d_Viewport)}, {::bof3::Img(0x7DED5C), Va(Gfx_PixelFormat) - 4},
-site	src/render/gfx_snapshot.cpp	444	fmt_place	pointer	live	n.at	%08X	if (i == kKeptCount || n.at != n.symbol) Fatal("gfx_snapshot: kept range 0x%08X, symbols.toml says 0x%08X", n.at, n.symbol);
-site	src/render/gfx_snapshot.cpp	444	fmt_place	word	live	n.symbol	%08X	if (i == kKeptCount || n.at != n.symbol) Fatal("gfx_snapshot: kept range 0x%08X, symbols.toml says 0x%08X", n.at, n.symbol);
-site	src/render/gfx_snapshot.cpp	446	narrow_call	image	live	&D3d_ShadeModeCache	Va	if (Va(&D3d_ShadeModeCache) != ::bof3::Img(0x6C3A44)) Fatal(" ");
+site	src/render/gfx_snapshot.cpp	32	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/render/gfx_snapshot.cpp	32	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/render/gfx_snapshot.cpp	35	low32	helper_def	live	p	Low32	return Low32(p);
+site	src/render/gfx_snapshot.cpp	98	narrow_call	image	live	Gfx_TexCache	Va	U TexEntry(U page, U i) { return Va(Gfx_TexCache) + (page * kPageEntries + i) * kTexEntry; }
+site	src/render/gfx_snapshot.cpp	99	narrow_call	image	live	Font_TexCache	Va	U FontEntry(U i) { return Va(Font_TexCache) + i * kFontEntry; }
+site	src/render/gfx_snapshot.cpp	100	narrow_call	image	live	D3d_CellTexCache	Va	U CellEntry(U i) { return Va(D3d_CellTexCache) + i * kCellEntry; }
+site	src/render/gfx_snapshot.cpp	101	narrow_call	image	live	Gfx_ClutRows	Va	U RowAt(U y) { return Va(Gfx_ClutRows) + y * 8; }
+site	src/render/gfx_snapshot.cpp	143	uintptr	-	live	std::uintptr_t	-	void* Object(U slot) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(Long(slot))); }
+site	src/render/gfx_snapshot.cpp	143	widen	word_read	live	Long(slot)	void*	void* Object(U slot) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(Long(slot))); }
+site	src/render/gfx_snapshot.cpp	204	sizeof_ptr	-	live	sizeof(void*)	-	static_assert(sizeof(render::PipeState) == (sizeof(void*) == 8 ? 88 : 84),
+site	src/render/gfx_snapshot.cpp	294	narrow_call	unread	live	map_rim::ExtraLayer()	Va	w.Put(Va(map_rim::ExtraLayer()));
+site	src/render/gfx_snapshot.cpp	400	narrow_call	unread	live	made	Va	live = Va(made);
+site	src/render/gfx_snapshot.cpp	492	narrow_call	unread	live	map_rim::ExtraLayer()	Va	const U extra_now = Va(map_rim::ExtraLayer());
+site	src/render/gfx_snapshot.cpp	496	fmt_place	word	live	extra_at	%08X	Log("quicksave GFX: the extra layer lay at 0x%08X at the take, here at 0x%08X: %u list heads rebased", extra_at,
+site	src/render/gfx_snapshot.cpp	496	fmt_place	word	live	extra_now	%08X	Log("quicksave GFX: the extra layer lay at 0x%08X at the take, here at 0x%08X: %u list heads rebased", extra_at,
+site	src/render/gfx_snapshot.cpp	610	narrow_call	unread	live	b	Va	Row(y)->block = Va(b);
+site	src/render/gfx_snapshot.cpp	637	narrow_call	unread	live	page	Va	Tex(TexEntry(5, 0))->surface = Va(page);
+site	src/render/gfx_snapshot.cpp	638	narrow_call	unread	live	&page->texture_vtable	Va	Tex(TexEntry(5, 0))->texture = Va(&page->texture_vtable);
+site	src/render/gfx_snapshot.cpp	639	narrow_call	unread	live	glyph	Va	Font(FontEntry(9))->surface = Va(glyph);
+site	src/render/gfx_snapshot.cpp	640	narrow_call	unread	live	&glyph->texture_vtable	Va	Font(FontEntry(9))->texture = Va(&glyph->texture_vtable);
+site	src/render/gfx_snapshot.cpp	641	narrow_call	unread	live	cell	Va	Cell(CellEntry(77))->surface = Va(cell);
+site	src/render/gfx_snapshot.cpp	642	narrow_call	unread	live	&cell->texture_vtable	Va	Cell(CellEntry(77))->texture = Va(&cell->texture_vtable);
+site	src/render/gfx_snapshot.cpp	714	narrow_call	image	live	&D3d_BackMaterialHandle	Va	{::bof3::Img(0x66B710), Va(Gfx_ScreenRect) + 8}, {::bof3::Img(0x6BEA00), Va(&Dd_CellBackdrop)}, {::bof3::Img(0x6C3A40), Va(&D3d_BackMaterialHandle)},
+site	src/render/gfx_snapshot.cpp	714	narrow_call	image	live	&Dd_CellBackdrop	Va	{::bof3::Img(0x66B710), Va(Gfx_ScreenRect) + 8}, {::bof3::Img(0x6BEA00), Va(&Dd_CellBackdrop)}, {::bof3::Img(0x6C3A40), Va(&D3d_BackMaterialHandle)},
+site	src/render/gfx_snapshot.cpp	714	narrow_call	image	live	Gfx_ScreenRect	Va	{::bof3::Img(0x66B710), Va(Gfx_ScreenRect) + 8}, {::bof3::Img(0x6BEA00), Va(&Dd_CellBackdrop)}, {::bof3::Img(0x6C3A40), Va(&D3d_BackMaterialHandle)},
+site	src/render/gfx_snapshot.cpp	715	narrow_call	image	live	&D3d_CaptureSurface	Va	{::bof3::Img(0x6C3A48), Va(&Gfx_RenderFlags) - 4}, {::bof3::Img(0x7C9F44), Va(&D3d_ScaleY) - 4}, {::bof3::Img(0x7CADF8), Va(&D3d_CaptureSurface)},
+site	src/render/gfx_snapshot.cpp	715	narrow_call	image	live	&D3d_ScaleY	Va	{::bof3::Img(0x6C3A48), Va(&Gfx_RenderFlags) - 4}, {::bof3::Img(0x7C9F44), Va(&D3d_ScaleY) - 4}, {::bof3::Img(0x7CADF8), Va(&D3d_CaptureSurface)},
+site	src/render/gfx_snapshot.cpp	715	narrow_call	image	live	&Gfx_RenderFlags	Va	{::bof3::Img(0x6C3A48), Va(&Gfx_RenderFlags) - 4}, {::bof3::Img(0x7C9F44), Va(&D3d_ScaleY) - 4}, {::bof3::Img(0x7CADF8), Va(&D3d_CaptureSurface)},
+site	src/render/gfx_snapshot.cpp	716	narrow_call	image	live	&D3d_Viewport	Va	{::bof3::Img(0x7CC338), Va(&DDraw_Primary)}, {::bof3::Img(0x7CC354), Va(&D3d_Viewport)}, {::bof3::Img(0x7DED5C), Va(Gfx_PixelFormat) - 4},
+site	src/render/gfx_snapshot.cpp	716	narrow_call	image	live	&DDraw_Primary	Va	{::bof3::Img(0x7CC338), Va(&DDraw_Primary)}, {::bof3::Img(0x7CC354), Va(&D3d_Viewport)}, {::bof3::Img(0x7DED5C), Va(Gfx_PixelFormat) - 4},
+site	src/render/gfx_snapshot.cpp	716	narrow_call	image	live	Gfx_PixelFormat	Va	{::bof3::Img(0x7CC338), Va(&DDraw_Primary)}, {::bof3::Img(0x7CC354), Va(&D3d_Viewport)}, {::bof3::Img(0x7DED5C), Va(Gfx_PixelFormat) - 4},
+site	src/render/gfx_snapshot.cpp	721	fmt_place	pointer	live	n.at	%08X	if (i == kKeptCount || n.at != n.symbol) Fatal("gfx_snapshot: kept range 0x%08X, symbols.toml says 0x%08X", n.at, n.symbol);
+site	src/render/gfx_snapshot.cpp	721	fmt_place	word	live	n.symbol	%08X	if (i == kKeptCount || n.at != n.symbol) Fatal("gfx_snapshot: kept range 0x%08X, symbols.toml says 0x%08X", n.at, n.symbol);
+site	src/render/gfx_snapshot.cpp	723	narrow_call	image	live	&D3d_ShadeModeCache	Va	if (Va(&D3d_ShadeModeCache) != ::bof3::Img(0x6C3A44)) Fatal(" ");
 site	src/render/interp.cpp	646	fmt_place	word	live	n.object	%08X	bof3::Log("interp-dbg NOTE cmd %u object %08X stands (%.1f, %.1f)", n.index, n.object, n.x, n.y);
 site	src/render/interp.cpp	657	fmt_place	word	live	note->object	%08X	bof3::Log("interp-dbg IDENT cmd %u object %08X tex %u at (%.1f, %.1f) stands (%.1f, %.1f) d (%.1f, %.1f)", i, note->object,
 site	src/render/interp.cpp	922	fmt_place	word	live	n.object	%08X	bof3::Log("interp-fig fc %u object %08X paired %d shown (%.2f, %.2f) kept %d stands (%.2f, %.2f) picture (%.2f, %.2f)",
@@ -15464,10 +15469,11 @@ file	src/os/win32/thread.cpp	live	uintptr	-	2
 file	src/os/win32/thread.cpp	live	width_if	logic	1
 file	src/os/win32/thread_start.cpp	live	ptr_overlay	unread	2
 file	src/render/gfx_snapshot.cpp	live	fmt_place	pointer	1
-file	src/render/gfx_snapshot.cpp	live	fmt_place	word	1
+file	src/render/gfx_snapshot.cpp	live	fmt_place	word	3
 file	src/render/gfx_snapshot.cpp	live	low32	helper_def	1
 file	src/render/gfx_snapshot.cpp	live	narrow_call	image	14
-file	src/render/gfx_snapshot.cpp	live	narrow_call	unread	8
+file	src/render/gfx_snapshot.cpp	live	narrow_call	unread	10
+file	src/render/gfx_snapshot.cpp	live	sizeof_ptr	-	1
 file	src/render/gfx_snapshot.cpp	live	uintptr	-	2
 file	src/render/gfx_snapshot.cpp	live	widen	param	1
 file	src/render/gfx_snapshot.cpp	live	widen	word_read	1
@@ -15497,8 +15503,8 @@ file	symbols.toml	live	ptr_member	ours_render	11
 file	symbols.toml	live	ptr_member	windows_function	14
 file	symbols.toml	live	ptr_member	windows_handle	3
 file	symbols.toml	live	ptr_member	windows_object	10
-#count sites	11447
-#count sites_live	7963
+#count sites	11452
+#count sites_live	7968
 #count sites_fuzz	3484
 #count fuzz_files	250
 #count narrow	357
@@ -15533,8 +15539,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count narrow_windows	4
 #count narrow_windows_live	2
 #count narrow_windows_live_files	2
-#count narrow_call	3354
-#count narrow_call_live	1512
+#count narrow_call	3356
+#count narrow_call_live	1514
 #count narrow_call_live_files	332
 #count narrow_call_fuzz	1842
 #count narrow_call_fuzz_files	234
@@ -15559,8 +15565,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count narrow_call_pool	79
 #count narrow_call_pool_live	13
 #count narrow_call_pool_live_files	5
-#count narrow_call_unread	68
-#count narrow_call_unread_live	25
+#count narrow_call_unread	70
+#count narrow_call_unread_live	27
 #count narrow_call_unread_live_files	5
 #count narrow_call_windows	11
 #count narrow_call_windows_live	5
@@ -15665,14 +15671,14 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count valloc_addr_-	6
 #count valloc_addr_-_live	6
 #count valloc_addr_-_live_files	3
-#count sizeof_ptr	18
-#count sizeof_ptr_live	18
-#count sizeof_ptr_live_files	9
+#count sizeof_ptr	19
+#count sizeof_ptr_live	19
+#count sizeof_ptr_live_files	10
 #count sizeof_ptr_fuzz	0
 #count sizeof_ptr_fuzz_files	0
-#count sizeof_ptr_-	18
-#count sizeof_ptr_-_live	18
-#count sizeof_ptr_-_live_files	9
+#count sizeof_ptr_-	19
+#count sizeof_ptr_-_live	19
+#count sizeof_ptr_-_live_files	10
 #count uintptr	2002
 #count uintptr_live	1336
 #count uintptr_live_files	527
@@ -15681,8 +15687,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count uintptr_-	2002
 #count uintptr_-_live	1336
 #count uintptr_-_live_files	527
-#count fmt_place	583
-#count fmt_place_live	513
+#count fmt_place	585
+#count fmt_place_live	515
 #count fmt_place_live_files	77
 #count fmt_place_fuzz	70
 #count fmt_place_fuzz_files	35
@@ -15692,8 +15698,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count fmt_place_pointer	126
 #count fmt_place_pointer_live	111
 #count fmt_place_pointer_live_files	35
-#count fmt_place_word	433
-#count fmt_place_word_live	385
+#count fmt_place_word	435
+#count fmt_place_word_live	387
 #count fmt_place_word_live_files	63
 #count import_slot	14
 #count import_slot_live	14

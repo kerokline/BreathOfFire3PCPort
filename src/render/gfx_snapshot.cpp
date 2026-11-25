@@ -582,11 +582,11 @@ unsigned SelfTestVersion4(const std::vector<unsigned char>& record) {
     put(d, frame[kSubMapLayers], WordAt(d.data() + frame[kSubMapLayers]) + 1);
     d.insert(d.begin() + static_cast<std::ptrdiff_t>(frame[kSubMapLayers] + 4), 0);
     check(refused(d, "damaged"), "map_layers' sub-record that does not hold its count is refused");
-    // The rebase: the heads' own places move, the pool's items and the rest do not.
+    // The rebase: the heads' own places move; a word outside the layer (a pool item) and the rest do not.
     const U from = 0x10203000, to = 0x0FF01000;
-    std::uint32_t layer[kExtraWords] = {0, from + 4, 0x93F120, from + 0x2C, from + 0x30, from - 4};
+    std::uint32_t layer[kExtraWords] = {0, from + 4, from + 0x1000, from + 0x2C, from + 0x30, from - 4};
     check(RebaseWords(layer, kExtraWords, from, to, kExtraWords * 4) == 2 && layer[0] == 0 && layer[1] == to + 4 &&
-              layer[2] == 0x93F120 && layer[3] == to + 0x2C && layer[4] == from + 0x30 && layer[5] == from - 4,
+              layer[2] == from + 0x1000 && layer[3] == to + 0x2C && layer[4] == from + 0x30 && layer[5] == from - 4,
           "the extra layer's heads rebased to its place here, nothing else");
     check(RebaseWords(layer, kExtraWords, to, to, kExtraWords * 4) == 0, "nothing rebased at the place it was taken");
     return cases;
