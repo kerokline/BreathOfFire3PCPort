@@ -122,10 +122,10 @@ constexpr unsigned kArea108SetCellCount = 4;
 // Area 111: the 7 x 7 grid of nibbles (4 bytes a row; an odd column the low
 // nibble) at the end of the image's initialized .data, its init's copy of it
 // (28 bytes) and the 7 x 7 map bytes it stamps.
-// kArea111Grid: now Area111_Grid (symbols.toml). Area111_Grid, 28 bytes
-constexpr unsigned kArea111GridBytes = 0x1C;
-constexpr unsigned kArea111GridSide = 7;
-// kArea111GridStart: now Area111_GridStart (symbols.toml). Area111_GridStart, 28 bytes
+// kArea111SlidingPlatforms: now Area111_SlidingPlatforms (symbols.toml). Area111_SlidingPlatforms, 28 bytes
+constexpr unsigned kArea111SlidingPlatformsBytes = 0x1C;
+constexpr unsigned kArea111SlidingPlatformsSide = 7;
+// kArea111SlidingPlatformsStart: now Area111_SlidingPlatformsStart (symbols.toml). Area111_SlidingPlatformsStart, 28 bytes
 constexpr ::bof3::image::Va kArea111CellBytes{0x61FB7C};   // Area111_CellBytes, 49
 // Area 112: the four member ids its handler 2 looks for and the four message
 // words by them, the four cells its cell hook tests (x, z, flag bits, flag),

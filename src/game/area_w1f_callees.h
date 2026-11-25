@@ -133,7 +133,7 @@ constexpr unsigned kArea75ListCount = 3;
 // kArea75NextList: now Area75_NextList (symbols.toml). Area75_NextList, 16
 // Object B's animation by (the previous move, the new one): rows of 4.
 // kArea75MoveAnims: now Area75_MoveAnims (symbols.toml). Area75_MoveAnims, rows of 4
-// The other's press pattern: rows of 15 bytes by the rhythm row, read at the
+// The partner's press pattern: rows of 15 bytes by the rhythm row, read at the
 // move's frame count mod 15.
 // kArea75Rhythm: now Area75_Rhythm (symbols.toml). Area75_Rhythm, rows of 15
 // The counters' format for Crt_sprintf (two numbers).
@@ -141,13 +141,13 @@ constexpr unsigned kArea75ListCount = 3;
 
 // Area 75's own cells (0x93C340..0x93C353; unnamed, no other reader read this
 // round). Two counters (words, 0x5DC at a reset) come down by 4 or 5 a press:
-// the player's by the button (Input_Pressed bit 0x20), the other's by the
-// rhythm tables. The phase (Area75_Phases' index), the move (0 the other's
+// the player's by the button (Input_Pressed bit 0x20), the partner's by the
+// rhythm tables. The phase (Area75_Phases' index), the move (0 the partner's
 // turn, 1 the player's, 2 both) and its frames, a flags byte (bit 8: presses
 // out of turn are not counted, 4: the counters blink, 1: not drawn), presses
 // out of turn and frames without a press (the player's), the rhythm row, the
-// two effect slots (the other's, the player's), the two object indexes (A the
-// other's; B the one animated by the move), the list and its position.
+// two effect slots (the partner's, the player's), the two object indexes (A the
+// partner's; B the one animated by the move), the list and its position.
 constexpr ::bof3::image::Va kPhase{0x93C340};
 // kMove: now AreaW1f_Move (symbols.toml).
 // kMoveFrames: now AreaW1f_MoveFrames (symbols.toml). u16
@@ -156,8 +156,8 @@ constexpr ::bof3::image::Va kPhase{0x93C340};
 // kIdleFrames: now AreaW1f_IdleFrames (symbols.toml).
 // kRow: now AreaW1f_Row (symbols.toml).
 // kPlayerCounter: now AreaW1f_PlayerCounter (symbols.toml). u16
-// kOtherCounter: now AreaW1f_OtherCounter (symbols.toml). u16
-constexpr ::bof3::image::Va kOtherEffect{0x93C34E};
+// kPartnerCounter: now AreaW1f_PartnerCounter (symbols.toml). u16
+constexpr ::bof3::image::Va kPartnerEffect{0x93C34E};
 constexpr ::bof3::image::Va kPlayerEffect{0x93C34F};
 constexpr ::bof3::image::Va kObjectA{0x93C350};
 // kObjectB: now AreaW1f_ObjectB (symbols.toml).

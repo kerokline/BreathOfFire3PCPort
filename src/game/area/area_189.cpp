@@ -86,7 +86,7 @@ void ChangeToPending() {
     AH_CALL(Field_ChangeArea)(Word(Mem(::bof3::Img(AreaW0b_Place_addr))), Long(Mem(::bof3::Img(at::kPendingX.v))), Long(Mem(::bof3::Img(AreaEntry_PendingZ_addr))), B(::bof3::Img(AreaEntry_PendingFlags_addr)));
 }
 
-// The walk's facing for the next area: Area189_FacingJitter[Rand() & 3] +
+// The Desert of Death walk's facing for the next area: Area189_FacingJitter[Rand() & 3] +
 // the leader's +8, the low nibble (Sprite_Current read after Rand).
 void JitterFacing() {
     const unsigned r = static_cast<unsigned>(AH_CALL(Rand)()) & 3;
@@ -145,7 +145,7 @@ extern "C" void __cdecl Area189_LeaderRun(void) {
     StateEntry("Area189_LeaderRun", ::bof3::Img(Area189_LeaderStates_addr), at::kArea189LeaderStateCount, Cur()[2])();
 }
 
-// original 0x42A8D0 (Area189_LeaderStates 0): the walk set up.
+// original 0x42A8D0 (Area189_LeaderStates 0): the Desert of Death walk set up.
 // Gte_SetGeomOffset(0xA0, 0xB9), Gte_SetGeomScreen(0x12C); Camera_Angles[0]
 // 0xFD12; the leader's facing +8 = the byte 0x904153; Camera_Distance 0xF280;
 // MapView_Redraw 4; Cond_AngleFB's low word ((2 - that byte, read again) &

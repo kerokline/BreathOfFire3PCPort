@@ -366,7 +366,7 @@ at `cf809700`. Missing = zero where the PC has a value:
 - **Placed bytes that come out zero or different are all already catalogued**:
   `Char_DefaultRecords` (28 a build; the default names at the disc's width, the
   language layer's names, DIV-0020, `exe-import.md` 3), `MeteorStrikeChip_Lifts`
-  (D267), `Area111_GridStart` (D268, PSX), `Scena17_EndSteps` (Western, the
+  (D267), `Area111_SlidingPlatformsStart` (D268, PSX), `Scena17_EndSteps` (Western, the
   owner's call in 4), `EffectKind0F_RuleLineIds` (the fishing rule pages, D286),
   `Char_ExpTable` on the PSP (Peco's row, HANDOFF item 9), and the regional
   values of `disc-data-inventory.md` 5 (`Area25_Handlers` JP, `Title_Sprites`,

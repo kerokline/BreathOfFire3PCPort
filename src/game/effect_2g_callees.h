@@ -47,7 +47,7 @@ constexpr ::bof3::image::Va kText{0x904BA0};          // the text scratch Crt_sp
 
 // --- kind 0x5B (area 75's two) -------------------------------------------------
 constexpr ::bof3::image::Va kArea75EffectSlots{0x93C34E}; // two bytes: the effect records area 75 keeps
-                                                       // (area_w1f_callees.h kOtherEffect / kPlayerEffect)
+                                                       // (area_w1f_callees.h kPartnerEffect / kPlayerEffect)
 constexpr unsigned kArea75EffectSlotCount = 2;
 
 // --- ranges ------------------------------------------------------------------

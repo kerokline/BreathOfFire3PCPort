@@ -145,7 +145,7 @@ handlers where the PC has 13 - Capcom's port, read, not measured further.
 | `0x40E330` | `Area75_PhasePlay` | `0x8D` | `Area75_Phases[2]` | kState | section 1.1 |
 | `0x40E3C0` | `Area75_PhaseMissed` | `0x17` | `Area75_Phases[3]` | kState | Cond row 10 flag 1 set; tail state `0x1E` |
 | `0x40E3E0` | `Area75_PhaseReached` | `0x92` | `Area75_Phases[4]` | kState | story flag `0x41` cleared; with `Cond_ByteFA` `0xA`: row 10 flag 0 set, tail kind and state 0, the run step 0, object B `+0x83` = 4, object A `+0x83` = 5 (words `+0x8A` 0), `MoveScript_Var7` 5, `Party_DropIn(5)`, counter 0 = `0x1E` |
-| `0x40E480` | `Area75_OtherPress` | `0x96` | called by `Area75_PhasePlay` | kCallee | a press of the rhythm table: `Sound_PlayEffect(0x202)`, the other's counter less 4 + `Rand() % 2`, its effect's `+0xC` less 1, object A made current with `+0x4A` = 1, `jmp Sprite_ScriptTick` |
+| `0x40E480` | `Area75_PartnerPress` | `0x96` | called by `Area75_PhasePlay` | kCallee | a press of the rhythm table: `Sound_PlayEffect(0x202)`, the partner's counter less 4 + `Rand() % 2`, its effect's `+0xC` less 1, object A made current with `+0x4A` = 1, `jmp Sprite_ScriptTick` |
 | `0x40E520` | `Area75_PlayerPress` | `0x74` | called by `Area75_PhasePlay` | kCallee | the button (`Input_Pressed` bit `0x20`): the same for the player's counter and effect with the leader's record; else the idle frames + 1 |
 | `0x40E5A0` | `Area75_EarlyPress` | `0x48` | called by `Area75_PhasePlay` | kCallee | unless the flags' bit 8, the button: the leader's record ticked, the player's effect less 1, the presses out of turn + 1 |
 | `0x40E5F0` | `Area75_DrawCounters` | `0x155` | `jmp`'d to by `Area75_PhaseRun` | kCallee | section 1.1 |
@@ -156,9 +156,9 @@ handlers where the PC has 13 - Capcom's port, read, not measured further.
 Area 75's cells `0x93C340..0x93C353` (unnamed; no reader outside the band
 was read) hold two counters (words, `0x5DC` at a reset) that come down by 4
 or 5 a press: **the player's** `0x93C34A` by the button (`Input_Pressed` bit
-`0x20`, read as a byte), **the other's** `0x93C34C` by a rhythm table. The
+`0x20`, read as a byte), **the partner's** `0x93C34C` by a rhythm table. The
 phase byte `0x93C340` indexes `Area75_Phases` (entry 0 the shared `ret`); the
-move `0x93C343` (0 the other's turn, 1 the player's, 2 both, anything else
+move `0x93C343` (0 the partner's turn, 1 the player's, 2 both, anything else
 the player's presses counted out of turn) runs for the frames `0x93C344`.
 
 - **`Area75_TailPresses`** (tail kind 30): the s8 state through the byte
@@ -169,9 +169,9 @@ the player's presses counted out of turn) runs for the frames `0x93C344`.
   `0x41` and `Field_ChangeArea(0x4B, 0x170000, 0x190000, 0x82)`, the music
   byte `0x904CD0` = `0x58`, counter 0 `0x13` or 0 by Cond row 10 flag 1, a
   fade in, counter 0 = 1. 5..`0xD`: three rounds gated by counter 0 (3, 6, 9,
-  `0xC`): the other's turn to below `0x579`, the player's to below `0x579`,
+  `0xC`): the partner's turn to below `0x579`, the player's to below `0x579`,
   message `0x17` then both until the counters are more than `0x96` apart and
-  the other's is at `0x47E` or less. `0xF`: the timer down to 4. `0x14` /
+  the partner's is at `0x47E` or less. `0xF`: the timer down to 4. `0x14` /
   `0x15`: a round of both after a choice (frames `0x78`, sound `0x201`), then
   the phase run with the state read again. `0x1E`: object A's word `+0x8A`
   and the leader's `+0x12E` bumped. `0x1F..0x23`: a fade, the music faded and
@@ -426,7 +426,7 @@ The thinnest: F44 1 (Area75_TailPresses), E42 10 (Area75_FollowStep), N37 10 (Ar
 | E3 | `Area75_ArmTail30` | state 1 | Area75_ArmTail30 6000 |
 | E4 | `Area75_MarkObjectB` | object A's cell | Area75_MarkObjectB 5999 |
 | E5 | `Area75_MarkObjectA` | index + 1 | Area75_MarkObjectA 6000 |
-| E6 | `Area75_ShowEffects` | the other's +2 | Area75_ShowEffects 5993 |
+| E6 | `Area75_ShowEffects` | the partner's +2 | Area75_ShowEffects 5993 |
 | E7 | `Area75_ShowEffects` | the player's = 3 | Area75_ShowEffects 6000 |
 | E8 | `Area75_PoseObject5` | object 6 | Area75_PoseObject5 6000 |
 | E9 | `Area75_PoseObject5` | +0x83 = 6 | Area75_PoseObject5 6000 |
@@ -498,7 +498,7 @@ The thinnest: F44 1 (Area75_TailPresses), E42 10 (Area75_FollowStep), N37 10 (Ar
 | F19 | `Area75_TailPresses` | state 6 phase 1 | Area75_TailPresses 85 |
 | F20 | `Area75_TailPresses` | state 7 at 7 | Area75_TailPresses 188 |
 | F21 | `Area75_TailPresses` | state 7 move 2 | Area75_TailPresses 158 |
-| F22 | `Area75_TailPresses` | state 8 the other counter | Area75_TailPresses 78 |
+| F22 | `Area75_TailPresses` | state 8 the partner counter | Area75_TailPresses 78 |
 | F23 | `Area75_TailPresses` | state 8 counter + 2 | Area75_TailPresses 77 |
 | F24 | `Area75_TailPresses` | state 9 at 8 | Area75_TailPresses 196 |
 | F25 | `Area75_TailPresses` | state 9 message 0x18 | Area75_TailPresses 173 |
@@ -563,7 +563,7 @@ The thinnest: F44 1 (Area75_TailPresses), E42 10 (Area75_FollowStep), N37 10 (Ar
 | G11 | `Area75_Trigger41` | sub-kind 0xD | Area75_Trigger41 6000 |
 | G12 | `Area75_Trigger41` | state 1 | Area75_Trigger41 6000 |
 | G13 | `Area75_Trigger41` | answers 1 | Area75_Trigger41 6000 |
-| K1 | `Area75_ResetPresses` | other counter 0x5DD | Area75_ResetPresses 6000 |
+| K1 | `Area75_ResetPresses` | partner counter 0x5DD | Area75_ResetPresses 6000 |
 | K2 | `Area75_ResetPresses` | player counter 0x5DB | Area75_ResetPresses 6000 |
 | K3 | `Area75_ResetPresses` | list 1 | Area75_ResetPresses 6000 |
 | K4 | `Area75_ResetPresses` | position 1 | Area75_ResetPresses 6000 |
@@ -618,21 +618,21 @@ The thinnest: F44 1 (Area75_TailPresses), E42 10 (Area75_FollowStep), N37 10 (Ar
 | K53 | `Area75_PhaseReached` | B at A | Area75_PhaseReached 1620 |
 | K54 | `Area75_PhaseReached` | A word 1 | Area75_PhaseReached 1664 |
 | K55 | `Area75_PhaseReached` | B word 1 | Area75_PhaseReached 1620 |
-| L1 | `Area75_OtherPress` | mod 14 | Area75_OtherPress 2699 |
-| L2 | `Area75_OtherPress` | rows of 16 | Area75_OtherPress 2316 |
-| L3 | `Area75_OtherPress` | sound 0x203 | Area75_OtherPress 3511 |
+| L1 | `Area75_PartnerPress` | mod 14 | Area75_PartnerPress 2699 |
+| L2 | `Area75_PartnerPress` | rows of 16 | Area75_PartnerPress 2316 |
+| L3 | `Area75_PartnerPress` | sound 0x203 | Area75_PartnerPress 3511 |
 | L4 | `RandHalf (75 x2)` | & 1 for % 2 | equivalent: `rand()` never answers a negative value, so `% 2` and `& 1` agree (the harness's negative answers are multiples of 4); variant L4b (`% 3`) refused |
-| L5 | `DropCounter (75 x2)` | less 5 | Area75_OtherPress 3503, Area75_PlayerPress 2959 |
-| L6 | `Area75_OtherPress` | the player's counter | Area75_OtherPress 3511 |
-| L7 | `Area75_OtherPress` | the player's effect | Area75_OtherPress 2630 |
-| L8 | `Area75_OtherPress` | +0x4A = 2 | Area75_OtherPress 3511 |
-| L9 | `Area75_OtherPress` | object B | Area75_OtherPress 3389 |
-| L10 | `Area75_OtherPress` | the slot read before Rand | Area75_OtherPress 146 |
-| L11 | `DrainEffect (75 x3)` | less 2 | Area75_OtherPress 3511, Area75_PlayerPress 2974, Area75_EarlyPress 2285 |
+| L5 | `DropCounter (75 x2)` | less 5 | Area75_PartnerPress 3503, Area75_PlayerPress 2959 |
+| L6 | `Area75_PartnerPress` | the player's counter | Area75_PartnerPress 3511 |
+| L7 | `Area75_PartnerPress` | the player's effect | Area75_PartnerPress 2630 |
+| L8 | `Area75_PartnerPress` | +0x4A = 2 | Area75_PartnerPress 3511 |
+| L9 | `Area75_PartnerPress` | object B | Area75_PartnerPress 3389 |
+| L10 | `Area75_PartnerPress` | the slot read before Rand | Area75_PartnerPress 146 |
+| L11 | `DrainEffect (75 x3)` | less 2 | Area75_PartnerPress 3511, Area75_PlayerPress 2974, Area75_EarlyPress 2285 |
 | L12 | `Area75_PlayerPress` | idle + 2 | Area75_PlayerPress 3026 |
 | L13 | `Area75_PlayerPress` | idle 1 after a press | Area75_PlayerPress 2974 |
-| L14 | `Area75_PlayerPress` | the other's counter | Area75_PlayerPress 2974 |
-| L15 | `Area75_PlayerPress` | the other's effect | Area75_PlayerPress 2230 |
+| L14 | `Area75_PlayerPress` | the partner's counter | Area75_PlayerPress 2974 |
+| L15 | `Area75_PlayerPress` | the partner's effect | Area75_PlayerPress 2230 |
 | L16 | `Area75_PlayerPress` | +0x4A = 2 | Area75_PlayerPress 2973 |
 | L17 | `Pressed20 (75 x2)` | bit 0x10 | Area75_PlayerPress 2981, Area75_EarlyPress 2342 |
 | L18 | `Area75_PlayerPress` | the slot read before Rand | Area75_PlayerPress 214 |
@@ -642,7 +642,7 @@ The thinnest: F44 1 (Area75_TailPresses), E42 10 (Area75_FollowStep), N37 10 (Ar
 | L22 | `Area75_EarlyPress` | early + 2 | Area75_EarlyPress 2285 |
 | L23 | `Area75_EarlyPress` | +0x4A = 3 | Area75_EarlyPress 2285 |
 | L24 | `Area75_EarlyPress` | the next record | Area75_EarlyPress 2170 |
-| L25 | `Area75_EarlyPress` | the other's effect | Area75_EarlyPress 1724 |
+| L25 | `Area75_EarlyPress` | the partner's effect | Area75_EarlyPress 1724 |
 | M1 | `Area75_DrawCounters` | blink by bit 8 | Area75_DrawCounters 588 |
 | M2 | `Area75_DrawCounters` | blink flag 2 | Area75_DrawCounters 550 |
 | M3 | `Area75_DrawCounters` | colour below 0x96 | Area75_DrawCounters 641 |
@@ -658,7 +658,7 @@ The thinnest: F44 1 (Area75_TailPresses), E42 10 (Area75_FollowStep), N37 10 (Ar
 | M13 | `Area75_DrawCounters` | five characters | Area75_DrawCounters 3976 |
 | M14 | `Area75_DrawCounters` | the second counter read first | Area75_DrawCounters 15 |
 | M15 | `Area75_DrawCounters` | the second text always | Area75_DrawCounters 553 |
-| M16 | `Area75_DrawCounters` | the first counter the other's | Area75_DrawCounters 3805 |
+| M16 | `Area75_DrawCounters` | the first counter the partner's | Area75_DrawCounters 3805 |
 | N1 | `Area75_DrawWindow` | shade 0xAD | Area75_DrawWindow 1983 |
 | N2 | `Area75_DrawWindow` | texture page 0xE | Area75_DrawWindow 6000 |
 | N3 | `Area75_DrawWindow` | CLUT x + 0x11 | Area75_DrawWindow 6000 |
@@ -700,7 +700,7 @@ The thinnest: F44 1 (Area75_TailPresses), E42 10 (Area75_FollowStep), N37 10 (Ar
 | N39 | `Area75_DrawWindow` | w + 1 whole | Area75_DrawWindow 2346 |
 | H10b | `GlideStep (x3)` | x step by count & 0xE | Area68_GlideStepA 2677, Area68_GlideStepB 2719 |
 | B2b | `Area69_GlideStep` | steps + 1 | Area69_GlideStep 4223 |
-| L4b | `RandHalf (75 x2)` | % 3 for % 2 | Area75_OtherPress 2322, Area75_PlayerPress 2057 |
+| L4b | `RandHalf (75 x2)` | % 3 for % 2 | Area75_PartnerPress 2322, Area75_PlayerPress 2057 |
 
 ## 5. The tables named
 
