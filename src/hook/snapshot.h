@@ -16,8 +16,11 @@
 //
 // The file BISLPS1X.DAT starts with an ordinary save file (Save_BuildBlock's
 // 0x12B0 bytes), so the save menu's summary reader reads it as a save; the
-// snapshot half follows, refused loudly by a build that is not the one that
-// wrote it.
+// snapshot half follows. Since format 2 (the state-by-name round,
+// docs/state-by-name-format.md) a load has three answers: exact in the build
+// and process that wrote it; portable in another build or process when every
+// task stood at a named place; otherwise refused with its reason, the save
+// half offered when it is whole.
 //
 // Nothing here is a replacement of Capcom's code: F6 / F7 are ours
 // (docs/quicksave.md, ledger draft A).
@@ -106,6 +109,42 @@ void Snapshot_RequestLoad(unsigned slot);
 // after Snapshot_Pending ran its load, to stay open on a refusal and say why
 // (with our back buffer the overlay line reaches only the log).
 const char* Snapshot_LastLine();
+
+// The last load's answer (docs/state-by-name-round.md 3.1;
+// docs/state-by-name-format.md 5), for the quick menu's question (group A4):
+// read after Snapshot_Pending ran a load, as Snapshot_LastLine.
+//   Exact     the build and process layout that wrote it: restored to the frame
+//   Portable  another build or process: the span and the records restored,
+//             each task started again at its place
+//   RefusedSaveOffered  refused before a byte was written, for `why`; the
+//             file's save half is whole (it sums as a save's block), so the
+//             menu may offer to load it as a save (Snapshot_ReadSaveHalf)
+//   Refused   refused, and there is no whole save half to offer
+// None before any load.
+enum class SnapshotAnswer { None, Exact, Portable, Refused, RefusedSaveOffered };
+struct SnapshotLoadResult {
+    SnapshotAnswer answer = SnapshotAnswer::None;
+    unsigned slot = 0;
+    std::string why;      // short, as the overlay shows it ("another build (not portable)")
+    std::string detail;   // the log's
+};
+const SnapshotLoadResult& Snapshot_LastLoad();
+
+// The keep list (snapshot.cpp kKept): the ranges of the span that are the
+// process's, read live before a restore writes the span and put back after
+// it. VAs. For the region table's start-up check (group A3).
+struct SnapshotKept {
+    std::uint32_t at;
+    std::uint32_t bytes;
+    const char* name;
+};
+const SnapshotKept* Snapshot_Kept(std::size_t& count);
+
+// The save half of quicksave slot `slot` (0x10..0x1F): its first 0x12B0
+// bytes, a save file as BISLPS0?.DAT is, when the file is there and the block
+// sums as LoadMenu_Read checks a save's. False with `why` otherwise. For
+// tier 0 (group A4): the bytes the title's load reads in place of a slot.
+bool Snapshot_ReadSaveHalf(unsigned slot, std::vector<unsigned char>& out, std::string& why);
 
 // WinMain's loop, after Task_RunAll, Gfx_LinkOTags and the frame count and
 // before the next frame's draw - the one point where every task is suspended
