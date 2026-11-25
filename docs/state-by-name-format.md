@@ -150,6 +150,11 @@ named: they are the process's, and a portable load writes them fresh.
 | image link | `span_words::Fold24` | the low 24 bits as at `0x400000`, the top byte kept | at this process's base |
 | message slot | the 17 run-time slots (`span_words::RuntimeSlot`), a value inside our message pool | the offset in the pool | this process's pool plus the offset |
 | text of ours | one of Capcom's slots (below) holding a pointer into a section of ours named by its bytes (`span_words::OurImage::Named`, content) | raw | exact: raw; portable: the process's own word, which must be text of ours |
+| (B1b) text word | `span_words::kTextWords` (the message box's three, the battle block's `0x93B8FC`), a value inside our message pool, as the message slots | the offset in the pool | this process's pool plus the offset; one naming our module elsewhere makes the take not portable |
+| (B1b) a cursor in a slot's text | any word that is no slot, its value a text slot's pointer or inside that text up to its NUL | `(offset in the text << 24) \| the slot` | from the slot, as a text slot is placed, plus the offset |
+
+The two B1b rows, and what measured them, are
+[`state-by-name-participants.md`](state-by-name-participants.md) 10.
 
 **Shared, not copied.** The fold, the run-time slots and our module's
 sections moved out of `statehash.cpp` into `src/hook/span_words.h`
