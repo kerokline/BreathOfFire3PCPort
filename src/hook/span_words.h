@@ -111,10 +111,10 @@ constexpr bool IsTextWord(std::uint32_t va) {
 // finding 2, docs/state-by-name-participants.md 10.7): a kind-0xF effect
 // object's +0x50 (the typing cursor) and +0x54 (the scrolling one), into one
 // of the thirteen fishing lines of 0x653B98 (effect_kind_0f.cpp; the lines are
-// DIV-0064's g_lines under an overlay). Effect_Objects: 20 records of 0x80, the
-// record live when +0 is not 0, its kind at +5. A word is named by where it
-// is: only these two fields of a live kind-0xF record are tried, and only
-// against those thirteen texts.
+// DIV-0064's g_lines under an overlay). Effect_Objects: 20 records of 0x80,
+// the kind at +5 (its last owner's, live or not). A word is named by where it
+// is: only these two fields of a kind-0xF record are tried, and only against
+// those thirteen texts.
 constexpr std::uint32_t kEffectObjects = 0x7E11E0;
 constexpr std::uint32_t kEffectRecords = 20;
 constexpr std::uint32_t kEffectStride = 0x80;

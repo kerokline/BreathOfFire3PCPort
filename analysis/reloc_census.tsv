@@ -5816,83 +5816,83 @@ site	src/game/core/title_states.cpp	290	base_offset	-	0x904EFC	0x904efc	data	gam
 site	src/game/core/title_states.cpp	416	base_offset	-	0x66C7F8	0x66c7f8	data	game	ui	base_helper	Title_BadgeOn	-	const std::uint32_t aState = ::bof3::Img(0x66C808), aBadge = ::bof3::Img(0x66C7F8), aBlink = ::bof3::Img(0x66C806);
 site	src/game/core/title_states.cpp	416	base_offset	-	0x66C806	0x66c806	data	game	ui	base_helper	Title_BlinkCount	-	const std::uint32_t aState = ::bof3::Img(0x66C808), aBadge = ::bof3::Img(0x66C7F8), aBlink = ::bof3::Img(0x66C806);
 site	src/game/core/title_states.cpp	416	base_offset	-	0x66C808	0x66c808	data	game	ui	base_helper	Title_State	-	const std::uint32_t aState = ::bof3::Img(0x66C808), aBadge = ::bof3::Img(0x66C7F8), aBlink = ::bof3::Img(0x66C806);
-site	src/game/core/transition.cpp	81	const_def	literal	kCameraYaw	0x929ec8	data	game	engine	module	Camera_Angles	-	constexpr std::uint32_t kCameraYaw = 0x929EC8;
-site	src/game/core/transition.cpp	83	const_def	literal	kCameraAngle	0x929ecc	data	game	engine	module	Cond_AngleFB	-	constexpr std::uint32_t kCameraAngle = 0x929ECC;
-site	src/game/core/transition.cpp	102	module_const	-	kCameraYaw	0x929ec8	data	game	engine	base_helper	Camera_Angles	file	AddWord(::bof3::Img(kCameraYaw), 0xB);
-site	src/game/core/transition.cpp	103	module_const	-	kCameraAngle	0x929ecc	data	game	engine	base_helper	Cond_AngleFB	file	AddWord(::bof3::Img(kCameraAngle), 0xB);
-site	src/game/core/transition.cpp	136	module_const	-	kCameraYaw	0x929ec8	data	game	engine	base_helper	Camera_Angles	file	AddWord(::bof3::Img(kCameraYaw), -0xB);
-site	src/game/core/transition.cpp	137	module_const	-	kCameraAngle	0x929ecc	data	game	engine	base_helper	Cond_AngleFB	file	AddWord(::bof3::Img(kCameraAngle), -0xB);
-site	src/game/core/transition.cpp	296	const_def	literal	kPitch	0x929ecc	data	game	engine	module	Cond_AngleFB	-	constexpr std::uint32_t kYaw = 0x929EC8, kPitch = 0x929ECC, kYawCopy = 0x7E0680, kPitchCopy = 0x7E0684;
-site	src/game/core/transition.cpp	296	const_def	literal	kPitchCopy	0x7e0684	data	game	engine	module	Light_AnglesCopy+0x4	-	constexpr std::uint32_t kYaw = 0x929EC8, kPitch = 0x929ECC, kYawCopy = 0x7E0680, kPitchCopy = 0x7E0684;
-site	src/game/core/transition.cpp	296	const_def	literal	kYaw	0x929ec8	data	game	engine	module	Camera_Angles	-	constexpr std::uint32_t kYaw = 0x929EC8, kPitch = 0x929ECC, kYawCopy = 0x7E0680, kPitchCopy = 0x7E0684;
-site	src/game/core/transition.cpp	296	const_def	literal	kYawCopy	0x7e0680	data	game	engine	module	Light_AnglesCopy	-	constexpr std::uint32_t kYaw = 0x929EC8, kPitch = 0x929ECC, kYawCopy = 0x7E0680, kPitchCopy = 0x7E0684;
-site	src/game/core/transition.cpp	313	const_def	literal	kBattleBytes	0x904aa0	data	game	engine	module	-	-	constexpr std::uint32_t kBattleBytes = 0x904AA0;
-site	src/game/core/transition.cpp	320	const_def	literal	kMode11Bytes	0x905da0	data	game	engine	module	FieldEvent_Object905DA0	-	constexpr std::uint32_t kMode11Bytes = 0x905DA0;
-site	src/game/core/transition.cpp	410	code_literal	literal	0x4981F1	0x4981f1	code	game	engine	init	-	-	{0x4981F1, 0x4983F1},
-site	src/game/core/transition.cpp	410	code_literal	literal	0x4983F1	0x4983f1	code	game	engine	init	-	-	{0x4981F1, 0x4983F1},
-site	src/game/core/transition.cpp	413	code_const	module	kAfterShop	0x4560d0	code	game	engine	base_helper	CommuSim_RollOffers	include	Snd_LoadBankFile, Fn<void (__cdecl*)()>(::bof3::Code(kAfterShop.v)), Text_EmitGlyph,
-site	src/game/core/transition.cpp	415	code_const	module	kMenuStates	0x589970	code	game	engine	base_helper	FieldMenu_Run	include	MoveScript_TintFrame, Field_DrawFrame, Field_ModeDispatch, Fn<void (__cdecl*)()>(::bof3::Code(kMenuStates.v)),
-site	src/game/core/transition.cpp	416	code_const	module	kShopStates	0x57f500	code	game	engine	base_helper	ShopMode_Dispatch	include	Field_RunTaskRecords, Fn<void (__cdecl*)()>(::bof3::Code(kShopStates.v)),
-site	src/game/core/transition.cpp	436	code_const	module	kTransitionEntry	0x495070	code	game	engine	base_helper	Transition_Task	include	mode_flow::g.task_create(2, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kTransitionEntry.v))));
-site	src/game/core/transition.cpp	449	const_def	derived	kind	0x904ee0	data	game	engine	module	ModeFlow_AreaTransition	-	const unsigned kind = ModeFlow_TransitionKind;
-site	src/game/core/transition.cpp	681	base_offset	-	0x905B82	0x905b82	data	game	engine	base_helper	EventOps_BlockByte	-	mode_flow::At(::bof3::Img(0x905B82))[0] = 0;
-site	src/game/core/transition.cpp	691	at_global	-	mode_flow::at::kClock	0x9040c8	data	game	engine	base_helper	-	-	const unsigned char* const clock = mode_flow::At(::bof3::Img(mode_flow::at::kClock));
-site	src/game/core/transition.cpp	729	const_def	derived	kind	0x904ee0	data	game	engine	module	ModeFlow_AreaTransition	-	const unsigned char kind = Area_EnterTransition;
-site	src/game/core/transition.cpp	735	at_global	-	mode_flow::at::kKind2XHigh	0x905e66	data	game	engine	base_helper	Field_Kind2X+0x2	-	if (Field_InputFlags & 1) mode_flow::g.entry_point(mode_flow::Word(mode_flow::At(::bof3::Img(mode_flow::at::kKind2XHigh))), mode_flow::Word(mode_flow::At(::bof3
-site	src/game/core/transition.cpp	735	at_global	-	mode_flow::at::kKind2ZHigh	0x905e62	data	game	engine	base_helper	Field_Kind2Z+0x2	-	if (Field_InputFlags & 1) mode_flow::g.entry_point(mode_flow::Word(mode_flow::At(::bof3::Img(mode_flow::at::kKind2XHigh))), mode_flow::Word(mode_flow::At(::bof3
-site	src/game/core/transition.cpp	775	module_const	-	kBattleBytes	0x904aa0	data	game	engine	base_helper	-	file	move_script::At(::bof3::Img(kBattleBytes))[0] = 0;
-site	src/game/core/transition.cpp	776	module_const	-	kBattleBytes	0x904aa0	data	game	engine	base_helper	-	file	move_script::At(::bof3::Img(kBattleBytes))[1] = 0;
-site	src/game/core/transition.cpp	777	module_const	-	kBattleBytes	0x904aa0	data	game	engine	base_helper	-	file	move_script::At(::bof3::Img(kBattleBytes))[2] = 0;
-site	src/game/core/transition.cpp	795	const_def	derived	kind	0x904ee0	data	game	engine	module	ModeFlow_AreaTransition	-	const unsigned char kind = ModeFlow_AreaTransition;
-site	src/game/core/transition.cpp	823	module_const	-	kMode11Bytes	0x905da0	data	game	engine	base_helper	FieldEvent_Object905DA0	file	move_script::At(::bof3::Img(kMode11Bytes))[1] = 0;
-site	src/game/core/transition.cpp	824	module_const	-	kMode11Bytes	0x905da0	data	game	engine	base_helper	FieldEvent_Object905DA0	file	move_script::At(::bof3::Img(kMode11Bytes))[2] = 0;
-site	src/game/core/transition.cpp	825	module_const	-	kMode11Bytes	0x905da0	data	game	engine	base_helper	FieldEvent_Object905DA0	file	move_script::At(::bof3::Img(kMode11Bytes))[3] = 0;
-site	src/game/core/transition.cpp	826	module_const	-	kMode11Bytes	0x905da0	data	game	engine	base_helper	FieldEvent_Object905DA0	file	move_script::At(::bof3::Img(kMode11Bytes))[4] = 0;
-site	src/game/core/transition.cpp	853	at_global	-	mode_rest::at::kMenuTimer	0x929f04	data	game	engine	base_helper	-	-	move_script::At(::bof3::Img(mode_rest::at::kMenuTimer))[0] = 3;
-site	src/game/core/transition.cpp	920	at_global	-	mode_rest::at::kFacingJitter	0x656a80	data	game	engine	base_helper	-	-	static_cast<unsigned char>((move_script::At(::bof3::Img(mode_rest::at::kFacingJitter))[r & 3] + ObjTrio[0].direction) & 0xF);
-site	src/game/core/transition.cpp	932	code_const	at	mode_rest::at::kAreaAskedX	0x430000	code	game	engine	call	-	-	SH_CALL(Field_ChangeArea)(ModeRest_AreaAsked, I(mode_rest::at::kAreaAskedX), I(mode_rest::at::kAreaAskedZ), 4);
-site	src/game/core/transition.cpp	946	at_global	-	mode_rest::at::kMessageBits	0x7dee44	data	game	engine	base_helper	-	-	if (move_script::At(::bof3::Img(mode_rest::at::kMessageBits))[0] & 2) {
-site	src/game/core/transition.cpp	986	at_global	-	mode_rest::at::kFormation	0x904aac	data	game	engine	base_helper	-	-	U formation = UL(::bof3::Img(mode_rest::at::kFormation));
-site	src/game/core/transition.cpp	991	at_global	-	mode_rest::at::kApproach	0x656aa4	data	game	engine	base_helper	-	-	const unsigned dx = static_cast<std::uint16_t>(static_cast<signed char>(move_script::At(::bof3::Img(mode_rest::at::kApproach))[i]));
-site	src/game/core/transition.cpp	992	at_global	-	mode_rest::at::kApproach	0x656aa4	data	game	engine	base_helper	-	-	const unsigned dz = static_cast<std::uint16_t>(static_cast<signed char>(move_script::At(::bof3::Img(mode_rest::at::kApproach))[i + 1]));
-site	src/game/core/transition.cpp	993	at_global	-	mode_rest::at::kKind2ZHigh	0x905e62	data	game	engine	base_helper	Field_Kind2Z+0x2	-	move_script::SetWord(move_script::At(::bof3::Img(mode_rest::at::kKind2ZHigh)), move_script::Word(move_script::At(::bof3::Img(mode_rest::at::kKind2ZHigh))) + dz)
-site	src/game/core/transition.cpp	993	at_global	-	mode_rest::at::kKind2ZHigh	0x905e62	data	game	engine	base_helper	Field_Kind2Z+0x2	-	move_script::SetWord(move_script::At(::bof3::Img(mode_rest::at::kKind2ZHigh)), move_script::Word(move_script::At(::bof3::Img(mode_rest::at::kKind2ZHigh))) + dz)
-site	src/game/core/transition.cpp	995	at_global	-	mode_rest::at::kKind2XHigh	0x905e66	data	game	engine	base_helper	Field_Kind2X+0x2	-	move_script::SetWord(move_script::At(::bof3::Img(mode_rest::at::kKind2XHigh)), move_script::Word(move_script::At(::bof3::Img(mode_rest::at::kKind2XHigh))) + dx)
-site	src/game/core/transition.cpp	995	at_global	-	mode_rest::at::kKind2XHigh	0x905e66	data	game	engine	base_helper	Field_Kind2X+0x2	-	move_script::SetWord(move_script::At(::bof3::Img(mode_rest::at::kKind2XHigh)), move_script::Word(move_script::At(::bof3::Img(mode_rest::at::kKind2XHigh))) + dx)
-site	src/game/core/transition.cpp	1007	at_global	-	mode_rest::at::kFormation	0x904aac	data	game	engine	base_helper	-	-	formation = UL(::bof3::Img(mode_rest::at::kFormation));
-site	src/game/core/transition.cpp	1054	at_global	-	mode_rest::at::kEventAsset	0x64ddef	data	game	engine	base_helper	-	-	const unsigned asset = move_script::At(::bof3::Img(mode_rest::at::kEventAsset))[EventBattle_Id * 4u];
-site	src/game/core/transition.cpp	1055	at_global	-	mode_rest::at::kEventTrack	0x64dece	data	game	engine	base_helper	-	-	keep = move_script::Word(move_script::At(::bof3::Img(mode_rest::at::kEventTrack) + asset * 4u)) == 0xFF;
-site	src/game/core/transition.cpp	1061	at_global	-	mode_rest::at::kEventAsset	0x64ddef	data	game	engine	base_helper	-	-	const unsigned asset = move_script::At(::bof3::Img(mode_rest::at::kEventAsset))[event * 4u];
-site	src/game/core/transition.cpp	1062	at_global	-	mode_rest::at::kEventFile	0x64decc	data	game	engine	base_helper	-	-	SH_CALL(LoadDatFile)(static_cast<int>(move_script::Word(move_script::At(::bof3::Img(mode_rest::at::kEventFile) + asset * 4u))));
-site	src/game/core/transition.cpp	1063	at_global	-	mode_rest::at::kEventAsset	0x64ddef	data	game	engine	base_helper	-	-	const unsigned again = move_script::At(::bof3::Img(mode_rest::at::kEventAsset))[EventBattle_Id * 4u];
-site	src/game/core/transition.cpp	1064	at_global	-	mode_rest::at::kEventTrack	0x64dece	data	game	engine	base_helper	-	-	track = move_script::Word(move_script::At(::bof3::Img(mode_rest::at::kEventTrack) + again * 4u));
-site	src/game/core/transition.cpp	1080	at_global	-	mode_rest::at::kBattleWord	0x904aa8	data	game	engine	base_helper	-	-	move_script::SetWord(move_script::At(::bof3::Img(mode_rest::at::kBattleWord)), 0);
-site	src/game/core/transition.cpp	1081	at_global	-	mode_rest::at::kBattleBytes	0x904aa0	data	game	engine	base_helper	-	-	for (unsigned k = 0; k < 5; ++k) move_script::At(::bof3::Img(mode_rest::at::kBattleBytes))[k] = 0;
-site	src/game/core/transition.cpp	1094	at_global	-	mode_rest::at::kBattleBytes	0x904aa0	data	game	engine	base_helper	-	-	for (unsigned k = 0; k < 5; ++k) move_script::At(::bof3::Img(mode_rest::at::kBattleBytes))[k] = 0;
-site	src/game/core/transition.cpp	1097	at_global	-	mode_rest::at::kMemberCount	0x904ab0	data	game	engine	base_helper	-	-	move_script::At(::bof3::Img(mode_rest::at::kMemberCount))[0] = static_cast<unsigned char>(count);
-site	src/game/core/transition.cpp	1343	at_global	-	rest_3g::at::kReturnZ	0x7e0920	data	game	engine	base_helper	MoveScript_TintRecords+0x220	-	const U z = ULRest3g(::bof3::Img(rest_3g::at::kReturnZ.v));
-site	src/game/core/transition.cpp	1344	at_global	-	rest_3g::at::kReturnX	0x7e091c	data	game	engine	base_helper	MoveScript_TintRecords+0x21c	-	const U x = ULRest3g(::bof3::Img(rest_3g::at::kReturnX.v));
-site	src/game/core/transition.cpp	1469	at_global	-	mode_flow::at::kClock	0x9040c8	data	game	engine	base_helper	-	-	unsigned char* const c = mode_flow::At(::bof3::Img(mode_flow::at::kClock));
-site	src/game/core/transition.cpp	1512	module_const	-	kPitch	0x929ecc	data	game	engine	base_helper	Cond_AngleFB	file	const short pitch = Signed16(::bof3::Img(kPitch));
-site	src/game/core/transition.cpp	1523	module_const	-	kYaw	0x929ec8	data	game	engine	base_helper	Camera_Angles	file	AddWordModeStates(::bof3::Img(kYaw), -0x16);
-site	src/game/core/transition.cpp	1524	module_const	-	kYawCopy	0x7e0680	data	game	engine	base_helper	Light_AnglesCopy	file	AddWordModeStates(::bof3::Img(kYawCopy), -0x16);
-site	src/game/core/transition.cpp	1527	module_const	-	kYaw	0x929ec8	data	game	engine	base_helper	Camera_Angles	file	AddWordModeStates(::bof3::Img(kYaw), 0x16);
-site	src/game/core/transition.cpp	1528	module_const	-	kYawCopy	0x7e0680	data	game	engine	base_helper	Light_AnglesCopy	file	AddWordModeStates(::bof3::Img(kYawCopy), 0x16);
-site	src/game/core/transition.cpp	1530	module_const	-	kPitch	0x929ecc	data	game	engine	base_helper	Cond_AngleFB	file	if ((buttons & 0x20) != 0 && Signed16(::bof3::Img(kPitch)) < 0x355) {
-site	src/game/core/transition.cpp	1531	module_const	-	kPitch	0x929ecc	data	game	engine	base_helper	Cond_AngleFB	file	AddWordModeStates(::bof3::Img(kPitch), 0x16);
-site	src/game/core/transition.cpp	1532	module_const	-	kPitchCopy	0x7e0684	data	game	engine	base_helper	Light_AnglesCopy+0x4	file	AddWordModeStates(::bof3::Img(kPitchCopy), 0x16);
-site	src/game/core/transition.cpp	1534	module_const	-	kPitch	0x929ecc	data	game	engine	base_helper	Cond_AngleFB	file	if ((buttons & 0x80) != 0 && Signed16(::bof3::Img(kPitch)) > 0xAA) {
-site	src/game/core/transition.cpp	1535	module_const	-	kPitch	0x929ecc	data	game	engine	base_helper	Cond_AngleFB	file	AddWordModeStates(::bof3::Img(kPitch), -0x16);
-site	src/game/core/transition.cpp	1536	module_const	-	kPitchCopy	0x7e0684	data	game	engine	base_helper	Light_AnglesCopy+0x4	file	AddWordModeStates(::bof3::Img(kPitchCopy), -0x16);
-site	src/game/core/transition.cpp	1551	module_const	-	kYaw	0x929ec8	data	game	engine	base_helper	Camera_Angles	file	AddWordModeStates(::bof3::Img(kYaw), -0x16);
-site	src/game/core/transition.cpp	1552	module_const	-	kYawCopy	0x7e0680	data	game	engine	base_helper	Light_AnglesCopy	file	AddWordModeStates(::bof3::Img(kYawCopy), -0x16);
-site	src/game/core/transition.cpp	1557	module_const	-	kPitch	0x929ecc	data	game	engine	base_helper	Cond_AngleFB	file	const short pitch = Signed16(::bof3::Img(kPitch));
-site	src/game/core/transition.cpp	1565	module_const	-	kPitchCopy	0x7e0684	data	game	engine	base_helper	Light_AnglesCopy+0x4	file	AddWordModeStates(::bof3::Img(kPitchCopy), -0x16);
-site	src/game/core/transition.cpp	1574	module_const	-	kPitchCopy	0x7e0684	data	game	engine	base_helper	Light_AnglesCopy+0x4	file	AddWordModeStates(::bof3::Img(kPitchCopy), 0x16);
-site	src/game/core/transition.cpp	1602	at_global	-	mode_flow::at::kBootClear	0x9039e0	data	game	engine	base_helper	-	-	std::memset(mode_flow::At(::bof3::Img(mode_flow::at::kBootClear)), 0, mode_flow::at::kBootClearBytes);
-site	src/game/core/transition.cpp	1619	base_offset	-	0x8B3580	0x8b3580	data	game	engine	base_helper	-	-	BattleE2_AnimSet = ::bof3::Img(0x8B3580);
-site	src/game/core/transition.cpp	1620	base_offset	-	0x8C3584	0x8c3584	data	game	engine	base_helper	-	-	mode_flow::SetLong(mode_flow::At(::bof3::Img(MoveScript_TintRecords_addr) + 0x180), ::bof3::Img(0x8C3584));
-site	src/game/core/transition.cpp	1623	code_const	module	kTitleLoadEntry	0x496c90	code	game	engine	base_helper	Title_LoadTask	include	mode_flow::g.task_create(1, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kTitleLoadEntry.v))));
+site	src/game/core/transition.cpp	82	const_def	literal	kCameraYaw	0x929ec8	data	game	engine	module	Camera_Angles	-	constexpr std::uint32_t kCameraYaw = 0x929EC8;
+site	src/game/core/transition.cpp	84	const_def	literal	kCameraAngle	0x929ecc	data	game	engine	module	Cond_AngleFB	-	constexpr std::uint32_t kCameraAngle = 0x929ECC;
+site	src/game/core/transition.cpp	103	module_const	-	kCameraYaw	0x929ec8	data	game	engine	base_helper	Camera_Angles	file	AddWord(::bof3::Img(kCameraYaw), 0xB);
+site	src/game/core/transition.cpp	104	module_const	-	kCameraAngle	0x929ecc	data	game	engine	base_helper	Cond_AngleFB	file	AddWord(::bof3::Img(kCameraAngle), 0xB);
+site	src/game/core/transition.cpp	137	module_const	-	kCameraYaw	0x929ec8	data	game	engine	base_helper	Camera_Angles	file	AddWord(::bof3::Img(kCameraYaw), -0xB);
+site	src/game/core/transition.cpp	138	module_const	-	kCameraAngle	0x929ecc	data	game	engine	base_helper	Cond_AngleFB	file	AddWord(::bof3::Img(kCameraAngle), -0xB);
+site	src/game/core/transition.cpp	297	const_def	literal	kPitch	0x929ecc	data	game	engine	module	Cond_AngleFB	-	constexpr std::uint32_t kYaw = 0x929EC8, kPitch = 0x929ECC, kYawCopy = 0x7E0680, kPitchCopy = 0x7E0684;
+site	src/game/core/transition.cpp	297	const_def	literal	kPitchCopy	0x7e0684	data	game	engine	module	Light_AnglesCopy+0x4	-	constexpr std::uint32_t kYaw = 0x929EC8, kPitch = 0x929ECC, kYawCopy = 0x7E0680, kPitchCopy = 0x7E0684;
+site	src/game/core/transition.cpp	297	const_def	literal	kYaw	0x929ec8	data	game	engine	module	Camera_Angles	-	constexpr std::uint32_t kYaw = 0x929EC8, kPitch = 0x929ECC, kYawCopy = 0x7E0680, kPitchCopy = 0x7E0684;
+site	src/game/core/transition.cpp	297	const_def	literal	kYawCopy	0x7e0680	data	game	engine	module	Light_AnglesCopy	-	constexpr std::uint32_t kYaw = 0x929EC8, kPitch = 0x929ECC, kYawCopy = 0x7E0680, kPitchCopy = 0x7E0684;
+site	src/game/core/transition.cpp	314	const_def	literal	kBattleBytes	0x904aa0	data	game	engine	module	-	-	constexpr std::uint32_t kBattleBytes = 0x904AA0;
+site	src/game/core/transition.cpp	321	const_def	literal	kMode11Bytes	0x905da0	data	game	engine	module	FieldEvent_Object905DA0	-	constexpr std::uint32_t kMode11Bytes = 0x905DA0;
+site	src/game/core/transition.cpp	411	code_literal	literal	0x4981F1	0x4981f1	code	game	engine	init	-	-	{0x4981F1, 0x4983F1},
+site	src/game/core/transition.cpp	411	code_literal	literal	0x4983F1	0x4983f1	code	game	engine	init	-	-	{0x4981F1, 0x4983F1},
+site	src/game/core/transition.cpp	414	code_const	module	kAfterShop	0x4560d0	code	game	engine	base_helper	CommuSim_RollOffers	include	Snd_LoadBankFile, Fn<void (__cdecl*)()>(::bof3::Code(kAfterShop.v)), Text_EmitGlyph,
+site	src/game/core/transition.cpp	416	code_const	module	kMenuStates	0x589970	code	game	engine	base_helper	FieldMenu_Run	include	MoveScript_TintFrame, Field_DrawFrame, Field_ModeDispatch, Fn<void (__cdecl*)()>(::bof3::Code(kMenuStates.v)),
+site	src/game/core/transition.cpp	417	code_const	module	kShopStates	0x57f500	code	game	engine	base_helper	ShopMode_Dispatch	include	Field_RunTaskRecords, Fn<void (__cdecl*)()>(::bof3::Code(kShopStates.v)),
+site	src/game/core/transition.cpp	437	code_const	module	kTransitionEntry	0x495070	code	game	engine	base_helper	Transition_Task	include	mode_flow::g.task_create(2, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kTransitionEntry.v))));
+site	src/game/core/transition.cpp	450	const_def	derived	kind	0x904ee0	data	game	engine	module	ModeFlow_AreaTransition	-	const unsigned kind = ModeFlow_TransitionKind;
+site	src/game/core/transition.cpp	705	base_offset	-	0x905B82	0x905b82	data	game	engine	base_helper	EventOps_BlockByte	-	mode_flow::At(::bof3::Img(0x905B82))[0] = 0;
+site	src/game/core/transition.cpp	715	at_global	-	mode_flow::at::kClock	0x9040c8	data	game	engine	base_helper	-	-	const unsigned char* const clock = mode_flow::At(::bof3::Img(mode_flow::at::kClock));
+site	src/game/core/transition.cpp	751	at_global	-	mode_flow::at::kKind2XHigh	0x905e66	data	game	engine	base_helper	Field_Kind2X+0x2	-	if (Field_InputFlags & 1) mode_flow::g.entry_point(mode_flow::Word(mode_flow::At(::bof3::Img(mode_flow::at::kKind2XHigh))), mode_flow::Word(mode_flow::At(::bof3
+site	src/game/core/transition.cpp	751	at_global	-	mode_flow::at::kKind2ZHigh	0x905e62	data	game	engine	base_helper	Field_Kind2Z+0x2	-	if (Field_InputFlags & 1) mode_flow::g.entry_point(mode_flow::Word(mode_flow::At(::bof3::Img(mode_flow::at::kKind2XHigh))), mode_flow::Word(mode_flow::At(::bof3
+site	src/game/core/transition.cpp	776	const_def	derived	kind	0x904ee0	data	game	engine	module	ModeFlow_AreaTransition	-	const unsigned char kind = Area_EnterTransition;
+site	src/game/core/transition.cpp	836	module_const	-	kBattleBytes	0x904aa0	data	game	engine	base_helper	-	file	move_script::At(::bof3::Img(kBattleBytes))[0] = 0;
+site	src/game/core/transition.cpp	837	module_const	-	kBattleBytes	0x904aa0	data	game	engine	base_helper	-	file	move_script::At(::bof3::Img(kBattleBytes))[1] = 0;
+site	src/game/core/transition.cpp	838	module_const	-	kBattleBytes	0x904aa0	data	game	engine	base_helper	-	file	move_script::At(::bof3::Img(kBattleBytes))[2] = 0;
+site	src/game/core/transition.cpp	856	const_def	derived	kind	0x904ee0	data	game	engine	module	ModeFlow_AreaTransition	-	const unsigned char kind = ModeFlow_AreaTransition;
+site	src/game/core/transition.cpp	886	module_const	-	kMode11Bytes	0x905da0	data	game	engine	base_helper	FieldEvent_Object905DA0	file	move_script::At(::bof3::Img(kMode11Bytes))[1] = 0;
+site	src/game/core/transition.cpp	887	module_const	-	kMode11Bytes	0x905da0	data	game	engine	base_helper	FieldEvent_Object905DA0	file	move_script::At(::bof3::Img(kMode11Bytes))[2] = 0;
+site	src/game/core/transition.cpp	888	module_const	-	kMode11Bytes	0x905da0	data	game	engine	base_helper	FieldEvent_Object905DA0	file	move_script::At(::bof3::Img(kMode11Bytes))[3] = 0;
+site	src/game/core/transition.cpp	889	module_const	-	kMode11Bytes	0x905da0	data	game	engine	base_helper	FieldEvent_Object905DA0	file	move_script::At(::bof3::Img(kMode11Bytes))[4] = 0;
+site	src/game/core/transition.cpp	927	at_global	-	mode_rest::at::kMenuTimer	0x929f04	data	game	engine	base_helper	-	-	move_script::At(::bof3::Img(mode_rest::at::kMenuTimer))[0] = 3;
+site	src/game/core/transition.cpp	984	at_global	-	mode_rest::at::kFacingJitter	0x656a80	data	game	engine	base_helper	-	-	static_cast<unsigned char>((move_script::At(::bof3::Img(mode_rest::at::kFacingJitter))[r & 3] + ObjTrio[0].direction) & 0xF);
+site	src/game/core/transition.cpp	996	code_const	at	mode_rest::at::kAreaAskedX	0x430000	code	game	engine	call	-	-	SH_CALL(Field_ChangeArea)(ModeRest_AreaAsked, I(mode_rest::at::kAreaAskedX), I(mode_rest::at::kAreaAskedZ), 4);
+site	src/game/core/transition.cpp	1049	at_global	-	mode_rest::at::kMessageBits	0x7dee44	data	game	engine	base_helper	-	-	if (move_script::At(::bof3::Img(mode_rest::at::kMessageBits))[0] & 2) {
+site	src/game/core/transition.cpp	1089	at_global	-	mode_rest::at::kFormation	0x904aac	data	game	engine	base_helper	-	-	U formation = UL(::bof3::Img(mode_rest::at::kFormation));
+site	src/game/core/transition.cpp	1094	at_global	-	mode_rest::at::kApproach	0x656aa4	data	game	engine	base_helper	-	-	const unsigned dx = static_cast<std::uint16_t>(static_cast<signed char>(move_script::At(::bof3::Img(mode_rest::at::kApproach))[i]));
+site	src/game/core/transition.cpp	1095	at_global	-	mode_rest::at::kApproach	0x656aa4	data	game	engine	base_helper	-	-	const unsigned dz = static_cast<std::uint16_t>(static_cast<signed char>(move_script::At(::bof3::Img(mode_rest::at::kApproach))[i + 1]));
+site	src/game/core/transition.cpp	1096	at_global	-	mode_rest::at::kKind2ZHigh	0x905e62	data	game	engine	base_helper	Field_Kind2Z+0x2	-	move_script::SetWord(move_script::At(::bof3::Img(mode_rest::at::kKind2ZHigh)), move_script::Word(move_script::At(::bof3::Img(mode_rest::at::kKind2ZHigh))) + dz)
+site	src/game/core/transition.cpp	1096	at_global	-	mode_rest::at::kKind2ZHigh	0x905e62	data	game	engine	base_helper	Field_Kind2Z+0x2	-	move_script::SetWord(move_script::At(::bof3::Img(mode_rest::at::kKind2ZHigh)), move_script::Word(move_script::At(::bof3::Img(mode_rest::at::kKind2ZHigh))) + dz)
+site	src/game/core/transition.cpp	1098	at_global	-	mode_rest::at::kKind2XHigh	0x905e66	data	game	engine	base_helper	Field_Kind2X+0x2	-	move_script::SetWord(move_script::At(::bof3::Img(mode_rest::at::kKind2XHigh)), move_script::Word(move_script::At(::bof3::Img(mode_rest::at::kKind2XHigh))) + dx)
+site	src/game/core/transition.cpp	1098	at_global	-	mode_rest::at::kKind2XHigh	0x905e66	data	game	engine	base_helper	Field_Kind2X+0x2	-	move_script::SetWord(move_script::At(::bof3::Img(mode_rest::at::kKind2XHigh)), move_script::Word(move_script::At(::bof3::Img(mode_rest::at::kKind2XHigh))) + dx)
+site	src/game/core/transition.cpp	1110	at_global	-	mode_rest::at::kFormation	0x904aac	data	game	engine	base_helper	-	-	formation = UL(::bof3::Img(mode_rest::at::kFormation));
+site	src/game/core/transition.cpp	1157	at_global	-	mode_rest::at::kEventAsset	0x64ddef	data	game	engine	base_helper	-	-	const unsigned asset = move_script::At(::bof3::Img(mode_rest::at::kEventAsset))[EventBattle_Id * 4u];
+site	src/game/core/transition.cpp	1158	at_global	-	mode_rest::at::kEventTrack	0x64dece	data	game	engine	base_helper	-	-	keep = move_script::Word(move_script::At(::bof3::Img(mode_rest::at::kEventTrack) + asset * 4u)) == 0xFF;
+site	src/game/core/transition.cpp	1164	at_global	-	mode_rest::at::kEventAsset	0x64ddef	data	game	engine	base_helper	-	-	const unsigned asset = move_script::At(::bof3::Img(mode_rest::at::kEventAsset))[event * 4u];
+site	src/game/core/transition.cpp	1165	at_global	-	mode_rest::at::kEventFile	0x64decc	data	game	engine	base_helper	-	-	SH_CALL(LoadDatFile)(static_cast<int>(move_script::Word(move_script::At(::bof3::Img(mode_rest::at::kEventFile) + asset * 4u))));
+site	src/game/core/transition.cpp	1166	at_global	-	mode_rest::at::kEventAsset	0x64ddef	data	game	engine	base_helper	-	-	const unsigned again = move_script::At(::bof3::Img(mode_rest::at::kEventAsset))[EventBattle_Id * 4u];
+site	src/game/core/transition.cpp	1167	at_global	-	mode_rest::at::kEventTrack	0x64dece	data	game	engine	base_helper	-	-	track = move_script::Word(move_script::At(::bof3::Img(mode_rest::at::kEventTrack) + again * 4u));
+site	src/game/core/transition.cpp	1183	at_global	-	mode_rest::at::kBattleWord	0x904aa8	data	game	engine	base_helper	-	-	move_script::SetWord(move_script::At(::bof3::Img(mode_rest::at::kBattleWord)), 0);
+site	src/game/core/transition.cpp	1184	at_global	-	mode_rest::at::kBattleBytes	0x904aa0	data	game	engine	base_helper	-	-	for (unsigned k = 0; k < 5; ++k) move_script::At(::bof3::Img(mode_rest::at::kBattleBytes))[k] = 0;
+site	src/game/core/transition.cpp	1197	at_global	-	mode_rest::at::kBattleBytes	0x904aa0	data	game	engine	base_helper	-	-	for (unsigned k = 0; k < 5; ++k) move_script::At(::bof3::Img(mode_rest::at::kBattleBytes))[k] = 0;
+site	src/game/core/transition.cpp	1200	at_global	-	mode_rest::at::kMemberCount	0x904ab0	data	game	engine	base_helper	-	-	move_script::At(::bof3::Img(mode_rest::at::kMemberCount))[0] = static_cast<unsigned char>(count);
+site	src/game/core/transition.cpp	1446	at_global	-	rest_3g::at::kReturnZ	0x7e0920	data	game	engine	base_helper	MoveScript_TintRecords+0x220	-	const U z = ULRest3g(::bof3::Img(rest_3g::at::kReturnZ.v));
+site	src/game/core/transition.cpp	1447	at_global	-	rest_3g::at::kReturnX	0x7e091c	data	game	engine	base_helper	MoveScript_TintRecords+0x21c	-	const U x = ULRest3g(::bof3::Img(rest_3g::at::kReturnX.v));
+site	src/game/core/transition.cpp	1680	at_global	-	mode_flow::at::kClock	0x9040c8	data	game	engine	base_helper	-	-	unsigned char* const c = mode_flow::At(::bof3::Img(mode_flow::at::kClock));
+site	src/game/core/transition.cpp	1723	module_const	-	kPitch	0x929ecc	data	game	engine	base_helper	Cond_AngleFB	file	const short pitch = Signed16(::bof3::Img(kPitch));
+site	src/game/core/transition.cpp	1734	module_const	-	kYaw	0x929ec8	data	game	engine	base_helper	Camera_Angles	file	AddWordModeStates(::bof3::Img(kYaw), -0x16);
+site	src/game/core/transition.cpp	1735	module_const	-	kYawCopy	0x7e0680	data	game	engine	base_helper	Light_AnglesCopy	file	AddWordModeStates(::bof3::Img(kYawCopy), -0x16);
+site	src/game/core/transition.cpp	1738	module_const	-	kYaw	0x929ec8	data	game	engine	base_helper	Camera_Angles	file	AddWordModeStates(::bof3::Img(kYaw), 0x16);
+site	src/game/core/transition.cpp	1739	module_const	-	kYawCopy	0x7e0680	data	game	engine	base_helper	Light_AnglesCopy	file	AddWordModeStates(::bof3::Img(kYawCopy), 0x16);
+site	src/game/core/transition.cpp	1741	module_const	-	kPitch	0x929ecc	data	game	engine	base_helper	Cond_AngleFB	file	if ((buttons & 0x20) != 0 && Signed16(::bof3::Img(kPitch)) < 0x355) {
+site	src/game/core/transition.cpp	1742	module_const	-	kPitch	0x929ecc	data	game	engine	base_helper	Cond_AngleFB	file	AddWordModeStates(::bof3::Img(kPitch), 0x16);
+site	src/game/core/transition.cpp	1743	module_const	-	kPitchCopy	0x7e0684	data	game	engine	base_helper	Light_AnglesCopy+0x4	file	AddWordModeStates(::bof3::Img(kPitchCopy), 0x16);
+site	src/game/core/transition.cpp	1745	module_const	-	kPitch	0x929ecc	data	game	engine	base_helper	Cond_AngleFB	file	if ((buttons & 0x80) != 0 && Signed16(::bof3::Img(kPitch)) > 0xAA) {
+site	src/game/core/transition.cpp	1746	module_const	-	kPitch	0x929ecc	data	game	engine	base_helper	Cond_AngleFB	file	AddWordModeStates(::bof3::Img(kPitch), -0x16);
+site	src/game/core/transition.cpp	1747	module_const	-	kPitchCopy	0x7e0684	data	game	engine	base_helper	Light_AnglesCopy+0x4	file	AddWordModeStates(::bof3::Img(kPitchCopy), -0x16);
+site	src/game/core/transition.cpp	1762	module_const	-	kYaw	0x929ec8	data	game	engine	base_helper	Camera_Angles	file	AddWordModeStates(::bof3::Img(kYaw), -0x16);
+site	src/game/core/transition.cpp	1763	module_const	-	kYawCopy	0x7e0680	data	game	engine	base_helper	Light_AnglesCopy	file	AddWordModeStates(::bof3::Img(kYawCopy), -0x16);
+site	src/game/core/transition.cpp	1768	module_const	-	kPitch	0x929ecc	data	game	engine	base_helper	Cond_AngleFB	file	const short pitch = Signed16(::bof3::Img(kPitch));
+site	src/game/core/transition.cpp	1776	module_const	-	kPitchCopy	0x7e0684	data	game	engine	base_helper	Light_AnglesCopy+0x4	file	AddWordModeStates(::bof3::Img(kPitchCopy), -0x16);
+site	src/game/core/transition.cpp	1785	module_const	-	kPitchCopy	0x7e0684	data	game	engine	base_helper	Light_AnglesCopy+0x4	file	AddWordModeStates(::bof3::Img(kPitchCopy), 0x16);
+site	src/game/core/transition.cpp	1813	at_global	-	mode_flow::at::kBootClear	0x9039e0	data	game	engine	base_helper	-	-	std::memset(mode_flow::At(::bof3::Img(mode_flow::at::kBootClear)), 0, mode_flow::at::kBootClearBytes);
+site	src/game/core/transition.cpp	1830	base_offset	-	0x8B3580	0x8b3580	data	game	engine	base_helper	-	-	BattleE2_AnimSet = ::bof3::Img(0x8B3580);
+site	src/game/core/transition.cpp	1831	base_offset	-	0x8C3584	0x8c3584	data	game	engine	base_helper	-	-	mode_flow::SetLong(mode_flow::At(::bof3::Img(MoveScript_TintRecords_addr) + 0x180), ::bof3::Img(0x8C3584));
+site	src/game/core/transition.cpp	1834	code_const	module	kTitleLoadEntry	0x496c90	code	game	engine	base_helper	Title_LoadTask	include	mode_flow::g.task_create(1, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kTitleLoadEntry.v))));
 site	src/game/crt_rest.cpp	85	range_cmp	<	0x58F000u	0x58f000	code	game	engine	-	AbilityMenu_InitRecord17	symbol	if (at - ::bof3::ImageBase() < 0x58F000u)
 site	src/game/crt_rest.cpp	122	code_const	gen_func	bof3::addr::Rand	0x5b93d2	code	game	engine	call	Rand	-	static std::uint32_t* const cell = bof3::IsEnabled(bof3::addr::Rand)
 site	src/game/crt_rest.cpp	124	abs_call	theirs	Crt_GetPtd	0x5bad64	code	game	engine	cast	Crt_GetPtd	-	: reinterpret_cast<std::uint32_t*>(Crt_GetPtd() + 0x14);
@@ -19291,53 +19291,72 @@ site	src/hook/snapshot.cpp	610	addr_eq	==	MenuWindows_ListText_addr	0x7dee50	dat
 site	src/hook/snapshot.cpp	610	addr_eq	==	Msgbox_Base_addr	0x7dee4c	data	platform	hook	static_assert	Msgbox_Base	-	static_assert(span_words::kTextWords[0] == Msgbox_Base_addr && span_words::kTextWords[1] == MenuWindows_ListText_addr &&
 site	src/hook/snapshot.cpp	611	addr_eq	==	BattleFlow_TaskCurrent_addr	0x93b8c4	data	platform	hook	static_assert	BattleFlow_TaskCurrent	-	span_words::kTextWords[2] == Msgbox_Resume_addr && span_words::kTextWords[3] == BattleFlow_TaskCurrent_addr + 0x38,
 site	src/hook/snapshot.cpp	611	addr_eq	==	Msgbox_Resume_addr	0x7dee54	data	platform	hook	static_assert	Msgbox_Resume	-	span_words::kTextWords[2] == Msgbox_Resume_addr && span_words::kTextWords[3] == BattleFlow_TaskCurrent_addr + 0x38,
-site	src/hook/snapshot.cpp	617	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	base_helper	-	include	const U data = Img(span_words::kDataLo);
-site	src/hook/snapshot.cpp	619	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	call	-	include	if (Unnamed(span_words::kDataLo + off)) continue;
-site	src/hook/snapshot.cpp	661	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U va = span_words::kDataLo + off;
-site	src/hook/snapshot.cpp	686	addr_eq	!=	span_words::kExeLo	0x400000	base	platform	hook	-	-	include	if (wp.image_base != span_words::kExeLo) {
-site	src/hook/snapshot.cpp	728	range_cmp	>=	span_words::kExeLo	0x400000	base	platform	hook	-	-	include	if (stored - span_words::kExeLo >= span_words::kImageExtent) break;
-site	src/hook/snapshot.cpp	728	range_cmp	>=	span_words::kImageExtent	0x587000	code	platform	hook	-	-	include	if (stored - span_words::kExeLo >= span_words::kImageExtent) break;
-site	src/hook/snapshot.cpp	729	ptr_sub	runtime_left	span_words::kExeLo	0x400000	base	platform	hook	-	-	include	*w = wp.image_base + (stored - span_words::kExeLo);
-site	src/hook/snapshot.cpp	732	ptr_sub	runtime_left	span_words::kExeLo	0x400000	base	platform	hook	-	-	include	const U low = (stored & 0xFFFFFFu) - span_words::kExeLo;
-site	src/hook/snapshot.cpp	733	range_cmp	>=	span_words::kImageExtent	0x587000	code	platform	hook	-	-	include	if (low >= span_words::kImageExtent || wp.image_base + low > 0xFFFFFFu) break;
-site	src/hook/snapshot.cpp	835	abs_call	orig	orig::Save_BuildBlock	0x5806f0	code	platform	hook	-	Save_BuildBlock	-	orig::Save_BuildBlock();
-site	src/hook/snapshot.cpp	869	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	base_helper	-	include	const U data = Img(span_words::kDataLo);
-site	src/hook/snapshot.cpp	871	ptr_sub	two_constants	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	for (U off = 0; off < span_words::kDataHi - span_words::kDataLo; off += 4) {
-site	src/hook/snapshot.cpp	871	range_cmp	<	span_words::kDataHi	0x93e000	data	platform	hook	-	-	include	for (U off = 0; off < span_words::kDataHi - span_words::kDataLo; off += 4) {
-site	src/hook/snapshot.cpp	872	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	call	-	include	if (Unnamed(span_words::kDataLo + off)) continue;
-site	src/hook/snapshot.cpp	877	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	init	-	include	now.insert(now.end(), {span_words::kDataLo + off, w, 0});
-site	src/hook/snapshot.cpp	879	module_const	-	span_words::kDataHi	0x93e000	data	platform	hook	-	-	include	for (U va = span_words::kDataHi; va < exe_layout::kPoolVa + exe_layout::kPoolSize; va += 4) {
-site	src/hook/snapshot.cpp	879	range_cmp	<	exe_layout::kPoolVa	0x93f000	end	platform	hook	-	-	include	for (U va = span_words::kDataHi; va < exe_layout::kPoolVa + exe_layout::kPoolSize; va += 4) {
-site	src/hook/snapshot.cpp	934	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	base_helper	-	include	const U data = Img(span_words::kDataLo);
-site	src/hook/snapshot.cpp	940	ptr_sub	two_constants	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	for (U off = 0; off < span_words::kDataHi - span_words::kDataLo; off += 4) {
-site	src/hook/snapshot.cpp	940	range_cmp	<	span_words::kDataHi	0x93e000	data	platform	hook	-	-	include	for (U off = 0; off < span_words::kDataHi - span_words::kDataLo; off += 4) {
-site	src/hook/snapshot.cpp	941	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	call	-	include	if (Unnamed(span_words::kDataLo + off)) continue;
-site	src/hook/snapshot.cpp	945	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	if (wp.pool_bytes && w - wp.pool < wp.pool_bytes && !pool_raw++) pool_first = span_words::kDataLo + off;
-site	src/hook/snapshot.cpp	1005	addr_eq	==	exe_layout::kDataVa	0x5da000	data	platform	hook	static_assert	-	include	static_assert(span_words::kDataLo == exe_layout::kDataVa, " ");
-site	src/hook/snapshot.cpp	1005	addr_eq	==	span_words::kDataLo	0x5da000	data	platform	hook	static_assert	-	include	static_assert(span_words::kDataLo == exe_layout::kDataVa, " ");
-site	src/hook/snapshot.cpp	1302	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	base_helper	-	include	const U data = Img(span_words::kDataLo);
-site	src/hook/snapshot.cpp	1306	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	call	-	include	if (off + 4 > span_words::kDataHi - span_words::kDataLo || off + 4 > h.span_bytes || Unnamed(span_words::kDataLo + off))
-site	src/hook/snapshot.cpp	1306	ptr_sub	two_constants	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	if (off + 4 > span_words::kDataHi - span_words::kDataLo || off + 4 > h.span_bytes || Unnamed(span_words::kDataLo + off))
-site	src/hook/snapshot.cpp	1306	range_cmp	>	span_words::kDataHi	0x93e000	data	platform	hook	-	-	include	if (off + 4 > span_words::kDataHi - span_words::kDataLo || off + 4 > h.span_bytes || Unnamed(span_words::kDataLo + off))
-site	src/hook/snapshot.cpp	1322	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	call	-	include	(detail.empty() ? std::string() : detail + " ") + Printf(" ", span_words::kDataLo + off) + what);
-site	src/hook/snapshot.cpp	2149	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U va = span_words::kDataLo + at;
-site	src/hook/snapshot.cpp	2179	code_const	gen_func	bof3::addr::Boot_Task	0x496b60	code	platform	hook	call	Boot_Task	-	const bool can = IsExeHost() && Bind_Active() && Bind_TableMeasured() && Bind_Rows() > 0 && Bind_Ours(bof3::addr::Boot_Task);
-site	src/hook/snapshot.cpp	2189	code_const	gen_func	bof3::addr::Boot_Task	0x496b60	code	platform	hook	base_helper	Boot_Task	-	::Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
-site	src/hook/snapshot.cpp	2192	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U va = span_words::kDataLo + off;
-site	src/hook/snapshot.cpp	2218	addr_eq	==	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	if ((e & 7) == kWordText && span_words::kDataLo + (e >> 3) * 4 == slot) ++text_words;
-site	src/hook/snapshot.cpp	2221	addr_eq	==	bof3::addr::Boot_Task	0x496b60	code	platform	hook	call	Boot_Task	-	Check(t[0].kind == kTaskCreated && t[0].name == bof3::addr::Boot_Task && t[1].kind == kTaskFree,
-site	src/hook/snapshot.cpp	2248	code_const	gen_func	bof3::addr::Boot_Task	0x496b60	code	platform	hook	base_helper	Boot_Task	-	entry == static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task)) &&
-site	src/hook/snapshot.cpp	2273	ptr_sub	two_constants	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	for (U off = 0; off < span_words::kDataHi - span_words::kDataLo && !copy; off += 4) {
-site	src/hook/snapshot.cpp	2273	range_cmp	<	span_words::kDataHi	0x93e000	data	platform	hook	-	-	include	for (U off = 0; off < span_words::kDataHi - span_words::kDataLo && !copy; off += 4) {
-site	src/hook/snapshot.cpp	2274	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U va = span_words::kDataLo + off;
-site	src/hook/snapshot.cpp	2290	addr_eq	==	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	if ((e & 7) == kWordTextCopy && span_words::kDataLo + (e >> 3) * 4 == copy &&
-site	src/hook/snapshot.cpp	2291	ptr_sub	runtime_left	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	U32(image + (e >> 3) * 4) == (3u << 24 | (slot - span_words::kDataLo)))
-site	src/hook/snapshot.cpp	2413	ptr_sub	runtime_left	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U ring = span_words::RuntimeSlot(3) - span_words::kDataLo;
-site	src/hook/snapshot.cpp	2423	addr_eq	==	0x401234	0x401234	code	platform	hook	call	-	-	Check(NameWord(wp, plain, 0x70001234, &kind, &stored, &np) && kind == kWordFold && stored == 0x401234,
-site	src/hook/snapshot.cpp	2430	module_const	-	span_words::kExeLo	0x400000	base	platform	hook	-	-	include	wp.image_base = span_words::kExeLo;
-site	src/hook/snapshot.cpp	2431	module_const	-	span_words::kExeLo	0x400000	base	platform	hook	call	-	include	Check(!NameWord(wp, plain, span_words::kExeLo + 0x1234, &kind, &stored, &np), " ");
-site	src/hook/snapshot.cpp	2437	ptr_sub	two_constants	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U box = Msgbox_Base_addr - span_words::kDataLo, battle = span_words::kTextWords[3] - span_words::kDataLo;
-site	src/hook/snapshot.cpp	2437	ptr_sub	runtime_left	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U box = Msgbox_Base_addr - span_words::kDataLo, battle = span_words::kTextWords[3] - span_words::kDataLo;
+site	src/hook/snapshot.cpp	613	addr_eq	==	Effect_Objects_addr	0x7e11e0	data	platform	hook	static_assert	Effect_Objects	-	static_assert(span_words::kEffectObjects == Effect_Objects_addr && span_words::kEffectRecords == Effect_Objects_count,
+site	src/hook/snapshot.cpp	613	addr_eq	==	span_words::kEffectObjects	0x7e11e0	data	platform	hook	static_assert	Effect_Objects	include	static_assert(span_words::kEffectObjects == Effect_Objects_addr && span_words::kEffectRecords == Effect_Objects_count,
+site	src/hook/snapshot.cpp	625	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	base_helper	-	include	const U data = Img(span_words::kDataLo);
+site	src/hook/snapshot.cpp	627	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	call	-	include	if (Unnamed(span_words::kDataLo + off)) continue;
+site	src/hook/snapshot.cpp	659	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	call	-	include	if (lines && !span_words::IsLineText(span_words::kDataLo + it->second)) continue;
+site	src/hook/snapshot.cpp	674	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U va = span_words::kDataLo + off;
+site	src/hook/snapshot.cpp	705	addr_eq	!=	span_words::kExeLo	0x400000	base	platform	hook	-	-	include	if (wp.image_base != span_words::kExeLo) {
+site	src/hook/snapshot.cpp	747	range_cmp	>=	span_words::kExeLo	0x400000	base	platform	hook	-	-	include	if (stored - span_words::kExeLo >= span_words::kImageExtent) break;
+site	src/hook/snapshot.cpp	747	range_cmp	>=	span_words::kImageExtent	0x587000	code	platform	hook	-	-	include	if (stored - span_words::kExeLo >= span_words::kImageExtent) break;
+site	src/hook/snapshot.cpp	748	ptr_sub	runtime_left	span_words::kExeLo	0x400000	base	platform	hook	-	-	include	*w = wp.image_base + (stored - span_words::kExeLo);
+site	src/hook/snapshot.cpp	751	ptr_sub	runtime_left	span_words::kExeLo	0x400000	base	platform	hook	-	-	include	const U low = (stored & 0xFFFFFFu) - span_words::kExeLo;
+site	src/hook/snapshot.cpp	752	range_cmp	>=	span_words::kImageExtent	0x587000	code	platform	hook	-	-	include	if (low >= span_words::kImageExtent || wp.image_base + low > 0xFFFFFFu) break;
+site	src/hook/snapshot.cpp	854	abs_call	orig	orig::Save_BuildBlock	0x5806f0	code	platform	hook	-	Save_BuildBlock	-	orig::Save_BuildBlock();
+site	src/hook/snapshot.cpp	888	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	base_helper	-	include	const U data = Img(span_words::kDataLo);
+site	src/hook/snapshot.cpp	890	ptr_sub	two_constants	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	for (U off = 0; off < span_words::kDataHi - span_words::kDataLo; off += 4) {
+site	src/hook/snapshot.cpp	890	range_cmp	<	span_words::kDataHi	0x93e000	data	platform	hook	-	-	include	for (U off = 0; off < span_words::kDataHi - span_words::kDataLo; off += 4) {
+site	src/hook/snapshot.cpp	891	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	call	-	include	if (Unnamed(span_words::kDataLo + off)) continue;
+site	src/hook/snapshot.cpp	896	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	init	-	include	now.insert(now.end(), {span_words::kDataLo + off, w, 0});
+site	src/hook/snapshot.cpp	898	module_const	-	span_words::kDataHi	0x93e000	data	platform	hook	-	-	include	for (U va = span_words::kDataHi; va < exe_layout::kPoolVa + exe_layout::kPoolSize; va += 4) {
+site	src/hook/snapshot.cpp	898	range_cmp	<	exe_layout::kPoolVa	0x93f000	end	platform	hook	-	-	include	for (U va = span_words::kDataHi; va < exe_layout::kPoolVa + exe_layout::kPoolSize; va += 4) {
+site	src/hook/snapshot.cpp	953	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	base_helper	-	include	const U data = Img(span_words::kDataLo);
+site	src/hook/snapshot.cpp	959	ptr_sub	two_constants	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	for (U off = 0; off < span_words::kDataHi - span_words::kDataLo; off += 4) {
+site	src/hook/snapshot.cpp	959	range_cmp	<	span_words::kDataHi	0x93e000	data	platform	hook	-	-	include	for (U off = 0; off < span_words::kDataHi - span_words::kDataLo; off += 4) {
+site	src/hook/snapshot.cpp	960	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	call	-	include	if (Unnamed(span_words::kDataLo + off)) continue;
+site	src/hook/snapshot.cpp	964	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	if (wp.pool_bytes && w - wp.pool < wp.pool_bytes && !pool_raw++) pool_first = span_words::kDataLo + off;
+site	src/hook/snapshot.cpp	1024	addr_eq	==	exe_layout::kDataVa	0x5da000	data	platform	hook	static_assert	-	include	static_assert(span_words::kDataLo == exe_layout::kDataVa, " ");
+site	src/hook/snapshot.cpp	1024	addr_eq	==	span_words::kDataLo	0x5da000	data	platform	hook	static_assert	-	include	static_assert(span_words::kDataLo == exe_layout::kDataVa, " ");
+site	src/hook/snapshot.cpp	1321	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	base_helper	-	include	const U data = Img(span_words::kDataLo);
+site	src/hook/snapshot.cpp	1325	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	call	-	include	if (off + 4 > span_words::kDataHi - span_words::kDataLo || off + 4 > h.span_bytes || Unnamed(span_words::kDataLo + off))
+site	src/hook/snapshot.cpp	1325	ptr_sub	two_constants	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	if (off + 4 > span_words::kDataHi - span_words::kDataLo || off + 4 > h.span_bytes || Unnamed(span_words::kDataLo + off))
+site	src/hook/snapshot.cpp	1325	range_cmp	>	span_words::kDataHi	0x93e000	data	platform	hook	-	-	include	if (off + 4 > span_words::kDataHi - span_words::kDataLo || off + 4 > h.span_bytes || Unnamed(span_words::kDataLo + off))
+site	src/hook/snapshot.cpp	1339	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U va = span_words::kDataLo + off, record = span_words::LineCursorRecord(va);
+site	src/hook/snapshot.cpp	1341	range_cmp	<=	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	(record && record + span_words::kEffectStride <= span_words::kDataLo + h.span_bytes &&
+site	src/hook/snapshot.cpp	1342	ptr_sub	runtime_left	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	LineCursorField(va, image + (record - span_words::kDataLo)) &&
+site	src/hook/snapshot.cpp	1343	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	call	-	include	span_words::IsLineText(span_words::kDataLo + slot));
+site	src/hook/snapshot.cpp	1354	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	call	-	include	(detail.empty() ? std::string() : detail + " ") + Printf(" ", span_words::kDataLo + off) + what);
+site	src/hook/snapshot.cpp	2181	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U va = span_words::kDataLo + at;
+site	src/hook/snapshot.cpp	2211	code_const	gen_func	bof3::addr::Boot_Task	0x496b60	code	platform	hook	call	Boot_Task	-	const bool can = IsExeHost() && Bind_Active() && Bind_TableMeasured() && Bind_Rows() > 0 && Bind_Ours(bof3::addr::Boot_Task);
+site	src/hook/snapshot.cpp	2221	code_const	gen_func	bof3::addr::Boot_Task	0x496b60	code	platform	hook	base_helper	Boot_Task	-	::Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
+site	src/hook/snapshot.cpp	2224	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U va = span_words::kDataLo + off;
+site	src/hook/snapshot.cpp	2250	addr_eq	==	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	if ((e & 7) == kWordText && span_words::kDataLo + (e >> 3) * 4 == slot) ++text_words;
+site	src/hook/snapshot.cpp	2253	addr_eq	==	bof3::addr::Boot_Task	0x496b60	code	platform	hook	call	Boot_Task	-	Check(t[0].kind == kTaskCreated && t[0].name == bof3::addr::Boot_Task && t[1].kind == kTaskFree,
+site	src/hook/snapshot.cpp	2280	code_const	gen_func	bof3::addr::Boot_Task	0x496b60	code	platform	hook	base_helper	Boot_Task	-	entry == static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task)) &&
+site	src/hook/snapshot.cpp	2306	ptr_sub	two_constants	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	for (U off = 0; off < span_words::kDataHi - span_words::kDataLo && !copy; off += 4) {
+site	src/hook/snapshot.cpp	2306	range_cmp	<	span_words::kDataHi	0x93e000	data	platform	hook	-	-	include	for (U off = 0; off < span_words::kDataHi - span_words::kDataLo && !copy; off += 4) {
+site	src/hook/snapshot.cpp	2307	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U va = span_words::kDataLo + off;
+site	src/hook/snapshot.cpp	2313	module_const	-	span_words::kLineTexts	0x653b98	data	platform	hook	-	-	include	const U line = span_words::kLineTexts, line0 = word(line);
+site	src/hook/snapshot.cpp	2314	module_const	-	span_words::kEffectObjects	0x7e11e0	data	platform	hook	-	Effect_Objects	include	const U rec = span_words::kEffectObjects + (span_words::kEffectRecords - 1) * span_words::kEffectStride, cursor = rec + 0x50;
+site	src/hook/snapshot.cpp	2331	module_const	-	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U at = span_words::kDataLo + (e >> 3) * 4;
+site	src/hook/snapshot.cpp	2332	ptr_sub	runtime_left	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	if ((e & 7) == kWordTextCopy && at == cursor && U32(image + (e >> 3) * 4) == (3u << 24 | (line - span_words::kDataLo)))
+site	src/hook/snapshot.cpp	2364	addr_eq	!=	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	if (span_words::kDataLo + (U32(e) >> 3) * 4 != cursor) continue;
+site	src/hook/snapshot.cpp	2365	ptr_sub	runtime_left	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U moved = (copy - span_words::kDataLo) / 4 << 3 | kWordTextCopy;
+site	src/hook/snapshot.cpp	2367	ptr_sub	runtime_left	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	unsigned char* w = bad.data() + kSaveHalf + sizeof(Header) + sizeof(HeaderExt) + (copy - span_words::kDataLo);
+site	src/hook/snapshot.cpp	2368	ptr_sub	runtime_left	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U named = 3u << 24 | (line - span_words::kDataLo);
+site	src/hook/snapshot.cpp	2479	ptr_sub	runtime_left	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U ring = span_words::RuntimeSlot(3) - span_words::kDataLo;
+site	src/hook/snapshot.cpp	2489	addr_eq	==	0x401234	0x401234	code	platform	hook	call	-	-	Check(NameWord(wp, plain, 0x70001234, &kind, &stored, &np) && kind == kWordFold && stored == 0x401234,
+site	src/hook/snapshot.cpp	2496	module_const	-	span_words::kExeLo	0x400000	base	platform	hook	-	-	include	wp.image_base = span_words::kExeLo;
+site	src/hook/snapshot.cpp	2497	module_const	-	span_words::kExeLo	0x400000	base	platform	hook	call	-	include	Check(!NameWord(wp, plain, span_words::kExeLo + 0x1234, &kind, &stored, &np), " ");
+site	src/hook/snapshot.cpp	2503	ptr_sub	two_constants	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U box = Msgbox_Base_addr - span_words::kDataLo, battle = span_words::kTextWords[3] - span_words::kDataLo;
+site	src/hook/snapshot.cpp	2503	ptr_sub	runtime_left	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U box = Msgbox_Base_addr - span_words::kDataLo, battle = span_words::kTextWords[3] - span_words::kDataLo;
+site	src/hook/snapshot.cpp	2509	module_const	-	span_words::kLineTexts	0x653b98	data	platform	hook	-	-	include	const U line_slot = span_words::kLineTexts - span_words::kDataLo;
+site	src/hook/snapshot.cpp	2509	ptr_sub	two_constants	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U line_slot = span_words::kLineTexts - span_words::kDataLo;
+site	src/hook/snapshot.cpp	2522	module_const	-	span_words::kEffectObjects	0x7e11e0	data	platform	hook	-	Effect_Objects	include	const U rec = span_words::kEffectObjects + (span_words::kEffectRecords - 1) * span_words::kEffectStride;
+site	src/hook/snapshot.cpp	2528	ptr_sub	runtime_left	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U typing = rec + 0x50 - span_words::kDataLo, scrolling = rec + 0x54 - span_words::kDataLo,
+site	src/hook/snapshot.cpp	2528	ptr_sub	runtime_left	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	const U typing = rec + 0x50 - span_words::kDataLo, scrolling = rec + 0x54 - span_words::kDataLo,
+site	src/hook/snapshot.cpp	2529	ptr_sub	runtime_left	span_words::kDataLo	0x5da000	data	platform	hook	-	-	include	other_field = rec + 0x58 - span_words::kDataLo;
 site	src/hook/span_words.h	35	const_def	literal	kExeLo	0x400000	base	platform	hook	module	-	-	constexpr std::uint32_t kExeLo = 0x400000;
 site	src/hook/span_words.h	36	const_def	literal	kExeHi	0x93f000	end	platform	hook	module	-	-	constexpr std::uint32_t kExeHi = 0x93F000;
 site	src/hook/span_words.h	45	const_def	derived	kImageExtent	0x587000	code	platform	hook	module	-	-	constexpr std::uint32_t kImageExtent = exe_layout::kPoolVa + exe_layout::kPoolSize - exe_layout::kImageBase;
@@ -19353,12 +19372,20 @@ site	src/hook/span_words.h	102	raw_literal	-	0x7DEE4C	0x7dee4c	data	platform	hoo
 site	src/hook/span_words.h	102	raw_literal	-	0x7DEE50	0x7dee50	data	platform	hook	init	MenuWindows_ListText	symbol	constexpr std::uint32_t kTextWords[] = {0x7DEE4C, 0x7DEE50, 0x7DEE54, 0x93B8FC};
 site	src/hook/span_words.h	102	raw_literal	-	0x7DEE54	0x7dee54	data	platform	hook	init	Msgbox_Resume	symbol	constexpr std::uint32_t kTextWords[] = {0x7DEE4C, 0x7DEE50, 0x7DEE54, 0x93B8FC};
 site	src/hook/span_words.h	102	raw_literal	-	0x93B8FC	0x93b8fc	data	platform	hook	init	-	-	constexpr std::uint32_t kTextWords[] = {0x7DEE4C, 0x7DEE50, 0x7DEE54, 0x93B8FC};
-site	src/hook/span_words.h	186	module_const	-	kDataLo	0x5da000	data	platform	hook	base_helper	-	file	const std::uint32_t data = Img(kDataLo), lo = Img(kExeLo), size = kExeHi - kExeLo;
-site	src/hook/span_words.h	186	module_const	-	kExeHi	0x93f000	end	platform	hook	-	-	file	const std::uint32_t data = Img(kDataLo), lo = Img(kExeLo), size = kExeHi - kExeLo;
-site	src/hook/span_words.h	186	module_const	-	kExeLo	0x400000	base	platform	hook	base_helper	-	file	const std::uint32_t data = Img(kDataLo), lo = Img(kExeLo), size = kExeHi - kExeLo;
-site	src/hook/span_words.h	186	ptr_sub	two_constants	kExeLo	0x400000	base	platform	hook	-	-	file	const std::uint32_t data = Img(kDataLo), lo = Img(kExeLo), size = kExeHi - kExeLo;
-site	src/hook/span_words.h	187	ptr_sub	two_constants	kDataLo	0x5da000	data	platform	hook	-	-	file	for (std::uint32_t off = 0; off < kDataHi - kDataLo; off += 4) {
-site	src/hook/span_words.h	187	range_cmp	<	kDataHi	0x93e000	data	platform	hook	-	-	file	for (std::uint32_t off = 0; off < kDataHi - kDataLo; off += 4) {
+site	src/hook/span_words.h	118	const_def	literal	kEffectObjects	0x7e11e0	data	platform	hook	module	Effect_Objects	-	constexpr std::uint32_t kEffectObjects = 0x7E11E0;
+site	src/hook/span_words.h	122	const_def	literal	kLineTexts	0x653b98	data	platform	hook	module	-	-	constexpr std::uint32_t kLineTexts = 0x653B98;
+site	src/hook/span_words.h	127	range_cmp	<	kEffectObjects	0x7e11e0	data	platform	hook	-	Effect_Objects	file	if (va < kEffectObjects || va >= kEffectObjects + kEffectRecords * kEffectStride) return 0;
+site	src/hook/span_words.h	127	range_cmp	>=	kEffectObjects	0x7e11e0	data	platform	hook	-	Effect_Objects	file	if (va < kEffectObjects || va >= kEffectObjects + kEffectRecords * kEffectStride) return 0;
+site	src/hook/span_words.h	128	ptr_sub	runtime_left	kEffectObjects	0x7e11e0	data	platform	hook	-	Effect_Objects	file	const std::uint32_t field = (va - kEffectObjects) % kEffectStride;
+site	src/hook/span_words.h	132	ptr_sub	runtime_left	kLineTexts	0x653b98	data	platform	hook	-	-	file	return slot_va >= kLineTexts && slot_va < kLineTexts + kLineTextCount * 8 && (slot_va - kLineTexts) % 8 == 0;
+site	src/hook/span_words.h	132	range_cmp	>=	kLineTexts	0x653b98	data	platform	hook	-	-	file	return slot_va >= kLineTexts && slot_va < kLineTexts + kLineTextCount * 8 && (slot_va - kLineTexts) % 8 == 0;
+site	src/hook/span_words.h	132	range_cmp	<	kLineTexts	0x653b98	data	platform	hook	-	-	file	return slot_va >= kLineTexts && slot_va < kLineTexts + kLineTextCount * 8 && (slot_va - kLineTexts) % 8 == 0;
+site	src/hook/span_words.h	211	module_const	-	kDataLo	0x5da000	data	platform	hook	base_helper	-	file	const std::uint32_t data = Img(kDataLo), lo = Img(kExeLo), size = kExeHi - kExeLo;
+site	src/hook/span_words.h	211	module_const	-	kExeHi	0x93f000	end	platform	hook	-	-	file	const std::uint32_t data = Img(kDataLo), lo = Img(kExeLo), size = kExeHi - kExeLo;
+site	src/hook/span_words.h	211	module_const	-	kExeLo	0x400000	base	platform	hook	base_helper	-	file	const std::uint32_t data = Img(kDataLo), lo = Img(kExeLo), size = kExeHi - kExeLo;
+site	src/hook/span_words.h	211	ptr_sub	two_constants	kExeLo	0x400000	base	platform	hook	-	-	file	const std::uint32_t data = Img(kDataLo), lo = Img(kExeLo), size = kExeHi - kExeLo;
+site	src/hook/span_words.h	212	ptr_sub	two_constants	kDataLo	0x5da000	data	platform	hook	-	-	file	for (std::uint32_t off = 0; off < kDataHi - kDataLo; off += 4) {
+site	src/hook/span_words.h	212	range_cmp	<	kDataHi	0x93e000	data	platform	hook	-	-	file	for (std::uint32_t off = 0; off < kDataHi - kDataLo; off += 4) {
 site	src/hook/stackwatch_win32.cpp	55	const_def	literal	kTaskStackTop	0x66c858	data	platform	hook	module	Task_StackTop	-	constexpr std::uint32_t kTaskStackTop = 0x66C858;
 site	src/hook/stackwatch_win32.cpp	358	module_const	-	kTaskStackTop	0x66c858	data	platform	hook	base_helper	Task_StackTop	file	const std::uint32_t saved = Long(Img(kTaskStackTop));
 site	src/hook/stackwatch_win32.cpp	372	module_const	-	kTaskStackTop	0x66c858	data	platform	hook	base_helper	Task_StackTop	file	const std::uint32_t stored = Long(Img(kTaskStackTop));
@@ -21874,23 +21901,30 @@ range	src/hook/snapshot.cpp	610	addr_eq	==	MenuWindows_ListText_addr	0x7dee50	da
 range	src/hook/snapshot.cpp	610	addr_eq	==	Msgbox_Base_addr	0x7dee4c	data	platform	static_assert(span_words::kTextWords[0] == Msgbox_Base_addr && span_words::kTextWords[1] == MenuWindows_ListText_addr &&
 range	src/hook/snapshot.cpp	611	addr_eq	==	BattleFlow_TaskCurrent_addr	0x93b8c4	data	platform	span_words::kTextWords[2] == Msgbox_Resume_addr && span_words::kTextWords[3] == BattleFlow_TaskCurrent_addr + 0x38,
 range	src/hook/snapshot.cpp	611	addr_eq	==	Msgbox_Resume_addr	0x7dee54	data	platform	span_words::kTextWords[2] == Msgbox_Resume_addr && span_words::kTextWords[3] == BattleFlow_TaskCurrent_addr + 0x38,
-range	src/hook/snapshot.cpp	686	addr_eq	!=	span_words::kExeLo	0x400000	base	platform	if (wp.image_base != span_words::kExeLo) {
-range	src/hook/snapshot.cpp	728	range_cmp	>=	span_words::kExeLo	0x400000	base	platform	if (stored - span_words::kExeLo >= span_words::kImageExtent) break;
-range	src/hook/snapshot.cpp	728	range_cmp	>=	span_words::kImageExtent	0x587000	code	platform	if (stored - span_words::kExeLo >= span_words::kImageExtent) break;
-range	src/hook/snapshot.cpp	733	range_cmp	>=	span_words::kImageExtent	0x587000	code	platform	if (low >= span_words::kImageExtent || wp.image_base + low > 0xFFFFFFu) break;
-range	src/hook/snapshot.cpp	871	range_cmp	<	span_words::kDataHi	0x93e000	data	platform	for (U off = 0; off < span_words::kDataHi - span_words::kDataLo; off += 4) {
-range	src/hook/snapshot.cpp	879	range_cmp	<	exe_layout::kPoolVa	0x93f000	end	platform	for (U va = span_words::kDataHi; va < exe_layout::kPoolVa + exe_layout::kPoolSize; va += 4) {
-range	src/hook/snapshot.cpp	940	range_cmp	<	span_words::kDataHi	0x93e000	data	platform	for (U off = 0; off < span_words::kDataHi - span_words::kDataLo; off += 4) {
-range	src/hook/snapshot.cpp	1005	addr_eq	==	exe_layout::kDataVa	0x5da000	data	platform	static_assert(span_words::kDataLo == exe_layout::kDataVa, " ");
-range	src/hook/snapshot.cpp	1005	addr_eq	==	span_words::kDataLo	0x5da000	data	platform	static_assert(span_words::kDataLo == exe_layout::kDataVa, " ");
-range	src/hook/snapshot.cpp	1306	range_cmp	>	span_words::kDataHi	0x93e000	data	platform	if (off + 4 > span_words::kDataHi - span_words::kDataLo || off + 4 > h.span_bytes || Unnamed(span_words::kDataLo + off))
-range	src/hook/snapshot.cpp	2218	addr_eq	==	span_words::kDataLo	0x5da000	data	platform	if ((e & 7) == kWordText && span_words::kDataLo + (e >> 3) * 4 == slot) ++text_words;
-range	src/hook/snapshot.cpp	2221	addr_eq	==	bof3::addr::Boot_Task	0x496b60	code	platform	Check(t[0].kind == kTaskCreated && t[0].name == bof3::addr::Boot_Task && t[1].kind == kTaskFree,
-range	src/hook/snapshot.cpp	2273	range_cmp	<	span_words::kDataHi	0x93e000	data	platform	for (U off = 0; off < span_words::kDataHi - span_words::kDataLo && !copy; off += 4) {
-range	src/hook/snapshot.cpp	2290	addr_eq	==	span_words::kDataLo	0x5da000	data	platform	if ((e & 7) == kWordTextCopy && span_words::kDataLo + (e >> 3) * 4 == copy &&
-range	src/hook/snapshot.cpp	2423	addr_eq	==	0x401234	0x401234	code	platform	Check(NameWord(wp, plain, 0x70001234, &kind, &stored, &np) && kind == kWordFold && stored == 0x401234,
+range	src/hook/snapshot.cpp	613	addr_eq	==	Effect_Objects_addr	0x7e11e0	data	platform	static_assert(span_words::kEffectObjects == Effect_Objects_addr && span_words::kEffectRecords == Effect_Objects_count,
+range	src/hook/snapshot.cpp	613	addr_eq	==	span_words::kEffectObjects	0x7e11e0	data	platform	static_assert(span_words::kEffectObjects == Effect_Objects_addr && span_words::kEffectRecords == Effect_Objects_count,
+range	src/hook/snapshot.cpp	705	addr_eq	!=	span_words::kExeLo	0x400000	base	platform	if (wp.image_base != span_words::kExeLo) {
+range	src/hook/snapshot.cpp	747	range_cmp	>=	span_words::kExeLo	0x400000	base	platform	if (stored - span_words::kExeLo >= span_words::kImageExtent) break;
+range	src/hook/snapshot.cpp	747	range_cmp	>=	span_words::kImageExtent	0x587000	code	platform	if (stored - span_words::kExeLo >= span_words::kImageExtent) break;
+range	src/hook/snapshot.cpp	752	range_cmp	>=	span_words::kImageExtent	0x587000	code	platform	if (low >= span_words::kImageExtent || wp.image_base + low > 0xFFFFFFu) break;
+range	src/hook/snapshot.cpp	890	range_cmp	<	span_words::kDataHi	0x93e000	data	platform	for (U off = 0; off < span_words::kDataHi - span_words::kDataLo; off += 4) {
+range	src/hook/snapshot.cpp	898	range_cmp	<	exe_layout::kPoolVa	0x93f000	end	platform	for (U va = span_words::kDataHi; va < exe_layout::kPoolVa + exe_layout::kPoolSize; va += 4) {
+range	src/hook/snapshot.cpp	959	range_cmp	<	span_words::kDataHi	0x93e000	data	platform	for (U off = 0; off < span_words::kDataHi - span_words::kDataLo; off += 4) {
+range	src/hook/snapshot.cpp	1024	addr_eq	==	exe_layout::kDataVa	0x5da000	data	platform	static_assert(span_words::kDataLo == exe_layout::kDataVa, " ");
+range	src/hook/snapshot.cpp	1024	addr_eq	==	span_words::kDataLo	0x5da000	data	platform	static_assert(span_words::kDataLo == exe_layout::kDataVa, " ");
+range	src/hook/snapshot.cpp	1325	range_cmp	>	span_words::kDataHi	0x93e000	data	platform	if (off + 4 > span_words::kDataHi - span_words::kDataLo || off + 4 > h.span_bytes || Unnamed(span_words::kDataLo + off))
+range	src/hook/snapshot.cpp	1341	range_cmp	<=	span_words::kDataLo	0x5da000	data	platform	(record && record + span_words::kEffectStride <= span_words::kDataLo + h.span_bytes &&
+range	src/hook/snapshot.cpp	2250	addr_eq	==	span_words::kDataLo	0x5da000	data	platform	if ((e & 7) == kWordText && span_words::kDataLo + (e >> 3) * 4 == slot) ++text_words;
+range	src/hook/snapshot.cpp	2253	addr_eq	==	bof3::addr::Boot_Task	0x496b60	code	platform	Check(t[0].kind == kTaskCreated && t[0].name == bof3::addr::Boot_Task && t[1].kind == kTaskFree,
+range	src/hook/snapshot.cpp	2306	range_cmp	<	span_words::kDataHi	0x93e000	data	platform	for (U off = 0; off < span_words::kDataHi - span_words::kDataLo && !copy; off += 4) {
+range	src/hook/snapshot.cpp	2364	addr_eq	!=	span_words::kDataLo	0x5da000	data	platform	if (span_words::kDataLo + (U32(e) >> 3) * 4 != cursor) continue;
+range	src/hook/snapshot.cpp	2489	addr_eq	==	0x401234	0x401234	code	platform	Check(NameWord(wp, plain, 0x70001234, &kind, &stored, &np) && kind == kWordFold && stored == 0x401234,
 range	src/hook/span_words.h	56	range_cmp	<	kImageExtent	0x587000	code	platform	if (v - folds[i] < kImageExtent) {
-range	src/hook/span_words.h	187	range_cmp	<	kDataHi	0x93e000	data	platform	for (std::uint32_t off = 0; off < kDataHi - kDataLo; off += 4) {
+range	src/hook/span_words.h	127	range_cmp	<	kEffectObjects	0x7e11e0	data	platform	if (va < kEffectObjects || va >= kEffectObjects + kEffectRecords * kEffectStride) return 0;
+range	src/hook/span_words.h	127	range_cmp	>=	kEffectObjects	0x7e11e0	data	platform	if (va < kEffectObjects || va >= kEffectObjects + kEffectRecords * kEffectStride) return 0;
+range	src/hook/span_words.h	132	range_cmp	>=	kLineTexts	0x653b98	data	platform	return slot_va >= kLineTexts && slot_va < kLineTexts + kLineTextCount * 8 && (slot_va - kLineTexts) % 8 == 0;
+range	src/hook/span_words.h	132	range_cmp	<	kLineTexts	0x653b98	data	platform	return slot_va >= kLineTexts && slot_va < kLineTexts + kLineTextCount * 8 && (slot_va - kLineTexts) % 8 == 0;
+range	src/hook/span_words.h	212	range_cmp	<	kDataHi	0x93e000	data	platform	for (std::uint32_t off = 0; off < kDataHi - kDataLo; off += 4) {
 range	src/hook/statehash.cpp	207	range_cmp	<	kExeHi	0x93f000	end	platform	return (v >= kExeLo && v < kExeHi) || Fold(g_folds, g_nfolds, v, &c);
 range	src/hook/statehash.cpp	207	range_cmp	>=	kExeLo	0x400000	base	platform	return (v >= kExeLo && v < kExeHi) || Fold(g_folds, g_nfolds, v, &c);
 range	src/hook/statehash.cpp	233	range_cmp	<	kEnd	0x93e000	data	platform	for (std::uint32_t off = 0; off < kEnd - kBase; off += 4) {
@@ -23841,7 +23875,7 @@ file	src/game/core/title_states.cpp	game	ui	const_def_derived	1
 file	src/game/core/title_states.cpp	game	ui	const_def_literal	2
 file	src/game/core/title_states.cpp	game	ui	module_const	4
 file	src/game/core/title_states.cpp	hosted	ui	addr_eq	23
-file	src/game/core/transition.cpp	game	engine	accessor	257
+file	src/game/core/transition.cpp	game	engine	accessor	258
 file	src/game/core/transition.cpp	game	engine	accessor_addr	31
 file	src/game/core/transition.cpp	game	engine	at_global	28
 file	src/game/core/transition.cpp	game	engine	base_offset	3
@@ -27911,17 +27945,17 @@ file	src/hook/region_table.cpp	platform	hook	module_const	1
 file	src/hook/snapshot.cpp	platform	hook	abs_call	1
 file	src/hook/snapshot.cpp	platform	hook	accessor	32
 file	src/hook/snapshot.cpp	platform	hook	accessor_addr	12
-file	src/hook/snapshot.cpp	platform	hook	addr_eq	13
+file	src/hook/snapshot.cpp	platform	hook	addr_eq	15
 file	src/hook/snapshot.cpp	platform	hook	code_const	3
-file	src/hook/snapshot.cpp	platform	hook	module_const	24
-file	src/hook/snapshot.cpp	platform	hook	ptr_sub	13
-file	src/hook/snapshot.cpp	platform	hook	range_cmp	8
+file	src/hook/snapshot.cpp	platform	hook	module_const	32
+file	src/hook/snapshot.cpp	platform	hook	ptr_sub	21
+file	src/hook/snapshot.cpp	platform	hook	range_cmp	9
 file	src/hook/snapshot.cpp	platform	hook	raw_literal	18
 file	src/hook/span_words.h	platform	hook	const_def_derived	1
-file	src/hook/span_words.h	platform	hook	const_def_literal	6
+file	src/hook/span_words.h	platform	hook	const_def_literal	8
 file	src/hook/span_words.h	platform	hook	module_const	6
-file	src/hook/span_words.h	platform	hook	ptr_sub	2
-file	src/hook/span_words.h	platform	hook	range_cmp	2
+file	src/hook/span_words.h	platform	hook	ptr_sub	4
+file	src/hook/span_words.h	platform	hook	range_cmp	6
 file	src/hook/span_words.h	platform	hook	raw_literal	4
 file	src/hook/stackwatch_win32.cpp	platform	hook	const_def_literal	1
 file	src/hook/stackwatch_win32.cpp	platform	hook	module_const	7
@@ -27956,14 +27990,14 @@ file	src/launcher/ui/main.cpp	launcher	launcher	addr_eq	1
 file	src/render/gfx_snapshot.cpp	platform	render	accessor	30
 file	src/render/gfx_snapshot.cpp	platform	render	base_offset	22
 file	src/render/render_shim.cpp	platform	render	accessor	8
-#count sites	126060
-#count sites_game	57329
-#count sites_platform	832
+#count sites	126088
+#count sites_game	57330
+#count sites_platform	859
 #count sites_hosted	302
 #count sites_fuzz	67580
 #count sites_launcher	17
-#count class_accessor	27382
-#count class_accessor_game	23754
+#count class_accessor	27383
+#count class_accessor_game	23755
 #count class_accessor_platform	186
 #count class_accessor_hosted	0
 #count class_accessor_fuzz	3441
@@ -27980,9 +28014,9 @@ file	src/render/render_shim.cpp	platform	render	accessor	8
 #count class_at_global_hosted	0
 #count class_at_global_fuzz	1620
 #count class_at_global_launcher	0
-#count class_module_const	3582
+#count class_module_const	3590
 #count class_module_const_game	2309
-#count class_module_const_platform	170
+#count class_module_const_platform	178
 #count class_module_const_hosted	0
 #count class_module_const_fuzz	1101
 #count class_module_const_launcher	2
@@ -28022,27 +28056,27 @@ file	src/render/render_shim.cpp	platform	render	accessor	8
 #count class_abs_call_hosted	25
 #count class_abs_call_fuzz	13
 #count class_abs_call_launcher	0
-#count class_range_cmp	212
+#count class_range_cmp	217
 #count class_range_cmp_game	44
-#count class_range_cmp_platform	54
+#count class_range_cmp_platform	59
 #count class_range_cmp_hosted	0
 #count class_range_cmp_fuzz	114
 #count class_range_cmp_launcher	0
-#count class_addr_eq	2137
+#count class_addr_eq	2139
 #count class_addr_eq_game	60
-#count class_addr_eq_platform	44
+#count class_addr_eq_platform	46
 #count class_addr_eq_hosted	172
 #count class_addr_eq_fuzz	1858
 #count class_addr_eq_launcher	3
-#count class_ptr_sub	140
+#count class_ptr_sub	150
 #count class_ptr_sub_game	25
-#count class_ptr_sub_platform	39
+#count class_ptr_sub_platform	49
 #count class_ptr_sub_hosted	0
 #count class_ptr_sub_fuzz	76
 #count class_ptr_sub_launcher	0
-#count class_const_def	4406
+#count class_const_def	4408
 #count class_const_def_game	4026
-#count class_const_def_platform	38
+#count class_const_def_platform	40
 #count class_const_def_hosted	0
 #count class_const_def_fuzz	341
 #count class_const_def_launcher	1
@@ -28058,7 +28092,7 @@ file	src/render/render_shim.cpp	platform	render	accessor	8
 #count class_image_meta_hosted	0
 #count class_image_meta_fuzz	0
 #count class_image_meta_launcher	0
-#count const_def_literal	3302
+#count const_def_literal	3304
 #count const_def_derived	1104
 #count value_literal	28
 #count base_offset	1320
@@ -28084,26 +28118,26 @@ file	src/render/render_shim.cpp	platform	render	accessor	8
 #count literal_with_symbol_nonfuzz	700
 #count abs_call_theirs	11
 #count call_through_data_word	739
-#count constexpr_context_refs_nonfuzz	189
-#count ptr_sub_two_constants	67
+#count constexpr_context_refs_nonfuzz	191
+#count ptr_sub_two_constants	68
 #count range_helper_calls	17
 #count files_with_sites	1243
 #count files_with_sites_nonfuzz	973
 #count gate_asm_operand	66
 #count gate_asm_text	0
 #count gate_abs_call	1414
-#count gate_range_cmp	98
-#count gate_addr_eq	104
-#count gate_ptr_sub	64
-#count gate_const_def_literal	3012
+#count gate_range_cmp	103
+#count gate_addr_eq	106
+#count gate_ptr_sub	74
+#count gate_const_def_literal	3014
 #count gate_raw_literal	690
 #count gate_code_literal	932
 #gate asm_operand	66
 #gate asm_text	0
 #gate abs_call	1414
-#gate range_cmp	98
-#gate addr_eq	104
-#gate ptr_sub	64
-#gate const_def_literal	3012
+#gate range_cmp	103
+#gate addr_eq	106
+#gate ptr_sub	74
+#gate const_def_literal	3014
 #gate raw_literal	690
 #gate code_literal	932

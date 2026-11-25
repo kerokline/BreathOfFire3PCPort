@@ -613,10 +613,15 @@ static_assert(span_words::kTextWords[0] == Msgbox_Base_addr && span_words::kText
 static_assert(span_words::kEffectObjects == Effect_Objects_addr && span_words::kEffectRecords == Effect_Objects_count,
               "span_words::kEffectObjects against symbols.toml");
 
-// A kind-0xF effect object's cursor field, live in `record_bytes` (the
-// record's 0x80 bytes, the live span's at a take, the file's at a load).
+// A kind-0xF effect object's cursor field, by `record_bytes` (the record's
+// 0x80 bytes, the live span's at a take, the file's at a load). Live or not:
+// the kind byte stays its last owner's until Effect_Spawn reuses the record
+// and writes +5, so a kind-0xF record's +0x50 / +0x54 hold that owner's
+// cursors (or 0) after its effect ends too (masterAndManillo: records 8 and 9
+// from tick 1,700, +0 clear). A record reused by another kind is that
+// kind's, and its fields are written raw.
 bool LineCursorField(U va, const unsigned char* record_bytes) {
-    return span_words::LineCursorRecord(va) != 0 && record_bytes[0] != 0 && record_bytes[5] == span_words::kLineEffectKind;
+    return span_words::LineCursorRecord(va) != 0 && record_bytes[5] == span_words::kLineEffectKind;
 }
 
 // The text slots as they stand, into wp.texts (a take's, and the probe's).
@@ -1332,7 +1337,7 @@ Parsed Parse(const std::vector<unsigned char>& file, const BuildId& build, const
             delta = file_value >> 24;
             if (!span_words::IsSlot(slot) || slot + 4 > h.span_bytes)
                 return Refuse(p, "damaged", Printf("WORDS entry %u copies offset 0x%X, which is no slot of Capcom's", i, slot));
-            // Only where a copy may be: a text word, or a live kind-0xF effect
+            // Only where a copy may be: a text word, or a kind-0xF effect
             // object's cursor field as the file holds the record. A file of a
             // build that named copies by value anywhere (B1b, d8c9917f and
             // e15d1f3a) is refused here rather than its word renamed.
@@ -2532,8 +2537,14 @@ void SelfTestFormat2() {
                   NameWord(wp, scrolling, Va(kTextA) + end, &kind, &stored, &np) && stored == (end << 24 | line_slot) &&
                   !NameWord(wp, scrolling, Va(kTextA) + end + 1, &kind, &stored, &np) &&
                   !NameWord(wp, other_field, Va(kTextA) + 5, &kind, &stored, &np),
-              "a live kind-0xF effect object's +0x50 / +0x54 inside a line's text, up to its NUL, is written as the line and how far "
+              "a kind-0xF effect object's +0x50 / +0x54 inside a line's text, up to its NUL, is written as the line and how far "
               "in; one past the NUL, and another field of the record, are not");
+        live[0] = 0;   // the effect ended: the kind byte and the cursors stay
+        WriteRange(Img(rec), live.data(), span_words::kEffectStride);
+        Check(NameWord(wp, typing, Va(kTextA) + 5, &kind, &stored, &np) && kind == kWordTextCopy,
+              "a kind-0xF record whose effect has ended keeps its cursors named");
+        live[0] = 1;
+        WriteRange(Img(rec), live.data(), span_words::kEffectStride);
         np = 0;
         wp.texts = {{Va(kTextA), text_slot}};
         Check(!NameWord(wp, typing, Va(kTextA) + 5, &kind, &stored, &np) && np == kNpTextOurs,
