@@ -82,8 +82,12 @@ set(_gen_hdr "${_gen_dir}/bof3/symbols.gen.h")
 # bind.gen.h beside it: the bind table src/hook/bind.cpp alone includes
 # (docs/relocatable-image-design.md 4.1).
 set(_bind_hdr "${_gen_dir}/bof3/bind.gen.h")
+# region_table.gen.h beside it: the region table (tools/region_table.py,
+# docs/region-table.md), which src/hook/region_table.cpp checks at start-up.
+# gen_symbols.py writes it on every run, from the files below as well.
+set(_region_hdr "${_gen_dir}/bof3/region_table.gen.h")
 add_custom_command(
-  OUTPUT "${_gen_hdr}" "${_bind_hdr}"
+  OUTPUT "${_gen_hdr}" "${_bind_hdr}" "${_region_hdr}"
   COMMAND "${BOF3X_PYTHON}" "${CMAKE_SOURCE_DIR}/tools/gen_symbols.py"
           --toml "${CMAKE_SOURCE_DIR}/symbols.toml" --out "${_gen_hdr}" --bind-out "${_bind_hdr}"
   DEPENDS "${CMAKE_SOURCE_DIR}/symbols.toml"
@@ -92,9 +96,14 @@ add_custom_command(
           "${CMAKE_SOURCE_DIR}/src/game/records.h"
           "${CMAKE_SOURCE_DIR}/src/game/records_effect.h"
           "${CMAKE_SOURCE_DIR}/src/game/records_gpu.h"
+          "${CMAKE_SOURCE_DIR}/tools/region_table.py"
+          "${CMAKE_SOURCE_DIR}/tools/region_classes.txt"
+          "${CMAKE_SOURCE_DIR}/tools/statehash_skip.txt"
+          "${CMAKE_SOURCE_DIR}/src/hook/snapshot.cpp"
+          "${CMAKE_SOURCE_DIR}/src/hook/exe_layout.h"
   COMMENT "Generating bof3/symbols.gen.h from symbols.toml"
   VERBATIM)
-add_custom_target(bof3x_symbols DEPENDS "${_gen_hdr}" "${_bind_hdr}")
+add_custom_target(bof3x_symbols DEPENDS "${_gen_hdr}" "${_bind_hdr}" "${_region_hdr}")
 
 # --- recipes/exe-pointers.tsv -> bof3/rebase.gen.h ----------------------------
 # The pointer words of .data the exe host moves with the image when bof3x.exe
@@ -364,6 +373,7 @@ set(_dll_sources
   src/hook/wav_dump.cpp
   src/hook/stallwatch.cpp
   src/hook/snapshot.cpp
+  src/hook/region_table.cpp
   src/hook/draw_order.cpp
   src/hook/write_watch.cpp
   src/hook/stp_census.cpp

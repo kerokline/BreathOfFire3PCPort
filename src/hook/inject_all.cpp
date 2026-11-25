@@ -2,6 +2,7 @@
 
 #include "hook/behaviour.h"
 #include "hook/snapshot.h"
+#include "hook/region_table.h"
 #include "render/gfx_snapshot.h"
 
 #include "game/band_census.h"
@@ -2862,6 +2863,8 @@ void InjectAll() {
                                 // its self-test - before Snapshot_Inject, beside it, after every module's self-test
     Snapshot_Inject();          // the quicksave round's SN (docs/quicksave.md): the snapshot core's self-test
                                 // (BOF3X_SHADOW=snapshot) - after DrawPool_Grow, which places the hosted pool it copies
+    RegionTable_Check();        // the state-by-name round's A3 (docs/region-table.md): the region table against the
+                                // span, the names' places, the keep list and the skip list - beside the keep list's check
     QuickMenu_Inject();         // the quicksave round's QM: the lists' and the cursor's self-test, then draft B's
                                 // split save list (SaveLists) - after every module's self-test, which compared the original's
     MountainPasses_Arm();       // DIV-0191 (game/event_script.h): the placement hook, the step hook and the bounded
