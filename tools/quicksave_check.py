@@ -780,6 +780,9 @@ NOT_PORTABLE = {0: 'portable', 1: 'taken by the hosted build', 2: 'the code plac
 PROOF_SKIP_EXTRA = [
     (0x6BC62C, 4, 'ours   Overlay_Text: after F6 / F7 / the quick menu it names our line buffer (snapshot.cpp Show, '
                   'quick_menu.cpp g_f7_line), an address in our module that each build links elsewhere'),
+    (0x7DEE4C, 12, 'ours   Msgbox_Base, MenuWindows_ListText, Msgbox_Resume: text in our message pool (DIV-0007), '
+                   'which the quicksave writes by its offset (span_words.h kTextWords) and the hash reads raw'),
+    (0x93B8FC, 4, 'ours   BattleFlow_TaskCurrent+0x38: the battle block\'s text word, as above (kTextWords)'),
 ]
 
 
