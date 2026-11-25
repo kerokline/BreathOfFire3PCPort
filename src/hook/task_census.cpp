@@ -13,6 +13,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/task_sched_callees.h"   // the records' layout; game/task_switch.h's slice and entry slot
 #include "hook/log.h"
+#include "hook/task_yield.h"
 #include "os/os.h"
 
 namespace task_census {
@@ -37,9 +38,20 @@ struct Site {
 bool g_read = false, g_on = false;
 std::string g_path;
 bof3::os::ModuleImageInfo g_module;
-std::array<std::map<Chain, Site>, task_sched::kTasks> g_sites;
+// A row is a chain and the yield word the task carried with it (task_yield.h:
+// the site id, 0 for none), so that a chain seen with two words is two rows.
+using Key = std::pair<Chain, U>;
+std::array<std::map<Key, Site>, task_sched::kTasks> g_sites;
 std::map<std::array<int, task_sched::kTasks>, U> g_frames;   // each task's site id (-1: free) -> frames
 U g_seen = 0;
+
+// The frames as runs: consecutive frames (by Frame_Counter) on which the four
+// tasks stood at the same rows and carried the same yield words. -1: free.
+struct Run {
+    U first = 0, frames = 0;
+    std::array<int, task_sched::kTasks> rows{}, yields{};
+};
+std::vector<Run> g_runs;
 
 // A native address (a task slice, our code, the image where it lies): not a VA.
 const unsigned char* Native(std::uintptr_t a) { return reinterpret_cast<const unsigned char*>(a); }
@@ -73,9 +85,12 @@ void Write() {
                     "Addresses of our code, counts and stack depths only.\n");
     std::fprintf(f, "#module\t0x%llX\t0x%llX\tframes\t%u\tslice\t0x%X\n", static_cast<unsigned long long>(g_module.base),
                  static_cast<unsigned long long>(g_module.extent), g_seen, task_sched::kStackSize);
-    std::fprintf(f, "#rec\ttask\tsite\tframes\tfirst_frame\tmin_depth\tmax_depth\tfresh\tmodes\tchain\n");
+    for (const bof3::task_yield::Site& y : bof3::task_yield::kSites)
+        std::fprintf(f, "#yieldsite\t%u\t%s\t%u\n", y.id, y.name, y.bytes);
+    std::fprintf(f, "#rec\ttask\tsite\tframes\tfirst_frame\tmin_depth\tmax_depth\tfresh\tmodes\tchain\tyield\n");
     for (U k = 0; k < task_sched::kTasks; ++k)
-        for (const auto& [chain, s] : g_sites[k]) {
+        for (const auto& [key, s] : g_sites[k]) {
+            const Chain& chain = key.first;
             std::fprintf(f, "site\t%u\t%d\t%u\t%u\t0x%X\t0x%X\t%u\t", k, s.id, s.count, s.first_frame, s.min_depth, s.max_depth,
                          s.fresh);
             bool first = true;
@@ -89,9 +104,12 @@ void Write() {
                 std::fprintf(f, "%s0x%llX", first ? "" : " ", static_cast<unsigned long long>(a));
                 first = false;
             }
-            std::fputc('\n', f);
+            std::fprintf(f, "\t%u\n", key.second);
         }
     for (const auto& [ids, n] : g_frames) std::fprintf(f, "frame\t%d\t%d\t%d\t%d\t%u\n", ids[0], ids[1], ids[2], ids[3], n);
+    for (const Run& r : g_runs)
+        std::fprintf(f, "run\t%u\t%u\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n", r.first, r.frames, r.rows[0], r.rows[1], r.rows[2],
+                     r.rows[3], r.yields[0], r.yields[1], r.yields[2], r.yields[3]);
     std::fclose(f);
 }
 
@@ -116,9 +134,10 @@ void Frame() {
     const unsigned char* records = Native(::bof3::Img(bof3::addr::Task_Records));
     const U top0 = static_cast<U>(Task_StackTop);
     const unsigned mode = static_cast<std::uint16_t>(Game_Mode);   // task 0's own word +0x18 (docs/task_sched.md 1)
-    std::array<int, kTasks> ids{};
+    std::array<int, kTasks> ids{}, yields{};
     for (U k = 0; k < kTasks; ++k) {
         ids[k] = -1;
+        yields[k] = -1;
         const unsigned char* r = records + k * kRecordSize;
         std::uint16_t state;
         std::memcpy(&state, r + kState, sizeof state);
@@ -136,10 +155,16 @@ void Frame() {
             std::memcpy(&word, Native(at), sizeof word);
             if (Executable(word) && AfterCall(word)) chain.push_back(word);
         }
-        std::map<Chain, Site>& sites = g_sites[k];
-        auto it = sites.find(chain);
+        // The yield word at this frame (task_yield.h): what a take would write
+        // for this task, read beside the chain so that the two can be checked
+        // against each other (tools/task_census.py).
+        const U yield = bof3::task_yield::g_entries[k].site;
+        yields[k] = static_cast<int>(yield);
+        std::map<Key, Site>& sites = g_sites[k];
+        const Key key{chain, yield};
+        auto it = sites.find(key);
         if (it == sites.end()) {
-            it = sites.emplace(chain, Site{}).first;
+            it = sites.emplace(key, Site{}).first;
             it->second.id = static_cast<int>(sites.size()) - 1;
             it->second.first_frame = Frame_Counter;
         }
@@ -153,6 +178,12 @@ void Frame() {
         ids[k] = s.id;
     }
     g_frames[ids] += 1;
+    const U now = Frame_Counter;
+    if (!g_runs.empty() && g_runs.back().rows == ids && g_runs.back().yields == yields &&
+        g_runs.back().first + g_runs.back().frames == now)
+        g_runs.back().frames += 1;
+    else
+        g_runs.push_back(Run{now, 1, ids, yields});
     g_seen += 1;
     if (g_seen % kEvery == 0) Write();
 }

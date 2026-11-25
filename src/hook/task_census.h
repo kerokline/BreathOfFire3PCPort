@@ -17,6 +17,13 @@
 // every 60 frames (a harness ends the game by ending the process at the
 // recipe's done, so nothing is written at exit).
 //
+// The yield word (docs/state-by-name-sites.md 5): each row also carries the
+// site the task's yield entry held on those frames (hook/task_yield.h; 0 for
+// none), a row per chain and word; the file lists the build's sites
+// (#yieldsite) and the frames as runs of the four tasks' words (run rows, by
+// Frame_Counter). tools/task_census.py --sites checks the chain and the word
+// against each other; --list-runs finds frames at a site.
+//
 // Instrumentation, not a replacement: unset, the hook is one test of a bool
 // that is never set. Set, it reads game memory and writes this module's own
 // tables and file. No DIVERGENCE.md entry: it changes no behaviour.

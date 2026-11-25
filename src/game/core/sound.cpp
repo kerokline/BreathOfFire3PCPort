@@ -1407,16 +1407,37 @@ extern "C" void __cdecl Save_ReadSummaries(void) {
 // - and Field_RunTaskRecords. The task leaves only through Task_Restart
 // (TitleFlow_EnterGame). As the original has it, the mode is not checked:
 // the table is two long and a 0 follows (ours aborts on a null entry).
+//
+// The yield word (docs/state-by-name-sites.md): the sleep opens the loop's
+// pass, so site 2's resume entry runs the rest of that pass and then the
+// loop. Nothing is alive across the sleep: the mode is Game_Mode, in the
+// span. (The include is here, not with the others, to keep this one hunk.)
+#include "hook/task_yield.h"
+namespace {
+void TitleTaskRunPass() {
+    Entry(::bof3::Img(TitleTask_Modes_addr), LongShopStates2(::bof3::Img(shop_states2::at::kGameMode.v)) & 0xFFFF, "TitleTask_Run")();
+    shop_states2::g.run_task_records();
+}
+[[noreturn]] void TitleTaskRunLoop() {
+    for (;;) {
+        Task_YieldAt(bof3::task_yield::kSiteTitleTaskRun, 1, nullptr, 0, shop_states2::g.task_sleep);
+        TitleTaskRunPass();
+    }
+}
+}  // namespace
+
 extern "C" void __cdecl TitleTask_Run(void) {
     Game_Mode = 0;
     Game_Step = 0;
     shop_states2::g.task_clear();
     shop_states2::g.window_reset();
-    for (;;) {
-        shop_states2::g.task_sleep(1);
-        Entry(::bof3::Img(TitleTask_Modes_addr), LongShopStates2(::bof3::Img(shop_states2::at::kGameMode.v)) & 0xFFFF, "TitleTask_Run")();
-        shop_states2::g.run_task_records();
-    }
+    TitleTaskRunLoop();
+}
+
+void __cdecl bof3::task_yield::ResumeTitleTaskRun() {
+    Task_YieldResume(kSiteTitleTaskRun, nullptr, 0);
+    TitleTaskRunPass();
+    TitleTaskRunLoop();
 }
 
 // original 0x588EB0: task 0's mode 0 - LoadDatFile(0x31D), Task_Sleep(1)
