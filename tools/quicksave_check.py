@@ -1082,7 +1082,15 @@ def cmd_matrix(a):
         route = t.route if os.path.exists(t.route) else os.path.join(ROOT, 'tools', 'recipes', t.route + '.txt')
         lang = t.lang or a.lang
         keep = t.keep or a.keep
-        tp, cp, idle = take_recipes(route, t.fc - 1, keep, d, t.name)
+        try:
+            tp, cp, idle = take_recipes(route, t.fc - 1, keep, d, t.name)
+        except SystemExit as e:     # a route this cannot cut (a hand-written recipe: press / until), a frame past its end
+            print(f'take {t.name}: not made - {e}')
+            with open(res, 'a', encoding='utf-8') as f:
+                f.write('\t'.join(str(x) for x in (t.name, os.path.basename(route)[:-4], t.fc, tb.label, '', '', '', '',
+                                                  '', '', '', '', '', '', 'no take', str(e).replace('\t', ' '), '', '',
+                                                  '', '', 3)) + '\n')
+            continue
         todo = [lb for lb in loads if (t.name, tb.label, lb.label) not in done]
         if not todo:
             continue
