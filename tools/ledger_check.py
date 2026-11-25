@@ -27,6 +27,14 @@ The divergence ledger, docs/DIVERGENCE.md (CLAUDE.md rule 2):
     set by the round's stage C). Each run also tests these checks on the worked
     examples, DIV-0176 and DIV-0183, each with one field line changed, added or
     removed (FIXTURE_CASES).
+  * the saved-state field (the state-by-name round, the owner's call 6,
+    docs/state-by-name-round.md 7; docs/DIVERGENCE.md "The saved-state field"):
+    `Saved state: unchanged` or `Saved state: changed (revision N)`, one line,
+    N a whole number from 1. Required on every entry from SAVED_STATE_FROM
+    (the first entry after DIV-0245, the last before the round); an earlier entry may carry it and
+    is then held to the same grammar. The same FIXTURE_CASES test it: each
+    worked example is checked as an entry after the round, with
+    `Saved state: unchanged` added, and the cases change, add or remove it.
 
 The ownership ledger, symbols.toml `impl` against the detours in src/:
   * every function detoured to ours (BOF3_INJECT, or a direct bof3::Inject
@@ -84,6 +92,14 @@ TOWARD_VALUES = ('psx', 'psp', 'pc')
 LANGUAGE_VALUES = tuple(language_tags.TAGS) + ('original',)
 # The Default clause of an entry whose Languages is not `any` and Default `on`.
 LANG_DEFAULT = 'under its languages'
+# The saved-state field (docs/DIVERGENCE.md "The saved-state field"; the
+# state-by-name round, the owner's call 6 of 2026-11-25). Every entry from this
+# number on carries it: DIV-0245 was the ledger's last entry when the round
+# added the field, so the rule binds the entries written after it and none
+# before. A constant, read once from the ledger: never move it.
+SAVED_STATE_FIELD = 'Saved state'
+SAVED_STATE_FROM = 246
+SAVED_STATE_VALUE = re.compile(r'unchanged|changed \(revision [1-9]\d*\)')
 # (DIV id, field) -> why: an entry whose line of that name predates the switch
 # fields and means something else. Its line is not read as the field; the
 # check fails once the line is renamed, so the list cannot go stale.
@@ -201,6 +217,7 @@ def check_divergence(r, inv):
             r.error(f'{LEDGER}: Status line says {n} entries to {top}; '
                     f'the ledger has {len(ids)} to {last}')
     check_switch_fields(r, fielded, set(seen), inv)
+    check_saved_state(r, fielded)
     selftest_fields(r, fielded, set(seen), inv)
     check_behaviours(r, fielded, inv)
     selftest_behaviours(r, fielded, set(seen), inv)
@@ -461,6 +478,27 @@ def check_switch_fields(r, fielded, defined, inv, whole=True):
     r.note(f'{filled} of {len(fielded)} entries carry all {len(SWITCH_FIELDS)} switch fields')
 
 
+def check_saved_state(r, fielded, first=SAVED_STATE_FROM):
+    """`Saved state:` on every entry numbered `first` or above, in its grammar
+    wherever it is (the module docstring)."""
+    carried = 0
+    for did, where, chunk in fielded:
+        lines = field_lines(chunk, SAVED_STATE_FIELD)
+        if len(lines) > 1:
+            r.error(f'{where}: {did} has {len(lines)} "{SAVED_STATE_FIELD}:" lines, want one')
+        if not lines:
+            if int(did[4:]) >= first:
+                r.error(f'{where}: {did} has no "- **{SAVED_STATE_FIELD}:**" field (every entry from '
+                        f'DIV-{first:04d} says whether it gives a saved byte a new meaning: docs/DIVERGENCE.md '
+                        '"The saved-state field")')
+            continue
+        carried += 1
+        if not SAVED_STATE_VALUE.fullmatch(lines[0]):
+            r.error(f'{where}: {did} {SAVED_STATE_FIELD} {lines[0]!r} is not unchanged or changed (revision N), '
+                    'N a whole number from 1')
+    r.note(f'{carried} of {len(fielded)} entries carry "{SAVED_STATE_FIELD}:" (required from DIV-{first:04d})')
+
+
 def check_citations(r, defined):
     cited = {}   # DIV id -> where it is first cited
     for rel, path in walk('.', CITE_EXTS):
@@ -548,6 +586,22 @@ FIXTURE_CASES = [
     ('DIV-0176', {'Languages': 'ja-JP, ja-JP'}, 'names a language twice'),
     ('DIV-0176', {'Languages': 'any, ja-JP'}, '`any` stands alone'),
     ('DIV-0183', {'-Languages': ''}, 'has no "- **Languages:**" field'),
+    # The saved-state field: the chunk carries `Saved state: unchanged` and is
+    # checked as the first entry after the round, unless `@id` names another ID.
+    ('DIV-0176', {'Saved state': 'changed (revision 2)'}, None),
+    ('DIV-0183', {'Saved state': 'changed (revision 12) - the rim reads its row another way'}, None),
+    ('DIV-0176', {'Saved state': 'unchanged - presentation only'}, None),
+    ('DIV-0176', {'-Saved state': ''}, 'has no "- **Saved state:**" field'),
+    ('DIV-0176', {'-Saved state': '', '@id': 'DIV-0245'}, None),
+    ('DIV-0176', {'Saved state': 'changed (rev 2)', '@id': 'DIV-0245'}, 'is not unchanged or changed'),
+    ('DIV-0176', {'+Saved state': 'unchanged'}, '"Saved state:" lines, want one'),
+    ('DIV-0176', {'Saved state': 'changed'}, 'is not unchanged or changed'),
+    ('DIV-0176', {'Saved state': 'changed (revision 0)'}, 'is not unchanged or changed'),
+    ('DIV-0176', {'Saved state': 'changed (revision 02)'}, 'is not unchanged or changed'),
+    ('DIV-0176', {'Saved state': 'changed (revision N)'}, 'is not unchanged or changed'),
+    ('DIV-0176', {'Saved state': 'Unchanged'}, 'is not unchanged or changed'),
+    ('DIV-0176', {'Saved state': 'no'}, 'is not unchanged or changed'),
+    ('DIV-0176', {'Saved state': ''}, 'is not unchanged or changed'),
 ]
 
 
@@ -577,15 +631,18 @@ def selftest_fields(r, fielded, defined, inv):
                     '(ledger_check.py FIXTURE_IDS)')
             return
     past = f'DIV-{max(int(x[4:]) for x in defined) + 1:04d}'
+    after = f'DIV-{SAVED_STATE_FROM:04d}'
     for did, changes, want in FIXTURE_CASES:
         changes = {f: v.replace('<past the last>', past) for f, v in changes.items()}
+        as_id = changes.pop('@id', after)
         t = Report()
         try:
-            chunk = fixture_chunk(have[did], changes)
+            chunk = fixture_chunk(have[did] + f'\n- **{SAVED_STATE_FIELD}:** unchanged', changes)
         except KeyError as e:
             r.error(f'self-test: {did} has no "{e.args[0]}:" line to change')
             continue
         check_switch_fields(t, [(did, f'self-test {did} {changes}', chunk)], defined, inv, whole=False)
+        check_saved_state(t, [(as_id, f'self-test {did} as {as_id} {changes}', chunk)])
         if want is None and t.errors:
             r.error(f'self-test: {did} with {changes} should pass, gave: {t.errors[0]}')
         elif want is not None and not any(want in e for e in t.errors):
