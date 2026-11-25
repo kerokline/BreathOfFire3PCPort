@@ -183,7 +183,7 @@ enum NotPortable : U {
     kNpTaskEntry = 4,        // a task created and not yet run whose entry names no VA
     kNpSlotCode = 5,         // a slot of Capcom's holds a function of ours by its address
     kNpRuntimeSlot = 6,      // a run-time slot names our module outside the message pool
-    kNpTextOurs = 7,         // a text word (span_words::kTextWords) names our module outside the pool and the text slots
+    kNpTextOurs = 7,         // a text word or a line cursor field names our module outside the pool and the texts it may
 };
 
 const char* NotPortableText(U code) {
@@ -195,7 +195,7 @@ const char* NotPortableText(U code) {
     case kNpTaskEntry: return "a new task's entry names no VA";
     case kNpSlotCode: return "a slot holds a function of ours";
     case kNpRuntimeSlot: return "a message slot names our module";
-    case kNpTextOurs: return "a message box's text is ours outside the message pool";
+    case kNpTextOurs: return "a text pointer names our module outside the message pool and the slots' texts";
     default: return "a reason this build does not know";
     }
 }
@@ -610,6 +610,14 @@ bool Unnamed(U va) {
 static_assert(span_words::kTextWords[0] == Msgbox_Base_addr && span_words::kTextWords[1] == MenuWindows_ListText_addr &&
                   span_words::kTextWords[2] == Msgbox_Resume_addr && span_words::kTextWords[3] == BattleFlow_TaskCurrent_addr + 0x38,
               "span_words::kTextWords against symbols.toml (the box state's three, the battle block's +0x38)");
+static_assert(span_words::kEffectObjects == Effect_Objects_addr && span_words::kEffectRecords == Effect_Objects_count,
+              "span_words::kEffectObjects against symbols.toml");
+
+// A kind-0xF effect object's cursor field, live in `record_bytes` (the
+// record's 0x80 bytes, the live span's at a take, the file's at a load).
+bool LineCursorField(U va, const unsigned char* record_bytes) {
+    return span_words::LineCursorRecord(va) != 0 && record_bytes[0] != 0 && record_bytes[5] == span_words::kLineEffectKind;
+}
 
 // The text slots as they stand, into wp.texts (a take's, and the probe's).
 void ReadTextSlots(WordPlace& wp) {
@@ -641,16 +649,21 @@ U TextExtent(U v) {
 // The slot whose text `w` points into - at its start, or inside it up to its
 // NUL, as the effect objects' cursors into DIV-0064's lines do
 // (masterAndManillo) - as an offset from kDataLo, and how far in; false if
-// none. The greatest text start at or below `w` is the one tried.
-bool TextSlotOf(const WordPlace& wp, U w, U* slot, U* delta) {
-    auto it = std::upper_bound(wp.texts.begin(), wp.texts.end(), std::pair<U, U>{w, ~U{0}});
-    if (it == wp.texts.begin()) return false;
-    --it;
-    const U d = w - it->first;
-    if (d > TextExtent(it->first)) return false;
-    *slot = it->second;
-    *delta = d;
-    return true;
+// none. Only `lines` (the thirteen line records) when set. Called only for a
+// word whose place says it holds a text pointer (NameWord): a value inside a
+// text is no evidence on its own (the proof's finding 2).
+bool TextSlotOf(const WordPlace& wp, U w, bool lines, U* slot, U* delta) {
+    for (auto it = std::upper_bound(wp.texts.begin(), wp.texts.end(), std::pair<U, U>{w, ~U{0}}); it != wp.texts.begin();) {
+        --it;
+        if (w - it->first > 255) return false;   // past any text that could hold it
+        if (lines && !span_words::IsLineText(span_words::kDataLo + it->second)) continue;
+        const U d = w - it->first;
+        if (d > TextExtent(it->first)) continue;
+        *slot = it->second;
+        *delta = d;
+        return true;
+    }
+    return false;
 }
 
 // The word at `off` (bytes from .data's start) holding `w`, at a take: true
@@ -659,23 +672,29 @@ bool TextSlotOf(const WordPlace& wp, U w, U* slot, U* delta) {
 // word makes the take this build's only.
 bool NameWord(const WordPlace& wp, U off, U w, U* kind, U* stored, U* np) {
     const U va = span_words::kDataLo + off;
-    // A run-time slot or a text word into the message pool: by its offset in
-    // the pool. A copy of a text slot's pointer, in any word that is not a
-    // slot itself: by that slot (B1b; docs/state-by-name-participants.md 10).
-    bool runtime = span_words::IsTextWord(va);
+    // Named by where the word is, never by what its value looks like
+    // (docs/state-by-name-participants.md 10.7): a run-time slot or a text word
+    // into the message pool, by its offset in the pool; a text word or a
+    // kind-0xF effect object's cursor field pointing into a slot's text, by
+    // that slot and how far in. A value test alone only ever makes a take less
+    // trusted (the not-portable codes below), never renames a word.
+    const bool text_word = span_words::IsTextWord(va);
+    bool runtime = text_word;
     for (U i = 0; i < span_words::kRuntimeSlots && !runtime; ++i) runtime = va == span_words::RuntimeSlot(i);
     if (runtime && wp.pool_bytes && w - wp.pool < wp.pool_bytes) {
         *kind = kWordPool;
         *stored = w - wp.pool;
         return true;
     }
+    const U record = span_words::LineCursorRecord(va);
+    const bool cursor = record && LineCursorField(va, At(Img(record)));
     U slot = 0, delta = 0;
-    if (!span_words::IsSlot(off) && TextSlotOf(wp, w, &slot, &delta)) {
+    if ((text_word || cursor) && TextSlotOf(wp, w, cursor, &slot, &delta)) {
         *kind = kWordTextCopy;
         *stored = delta << 24 | slot;
         return true;
     }
-    if (runtime && span_words::g_ours.Named(w) && !*np) *np = span_words::IsTextWord(va) ? kNpTextOurs : kNpRuntimeSlot;
+    if ((runtime || cursor) && span_words::g_ours.Named(w) && !*np) *np = text_word || cursor ? kNpTextOurs : kNpRuntimeSlot;
     if (wp.code) {
         if (const U named = Bind_VaOf(w)) {
             *kind = kWordCode;
@@ -1313,6 +1332,19 @@ Parsed Parse(const std::vector<unsigned char>& file, const BuildId& build, const
             delta = file_value >> 24;
             if (!span_words::IsSlot(slot) || slot + 4 > h.span_bytes)
                 return Refuse(p, "damaged", Printf("WORDS entry %u copies offset 0x%X, which is no slot of Capcom's", i, slot));
+            // Only where a copy may be: a text word, or a live kind-0xF effect
+            // object's cursor field as the file holds the record. A file of a
+            // build that named copies by value anywhere (B1b, d8c9917f and
+            // e15d1f3a) is refused here rather than its word renamed.
+            const U va = span_words::kDataLo + off, record = span_words::LineCursorRecord(va);
+            const bool place = span_words::IsTextWord(va) ||
+                               (record && record + span_words::kEffectStride <= span_words::kDataLo + h.span_bytes &&
+                                LineCursorField(va, image + (record - span_words::kDataLo)) &&
+                                span_words::IsLineText(span_words::kDataLo + slot));
+            if (!place)
+                return Refuse(p, reason.empty() ? std::string("a word this process cannot place") : reason + " (a word this build cannot place)",
+                              (detail.empty() ? std::string() : detail + "; ") +
+                                  Printf("the file names the word at 0x%08X as a copy of a slot's text, and that word holds none", va));
             place_kind = kWordText;
             file_value = U32(image + slot);
             live_value = U32(At(data + slot));
@@ -2264,50 +2296,84 @@ void SelfTestFormat2() {
                   "an exact restore of format 2: the span (the text slot the take's) and the arena as at the take");
         }
 
-        // (2b) B1b: a word holding the text slot's pointer (as an effect
-        // object copies a slot's, masterAndManillo) follows that slot; the
-        // message box aimed at a buffer of ours (DIV-0225's town warp page)
-        // makes the take not portable.
+        // (2b) B1b, B1c: a kind-0xF effect object's cursor into a fishing
+        // line (masterAndManillo's) follows the line; a word no rule places
+        // whose value lies in the same text keeps its value (the proof's
+        // finding 2); the message box aimed at a buffer of ours (DIV-0225's
+        // town warp page) makes the take not portable.
         if (slot) {
             U copy = 0;
             for (U off = 0; off < span_words::kDataHi - span_words::kDataLo && !copy; off += 4) {
                 const U va = span_words::kDataLo + off;
                 bool runtime = span_words::IsTextWord(va);
                 for (U i = 0; i < span_words::kRuntimeSlots; ++i) runtime = runtime || va == span_words::RuntimeSlot(i);
-                if (!span_words::IsSlot(off) && !Unnamed(va) && !runtime && word(va) == 0) copy = va;
+                if (!span_words::IsSlot(off) && !Unnamed(va) && !runtime && !span_words::LineCursorRecord(va) && word(va) == 0) copy = va;
             }
-            Check(copy != 0, "a word of .data no rule names, to hold a copy");
-            set_word(slot, text_a);
-            set_word(copy, text_a + 3);   // a cursor three bytes into the slot's text
+            Check(copy != 0, "a word of .data no rule names, to hold a number");
+            const U line = span_words::kLineTexts, line0 = word(line);
+            const U rec = span_words::kEffectObjects + (span_words::kEffectRecords - 1) * span_words::kEffectStride, cursor = rec + 0x50;
+            std::vector<unsigned char> rec0(At(Img(rec)), At(Img(rec)) + span_words::kEffectStride);
+            std::vector<unsigned char> live(span_words::kEffectStride, 0);
+            live[0] = 1;
+            live[5] = static_cast<unsigned char>(span_words::kLineEffectKind);
+            WriteRange(Img(rec), live.data(), span_words::kEffectStride);
+            set_word(line, text_a);
+            set_word(cursor, text_a + 3);   // the typing cursor three bytes into the line
+            set_word(copy, text_a + 3);     // a number that happens to lie there
             std::vector<unsigned char> c;
             OnOwnStack([&] { c = Take(reg, span, top, &FakeSaveHalf); });
             Stamp(c, build);
             const HeaderExt cx = ExtOf(c);
-            U copies = 0;
+            U copies = 0, raw_named = 0;
             const unsigned char* image = c.data() + kSaveHalf + sizeof(Header) + sizeof(HeaderExt);
             for (U i = 0; i < cx.words; ++i) {
                 const U e = U32(c.data() + WordsAt(c) + std::size_t{i} * sizeof(U));
-                if ((e & 7) == kWordTextCopy && span_words::kDataLo + (e >> 3) * 4 == copy &&
-                    U32(image + (e >> 3) * 4) == (3u << 24 | (slot - span_words::kDataLo)))
+                const U at = span_words::kDataLo + (e >> 3) * 4;
+                if ((e & 7) == kWordTextCopy && at == cursor && U32(image + (e >> 3) * 4) == (3u << 24 | (line - span_words::kDataLo)))
                     ++copies;
+                if (at == copy) ++raw_named;
             }
-            Check(cx.portable == 1 && copies == 1, "a copy of a text slot's pointer is written as that slot, and the take stays portable");
-            set_word(slot, text_b);
+            Check(cx.portable == 1 && copies == 1 && raw_named == 0,
+                  "the cursor is written as its line and how far in, the number is written raw, and the take stays portable");
+            set_word(line, text_b);
+            set_word(cursor, 0x5A5A5A5A);
             set_word(copy, 0x5A5A5A5A);
             q = Parse(c, other, span, top, reg);
-            Check(q.ok && q.answer == Answer::Portable, "the take with the copy parses as portable in another build");
+            Check(q.ok && q.answer == Answer::Portable, "the take with the cursor parses as portable in another build");
             if (q.ok) {
                 OnOwnStack([&] { Restore(q, reg); });
-                Check(word(copy) == text_b + 3 && word(slot) == text_b, "a portable restore places the cursor in its slot's text: this process's");
+                Check(word(cursor) == text_b + 3 && word(line) == text_b && word(copy) == text_a + 3,
+                      "a portable restore places the cursor in this process's line and leaves the number as it was");
             }
-            set_word(slot, text_b);
-            set_word(copy, 0x5A5A5A5A);
+            set_word(line, text_b);
+            set_word(cursor, 0x5A5A5A5A);
             q = Parse(c, build, span, top, reg);
             Check(q.ok && q.answer == Answer::Exact, "and exactly in its own build");
             if (q.ok) {
                 OnOwnStack([&] { Restore(q, reg); });
-                Check(word(copy) == text_a + 3 && word(slot) == text_a, "an exact restore places the cursor in its slot's text: the take's");
+                Check(word(cursor) == text_a + 3 && word(line) == text_a && word(copy) == text_a + 3,
+                      "an exact restore places the cursor in the take's line");
             }
+            // A file that names a word as a copy where none may be (a build
+            // that named copies by value) is refused, not renamed.
+            {
+                std::vector<unsigned char> bad = c;
+                const HeaderExt bx = ExtOf(bad);
+                for (U i = 0; i < bx.words; ++i) {
+                    unsigned char* e = bad.data() + WordsAt(bad) + std::size_t{i} * sizeof(U);
+                    if (span_words::kDataLo + (U32(e) >> 3) * 4 != cursor) continue;
+                    const U moved = (copy - span_words::kDataLo) / 4 << 3 | kWordTextCopy;
+                    std::memcpy(e, &moved, sizeof moved);
+                    unsigned char* w = bad.data() + kSaveHalf + sizeof(Header) + sizeof(HeaderExt) + (copy - span_words::kDataLo);
+                    const U named = 3u << 24 | (line - span_words::kDataLo);
+                    std::memcpy(w, &named, sizeof named);
+                }
+                q = Parse(bad, other, span, top, reg);
+                Check(!q.ok && q.why == "another build (a word this build cannot place)" && q.offer_save,
+                      "a file naming a copy at a word that holds none is refused, its save offered");
+            }
+            WriteRange(Img(rec), rec0.data(), span_words::kEffectStride);
+            set_word(line, line0);
             set_word(copy, 0);
             const U box0 = word(Msgbox_Base_addr);
             set_word(Msgbox_Base_addr, Va(g_test_warp_page));
@@ -2440,15 +2506,46 @@ void SelfTestFormat2() {
               "a message box's text word into the pool, and the battle block's, are written as their offsets in it");
         U text_slot = 0;
         while (!span_words::IsSlot(text_slot)) text_slot += 4;
-        wp.texts = {{Va(kTextA), text_slot}};
-        Check(NameWord(wp, plain, Va(kTextA), &kind, &stored, &np) && kind == kWordTextCopy && stored == text_slot && np == 0 &&
-                  NameWord(wp, battle, Va(kTextA), &kind, &stored, &np) && kind == kWordTextCopy && stored == text_slot,
-              "a word holding a text slot's pointer is written as that slot's offset, a text word's too");
+        const U line_slot = span_words::kLineTexts - span_words::kDataLo;
+        Check(span_words::IsSlot(line_slot), "the first fishing line's record is one of Capcom's slots");
+        wp.texts = {{Va(kTextA), line_slot}};
+        // Named by where it is (the proof's finding 2): a word no rule places
+        // keeps its value however it falls, and a text word is a pointer.
+        Check(!NameWord(wp, plain, Va(kTextA), &kind, &stored, &np) && !NameWord(wp, plain, Va(kTextA) + 5, &kind, &stored, &np) &&
+                  np == 0,
+              "a word no rule places is written raw although its value lies in a slot's text (a number, finding 2)");
+        Check(NameWord(wp, battle, Va(kTextA), &kind, &stored, &np) && kind == kWordTextCopy && stored == line_slot &&
+                  NameWord(wp, battle, Va(kTextA) + 5, &kind, &stored, &np) && stored == (5u << 24 | line_slot),
+              "a text word holding a slot's pointer, or a cursor into its text, is written as that slot and how far in");
+        // A kind-0xF effect object's cursor fields, on a record of the live
+        // table made live for the test and put back after.
+        const U rec = span_words::kEffectObjects + (span_words::kEffectRecords - 1) * span_words::kEffectStride;
+        std::vector<unsigned char> rec0(At(Img(rec)), At(Img(rec)) + span_words::kEffectStride);
+        std::vector<unsigned char> live(span_words::kEffectStride, 0);
+        live[0] = 1;
+        live[5] = static_cast<unsigned char>(span_words::kLineEffectKind);
+        WriteRange(Img(rec), live.data(), span_words::kEffectStride);
+        const U typing = rec + 0x50 - span_words::kDataLo, scrolling = rec + 0x54 - span_words::kDataLo,
+                other_field = rec + 0x58 - span_words::kDataLo;
         const U end = static_cast<U>(sizeof kTextA - 1);
-        Check(NameWord(wp, plain, Va(kTextA) + 5, &kind, &stored, &np) && kind == kWordTextCopy && stored == (5u << 24 | text_slot) &&
-                  NameWord(wp, plain, Va(kTextA) + end, &kind, &stored, &np) && stored == (end << 24 | text_slot) &&
-                  !NameWord(wp, plain, Va(kTextA) + end + 1, &kind, &stored, &np),
-              "a cursor inside the slot's text, up to its NUL, is written as the slot and how far in; one past the NUL is not");
+        Check(NameWord(wp, typing, Va(kTextA) + 5, &kind, &stored, &np) && kind == kWordTextCopy && stored == (5u << 24 | line_slot) &&
+                  NameWord(wp, scrolling, Va(kTextA) + end, &kind, &stored, &np) && stored == (end << 24 | line_slot) &&
+                  !NameWord(wp, scrolling, Va(kTextA) + end + 1, &kind, &stored, &np) &&
+                  !NameWord(wp, other_field, Va(kTextA) + 5, &kind, &stored, &np),
+              "a live kind-0xF effect object's +0x50 / +0x54 inside a line's text, up to its NUL, is written as the line and how far "
+              "in; one past the NUL, and another field of the record, are not");
+        np = 0;
+        wp.texts = {{Va(kTextA), text_slot}};
+        Check(!NameWord(wp, typing, Va(kTextA) + 5, &kind, &stored, &np) && np == kNpTextOurs,
+              "a cursor field pointing into a slot's text that is not a fishing line makes the take not portable");
+        np = 0;
+        live[5] = 0x5;
+        WriteRange(Img(rec), live.data(), span_words::kEffectStride);
+        wp.texts = {{Va(kTextA), line_slot}};
+        Check(!NameWord(wp, typing, Va(kTextA) + 5, &kind, &stored, &np) && np == 0,
+              "the same field of an effect object of another kind is written raw");
+        WriteRange(Img(rec), rec0.data(), span_words::kEffectStride);
+        wp.texts = {{Va(kTextA), text_slot}};
         Check(!NameWord(wp, box, Va(kTextB), &kind, &stored, &np) && np == kNpTextOurs,
               "a message box's text word naming our module elsewhere (the town warp's page) makes the take not portable");
         np = 0;
@@ -2570,7 +2667,7 @@ void SelfTest() {
         "and a truncated file refused; format 2: a format-1 file exact, a portable file of another build restored "
         "portably and exactly in its own, one not portable, an unknown site, another state revision, other settings, "
         "damaged settings, an unbound code word and other bound functions refused with the save offered, the word kinds; "
-        "the text words into the pool, a copy of a text slot placed as its slot, the message box on a buffer of ours not portable; "
+        "the text words into the pool, a line cursor placed by its line and a number in a text left raw, the message box on a buffer of ours not portable; "
         "an empty slot; the "
         "rotation over sixteen files, a gapped set, a failed rename and an empty slot file a crash left",
         span.image.base, span.image.bytes, span.pool.base, span.pool.bytes);

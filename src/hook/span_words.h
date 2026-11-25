@@ -107,6 +107,31 @@ constexpr bool IsTextWord(std::uint32_t va) {
     return false;
 }
 
+// The other place a cursor into text of ours is kept (B1c; the proof's
+// finding 2, docs/state-by-name-participants.md 10.7): a kind-0xF effect
+// object's +0x50 (the typing cursor) and +0x54 (the scrolling one), into one
+// of the thirteen fishing lines of 0x653B98 (effect_kind_0f.cpp; the lines are
+// DIV-0064's g_lines under an overlay). Effect_Objects: 20 records of 0x80, the
+// record live when +0 is not 0, its kind at +5. A word is named by where it
+// is: only these two fields of a live kind-0xF record are tried, and only
+// against those thirteen texts.
+constexpr std::uint32_t kEffectObjects = 0x7E11E0;
+constexpr std::uint32_t kEffectRecords = 20;
+constexpr std::uint32_t kEffectStride = 0x80;
+constexpr std::uint32_t kLineEffectKind = 0xF;
+constexpr std::uint32_t kLineTexts = 0x653B98;   // thirteen records of 8: the text pointer at +0
+constexpr std::uint32_t kLineTextCount = 13;
+// The record a cursor field at `va` belongs to, or 0 when `va` is no +0x50 /
+// +0x54 of Effect_Objects (the record's kind is the caller's to read).
+constexpr std::uint32_t LineCursorRecord(std::uint32_t va) {
+    if (va < kEffectObjects || va >= kEffectObjects + kEffectRecords * kEffectStride) return 0;
+    const std::uint32_t field = (va - kEffectObjects) % kEffectStride;
+    return field == 0x50 || field == 0x54 ? va - field : 0;
+}
+constexpr bool IsLineText(std::uint32_t slot_va) {
+    return slot_va >= kLineTexts && slot_va < kLineTexts + kLineTextCount * 8 && (slot_va - kLineTexts) % 8 == 0;
+}
+
 // A section of ours a pointer can name: every one the loader keeps. The
 // discardable ones (.reloc and the DWARF sections, 41 of the image's 94 MB in
 // the build of 2026-10-10) are mapped but nothing points into them, and a
