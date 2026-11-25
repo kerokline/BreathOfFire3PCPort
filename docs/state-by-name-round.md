@@ -6,7 +6,7 @@ The owner chose I54 as the first of the larger changes after `v0.1.0-beta.2`
 laptop, the round to launch on the desktop. Section 2 is measured (the task
 census ran here the same day, on the Linux build of `main` `65b7810f` plus the
 probe); section 1 says what that changed in I54's tiers; sections 3 to 6 are a
-plan; section 7 is the owner's calls (1 and 2 answered the same day, 3 to 5
+plan; section 7 is the owner's calls (1 and 2 answered the same day, 3 to 8
 open); section 9 lists what is not checked.
 
 ## 0. The shape in one paragraph
@@ -540,7 +540,7 @@ have no entry.
 **Answered 2026-11-24 (the owner, by chat): calls 1 and 2, both as
 proposed.** F6 takes the frame it is given and never waits; a take on a
 nested frame is this build's only. Another build refuses its snapshot and
-offers the save it starts with, after a confirmation. Calls 3 to 5 are open.
+offers the save it starts with, after a confirmation. Calls 3 to 8 are open.
 
 1. **A take on a nested frame - answered: (a).** (a) F6 takes the frame it is given and the
    file says "this build only" (proposed: a save state is of the frame the
@@ -556,6 +556,36 @@ offers the save it starts with, after a confirmation. Calls 3 to 5 are open.
    wanted sooner for its own sake (I45's size, I46's checks).
 5. **The probe stays** as a developer's switch, like `BOF3X_STPCENSUS`
    (proposed), or goes after the round.
+6. **Who keeps the state revision honest** (added 2026-11-24). A portable
+   quicksave is safe across builds only if every later change that gives a
+   saved byte a new meaning raises the revision (3.4). Nothing enforces it:
+   CI holds no game data and cannot run the cross-build proof. A change that
+   forgets leaves an older quicksave that loads and misbehaves, with no
+   refusal. Proposed: a field in the ledger's entry template, "Saved state:
+   unchanged / changed (revision N)", and `tools/ledger_check.py` failing on
+   an entry after this round that lacks it.
+7. **What is promised across releases.** When the revision rises: (a) an
+   older quicksave falls back to its save, and a converter is written only
+   when one change makes it worth its cost (proposed); (b) every step gets a
+   converter, a standing cost on each such change.
+8. **A quicksave across settings.** A load is refused today for another
+   language or music source ([`quicksave.md`](quicksave.md) 4b, 4c) and for
+   nothing else. With builds no longer refusing each other, a quicksave
+   meets another wide mode, preset, cheat set or mod list more often than
+   before. Which of those are safe to cross is **not measured**. Proposed:
+   the round's first step reads which settings change state a quicksave
+   holds, and the header carries a fingerprint of those, so that a
+   difference is a refusal with its reason (and the save offered), never a
+   load that goes wrong.
+
+**For the release that carries this round:** every quicksave taken before
+it is format 1. It loads exactly in its own build and as its save in any
+other, never as portable. That belongs in that release's notes.
+
+**Before a launch, cheaply:** the probe is one variable and costs nothing in
+play. Run with it during the owner's own play on the desktop, the census
+gains the scenes, minigames and fights the sixteen routes are thin on, and
+the 32-bit build's places, before the round fixes its list of sites.
 
 ## 8. Not in this round
 
