@@ -33,9 +33,21 @@ void QuickMenu_AfterPoint();
 // battle's has other messages at those ids).
 void QuickMenu_TitlePoolLoaded();
 
+// Draft B (docs/state-by-name-tier0.md 2), the title's load path: a refused
+// quicksave's save half, loaded through the title after the restart.
+// TitleFlow_Begin: the save half's bytes when the title's menu begins on the
+// way to that load (the menu's first step then goes to the load menu's read),
+// nullptr otherwise; any came-from put-back still armed is dropped first
+// (save_tail.h). LoadMenu_Read: the bytes to read in place of the slot's file,
+// once, nullptr otherwise. The slot they came from, for the log.
+const unsigned char* QuickMenu_TitleBegins();
+const unsigned char* QuickMenu_SaveHalfForRead();
+unsigned QuickMenu_SaveHalfSlot();
+
 // InjectAll, after every module's self-test: the self-test of the two lists
 // and the cursor (BOF3X_SELFTEST_ONLY in the exe host, BOF3X_SHADOW=quick_menu
-// hosted), then SaveLists_Arm.
+// hosted), then SaveLists_Arm, then the save tail's self-test and switch
+// (SaveTail_Inject).
 void QuickMenu_Inject();
 
 }  // namespace bof3

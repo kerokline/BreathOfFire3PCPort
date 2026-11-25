@@ -20,6 +20,7 @@
 #include "game/rest_2c_callees.h"
 #include "game/save_menu.h"
 #include "game/save_menu_callees.h"
+#include "game/save_tail.h"
 #include "game/scenario_harness.h"
 #include "game/shop/field_save_callees.h"
 #include "game/shop_states_callees.h"
@@ -630,11 +631,15 @@ extern "C" void __cdecl FieldSave_Confirm(void) {
 // file written, 0x12B0 bytes. Unless Save_WriteFile answered -1 (DIV-0003's
 // failure path: a bare return): the sub-state up, the timer 0x1E, the slot's
 // summary (the slot read again) and 0x6BC881 = 2.
+// DIVERGENCE (the state-by-name round's A4, ledger draft C, save_tail.h): the
+// came-from place written in the staging buffer's tail after the build, which
+// cleared it, and before the write, which writes it as it is.
 extern "C" void __cdecl FieldSave_Write(void) {
     TitleBox(0x12);
     MessageRest2c(0x99);
     SH_CALL(SaveMenu_DrawSlots)(0x20, 0x30, 0);
     SH_CALL(Save_BuildBlock)();
+    bof3::SaveTail_Write(AtRest2c(::bof3::Img(Save_Staging_addr)) + save_tail::kBlockBytes);   // draft C
     SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath.v))), reinterpret_cast<const char*>(AtRest2c(::bof3::Img(rest_2c::at::kPathFormat.v))), Rest2c_Slot);
     const int written = SH_CALL(Save_WriteFile)(reinterpret_cast<const char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath.v))), rest_2c::at::kSaveSize);
     if (written == -1) return;
@@ -1018,10 +1023,13 @@ extern "C" void __cdecl Menu_DrawBlackScreen(void) {
 // file's name made with 0 (the slot not yet read), the block built, the name
 // made again with the slot (read again), the file written; unless
 // Save_WriteFile answered -1, the slot's summary.
+// DIVERGENCE (draft C, save_tail.h): the came-from place in the tail, as
+// FieldSave_Write writes it.
 extern "C" void __cdecl Save_QuickWrite(void) {
     Rest2c_Slot = 0;
     SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath.v))), reinterpret_cast<const char*>(AtRest2c(::bof3::Img(rest_2c::at::kPathFormat.v))), 0u);
     SH_CALL(Save_BuildBlock)();
+    bof3::SaveTail_Write(AtRest2c(::bof3::Img(Save_Staging_addr)) + save_tail::kBlockBytes);   // draft C
     SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath.v))), reinterpret_cast<const char*>(AtRest2c(::bof3::Img(rest_2c::at::kPathFormat.v))), Rest2c_Slot);
     const int written = SH_CALL(Save_WriteFile)(reinterpret_cast<const char*>(AtRest2c(::bof3::Img(rest_2c::at::kPath.v))), rest_2c::at::kSaveSize);
     if (written == -1) return;

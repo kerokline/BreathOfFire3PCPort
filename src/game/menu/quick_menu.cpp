@@ -42,6 +42,24 @@
 // acted on at its release, so the button is up when the game's latch runs
 // again: a press kept down would be an edge to the game's next latch (after a
 // load, against the Input_Held the quicksave holds).
+//
+// DIVERGENCE (the state-by-name round's group A4, ledger draft B,
+// docs/state-by-name-tier0.md 2): a refused quicksave loads as its save. When
+// the core refuses a load and its save half is whole (Snapshot_LastLoad's
+// RefusedSaveOffered), the menu asks a second question: the reason and "Load
+// the save in this quicksave?" in the 8 x 8 font below the slots, the game's
+// own Yes / No in the title box. No keeps the game as it is (the slots and the
+// reason, as any refusal). Yes takes the game's own road: the save half read
+// (Snapshot_ReadSaveHalf), then the restart F9's second press asks
+// (Game_RestartFlag: the loop sets the stack base again and creates the tasks
+// afresh, Boot_Task first); when the title's task 1 has begun (Title_Task has
+// put its state word, which the restart left at a mark of ours, to 0), its
+// state is put to 7, Title_StateMenu - the state Start on the logo leads to -
+// so the title's own code makes task 0 the title's menu task; the menu's
+// first step (TitleFlow_Begin) then goes to the load menu's read
+// (LoadMenu_Read) with this save half as the bytes read in place of a
+// BISLPS0?.DAT, and LoadMenu_Loaded, LoadMenu_Apply and TitleFlow_EnterGame
+// run unchanged. F7 asks nothing: its line says F5 can load the save.
 #include "game/quick_menu.h"
 
 #include <filesystem>
@@ -62,6 +80,7 @@
 #include "hook/input_script.h"
 #include "hook/log.h"
 #include "hook/snapshot.h"
+#include "game/save_tail.h"
 #include "input/key_codes.h"
 #include "os/os.h"
 
@@ -82,11 +101,12 @@ constexpr unsigned kMsgYesNo = 0xF;         // Menu_YesNo's line
 constexpr unsigned kBattleMode = 5;         // Game_Mode in a battle (docs/mode-rest.md 1.1)
 
 // The menu as a value: the self-test steps it without a window.
-enum class Act { None, Close, Load };
+enum class Act { None, Close, Load, LoadSave };
 struct Menu {
     U cursor = 0;              // 0..15: the slot, 0 the newest
     U first = 0;               // the first of the three shown
     bool asking = false;       // "load this game?" over the cursor's slot
+    bool offer = false;        // refused, the save half whole: "load the save in this quicksave?" (draft B)
     U yes = 1;                 // Menu_YesNo's byte: 1 Yes (the left stop), 0 No; LoadMenu_Choose starts it at 1
     Act waiting = Act::None;   // acted on when confirm and cancel are both up
     std::uint16_t prev = 0xFFFF;   // every button down: nothing counts as pressed until released once
@@ -104,13 +124,14 @@ Act Step(Menu& m, std::uint16_t pad, std::uint16_t confirm, std::uint16_t cancel
         m.waiting = Act::None;
         return a;
     }
-    if (m.asking) {
-        // Menu_YesNo's order: cancel (No), confirm, then left / right.
+    if (m.asking || m.offer) {
+        // Menu_YesNo's order: cancel (No), confirm, then left / right. No
+        // leaves either question for the slots.
         if (pressed & cancel) {
-            m.asking = false;
+            m.asking = m.offer = false;
         } else if (pressed & confirm) {
-            if (m.yes != 0) m.waiting = Act::Load;
-            else m.asking = false;
+            if (m.yes != 0) m.waiting = m.offer ? Act::LoadSave : Act::Load;
+            else m.asking = m.offer = false;
         } else if (pressed & kLeftRight) {
             m.yes ^= 1;
         }
@@ -182,6 +203,25 @@ bool g_paused_by_us = false;   // the game was not paused (F9) when F5 opened th
 bool g_loading = false;        // a Load asked; Snapshot_Pending runs it at this frame's end
 unsigned g_loading_slot = 0;
 char g_refusal[64];            // the last refusal's reason, upper case for the 8 x 8 font; "" for none
+
+// Draft B: the save half's road (the comment at the top). Ours, outside the
+// span: the restart rewrites the span's game state, these carry the request
+// across it.
+enum class Tier0 { None, Restart, Title, Read };
+Tier0 g_tier0 = Tier0::None;
+std::vector<unsigned char> g_half;   // the save half's 0x12B0 bytes, as Snapshot_ReadSaveHalf gave them
+unsigned g_half_slot = 0;
+// Title_State (task 1's private word +0x18) while the restart is on its way:
+// no Title_States entry, so its change to 0 is Title_Task's own entry.
+// Task_Create keeps a record's private words and Task_ClearPrivate clears
+// +8..+0x17 only, so nothing else writes it before then.
+constexpr std::uint16_t kTitleStateMark = 0xFFFF;
+constexpr std::uint16_t kTitleStateMenu = 7;   // Title_StateMenu, Title_States[7]
+// The question below the reason, ours (Simplified Technical English,
+// CLAUDE.md): there is no message for it in the game's pools, so it is drawn
+// as the reason is, in the 8 x 8 font, under every language.
+constexpr char kSaveQuestion[] = "LOAD THE SAVE IN THIS QUICKSAVE?";
+char g_f7_line[160];           // F7's refusal line with the way to the save (draft B)
 
 constexpr int kSlotsX = 0x20, kSlotsY = 0x30;   // the load menu's (LoadMenu_Choose's draw_slots)
 
@@ -258,13 +298,80 @@ void DrawYesNo(U yes) {
 // battle's pictures, so the backdrop is left out and the black screen is the
 // background; the title box, the slots, the portraits, the font and the hand
 // draw right there (the capture of 2026-11-06, docs/quicksave.md QM.8).
+//
+// Draft B's question: the title box holds the game's Yes / No alone (its line
+// is spaces and then the two words, so no message of the box's is under it),
+// the slots unlit, and below them the reason and the question, two lines of
+// the 8 x 8 font.
 void Draw() {
     Menu_DrawBlackScreen();
+    static const unsigned char kNoMessage[1] = {0};
     const unsigned message = g_menu.asking ? kMsgConfirm : g_refusal[0] != 0 ? kMsgCouldNot : kMsgChoose;
-    save_menu::DrawLoadWindows(Game_Mode != kBattleMode, TitleLine(message));
-    save_menu::DrawSlotsOver(kSlotsX, kSlotsY, g_menu.asking ? 0 : 1, g_summaries, &g_menu.first, &g_menu.cursor);
-    if (g_menu.asking) DrawYesNo(g_menu.yes);
-    else if (g_refusal[0] != 0) Text_DrawFont8(0x10, 0xE0, 0, reinterpret_cast<const unsigned char*>(g_refusal));
+    save_menu::DrawLoadWindows(Game_Mode != kBattleMode, g_menu.offer ? kNoMessage : TitleLine(message));
+    save_menu::DrawSlotsOver(kSlotsX, kSlotsY, g_menu.asking || g_menu.offer ? 0 : 1, g_summaries, &g_menu.first, &g_menu.cursor);
+    if (g_menu.asking || g_menu.offer) DrawYesNo(g_menu.yes);
+    if (g_menu.offer) {
+        char two[sizeof g_refusal + sizeof kSaveQuestion + 1];
+        std::snprintf(two, sizeof two, "%s\n%s", g_refusal, kSaveQuestion);
+        Text_DrawFont8(0x10, 0xE0, 0, reinterpret_cast<const unsigned char*>(two));
+    } else if (!g_menu.asking && g_refusal[0] != 0) {
+        Text_DrawFont8(0x10, 0xE0, 0, reinterpret_cast<const unsigned char*>(g_refusal));
+    }
+}
+
+// Draft B, Yes: the save half read, the restart asked as F9's second press
+// asks it - Game_Paused 0 and Game_RestartFlag, the sound left paused as that
+// press leaves it (the title's music is started afresh) - and the menu closed.
+// A save half that cannot be read (the file changed since the refusal) keeps
+// the menu, with the reason.
+void AskSaveLoad(unsigned slot) {
+    std::string why;
+    if (!bof3::Snapshot_ReadSaveHalf(slot, g_half, why)) {
+        std::snprintf(g_refusal, sizeof g_refusal, "NO SAVE - %s", why.c_str());
+        for (char* c = g_refusal; *c; ++c)
+            if (*c >= 'a' && *c <= 'z') *c = static_cast<char>(*c - 'a' + 'A');
+        bof3::Log("quickmenu   BISLPS%02X.DAT: the save half cannot be read (%s); the menu stays open", slot, why.c_str());
+        return;
+    }
+    g_half_slot = slot;
+    g_tier0 = Tier0::Restart;
+    Title_State = kTitleStateMark;
+    g_open = false;
+    Game_Paused = 0;
+    Game_RestartFlag = 1;
+    bof3::Log("quickmenu   BISLPS%02X.DAT's save half at Frame_Counter %u: the restart asked (Game_RestartFlag), then "
+              "the title's load of it (draft B)", slot, static_cast<U>(Frame_Counter));
+}
+
+// Draft B at the frame point: once the title's task 1 has begun after the
+// restart, its state 7, the way Start on the logo goes (Title_CheckStart):
+// Title_StateMenu then stops the music, makes task 0 the title's menu task
+// TitleTask_Run and ends task 1. Title_StartArmed 0, as Title_CheckStart
+// leaves it. No transition is started: the load menu's read follows at once
+// and LoadMenu_Loaded starts its own.
+void Tier0Frame() {
+    if (g_tier0 != Tier0::Restart || Title_State == kTitleStateMark) return;
+    const unsigned was = Title_State;
+    Title_State = kTitleStateMenu;
+    Title_StartArmed = 0;
+    g_tier0 = Tier0::Title;
+    bof3::Log("quickmenu   the title's task began at Frame_Counter %u (its state %u): state 7, the title's menu (draft B)",
+              static_cast<U>(Frame_Counter), was);
+}
+
+// F7 (draft B): a refusal whose save half is whole says that F5 can load it.
+// Right after the point, where the core has just put its line in Overlay_Text:
+// the line is copied with the addition into ours, and Overlay_Text names ours.
+void F7Line() {
+    if (g_open) return;   // the menu's own refusal: it shows its reason and asks itself
+    const char* const line = bof3::Snapshot_LastLine();
+    const char* const shown = Overlay_Text;
+    constexpr char kRefused[] = "Quickload refused: ";
+    if (shown != line || std::strncmp(line, kRefused, sizeof kRefused - 1) != 0) return;
+    if (bof3::Snapshot_LastLoad().answer != bof3::SnapshotAnswer::RefusedSaveOffered) return;
+    std::snprintf(g_f7_line, sizeof g_f7_line, "%s - use F5 to load the save in it", line);
+    Overlay_Text = g_f7_line;
+    bof3::Log("quickmenu   F7: %s (draft B)", g_f7_line);
 }
 
 // --- the self-test ------------------------------------------------------------------
@@ -444,13 +551,37 @@ void CursorSelfTest() {
     if (Step(m, kConfirm, kConfirm, kCancel, sums) != Act::None) Fail("Yes acted while held");
     if (Step(m, kConfirm, kConfirm, kCancel, sums) != Act::None) Fail("Yes acted while held");
     if (Step(m, 0, kConfirm, kCancel, sums) != Act::Load || m.cursor != 3) Fail("Yes on slot 3 did not load at the release");
+    // Draft B's question (a refusal with the save half whole): Yes first;
+    // right and confirm is No, back to the slots; cancel is No; Yes acts at
+    // the release as LoadSave, on the cursor's slot.
+    m = Menu{};
+    Step(m, 0, kConfirm, kCancel, sums);
+    m.cursor = 3;
+    m.offer = true;
+    m.yes = 1;
+    Tap(kLeftRight & 0x2000);
+    if (m.yes != 0 || !m.offer) Fail("right did not flip the save question to No");
+    Tap(kConfirm);
+    if (m.offer || m.asking) Fail("No on the save question did not return to the slots");
+    m.offer = true;
+    m.yes = 1;
+    Tap(kCancel);
+    if (m.offer) Fail("cancel did not answer the save question No");
+    m.offer = true;
+    m.yes = 1;
+    Tap(kDown);
+    if (m.cursor != 3 || !m.offer) Fail("down moved the cursor during the save question");
+    if (Step(m, kConfirm, kConfirm, kCancel, sums) != Act::None) Fail("Yes on the save question acted while held");
+    if (Step(m, 0, kConfirm, kCancel, sums) != Act::LoadSave || m.cursor != 3)
+        Fail("Yes on the save question did not ask the save's load at the release");
     // Cancel on the slots closes, at the release.
-    m.asking = false;
+    m.asking = m.offer = false;
     if (Step(m, kCancel, kConfirm, kCancel, sums) != Act::None) Fail("cancel acted on the press");
     if (Step(m, 0, kConfirm, kCancel, sums) != Act::Close) Fail("cancel on the slots did not close at the release");
     bof3::Log("shadow      quick menu self-test: the cursor over 0..15 with gaps (slots 0, 3, F present), the three "
               "shown following it, the held repeat, no question on an empty slot, Yes / No by left and right, No and "
-              "cancel back to the slots, Yes loading and cancel closing at the release");
+              "cancel back to the slots, Yes loading and cancel closing at the release; the save question's No, cancel and Yes "
+              "(LoadSave at the release)");
 }
 
 }  // namespace
@@ -475,6 +606,11 @@ bool QuickMenu_Frame() {
     if (act == Act::Close) {
         Close("cancel");
         return true;
+    }
+    if (act == Act::LoadSave) {
+        AskSaveLoad(kFirstSlot + g_menu.cursor);
+        if (!g_open) return true;   // the restart comes at the loop's next pass: nothing more drawn
+        g_menu.offer = false;
     }
     if (act == Act::Load) {
         // Still paused and open: the snapshot core runs the load at this
@@ -507,7 +643,12 @@ void QuickMenu_TitlePoolLoaded() {
 }
 
 void QuickMenu_AfterPoint() {
-    if (!g_loading) return;
+    Tier0Frame();
+    SaveTail_Frame();
+    if (!g_loading) {
+        F7Line();
+        return;
+    }
     g_loading = false;
     const char* const line = Snapshot_LastLine();
     constexpr char kRefused[] = "Quickload refused: ";
@@ -517,6 +658,13 @@ void QuickMenu_AfterPoint() {
         for (char* c = g_refusal; *c; ++c)
             if (*c >= 'a' && *c <= 'z') *c = static_cast<char>(*c - 'a' + 'A');
         bof3::Log("quickmenu   BISLPS%02X.DAT not loaded (%s); the menu stays open", g_loading_slot, line);
+        // Draft B: its save half is whole - ask whether to load it.
+        const SnapshotLoadResult& r = Snapshot_LastLoad();
+        if (r.answer == SnapshotAnswer::RefusedSaveOffered && r.slot == g_loading_slot) {
+            g_menu.offer = true;
+            g_menu.yes = 1;
+            bof3::Log("quickmenu   BISLPS%02X.DAT: its save half is whole; asked whether to load it (draft B)", g_loading_slot);
+        }
         return;
     }
     // Restored: the span holds the take's Game_Paused (0: a take is never
@@ -534,12 +682,31 @@ void QuickMenu_AfterPoint() {
               g_loading_slot, line);
 }
 
+const unsigned char* QuickMenu_TitleBegins() {
+    SaveTail_Forget();
+    if (g_tier0 != Tier0::Title) return nullptr;
+    g_tier0 = Tier0::Read;
+    bof3::Log("quickmenu   the title's menu began at Frame_Counter %u: to the load menu's read of BISLPS%02X.DAT's save "
+              "half (draft B)", static_cast<U>(Frame_Counter), g_half_slot);
+    return g_half.data();
+}
+
+const unsigned char* QuickMenu_SaveHalfForRead() {
+    if (g_tier0 != Tier0::Read) return nullptr;
+    g_tier0 = Tier0::None;
+    return g_half.data();
+}
+
+unsigned QuickMenu_SaveHalfSlot() { return g_half_slot; }
+
 void QuickMenu_Inject() {
-    if (IsExeHost() ? bof3::os::GetEnv("BOF3X_SELFTEST_ONLY", nullptr, 0) > 0 : WantsShadow("quick_menu")) {
+    const bool selftest = IsExeHost() ? bof3::os::GetEnv("BOF3X_SELFTEST_ONLY", nullptr, 0) > 0 : WantsShadow("quick_menu");
+    if (selftest) {
         ListsSelfTest();
         CursorSelfTest();
     }
     SaveLists_Arm();
+    SaveTail_Inject(selftest);
 }
 
 }  // namespace bof3

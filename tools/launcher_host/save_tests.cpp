@@ -290,6 +290,19 @@ void TestFile(const fs::path& temp) {
     Block old{};
     Expect(ReadPcFile(backup, old, why) && old[0x678] == 7, "the backup holds the file from before");
     Expect(!fs::exists(file + L".tmp", ec), "no temporary file is left");
+    // The tail after the block (the came-from place, src/game/save_tail.h): read, and written back as given.
+    Tail tail{};
+    for (std::size_t i = 0; i < 0x20; ++i) tail[i] = static_cast<std::uint8_t>(0xA0 + i);
+    Expect(WritePcFile(file, b, tail, keep, backup, why), "a file with a tail is written");
+    Tail tail_back{};
+    Block b_back{};
+    Expect(ReadPcFile(file, b_back, tail_back, why) && b_back == b && tail_back == tail, "the block and the tail read back");
+    Expect(KeptTail(b, b, tail) == tail, "an edit in the same area keeps the tail");
+    Block moved = b;
+    moved[0x24] = static_cast<std::uint8_t>(moved[0x24] + 1);
+    Expect(KeptTail(b, moved, tail) == Tail{}, "an edit to another area writes the tail zero");
+    Expect(WritePcFile(file, b, keep, backup, why) && ReadPcFile(file, b_back, tail_back, why) && tail_back == Tail{},
+           "the form without a tail writes it zero");
     fs::remove_all(temp, ec);
 }
 

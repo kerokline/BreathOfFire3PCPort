@@ -7,6 +7,7 @@ docs/quicksave-round.md section 2 "RC").
     python tools/quicksave_check.py inproc RUN.sh [--log bof3x.log] [--plain PLAIN.sh]
     python tools/quicksave_check.py cross LIVE.sh LOADED.sh [--log-live L] [--log-loaded L]
     python tools/quicksave_check.py same  A.sh B.sh [--refb A2.sh]   (the identity reference: keys pressed, nothing changed)
+    python tools/quicksave_check.py tier0 ROUTE.txt --at F --out DIR [--host linux --elf E --direct] [--env K=V]
     python tools/quicksave_check.py selftest
 
 make    From a recorded route (wait / hold / one-frame shot lines only) and
@@ -52,6 +53,25 @@ run     One live run through tools/input_run.py with BOF3X_STATEHASH and the
         recipe's form wants (inproc for quick_N, same against --plain for
         _keys). --lock DIR takes the machine's one-live-game lock (mkdir,
         retried a minute apart) for the run and gives it back after.
+tier0   A refused quicksave loaded as its save (the state-by-name round's
+        A4, docs/state-by-name-tier0.md 5). Four steps, one game at a time:
+          take   the route to idle frame F and `key f6` there, then a few
+                 frames: BISLPS10.DAT in the run's game folder;
+          doctor one byte of the file's build stamp (the version tag)
+                 changed, so the build that wrote it refuses it as
+                 another build; its save half written apart as a recipe
+                 save (T0HALF.DAT) - the bytes the title's load reads;
+          load   from the title, F5, confirm on slot 0, Yes: the load is
+                 refused and the menu asks whether to load the save; Yes:
+                 the restart and the title's load of the save half; then,
+                 once Game_Mode is 2, --after frames and the peeks;
+          ref    the same save half as slot 0 through the title's own load
+                 menu (combat.txt's presses: start, start, r2 three times), then the
+                 same wait and peeks.
+        The two runs' peeks (the area, the leader's position, the came-from
+        place, the play clock) and their last shots are compared; the load
+        run's log must show the refusal, the question, the restart, the
+        title's state 7 and the load menu's read of the save half.
 selftest  The analyses on synthetic hash files: an equal window, a window
         diverging at a known tick, a run with no restore, a cross pair.
 
@@ -557,6 +577,153 @@ def cmd_run(a):
     return 0
 
 
+# ---------------------------------------------------------------- tier 0
+
+# Peeked once the game is up (docs/state-by-name-tier0.md 5): u16 Game_AreaNumber;
+# the leader's x and z (ObjTrio +0x34, +0x38, what Save_BuildBlock saves);
+# the came-from place (AreaW2c_LastArea, 0x7E091C, 0x7E0920); the play clock.
+TIER0_PEEKS = [('0x904EFC', 'u16', 'area'), ('0x802D74', 'u32', 'x'), ('0x802D78', 'u32', 'z'),
+               ('0x802290', 'u16', 'came_from'), ('0x7E091C', 'u32', 'came_x'), ('0x7E0920', 'u32', 'came_z'),
+               ('0x6BC63C', 'u8', 'restart_flag')]
+GAME_MODE = '0x66C7E8'
+STAMP_AT = 0x12B0 + 8 + 4 * 4      # the version tag in the header (docs/quicksave.md 4)
+SAVE_HALF = 0x12B0
+
+
+def tier0_tail(after):
+    out = [f'until {GAME_MODE} u16 == 2 timeout 5400', f'wait {after}']
+    out += [f'peek {a} {t} t0_{n}' for a, t, n in TIER0_PEEKS]
+    out += ['shot t0_up 1', 'wait 2']
+    return out
+
+
+def run_input(a, recipe, out, extra, saves=None):
+    cmd = [sys.executable, os.path.join(TOOLS, 'input_run.py'), recipe, '--out', out, '--no-front',
+           '--lang', a.lang, '--minutes', str(a.minutes)]
+    if a.host:
+        cmd += ['--host', a.host]
+    if a.elf:
+        cmd += ['--elf', a.elf]
+    if a.direct:
+        cmd += ['--direct']
+    for kv in a.env:
+        cmd += ['--env', kv]
+    cmd += extra
+    os.makedirs(out, exist_ok=True)
+    log = linux_log(a) if a.host == 'linux' else None
+    if log and os.path.exists(log):
+        os.remove(log)      # the run's own log, never the last run's
+    env = dict(os.environ)
+    if saves:               # the harness reads it for the recipe save (input_run.py linux_save)
+        env['BOF3X_RECIPE_SAVES'] = saves
+    t0 = time.time()
+    p = subprocess.run(cmd, capture_output=True, text=True, env=env)
+    open(os.path.join(out, '_run.txt'), 'w').write(' '.join(cmd) + '\n\n' + p.stdout + p.stderr)
+    tail = p.stdout.strip().splitlines()[-1] if p.stdout.strip() else p.stderr.strip()[-400:]
+    print(f'  {os.path.basename(recipe)}: exit {p.returncode}, {time.time() - t0:.0f} s - {tail}')
+    if log and os.path.exists(log):
+        shutil.copy(log, os.path.join(out, 'bof3x.log'))
+    return p.returncode, os.path.join(out, 'bof3x.log')
+
+
+def linux_log(a):
+    import linux_run
+    return linux_run.local_path(linux_run.log_of(a.elf))
+
+
+def cmd_tier0(a):
+    header, r = read_route(a.route)
+    f = a.at
+    if f >= len(r) or r[f] != ('', None):
+        sys.exit(f'{a.route}: frame {f} is not an idle frame (idle runs near it: {idle_runs(r, max(0, f - 60), f + 60)})')
+    out = os.path.abspath(a.out)
+    os.makedirs(out, exist_ok=True)
+    save = [h for h in header if re.match(r'#\s*save\s', h)]
+    # 1. the take
+    take = os.path.join(out, 't0_take.txt')
+    lines = [f'# tier0 take at {f} from {os.path.basename(a.route)} (quicksave_check.py tier0)'] + save
+    emit(r[:f] + [('KEY', 'f6')], lines)
+    lines += ['wait 30']
+    open(take, 'w', newline='\n').write('\n'.join(lines) + '\n')
+    print('take:')
+    inst = ['--game', a.game] if a.game else []
+    rc, log = run_input(a, take, os.path.join(out, 'take'), inst + (['--slot0-hold'] if save else ['--no-save']))
+    game = os.path.join(out, 'take', 'game')
+    qs = os.path.join(game, 'BISLPS10.DAT')
+    if not os.path.exists(qs):
+        print(f'no quicksave in {game}: the take did not happen')
+        return 1
+    # 2. the stamp doctored; the save half apart
+    b = bytearray(open(qs, 'rb').read())
+    shutil.copy(qs, qs + '.orig')
+    b[STAMP_AT] ^= 0x20
+    open(qs, 'wb').write(b)
+    halves = os.path.join(out, 'half')
+    os.makedirs(halves, exist_ok=True)
+    open(os.path.join(halves, 'T0HALF.DAT'), 'wb').write(bytes(b[:SAVE_HALF]))
+    print(f'doctor: {qs}, byte 0x{STAMP_AT:X} of the build stamp changed; save half {len(b[:SAVE_HALF])} bytes')
+    # 3. the load: F5, confirm on slot 0, Yes (refused), Yes (the save)
+    load = os.path.join(out, 't0_load.txt')
+    lines = ['# tier0 load: F5 on the title, slot 0, Yes, then Yes to the save (quicksave_check.py tier0)',
+             'wait 150', 'key f5', 'wait 20', 'hold r2 3', 'wait 20', 'hold r2 3', 'wait 30', 'shot t0_question 1',
+             'wait 10', 'hold r2 3'] + tier0_tail(a.after)
+    open(load, 'w', newline='\n').write('\n'.join(lines) + '\n')
+    print('load:')
+    rc_load, log_load = run_input(a, load, os.path.join(out, 'load'), ['--run-game', 'none', '--game', game, '--no-save'])
+    # 4. the reference: the save half through the title's menu
+    ref = os.path.join(out, 't0_ref.txt')
+    lines = ['# tier0 reference: the save half as slot 0, through the title\'s load menu (quicksave_check.py tier0)',
+             '# save T0HALF', 'wait 59', 'hold start 5', 'wait 95', 'hold start 6', 'wait 43', 'hold r2 3', 'wait 59',
+             'hold r2 5', 'wait 25', 'hold r2 5'] + tier0_tail(a.after)
+    open(ref, 'w', newline='\n').write('\n'.join(lines) + '\n')
+    print('ref:')
+    rc_ref, log_ref = run_input(a, ref, os.path.join(out, 'ref'),
+                                ['--slot0-hold'] + inst, saves=halves)
+    # the comparison
+    want = ['refused', 'its save half is whole', 'the restart asked', 'state 7, the title', 'load menu\'s read',
+            'loaded the save half']
+    seen = open(log_load, errors='replace').read() if os.path.exists(log_load) else ''
+    road = [(w, w in seen) for w in want]
+    pl, pr = peeks_of(log_load), peeks_of(log_ref)
+    print('the road (the load run\'s log):')
+    for w, ok in road:
+        print(f'  {"yes" if ok else "NO "}  {w}')
+    print('where it stands:            load            ref')
+    same = True
+    for _, _, n in TIER0_PEEKS:
+        x, y = pl.get('t0_' + n), pr.get('t0_' + n)
+        # equal and read; an area 0 is no game (a take on the title comes up there)
+        same = same and x is not None and x == y and not (n == 'area' and x == '0x0')
+        print(f'  {n:12s} {str(x):>16s} {str(y):>16s}  {"equal" if x == y else "DIFFERENT"}')
+    shots = [os.path.join(out, k) for k in ('load', 'ref')]
+    pics = [shot_bytes(d, 't0_up') for d in shots]
+    pic = pics[0] is not None and pics[0] == pics[1]
+    print(f'  the picture t0_up: {"equal" if pic else "different" if all(pics) else "missing"}')
+    ok = all(o for _, o in road) and same
+    print('tier0: ' + ('the save half came up where the title\'s load puts it' if ok else 'NOT as the title\'s load'))
+    return 0 if ok else 1
+
+
+def peeks_of(log):
+    """{label: value} of the log's `input       peek LABEL = 0xV (D) recipe frame N` lines (input_script.cpp)."""
+    got = {}
+    if not os.path.exists(log):
+        return got
+    for line in open(log, errors='replace'):
+        m = re.search(r'input\s+peek (t0_\w+) = (0x[0-9A-Fa-f]+)', line)
+        if m:
+            got[m[1]] = m[2]
+    return got
+
+
+def shot_bytes(d, name):
+    for ext in ('.png', '.bmp'):
+        p = os.path.join(d, name + ext)
+        if os.path.exists(p):
+            return open(p, 'rb').read()
+    return None
+
+
 # ---------------------------------------------------------------- self-test
 
 def write_sh(path, recs, pages=8):
@@ -721,6 +888,19 @@ def main():
     p.add_argument('--save', help='the recipe save to hold in slot 0 (input_run --save); for a cross run, the live '
                    'run, so a save list read later in the route lists the same file on both sides')
     p.set_defaults(fn=cmd_run)
+    p = sub.add_parser('tier0')
+    p.add_argument('route')
+    p.add_argument('--at', type=int, required=True, help='the idle recipe frame of the route where f6 takes')
+    p.add_argument('--out', required=True)
+    p.add_argument('--after', type=int, default=120, help='frames after Game_Mode 2 before the peeks and the shot')
+    p.add_argument('--host')
+    p.add_argument('--elf')
+    p.add_argument('--direct', action='store_true')
+    p.add_argument('--game', help='the install for the take and the reference run (input_run --game)')
+    p.add_argument('--lang', default='en-US')
+    p.add_argument('--minutes', type=float, default=10)
+    p.add_argument('--env', action='append', default=[])
+    p.set_defaults(fn=cmd_tier0)
     p = sub.add_parser('selftest')
     p.set_defaults(fn=cmd_selftest)
     a = ap.parse_args()
