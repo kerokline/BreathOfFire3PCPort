@@ -11689,3 +11689,27 @@ of focus. An unskipped movie stalls the same way at its end.
 **Fixed:** by DIV-0049's amendment of 2026-11-23: the last activation a movie
 takes is handed to the game at the next message step. **Not seen yet on the
 desktop:** the owner's run owes it.
+
+## D436 — Quitting the fishing in a game loaded at the fishing spot stops the game (Capcom's path, D270's; met 2026-11-25 by the state-by-name round's A4; open for a save without the came-from place)
+
+**Who saw it, in which configuration:** the state-by-name round's group A4, on
+the Linux ELF of `sbn/A4`, headless: a quicksave's save half taken at the
+fishing spot (`caughFish`, area 30, a mode-8 area), its tail zeroed, loaded as
+a save, then the fishing quit ([`state-by-name-tier0.md`](state-by-name-tier0.md)
+4 and 5.3; the capture is `p3f/leave_0` under that group's root).
+
+**What happens:** an F12 save (or a quicksave's save half) made at the fishing
+spot loads there with the came-from area `0xFFFF` (`GameMode_Start`). Quitting
+the fishing (`GameMode8_Leave` `0x4964E0`) asks `Field_ChangeArea(0xFFFF, ...)`,
+and `Area_ZoneAtIn` reads address 0 under `Area_PickMusic`: D270's null zone
+list, reached by the mode-8 leave, which DIV-0121's hold does not guard.
+
+**Status:** a save made by a build with DIV-0246 carries the place the party
+came from and leaves to it (measured: area 16). A save without it - every F12
+save made at the spot before DIV-0246, a save written with `SaveCameFrom` off -
+still stops the game on the quit. Not run with `BOF3X_ORIGINAL=*`; the path is
+the original's by reading. A fix for the untagged save would be DIV-0121's
+hold applied in `GameMode8_Leave` too (the fishing then has no way out but a
+reload), or a default place for each mode-8 area: **the owner's call**. Mode-8
+areas other than the fishing spot are not tried.
+

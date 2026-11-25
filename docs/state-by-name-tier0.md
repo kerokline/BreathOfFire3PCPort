@@ -529,7 +529,7 @@ reads the tail, finds no tag and arms nothing; neither saves.
   live outside the tree, on the machines); a reading of a route that saves,
   taken before this change, differs on that page from the save on.
 
-## 7. Ledger drafts
+## 7. Ledger drafts (numbered at the merge, 2026-11-25: B into DIV-0147 and DIV-0145, C is DIV-0246, D into DIV-0121; the fishing crash is known-defects D436)
 
 Numbered at the merge. Each in the ledger's entry format; an amendment is the
 paragraph to add to the entry it amends, with the fields of that entry as they

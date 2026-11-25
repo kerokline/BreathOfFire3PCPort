@@ -340,7 +340,7 @@ the laptop (they hold game data).
   `analysis/` are regenerated as their checks direct; each `--check` passes
   after.
 
-## 8. Ledger: draft A (an amendment of DIV-0145)
+## 8. Ledger: draft A (an amendment of DIV-0145) - taken into DIV-0145, 2026-11-25
 
 - **What the original did:** as DIV-0145 has it (F6 nothing; F7 the next
   renderer device).

@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 245 entries, DIV-0001..0245, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 246 entries, DIV-0001..0246, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -9932,6 +9932,17 @@ designed in rather than bolted on.
   plays to its end through boss encounter 23 in area 67. The `event_leader`
   fuzz runs Capcom's rule (the switch `g_edge_no_area` is armed after it).
   **Not seen by the owner.**
+- **Amended 2026-11-25 - when the hold is still reached** (the state-by-name
+  round's group A4, DIV-0246): a save made by this build carries the place the
+  party came from, put back after its load, so an edge leads there and the
+  hold is not reached. It is still reached after the load of a save without
+  the tag (every save made before DIV-0246, a PlayStation save converted, a
+  save written with `SaveCameFrom` off, a save the editor moved to another
+  area), of a tagged save whose came-from area was itself `0xFFFF` (made in a
+  game loaded there from an untagged save before the party left), and when
+  the put-back is dropped (an entry event took the party on). Measured:
+  `stallion.txt` from the `combat` save still stays in area 29; from a tagged
+  save made there it leaves at the edge (DIV-0246).
 - **Reversible?** `BOF3X_ORIGINAL=EdgeNoArea`.
   A player turns it off with `BOF3X_OFF=EdgeNoArea` (the ini's `off=`).
 - **Switch:** EdgeNoArea
@@ -9940,6 +9951,7 @@ designed in rather than bolted on.
 - **Toward:** none - the PlayStation has the same unbounded lookup; the hold is no release's
 - **Languages:** any
 - **State:** active
+- **Saved state:** unchanged - the hold reads a word the game already holds
 
 ### The wide modes re-stage the scenes' edge actors
 
@@ -11615,6 +11627,28 @@ designed in rather than bolted on.
   pixel-equal. Re-checked after `main`'s typed-data round (PR #94) merged.
   The language refusal (2026-10-20): the `snapshot` self-test in the exe
   host under the original and under en-US, both passing.
+- **Amended 2026-11-25 - format 2: a quicksave that outlives its build** (the
+  state-by-name round's group A1, [`state-by-name-format.md`](state-by-name-format.md);
+  IDEAS I54; the owner's calls 1, 2, 7 and 8 of 2026-11-24 and 2026-11-25): a
+  quicksave is written in format 2. A load answers one of three ways. In the
+  build and process that wrote it, it restores to the frame, as before. In
+  another build or process it restores when the file is portable - every task
+  stood at a named place, and this build can place every word written by its
+  name - with each task started again at its place. Otherwise it is refused
+  with its reason on screen, and when its save half is whole the refusal says
+  the save can be loaded (the menu's question is DIV-0147's amendment of the
+  same day). A quicksave taken under other settings that are not safe to cross
+  (the original text or a translation, the code switches and the preset's
+  list, the behaviours, the champion, the layers and mods, the PSP's rules,
+  the desert entrance, the layering) is a new refusal, "other settings", with
+  the setting named and the save offered. A quicksave of another state
+  revision is refused the same way. Every quicksave written before this
+  change is format 1: it loads exactly in its own build and is refused, its
+  save offered, in any other. A build without this change refuses every
+  format-2 file as "another format"; its save half is still a save.
+- **Amended 2026-11-25 - F7 names the way to the save** (group A4; the question is DIV-0147's):
+  a refusal whose save half is whole adds to F7's line "- use F5 to load the
+  save in it"; F7 asks nothing.
 - **Reversible?** The keys are ours; without them nothing of the game
   changes. They are read only in our window procedure, so only the hosted
   build's `BOF3X_ORIGINAL=Game_WndProc` turns them off (Capcom's window
@@ -11626,6 +11660,7 @@ designed in rather than bolted on.
 - **Toward:** none - no release has save states
 - **Languages:** any
 - **State:** active
+- **Saved state:** changed (revision 1) - the first revision: format 2's header carries it from here on (docs/state-by-name-format.md)
 
 ### The save list is BISLPS0?.DAT and bounded at sixteen; the quicksaves list apart
 
@@ -11712,6 +11747,27 @@ designed in rather than bolted on.
   QM.8. The owner chose this over refusing F5 in a battle or uploading the
   backdrop's textures. Other modes than the field and the battle are not
   measured.
+- **Amended 2026-11-25 - a refused quicksave loads as its save** (the
+  state-by-name round's group A4, [`state-by-name-tier0.md`](state-by-name-tier0.md)
+  2; the owner's calls 2 and 3 of 2026-11-24 and 2026-11-25): when a load is
+  refused for its build or process and its save half is whole (DIV-0145 as
+  amended the same day), the menu asks on that slot: the reason and "LOAD THE
+  SAVE IN THIS QUICKSAVE?" in the 8 x 8 font below the slots (ours, in
+  Simplified Technical English, under every language, as the reason always
+  was), the game's own Yes / No with the hand in the title box. No, or cancel,
+  goes back to the slots and leaves the game as it was. Yes reads the save
+  half and asks the restart F9's second press asks (`Game_RestartFlag`); once
+  the title's task has begun, its state is put to 7, `Title_StateMenu`, where
+  Start on the logo leads, so the title's own code makes the menu task; the
+  menu's first step (`TitleFlow_Begin` `0x587DC0`) goes to the load menu's
+  read (`LoadMenu_Read` `0x5883C0`) with the save half as the bytes read in
+  place of a `BISLPS0?.DAT` (the slot list showing its summary in slot 0),
+  and `LoadMenu_Loaded`, `LoadMenu_Apply` and `TitleFlow_EnterGame` run as
+  for any save. No slot is marked before a load is tried. Measured: the game
+  comes up where the title's own load of the same save half puts it (the
+  area, the leader's position, the came-from place, the picture), on
+  `combat` in the field; section 4 has a take in a battle, a scene and the
+  fishing minigame.
 - **Reversible?** F5 is ours (nothing of Capcom's is replaced; without the
   key nothing changes). It is read only in our window procedure, so only the
   hosted build's `BOF3X_ORIGINAL=Game_WndProc` turns it off (Capcom's window
@@ -11723,6 +11779,7 @@ designed in rather than bolted on.
 - **Toward:** none - no release has quicksaves
 - **Languages:** any
 - **State:** active
+- **Saved state:** unchanged - the question and the road change code and presentation; no byte a quicksave holds is read another way (the road's request and buffer are statics of ours, outside the span)
 
 ### The staff roll follows the language: a US or PAL layer rolls its release's credits
 
@@ -18794,3 +18851,67 @@ designed in rather than bolted on.
 - **Toward:** none - no release has it; it is the romhack's readme's
 - **Languages:** any
 - **State:** active
+
+### A save keeps where the party came from: an edge leads back after a load
+
+- **ID:** DIV-0246
+- **Date:** 2026-11-25
+- **Subsystem:** save files and the field: the save's writers
+  (`FieldSave_Write` `0x580010` and `Save_QuickWrite` `0x5809C0`, ours in
+  `src/game/shop/field_save.cpp`; the quicksave's save half, `GameSaveHalf`
+  in `src/hook/snapshot.cpp`), the load (`LoadMenu_Read` `0x5883C0`,
+  `src/game/core/sound.cpp`), the put-back at the loop's frame point
+  (`src/game/core/save_tail.cpp`); [`state-by-name-tier0.md`](state-by-name-tier0.md) 3
+- **Tier:** Sensible - the PC port's own save-anywhere (F12) stands a save
+  where the original's saves never stood; the save keeps what the way out needs.
+- **Original behaviour:** a save file is `0x12B0` bytes, the `0x10B0`-byte
+  block and `0x200` bytes that `Save_BuildBlock` clears and `Save_WriteFile`
+  writes as zero (measured: 76 of 76 recipe saves on the laptop; the editor
+  spec's 67 of 67); the load neither sums nor copies them. `GameMode_Start`
+  makes `Game_AreaNumber` `0xFFFF` before it enters a loaded game's area, so
+  `Area_Enter` records the area the party came from as `0xFFFF` and the
+  position as the leader's stale cell; an encounter field's edge
+  (`Field_LeaderStepLands`) and a mode-8 area's leave (`GameMode8_Leave`
+  `0x4964E0`) then lead to area `0xFFFF`: Capcom's crash (known-defects D270),
+  ours holds (DIV-0121).
+- **New behaviour:** every save - a save point's, F12's, a quicksave's save
+  half - writes in those `0x200` bytes a tag (`BOF3XTL`, a version, the
+  records' length and FNV-1a) and the came-from place: `AreaW2c_LastArea`
+  `0x802290` and the dwords `0x7E091C`, `0x7E0920`. A load of a tagged save
+  whose area is not `0xFFFF` puts the three words back at the first frame
+  point after the loaded game has entered its area (`Game_Mode` past 1), when
+  the party is still in the save's area and the word is still `0xFFFF`; so
+  the edge leads where it led when the save was made. An area's init, which
+  runs inside `Area_Enter`, still sees `0xFFFF` after a load, as before. A
+  save without the tag loads as before. The save editor keeps a PC file's
+  tail, and writes it zero for a save it moves to another area.
+- **Rationale:** the owner, 2026-11-24: fix DIV-0121's cause in the save, so
+  that the save a refused quicksave offers (tier 0, DIV-0147 as amended) and every F12
+  save are used as they are. The position is needed with the area: the place a
+  field is entered from on the world map is not fixed (area 29 is entered by
+  the world map's encounter at the party's cell, measured: section 5.2).
+- **Also in the PSX version?** No - a memory card's file holds the block
+  alone, and the disc saves at save points (whether a PlayStation save can
+  stand in an encounter field is not established: DIV-0121).
+- **Verification:** the self-test `save tail` (`BOF3X_SELFTEST_ONLY`: the
+  tail written and read back, the faults, an unknown record kind skipped, the
+  put-back's condition). `stallion.txt` (cut at 11,500 frames, `--speed 8`)
+  from an F12 save and from a quicksave's save half, both made in area 29
+  after the harness entered it from the world map: the put-back at
+  `Frame_Counter` 370, and at recipe frame 10,745 the edge takes the party to
+  area 33 at the place it came from; from the `combat` save (no tag) the party
+  stays in area 29 (DIV-0121). The fishing spot (area 30, mode 8): a
+  quicksave's save half taken there loads with its came-from place, area 16,
+  and quitting the fishing leaves to it; the same bytes with the tail zeroed
+  crash on the quit (`GameMode8_Leave`, D270's path: known-defects D436). [`state-by-name-tier0.md`](state-by-name-tier0.md) 5.2, 5.3.
+  **Not seen by the owner.**
+- **Reversible?** `BOF3X_ORIGINAL=SaveCameFrom`: no save writes the tail and
+  no load reads it, DIV-0121's hold as before. A player turns it off with
+  `BOF3X_OFF=SaveCameFrom` (the ini's `off=`).
+- **Switch:** SaveCameFrom
+- **Default:** on
+- **Player:** yes - BOF3X_OFF=SaveCameFrom (ini off=)
+- **Toward:** none - no release saves the place the party came from
+- **Languages:** any
+- **State:** active
+- **Saved state:** unchanged - the tail is the save file's, outside the block; in a quicksave's span only `Save_Staging`'s tail holds it after a save, a transient that `Save_BuildBlock` clears before every save and `LoadMenu_Read` before every load and nothing reads; the put-back's request is a static of ours
