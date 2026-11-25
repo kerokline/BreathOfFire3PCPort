@@ -267,7 +267,7 @@ Captures in `~/bof3x-runs/sbn1125/B1/root/` (outside the tree).
   `Low32` twice and logged twice); regenerated, and it passes. Not run: the
   slow `linux_tree.py` and `fnptr_census.py` (CI's).
 
-## 7. Ledger: draft E (an amendment of DIV-0145)
+## 7. Ledger: draft E (an amendment of DIV-0145) - taken into DIV-0145, 2026-11-25
 
 - **What the original did:** as DIV-0145 has it (F6 nothing; F7 the next
   renderer device).

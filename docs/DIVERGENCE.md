@@ -11649,6 +11649,24 @@ designed in rather than bolted on.
 - **Amended 2026-11-25 - F7 names the way to the save** (group A4; the question is DIV-0147's):
   a refusal whose save half is whole adds to F7's line "- use F5 to load the
   save in it"; F7 asks nothing.
+- **Amended 2026-11-25 - a record of ours that this build cannot read is a refusal** (the
+  state-by-name round's group B1, [`state-by-name-participants.md`](state-by-name-participants.md);
+  round doc 3.6): a quicksave whose record of ours - the graphics, the sound,
+  the behaviours, our other statics - is one this build does not read, or is
+  damaged, is refused before anything is written, with its reason ("another
+  graphics record", "another sound record", "another behaviours record",
+  "another state record", "damaged"), and its save is offered when its save
+  half is whole. Before, each of the first four ended the game in a `Fatal`
+  part-way through the load. A quicksave taken during a master's talk from
+  the master list or with the town warp open, loaded with CampMasters or
+  TownWarp off, and one taken with the original's 1,024 draw items loaded
+  with 2,048 or the reverse, are refused as "other settings" with the setting
+  named (in a format-2 file the settings' fingerprint refuses them first).
+  The graphics record is written at version 4: the same bytes at 32 and 64
+  bits and on Windows and Linux (read from the code; only the 64-bit Linux
+  build ran); every quicksave written before this change is refused for it,
+  its save offered. The state revision stays 1: a participant's record is the
+  quicksave's contents under its own version, not a byte of the game's state.
 - **Reversible?** The keys are ours; without them nothing of the game
   changes. They are read only in our window procedure, so only the hosted
   build's `BOF3X_ORIGINAL=Game_WndProc` turns them off (Capcom's window
