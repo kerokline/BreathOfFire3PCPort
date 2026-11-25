@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 245 entries, DIV-0001..0245, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 247 entries, DIV-0001..0247, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -2985,6 +2985,24 @@ designed in rather than bolted on.
   of 34 frames; the deck and both railings reach the edge); at 16:9 a
   strip 5 px wide at the right edge on 2 frames; narrow, all 34 frames
   identical (the strips are linked as the original links them).
+  **Amended 2026-11-25 (known-defects D284, the owner's report;
+  [`scene-touchups-1125.md`](scene-touchups-1125.md) 1): the area's backdrop
+  is not drawn over a scene's own sky for the rim's cells alone.** At 4:3
+  area 23's sunset (`EffectKind18_01_Sunset` `0x4FD2E0`,
+  `Gfx_DrawSkyGradient`) is the only sky drawn: no cell of Capcom's walk is
+  off the map, `MapView_BuildFlags` is 0 and `AreaMap_DrawBackdrop` returns.
+  Under the grown ring the rim's cells off the map set bit 0 (measured: 0 at
+  4:3, 1 at 16:9, recipe frame 601 of `cutsceneAndNue.txt`), and the area's
+  blue backdrop was drawn over the sunset at 16:9 and 21:9 from the
+  wide-ring round on. Now the grown walk notes whether any off-map cell is
+  one Capcom's walk reads (view rows 0..54, view columns inset..27 -
+  inset), `Gfx_DrawSkyGradient` notes its frame (`WideSky_NoteEffectSky`),
+  and `AreaMap_DrawBackdrop` leaves the backdrop out when the flag byte is
+  1, the bit is the rim's alone and that sky was drawn this frame or the
+  one before. No game byte is written. Kind 0x18's sub-kind 0x3F needs
+  nothing: it clears the flag byte itself before its sky, Capcom's own
+  guard. The skies of sub-kinds 0x15, 0x44 and 0x61 were not measured for
+  this. Verification: section 5 of the doc.
 - **Reversible?** Unset `BOF3X_WIDE` (the default). `BOF3X_ORIGINAL=Widescreen`
   keeps the frame pass's original ranges under a wide picture;
   `BOF3X_ORIGINAL=MapView_Build` the terrain cull's;
@@ -6088,6 +6106,37 @@ designed in rather than bolted on.
   shown frame 1,044 called it correct as it is (section 4 of the doc).
   **The owner, 2026-10-29 night, on the sheet:** "that looks correct to me,
   so no change needed. I think your new layering rule looks good".
+  **Amended 2026-11-25 (the owner's report, two scenes;
+  [`scene-touchups-1125.md`](scene-touchups-1125.md) 2 and 3; known-defects
+  D436, D437): two cases where the rule moved a sprite past something
+  Capcom's order draws over it.** (1) **Two sprites of one layer.** The
+  test for "a sprite of the layer before" read the draw list after the
+  sprite, but a layer's run of sprites is drawn in descending order of the
+  s16 at `+0x60`, not in list order. On the Yraall road (area 19) Teepo
+  (key `0x1B9E`, depth 1,133) was moved from layer 27 to 30 while Ryu (key
+  `0x1B9D`, depth 1,124), whom Capcom draws over him, stayed in 27: Teepo
+  was drawn over Ryu through his kick. Now, after every sprite is judged,
+  a sprite is not drawn in a later layer than an overlapping sprite of its
+  own layer that Capcom's pass draws after it (`Defer`, `DrawnAfter`: the
+  depth within a run, the list's order across a draw-table item). (2) **Rei
+  at Bunyan's table.** The second list of the layer before is tested
+  against the 28 px body box. In Bunyan's house (area 8) Rei, on cell
+  (79, 29), was moved from layer 20 to 21 past the top of the table's back
+  cell (80, 28), which his body box does not reach and his tail does: the
+  tail was drawn over the back cell and under the near one. That object on
+  that cell (a field object of area 8 running movement script 3) is now
+  kept in its own layer (`ReiAtTable`), where the table covers the tail as
+  Capcom drew it; DIV-0246 takes over while he swings it. **The general
+  form was built and withdrawn the same day:** testing the second list
+  against what the sprite drew last pass (as the record runs and the other
+  sprites are) kept Rei in his layer, but on five other routes it also cut
+  feet the rule had freed (the faerie village, Bunyan's house on the way to
+  the table) and changed frames of Garr beside a block that the owner
+  accepted on 2026-10-29 (section 4 of the doc). A sprite's drawn box holds
+  its shadow and its empty margins; a narrower measure of "what reaches the
+  top" is the open question. Both parts only stop or shorten moves: every
+  pixel they change is Capcom's order at that spot. Verification: section
+  5 of the doc.
 - **Reversible?** `BOF3X_LAYERING=0`. `BOF3X_LAYERING_AHEAD`
   (1..8) and `BOF3X_LAYERING_RISE` (0..64) move the two numbers;
   `BOF3X_LAYERING_LOG=1` with a `BOF3X_DRAWORDER` window logs each
@@ -18761,5 +18810,93 @@ designed in rather than bolted on.
 - **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
 - **Player:** yes - BOF3X_ON, on=
 - **Toward:** none - no release has it; it is the romhack's readme's
+- **Languages:** any
+- **State:** active
+
+### Rei's tail is drawn over Bunyan's table while he swings it at the plate
+
+- **ID:** DIV-0246
+- **Date:** 2026-11-25
+- **Subsystem:** field draw order (`Sprite_DrawPass` `0x593060`, ours in
+  `src/game/field/sprite_2.cpp`; the rule in `src/game/field/layering.cpp`
+  (`TailSwipe`), beside DIV-0071's and DIV-0151's;
+  [`scene-touchups-1125.md`](scene-touchups-1125.md) 3)
+- **Tier:** Intent - the owner's request, 2026-11-25: the tail hidden
+  behind the table until the end, "when he swipes it over the table and
+  hits the plate"
+- **Original behaviour:** upstairs in Bunyan's house (area 8;
+  `bunyanHouseChoppingMiniGame.txt` recipe frames 1,178..1,560) Rei stands
+  on cell (79, 29) behind the near corner of the table, in layer 20. The
+  top of the table's back cell (80, 28) is in layer 20's second list and
+  the top of its near cell (80, 29) is a draw-table item of layer 21, so
+  both are drawn after him and cover his tail for the whole scene - while
+  he turns his back and the plate falls too. The tail is never seen to
+  touch the plate. Capcom's order: the same with `BOF3X_LAYERING=0`.
+- **New behaviour:** that object alone - a field object of area 8 running
+  the area's movement script 3 (object `+0x83`) on cell (79, 29), in a
+  standing pose (animation `+0x4B` equal to facing `+8`) - is drawn one
+  layer later, with that layer's last key, while its facing is 6, 7 or 0:
+  the turn away from the talk's facing 5, the back to the camera, and the
+  turn back (recipe frames 1,470..1,551 of the route). He is then drawn
+  after both tops and before the table's left face (layer 21's second
+  list), which still covers his legs. In his talking pose DIV-0071 leaves
+  him in layer 20 (its amendment of 2026-11-25, part 2) and the table covers the
+  tail as Capcom drew it. `BOF3X_LAYERING_LOG=1` logs each pass the rule
+  takes (`DIV-0246`).
+- **Rationale:** the scene is a tail knocking a plate off a table; drawn
+  behind the table the tail is not in the picture when it happens. The
+  owner's call, for this scene only.
+- **Also in the PSX version?** Not looked at on the PlayStation. The
+  deciding code is `Sprite_DrawPass` and the cell lists, the same functions
+  DIV-0151 read on both platforms; the placing data are the area's. Taken
+  as Capcom's order, not a port fault, from the `BOF3X_LAYERING=0` run.
+- **Verification:** [`scene-touchups-1125.md`](scene-touchups-1125.md) 5.
+  **Not seen in play.**
+- **Reversible?** `BOF3X_LAYERING=0` (with DIV-0071); Capcom's order under
+  `BOF3X_ORIGINAL` (the pass is Capcom's).
+- **Switch:** env:BOF3X_LAYERING=0 - DIV-0071's switch too: the rule runs inside its pass (`src/game/field/layering.cpp` `LayerFor`)
+- **Default:** on
+- **Player:** yes - the launcher has no key for it; both hosts read the variable
+- **Toward:** none - Capcom's order hides the tail
+- **Languages:** any
+- **State:** active
+
+### The plate on Bunyan's table is drawn whole, over the table's faces
+
+- **ID:** DIV-0247
+- **Date:** 2026-11-25
+- **Subsystem:** field draw order (`Sprite_DrawPass` `0x593060`, ours in
+  `src/game/field/sprite_2.cpp`; the rule in `src/game/field/layering.cpp`
+  (`PlateOnTable`), beside DIV-0246's;
+  [`scene-touchups-1125.md`](scene-touchups-1125.md) 3a)
+- **Tier:** Intent - the owner's request, 2026-11-25: the plate "fully on
+  top of the table"; its corners looked squared
+- **Original behaviour:** upstairs in Bunyan's house (area 8) the plate
+  stands on the corner where the table's cells meet, map point (80, 29), at
+  the table top's height, in layer 21. Three pieces of the table are drawn
+  after it and over its edges: the table's left face (layer 21's second
+  list), the top of cell (81, 29) (layer 22's first list) and the front
+  face (layer 22's second list). The plate's lower left, lower right and
+  bottom are cut on the table's edges. Capcom's order: the same with
+  `BOF3X_LAYERING=0`.
+- **New behaviour:** that object alone - a field object of area 8 running
+  the area's movement script 1 (object `+0x83`), on cell (80, 29) of row
+  29, its feet at 6 (the table top) - is drawn two layers later, after the
+  three pieces, with no stop test. Once it slides (cell (79, 29)) or falls
+  it is judged as any sprite. `BOF3X_LAYERING_LOG=1` logs each pass the rule
+  takes (`DIV-0247`).
+- **Rationale:** a round plate on a table; the cuts come from where its
+  object is placed, on the seam of the table's cells. The owner's call, for
+  this object only.
+- **Also in the PSX version?** Not looked at on the PlayStation; taken as
+  Capcom's order from the `BOF3X_LAYERING=0` run, as DIV-0246.
+- **Verification:** [`scene-touchups-1125.md`](scene-touchups-1125.md) 5.
+  **Not seen in play.**
+- **Reversible?** `BOF3X_LAYERING=0` (with DIV-0071); Capcom's order under
+  `BOF3X_ORIGINAL` (the pass is Capcom's).
+- **Switch:** env:BOF3X_LAYERING=0 - DIV-0071's switch too: the rule runs inside its pass (`src/game/field/layering.cpp` `LayerFor`)
+- **Default:** on
+- **Player:** yes - the launcher has no key for it; both hosts read the variable
+- **Toward:** none - Capcom's order cuts the plate
 - **Languages:** any
 - **State:** active

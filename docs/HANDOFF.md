@@ -32,6 +32,15 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
 ## Pick up here
 
 00. **Next, 2026-11-16** (the order is the owner's; these are the candidates):
+   - **Three scene faults, 2026-11-25 (branch `fix/scene-touchups`, [`scene-touchups-1125.md`](scene-touchups-1125.md)):**
+     DIV-0071's two amendments (sprites of one layer keep Capcom's order; Rei kept in his layer at Bunyan's table - the
+     general form, a second list tested against what the sprite drew, cut feet on other routes and was withdrawn, so
+     that class is open), DIV-0246 (Rei's tail over Bunyan's table during the swipe), DIV-0247 (the plate drawn whole) and DIV-0041's amendment (D284, the sunset's sky
+     in a wide picture). Owed: the owner's eye on the three scenes, the question in
+     [`owner-review.md`](owner-review.md)'s top section, **D438** (the sound group's self-test fails on `main`, so
+     `BOF3X_SHADOW='*'` stops there: trace it first), the ten state-hash routes (DIV-0071 is off in a hashed run, so
+     they are expected unchanged; not run), a look at 21:9, and the skies of kind 0x18's sub-kinds 0x15, 0x44 and 0x61
+     against the backdrop conflict.
    - **A PSP disc's text on a PC install (2026-11-23, [`loc-build-psp.md`](loc-build-psp.md) 12):** built and diffed
      and run through setup (PC + US disc + PSP-EU). Owed: the owner's play under `en-150` there (fight 26's turn
      counter, the fishing equip headings and the staff roll stay the port's under that layer; not seen). Open for the
@@ -644,7 +653,7 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    - **The JP world map's camera** (D281, [`abc-sweep-1013-jp.md`](abc-sweep-1013-jp.md) 3.3).
    - **Groups 17 and 18 from PSP-EU and ja-JP** ([`labels-1013.md`](labels-1013.md) 7): not built.
    - **The `_pre1013` entry lists** in `analysis/`: remove once nothing reads them.
-   - D270's look owed; D284 and D285 not traced; D287 (the launcher's clipped lines); DIV-0064's 2026-10-18 amendment confirmed by the owner 2026-10-31
+   - D270's look owed; D284 fixed 2026-11-25 (DIV-0041's amendment), D285 not traced; D287 (the launcher's clipped lines); DIV-0064's 2026-10-18 amendment confirmed by the owner 2026-10-31
      the owner's confirmation.
 
 17. **The follow-up round: disc-only and PSP polish** is folded into item 14's round (group AU: D320; PL: the

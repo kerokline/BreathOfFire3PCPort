@@ -1108,8 +1108,10 @@ extern "C" void __cdecl EffectKind18_01_Sunset(void) {
 // (0x40 + 0x17E, ...) as a word at 0x937F88 + 0x2E climbs to 0xBF: the sunset
 // of area 23's cutscene. DIV-0041: under a wide picture the corners are
 // (-53, 0)..(372, 239) - the same rule as AreaMap_DrawBackdrop above, and
-// the fuzz (before Widescreen_Inject) compares the original's.
+// the fuzz (before Widescreen_Inject) compares the original's. It also notes
+// the frame (WideSky_NoteEffectSky, widescreen.h) for AreaMap_DrawBackdrop.
 extern "C" void __cdecl Gfx_DrawSkyGradient(unsigned r, unsigned g_, unsigned b) {
+    WideSky_NoteEffectSky();   // DIV-0041 (D284): the area's backdrop stays under this sky
     area_backdrop::g.draw_mode(Gfx_PacketNext, 0, 1, 0x95, 0);
     area_backdrop::g.commit(7, 0xC);
     unsigned char* const quad = Gfx_PacketNext;

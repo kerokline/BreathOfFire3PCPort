@@ -448,6 +448,62 @@ std::uint32_t g_faerie_sides[kFaerieSides];
 unsigned g_faerie_sides_n;
 Box g_faerie_reach;                          // their union box
 
+// Rei at Bunyan's table (known-defects D437 and DIV-0246, the owner's request
+// of 2026-11-25): in area 8, upstairs in Bunyan's house, Rei stands behind the
+// table's near corner, cell (79, 29), and Capcom's order draws the table's
+// tops over his tail from the first frame to the last - the top of cell
+// (80, 28) in his own layer's second list, the top of cell (80, 29) a
+// draw-table item of the next layer. He is known by what he is: a field
+// object (Sprite_Objects) of area 8 running the area's movement script
+// kSwipeScript on that cell.
+//   - D437: DIV-0071 moved him one layer later, past the back cell's top,
+//     which his body box does not reach and his tail does - the tail over
+//     the back cell and under the near one. There he stays in his own layer:
+//     Capcom's order, the table over the tail.
+//   - DIV-0246: while he is turned away from his talking pose (facing 5) -
+//     standing (animation == facing) at facing 6, 7 or 0, the turn that
+//     swings the tail round at the plate, and the turn back - he is drawn
+//     after both tops: one layer later, last of that layer's sprites and
+//     table items. The table's faces, that layer's second list, still cover
+//     his legs.
+constexpr unsigned kSwipeArea = 8;
+constexpr unsigned kSwipeScript = 3;
+constexpr int kSwipeCellX = 79, kSwipeCellZ = 29;
+const unsigned char* g_swipe;   // the sprite drawn over the table this pass, or null
+
+bool ReiAtTable(const unsigned char* sprite, int cell_x, int cell_z) {
+    if (Game_AreaNumber != kSwipeArea || cell_x != kSwipeCellX || cell_z != kSwipeCellZ) return false;
+    const unsigned char* const objects = reinterpret_cast<const unsigned char*>(::bof3::Img(Sprite_Objects_addr));
+    if (sprite < objects || sprite >= objects + 30u * 0xA4u || (sprite - objects) % 0xA4u != 0) return false;
+    return sprite[0x83] == kSwipeScript && !(sprite[0x24] & 0x40);
+}
+
+// The plate on that table (DIV-0247, the owner's request of 2026-11-25): a
+// field object of area 8 running movement script kPlateScript, at the table
+// top's height (feet kPlateFeet), at rest on the corner where the table's
+// cells meet, (80, 29). Capcom's order draws three
+// pieces of the table after it, each over an edge of the plate: the table's
+// left face (its layer's second list), the top of cell (81, 29) (the next
+// layer's first list) and the front face (that layer's second list). At rest
+// it is drawn two layers later, after all three. Once it slides (cell
+// (79, 29), past the table's edge) it is judged as any sprite: drawn over the
+// faces there, a dark sliver of it showed on the table's left face.
+constexpr unsigned kPlateScript = 1;
+constexpr int kPlateFeet = 6;
+const unsigned char* g_plate;   // the plate drawn two layers later this pass, or null
+
+bool PlateOnTable(const unsigned char* sprite, int feet, int cell_x, int cell_z) {
+    if (Game_AreaNumber != kSwipeArea || cell_z != kSwipeCellZ || cell_x != kSwipeCellX + 1) return false;
+    const unsigned char* const objects = reinterpret_cast<const unsigned char*>(::bof3::Img(Sprite_Objects_addr));
+    if (sprite < objects || sprite >= objects + 30u * 0xA4u || (sprite - objects) % 0xA4u != 0) return false;
+    return sprite[0x83] == kPlateScript && feet == kPlateFeet && !(sprite[0x24] & 0x40);
+}
+
+bool TailSwipe(const unsigned char* sprite) {
+    const unsigned facing = sprite[8];
+    return sprite[0x4B] == facing && (facing == 6 || facing == 7 || facing == 0);
+}
+
 // Each primitive of one of a layer's lists, as ListClear walks it.
 template <typename F>
 void ForEachInList(unsigned layer, unsigned which, F&& f) {
@@ -482,6 +538,26 @@ unsigned LayerFor(unsigned index, unsigned layer) {
                       static_cast<unsigned>(Frame_Counter), Address(sprite), layer, Get<std::uint16_t>(sprite + 0x32), sx, sy,
                       cell_x, cell_z, feet, Get<std::uint32_t>(sprite + 0x34), Get<std::uint32_t>(sprite + 0x38));
         return layer;
+    }
+    // Rei at Bunyan's table (ReiAtTable): in his own layer, with no test; or,
+    // through the swipe, one layer later, where Defer gives him the last key.
+    if (ReiAtTable(sprite, cell_x, cell_z)) {
+        const bool swipe = g_swipe == nullptr && layer + 1 < 0x37 && TailSwipe(sprite);
+        if (swipe) g_swipe = sprite;
+        if (g_log)
+            bof3::Log("%s    frame %u: Rei %08X (area %u, script %u, cell %d,%d), facing %u: layer %u %s",
+                      swipe ? "DIV-0246" : "D437 fix", static_cast<unsigned>(Frame_Counter), Address(sprite), kSwipeArea,
+                      kSwipeScript, cell_x, cell_z, static_cast<unsigned>(sprite[8]), layer,
+                      swipe ? "drawn last in the next layer, over the table's tops" : "kept, under the table's tops");
+        return swipe ? layer + 1 : layer;
+    }
+    // The plate on the table (PlateOnTable): two layers later, with no test.
+    if (g_plate == nullptr && layer + 2 < 0x37 && PlateOnTable(sprite, feet, cell_x, cell_z)) {
+        g_plate = sprite;
+        if (g_log)
+            bof3::Log("DIV-0247    frame %u: the plate %08X (area %u, script %u, cell %d,%d, feet %d): layer %u drawn in layer %u, over the table's faces",
+                      static_cast<unsigned>(Frame_Counter), Address(sprite), kSwipeArea, kPlateScript, cell_x, cell_z, feet, layer, layer + 2);
+        return layer + 2;
     }
     const Box feet_box = BoxRound(sprite, kFeetHalfWidth, kFeetAbove, kFeetBelow);
     const Box whole_box = BoxRound(sprite, kBodyHalfWidth, kBodyAbove, kFeetBelow);   // the body and the feet
@@ -600,10 +676,12 @@ unsigned LayerFor(unsigned index, unsigned layer) {
                       drawn_in == layer ? g_why : "", drawn_in == layer ? 0u : g_faerie_sides_n);
     }
     if (g_log && draw_order::Tagging())
-        bof3::Log("DIV-0071    frame %u: sprite %08X at (%g, %g), cell %d,%d, feet %d, key %04X, pos %08X %08X: layer %u drawn in layer %u; stopped by %s",
+        bof3::Log("DIV-0071    frame %u: sprite %08X at (%g, %g), cell %d,%d, feet %d, key %04X, pos %08X %08X: layer %u drawn in layer %u; stopped by %s"
+                  " (area %u, animation %u, facing %u, script %u, depth %d, record byte %02X)",
                   static_cast<unsigned>(Frame_Counter), Address(sprite), sx, sy, cell_x, cell_z, feet, Get<std::uint16_t>(sprite + 0x32),
                   Get<std::uint32_t>(sprite + 0x34), Get<std::uint32_t>(sprite + 0x38), layer, drawn_in,
-                  drawn_in == layer + static_cast<unsigned>(g_ahead) ? "nothing" : g_why);
+                  drawn_in == layer + static_cast<unsigned>(g_ahead) ? "nothing" : g_why, static_cast<unsigned>(Game_AreaNumber),
+                  sprite[0x4B], sprite[8], sprite[0x83], Get<std::int16_t>(sprite + 0x60), sprite[0x89]);
     return drawn_in;
 }
 
@@ -624,9 +702,31 @@ void Arm() {
         bof3::Log("DIV-0071    comparison mode 2: every sprite's key one layer later");
 }
 
+// Whether Capcom's pass draws list entry `b` after entry `a`, the two in one
+// layer: the pass gathers a layer's sprites into runs, a run ending at the
+// next draw-table item whose key is at or below the next sprite's, and draws a
+// run's sprites in descending order of the s16 at +0x60, equal ones in list
+// order (Sprite_DrawPass). So within a run the depth decides, and across a
+// table item the list's order does.
+bool DrawnAfter(unsigned a, unsigned b) {
+    const unsigned first = a < b ? a : b, second = a < b ? b : a;
+    const std::uint16_t key_first = Get<std::uint16_t>(Sprite_DrawList[first] + 0x32);
+    const std::uint16_t key_second = Get<std::uint16_t>(Sprite_DrawList[second] + 0x32);
+    bool split = false;
+    for (unsigned item = 0; item < DrawTable_Count && !split; ++item) {
+        const std::uint16_t key = static_cast<std::uint16_t>(DrawTable[item] >> 16);
+        split = key > key_first && key <= key_second;
+    }
+    if (split) return b > a;
+    const int depth_a = Get<std::int16_t>(Sprite_DrawList[a] + 0x60), depth_b = Get<std::int16_t>(Sprite_DrawList[b] + 0x60);
+    return depth_b != depth_a ? depth_b < depth_a : b > a;
+}
+
 bool Defer() {
     g_moved_n = 0;
     g_faerie = nullptr;
+    g_swipe = nullptr;
+    g_plate = nullptr;
     g_faerie_sides_n = 0;
     // A new generation of record runs: the pass about to draw fills it.
     g_runs_before = g_runs_now;
@@ -660,6 +760,37 @@ bool Defer() {
         const unsigned layer = Get<std::uint16_t>(Sprite_DrawList[i] + 0x32) >> 8;
         layers[i] = layer < 0x37 ? LayerFor(i, layer) : layer;
     }
+    // Two sprites of one layer that overlap keep Capcom's order (amended
+    // 2026-11-25): the one drawn first is not moved past the layer the other is
+    // drawn in. LayerFor's own test reads the sprites after it in the list, but
+    // a layer's run is drawn by depth, not in list order: on the Yraall road
+    // Teepo (key 0x1B9E, depth 1133) was moved three layers later while Ryu
+    // (key 0x1B9D, depth 1124) in front of him stayed, and was drawn over Ryu
+    // through his kick.
+    for (bool changed = true; changed;) {
+        changed = false;
+        for (unsigned i = 0; i < count; ++i) {
+            const unsigned char* const a = Sprite_DrawList[i];
+            const unsigned from = Get<std::uint16_t>(a + 0x32) >> 8;
+            if (layers[i] == from || a == g_swipe || a == g_plate || (a[0x24] & 0x40)) continue;
+            const Box box_a = Reach(a, BoxRound(a, kBodyHalfWidth, kBodyAbove, kBodyBelow));
+            for (unsigned j = 0; j < count; ++j) {
+                const unsigned char* const b = Sprite_DrawList[j];
+                if (j == i || layers[j] >= layers[i] || (b[0x24] & 0x40)) continue;
+                if (static_cast<unsigned>(Get<std::uint16_t>(b + 0x32) >> 8) != from || !DrawnAfter(i, j)) continue;
+                if (!Overlap(Reach(b, BoxRound(b, kBodyHalfWidth, kBodyAbove, kBodyBelow)), box_a)) continue;
+                if (g_log && draw_order::Tagging())
+                    bof3::Log("DIV-0071    frame %u: sprite %08X drawn in layer %u, not %u: sprite %08X of its layer %u, drawn after it, is drawn in layer %u",
+                              static_cast<unsigned>(Frame_Counter), Address(a), layers[j], layers[i], Address(b), from, layers[j]);
+                if (a == g_faerie) {
+                    g_faerie = nullptr;
+                    g_faerie_sides_n = 0;
+                }
+                layers[i] = layers[j];
+                changed = true;
+            }
+        }
+    }
     // The table faerie's sides are drawn again right after it: anything else
     // drawn between its own layer's second list and it that the sides reach
     // would be covered by them where the original drew it over them - a
@@ -685,7 +816,8 @@ bool Defer() {
         const std::uint16_t key = Get<std::uint16_t>(sprite + 0x32);
         if (layers[i] == static_cast<unsigned>(key >> 8)) continue;
         g_moved[g_moved_n++] = {sprite, key};
-        const auto later = static_cast<std::uint16_t>(layers[i] << 8 | (key & 0xFFu));
+        // Rei's swipe (TailSwipe): the layer's last key, after its table items.
+        const auto later = static_cast<std::uint16_t>(layers[i] << 8 | (sprite == g_swipe ? 0xFFu : key & 0xFFu));
         std::memcpy(sprite + 0x32, &later, 2);
     }
     return g_moved_n != 0;
@@ -696,6 +828,8 @@ void Restore() {
     g_moved_n = 0;
     g_faerie = nullptr;
     g_faerie_sides_n = 0;
+    g_swipe = nullptr;
+    g_plate = nullptr;
 }
 
 void BeforeSprite() { g_sprite_mark = Gfx_PacketNext; }

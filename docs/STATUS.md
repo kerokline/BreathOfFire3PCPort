@@ -8,6 +8,15 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
+**Three scene faults from the owner's play, 2026-11-25 (branch `fix/scene-touchups`, not merged).** Teepo drawn over
+Ryu on the Yraall road (D436) and Rei's tail half over Bunyan's table (D437) were DIV-0071's rule moving a sprite past
+something Capcom's order draws over it: fixed by its amendment (the first for every pair of sprites in one layer, the
+second for Rei at that table only - its general form cut feet elsewhere and was withdrawn). Rei's tail over the table during his swipe is new, the
+owner's request (DIV-0246), and so is the plate on that table drawn whole (DIV-0247). **The hosted suite
+`BOF3X_SHADOW='*'` stops in the sound group on `main`** (D438, `SndBuf_Play`, found by this work, not traced). Area 23's sunset sky staying blue in a wide picture was D284, on record since 2026-10-13 and
+never right at 16:9 or 21:9: the grown ring's rim cells turned the area's backdrop on over the sunset's own sky; fixed by
+DIV-0041's amendment. [`scene-touchups-1125.md`](scene-touchups-1125.md) has the measurements and what was not run.
+
 **The beta.2 gates, 2026-11-24 (`main` `a1f7fa47`, the PR #285 merge).** Three things, and the notes
 ([`releases/v0.1.0-beta.2.md`](releases/v0.1.0-beta.2.md)) updated for them and for what merged after their draft.
 (1) **The owner's word on the Linux build:** the first scenes played on the laptop; the buttons work, the sounds play
