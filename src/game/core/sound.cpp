@@ -951,7 +951,8 @@ extern "C" void __cdecl TitleMenu_Leave(void) {
 // records are made (solo.h Solo_StampNewGame; nothing with SoloCharacter off),
 // and the New Game sequence first (new_game.h: the name screen and the Config
 // screen, switches NewGameNameEntry and NewGameOptions; with both off the
-// body below runs whole, as the port's).
+// body below runs whole, as the port's). With NewGameOptions on the rest runs
+// from TitleFlow_EnterGame, after the Config screen (NewGame_RestOwed).
 void TitleFlow_NewGameRecords() {
     save_menu::g.init_characters();
     solo::Solo_StampNewGame();
@@ -1233,6 +1234,10 @@ extern "C" void __cdecl TitleFlow_EnterGame(void) {
         Game_Step = 1;
         return;
     }
+    // ours (DIV-0232): New Game's rest, left by the New Game sequence until
+    // its Config screen has closed (new_game.h); nothing with NewGameOptions
+    // off. Before the growth roll, as the port's New Game has them.
+    if (new_game::NewGame_RestOwed()) TitleFlow_NewGameRest(false, 5);
     for (save_menu::U i = 0; i < 8; ++i) {
         save_menu::g.roll_growth(i);
         save_menu::g.recalc(AtSaveMenu(::bof3::Img(CharacterRecords_addr) + i * save_menu::at::kCharStride));
