@@ -146,7 +146,7 @@ comes from. A row can be edited or added by hand.
 | `formation` | 6 | The tactics wheel's entry for cell n (`TacticsFormation_Build`), checked against the help lines `0x77 + n`: Normal, Attack, Defense, Chain, Magic, Refuge |
 | `fish` | 23 | Kind k is consumable item `0x38 + k` (`FieldPanel_DrawKindRow`); kind 22 copies the fish merchant's name. Where the install gives item names, the editor takes kinds 0..21 from them, in the install's language |
 | `chapter` | 20 | Our labels, from [`boss-fights.md`](boss-fights.md) and each chapter file's end: "Ends with <boss>" only where the fight is in the run that ends the chapter |
-| `area` | 128 of 200 | 20 from the US text (area captions, region names); 107 cited from one source each (the sibling's `names/areas.toml` and `places.toml`, our docs); 72 areas have no name and show as a number |
+| `area` | 168 of 200 | 20 from the US text (area captions, region names); 43 from each area's enemy table and the link lists (2026-11-24: an area is placed by the enemies it holds and the areas it links, which also moved area 85 from Angel Tower's "top" to below the pit and areas 111 / 112 to Relay Point A's upper and lower decks, off the container ship); 104 cited from one source each (the sibling's `names/areas.toml` and `places.toml`, our docs); 32 areas have no name and show as a number |
 
 The two countdowns are labelled by the names of abilities `0x3E` and `0x15`
 from the install's ability names (Celerity and Bonebreak on the US text):
