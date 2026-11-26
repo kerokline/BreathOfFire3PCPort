@@ -124,9 +124,9 @@ unsigned g_fish_count_high = 0;
 // DIVERGENCE DIV-0121 (amended 2026-11-26): 1 (PatchBytes "EdgeNoArea", after
 // the self-test, which compares Capcom's rule). The fishing's leave
 // (GameMode8_Leave) goes to the area the party came from; a game loaded at
-// the spot from a save without that place (DIV-0246) came from none (0xFFFF,
+// the spot from a save without that place (DIV-0248) came from none (0xFFFF,
 // GameMode_Start's), and Capcom's leave asks Field_ChangeArea for area 0xFFFF:
-// Area_ZoneAtIn reads a null zone list (D436). The menu's leave choice holds
+// Area_ZoneAtIn reads a null zone list (D439). The menu's leave choice holds
 // instead: the press does nothing.
 unsigned char g_fish_leave_hold = 0;
 bool LeaveHeld() { return g_fish_leave_hold && AreaW2c_LastArea == 0xFFFF; }

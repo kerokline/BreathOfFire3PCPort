@@ -11701,7 +11701,7 @@ of focus. An unskipped movie stalls the same way at its end.
 takes is handed to the game at the next message step. **Not seen yet on the
 desktop:** the owner's run owes it.
 
-## D436 — Quitting the fishing in a game loaded at the fishing spot stops the game (Capcom's path, D270's; met 2026-11-25 by the state-by-name round's A4; held since 2026-11-26 for a save without the came-from place)
+## D439 — Quitting the fishing in a game loaded at the fishing spot stops the game (Capcom's path, D270's; met 2026-11-25 by the state-by-name round's A4; held since 2026-11-26 for a save without the came-from place)
 
 **Who saw it, in which configuration:** the state-by-name round's group A4, on
 the Linux ELF of `sbn/A4`, headless: a quicksave's save half taken at the
@@ -11715,9 +11715,9 @@ the fishing (`GameMode8_Leave` `0x4964E0`) asks `Field_ChangeArea(0xFFFF, ...)`,
 and `Area_ZoneAtIn` reads address 0 under `Area_PickMusic`: D270's null zone
 list, reached by the mode-8 leave, which DIV-0121's hold does not guard.
 
-**Status:** a save made by a build with DIV-0246 carries the place the party
+**Status:** a save made by a build with DIV-0248 carries the place the party
 came from and leaves to it (measured: area 16). A save without it - every F12
-save made at the spot before DIV-0246, a save written with `SaveCameFrom` off -
+save made at the spot before DIV-0248, a save written with `SaveCameFrom` off -
 still stops the game on the quit. Not run with `BOF3X_ORIGINAL=*`; the path is
 the original's by reading. A fix for the untagged save would be DIV-0121's
 hold applied in `GameMode8_Leave` too (the fishing then has no way out but a

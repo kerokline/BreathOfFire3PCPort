@@ -9933,19 +9933,19 @@ designed in rather than bolted on.
   fuzz runs Capcom's rule (the switch `g_edge_no_area` is armed after it).
   **Not seen by the owner.**
 - **Amended 2026-11-25 - when the hold is still reached** (the state-by-name
-  round's group A4, DIV-0246): a save made by this build carries the place the
+  round's group A4, DIV-0248): a save made by this build carries the place the
   party came from, put back after its load, so an edge leads there and the
   hold is not reached. It is still reached after the load of a save without
-  the tag (every save made before DIV-0246, a PlayStation save converted, a
+  the tag (every save made before DIV-0248, a PlayStation save converted, a
   save written with `SaveCameFrom` off, a save the editor moved to another
   area), of a tagged save whose came-from area was itself `0xFFFF` (made in a
   game loaded there from an untagged save before the party left), and when
   the put-back is dropped (an entry event took the party on). Measured:
   `stallion.txt` from the `combat` save still stays in area 29; from a tagged
-  save made there it leaves at the edge (DIV-0246).
+  save made there it leaves at the edge (DIV-0248).
 - **Amended 2026-11-26 - the fishing spot's leave choice holds too** (the
   owner, by chat: "for older saves, lets let it load but hold the player in
-  the spot"; known-defects D436). The same cause by another road: the fishing
+  the spot"; known-defects D439). The same cause by another road: the fishing
   spot is a mode-8 area, and its leave (`GameMode8_Leave` `0x4964E0`) calls
   `Field_ChangeArea` with the same came-from word and position. The step
   that leads there is the fishing menu's (`LeaderPanel_S1Choose` `0x528CD0`,
@@ -9956,7 +9956,7 @@ designed in rather than bolted on.
   `Area_ZoneAtIn`. **Ours:** while the word is `0xFFFF`, a confirm press on
   that choice does nothing: no sound, the menu stays, the other choice and
   the cancel button are Capcom's. The player fishes on and leaves by loading
-  another save. A save made with DIV-0246 leaves as Capcom's code does.
+  another save. A save made with DIV-0248 leaves as Capcom's code does.
   The same switch, `EdgeNoArea` (a second flag, `g_fish_leave_hold` in
   `src/game/field/leader_panel.cpp`, armed after the panel's self-test).
   **Verification:** the owner's route `tools/recipes/fishQuicksave.txt`
@@ -18895,7 +18895,7 @@ designed in rather than bolted on.
 
 ### A save keeps where the party came from: an edge leads back after a load
 
-- **ID:** DIV-0246
+- **ID:** DIV-0248
 - **Date:** 2026-11-25
 - **Subsystem:** save files and the field: the save's writers
   (`FieldSave_Write` `0x580010` and `Save_QuickWrite` `0x5809C0`, ours in
@@ -18944,7 +18944,7 @@ designed in rather than bolted on.
   stays in area 29 (DIV-0121). The fishing spot (area 30, mode 8): a
   quicksave's save half taken there loads with its came-from place, area 16,
   and quitting the fishing leaves to it; the same bytes with the tail zeroed
-  crash on the quit (`GameMode8_Leave`, D270's path: known-defects D436). [`state-by-name-tier0.md`](state-by-name-tier0.md) 5.2, 5.3.
+  crash on the quit (`GameMode8_Leave`, D270's path: known-defects D439). [`state-by-name-tier0.md`](state-by-name-tier0.md) 5.2, 5.3.
   **Not seen by the owner.**
 - **Reversible?** `BOF3X_ORIGINAL=SaveCameFrom`: no save writes the tail and
   no load reads it, DIV-0121's hold as before. A player turns it off with

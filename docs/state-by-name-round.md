@@ -549,9 +549,9 @@ Merged in the order A3, A1, A4, A2, B1, B2, B1b, B3, B1c. The scratch root is
 
 | Group | Notes | What it left |
 |---|---|---|
-| A3 | [`region-table.md`](region-table.md) | The region table: 3,898 runs, 1,630,953 bytes `unknown` (a CI number that may only fall), checked at start-up. The ledger's `Saved state:` field, required from DIV-0246 (call 6). |
+| A3 | [`region-table.md`](region-table.md) | The region table: 3,898 runs, 1,630,953 bytes `unknown` (a CI number that may only fall), checked at start-up. The ledger's `Saved state:` field, required from DIV-0248 (call 6). |
 | A1 | [`state-by-name-format.md`](state-by-name-format.md) | Format 2: the state revision (1), portable, the settings fingerprint (call 8's read), `TASKS`, the words written by name, the three answers. The desktop's size words joined the keep list. |
-| A4 | [`state-by-name-tier0.md`](state-by-name-tier0.md) | F5's question and the save half's road through the title's own load; the came-from place in a save's tail (DIV-0246, `SaveCameFrom`). Known-defects D436. |
+| A4 | [`state-by-name-tier0.md`](state-by-name-tier0.md) | F5's question and the save half's road through the title's own load; the came-from place in a save's tail (DIV-0248, `SaveCameFrom`). Known-defects D439. |
 | A2 | [`state-by-name-sites.md`](state-by-name-sites.md) 1 to 6 | `Task_YieldAt`, sites 1 to 8, the census column, `BOF3X_QSPORTABLE=1`. The first portable loads in a live game. |
 | B1 | [`state-by-name-participants.md`](state-by-name-participants.md) | A record this build cannot read is a refusal before the span is written (four of the six stopped the game before); `GFX` version 4, field by field. |
 | B2 | [`state-by-name-sites.md`](state-by-name-sites.md) 7 to 12 | Sites 9 to 15: task 0's waits. Task 0 at no site on 1,507 frames before and 16 after, on eight routes. |
@@ -618,7 +618,7 @@ rows are gone, and the pairs are recorded again
 | `SaveCameFrom`, a player's switch, default on | "default on is fine" | as built |
 | The save editor writes a zero tail for a save it moves to another area | "Yeah, this makes sense to me to do" | the editor's repository; not in this branch |
 | The title task's state word written in place of a Start press | agreed (2026-11-26, after the explanation) | as built (the word is written) |
-| An untagged save at the fishing spot, on the quit (D436) | "lets let it load but hold the player in the spot" | built 2026-11-26: the menu's leave choice does nothing (DIV-0121's amendment) |
+| An untagged save at the fishing spot, on the quit (D439) | "lets let it load but hold the player in the spot" | built 2026-11-26: the menu's leave choice does nothing (DIV-0121's amendment) |
 
 ## 7. The owner's calls
 
