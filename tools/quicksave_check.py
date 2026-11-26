@@ -932,7 +932,8 @@ def game_run(a, build, recipe, out, extra, env, lang):
     else:
         import linux_run
         cmd += ['--host', 'linux', '--elf', build.path]
-        cmd += ['--launcher', os.path.join(os.path.dirname(build.path), 'bof3x-launcher')] if build.launcher else ['--direct']
+        # The ELF's path is the WSL's when this is Windows: its folder is cut at '/', never joined with '\'.
+        cmd += ['--launcher', build.path.rpartition('/')[0] + '/bof3x-launcher'] if build.launcher else ['--direct']
         log = linux_run.local_path(linux_run.log_of(build.path))
     for kv in env:
         cmd += ['--env', kv]
@@ -1133,16 +1134,28 @@ def cmd_matrix(a):
                     shutil.copy(qs, os.path.join(gdir, 'BISLPS10.DAT'))
                     extra = ['--game', gdir, '--no-save']
                 else:
+                    import linux_run
                     src = ld + '_game'
-                    if os.path.lexists(src):
-                        shutil.rmtree(src)
                     live_game = os.path.join(d, 'live_game')
-                    if os.path.isdir(live_game):
-                        shutil.copytree(live_game, src, symlinks=True,
-                                        ignore=shutil.ignore_patterns('BISLPS1*', 'bof3x.log'))
-                    else:      # a take by a Windows build: a run folder from the install, as --only-slot0 makes it
-                        import linux_run
-                        linux_run.make_run_game(a.game_load or a.game, src, None, True)
+                    if linux_run.ON_WINDOWS:
+                        # From Windows the folder's links are the WSL's to make (os.symlink wants a privilege
+                        # here; measured 2026-11-26, WinError 1314), and a folder of them is the WSL's to remove:
+                        # so a run folder from the install through the helper, as input_run.py makes the take's,
+                        # for a Linux take's load too (the take's own folder is not copied).
+                        helper = linux_run.LinuxGame(lb.path, a.game_load or a.game, {}, os.devnull)
+                        got = helper._ask('mkgame', linux_run.to_linux(a.game_load or a.game), linux_run.to_linux(src),
+                                          None, True)
+                        helper.close()
+                        if not got:
+                            raise SystemExit(f'the WSL could not make the game folder of the load, {src}')
+                    else:
+                        if os.path.lexists(src):
+                            shutil.rmtree(src)
+                        if os.path.isdir(live_game):
+                            shutil.copytree(live_game, src, symlinks=True,
+                                            ignore=shutil.ignore_patterns('BISLPS1*', 'bof3x.log'))
+                        else:      # a take by a Windows build: a run folder from the install, as --only-slot0 makes it
+                            linux_run.make_run_game(a.game_load or a.game, src, None, True)
                     shutil.copy(qs, os.path.join(src, 'BISLPS10.DAT'))
                     extra = ['--game', src, '--run-game', 'none', '--no-save']
                 if os.path.exists(sh):
