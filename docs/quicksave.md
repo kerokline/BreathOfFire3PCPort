@@ -85,6 +85,7 @@ checked against `symbols.toml` at start-up):
 | `DInput_Object` .. `Gpu_DispEnv` `0x7DE928` (952) | the input objects |
 | `Font_GlyphData` `0x7CC35C` | a heap block made once a launch |
 | `Gfx_WindowRect` .. `Dd_CellBackdrop` `0x6BE1D0` (2,096), `Gfx_ClutRows` `0x6C2A40` (4,096), `D3d_DeviceDesc` `0x7CC238` (252), `Dd_DirectDraw` `0x7CC334`, `Dd_StageSurface` `0x7CC344`, `D3d_Device` `0x7CC350` | the display's window rectangle, mode list, row pointers and objects; what the caches and rows **hold** is SP-G's to clear and reconvert |
+| `Desktop_Bpp`, `Desktop_Height`, `Desktop_Width` `0x939A2C` (12) | this machine's desktop, read once at start (added 2026-11-25 for loads from another machine, [`state-by-name-format.md`](state-by-name-format.md) 1a) |
 
 `Overlay_Text` / `Overlay_Frames` are in the span: the "Quickload" line is
 written after it.
@@ -95,6 +96,27 @@ F6 and F7 are refused while `BOF3X_GAPWATCH` is set (its guard pages and
 bookkeeping are over the span).
 
 ## 4. The file `BISLPS1X.DAT`
+
+> **Amended 2026-11-25 (the state-by-name round's group A1,
+> [`state-by-name-format.md`](state-by-name-format.md)):** a take writes
+> **format 2**: the table below with `format` 2 and `header_bytes` `0xD0`,
+> then a 12-word extension (the state revision, portable, the settings'
+> fingerprint, the sections' sizes, the code places' table, the bound VAs'
+> fingerprint, the image's base), and after the arena three sections - the
+> `TASKS` record (where each task stood), the settings' lines, and the
+> `WORDS` list (the words of `.data` written by what they name: a code place
+> as its VA, a message slot as its offset in the pool, a moved image's
+> pointers as at `0x400000`). A load has three answers: **exact** in the build
+> and process that wrote it, as below; **portable** in another build or
+> process when every task stood at a named place, each task started again
+> there and the arena not read; otherwise **refused**, its reason shown, and
+> the save half offered when its block sums as a save's. "Another build" and
+> "another process" below are refusals only for a file that is not portable.
+> New refusals: another state revision, other settings (the setting named),
+> damaged settings, other functions bound, a task at a place this build does
+> not know, a word this build cannot place. Format 1 (the table below as it
+> was) still loads exactly in its own build and is refused, its save offered,
+> in any other.
 
 In the game directory, beside the saves; `X` = `0`..`F`. Little-endian.
 
@@ -214,9 +236,13 @@ does not see it. Two cases (2026-10-20, the owner's call):
 ## 5. The registry
 
 ```cpp
-void Snapshot_Register(const char* tag, SnapshotSaveFn save, SnapshotRestoreFn restore);
+void Snapshot_Register(const char* tag, SnapshotSaveFn save, SnapshotRestoreFn restore,
+                       SnapshotDiscardFn discard = nullptr, SnapshotCheckFn check = nullptr);
 // SnapshotSaveFn:    void (*)(SnapshotWriter&)  - Put(bytes) / Put(value)
 // SnapshotRestoreFn: void (*)(SnapshotReader&)  - Get(bytes) / Get<T>()
+// SnapshotDiscardFn: void (*)()                 - before the span is written (SP-A)
+// SnapshotCheckFn:   bool (*)(SnapshotReader&, std::string& why, std::string& detail)
+//                    - while the file is read, before anything is written; false refuses
 ```
 
 Once per module, at start-up (its `_Inject`); 1..15 printable characters,
@@ -226,7 +252,31 @@ and the keep list are written, so it sees the snapshot's span. A participant
 that needs a live value the span held (a device pointer to release) keeps
 its own copy outside the span. Both run on the own stack (section 2).
 
-**Registered now: `ST`** (census 3), our statics that are game state and
+**The six participants and their checks** (the state-by-name round's B1,
+[`state-by-name-participants.md`](state-by-name-participants.md), 2026-11-25).
+Each record carries a version of its own; a record this build does not read,
+or one its check cannot walk to its exact end, is refused by the
+participant's check with its reason, before a byte of the span is written,
+and the save half is offered when it is whole (tier 0). Every condition a
+restore fails on that a record shows is its check's; the `Fatal`s left in the
+restores are for the core's order, memory, the device, and damage the file's
+words do not show (the notes doc, section 3).
+
+| Tag | File | Version | Refused by its check as |
+|---|---|--:|---|
+| `ST` | `src/hook/snapshot.cpp` | 1 | another state record; other settings (DrawPool); another language; damaged |
+| `SOUND` | `src/game/platform/sound_ours.cpp` | 1 | another sound record; another music source (4c); damaged |
+| `GFX` | `src/render/gfx_snapshot.cpp` | 4 | another graphics record (a version, or a sub-record of another layout); damaged |
+| `BEHAVIOURS` | `src/game/field/field_7.cpp` | 4 | another behaviours record; other settings (CampMasters), (TownWarp); damaged |
+| `SOLOCB` | `src/game/solo/solo_battle.cpp` | 3 | solo battle record (a version); damaged |
+| `NEWGAME` | `src/game/core/new_game.cpp` | 1 | New Game record (a version or size); name screen, switch off; name screen, no grid |
+
+Every record is the same bytes at 32 and 64 bits and on Windows and Linux
+since `GFX`'s version 4, which writes its pipe state field by field (version
+3 wrote `render::PipeState` by its size, a pointer and padding: 84 bytes on
+i686, 88 on x86-64).
+
+**`ST`** (census 3), our statics that are game state and
 neither audio nor graphics: Rand's seed (`crt_rest::RandSeedCell()`),
 DIV-0062's free ring (`draw_pool::Free()`, `Count()` entries), DIV-0007's
 relocated system message pool (`MsgPool_Moved`, 32 KB under a language
@@ -489,6 +539,21 @@ The switch: `SaveLists`, a `PatchBytes` of a flag of ours set by
   overlay line alone would not show: with our back buffer the loop's
   `Overlay` writes it to the log, not the screen.
 
+- **Amended 2026-11-25 (the state-by-name round's group A4, ledger draft B;
+  [`state-by-name-tier0.md`](state-by-name-tier0.md) 2): a refusal whose
+  save half is whole asks a second question.** When the core refuses a load
+  for its build or process and the file's save half sums as a save
+  (`Snapshot_LastLoad()` answers `RefusedSaveOffered`), the menu stays on the
+  refused slot with the game's Yes / No in the title box (the hand on Yes) and,
+  below the slots in the 8 x 8 font, the reason and `LOAD THE SAVE IN THIS
+  QUICKSAVE?`. No or cancel goes back to the slots, the game untouched. Yes
+  reads the save half (`Snapshot_ReadSaveHalf`), asks the restart F9's second
+  press asks (`Game_RestartFlag`), puts the title's task to its state 7 once it
+  has begun (where Start on the logo leads), and the title menu's first step
+  goes to `LoadMenu_Read` with the save half as the bytes read; the rest is the
+  title's load of a save. F7 asks nothing: its line adds "- use F5 to load the
+  save in it". No slot is marked before a load is tried (the owner's call 3).
+
 `Snapshot_LastLine` is the one addition to SN's files: an accessor of the
 line `Show` last wrote (`g_overlay`).
 
@@ -689,7 +754,7 @@ the span still holds the live process's words.
 | **The palette rows** `Gfx_ClutRows` (`0x6C2A40`, 512 x {generation, `0x1000`-byte block}) | every generation, and each block's `0x1000` bytes - **carried, not reconverted**: `Gfx_LoadImage` writes the shadow without converting the row (`gfx_image.cpp`), so a row can lag its shadow, and a reconversion would draw what the live game did not | the take's bytes into the live block (the pointer stays the process's - RC's `+4` words); a row with a block then and none now gets one (`Crt_malloc`, as `Gfx_ConvertRow` makes it); a row made since is freed and nulled, so `Gfx_ClutPixels` converts it on first use again, as then; the take's generations |
 | `Gfx_TexCache` (`0x6C3F40`), `D3d_CellTexCache` (`0x7CAE38`) | nothing | discard: every texture and surface the live tables hold, in the teardown's order, **released after the next present** (below); then both tables emptied - page and cell textures are built again on demand from the restored shadow and rows. Both tables are skip-listed: the hash sees neither their slots nor their use counters |
 | `Font_TexCache` (`0x7C9F50`, 128 x 0x14) | nothing (its words are in the span) | discard: the live surfaces released after the next present; then **every entry the take had built is built again** - `Font_BuildGlyphTexture(slot, glyph, CLUT)` from the take's words and rows - and the take's glyph, CLUT, generation and used words written back, so the cache's lookups and its choice of a free slot go on as they would have (the glyph words are not skip-listed: the hash sees them) |
-| the device's pipe state (`render_shim` `g_state`) and the clear colour | `PipeState` without its texture and grab, the colour | as at the take; consistent with `D3d_ShadeModeCache` (`0x6C3A44`), which comes back with the span |
+| the device's pipe state (`render_shim` `g_state`) and the clear colour | `PipeState` without its texture and grab, the colour - since version 4 (2026-11-25) its twelve other fields one by one in fixed-width words, not the struct's bytes | as at the take; consistent with `D3d_ShadeModeCache` (`0x6C3A44`), which comes back with the span |
 | DIV-0125's frame-buffer grabs | nothing | all forgotten (`render::ForgetGrabs`): the pictures they hold are the live moment's |
 | DIV-0071's last pass (`layering` `g_runs`, `g_runs_now`) | the runs the last pass stamped, each with its table index | both tables emptied; the runs written back at their indices **restamped with this process's `g_pass`**, so the next pass's `Defer` judges by what the take's last pass drew |
 | DIV-0085's `g_file_sides` (64 KB) | up to its last non-zero byte | as at the take (the rest zero) |
@@ -734,7 +799,17 @@ drawn last pass") - the sprite is kept in its layer there, not judged by the
 proximity test the census expected (that is `g_runs_before == 0`'s path).
 Carrying the runs is exact and costs a few KB.
 
-The record: 15,067 bytes in the self-test (no palette rows); 17 rows, about
+Since version 4 (the state-by-name round's B1) the five sub-records -
+layering's, map_layers', widescreen's, wide_rand's, map_rim's - are each
+framed by their byte count, and the record ends with the extra layer's place
+at the take: an empty list's head in `map_rim`'s extra layer names its own
+address, a place in our module, and a restore elsewhere rebases those words
+to this process's layer. A check (`CheckRecord`) walks the record before the
+span is written: another version, map_rim's version word, widescreen's size
+word or wide_rand's size other than this build's writer gives are "another
+graphics record"; a record it cannot walk to its end is "damaged".
+
+The record: 15,067 bytes in the self-test at version 3 (15,062 at version 4; no palette rows); 17 rows, about
 80 KB, in the town and the house; 25, about 116 KB, on the world map.
 
 ### The checks
@@ -940,11 +1015,14 @@ build check refuses another build first).
 
 ### 10.3 Refusals and Fatals (rule 4)
 
-A restore with no discard before it, a bank whose data word in the span is
-not the record's, a bank with data and no bytes, a voice entry pointing
-outside its bank's data, a channel naming a bank or entry out of range, a
-`Music_File` that does not read back as the take's, a track stream with no
-file: each a Fatal naming it. At the take: a synth stream that is not
+A record of another version, a bank with data and no bytes, a channel
+naming a bank or entry out of range, a track stream with no file, and a
+record the check cannot walk to its exact end are refused by `SnapCheck`
+before the span is written (since 2026-11-25, the state-by-name round's B1;
+before, the check let them through to `SnapRestore`'s Fatals). A restore with
+no discard before it, a bank whose data word in the span is not the record's,
+a voice entry pointing outside its bank's data, and a `Music_File` that does
+not read back as the take's: each a Fatal naming it. At the take: a synth stream that is not
 `Music_File`'s track is a Fatal (it cannot happen: `IsSong` holds only for
 it); a channel naming a buffer no entry holds is logged and comes back
 silent.

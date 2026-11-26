@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <utility>
 
 #include "bof3/symbols.gen.h"
 #include "game/area_data_reload.h"
@@ -36,6 +37,7 @@
 #include "hook/code_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "hook/task_yield.h"
 #include "input/sigma.h"
 
 namespace {
@@ -92,17 +94,21 @@ unsigned char SlotByte(const unsigned char& argument) { return *reinterpret_cast
 // (subtractive, slot 0). Each frame the tile is not yet done, the yaw and the
 // angle word turn by 11 and the distance shrinks by 50, the map view asked to
 // redraw; the frame the fade finishes, nothing moves.
-void SwingOut(int step) {
-    std::int32_t level = 0;
-    while (mode_flow::g.draw_tile(reinterpret_cast<short*>(&level), step, 1, 0, 2) == 0) {
+//
+// The yield word (docs/state-by-name-sites.md): the loop is entered from its
+// test, fresh with the level 0 and from site 6 with the take's level and step.
+using bof3::task_yield::SwingOutLocals;
+void SwingOutLoop(SwingOutLocals l) {
+    while (mode_flow::g.draw_tile(reinterpret_cast<short*>(&l.level), l.step, 1, 0, 2) == 0) {
         AddWord(::bof3::Img(kCameraYaw), 0xB);
         AddWord(::bof3::Img(kCameraAngle), 0xB);
         Camera_Distance = static_cast<short>(Camera_Distance - 0x32);
         MapView_Redraw = 2;
-        mode_flow::g.sleep(1);
+        Task_YieldAt(bof3::task_yield::kSiteSwingOut, 1, &l, sizeof l, mode_flow::g.sleep);
     }
     mode_flow::g.task_exit();
 }
+void SwingOut(int step) { SwingOutLoop({0, step}); }
 
 // Kinds 11 and 18: the mirror. The camera is put at yaw 0xFEAB, angle 0x355;
 // five frames of fade-in from black whatever the tile says; then every frame
@@ -114,16 +120,18 @@ void SwingOut(int step) {
 // add, as 16 bits - a distance that does not come to 0x5DC in steps of 50
 // turns the camera for ever; the stop is tested before the frame's sleep, so
 // the last frame's turn is not slept on.
-void SwingIn() {
-    std::int32_t level = 0x7FFF;
-    Camera_Angles[0] = 0xFEAB;
-    mode_flow::SetWord(mode_flow::At(::bof3::Img(Cond_AngleFB_addr)), 0x355);
-    MapView_Redraw = 2;
-    for (int i = 0; i < 5; ++i) {
-        mode_flow::g.draw_tile(reinterpret_cast<short*>(&level), -0x400, 1, 0, 2);
-        mode_flow::g.sleep(1);
-    }
-    unsigned char done = mode_flow::g.draw_tile(reinterpret_cast<short*>(&level), -0x400, 1, 0, 2);
+//
+// The yield word (docs/state-by-name-sites.md): two loops, two sites. The
+// opening is entered from its test with the frame to draw next (site 7 stands
+// after frame `frame` slept, so its resume entry goes on with frame + 1); the
+// turn is entered from its top, and its yield is mid-pass, so site 8's resume
+// entry runs the rest of that pass (SwingInTurnRest) and then the loop.
+using bof3::task_yield::SwingInOpenLocals;
+using bof3::task_yield::SwingInTurnLocals;
+void SwingInTurnRest(SwingInTurnLocals& l) {
+    if (l.done == 0) l.done = mode_flow::g.draw_tile(reinterpret_cast<short*>(&l.level), -0x400, 1, 0, 2);
+}
+void SwingInTurnLoop(SwingInTurnLocals l) {
     for (;;) {
         const auto distance = static_cast<std::uint16_t>(Camera_Distance + 0x32);
         AddWord(::bof3::Img(kCameraYaw), -0xB);
@@ -131,13 +139,27 @@ void SwingIn() {
         Camera_Distance = static_cast<short>(distance);
         MapView_Redraw = 2;
         if (distance == 0x5DC) break;
-        mode_flow::g.sleep(1);
-        if (done == 0) done = mode_flow::g.draw_tile(reinterpret_cast<short*>(&level), -0x400, 1, 0, 2);
+        Task_YieldAt(bof3::task_yield::kSiteSwingInTurn, 1, &l, sizeof l, mode_flow::g.sleep);
+        SwingInTurnRest(l);
     }
     Camera_Angles[0] = 0xFD56;
     mode_flow::SetWord(mode_flow::At(::bof3::Img(Cond_AngleFB_addr)), 0x200);
     MapView_Redraw = 2;
     mode_flow::g.task_exit();
+}
+void SwingInOpenLoop(SwingInOpenLocals l) {
+    for (; l.frame < 5; ++l.frame) {
+        mode_flow::g.draw_tile(reinterpret_cast<short*>(&l.level), -0x400, 1, 0, 2);
+        Task_YieldAt(bof3::task_yield::kSiteSwingInOpen, 1, &l, sizeof l, mode_flow::g.sleep);
+    }
+    const unsigned char done = mode_flow::g.draw_tile(reinterpret_cast<short*>(&l.level), -0x400, 1, 0, 2);
+    SwingInTurnLoop({l.level, done});
+}
+void SwingIn() {
+    Camera_Angles[0] = 0xFEAB;
+    mode_flow::SetWord(mode_flow::At(::bof3::Img(Cond_AngleFB_addr)), 0x355);
+    MapView_Redraw = 2;
+    SwingInOpenLoop({0x7FFF, 0});
 }
 
 // A countdown: frames 29..0, then seconds and minutes 59..0, then hours.
@@ -226,6 +248,28 @@ void BattleFrames() {
 }
 
 }  // namespace
+
+// The swings' resume entries (task_yield.h sites 6, 7, 8): the locals back,
+// the entry cleared, then the loop from where the yield left it.
+void __cdecl bof3::task_yield::ResumeSwingOut() {
+    SwingOutLocals l;
+    Task_YieldResume(kSiteSwingOut, &l, sizeof l);
+    SwingOutLoop(l);
+}
+
+void __cdecl bof3::task_yield::ResumeSwingInOpen() {
+    SwingInOpenLocals l;
+    Task_YieldResume(kSiteSwingInOpen, &l, sizeof l);
+    ++l.frame;   // the loop's step, which the sleep's return would have reached next
+    SwingInOpenLoop(l);
+}
+
+void __cdecl bof3::task_yield::ResumeSwingInTurn() {
+    SwingInTurnLocals l;
+    Task_YieldResume(kSiteSwingInTurn, &l, sizeof l);
+    SwingInTurnRest(l);   // the rest of the pass the yield stood in
+    SwingInTurnLoop(l);
+}
 
 namespace mode_states {
 
@@ -484,25 +528,52 @@ extern "C" void __cdecl Transition_Kind20(void) {
 // push dwords); the level lives in the argument slot of the step and only its
 // low word is read or written by Transition_DrawTile; the task ends with a
 // call to Task_Exit (which never returns in game).
+//
+// The yield word (docs/state-by-name-sites.md): the loop is entered from its
+// test, fresh with the start's level and from site 4 with the take's level
+// and arguments (FadeLocals); whether the fade goes out is the step's sign.
+namespace {
+using bof3::task_yield::FadeLocals;
+void FadeSubLoop(FadeLocals l) {
+    while (mode_flow::g.draw_tile(reinterpret_cast<short*>(&l.level), l.step, l.semi, l.slot, 2) == 0)
+        Task_YieldAt(bof3::task_yield::kSiteFadeSub, 1, &l, sizeof l, mode_flow::g.sleep);
+    if (static_cast<short>(l.step) > 0) SetFadeHold(0);
+    mode_flow::g.task_exit();
+}
+void FadeAddLoop(FadeLocals l) {
+    while (mode_flow::g.draw_tile(reinterpret_cast<short*>(&l.level), l.step, l.semi, l.slot, 1) == 0)
+        Task_YieldAt(bof3::task_yield::kSiteFadeAdd, 1, &l, sizeof l, mode_flow::g.sleep);
+    if (static_cast<short>(l.step) > 0) SetFadeHold(0xFF);
+    mode_flow::g.task_exit();
+}
+}  // namespace
+
 extern "C" void __cdecl Transition_FadeSub(int step, unsigned semi, unsigned slot) {
     const bool out = static_cast<short>(step) > 0;
-    std::int32_t level = out ? 0 : 0x7FFF;
-    while (mode_flow::g.draw_tile(reinterpret_cast<short*>(&level), step, semi, slot, 2) == 0) mode_flow::g.sleep(1);
-    if (out) SetFadeHold(0);
-    mode_flow::g.task_exit();
+    FadeSubLoop({out ? 0 : 0x7FFF, step, semi, slot});
+}
+
+void __cdecl bof3::task_yield::ResumeFadeSub() {
+    FadeLocals l;
+    Task_YieldResume(kSiteFadeSub, &l, sizeof l);
+    FadeSubLoop(l);
 }
 
 // original 0x4956A0: the same through an additive tile (blend mode 1), so
 // through white. A fade in (step <= 0) zeroes the hold bytes before the
 // first frame; a fade out sets them to 0xFF after the last. A tail jump to
 // Task_Exit.
+// The yield word: as FadeSub's, site 5.
 extern "C" void __cdecl Transition_FadeAdd(int step, unsigned semi, unsigned slot) {
     const bool out = static_cast<short>(step) > 0;
-    std::int32_t level = out ? 0 : 0x7FFF;
     if (!out) SetFadeHold(0);
-    while (mode_flow::g.draw_tile(reinterpret_cast<short*>(&level), step, semi, slot, 1) == 0) mode_flow::g.sleep(1);
-    if (out) SetFadeHold(0xFF);
-    mode_flow::g.task_exit();
+    FadeAddLoop({out ? 0 : 0x7FFF, step, semi, slot});
+}
+
+void __cdecl bof3::task_yield::ResumeFadeAdd() {
+    FadeLocals l;
+    Task_YieldResume(kSiteFadeAdd, &l, sizeof l);
+    FadeAddLoop(l);
 }
 
 // original 0x495750: one frame of a fade - a draw mode under tpage
@@ -549,16 +620,54 @@ extern "C" unsigned char __cdecl Transition_DrawTile(short* level, int step, uns
 // As the original has it: Game_Mode indexes the table unchecked, read afresh
 // every frame (the handlers change it); the table is read from memory each
 // time.
+//
+// The yield word (docs/state-by-name-sites.md): the sleep ends the loop's
+// pass, so the loop's top is where site 1 stands, and its resume entry is the
+// loop. Nothing is alive across the sleep: the mode is Game_Mode, in the span.
+//
+// The pass after the handler (the clock, the sleep) is a function of its own,
+// FieldTaskPassEnd: the nested sites' resume entries (sites 9..15, below the
+// waits) end the handler's step they stand in, then make the same pass end
+// and enter the loop (docs/state-by-name-sites.md 8).
+namespace {
+void FieldTaskPassEnd() {
+    mode_flow::g.clock_tick();
+    Task_YieldAt(bof3::task_yield::kSiteFieldTask, 1, nullptr, 0, mode_flow::g.sleep);
+}
+[[noreturn]] void FieldTaskLoop() {
+    for (;;) {
+        reinterpret_cast<mode_flow::Handler>(GameMode_Handlers[Game_Mode].Native())();
+        FieldTaskPassEnd();
+    }
+}
+
+// The nested waits' sites (task_yield.h sites 9..14; docs/state-by-name-sites.md
+// 8). Field_WaitTransition and Menu_WaitTransition are called through their
+// callers' callee tables with one byte, so the caller names the site of the
+// wait it is about to call here, and the wait takes the word at its entry
+// (std::exchange: a wait that is not ours leaves it, and the WaitAt's end
+// clears it). A wait entered with no site named - Capcom's code calling ours,
+// a fuzz - sleeps at no site, as before. A static of ours: not in the span.
+std::uint32_t g_waitSite = 0;
+struct WaitAt {
+    explicit WaitAt(std::uint32_t site) { g_waitSite = site; }
+    ~WaitAt() { g_waitSite = 0; }
+    WaitAt(const WaitAt&) = delete;
+    WaitAt& operator=(const WaitAt&) = delete;
+};
+}  // namespace
+
 extern "C" void __cdecl Field_Task(void) {
     Game_Mode = 0;
     Game_Step = 0;
     mode_flow::g.clear_private();
     mode_flow::g.window_reset();
-    for (;;) {
-        reinterpret_cast<mode_flow::Handler>(GameMode_Handlers[Game_Mode].Native())();
-        mode_flow::g.clock_tick();
-        mode_flow::g.sleep(1);
-    }
+    FieldTaskLoop();
+}
+
+void __cdecl bof3::task_yield::ResumeFieldTask() {
+    Task_YieldResume(kSiteFieldTask, nullptr, 0);
+    FieldTaskLoop();
 }
 
 namespace mode_flow {
@@ -631,6 +740,29 @@ extern "C" void __cdecl GameMode_Start(void) {
 // byte (the original's eax holds Field_Task's mode index above it, 1); the
 // input flags are read afresh after every call; the area number is read once
 // for both 0xBD tests, after the last call before them.
+//
+// The yield word (docs/state-by-name-sites.md 8): the wait is site 9. Nothing
+// of this frame is alive across it (the cells, the flags and the kind are read
+// before and not after), so the rest of the step is two functions of the span
+// alone, called here and by the site's resume entry: the rest of the kind's
+// branch (EnterAfterWait), then the step's end (EnterEnd).
+namespace {
+void EnterAfterWait() {
+    if (Field_InputFlags & 1) mode_flow::g.entry_point(mode_flow::Word(mode_flow::At(::bof3::Img(mode_flow::at::kKind2XHigh))), mode_flow::Word(mode_flow::At(::bof3::Img(mode_flow::at::kKind2ZHigh))));
+}
+void EnterEnd() {
+    const bool bit0 = (Field_InputFlags & 1) != 0;
+    const std::uint16_t area = Game_AreaNumber;
+    if (bit0) ModeFlow_AreaTransition = 0xA;
+    else if (area == 0xBD) ModeFlow_AreaTransition = 0x14;
+    else ModeFlow_AreaTransition = 0;
+    if (area != 0xBD) mode_flow::g.zone_roll(1);
+    Field_ScriptFlags2 = static_cast<std::uint16_t>(Field_ScriptFlags2 & 0xFFBF);
+    Field_Request = 0;
+    Game_Mode = 2;
+}
+}  // namespace
+
 extern "C" void __cdecl GameMode_Enter(void) {
     const unsigned char flags = AreaEntry_PendingFlags;
     const std::int32_t z = static_cast<std::int32_t>(AreaEntry_PendingZ);
@@ -646,18 +778,13 @@ extern "C" void __cdecl GameMode_Enter(void) {
         Draw_PassFlags = 0;
     } else if (kind != 0xFF) {
         mode_flow::g.transition(kind);
-        mode_flow::g.wait_transition(1);
-        if (Field_InputFlags & 1) mode_flow::g.entry_point(mode_flow::Word(mode_flow::At(::bof3::Img(mode_flow::at::kKind2XHigh))), mode_flow::Word(mode_flow::At(::bof3::Img(mode_flow::at::kKind2ZHigh))));
+        {
+            const WaitAt at(bof3::task_yield::kSiteWaitEnter);
+            mode_flow::g.wait_transition(1);
+        }
+        EnterAfterWait();
     }
-    const bool bit0 = (Field_InputFlags & 1) != 0;
-    const std::uint16_t area = Game_AreaNumber;
-    if (bit0) ModeFlow_AreaTransition = 0xA;
-    else if (area == 0xBD) ModeFlow_AreaTransition = 0x14;
-    else ModeFlow_AreaTransition = 0;
-    if (area != 0xBD) mode_flow::g.zone_roll(1);
-    Field_ScriptFlags2 = static_cast<std::uint16_t>(Field_ScriptFlags2 & 0xFFBF);
-    Field_Request = 0;
-    Game_Mode = 2;
+    EnterEnd();
 }
 
 // original 0x4959F0 (PSX 0x80198378): Game_Mode 2, the field (PSX GAME.EMI section 0,
@@ -671,15 +798,34 @@ extern "C" void __cdecl GameMode_Enter(void) {
 // (the original passes ecx with whatever its upper bytes held; the callee
 // reads the byte). The PSX's case 5 also started the next area's music; the
 // port fades instead (docs/mode-tasks.md section 3).
+//
+// The yield word (docs/state-by-name-sites.md 8): the two waits are sites 10
+// (the menu) and 11 (the area change). Nothing of this frame is alive across
+// either: the request was read before, and the area change reads the track
+// again after its wait. The rest of each case is a function, called here and
+// by the site's resume entry: ToMenuEnd, and AreaChangeEnd with the track.
+namespace {
+void ToMenuEnd() {
+    Game_Step = 0;
+    Game_Mode = 3;
+}
+void AreaChangeEnd(unsigned char track) {
+    if (track != 0xFF && AreaW1f_MusicCurrent != track) mode_tasks::g.music_stop(0xA);
+    Game_Mode = 1;
+}
+}  // namespace
+
 extern "C" void __cdecl GameMode_Field(void) {
     mode_tasks::g.event_dispatch();
     mode_tasks::g.field_frame();
     switch (Field_Request) {
     case 1:   // the menu
         mode_tasks::g.transition(2);
-        mode_tasks::g.wait_transition(0);
-        Game_Step = 0;
-        Game_Mode = 3;
+        {
+            const WaitAt at(bof3::task_yield::kSiteWaitToMenu);
+            mode_tasks::g.wait_transition(0);
+        }
+        ToMenuEnd();
         return;
     case 2:
         Game_Mode = 4;
@@ -710,11 +856,13 @@ extern "C" void __cdecl GameMode_Field(void) {
         const unsigned char kind = ModeFlow_AreaTransition;
         if (kind != 0xFF) {
             mode_tasks::g.transition(kind);
-            mode_tasks::g.wait_transition(0);
+            {
+                const WaitAt at(bof3::task_yield::kSiteWaitArea);
+                mode_tasks::g.wait_transition(0);
+            }
             track = Music_Track;
         }
-        if (track != 0xFF && AreaW1f_MusicCurrent != track) mode_tasks::g.music_stop(0xA);
-        Game_Mode = 1;
+        AreaChangeEnd(track);
         return;
     }
     case 6:
@@ -758,6 +906,17 @@ extern "C" void __cdecl GameMode3_Run(void) {
 // before Transition_Start(3) (pushed first); Menu_WaitTransition(1); with the
 // word 0x7E0678 0x6E and the music not playing, Music_FadeOut(0x10); Game_Step
 // up.
+//
+// The yield word (docs/state-by-name-sites.md 8): the menu's wait is site 13.
+// Nothing of this frame is alive across it; the rest of the step is
+// MenuOpenEnd, called here and by the site's resume entry.
+namespace {
+void MenuOpenEnd() {
+    if (MusicWordAndSilent()) SH_CALL(Music_FadeOut)(0x10);
+    StepUp();
+}
+}  // namespace
+
 extern "C" void __cdecl GameMode3_Enter(void) {
     SH_CALL(LoadDatFile)(static_cast<int>(mode_rest::at::kMenuFile));
     WaitLoad();
@@ -767,9 +926,11 @@ extern "C" void __cdecl GameMode3_Enter(void) {
     BattleE1_Mode = 0;
     move_script::At(::bof3::Img(mode_rest::at::kMenuTimer))[0] = 3;
     SH_CALL(Transition_Start)(3);
-    SH_CALL(Menu_WaitTransition)(1);
-    if (MusicWordAndSilent()) SH_CALL(Music_FadeOut)(0x10);
-    StepUp();
+    {
+        const WaitAt at(bof3::task_yield::kSiteMenuWaitOpen);
+        SH_CALL(Menu_WaitTransition)(1);
+    }
+    MenuOpenEnd();
 }
 
 // original 0x495C50 (GameMode3_Steps[2]; PSX 0x801986EC): the menu's last
@@ -796,29 +957,17 @@ extern "C" void __cdecl GameMode3_Enter(void) {
 // the fuzz, scenario_harness.cpp's rows); the leader's facing, the pending
 // area's cells and the jitter are read after Rand, the saved trip after
 // Flags_Clear.
-extern "C" void __cdecl GameMode3_Leave(void) {
-    SH_CALL(Menu_Frame)();
-    SH_CALL(Transition_Start)(2);
-    SH_CALL(Menu_WaitTransition)(0);
-    SH_CALL(Task_Sleep)(1);
-    if (MenuLists_PartyChanged != 0) {
-        const unsigned c = Cond_Flags[0xd4], b = Cond_Flags[0xd3], a = Cond_Flags[0xd2];
-        SH_CALL(PartySet_Load)(a, b, c, 0);
-        WaitLoad();
-        MenuLists_PartyChanged = 0;
-    }
-    {
-        const unsigned char set = static_cast<unsigned char>(AreaW0b_PartySet | 0x80);
-        AreaW0b_PartySet = set;
-        SH_CALL(Snd_LoadBankFile)((set & 0x7Fu) + mode_rest::at::kPartySetFiles);
-    }
-    if (Field_InputFlags & 0x10) {
-        SH_CALL(LoadDatFile)(static_cast<int>(mode_rest::at::kCommuFile));
-        WaitLoad();
-        SH_CALL(CommuSim_RollOffers)();
-    }
-    SH_CALL(Transition_Start)(3);
-    SH_CALL(Field_WaitTransition)(1);
+// The yield word (docs/state-by-name-sites.md 8): three yields of this step
+// are sites - the menu's wait (14), the sleep after it (15) and the field's
+// wait (12). Nothing of this frame is alive across any of them (every word is
+// read after the yield it follows), so the step is cut there into functions of
+// the span alone, each calling the next, called here and by the sites' resume
+// entries: MenuCloseAfterWait (the sleep, then the rest), MenuCloseAfterSleep
+// (the party set, the loads and their waits, the field's wait, then the rest)
+// and MenuCloseAfterFieldWait (the music, the camp or the area asked, the end).
+// The loads' waits (WaitLoad) stay at no site.
+namespace {
+void MenuCloseAfterFieldWait() {
     if (MusicWordAndSilent()) SH_CALL(Music_FadeIn)(0x10);
     if (MenuLists_CampChosen != 0) {
         const unsigned char out = AreaW3c_CampFlag;
@@ -852,6 +1001,45 @@ extern "C" void __cdecl GameMode3_Leave(void) {
     SH_CALL(Window_ResetAll)();
     Game_Mode = 2;
     Game_Step = 0;
+}
+void MenuCloseAfterSleep() {
+    if (MenuLists_PartyChanged != 0) {
+        const unsigned c = Cond_Flags[0xd4], b = Cond_Flags[0xd3], a = Cond_Flags[0xd2];
+        SH_CALL(PartySet_Load)(a, b, c, 0);
+        WaitLoad();
+        MenuLists_PartyChanged = 0;
+    }
+    {
+        const unsigned char set = static_cast<unsigned char>(AreaW0b_PartySet | 0x80);
+        AreaW0b_PartySet = set;
+        SH_CALL(Snd_LoadBankFile)((set & 0x7Fu) + mode_rest::at::kPartySetFiles);
+    }
+    if (Field_InputFlags & 0x10) {
+        SH_CALL(LoadDatFile)(static_cast<int>(mode_rest::at::kCommuFile));
+        WaitLoad();
+        SH_CALL(CommuSim_RollOffers)();
+    }
+    SH_CALL(Transition_Start)(3);
+    {
+        const WaitAt at(bof3::task_yield::kSiteWaitMenuBack);
+        SH_CALL(Field_WaitTransition)(1);
+    }
+    MenuCloseAfterFieldWait();
+}
+void MenuCloseAfterWait() {
+    Task_YieldAt(bof3::task_yield::kSiteMenuLeaveSleep, 1, nullptr, 0, SH_CALL(Task_Sleep));
+    MenuCloseAfterSleep();
+}
+}  // namespace
+
+extern "C" void __cdecl GameMode3_Leave(void) {
+    SH_CALL(Menu_Frame)();
+    SH_CALL(Transition_Start)(2);
+    {
+        const WaitAt at(bof3::task_yield::kSiteMenuWaitClose);
+        SH_CALL(Menu_WaitTransition)(0);
+    }
+    MenuCloseAfterWait();
 }
 
 // original 0x495E60 (GameMode_Handlers[4]; PSX 0x801989D4): with the message
@@ -1336,17 +1524,41 @@ extern "C" void __cdecl GameMode11_LookEnd(void) {
 // first pass; with `run` set the loop ends only on a frame the wait word is
 // 0 after the field frame (never on the first test); the word is read afresh
 // after each call.
+//
+// The yield word (docs/state-by-name-sites.md 8): with a site named by the
+// caller (WaitAt, sites 9..12) each of the two sleeps is that site, its locals
+// `run` and which sleep (task_yield.h WaitLocals); with none it sleeps at no
+// site. One text of the loop, entered two ways: the pass after the loop's
+// first sleep (FieldWaitPass, true when the wait is over) and the loop
+// (FieldWaitLoop), called by the wait and by the sites' resume entries.
+namespace {
+void WaitSleep(std::uint32_t site, unsigned char run, std::uint32_t phase, bof3::task_yield::SleepFn sleep) {
+    if (site == 0) {
+        sleep(1);
+        return;
+    }
+    const bof3::task_yield::WaitLocals locals{run, phase};
+    Task_YieldAt(site, 1, &locals, sizeof locals, sleep);
+}
+bool FieldWaitPass(std::uint32_t site, unsigned char run) {
+    if (Transition_Busy == 0 && run == 0) {
+        WaitSleep(site, run, bof3::task_yield::kWaitLast, mode_flow::g.sleep);
+        return true;
+    }
+    mode_flow::g.field_frame();
+    return Transition_Busy == 0;
+}
+void FieldWaitLoop(std::uint32_t site, unsigned char run) {
+    for (;;) {
+        WaitSleep(site, run, bof3::task_yield::kWaitTop, mode_flow::g.sleep);
+        if (FieldWaitPass(site, run)) return;
+    }
+}
+}  // namespace
+
 extern "C" void __cdecl Field_WaitTransition(unsigned char run_argument) {
     const unsigned char run = SlotByte(run_argument);
-    for (;;) {
-        mode_flow::g.sleep(1);
-        if (Transition_Busy == 0 && run == 0) {
-            mode_flow::g.sleep(1);
-            return;
-        }
-        mode_flow::g.field_frame();
-        if (Transition_Busy == 0) return;
-    }
+    FieldWaitLoop(std::exchange(g_waitSite, 0u), run);
 }
 
 // original 0x496830 (no PSX twin paired; PSX 0x80199C38): Field_WaitTransition with the menu's
@@ -1356,17 +1568,101 @@ extern "C" void __cdecl Field_WaitTransition(unsigned char run_argument) {
 //
 // As the original has it: `run` is the argument's byte, read once, and
 // tested every pass; the wait word is read afresh at both tests.
+//
+// The yield word: as Field_WaitTransition's, sites 13 and 14.
+namespace {
+bool MenuWaitPass(std::uint32_t site, unsigned char run) {
+    if (Transition_Busy == 0 && run == 0) {
+        WaitSleep(site, run, bof3::task_yield::kWaitLast, mode_states::g.sleep);
+        return true;
+    }
+    mode_states::g.menu_frame();
+    return Transition_Busy == 0;
+}
+void MenuWaitLoop(std::uint32_t site, unsigned char run) {
+    for (;;) {
+        WaitSleep(site, run, bof3::task_yield::kWaitTop, mode_states::g.sleep);
+        if (MenuWaitPass(site, run)) return;
+    }
+}
+}  // namespace
+
 extern "C" __attribute__((disable_tail_calls)) void __cdecl Menu_WaitTransition(unsigned char run_argument) {
     const unsigned char run = SlotByte(run_argument);
-    for (;;) {
-        mode_states::g.sleep(1);
-        if (Transition_Busy == 0 && run == 0) {
-            mode_states::g.sleep(1);
-            return;
-        }
-        mode_states::g.menu_frame();
-        if (Transition_Busy == 0) return;
-    }
+    MenuWaitLoop(std::exchange(g_waitSite, 0u), run);
+}
+
+// The resume entries of sites 9..15 (task_yield.h; docs/state-by-name-sites.md
+// 8). Each is task 0's body entered at a nested yield: the rest of the wait
+// from the sleep the take stood in (nothing after the last sleep; the pass,
+// then the loop, after the first), the rest of the caller's step (the same
+// functions the step calls), then Field_Task's pass end and its loop. The
+// handlers between Field_Task and the step return at once when the step
+// returns (GameMode3_Run's StepDispatch calls the step last), so nothing of
+// theirs is left. The site's locals are checked: a `run` that is not a byte or
+// a phase that is neither sleep is no frame a wait writes.
+namespace {
+using WaitPassFn = bool (*)(std::uint32_t, unsigned char);
+using WaitLoopFn = void (*)(std::uint32_t, unsigned char);
+void WaitResume(std::uint32_t site, WaitPassFn pass, WaitLoopFn loop) {
+    bof3::task_yield::WaitLocals l{};
+    Task_YieldResume(site, &l, sizeof l);
+    if (l.run > 0xFF || (l.phase != bof3::task_yield::kWaitTop && l.phase != bof3::task_yield::kWaitLast))
+        bof3::Fatal("site %u's resume entry: run %u, phase %u - not a wait's frame", site, l.run, l.phase);
+    if (l.phase == bof3::task_yield::kWaitLast) return;
+    const auto run = static_cast<unsigned char>(l.run);
+    if (!pass(site, run)) loop(site, run);
+}
+}  // namespace
+
+void __cdecl bof3::task_yield::ResumeWaitEnter() {
+    WaitResume(kSiteWaitEnter, &FieldWaitPass, &FieldWaitLoop);
+    EnterAfterWait();
+    EnterEnd();
+    FieldTaskPassEnd();
+    FieldTaskLoop();
+}
+
+void __cdecl bof3::task_yield::ResumeWaitToMenu() {
+    WaitResume(kSiteWaitToMenu, &FieldWaitPass, &FieldWaitLoop);
+    ToMenuEnd();
+    FieldTaskPassEnd();
+    FieldTaskLoop();
+}
+
+void __cdecl bof3::task_yield::ResumeWaitArea() {
+    WaitResume(kSiteWaitArea, &FieldWaitPass, &FieldWaitLoop);
+    AreaChangeEnd(Music_Track);
+    FieldTaskPassEnd();
+    FieldTaskLoop();
+}
+
+void __cdecl bof3::task_yield::ResumeWaitMenuBack() {
+    WaitResume(kSiteWaitMenuBack, &FieldWaitPass, &FieldWaitLoop);
+    MenuCloseAfterFieldWait();
+    FieldTaskPassEnd();
+    FieldTaskLoop();
+}
+
+void __cdecl bof3::task_yield::ResumeMenuWaitOpen() {
+    WaitResume(kSiteMenuWaitOpen, &MenuWaitPass, &MenuWaitLoop);
+    MenuOpenEnd();
+    FieldTaskPassEnd();
+    FieldTaskLoop();
+}
+
+void __cdecl bof3::task_yield::ResumeMenuWaitClose() {
+    WaitResume(kSiteMenuWaitClose, &MenuWaitPass, &MenuWaitLoop);
+    MenuCloseAfterWait();
+    FieldTaskPassEnd();
+    FieldTaskLoop();
+}
+
+void __cdecl bof3::task_yield::ResumeMenuLeaveSleep() {
+    Task_YieldResume(kSiteMenuLeaveSleep, nullptr, 0);
+    MenuCloseAfterSleep();
+    FieldTaskPassEnd();
+    FieldTaskLoop();
 }
 
 // original 0x496870 (PSX 0x80199CAC): the play clock and two countdowns, once a frame from

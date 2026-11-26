@@ -2039,9 +2039,9 @@ site	src/game/core/mode_tasks.cpp	85	uintptr	-	live	std::uintptr_t	-	const auto 
 site	src/game/core/mode_tasks.cpp	85	uintptr	-	live	std::uintptr_t	-	const auto prim = reinterpret_cast<std::uintptr_t>(g_prim), out = reinterpret_cast<std::uintptr_t>(g_sprite_out);
 site	src/game/core/mode_tasks.cpp	243	low32	image	live	&Input_Pressed	Low32	{Low32(&Input_Pressed), 2},
 site	src/game/core/mode_tasks.cpp	306	asm	other	live	(empty)	-	asm volatile("" ::: "memory"); // no tail call: the frame must outlive the body
-site	src/game/core/new_game.cpp	174	low32	image_local	live	r	Low32	SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x1D, Low32(r));
-site	src/game/core/new_game.cpp	461	low32	object_ours	live	&g_name_on	Low32	bof3::PatchBytes(" ", Low32(&g_name_on), &was, &is, 1);
-site	src/game/core/new_game.cpp	462	low32	object_ours	live	&g_options_on	Low32	bof3::PatchBytes(" ", Low32(&g_options_on), &was, &is, 1);
+site	src/game/core/new_game.cpp	179	low32	image_local	live	r	Low32	SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x1D, Low32(r));
+site	src/game/core/new_game.cpp	473	low32	object_ours	live	&g_name_on	Low32	bof3::PatchBytes(" ", Low32(&g_name_on), &was, &is, 1);
+site	src/game/core/new_game.cpp	474	low32	object_ours	live	&g_options_on	Low32	bof3::PatchBytes(" ", Low32(&g_options_on), &was, &is, 1);
 site	src/game/core/prim.cpp	57	asm	cw	live	fnstcw %0	fnstcw	__asm__("fnstcw %0" : "=m"(cw));
 site	src/game/core/prim.cpp	60	asm	cw	live	fldcw %0	fldcw	void SetControlWord(unsigned short cw) { __asm__("fldcw %0" : : "m"(cw)); }
 site	src/game/core/prim.cpp	108	fmt_place	word	live	texture	%08X	bof3::Log("shadow Prim_SetTexture self-test MISMATCH: round %u, word %04X, texture %08X, count %d, "
@@ -2109,64 +2109,67 @@ site	src/game/core/save_menu_fuzz.cpp	996	narrow_call	object_ours	fuzz	&g_buffer
 site	src/game/core/save_menu_fuzz.cpp	1086	narrow_call	image_local	fuzz	reinterpret_cast<const void*>(TargetTable()[i])	Addr	for (unsigned i = 0; i < kTableEntries; ++i) PutLong(::bof3::Img(at::kStepTable.v) + i * 4, Addr(reinterpret_cast<const void*>(TargetTable()[i])));
 site	src/game/core/save_menu_fuzz.cpp	1124	fmt_place	word	fuzz	ours.result	%08X	bof3::Log("shadow save_menu MISMATCH: round %u, %s, cw %04X, result %08X / %08X, log %u / %u, "
 site	src/game/core/save_menu_fuzz.cpp	1124	fmt_place	word	fuzz	theirs.result	%08X	bof3::Log("shadow save_menu MISMATCH: round %u, %s, cw %04X, result %08X / %08X, log %u / %u, "
-site	src/game/core/sound.cpp	76	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/core/sound.cpp	76	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/core/sound.cpp	78	low32	helper_def	live	p	Low32	U Addr(const volatile void* p) { return Low32(p); }
-site	src/game/core/sound.cpp	101	uintptr	-	live	std::uintptr_t	-	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/core/sound.cpp	101	widen	param	live	address	unsigned char*	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/core/sound.cpp	103	low32	image_local	live	p	Low32	save_menu::U AddrSaveMenu(const volatile void* p) { return Low32(p); }
-site	src/game/core/sound.cpp	186	low32	helper_def	live	p	Low32	std::uint32_t AddrScenaSx2(const void* p) { return Low32(p); }
-site	src/game/core/sound.cpp	188	uintptr	-	live	std::uintptr_t	-	unsigned char* AtShopStates2(shop_states2::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/core/sound.cpp	188	widen	param	live	address	unsigned char*	unsigned char* AtShopStates2(shop_states2::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/core/sound.cpp	205	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(target));
-site	src/game/core/sound.cpp	205	widen	param	live	target	Handler [fn]	return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(target));
-site	src/game/core/sound.cpp	214	uintptr	-	live	std::uintptr_t	-	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/core/sound.cpp	214	widen	param	live	address	unsigned char*	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/core/sound.cpp	224	low32	helper_def	live	p	Low32	std::uint32_t Address(const volatile void* p) { return Low32(p); }
-site	src/game/core/sound.cpp	270	uintptr	-	live	std::uintptr_t	-	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/core/sound.cpp	270	widen	param	live	address	unsigned char*	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/core/sound.cpp	272	low32	helper_def	live	p	Low32	std::uint32_t Address(const volatile void* p) { return Low32(p); }
-site	src/game/core/sound.cpp	311	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(word));
-site	src/game/core/sound.cpp	311	widen	param	live	word	Fn [fn]	return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(word));
-site	src/game/core/sound.cpp	391	narrow_call	image	live	Sound_Channels	AddrScenaSx2	for (std::uint32_t p = AddrScenaSx2(Sound_Channels); p < ::bof3::Img(scena_sx2::at::kChannelsEnd); p += 4) {
-site	src/game/core/sound.cpp	410	narrow_call	image	live	Sound_Banks	AddrScenaSx2	const std::uint32_t cue_at = AddrScenaSx2(Sound_Banks) + bank + (c & 0xFF) * 16;
-site	src/game/core/sound.cpp	414	narrow_call	image	live	Sound_Banks	AddrScenaSx2	const std::uint32_t buffer = UScenaSx2(LongScenaSx2(AtScenaSx2(AddrScenaSx2(Sound_Banks) + scena_sx2::at::kBankVoices + bank + (voice & 0xFF) * 8)));
-site	src/game/core/sound.cpp	522	widen	img_place	live	::bof3::Img(kLoopingName.v)	const char*	sound::g.sprintf(looping, reinterpret_cast<const char*>(::bof3::Img(kLoopingName.v)), track);
-site	src/game/core/sound.cpp	523	widen	img_place	live	::bof3::Img(kOnceName.v)	const char*	sound::g.sprintf(once, reinterpret_cast<const char*>(::bof3::Img(kOnceName.v)), track);
-site	src/game/core/sound.cpp	562	fmt_place	pointer	live	Music_LoadedTrack	%p	MUSIC_LOG("Music_Play(%u, %d) track %u loaded %d from %p", Frame_Counter, track, frames, (unsigned)Music_Track, Music_LoadedTrack, __builtin_return_address(0));
-site	src/game/core/sound.cpp	587	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_FadeOutStop(%d) track %u from %p", Frame_Counter, frames, (unsigned)Music_Track, __builtin_return_address(0));
-site	src/game/core/sound.cpp	591	asm	x87	live	fildll %[n]	fchs fdivrs fildll fstps	__asm__ volatile(
-site	src/game/core/sound.cpp	610	naked	-	live	Sound_StopMusic	-	extern " " __attribute__((naked)) void __cdecl Sound_StopMusic(void) {
-site	src/game/core/sound.cpp	611	width_if	asm_pair	live	Sound_StopMusic	#if defined(__i386__)	#if defined(__i386__)
-site	src/game/core/sound.cpp	612	asm	stack	live	jmp *(	jmp	__asm__ volatile("jmp *(" BOF3_SYM(SoundRest_g) "+8)");
-site	src/game/core/sound.cpp	614	asm	stack	live	jmp *%c0+	jmp	__asm__ volatile("jmp *%c0+" BOF3_SYM(SoundRest_g) "(%%rip)" : : "i"(offsetof(sound_rest::Callees, halt)));
-site	src/game/core/sound.cpp	621	naked	-	live	Sound_ResumeAll	-	extern " " __attribute__((naked)) void __cdecl Sound_ResumeAll(void) {
-site	src/game/core/sound.cpp	622	width_if	asm_pair	live	Sound_ResumeAll	#if defined(__i386__)	#if defined(__i386__)
-site	src/game/core/sound.cpp	623	asm	stack	live	jmp *(	jmp	__asm__ volatile("jmp *(" BOF3_SYM(SoundRest_g) "+12)");
-site	src/game/core/sound.cpp	625	asm	stack	live	jmp *%c0+	jmp	__asm__ volatile("jmp *%c0+" BOF3_SYM(SoundRest_g) "(%%rip)" : : "i"(offsetof(sound_rest::Callees, resume)));
-site	src/game/core/sound.cpp	635	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_FadeIn(%d) track %u from %p", Frame_Counter, frames, (unsigned)Music_Track, __builtin_return_address(0));
-site	src/game/core/sound.cpp	637	asm	x87	live	flds %[full]	fidivl flds fstps fsubs	__asm__ volatile(
-site	src/game/core/sound.cpp	643	uintptr	-	live	std::uintptr_t	-	: [full] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k127At))), [volume] " "(Music_Volume), [n] " "(frames)
-site	src/game/core/sound.cpp	643	widen	param	live	k127At	const float*	: [full] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k127At))), [volume] " "(Music_Volume), [n] " "(frames)
-site	src/game/core/sound.cpp	653	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_FadeOut(%d) track %u from %p", Frame_Counter, frames, (unsigned)Music_Track, __builtin_return_address(0));
-site	src/game/core/sound.cpp	656	asm	x87	live	fildll %[n]	fchs fdivrs fildll fstps	__asm__ volatile(
-site	src/game/core/sound.cpp	672	naked	-	live	Sound_MusicPlaying	-	extern " " __attribute__((naked)) int __cdecl Sound_MusicPlaying(void) {
-site	src/game/core/sound.cpp	673	width_if	asm_pair	live	Sound_MusicPlaying	#if defined(__i386__)	#if defined(__i386__)
-site	src/game/core/sound.cpp	674	asm	stack	live	jmp *(	jmp	__asm__ volatile("jmp *(" BOF3_SYM(SoundRest_g) "+16)");
-site	src/game/core/sound.cpp	676	asm	stack	live	jmp *%c0+	jmp	__asm__ volatile("jmp *%c0+" BOF3_SYM(SoundRest_g) "(%%rip)" : : "i"(offsetof(sound_rest::Callees, music_playing)));
-site	src/game/core/sound.cpp	715	asm	x87	live	flds %[step]	fadds flds fstps	__asm__ volatile(
-site	src/game/core/sound.cpp	761	narrow_call	image_local	live	payload	Addr	const display_env::U src = Addr(payload);
-site	src/game/core/sound.cpp	764	narrow_call	heap	live	display_env::g.malloc(bytes)	Addr	const display_env::U data = Addr(display_env::g.malloc(bytes));
-site	src/game/core/sound.cpp	774	narrow_call	unread	live	display_env::g.from_wave(display_env::At(sample))	Addr	PutLong(entry + 4, Addr(display_env::g.from_wave(display_env::At(sample))));
-site	src/game/core/sound.cpp	1115	naked	-	live	LoadMenu_Error	-	extern " " __attribute__((naked)) void __cdecl LoadMenu_Error(void) {
-site	src/game/core/sound.cpp	1116	width_if	asm_pair	live	LoadMenu_Error	#if defined(__i386__)	#if defined(__i386__)
-site	src/game/core/sound.cpp	1117	asm	stack	live	push %ecx	call push	__asm__ volatile(
-site	src/game/core/sound.cpp	1123	asm	stack	live	jmp	jmp	__asm__ volatile("jmp " BOF3_SYM(SaveMenu_LoadErrorBody)); // the caller's ecx is the body's first argument already
-site	src/game/core/sound.cpp	1240	uintptr	-	live	std::uintptr_t	-	save_menu::g.task_restart(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(save_menu::at::kGameTask.v))));
-site	src/game/core/sound.cpp	1240	widen	code_place	live	::bof3::Code(save_menu::at::kGameTask.v)	void*	save_menu::g.task_restart(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(save_menu::at::kGameTask.v))));
-site	src/game/core/task.cpp	18	uintptr	-	live	std::uintptr_t	-	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/core/task.cpp	18	widen	param	live	address	unsigned char*	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/core/task.cpp	48	uintptr	-	live	std::uintptr_t	-	const auto e = reinterpret_cast<std::uintptr_t>(entry);
+site	src/game/core/save_tail.cpp	126	uintptr	-	live	std::uintptr_t	-	unsigned char* Tint() { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(MoveScript_TintRecords_addr))); }
+site	src/game/core/save_tail.cpp	126	widen	img_place	live	::bof3::Img(MoveScript_TintRecords_addr)	unsigned char*	unsigned char* Tint() { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(MoveScript_TintRecords_addr))); }
+site	src/game/core/save_tail.cpp	271	low32	object_ours	live	&g_on	Low32	if (PatchBytes(" ", Low32(&g_on), &was, &is, 1))
+site	src/game/core/sound.cpp	78	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/core/sound.cpp	78	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/core/sound.cpp	80	low32	helper_def	live	p	Low32	U Addr(const volatile void* p) { return Low32(p); }
+site	src/game/core/sound.cpp	103	uintptr	-	live	std::uintptr_t	-	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/core/sound.cpp	103	widen	param	live	address	unsigned char*	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/core/sound.cpp	105	low32	image_local	live	p	Low32	save_menu::U AddrSaveMenu(const volatile void* p) { return Low32(p); }
+site	src/game/core/sound.cpp	188	low32	helper_def	live	p	Low32	std::uint32_t AddrScenaSx2(const void* p) { return Low32(p); }
+site	src/game/core/sound.cpp	190	uintptr	-	live	std::uintptr_t	-	unsigned char* AtShopStates2(shop_states2::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/core/sound.cpp	190	widen	param	live	address	unsigned char*	unsigned char* AtShopStates2(shop_states2::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/core/sound.cpp	207	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(target));
+site	src/game/core/sound.cpp	207	widen	param	live	target	Handler [fn]	return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(target));
+site	src/game/core/sound.cpp	216	uintptr	-	live	std::uintptr_t	-	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/core/sound.cpp	216	widen	param	live	address	unsigned char*	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/core/sound.cpp	226	low32	helper_def	live	p	Low32	std::uint32_t Address(const volatile void* p) { return Low32(p); }
+site	src/game/core/sound.cpp	272	uintptr	-	live	std::uintptr_t	-	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/core/sound.cpp	272	widen	param	live	address	unsigned char*	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/core/sound.cpp	274	low32	helper_def	live	p	Low32	std::uint32_t Address(const volatile void* p) { return Low32(p); }
+site	src/game/core/sound.cpp	313	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(word));
+site	src/game/core/sound.cpp	313	widen	param	live	word	Fn [fn]	return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(word));
+site	src/game/core/sound.cpp	393	narrow_call	image	live	Sound_Channels	AddrScenaSx2	for (std::uint32_t p = AddrScenaSx2(Sound_Channels); p < ::bof3::Img(scena_sx2::at::kChannelsEnd); p += 4) {
+site	src/game/core/sound.cpp	412	narrow_call	image	live	Sound_Banks	AddrScenaSx2	const std::uint32_t cue_at = AddrScenaSx2(Sound_Banks) + bank + (c & 0xFF) * 16;
+site	src/game/core/sound.cpp	416	narrow_call	image	live	Sound_Banks	AddrScenaSx2	const std::uint32_t buffer = UScenaSx2(LongScenaSx2(AtScenaSx2(AddrScenaSx2(Sound_Banks) + scena_sx2::at::kBankVoices + bank + (voice & 0xFF) * 8)));
+site	src/game/core/sound.cpp	524	widen	img_place	live	::bof3::Img(kLoopingName.v)	const char*	sound::g.sprintf(looping, reinterpret_cast<const char*>(::bof3::Img(kLoopingName.v)), track);
+site	src/game/core/sound.cpp	525	widen	img_place	live	::bof3::Img(kOnceName.v)	const char*	sound::g.sprintf(once, reinterpret_cast<const char*>(::bof3::Img(kOnceName.v)), track);
+site	src/game/core/sound.cpp	564	fmt_place	pointer	live	Music_LoadedTrack	%p	MUSIC_LOG("Music_Play(%u, %d) track %u loaded %d from %p", Frame_Counter, track, frames, (unsigned)Music_Track, Music_LoadedTrack, __builtin_return_address(0));
+site	src/game/core/sound.cpp	589	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_FadeOutStop(%d) track %u from %p", Frame_Counter, frames, (unsigned)Music_Track, __builtin_return_address(0));
+site	src/game/core/sound.cpp	593	asm	x87	live	fildll %[n]	fchs fdivrs fildll fstps	__asm__ volatile(
+site	src/game/core/sound.cpp	612	naked	-	live	Sound_StopMusic	-	extern " " __attribute__((naked)) void __cdecl Sound_StopMusic(void) {
+site	src/game/core/sound.cpp	613	width_if	asm_pair	live	Sound_StopMusic	#if defined(__i386__)	#if defined(__i386__)
+site	src/game/core/sound.cpp	614	asm	stack	live	jmp *(	jmp	__asm__ volatile("jmp *(" BOF3_SYM(SoundRest_g) "+8)");
+site	src/game/core/sound.cpp	616	asm	stack	live	jmp *%c0+	jmp	__asm__ volatile("jmp *%c0+" BOF3_SYM(SoundRest_g) "(%%rip)" : : "i"(offsetof(sound_rest::Callees, halt)));
+site	src/game/core/sound.cpp	623	naked	-	live	Sound_ResumeAll	-	extern " " __attribute__((naked)) void __cdecl Sound_ResumeAll(void) {
+site	src/game/core/sound.cpp	624	width_if	asm_pair	live	Sound_ResumeAll	#if defined(__i386__)	#if defined(__i386__)
+site	src/game/core/sound.cpp	625	asm	stack	live	jmp *(	jmp	__asm__ volatile("jmp *(" BOF3_SYM(SoundRest_g) "+12)");
+site	src/game/core/sound.cpp	627	asm	stack	live	jmp *%c0+	jmp	__asm__ volatile("jmp *%c0+" BOF3_SYM(SoundRest_g) "(%%rip)" : : "i"(offsetof(sound_rest::Callees, resume)));
+site	src/game/core/sound.cpp	637	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_FadeIn(%d) track %u from %p", Frame_Counter, frames, (unsigned)Music_Track, __builtin_return_address(0));
+site	src/game/core/sound.cpp	639	asm	x87	live	flds %[full]	fidivl flds fstps fsubs	__asm__ volatile(
+site	src/game/core/sound.cpp	645	uintptr	-	live	std::uintptr_t	-	: [full] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k127At))), [volume] " "(Music_Volume), [n] " "(frames)
+site	src/game/core/sound.cpp	645	widen	param	live	k127At	const float*	: [full] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k127At))), [volume] " "(Music_Volume), [n] " "(frames)
+site	src/game/core/sound.cpp	655	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_FadeOut(%d) track %u from %p", Frame_Counter, frames, (unsigned)Music_Track, __builtin_return_address(0));
+site	src/game/core/sound.cpp	658	asm	x87	live	fildll %[n]	fchs fdivrs fildll fstps	__asm__ volatile(
+site	src/game/core/sound.cpp	674	naked	-	live	Sound_MusicPlaying	-	extern " " __attribute__((naked)) int __cdecl Sound_MusicPlaying(void) {
+site	src/game/core/sound.cpp	675	width_if	asm_pair	live	Sound_MusicPlaying	#if defined(__i386__)	#if defined(__i386__)
+site	src/game/core/sound.cpp	676	asm	stack	live	jmp *(	jmp	__asm__ volatile("jmp *(" BOF3_SYM(SoundRest_g) "+16)");
+site	src/game/core/sound.cpp	678	asm	stack	live	jmp *%c0+	jmp	__asm__ volatile("jmp *%c0+" BOF3_SYM(SoundRest_g) "(%%rip)" : : "i"(offsetof(sound_rest::Callees, music_playing)));
+site	src/game/core/sound.cpp	717	asm	x87	live	flds %[step]	fadds flds fstps	__asm__ volatile(
+site	src/game/core/sound.cpp	763	narrow_call	image_local	live	payload	Addr	const display_env::U src = Addr(payload);
+site	src/game/core/sound.cpp	766	narrow_call	heap	live	display_env::g.malloc(bytes)	Addr	const display_env::U data = Addr(display_env::g.malloc(bytes));
+site	src/game/core/sound.cpp	776	narrow_call	unread	live	display_env::g.from_wave(display_env::At(sample))	Addr	PutLong(entry + 4, Addr(display_env::g.from_wave(display_env::At(sample))));
+site	src/game/core/sound.cpp	1152	naked	-	live	LoadMenu_Error	-	extern " " __attribute__((naked)) void __cdecl LoadMenu_Error(void) {
+site	src/game/core/sound.cpp	1153	width_if	asm_pair	live	LoadMenu_Error	#if defined(__i386__)	#if defined(__i386__)
+site	src/game/core/sound.cpp	1154	asm	stack	live	push %ecx	call push	__asm__ volatile(
+site	src/game/core/sound.cpp	1160	asm	stack	live	jmp	jmp	__asm__ volatile("jmp " BOF3_SYM(SaveMenu_LoadErrorBody)); // the caller's ecx is the body's first argument already
+site	src/game/core/sound.cpp	1281	uintptr	-	live	std::uintptr_t	-	save_menu::g.task_restart(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(save_menu::at::kGameTask.v))));
+site	src/game/core/sound.cpp	1281	widen	code_place	live	::bof3::Code(save_menu::at::kGameTask.v)	void*	save_menu::g.task_restart(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(save_menu::at::kGameTask.v))));
+site	src/game/core/task.cpp	19	uintptr	-	live	std::uintptr_t	-	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/core/task.cpp	19	widen	param	live	address	unsigned char*	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/core/task.cpp	49	uintptr	-	live	std::uintptr_t	-	const auto e = reinterpret_cast<std::uintptr_t>(entry);
 site	src/game/core/task_sched_fuzz.cpp	67	naked	-	fuzz	TaskSchedFuzz_Probe	-	extern " " __attribute__((naked)) void __cdecl TaskSchedFuzz_Probe(void) {
 site	src/game/core/task_sched_fuzz.cpp	68	asm	stack	fuzz	pushal	call pushal pushl ud2	asm("pushal\n\t"
 site	src/game/core/task_sched_fuzz.cpp	68	asm_symbol	underscore	fuzz	_TaskSchedFuzz_Entered	call _TaskSchedFuzz_Entered	asm("pushal\n\t"
@@ -2199,64 +2202,64 @@ site	src/game/core/task_sched_fuzz.cpp	191	widen	param	fuzz	address	unsigned cha
 site	src/game/core/task_sched_fuzz.cpp	402	narrow_call	func_ours	fuzz	reinterpret_cast<const void*>(&TaskSchedFuzz_Probe)	Address	SetLong(frame + kEntrySlot, Address(reinterpret_cast<const void*>(&TaskSchedFuzz_Probe)));
 site	src/game/core/task_sched_fuzz.cpp	434	narrow_call	image_local	fuzz	copy	Address	const auto base = Address(copy);
 site	src/game/core/task_sched_fuzz.cpp	447	narrow_call	image_local	fuzz	arena	Address	g_arena = Address(arena);
-site	src/game/core/title.cpp	221	low32	helper_def	live	p	Low32	U Key(const void* p) { return Low32(p); }
-site	src/game/core/title.cpp	239	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<HandlerRest4e>(static_cast<std::uintptr_t>(L(table + 4 * index)))();
-site	src/game/core/title.cpp	239	widen	word_read	live	L(table + 4 * index)	HandlerRest4e [fn]	reinterpret_cast<HandlerRest4e>(static_cast<std::uintptr_t>(L(table + 4 * index)))();
-site	src/game/core/title.cpp	256	low32	image_local	live	window	Low32	Low32(window));
-site	src/game/core/title.cpp	273	uintptr	-	live	std::uintptr_t	-	template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
-site	src/game/core/title.cpp	273	widen	param	live	address	T	template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
-site	src/game/core/title.cpp	361	narrow_call	image	live	Boss26Fx_CountFormat	Key	reinterpret_cast<const char*>(At(Key(Boss26Fx_CountFormat))), BRest4e(count));
-site	src/game/core/title.cpp	412	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<HandlerRest4f>(static_cast<std::uintptr_t>(LRest4f(table + 4 * index)))();
-site	src/game/core/title.cpp	412	widen	other	live	LRest4f(table + 4 * index)	HandlerRest4f [fn]	reinterpret_cast<HandlerRest4f>(static_cast<std::uintptr_t>(LRest4f(table + 4 * index)))();
-site	src/game/core/title.cpp	751	narrow_call	image	live	CommuRank_Modes	Key	Run(" ", Key(CommuRank_Modes), CommuRank_Modes_count, Rest4b_BoardState,
-site	src/game/core/title.cpp	1332	uintptr	-	live	std::uintptr_t	-	const auto* const label = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(ops.label[r]));
-site	src/game/core/title.cpp	1332	widen	param	live	ops.label[r]	const unsigned char*	const auto* const label = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(ops.label[r]));
-site	src/game/core/title.cpp	1514	uintptr	-	live	std::uintptr_t	-	const auto* glyph = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(
-site	src/game/core/title.cpp	1514	widen	other	live	*reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(kGlyphPointers.v) + 4 * i))	const unsigned char*	const auto* glyph = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(
-site	src/game/core/title.cpp	1515	uintptr	-	live	std::uintptr_t	-	*reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(kGlyphPointers.v) + 4 * i))));
-site	src/game/core/title.cpp	1515	widen	img_place	live	::bof3::Img(kGlyphPointers.v) + 4 * i	const std::uint32_t*	*reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(kGlyphPointers.v) + 4 * i))));
-site	src/game/core/title.cpp	1532	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(c.letter))));
-site	src/game/core/title.cpp	1532	widen	img_place	live	::bof3::Img(c.letter)	const unsigned char*	reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(c.letter))));
-site	src/game/core/title.cpp	1566	low32	pool	live	Gfx_PacketNext.Native()	Low32	const std::uint32_t next = Low32(Gfx_PacketNext.Native());
-site	src/game/core/title.cpp	1570	fmt_place	narrowed	live	Low32(__builtin_return_address(0))	%08X	bof3::Log("draworder packet pool full: a %u-byte primitive for slot %u skipped (next %08X, limit %08X) from %08X",
-site	src/game/core/title.cpp	1570	fmt_place	word	live	limit	%08X	bof3::Log("draworder packet pool full: a %u-byte primitive for slot %u skipped (next %08X, limit %08X) from %08X",
-site	src/game/core/title.cpp	1570	fmt_place	word	live	next	%08X	bof3::Log("draworder packet pool full: a %u-byte primitive for slot %u skipped (next %08X, limit %08X) from %08X",
-site	src/game/core/title.cpp	1571	low32	func_ours	live	__builtin_return_address(0)	Low32	size, slot & 0xFF, next, limit, Low32(__builtin_return_address(0)));
-site	src/game/core/title.cpp	1576	low32	func_ours	live	__builtin_return_address(0)	Low32	draw_order::TagCommit(next, slot, Low32(__builtin_return_address(0)));
-site	src/game/core/title.cpp	1629	fmt_place	word	live	static_cast<std::uint32_t>(Low32(record))	%08X	bof3::Log("poselog frame %u upload %u/%u at %d,%d size %dx%d kind %u record %08X", static_cast<std::uint32_t>(Frame_Counter),
-site	src/game/core/title.cpp	1631	low32	image_local	live	record	Low32	static_cast<std::uint32_t>(kind), static_cast<std::uint32_t>(Low32(record)));
-site	src/game/core/title.cpp	1757	uintptr	-	live	std::uintptr_t	-	Field_LoadingFrame, reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(::bof3::Code(kModeDispatch.v))),
-site	src/game/core/title.cpp	1846	uintptr	-	live	std::uintptr_t	-	title_states::gTitleStates.task_create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kDemoEntry.v))));
-site	src/game/core/title.cpp	1846	widen	code_place	live	::bof3::Code(kDemoEntry.v)	void*	title_states::gTitleStates.task_create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kDemoEntry.v))));
-site	src/game/core/title.cpp	1903	uintptr	-	live	std::uintptr_t	-	title_states::gTitleStates.task_create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kMenuEntry.v))));
-site	src/game/core/title.cpp	1903	widen	code_place	live	::bof3::Code(kMenuEntry.v)	void*	title_states::gTitleStates.task_create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kMenuEntry.v))));
+site	src/game/core/title.cpp	222	low32	helper_def	live	p	Low32	U Key(const void* p) { return Low32(p); }
+site	src/game/core/title.cpp	240	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<HandlerRest4e>(static_cast<std::uintptr_t>(L(table + 4 * index)))();
+site	src/game/core/title.cpp	240	widen	word_read	live	L(table + 4 * index)	HandlerRest4e [fn]	reinterpret_cast<HandlerRest4e>(static_cast<std::uintptr_t>(L(table + 4 * index)))();
+site	src/game/core/title.cpp	257	low32	image_local	live	window	Low32	Low32(window));
+site	src/game/core/title.cpp	274	uintptr	-	live	std::uintptr_t	-	template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+site	src/game/core/title.cpp	274	widen	param	live	address	T	template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+site	src/game/core/title.cpp	362	narrow_call	image	live	Boss26Fx_CountFormat	Key	reinterpret_cast<const char*>(At(Key(Boss26Fx_CountFormat))), BRest4e(count));
+site	src/game/core/title.cpp	413	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<HandlerRest4f>(static_cast<std::uintptr_t>(LRest4f(table + 4 * index)))();
+site	src/game/core/title.cpp	413	widen	other	live	LRest4f(table + 4 * index)	HandlerRest4f [fn]	reinterpret_cast<HandlerRest4f>(static_cast<std::uintptr_t>(LRest4f(table + 4 * index)))();
+site	src/game/core/title.cpp	752	narrow_call	image	live	CommuRank_Modes	Key	Run(" ", Key(CommuRank_Modes), CommuRank_Modes_count, Rest4b_BoardState,
+site	src/game/core/title.cpp	1333	uintptr	-	live	std::uintptr_t	-	const auto* const label = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(ops.label[r]));
+site	src/game/core/title.cpp	1333	widen	param	live	ops.label[r]	const unsigned char*	const auto* const label = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(ops.label[r]));
+site	src/game/core/title.cpp	1515	uintptr	-	live	std::uintptr_t	-	const auto* glyph = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(
+site	src/game/core/title.cpp	1515	widen	other	live	*reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(kGlyphPointers.v) + 4 * i))	const unsigned char*	const auto* glyph = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(
+site	src/game/core/title.cpp	1516	uintptr	-	live	std::uintptr_t	-	*reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(kGlyphPointers.v) + 4 * i))));
+site	src/game/core/title.cpp	1516	widen	img_place	live	::bof3::Img(kGlyphPointers.v) + 4 * i	const std::uint32_t*	*reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(kGlyphPointers.v) + 4 * i))));
+site	src/game/core/title.cpp	1533	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(c.letter))));
+site	src/game/core/title.cpp	1533	widen	img_place	live	::bof3::Img(c.letter)	const unsigned char*	reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(c.letter))));
+site	src/game/core/title.cpp	1567	low32	pool	live	Gfx_PacketNext.Native()	Low32	const std::uint32_t next = Low32(Gfx_PacketNext.Native());
+site	src/game/core/title.cpp	1571	fmt_place	narrowed	live	Low32(__builtin_return_address(0))	%08X	bof3::Log("draworder packet pool full: a %u-byte primitive for slot %u skipped (next %08X, limit %08X) from %08X",
+site	src/game/core/title.cpp	1571	fmt_place	word	live	limit	%08X	bof3::Log("draworder packet pool full: a %u-byte primitive for slot %u skipped (next %08X, limit %08X) from %08X",
+site	src/game/core/title.cpp	1571	fmt_place	word	live	next	%08X	bof3::Log("draworder packet pool full: a %u-byte primitive for slot %u skipped (next %08X, limit %08X) from %08X",
+site	src/game/core/title.cpp	1572	low32	func_ours	live	__builtin_return_address(0)	Low32	size, slot & 0xFF, next, limit, Low32(__builtin_return_address(0)));
+site	src/game/core/title.cpp	1577	low32	func_ours	live	__builtin_return_address(0)	Low32	draw_order::TagCommit(next, slot, Low32(__builtin_return_address(0)));
+site	src/game/core/title.cpp	1630	fmt_place	word	live	static_cast<std::uint32_t>(Low32(record))	%08X	bof3::Log("poselog frame %u upload %u/%u at %d,%d size %dx%d kind %u record %08X", static_cast<std::uint32_t>(Frame_Counter),
+site	src/game/core/title.cpp	1632	low32	image_local	live	record	Low32	static_cast<std::uint32_t>(kind), static_cast<std::uint32_t>(Low32(record)));
+site	src/game/core/title.cpp	1778	uintptr	-	live	std::uintptr_t	-	Field_LoadingFrame, reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(::bof3::Code(kModeDispatch.v))),
+site	src/game/core/title.cpp	1867	uintptr	-	live	std::uintptr_t	-	title_states::gTitleStates.task_create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kDemoEntry.v))));
+site	src/game/core/title.cpp	1867	widen	code_place	live	::bof3::Code(kDemoEntry.v)	void*	title_states::gTitleStates.task_create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kDemoEntry.v))));
+site	src/game/core/title.cpp	1924	uintptr	-	live	std::uintptr_t	-	title_states::gTitleStates.task_create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kMenuEntry.v))));
+site	src/game/core/title.cpp	1924	widen	code_place	live	::bof3::Code(kMenuEntry.v)	void*	title_states::gTitleStates.task_create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kMenuEntry.v))));
 site	src/game/core/title_menu.cpp	58	fmt_place	word	live	(unsigned)tag	%08X	bof3::Fatal("title menu chunk: tag 0x%08X, %u bytes - wants tag 0 and 3", (unsigned)tag, (unsigned)size);
 site	src/game/core/title_states.cpp	38	uintptr	-	live	std::uintptr_t	-	Field_LoadingFrame, reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(::bof3::Code(kModeDispatch.v))),
 site	src/game/core/title_states.cpp	79	uintptr	-	live	std::uintptr_t	-	const auto at = reinterpret_cast<std::uintptr_t>(p);
 site	src/game/core/title_states.cpp	80	uintptr	-	live	std::uintptr_t	-	const auto prim = reinterpret_cast<std::uintptr_t>(g_prim), out = reinterpret_cast<std::uintptr_t>(g_sprite_out);
 site	src/game/core/title_states.cpp	80	uintptr	-	live	std::uintptr_t	-	const auto prim = reinterpret_cast<std::uintptr_t>(g_prim), out = reinterpret_cast<std::uintptr_t>(g_sprite_out);
 site	src/game/core/title_states.cpp	140	low32	func_ours	live	entry	Low32	Record(12, static_cast<std::uint32_t>(slot), Low32(entry));
-site	src/game/core/transition.cpp	193	low32	helper_def	live	p	Low32	U AddressOf(const void* p) { return Low32(p); }
-site	src/game/core/transition.cpp	207	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<HandlerModeRest>(static_cast<std::uintptr_t>(UL(table + 4 * step)))();
-site	src/game/core/transition.cpp	207	widen	word_read	live	UL(table + 4 * step)	HandlerModeRest	reinterpret_cast<HandlerModeRest>(static_cast<std::uintptr_t>(UL(table + 4 * step)))();
-site	src/game/core/transition.cpp	247	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<mode_states::Handler>(static_cast<std::uintptr_t>(
-site	src/game/core/transition.cpp	247	widen	word_read	live	static_cast<std::uint32_t>(mode_states::Long(mode_states::At(table + 4u * static_cast<std::uint32_t>(index))))	mode_states::Handler [fn]	return reinterpret_cast<mode_states::Handler>(static_cast<std::uintptr_t>(
-site	src/game/core/transition.cpp	295	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<HandlerRest3g>(static_cast<std::uintptr_t>(ULRest3g(table + 4 * step)))();
-site	src/game/core/transition.cpp	295	widen	other	live	ULRest3g(table + 4 * step)	HandlerRest3g	reinterpret_cast<HandlerRest3g>(static_cast<std::uintptr_t>(ULRest3g(table + 4 * step)))();
-site	src/game/core/transition.cpp	358	uintptr	-	live	std::uintptr_t	-	template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
-site	src/game/core/transition.cpp	358	widen	param	live	address	T	template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
-site	src/game/core/transition.cpp	393	uintptr	-	live	std::uintptr_t	-	mode_flow::g.task_create(2, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kTransitionEntry.v))));
-site	src/game/core/transition.cpp	393	widen	code_place	live	::bof3::Code(kTransitionEntry.v)	void*	mode_flow::g.task_create(2, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kTransitionEntry.v))));
-site	src/game/core/transition.cpp	752	narrow_call	image	live	GameMode3_Steps	AddressOf	StepDispatch(" ", AddressOf(GameMode3_Steps), GameMode3_Steps_count);
-site	src/game/core/transition.cpp	872	narrow_call	image	live	GameMode5_Steps	AddressOf	StepDispatch(" ", AddressOf(GameMode5_Steps), GameMode5_Steps_count);
-site	src/game/core/transition.cpp	1211	narrow_call	image	live	GameMode8_Steps	AddressOf	StepDispatchRest3g(" ", AddressOf(GameMode8_Steps), GameMode8_Steps_count);
-site	src/game/core/transition.cpp	1271	narrow_call	image	live	GameMode9_Steps	AddressOf	StepDispatchRest3g(" ", AddressOf(GameMode9_Steps), GameMode9_Steps_count);
-site	src/game/core/transition.cpp	1296	narrow_call	image	live	GameMode10_Steps	AddressOf	StepDispatchRest3g(" ", AddressOf(GameMode10_Steps), GameMode10_Steps_count);
-site	src/game/core/transition.cpp	1305	narrow_call	image	live	GameMode11_Steps	AddressOf	StepDispatchRest3g(" ", AddressOf(GameMode11_Steps), GameMode11_Steps_count);
-site	src/game/core/transition.cpp	1538	uintptr	-	live	std::uintptr_t	-	mode_flow::g.task_create(1, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kTitleLoadEntry.v))));
-site	src/game/core/transition.cpp	1538	widen	code_place	live	::bof3::Code(kTitleLoadEntry.v)	void*	mode_flow::g.task_create(1, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kTitleLoadEntry.v))));
-site	src/game/core/transition.cpp	1592	low32	object_ours	live	&mode_flow::g_area_track_fallback	Low32	Low32(&mode_flow::g_area_track_fallback), was, is, 4);
-site	src/game/core/transition.cpp	1598	low32	object_ours	live	&mode_rest::g_event_keeps_music	Low32	bof3::PatchBytes(" ", Low32(&mode_rest::g_event_keeps_music),
+site	src/game/core/transition.cpp	215	low32	helper_def	live	p	Low32	U AddressOf(const void* p) { return Low32(p); }
+site	src/game/core/transition.cpp	229	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<HandlerModeRest>(static_cast<std::uintptr_t>(UL(table + 4 * step)))();
+site	src/game/core/transition.cpp	229	widen	word_read	live	UL(table + 4 * step)	HandlerModeRest	reinterpret_cast<HandlerModeRest>(static_cast<std::uintptr_t>(UL(table + 4 * step)))();
+site	src/game/core/transition.cpp	291	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<mode_states::Handler>(static_cast<std::uintptr_t>(
+site	src/game/core/transition.cpp	291	widen	word_read	live	static_cast<std::uint32_t>(mode_states::Long(mode_states::At(table + 4u * static_cast<std::uint32_t>(index))))	mode_states::Handler [fn]	return reinterpret_cast<mode_states::Handler>(static_cast<std::uintptr_t>(
+site	src/game/core/transition.cpp	339	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<HandlerRest3g>(static_cast<std::uintptr_t>(ULRest3g(table + 4 * step)))();
+site	src/game/core/transition.cpp	339	widen	other	live	ULRest3g(table + 4 * step)	HandlerRest3g	reinterpret_cast<HandlerRest3g>(static_cast<std::uintptr_t>(ULRest3g(table + 4 * step)))();
+site	src/game/core/transition.cpp	402	uintptr	-	live	std::uintptr_t	-	template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+site	src/game/core/transition.cpp	402	widen	param	live	address	T	template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+site	src/game/core/transition.cpp	437	uintptr	-	live	std::uintptr_t	-	mode_flow::g.task_create(2, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kTransitionEntry.v))));
+site	src/game/core/transition.cpp	437	widen	code_place	live	::bof3::Code(kTransitionEntry.v)	void*	mode_flow::g.task_create(2, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kTransitionEntry.v))));
+site	src/game/core/transition.cpp	900	narrow_call	image	live	GameMode3_Steps	AddressOf	StepDispatch(" ", AddressOf(GameMode3_Steps), GameMode3_Steps_count);
+site	src/game/core/transition.cpp	1060	narrow_call	image	live	GameMode5_Steps	AddressOf	StepDispatch(" ", AddressOf(GameMode5_Steps), GameMode5_Steps_count);
+site	src/game/core/transition.cpp	1399	narrow_call	image	live	GameMode8_Steps	AddressOf	StepDispatchRest3g(" ", AddressOf(GameMode8_Steps), GameMode8_Steps_count);
+site	src/game/core/transition.cpp	1459	narrow_call	image	live	GameMode9_Steps	AddressOf	StepDispatchRest3g(" ", AddressOf(GameMode9_Steps), GameMode9_Steps_count);
+site	src/game/core/transition.cpp	1484	narrow_call	image	live	GameMode10_Steps	AddressOf	StepDispatchRest3g(" ", AddressOf(GameMode10_Steps), GameMode10_Steps_count);
+site	src/game/core/transition.cpp	1493	narrow_call	image	live	GameMode11_Steps	AddressOf	StepDispatchRest3g(" ", AddressOf(GameMode11_Steps), GameMode11_Steps_count);
+site	src/game/core/transition.cpp	1834	uintptr	-	live	std::uintptr_t	-	mode_flow::g.task_create(1, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kTitleLoadEntry.v))));
+site	src/game/core/transition.cpp	1834	widen	code_place	live	::bof3::Code(kTitleLoadEntry.v)	void*	mode_flow::g.task_create(1, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kTitleLoadEntry.v))));
+site	src/game/core/transition.cpp	1888	low32	object_ours	live	&mode_flow::g_area_track_fallback	Low32	Low32(&mode_flow::g_area_track_fallback), was, is, 4);
+site	src/game/core/transition.cpp	1894	low32	object_ours	live	&mode_rest::g_event_keeps_music	Low32	bof3::PatchBytes(" ", Low32(&mode_rest::g_event_keeps_music),
 site	src/game/crt_rest.cpp	79	low32	func_ours	live	ret	Low32	const auto at = Low32(ret);
 site	src/game/crt_rest.cpp	81	low32	object_ours	live	&__ImageBase	Low32	const auto dll = Low32(&__ImageBase);
 site	src/game/crt_rest.cpp	83	low32	unread	live	reinterpret_cast<const void*>(::bof3::image::g_ownBase)	Low32	const auto dll = Low32(reinterpret_cast<const void*>(::bof3::image::g_ownBase));
@@ -4069,25 +4072,25 @@ site	src/game/field/field_6.cpp	2313	naked	-	live	Scenario_CallB	-	extern " " __
 site	src/game/field/field_6.cpp	2314	width_if	asm_pair	live	Scenario_CallB	#if defined(__i386__)	#if defined(__i386__)
 site	src/game/field/field_6.cpp	2318	asm	other	live	movl	movl	asm("movl " BOF3_SYM(Bof3_ImageMove) ", %%edx\n\t"
 site	src/game/field/field_6.cpp	2333	asm	other	live	movslq	movslq	asm("movslq " BOF3_SYM(Bof3_ImageMove) "(%%rip), %%r10\n\t"
-site	src/game/field/field_7.cpp	154	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(field_modes::Long(field_modes::At(table + 4u * static_cast<std::uint32_t>
-site	src/game/field/field_7.cpp	154	widen	word_read	live	static_cast<std::uint32_t>(field_modes::Long(field_modes::At(table + 4u * static_cast<std::uint32_t>(index))))	VoidFn [fn]	return reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(field_modes::Long(field_modes::At(table + 4u * static_cast<std::uint32_t>
-site	src/game/field/field_7.cpp	174	low32	image	live	Cond_Flags	Low32	const std::uint32_t kCondFlags = Low32(Cond_Flags);
-site	src/game/field/field_7.cpp	243	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(unsigned char*)>(static_cast<std::uintptr_t>(entry))(object);
-site	src/game/field/field_7.cpp	258	uintptr	-	live	std::uintptr_t	-	int r = static_cast<signed char>(reinterpret_cast<Hook>(static_cast<std::uintptr_t>(record->step))(x, z));
-site	src/game/field/field_7.cpp	258	widen	param	live	record->step	Hook [fn]	int r = static_cast<signed char>(reinterpret_cast<Hook>(static_cast<std::uintptr_t>(record->step))(x, z));
-site	src/game/field/field_7.cpp	269	uintptr	-	live	std::uintptr_t	-	int r = static_cast<signed char>(reinterpret_cast<Hook>(static_cast<std::uintptr_t>(record->arrive))(x, z));
-site	src/game/field/field_7.cpp	269	widen	param	live	record->arrive	Hook [fn]	int r = static_cast<signed char>(reinterpret_cast<Hook>(static_cast<std::uintptr_t>(record->arrive))(x, z));
-site	src/game/field/field_7.cpp	287	uintptr	-	live	std::uintptr_t	-	const unsigned char answer = reinterpret_cast<unsigned char (__cdecl*)(unsigned, unsigned)>(static_cast<std::uintptr_t>(entry))(x, z);
-site	src/game/field/field_7.cpp	543	low32	image_local	live	out	Low32	Msgbox_Base = Low32(out);
-site	src/game/field/field_7.cpp	544	low32	image_local	live	out	Low32	MenuWindows_ListText = Low32(out);
-site	src/game/field/field_7.cpp	560	fmt_place	word	live	static_cast<unsigned>(TownWarp_Visited)	%08X	bof3::Log("DIV-0225 TownWarp: the menu opens in area %u (visited 0x%08X)", static_cast<unsigned>(Game_AreaNumber),
-site	src/game/field/field_7.cpp	683	widen	img_place	live	::bof3::Img(bof3::addr::MessagePools)	unsigned char*	unsigned char* TextArena() { return reinterpret_cast<unsigned char*>(::bof3::Img(bof3::addr::MessagePools)); }
-site	src/game/field/field_7.cpp	1164	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAtFieldE2(::bof3::Img(WorldMap_FieldHooks_addr), index, " ")))();
-site	src/game/field/field_7.cpp	1164	widen	other	live	CodeAtFieldE2(::bof3::Img(WorldMap_FieldHooks_addr), index, " ")	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAtFieldE2(::bof3::Img(WorldMap_FieldHooks_addr), index, " ")))();
-site	src/game/field/field_7.cpp	1269	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(unsigned char*, unsigned char*)>(static_cast<std::uintptr_t>(entry))(object, move_script::At(::bof3::Img(Cond_Flags_addr) + 0xa
-site	src/game/field/field_7.cpp	1340	uintptr	-	live	std::uintptr_t	-	const auto handler = reinterpret_cast<area_harness::Hook>(static_cast<std::uintptr_t>(
-site	src/game/field/field_7.cpp	1340	widen	word_read	live	static_cast<std::uint32_t>(move_script::Long(area_harness::Mem(::bof3::Img(Area_CellHooks_addr) + at::kPairStride * i + 	area_harness::Hook	const auto handler = reinterpret_cast<area_harness::Hook>(static_cast<std::uintptr_t>(
-site	src/game/field/field_7.cpp	1378	low32	object_ours	live	&field_e2::g_name_nul	Low32	bof3::PatchBytes(" ", Low32(&field_e2::g_name_nul), &was, &is, 1);
+site	src/game/field/field_7.cpp	159	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(field_modes::Long(field_modes::At(table + 4u * static_cast<std::uint32_t>
+site	src/game/field/field_7.cpp	159	widen	word_read	live	static_cast<std::uint32_t>(field_modes::Long(field_modes::At(table + 4u * static_cast<std::uint32_t>(index))))	VoidFn [fn]	return reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(field_modes::Long(field_modes::At(table + 4u * static_cast<std::uint32_t>
+site	src/game/field/field_7.cpp	179	low32	image	live	Cond_Flags	Low32	const std::uint32_t kCondFlags = Low32(Cond_Flags);
+site	src/game/field/field_7.cpp	248	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(unsigned char*)>(static_cast<std::uintptr_t>(entry))(object);
+site	src/game/field/field_7.cpp	263	uintptr	-	live	std::uintptr_t	-	int r = static_cast<signed char>(reinterpret_cast<Hook>(static_cast<std::uintptr_t>(record->step))(x, z));
+site	src/game/field/field_7.cpp	263	widen	param	live	record->step	Hook [fn]	int r = static_cast<signed char>(reinterpret_cast<Hook>(static_cast<std::uintptr_t>(record->step))(x, z));
+site	src/game/field/field_7.cpp	274	uintptr	-	live	std::uintptr_t	-	int r = static_cast<signed char>(reinterpret_cast<Hook>(static_cast<std::uintptr_t>(record->arrive))(x, z));
+site	src/game/field/field_7.cpp	274	widen	param	live	record->arrive	Hook [fn]	int r = static_cast<signed char>(reinterpret_cast<Hook>(static_cast<std::uintptr_t>(record->arrive))(x, z));
+site	src/game/field/field_7.cpp	292	uintptr	-	live	std::uintptr_t	-	const unsigned char answer = reinterpret_cast<unsigned char (__cdecl*)(unsigned, unsigned)>(static_cast<std::uintptr_t>(entry))(x, z);
+site	src/game/field/field_7.cpp	548	low32	image_local	live	out	Low32	Msgbox_Base = Low32(out);
+site	src/game/field/field_7.cpp	549	low32	image_local	live	out	Low32	MenuWindows_ListText = Low32(out);
+site	src/game/field/field_7.cpp	565	fmt_place	word	live	static_cast<unsigned>(TownWarp_Visited)	%08X	bof3::Log("DIV-0225 TownWarp: the menu opens in area %u (visited 0x%08X)", static_cast<unsigned>(Game_AreaNumber),
+site	src/game/field/field_7.cpp	688	widen	img_place	live	::bof3::Img(bof3::addr::MessagePools)	unsigned char*	unsigned char* TextArena() { return reinterpret_cast<unsigned char*>(::bof3::Img(bof3::addr::MessagePools)); }
+site	src/game/field/field_7.cpp	1308	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAtFieldE2(::bof3::Img(WorldMap_FieldHooks_addr), index, " ")))();
+site	src/game/field/field_7.cpp	1308	widen	other	live	CodeAtFieldE2(::bof3::Img(WorldMap_FieldHooks_addr), index, " ")	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAtFieldE2(::bof3::Img(WorldMap_FieldHooks_addr), index, " ")))();
+site	src/game/field/field_7.cpp	1413	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(unsigned char*, unsigned char*)>(static_cast<std::uintptr_t>(entry))(object, move_script::At(::bof3::Img(Cond_Flags_addr) + 0xa
+site	src/game/field/field_7.cpp	1484	uintptr	-	live	std::uintptr_t	-	const auto handler = reinterpret_cast<area_harness::Hook>(static_cast<std::uintptr_t>(
+site	src/game/field/field_7.cpp	1484	widen	word_read	live	static_cast<std::uint32_t>(move_script::Long(area_harness::Mem(::bof3::Img(Area_CellHooks_addr) + at::kPairStride * i + 	area_harness::Hook	const auto handler = reinterpret_cast<area_harness::Hook>(static_cast<std::uintptr_t>(
+site	src/game/field/field_7.cpp	1524	low32	object_ours	live	&field_e2::g_name_nul	Low32	bof3::PatchBytes(" ", Low32(&field_e2::g_name_nul), &was, &is, 1);
 site	src/game/field/field_ability.cpp	178	uintptr	-	live	std::uintptr_t	-	const auto handler = reinterpret_cast<Effect>(static_cast<std::uintptr_t>(static_cast<U>(Long(move_script::At(::bof3::Img(FieldAbility_Effects_addr) + 4 * index
 site	src/game/field/field_ability.cpp	178	widen	word_read	live	static_cast<U>(Long(move_script::At(::bof3::Img(FieldAbility_Effects_addr) + 4 * index)))	Effect [fn]	const auto handler = reinterpret_cast<Effect>(static_cast<std::uintptr_t>(static_cast<U>(Long(move_script::At(::bof3::Img(FieldAbility_Effects_addr) + 4 * index
 site	src/game/field/field_ability.cpp	205	low32	object_ours	live	&rest_2d::g_field_heal_party	Low32	bof3::PatchBytes(" ", Low32(&rest_2d::g_field_heal_party), &was, &is, 1);
@@ -4420,54 +4423,55 @@ site	src/game/field/leader_panel.cpp	75	narrow_call	image_local	live	table	Key	w
 site	src/game/field/leader_panel.cpp	76	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[step]))();
 site	src/game/field/leader_panel.cpp	76	widen	param	live	table[step]	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[step]))();
 site	src/game/field/leader_panel.cpp	86	narrow_call	image_local	live	rv::Bytes(Sprite_Objects)	Key	who, n, at::kSpriteCount, (unsigned)(Key(rv::Bytes(Sprite_Objects)) + n * effect_1e::at::kSpriteStride));
-site	src/game/field/leader_panel.cpp	204	uintptr	-	live	std::uintptr_t	-	unsigned char* AtEffect1f(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
-site	src/game/field/leader_panel.cpp	204	widen	param	live	a	unsigned char*	unsigned char* AtEffect1f(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
-site	src/game/field/leader_panel.cpp	239	narrow_call	image_local	live	table	Key	who, by, index, entries, Key(table));
-site	src/game/field/leader_panel.cpp	240	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
-site	src/game/field/leader_panel.cpp	240	widen	param	live	table[index]	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
-site	src/game/field/leader_panel.cpp	274	low32	helper_def	live	p	Low32	std::uint32_t KeyFieldE1(const void* p) { return Low32(p); }
-site	src/game/field/leader_panel.cpp	319	low32	image_local	live	table	Low32	who, by, index, count, static_cast<unsigned>(::bof3::VaOf(Low32(table))));
-site	src/game/field/leader_panel.cpp	320	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
-site	src/game/field/leader_panel.cpp	320	widen	param	live	table[index]	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
-site	src/game/field/leader_panel.cpp	433	low32	helper_def	live	p	Low32	U AddrOf(const void* p) { return Low32(p); }
-site	src/game/field/leader_panel.cpp	462	narrow_call	image_local	live	table	Key	who, byte, index, entries, (unsigned)Key(table));
-site	src/game/field/leader_panel.cpp	463	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
-site	src/game/field/leader_panel.cpp	463	widen	param	live	table[index]	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
-site	src/game/field/leader_panel.cpp	846	narrow_call	image_local	live	s + 0xC	Key	SetL(Key(s + 0xC), held & 0xA000u);
-site	src/game/field/leader_panel.cpp	848	narrow_call	image_local	live	t + 0xC	Key	SetL(::bof3::Img(at::kEff0StepX.v), static_cast<U>(L(Key(t + 0xC))) != 0x8000u ? 0x800u : 0xFFFFF800u);
-site	src/game/field/leader_panel.cpp	853	narrow_call	image_local	live	s + 0xC	Key	if ((Input_Held & static_cast<U>(L(Key(s + 0xC)))) == 0 || x <= 0x60000 || x >= 0x150000) {
-site	src/game/field/leader_panel.cpp	1920	narrow_call	object_ours	live	&kEff6Shown	AddrOf	const auto page = static_cast<short>(WRest1g(AddrOf(&kEff6Shown)) - 1);
-site	src/game/field/leader_panel.cpp	1956	narrow_call	object_ours	live	&kEff6Page	AddrOf	const auto page = static_cast<short>(WRest1g(AddrOf(&kEff6Page)) - 1);
-site	src/game/field/leader_panel.cpp	1957	narrow_call	object_ours	live	&kEff6Page	AddrOf	SetW(AddrOf(&kEff6Page), static_cast<U>(page));
-site	src/game/field/leader_panel.cpp	2246	narrow_call	image_local	live	rv::Bytes(Sprite_Objects)	Key	spot, kSpriteCount, index, (unsigned)(Key(rv::Bytes(Sprite_Objects)) + index * kSpriteStride));
-site	src/game/field/leader_panel.cpp	3069	narrow_call	image_local	live	s + 0x3C	Key	const U held = LongEffect1f(Key(s + 0x3C));
-site	src/game/field/leader_panel.cpp	3070	narrow_call	image_local	live	s + 0x3C	Key	SetLongEffect1f(Key(s + 0x3C), 0);
-site	src/game/field/leader_panel.cpp	3073	narrow_call	image_local	live	after + 0x3C	Key	SetLongEffect1f(Key(after + 0x3C), held);
-site	src/game/field/leader_panel.cpp	3075	narrow_call	image_local	live	s + 0x60	Key	const SEffect1f far = static_cast<SEffect1f>(LongEffect1f(Key(s + 0x60)));
-site	src/game/field/leader_panel.cpp	3077	narrow_call	image_local	live	r + 0x60	Key	const U d = LongEffect1f(Key(r + 0x60));
-site	src/game/field/leader_panel.cpp	3079	narrow_call	image_local	live	r + 0x3E	Key	const U lift = static_cast<U>(static_cast<SEffect1f>(static_cast<short>(WordEffect1f(Key(r + 0x3E))))) << 1;
-site	src/game/field/leader_panel.cpp	3089	narrow_call	image_local	live	s + 0x40	Key	SetLongEffect1f(Key(s + 0x40), scale(divisor(s, true)));
-site	src/game/field/leader_panel.cpp	3092	narrow_call	image_local	live	c + 0x44	Key	SetLongEffect1f(Key(c + 0x44), q);
-site	src/game/field/leader_panel.cpp	3096	narrow_call	image_local	live	s + 0x40	Key	SetLongEffect1f(Key(s + 0x40), scale(far));
-site	src/game/field/leader_panel.cpp	3099	narrow_call	image_local	live	c + 0x44	Key	SetLongEffect1f(Key(c + 0x44), q);
-site	src/game/field/leader_panel.cpp	3102	narrow_call	image_local	live	s + 0x40	Key	SetLongEffect1f(Key(s + 0x40), 0);
-site	src/game/field/leader_panel.cpp	3103	narrow_call	image	live	Sprite_Current + 0x44	Key	SetLongEffect1f(Key(Sprite_Current + 0x44), 0);
-site	src/game/field/leader_panel.cpp	3104	narrow_call	image_local	live	after	Key	return Key(after);
-site	src/game/field/leader_panel.cpp	3112	narrow_call	image_local	live	rv::Bytes(Sprite_Objects)	Key	const U kEnd = Key(rv::Bytes(Sprite_Objects)) + 30 * kStride;
-site	src/game/field/leader_panel.cpp	3113	narrow_call	image_local	live	rv::Bytes(Sprite_Objects)	Key	for (U record = Key(rv::Bytes(Sprite_Objects)); record < kEnd; record += kStride) {
-site	src/game/field/leader_panel.cpp	3124	narrow_call	image_local	live	rv::Bytes(Effect_Objects)	Key	unsigned char* const r = AtEffect1f(Key(rv::Bytes(Effect_Objects)) + record * 0x80);
-site	src/game/field/leader_panel.cpp	3192	narrow_call	image	live	UiSprite_Modes	Key	const U record = Key(UiSprite_Modes) + 16u * (index & 0xFF);
-site	src/game/field/leader_panel.cpp	3218	narrow_call	image	live	UiSprite_Sheet	Key	const U record = Key(UiSprite_Sheet) + 16u * (sprite & 0xFF);
-site	src/game/field/leader_panel.cpp	3220	narrow_call	pool	live	prim + 0x16	Key	SetWord(Key(prim + 0x16), clut);
-site	src/game/field/leader_panel.cpp	3221	narrow_call	pool	live	prim + 0x18	Key	SetWord(Key(prim + 0x18), WordEffect1f(record + 8));
-site	src/game/field/leader_panel.cpp	3222	narrow_call	pool	live	prim + 0x1A	Key	SetWord(Key(prim + 0x1A), WordEffect1f(record + 0xA));
-site	src/game/field/leader_panel.cpp	3274	narrow_call	image_local	live	name	KeyFieldE1	TextFieldE1(0x70, 0x45 - r * 20, 0, 0xF, KeyFieldE1(name));
-site	src/game/field/leader_panel.cpp	3280	narrow_call	image_local	live	name	KeyFieldE1	TextFieldE1(0x27 - r * 25, 0x73, 0, 3, KeyFieldE1(name));
-site	src/game/field/leader_panel.cpp	3283	narrow_call	image_local	live	name	KeyFieldE1	TextFieldE1(r * 25 + 0xE7, 0x73, 0, 3, KeyFieldE1(name));
-site	src/game/field/leader_panel.cpp	3324	narrow_call	image_local	live	text	KeyFieldE1	TextFieldE1(x + 0x3D, y + 9, 0, 5, KeyFieldE1(text));
-site	src/game/field/leader_panel.cpp	3527	low32	object_ours	live	&g_shop_ask_row	Low32	bof3::PatchBytes(" ", Low32(&g_shop_ask_row), &was,
-site	src/game/field/leader_panel.cpp	3534	low32	object_ours	live	&g_fish_panel_duck	Low32	bof3::PatchBytes(" ", Low32(&g_fish_panel_duck),
-site	src/game/field/leader_panel.cpp	3541	low32	object_ours	live	&g_fish_count_word	Low32	bof3::PatchBytes(" ", Low32(&g_fish_count_word), &was, &is, 1);
+site	src/game/field/leader_panel.cpp	214	uintptr	-	live	std::uintptr_t	-	unsigned char* AtEffect1f(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
+site	src/game/field/leader_panel.cpp	214	widen	param	live	a	unsigned char*	unsigned char* AtEffect1f(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
+site	src/game/field/leader_panel.cpp	249	narrow_call	image_local	live	table	Key	who, by, index, entries, Key(table));
+site	src/game/field/leader_panel.cpp	250	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
+site	src/game/field/leader_panel.cpp	250	widen	param	live	table[index]	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
+site	src/game/field/leader_panel.cpp	284	low32	helper_def	live	p	Low32	std::uint32_t KeyFieldE1(const void* p) { return Low32(p); }
+site	src/game/field/leader_panel.cpp	329	low32	image_local	live	table	Low32	who, by, index, count, static_cast<unsigned>(::bof3::VaOf(Low32(table))));
+site	src/game/field/leader_panel.cpp	330	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
+site	src/game/field/leader_panel.cpp	330	widen	param	live	table[index]	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
+site	src/game/field/leader_panel.cpp	443	low32	helper_def	live	p	Low32	U AddrOf(const void* p) { return Low32(p); }
+site	src/game/field/leader_panel.cpp	472	narrow_call	image_local	live	table	Key	who, byte, index, entries, (unsigned)Key(table));
+site	src/game/field/leader_panel.cpp	473	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
+site	src/game/field/leader_panel.cpp	473	widen	param	live	table[index]	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
+site	src/game/field/leader_panel.cpp	862	narrow_call	image_local	live	s + 0xC	Key	SetL(Key(s + 0xC), held & 0xA000u);
+site	src/game/field/leader_panel.cpp	864	narrow_call	image_local	live	t + 0xC	Key	SetL(::bof3::Img(at::kEff0StepX.v), static_cast<U>(L(Key(t + 0xC))) != 0x8000u ? 0x800u : 0xFFFFF800u);
+site	src/game/field/leader_panel.cpp	869	narrow_call	image_local	live	s + 0xC	Key	if ((Input_Held & static_cast<U>(L(Key(s + 0xC)))) == 0 || x <= 0x60000 || x >= 0x150000) {
+site	src/game/field/leader_panel.cpp	1936	narrow_call	object_ours	live	&kEff6Shown	AddrOf	const auto page = static_cast<short>(WRest1g(AddrOf(&kEff6Shown)) - 1);
+site	src/game/field/leader_panel.cpp	1972	narrow_call	object_ours	live	&kEff6Page	AddrOf	const auto page = static_cast<short>(WRest1g(AddrOf(&kEff6Page)) - 1);
+site	src/game/field/leader_panel.cpp	1973	narrow_call	object_ours	live	&kEff6Page	AddrOf	SetW(AddrOf(&kEff6Page), static_cast<U>(page));
+site	src/game/field/leader_panel.cpp	2262	narrow_call	image_local	live	rv::Bytes(Sprite_Objects)	Key	spot, kSpriteCount, index, (unsigned)(Key(rv::Bytes(Sprite_Objects)) + index * kSpriteStride));
+site	src/game/field/leader_panel.cpp	3085	narrow_call	image_local	live	s + 0x3C	Key	const U held = LongEffect1f(Key(s + 0x3C));
+site	src/game/field/leader_panel.cpp	3086	narrow_call	image_local	live	s + 0x3C	Key	SetLongEffect1f(Key(s + 0x3C), 0);
+site	src/game/field/leader_panel.cpp	3089	narrow_call	image_local	live	after + 0x3C	Key	SetLongEffect1f(Key(after + 0x3C), held);
+site	src/game/field/leader_panel.cpp	3091	narrow_call	image_local	live	s + 0x60	Key	const SEffect1f far = static_cast<SEffect1f>(LongEffect1f(Key(s + 0x60)));
+site	src/game/field/leader_panel.cpp	3093	narrow_call	image_local	live	r + 0x60	Key	const U d = LongEffect1f(Key(r + 0x60));
+site	src/game/field/leader_panel.cpp	3095	narrow_call	image_local	live	r + 0x3E	Key	const U lift = static_cast<U>(static_cast<SEffect1f>(static_cast<short>(WordEffect1f(Key(r + 0x3E))))) << 1;
+site	src/game/field/leader_panel.cpp	3105	narrow_call	image_local	live	s + 0x40	Key	SetLongEffect1f(Key(s + 0x40), scale(divisor(s, true)));
+site	src/game/field/leader_panel.cpp	3108	narrow_call	image_local	live	c + 0x44	Key	SetLongEffect1f(Key(c + 0x44), q);
+site	src/game/field/leader_panel.cpp	3112	narrow_call	image_local	live	s + 0x40	Key	SetLongEffect1f(Key(s + 0x40), scale(far));
+site	src/game/field/leader_panel.cpp	3115	narrow_call	image_local	live	c + 0x44	Key	SetLongEffect1f(Key(c + 0x44), q);
+site	src/game/field/leader_panel.cpp	3118	narrow_call	image_local	live	s + 0x40	Key	SetLongEffect1f(Key(s + 0x40), 0);
+site	src/game/field/leader_panel.cpp	3119	narrow_call	image	live	Sprite_Current + 0x44	Key	SetLongEffect1f(Key(Sprite_Current + 0x44), 0);
+site	src/game/field/leader_panel.cpp	3120	narrow_call	image_local	live	after	Key	return Key(after);
+site	src/game/field/leader_panel.cpp	3128	narrow_call	image_local	live	rv::Bytes(Sprite_Objects)	Key	const U kEnd = Key(rv::Bytes(Sprite_Objects)) + 30 * kStride;
+site	src/game/field/leader_panel.cpp	3129	narrow_call	image_local	live	rv::Bytes(Sprite_Objects)	Key	for (U record = Key(rv::Bytes(Sprite_Objects)); record < kEnd; record += kStride) {
+site	src/game/field/leader_panel.cpp	3140	narrow_call	image_local	live	rv::Bytes(Effect_Objects)	Key	unsigned char* const r = AtEffect1f(Key(rv::Bytes(Effect_Objects)) + record * 0x80);
+site	src/game/field/leader_panel.cpp	3208	narrow_call	image	live	UiSprite_Modes	Key	const U record = Key(UiSprite_Modes) + 16u * (index & 0xFF);
+site	src/game/field/leader_panel.cpp	3234	narrow_call	image	live	UiSprite_Sheet	Key	const U record = Key(UiSprite_Sheet) + 16u * (sprite & 0xFF);
+site	src/game/field/leader_panel.cpp	3236	narrow_call	pool	live	prim + 0x16	Key	SetWord(Key(prim + 0x16), clut);
+site	src/game/field/leader_panel.cpp	3237	narrow_call	pool	live	prim + 0x18	Key	SetWord(Key(prim + 0x18), WordEffect1f(record + 8));
+site	src/game/field/leader_panel.cpp	3238	narrow_call	pool	live	prim + 0x1A	Key	SetWord(Key(prim + 0x1A), WordEffect1f(record + 0xA));
+site	src/game/field/leader_panel.cpp	3290	narrow_call	image_local	live	name	KeyFieldE1	TextFieldE1(0x70, 0x45 - r * 20, 0, 0xF, KeyFieldE1(name));
+site	src/game/field/leader_panel.cpp	3296	narrow_call	image_local	live	name	KeyFieldE1	TextFieldE1(0x27 - r * 25, 0x73, 0, 3, KeyFieldE1(name));
+site	src/game/field/leader_panel.cpp	3299	narrow_call	image_local	live	name	KeyFieldE1	TextFieldE1(r * 25 + 0xE7, 0x73, 0, 3, KeyFieldE1(name));
+site	src/game/field/leader_panel.cpp	3340	narrow_call	image_local	live	text	KeyFieldE1	TextFieldE1(x + 0x3D, y + 9, 0, 5, KeyFieldE1(text));
+site	src/game/field/leader_panel.cpp	3543	low32	object_ours	live	&g_shop_ask_row	Low32	bof3::PatchBytes(" ", Low32(&g_shop_ask_row), &was,
+site	src/game/field/leader_panel.cpp	3550	low32	object_ours	live	&g_fish_panel_duck	Low32	bof3::PatchBytes(" ", Low32(&g_fish_panel_duck),
+site	src/game/field/leader_panel.cpp	3557	low32	object_ours	live	&g_fish_leave_hold	Low32	bof3::PatchBytes(" ", Low32(&g_fish_leave_hold), &was, &is, 1);
+site	src/game/field/leader_panel.cpp	3563	low32	object_ours	live	&g_fish_count_word	Low32	bof3::PatchBytes(" ", Low32(&g_fish_count_word), &was, &is, 1);
 site	src/game/field/map_cells.cpp	27	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<T>(static_cast<std::uintptr_t>(w));
 site	src/game/field/map_cells.cpp	27	widen	param	live	w	T	return reinterpret_cast<T>(static_cast<std::uintptr_t>(w));
 site	src/game/field/map_cells.cpp	64	asm	cw	live	fnstcw %0	fnstcw	__asm__("fnstcw %0" : "=m"(cw));
@@ -6860,27 +6864,27 @@ site	src/game/platform/gte.cpp	617	fmt_place	word	live	Gte_Transformed[0]	%08X	"
 site	src/game/platform/gte.cpp	617	fmt_place	word	live	Gte_Transformed[1]	%08X	"original %08X %08X %08X", Gte_Transformed[0], Gte_Transformed[1], Gte_Transformed[2],
 site	src/game/platform/gte.cpp	617	fmt_place	word	live	Gte_Transformed[2]	%08X	"original %08X %08X %08X", Gte_Transformed[0], Gte_Transformed[1], Gte_Transformed[2],
 site	src/game/platform/gte.cpp	910	low32	object_ours	live	&psx_gte::g_lv_exact	Low32	Low32(&psx_gte::g_lv_exact), was, is, 4);
-site	src/game/platform/magic_080.cpp	122	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	122	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	124	uintptr	-	live	std::uintptr_t	-	std::uint32_t* Longs(U address) { return reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	124	widen	param	live	address	std::uint32_t*	std::uint32_t* Longs(U address) { return reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	126	low32	helper_def	live	p	Low32	U Addr(const volatile void* p) { return Low32(p); }
-site	src/game/platform/magic_080.cpp	165	uintptr	-	live	std::uintptr_t	-	const char* StrWinMain(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	165	widen	param	live	address	const char*	const char* StrWinMain(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	312	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(void*)>(static_cast<std::uintptr_t>(::bof3::Code(kSoundSetup.v))), Port_DroppedCall,
-site	src/game/platform/magic_080.cpp	737	long	l	live	long	-	long long draw_ticks = 0, logic_ticks = 0;
-site	src/game/platform/magic_080.cpp	755	uintptr	-	live	std::uintptr_t	-	Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
-site	src/game/platform/magic_080.cpp	755	widen	code_place	live	::bof3::Code(bof3::addr::Boot_Task)	void*	Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
-site	src/game/platform/magic_080.cpp	907	uintptr	-	live	std::uintptr_t	-	unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride));
-site	src/game/platform/magic_080.cpp	907	widen	img_place	live	::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride	unsigned char*	unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride));
-site	src/game/platform/magic_080.cpp	966	naked	-	live	Cfg_Load	-	extern " " __attribute__((naked)) void __cdecl Cfg_Load(void) {
-site	src/game/platform/magic_080.cpp	967	width_if	asm_pair	live	Cfg_Load	#if defined(__i386__)	#if defined(__i386__)
-site	src/game/platform/magic_080.cpp	968	asm	stack	live	subl $0x3C, %esp	call leal pushl subl	asm("subl $0x3C, %esp\n\t"
-site	src/game/platform/magic_080.cpp	980	asm	stack	live	subq $0x68, %rsp	call leaq subq	asm("subq $0x68, %rsp\n\t"
-site	src/game/platform/magic_080.cpp	1043	low32	image_local	live	pool	Low32	render::interp::ForgetPrims(Low32(pool), Low32(pool) + 0x10000u);
-site	src/game/platform/magic_080.cpp	1043	low32	image_local	live	pool	Low32	render::interp::ForgetPrims(Low32(pool), Low32(pool) + 0x10000u);
-site	src/game/platform/magic_080.cpp	1055	low32	image_local	live	node	Low32	node[1] = Low32(node);
-site	src/game/platform/magic_080.cpp	1072	narrow_call	image	live	Gfx_CurrentEnv	Addr	const U block = Addr(Gfx_CurrentEnv);
+site	src/game/platform/magic_080.cpp	123	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	123	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	125	uintptr	-	live	std::uintptr_t	-	std::uint32_t* Longs(U address) { return reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	125	widen	param	live	address	std::uint32_t*	std::uint32_t* Longs(U address) { return reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	127	low32	helper_def	live	p	Low32	U Addr(const volatile void* p) { return Low32(p); }
+site	src/game/platform/magic_080.cpp	166	uintptr	-	live	std::uintptr_t	-	const char* StrWinMain(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	166	widen	param	live	address	const char*	const char* StrWinMain(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	313	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(void*)>(static_cast<std::uintptr_t>(::bof3::Code(kSoundSetup.v))), Port_DroppedCall,
+site	src/game/platform/magic_080.cpp	738	long	l	live	long	-	long long draw_ticks = 0, logic_ticks = 0;
+site	src/game/platform/magic_080.cpp	756	uintptr	-	live	std::uintptr_t	-	Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
+site	src/game/platform/magic_080.cpp	756	widen	code_place	live	::bof3::Code(bof3::addr::Boot_Task)	void*	Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
+site	src/game/platform/magic_080.cpp	908	uintptr	-	live	std::uintptr_t	-	unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride));
+site	src/game/platform/magic_080.cpp	908	widen	img_place	live	::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride	unsigned char*	unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride));
+site	src/game/platform/magic_080.cpp	968	naked	-	live	Cfg_Load	-	extern " " __attribute__((naked)) void __cdecl Cfg_Load(void) {
+site	src/game/platform/magic_080.cpp	969	width_if	asm_pair	live	Cfg_Load	#if defined(__i386__)	#if defined(__i386__)
+site	src/game/platform/magic_080.cpp	970	asm	stack	live	subl $0x3C, %esp	call leal pushl subl	asm("subl $0x3C, %esp\n\t"
+site	src/game/platform/magic_080.cpp	982	asm	stack	live	subq $0x68, %rsp	call leaq subq	asm("subq $0x68, %rsp\n\t"
+site	src/game/platform/magic_080.cpp	1045	low32	image_local	live	pool	Low32	render::interp::ForgetPrims(Low32(pool), Low32(pool) + 0x10000u);
+site	src/game/platform/magic_080.cpp	1045	low32	image_local	live	pool	Low32	render::interp::ForgetPrims(Low32(pool), Low32(pool) + 0x10000u);
+site	src/game/platform/magic_080.cpp	1057	low32	image_local	live	node	Low32	node[1] = Low32(node);
+site	src/game/platform/magic_080.cpp	1074	narrow_call	image	live	Gfx_CurrentEnv	Addr	const U block = Addr(Gfx_CurrentEnv);
 site	src/game/platform/music.cpp	80	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/platform/music.cpp	80	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/platform/music.cpp	110	uintptr	-	live	std::uintptr_t	-	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
@@ -6888,37 +6892,37 @@ site	src/game/platform/music.cpp	110	widen	param	live	address	unsigned char*	uns
 site	src/game/platform/music.cpp	122	low32	helper_def	live	p	Low32	std::uint32_t Address(const volatile void* p) { return Low32(p); }
 site	src/game/platform/music.cpp	335	uintptr	-	live	std::uintptr_t	-	void* second = reinterpret_cast<void*>(static_cast<std::uintptr_t>(offset));
 site	src/game/platform/music.cpp	335	widen	param	live	offset	void*	void* second = reinterpret_cast<void*>(static_cast<std::uintptr_t>(offset));
-site	src/game/platform/music.cpp	397	asm	x87	live	fildl %[level]	fildl fistpll fldcw fmuls fnstcw fsubs movw orb	__asm__ volatile(
-site	src/game/platform/music.cpp	410	uintptr	-	live	std::uintptr_t	-	: [level] " "(level), [inverse] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(sound::kInverse127At))),
-site	src/game/platform/music.cpp	410	widen	param	live	sound::kInverse127At	const float*	: [level] " "(level), [inverse] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(sound::kInverse127At))),
-site	src/game/platform/music.cpp	411	uintptr	-	live	std::uintptr_t	-	[scale] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(sound::k10000At)))
-site	src/game/platform/music.cpp	411	widen	param	live	sound::k10000At	const float*	[scale] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(sound::k10000At)))
-site	src/game/platform/music.cpp	433	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_Start(%p, %u, %d) track %u from %p", Frame_Counter, file, size, loops, (unsigned)Music_Track, __builtin_return_address(0));
-site	src/game/platform/music.cpp	433	fmt_place	pointer	live	Frame_Counter	%p	MUSIC_LOG("Music_Start(%p, %u, %d) track %u from %p", Frame_Counter, file, size, loops, (unsigned)Music_Track, __builtin_return_address(0));
-site	src/game/platform/music.cpp	495	widen	img_place	live	::bof3::Img(kMemoryName.v)	const char*	sound::g.sprintf(name, reinterpret_cast<const char*>(::bof3::Img(kMemoryName.v)), size, file);
-site	src/game/platform/music.cpp	603	asm	x87	live	flds %[volume]	fistpll fldcw flds fmuls fnstcw fsubs movw orb	__asm__ volatile(
-site	src/game/platform/music.cpp	616	uintptr	-	live	std::uintptr_t	-	: [volume] " "(volume), [inverse] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(kInverse127At))),
-site	src/game/platform/music.cpp	616	widen	param	live	kInverse127At	const float*	: [volume] " "(volume), [inverse] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(kInverse127At))),
-site	src/game/platform/music.cpp	617	uintptr	-	live	std::uintptr_t	-	[scale] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k10000At)))
-site	src/game/platform/music.cpp	617	widen	param	live	k10000At	const float*	[scale] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k10000At)))
-site	src/game/platform/music.cpp	627	naked	-	live	Music_Halt	-	extern " " __attribute__((naked)) int __cdecl Music_Halt(void) {
-site	src/game/platform/music.cpp	628	width_if	asm_pair	live	Music_Halt	#if defined(__i386__)	#if defined(__i386__)
-site	src/game/platform/music.cpp	629	asm	stack	live	push %ecx	call push	__asm__ volatile(
-site	src/game/platform/music.cpp	635	asm	stack	live	jmp	jmp	__asm__ volatile("jmp " BOF3_SYM(SoundRest_HaltBody)); // the caller's ecx is the body's first argument already
-site	src/game/platform/music.cpp	647	naked	-	live	Music_IsPlaying	-	extern " " __attribute__((naked)) int __cdecl Music_IsPlaying(void) {
-site	src/game/platform/music.cpp	648	width_if	asm_pair	live	Music_IsPlaying	#if defined(__i386__)	#if defined(__i386__)
-site	src/game/platform/music.cpp	649	asm	stack	live	push %ecx	call push	__asm__ volatile(
-site	src/game/platform/music.cpp	655	asm	stack	live	jmp	jmp	__asm__ volatile("jmp " BOF3_SYM(SaveMenu_MusicPlayingBody)); // the caller's ecx is the body's first argument already
-site	src/game/platform/music.cpp	666	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_Stop track %u from %p", Frame_Counter, (unsigned)Music_Track, __builtin_return_address(0));
-site	src/game/platform/music.cpp	735	fmt_place	narrowed	live	__builtin_return_address(0)	%p	bof3::Log("music_log f%u SndStream_Play(%p) from %p", Frame_Counter, static_cast<const void*>(wave),
-site	src/game/platform/music.cpp	735	fmt_place	pointer	live	static_cast<const void*>(wave)	%p	bof3::Log("music_log f%u SndStream_Play(%p) from %p", Frame_Counter, static_cast<const void*>(wave),
-site	src/game/platform/music.cpp	770	naked	-	live	SndStream_IsPlaying	-	extern " " __attribute__((naked)) int __cdecl SndStream_IsPlaying(void) {
-site	src/game/platform/music.cpp	771	width_if	asm_pair	live	SndStream_IsPlaying	#if defined(__i386__)	#if defined(__i386__)
-site	src/game/platform/music.cpp	772	asm	stack	live	push %ecx	call push	__asm__ volatile(
-site	src/game/platform/music.cpp	778	asm	stack	live	jmp	jmp	__asm__ volatile("jmp " BOF3_SYM(SoundRest_StreamPlayingBody)); // the caller's ecx is the body's first argument already
-site	src/game/platform/music.cpp	794	width_if	logic	live	Music_Pump	#if defined(__i386__)	#if defined(__i386__)
-site	src/game/platform/music.cpp	795	handle_array	slot_i686	live	Music_Events	g.msg_wait	const unsigned signalled = sound::g.msg_wait(2, Music_Events, 0, 0, 0xFF);
-site	src/game/platform/music.cpp	802	handle_array	native	live	events	g.msg_wait	const unsigned signalled = sound::g.msg_wait(2, events, 0, 0, 0xFF);
+site	src/game/platform/music.cpp	406	asm	x87	live	fildl %[level]	fildl fistpll fldcw fmuls fnstcw fsubs movw orb	__asm__ volatile(
+site	src/game/platform/music.cpp	419	uintptr	-	live	std::uintptr_t	-	: [level] " "(level), [inverse] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(sound::kInverse127At))),
+site	src/game/platform/music.cpp	419	widen	param	live	sound::kInverse127At	const float*	: [level] " "(level), [inverse] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(sound::kInverse127At))),
+site	src/game/platform/music.cpp	420	uintptr	-	live	std::uintptr_t	-	[scale] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(sound::k10000At)))
+site	src/game/platform/music.cpp	420	widen	param	live	sound::k10000At	const float*	[scale] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(sound::k10000At)))
+site	src/game/platform/music.cpp	442	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_Start(%p, %u, %d) track %u from %p", Frame_Counter, file, size, loops, (unsigned)Music_Track, __builtin_return_address(0));
+site	src/game/platform/music.cpp	442	fmt_place	pointer	live	Frame_Counter	%p	MUSIC_LOG("Music_Start(%p, %u, %d) track %u from %p", Frame_Counter, file, size, loops, (unsigned)Music_Track, __builtin_return_address(0));
+site	src/game/platform/music.cpp	504	widen	img_place	live	::bof3::Img(kMemoryName.v)	const char*	sound::g.sprintf(name, reinterpret_cast<const char*>(::bof3::Img(kMemoryName.v)), size, file);
+site	src/game/platform/music.cpp	612	asm	x87	live	flds %[volume]	fistpll fldcw flds fmuls fnstcw fsubs movw orb	__asm__ volatile(
+site	src/game/platform/music.cpp	625	uintptr	-	live	std::uintptr_t	-	: [volume] " "(volume), [inverse] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(kInverse127At))),
+site	src/game/platform/music.cpp	625	widen	param	live	kInverse127At	const float*	: [volume] " "(volume), [inverse] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(kInverse127At))),
+site	src/game/platform/music.cpp	626	uintptr	-	live	std::uintptr_t	-	[scale] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k10000At)))
+site	src/game/platform/music.cpp	626	widen	param	live	k10000At	const float*	[scale] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k10000At)))
+site	src/game/platform/music.cpp	636	naked	-	live	Music_Halt	-	extern " " __attribute__((naked)) int __cdecl Music_Halt(void) {
+site	src/game/platform/music.cpp	637	width_if	asm_pair	live	Music_Halt	#if defined(__i386__)	#if defined(__i386__)
+site	src/game/platform/music.cpp	638	asm	stack	live	push %ecx	call push	__asm__ volatile(
+site	src/game/platform/music.cpp	644	asm	stack	live	jmp	jmp	__asm__ volatile("jmp " BOF3_SYM(SoundRest_HaltBody)); // the caller's ecx is the body's first argument already
+site	src/game/platform/music.cpp	656	naked	-	live	Music_IsPlaying	-	extern " " __attribute__((naked)) int __cdecl Music_IsPlaying(void) {
+site	src/game/platform/music.cpp	657	width_if	asm_pair	live	Music_IsPlaying	#if defined(__i386__)	#if defined(__i386__)
+site	src/game/platform/music.cpp	658	asm	stack	live	push %ecx	call push	__asm__ volatile(
+site	src/game/platform/music.cpp	664	asm	stack	live	jmp	jmp	__asm__ volatile("jmp " BOF3_SYM(SaveMenu_MusicPlayingBody)); // the caller's ecx is the body's first argument already
+site	src/game/platform/music.cpp	675	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_Stop track %u from %p", Frame_Counter, (unsigned)Music_Track, __builtin_return_address(0));
+site	src/game/platform/music.cpp	744	fmt_place	narrowed	live	__builtin_return_address(0)	%p	bof3::Log("music_log f%u SndStream_Play(%p) from %p", Frame_Counter, static_cast<const void*>(wave),
+site	src/game/platform/music.cpp	744	fmt_place	pointer	live	static_cast<const void*>(wave)	%p	bof3::Log("music_log f%u SndStream_Play(%p) from %p", Frame_Counter, static_cast<const void*>(wave),
+site	src/game/platform/music.cpp	779	naked	-	live	SndStream_IsPlaying	-	extern " " __attribute__((naked)) int __cdecl SndStream_IsPlaying(void) {
+site	src/game/platform/music.cpp	780	width_if	asm_pair	live	SndStream_IsPlaying	#if defined(__i386__)	#if defined(__i386__)
+site	src/game/platform/music.cpp	781	asm	stack	live	push %ecx	call push	__asm__ volatile(
+site	src/game/platform/music.cpp	787	asm	stack	live	jmp	jmp	__asm__ volatile("jmp " BOF3_SYM(SoundRest_StreamPlayingBody)); // the caller's ecx is the body's first argument already
+site	src/game/platform/music.cpp	803	width_if	logic	live	Music_Pump	#if defined(__i386__)	#if defined(__i386__)
+site	src/game/platform/music.cpp	804	handle_array	slot_i686	live	Music_Events	g.msg_wait	const unsigned signalled = sound::g.msg_wait(2, Music_Events, 0, 0, 0xFF);
+site	src/game/platform/music.cpp	811	handle_array	native	live	events	g.msg_wait	const unsigned signalled = sound::g.msg_wait(2, events, 0, 0, 0xFF);
 site	src/game/platform/music_seq.cpp	105	uintptr	-	live	std::uintptr_t	-	bool Mono() { return *reinterpret_cast<const volatile unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(Rest4f_Setting3_addr))) != 0; }
 site	src/game/platform/music_seq.cpp	105	widen	img_place	live	::bof3::Img(Rest4f_Setting3_addr)	const volatile unsigned char*	bool Mono() { return *reinterpret_cast<const volatile unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(Rest4f_Setting3_addr))) != 0; }
 site	src/game/platform/music_seq.cpp	145	long	l	live	long	-	const long long size = static_cast<long long>(h.tellg());
@@ -7129,36 +7133,36 @@ site	src/game/platform/sound_ours.cpp	824	narrow_call	object_ours	live	&sound::g
 site	src/game/platform/sound_ours.cpp	893	widen	img_place	live	::bof3::Img(kLoopingName.v)	const char*	g.sprintf(looping, reinterpret_cast<const char*>(::bof3::Img(kLoopingName.v)), track);
 site	src/game/platform/sound_ours.cpp	894	widen	img_place	live	::bof3::Img(kOnceName.v)	const char*	g.sprintf(once, reinterpret_cast<const char*>(::bof3::Img(kOnceName.v)), track);
 site	src/game/platform/sound_ours.cpp	922	narrow_call	image	live	Sound_Banks	Address	std::uint32_t BankRecord(unsigned b) { return Address(Sound_Banks) + b * kBankBytes; }
-site	src/game/platform/sound_ours.cpp	975	fmt_place	word	live	buffer	%08X	bof3::Log("quicksave SOUND: channel %u names buffer %08X, which no bank's entry holds: silent after a restore",
-site	src/game/platform/sound_ours.cpp	1121	narrow_call	image	live	Music_Events	Address	const std::uint32_t scratch_at = Address(Snd_BufferDesc), scratch_end = Address(Music_Events);
-site	src/game/platform/sound_ours.cpp	1121	narrow_call	image	live	Snd_BufferDesc	Address	const std::uint32_t scratch_at = Address(Snd_BufferDesc), scratch_end = Address(Music_Events);
-site	src/game/platform/sound_ours.cpp	1142	fmt_place	word	live	Bank(record)->data	%08X	bof3::Fatal("quicksave SOUND: bank %u's data word is %08X in the span, %08X in the record", b + 1,
-site	src/game/platform/sound_ours.cpp	1142	fmt_place	word	live	old	%08X	bof3::Fatal("quicksave SOUND: bank %u's data word is %08X in the span, %08X in the record", b + 1,
-site	src/game/platform/sound_ours.cpp	1149	narrow_call	image_local	live	block	Address	Bank(record)->data = Address(block);
-site	src/game/platform/sound_ours.cpp	1154	fmt_place	word	live	old	%08X	bof3::Fatal("quicksave SOUND: bank %u entry %u's sample %08X lies outside its data %08X+%u", b + 1, e,
-site	src/game/platform/sound_ours.cpp	1154	fmt_place	word	live	sample	%08X	bof3::Fatal("quicksave SOUND: bank %u entry %u's sample %08X lies outside its data %08X+%u", b + 1, e,
-site	src/game/platform/sound_ours.cpp	1156	narrow_call	image_local	live	block	Address	const std::uint32_t moved = Address(block) + (sample - old);
-site	src/game/platform/sound_ours.cpp	1158	narrow_call	object_ours	live	g_snap.from_wave(At(moved))	Address	SetDword(EntryAt(b, e) + 4, Address(g_snap.from_wave(At(moved))));
-site	src/game/platform/sound_ours.cpp	1191	narrow_call	image_local	live	block	Address	SaveMenu_StreamData = Address(block);
-site	src/game/platform/sound_ours.cpp	1207	fmt_place	pointer	live	Music_File.Native()	%p	bof3::Fatal("quicksave SOUND: track %d read again is not the take's (file %p, %d bytes looping %d, track %d; "
-site	src/game/platform/sound_ours.cpp	1236	narrow_call	image	live	&Music_Volume	Address	SetVolumeBits(Dword(Address(&Music_Volume)));
-site	src/game/platform/sound_ours.cpp	1298	narrow_call	object_ours	live	&sound::g_play_refuses_none	Address	bof3::PatchBytes(" ", Address(&sound::g_play_refuses_none), &was, &is, 1);
-site	src/game/platform/sound_ours.cpp	1343	ptr_overlay	image_local	live	p	FakeBuf	FakeBuf* Self(void* p) { return static_cast<FakeBuf*>(p); }
-site	src/game/platform/sound_ours.cpp	1612	ptr_overlay	image_local	live	static_cast<void*>(At(Dword(EntryAt(b, e) + 4)))	FakeBuf	FakeBuf* EntryBuffer(unsigned b, unsigned e) { return static_cast<FakeBuf*>(static_cast<void*>(At(Dword(EntryAt(b, e) + 4)))); }
-site	src/game/platform/sound_ours.cpp	1619	ptr_overlay	image_local	live	FakeCreate(wave)	FakeBuf	FakeBuf* const f = static_cast<FakeBuf*>(FakeCreate(wave));
-site	src/game/platform/sound_ours.cpp	1633	narrow_call	image_local	live	loop_a	Address	Sound_Channels[5] = Address(loop_a);
-site	src/game/platform/sound_ours.cpp	1634	narrow_call	image_local	live	loop_b	Address	Sound_Channels[9] = Address(loop_b);
-site	src/game/platform/sound_ours.cpp	1635	narrow_call	image_local	live	quiet	Address	Sound_Channels[7] = Address(quiet);
-site	src/game/platform/sound_ours.cpp	1644	narrow_call	crt	live	stream	Address	SaveMenu_StreamData = Address(stream);
-site	src/game/platform/sound_ours.cpp	1646	ptr_overlay	crt	live	FakeCreate(static_cast<const unsigned char*>(stream))	FakeBuf	FakeBuf* const voice_buffer = static_cast<FakeBuf*>(FakeCreate(static_cast<const unsigned char*>(stream)));
-site	src/game/platform/sound_ours.cpp	1698	narrow_call	image_local	live	a	Address	bool channels = Sound_Channels[5] == Address(a) && Sound_Channels[9] == Address(b) && Sound_Channels[7] == Address(q);
-site	src/game/platform/sound_ours.cpp	1698	narrow_call	image_local	live	b	Address	bool channels = Sound_Channels[5] == Address(a) && Sound_Channels[9] == Address(b) && Sound_Channels[7] == Address(q);
-site	src/game/platform/sound_ours.cpp	1698	narrow_call	image_local	live	q	Address	bool channels = Sound_Channels[5] == Address(a) && Sound_Channels[9] == Address(b) && Sound_Channels[7] == Address(q);
-site	src/game/platform/sound_ours.cpp	1706	ptr_overlay	image	live	SndStream_Buffer	FakeBuf	FakeBuf* const v = static_cast<FakeBuf*>(SndStream_Buffer);
-site	src/game/platform/sound_ours.cpp	1749	ptr_overlay	image_local	live	FakeCreate(nullptr)	FakeBuf	FakeBuf* const old = static_cast<FakeBuf*>(FakeCreate(nullptr));
-site	src/game/platform/sound_ours.cpp	1769	narrow_call	crt	live	stream	Address	SaveMenu_StreamData = Address(stream);
-site	src/game/platform/sound_ours.cpp	1771	ptr_overlay	crt	live	FakeCreate(static_cast<const unsigned char*>(stream))	FakeBuf	FakeBuf* const voice_buffer = static_cast<FakeBuf*>(FakeCreate(static_cast<const unsigned char*>(stream)));
-site	src/game/platform/sound_ours.cpp	1816	ptr_overlay	image	live	SndStream_Buffer	FakeBuf	FakeBuf* const v = static_cast<FakeBuf*>(SndStream_Buffer);
+site	src/game/platform/sound_ours.cpp	982	fmt_place	word	live	buffer	%08X	bof3::Log("quicksave SOUND: channel %u names buffer %08X, which no bank's entry holds: silent after a restore",
+site	src/game/platform/sound_ours.cpp	1159	narrow_call	image	live	Music_Events	Address	const std::uint32_t scratch_at = Address(Snd_BufferDesc), scratch_end = Address(Music_Events);
+site	src/game/platform/sound_ours.cpp	1159	narrow_call	image	live	Snd_BufferDesc	Address	const std::uint32_t scratch_at = Address(Snd_BufferDesc), scratch_end = Address(Music_Events);
+site	src/game/platform/sound_ours.cpp	1180	fmt_place	word	live	Bank(record)->data	%08X	bof3::Fatal("quicksave SOUND: bank %u's data word is %08X in the span, %08X in the record", b + 1,
+site	src/game/platform/sound_ours.cpp	1180	fmt_place	word	live	old	%08X	bof3::Fatal("quicksave SOUND: bank %u's data word is %08X in the span, %08X in the record", b + 1,
+site	src/game/platform/sound_ours.cpp	1187	narrow_call	image_local	live	block	Address	Bank(record)->data = Address(block);
+site	src/game/platform/sound_ours.cpp	1192	fmt_place	word	live	old	%08X	bof3::Fatal("quicksave SOUND: bank %u entry %u's sample %08X lies outside its data %08X+%u", b + 1, e,
+site	src/game/platform/sound_ours.cpp	1192	fmt_place	word	live	sample	%08X	bof3::Fatal("quicksave SOUND: bank %u entry %u's sample %08X lies outside its data %08X+%u", b + 1, e,
+site	src/game/platform/sound_ours.cpp	1194	narrow_call	image_local	live	block	Address	const std::uint32_t moved = Address(block) + (sample - old);
+site	src/game/platform/sound_ours.cpp	1196	narrow_call	object_ours	live	g_snap.from_wave(At(moved))	Address	SetDword(EntryAt(b, e) + 4, Address(g_snap.from_wave(At(moved))));
+site	src/game/platform/sound_ours.cpp	1229	narrow_call	image_local	live	block	Address	SaveMenu_StreamData = Address(block);
+site	src/game/platform/sound_ours.cpp	1245	fmt_place	pointer	live	Music_File.Native()	%p	bof3::Fatal("quicksave SOUND: track %d read again is not the take's (file %p, %d bytes looping %d, track %d; "
+site	src/game/platform/sound_ours.cpp	1274	narrow_call	image	live	&Music_Volume	Address	SetVolumeBits(Dword(Address(&Music_Volume)));
+site	src/game/platform/sound_ours.cpp	1336	narrow_call	object_ours	live	&sound::g_play_refuses_none	Address	bof3::PatchBytes(" ", Address(&sound::g_play_refuses_none), &was, &is, 1);
+site	src/game/platform/sound_ours.cpp	1381	ptr_overlay	image_local	live	p	FakeBuf	FakeBuf* Self(void* p) { return static_cast<FakeBuf*>(p); }
+site	src/game/platform/sound_ours.cpp	1650	ptr_overlay	image_local	live	static_cast<void*>(At(Dword(EntryAt(b, e) + 4)))	FakeBuf	FakeBuf* EntryBuffer(unsigned b, unsigned e) { return static_cast<FakeBuf*>(static_cast<void*>(At(Dword(EntryAt(b, e) + 4)))); }
+site	src/game/platform/sound_ours.cpp	1657	ptr_overlay	image_local	live	FakeCreate(wave)	FakeBuf	FakeBuf* const f = static_cast<FakeBuf*>(FakeCreate(wave));
+site	src/game/platform/sound_ours.cpp	1671	narrow_call	image_local	live	loop_a	Address	Sound_Channels[5] = Address(loop_a);
+site	src/game/platform/sound_ours.cpp	1672	narrow_call	image_local	live	loop_b	Address	Sound_Channels[9] = Address(loop_b);
+site	src/game/platform/sound_ours.cpp	1673	narrow_call	image_local	live	quiet	Address	Sound_Channels[7] = Address(quiet);
+site	src/game/platform/sound_ours.cpp	1682	narrow_call	crt	live	stream	Address	SaveMenu_StreamData = Address(stream);
+site	src/game/platform/sound_ours.cpp	1684	ptr_overlay	crt	live	FakeCreate(static_cast<const unsigned char*>(stream))	FakeBuf	FakeBuf* const voice_buffer = static_cast<FakeBuf*>(FakeCreate(static_cast<const unsigned char*>(stream)));
+site	src/game/platform/sound_ours.cpp	1736	narrow_call	image_local	live	a	Address	bool channels = Sound_Channels[5] == Address(a) && Sound_Channels[9] == Address(b) && Sound_Channels[7] == Address(q);
+site	src/game/platform/sound_ours.cpp	1736	narrow_call	image_local	live	b	Address	bool channels = Sound_Channels[5] == Address(a) && Sound_Channels[9] == Address(b) && Sound_Channels[7] == Address(q);
+site	src/game/platform/sound_ours.cpp	1736	narrow_call	image_local	live	q	Address	bool channels = Sound_Channels[5] == Address(a) && Sound_Channels[9] == Address(b) && Sound_Channels[7] == Address(q);
+site	src/game/platform/sound_ours.cpp	1744	ptr_overlay	image	live	SndStream_Buffer	FakeBuf	FakeBuf* const v = static_cast<FakeBuf*>(SndStream_Buffer);
+site	src/game/platform/sound_ours.cpp	1787	ptr_overlay	image_local	live	FakeCreate(nullptr)	FakeBuf	FakeBuf* const old = static_cast<FakeBuf*>(FakeCreate(nullptr));
+site	src/game/platform/sound_ours.cpp	1807	narrow_call	crt	live	stream	Address	SaveMenu_StreamData = Address(stream);
+site	src/game/platform/sound_ours.cpp	1809	ptr_overlay	crt	live	FakeCreate(static_cast<const unsigned char*>(stream))	FakeBuf	FakeBuf* const voice_buffer = static_cast<FakeBuf*>(FakeCreate(static_cast<const unsigned char*>(stream)));
+site	src/game/platform/sound_ours.cpp	1880	ptr_overlay	image	live	SndStream_Buffer	FakeBuf	FakeBuf* const v = static_cast<FakeBuf*>(SndStream_Buffer);
 site	src/game/platform/sound_rest.cpp	35	uintptr	-	live	std::uintptr_t	-	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/platform/sound_rest.cpp	35	widen	param	live	address	unsigned char*	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/platform/sound_rest.cpp	36	low32	helper_def	live	p	Low32	std::uint32_t Address(const volatile void* p) { return Low32(p); }
@@ -7856,18 +7860,18 @@ site	src/game/shop/field_s_fuzz.cpp	306	uintptr	-	fuzz	std::uintptr_t	-	auto* co
 site	src/game/shop/field_s_fuzz.cpp	306	widen	param	fuzz	a[3]	unsigned char*	auto* const state = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a[3]));
 site	src/game/shop/field_s_fuzz.cpp	319	uintptr	-	fuzz	std::uintptr_t	-	auto* const dst = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a[0]));
 site	src/game/shop/field_s_fuzz.cpp	319	widen	param	fuzz	a[0]	unsigned char*	auto* const dst = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a[0]));
-site	src/game/shop/field_save.cpp	85	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2c(table + 4 * index)))();
-site	src/game/shop/field_save.cpp	85	widen	other	live	LRest2c(table + 4 * index)	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2c(table + 4 * index)))();
-site	src/game/shop/field_save.cpp	126	uintptr	-	live	std::uintptr_t	-	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/shop/field_save.cpp	126	widen	param	live	address	unsigned char*	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/shop/field_save.cpp	128	low32	image_local	live	p	Low32	save_menu::U AddrSaveMenu(const volatile void* p) { return Low32(p); }
-site	src/game/shop/field_save.cpp	153	uintptr	-	live	std::uintptr_t	-	template <typename T> T Fn(U address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
-site	src/game/shop/field_save.cpp	153	widen	param	live	address	T	template <typename T> T Fn(U address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
-site	src/game/shop/field_save.cpp	161	uintptr	-	live	std::uintptr_t	-	unsigned char* AtShopStates(shop_states::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/shop/field_save.cpp	161	widen	param	live	address	unsigned char*	unsigned char* AtShopStates(shop_states::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/shop/field_save.cpp	828	uintptr	-	live	std::uintptr_t	-	SH_CALL(Area_RunPlacement)(reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(L(descriptor))));
-site	src/game/shop/field_save.cpp	828	widen	word_read	live	L(descriptor)	const unsigned char*	SH_CALL(Area_RunPlacement)(reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(L(descriptor))));
-site	src/game/shop/field_save.cpp	1042	low32	object_ours	live	&g_summary_record0	Low32	Low32(&g_summary_record0), &was, &is, 1);
+site	src/game/shop/field_save.cpp	86	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2c(table + 4 * index)))();
+site	src/game/shop/field_save.cpp	86	widen	other	live	LRest2c(table + 4 * index)	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2c(table + 4 * index)))();
+site	src/game/shop/field_save.cpp	127	uintptr	-	live	std::uintptr_t	-	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/shop/field_save.cpp	127	widen	param	live	address	unsigned char*	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/shop/field_save.cpp	129	low32	image_local	live	p	Low32	save_menu::U AddrSaveMenu(const volatile void* p) { return Low32(p); }
+site	src/game/shop/field_save.cpp	154	uintptr	-	live	std::uintptr_t	-	template <typename T> T Fn(U address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+site	src/game/shop/field_save.cpp	154	widen	param	live	address	T	template <typename T> T Fn(U address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+site	src/game/shop/field_save.cpp	162	uintptr	-	live	std::uintptr_t	-	unsigned char* AtShopStates(shop_states::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/shop/field_save.cpp	162	widen	param	live	address	unsigned char*	unsigned char* AtShopStates(shop_states::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/shop/field_save.cpp	833	uintptr	-	live	std::uintptr_t	-	SH_CALL(Area_RunPlacement)(reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(L(descriptor))));
+site	src/game/shop/field_save.cpp	833	widen	word_read	live	L(descriptor)	const unsigned char*	SH_CALL(Area_RunPlacement)(reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(L(descriptor))));
+site	src/game/shop/field_save.cpp	1050	low32	object_ours	live	&g_summary_record0	Low32	Low32(&g_summary_record0), &was, &is, 1);
 site	src/game/shop/menu_draw_helpers.cpp	69	uintptr	-	live	std::uintptr_t	-	return AtMenuDrawHelpers(*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr))));
 site	src/game/shop/menu_draw_helpers.cpp	69	widen	img_place	live	::bof3::Img(BattleWinStates_Current_addr)	volatile std::uint32_t*	return AtMenuDrawHelpers(*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr))));
 site	src/game/shop/menu_draw_helpers.cpp	83	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<menu_draw_helpers::U>(LongMenuDrawHelpers(AtMenuDrawHelpers(table + index * 4)))))();
@@ -8812,70 +8816,155 @@ site	src/hook/input_script.cpp	1393	long	ul	live	unsigned long	-	const unsigned 
 site	src/hook/input_script.cpp	1404	long	ul	live	unsigned long	-	std::snprintf(name, sizeof name, " ", static_cast<unsigned long>(bof3::os::ProcessId()));
 site	src/hook/input_script.cpp	1406	long	ul	live	unsigned long	-	if (!g_release) Fatal(" ", static_cast<unsigned long>(bof3::os::LastError()));
 site	src/hook/input_script.h	37	long	l	live	long	-	void InputScript_RecordKey(unsigned vk, long lparam);
-site	src/hook/snapshot.cpp	76	sizeof_ptr	-	live	sizeof(void*)	-	constexpr U kSlice = sizeof(void*) == 8 ? 0x8000 : 0x4000;
-site	src/hook/snapshot.cpp	180	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U va) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(va)); }
-site	src/hook/snapshot.cpp	180	widen	param	live	va	unsigned char*	unsigned char* At(U va) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(va)); }
-site	src/hook/snapshot.cpp	185	low32	helper_def	live	p	Low32	U Va(const void* p) { return Low32(p); }
-site	src/hook/snapshot.cpp	221	narrow_call	pool	live	draw_pool::Items()	Va	const U items = Va(draw_pool::Items());
-site	src/hook/snapshot.cpp	232	narrow_call	unread	live	reinterpret_cast<const void*>(mbi.base)	Va	at = Va(reinterpret_cast<const void*>(mbi.base)) + static_cast<U>(mbi.size);
-site	src/hook/snapshot.cpp	244	fmt_place	pointer	live	at	%08X	Fatal("snapshot: 0x%08X is not committed memory, inside a range checked before the restore began", at);
-site	src/hook/snapshot.cpp	245	narrow_call	unread	live	reinterpret_cast<const void*>(mbi.base)	Va	U end = Va(reinterpret_cast<const void*>(mbi.base)) + static_cast<U>(mbi.size);
-site	src/hook/snapshot.cpp	250	fmt_place	pointer	live	at	%08X	Fatal("snapshot: MemProtect(0x%08X, 0x%X) failed (%lu)", at, end - at, (unsigned long)os::LastError());
-site	src/hook/snapshot.cpp	250	long	ul	live	unsigned long	-	Fatal(" ", at, end - at, (unsigned long)os::LastError());
-site	src/hook/snapshot.cpp	267	narrow_call	unread	live	reinterpret_cast<const void*>(mbi.base)	Va	const U region = Va(reinterpret_cast<const void*>(mbi.base));
-site	src/hook/snapshot.cpp	302	uintptr	-	live	std::uintptr_t	-	std::uintptr_t module = 0;
-site	src/hook/snapshot.cpp	304	long	ul	live	unsigned long	-	Fatal(" ", static_cast<unsigned long>(bof3::os::LastError()));
-site	src/hook/snapshot.cpp	309	narrow_call	windows	live	reinterpret_cast<const void*>(module)	Va	build.dll_base = Va(reinterpret_cast<const void*>(module));
-site	src/hook/snapshot.cpp	310	fmt_place	word	live	build.dll_base	%08X	Log("quicksave this build: %s, bof3x.dll sha256 %.64s at 0x%08X, %s host", build.tag, build.sha, build.dll_base,
-site	src/hook/snapshot.cpp	384	narrow_call	image	live	&Frame_Counter	Va	std::memcpy(&frame, image + (Va(&Frame_Counter) - span.image.base), 4);
-site	src/hook/snapshot.cpp	450	fmt_place	word	live	build.dll_base	%08X	Printf("bof3x.dll was at 0x%08X, here at 0x%08X: the task stacks name its code where it was", h.dll_base,
-site	src/hook/snapshot.cpp	450	fmt_place	word	live	h.dll_base	%08X	Printf("bof3x.dll was at 0x%08X, here at 0x%08X: the task stacks name its code where it was", h.dll_base,
-site	src/hook/snapshot.cpp	455	fmt_place	pointer	live	span.image.base	%08X	Printf("span 0x%08X+0x%X, pool 0x%08X+0x%X; here 0x%08X+0x%X, 0x%08X+0x%X", h.span_base, h.span_bytes,
-site	src/hook/snapshot.cpp	455	fmt_place	pointer	live	span.pool.base	%08X	Printf("span 0x%08X+0x%X, pool 0x%08X+0x%X; here 0x%08X+0x%X, 0x%08X+0x%X", h.span_base, h.span_bytes,
-site	src/hook/snapshot.cpp	455	fmt_place	word	live	h.pool_base	%08X	Printf("span 0x%08X+0x%X, pool 0x%08X+0x%X; here 0x%08X+0x%X, 0x%08X+0x%X", h.span_base, h.span_bytes,
-site	src/hook/snapshot.cpp	455	fmt_place	word	live	h.span_base	%08X	Printf("span 0x%08X+0x%X, pool 0x%08X+0x%X; here 0x%08X+0x%X, 0x%08X+0x%X", h.span_base, h.span_bytes,
-site	src/hook/snapshot.cpp	459	fmt_place	word	live	arena_top	%08X	Printf("the task stacks hung from 0x%08X (0x%X bytes), here from 0x%08X: a quicksave is this process's",
-site	src/hook/snapshot.cpp	459	fmt_place	word	live	h.arena_top	%08X	Printf("the task stacks hung from 0x%08X (0x%X bytes), here from 0x%08X: a quicksave is this process's",
-site	src/hook/snapshot.cpp	611	long	ul	live	unsigned long	-	static_cast<unsigned long>(bof3::os::LastError()));
-site	src/hook/snapshot.cpp	621	long	ul	live	unsigned long	-	why = Printf(" ", PathText(path).c_str(), static_cast<unsigned long>(bof3::os::LastError()));
-site	src/hook/snapshot.cpp	628	long	ul	live	unsigned long	-	const unsigned long error = bof3::os::LastError();
-site	src/hook/snapshot.cpp	655	long	ul	live	unsigned long	-	static_cast<unsigned long>(bof3::os::LastError()));
-site	src/hook/snapshot.cpp	716	long	ul	live	unsigned long	-	if (r != os::OwnStackResult::Done) Fatal(" ", os::OwnStackFailure(r), static_cast<unsigned long>(bof3::os::LastError()));
-site	src/hook/snapshot.cpp	744	fmt_place	word	live	File_Slots_addr	%08X	Log("quicksave F6 at Frame_Counter %u refused: a file is open in File_Slots (0x%08X) between frames",
-site	src/hook/snapshot.cpp	760	fmt_place	word	live	h->pool_base	%08X	Log("quicksave F6 at Frame_Counter %u: BISLPS10.DAT, %u bytes (save half 0x%X, span 0x%08X+0x%X, pool 0x%08X+0x%X, "
-site	src/hook/snapshot.cpp	760	fmt_place	word	live	h->span_base	%08X	Log("quicksave F6 at Frame_Counter %u: BISLPS10.DAT, %u bytes (save half 0x%X, span 0x%08X+0x%X, pool 0x%08X+0x%X, "
-site	src/hook/snapshot.cpp	761	fmt_place	word	live	h->frame_counter	%08X	"task arena 0x%08X-0x%X, %u participants; .rdata fnv %08X)",
-site	src/hook/snapshot.cpp	761	fmt_place	word	live	h->span_base	%08X	"task arena 0x%08X-0x%X, %u participants; .rdata fnv %08X)",
-site	src/hook/snapshot.cpp	785	fmt_place	word	live	top	%08X	Log("quicksave F7 %s refused: the task arena 0x%08X-0x%X is not committed", SlotName(slot).c_str(), top,
-site	src/hook/snapshot.cpp	792	fmt_place	word	live	p.header.rdata_fnv	%08X	Log("quicksave F7 %s: .rdata fnv %08X now, %08X at the take - written in play, and not copied (the census's "
-site	src/hook/snapshot.cpp	792	fmt_place	word	live	rdata	%08X	Log("quicksave F7 %s: .rdata fnv %08X now, %08X at the take - written in play, and not copied (the census's "
-site	src/hook/snapshot.cpp	944	narrow_call	object_ours	live	arena_block.data()	Va	const U top = (Va(arena_block.data()) + kArenaBytes + kPage - 1) & ~(kPage - 1);
-site	src/hook/snapshot.cpp	945	narrow_call	object_ours	live	arena_block.data()	Va	if (top - kArenaBytes < Va(arena_block.data())) Fatal(" ");
-site	src/hook/snapshot.cpp	950	narrow_call	image	live	&Task_StackTop	Va	WriteRange(Va(&Task_StackTop), reinterpret_cast<const unsigned char*>(&t), 4);
-site	src/hook/snapshot.cpp	1002	fmt_place	pointer	live	span.image.base + at	%08X	Log("shadow snapshot: span byte 0x%08X is 0x%02X after the restore, 0x%02X at the take", span.image.base + at,
-site	src/hook/snapshot.cpp	1160	long	ul	live	unsigned long	-	const fs::path dir = temp / Printf(" ", static_cast<unsigned long>(bof3::os::ProcessId()));
-site	src/hook/snapshot.cpp	1170	fmt_place	pointer	live	span.image.base	%08X	Log("shadow snapshot: self-test passed - span 0x%08X+0x%X and pool 0x%08X+0x%X copied, scribbled and restored equal; "
-site	src/hook/snapshot.cpp	1170	fmt_place	pointer	live	span.pool.base	%08X	Log("shadow snapshot: self-test passed - span 0x%08X+0x%X and pool 0x%08X+0x%X copied, scribbled and restored equal; "
-site	src/hook/snapshot.cpp	1242	narrow_call	image	live	&Frame_Deadline	Va	const U names[] = {Va(&Task_SchedulerEsp), Va(&Game_Hwnd), Va(&Game_HInstance), Va(&Frame_Deadline),
-site	src/hook/snapshot.cpp	1242	narrow_call	image	live	&Game_HInstance	Va	const U names[] = {Va(&Task_SchedulerEsp), Va(&Game_Hwnd), Va(&Game_HInstance), Va(&Frame_Deadline),
-site	src/hook/snapshot.cpp	1242	narrow_call	image	live	&Game_Hwnd	Va	const U names[] = {Va(&Task_SchedulerEsp), Va(&Game_Hwnd), Va(&Game_HInstance), Va(&Frame_Deadline),
-site	src/hook/snapshot.cpp	1242	narrow_call	image	live	&Task_SchedulerEsp	Va	const U names[] = {Va(&Task_SchedulerEsp), Va(&Game_Hwnd), Va(&Game_HInstance), Va(&Frame_Deadline),
-site	src/hook/snapshot.cpp	1243	narrow_call	image	live	&App_Active	Va	Va(&Fps_Shown), Va(&App_Active), Va(&Cfg_Fullscreen), Va(&Cfg_RenderMode),
-site	src/hook/snapshot.cpp	1243	narrow_call	image	live	&Cfg_Fullscreen	Va	Va(&Fps_Shown), Va(&App_Active), Va(&Cfg_Fullscreen), Va(&Cfg_RenderMode),
-site	src/hook/snapshot.cpp	1243	narrow_call	image	live	&Cfg_RenderMode	Va	Va(&Fps_Shown), Va(&App_Active), Va(&Cfg_Fullscreen), Va(&Cfg_RenderMode),
-site	src/hook/snapshot.cpp	1243	narrow_call	image	live	&Fps_Shown	Va	Va(&Fps_Shown), Va(&App_Active), Va(&Cfg_Fullscreen), Va(&Cfg_RenderMode),
-site	src/hook/snapshot.cpp	1244	narrow_call	image	live	&DInput_Object	Va	Va(Key_Table), Va(&DInput_Object), Va(&Font_GlyphData), Va(Gfx_WindowRect),
-site	src/hook/snapshot.cpp	1244	narrow_call	image	live	&Font_GlyphData	Va	Va(Key_Table), Va(&DInput_Object), Va(&Font_GlyphData), Va(Gfx_WindowRect),
-site	src/hook/snapshot.cpp	1244	narrow_call	image	live	Gfx_WindowRect	Va	Va(Key_Table), Va(&DInput_Object), Va(&Font_GlyphData), Va(Gfx_WindowRect),
-site	src/hook/snapshot.cpp	1244	narrow_call	image	live	Key_Table	Va	Va(Key_Table), Va(&DInput_Object), Va(&Font_GlyphData), Va(Gfx_WindowRect),
-site	src/hook/snapshot.cpp	1245	narrow_call	image	live	&Dd_DirectDraw	Va	Va(Gfx_ClutRows), Va(D3d_DeviceDesc), Va(&Dd_DirectDraw), Va(&Dd_StageSurface),
-site	src/hook/snapshot.cpp	1245	narrow_call	image	live	&Dd_StageSurface	Va	Va(Gfx_ClutRows), Va(D3d_DeviceDesc), Va(&Dd_DirectDraw), Va(&Dd_StageSurface),
-site	src/hook/snapshot.cpp	1245	narrow_call	image	live	D3d_DeviceDesc	Va	Va(Gfx_ClutRows), Va(D3d_DeviceDesc), Va(&Dd_DirectDraw), Va(&Dd_StageSurface),
-site	src/hook/snapshot.cpp	1245	narrow_call	image	live	Gfx_ClutRows	Va	Va(Gfx_ClutRows), Va(D3d_DeviceDesc), Va(&Dd_DirectDraw), Va(&Dd_StageSurface),
-site	src/hook/snapshot.cpp	1246	narrow_call	image	live	&D3d_Device	Va	Va(&D3d_Device)};
-site	src/hook/snapshot.cpp	1250	fmt_place	pointer	live	kKept[i].at	%08X	Fatal("snapshot: kKept's %s is 0x%08X, symbols.toml's at 0x%08X (VA 0x%08X)", kKept[i].name, kKept[i].at,
-site	src/hook/snapshot.cpp	1250	fmt_place	pointer	live	names[i] - Img(kKept[i].at) + kKept[i].at	%08X	Fatal("snapshot: kKept's %s is 0x%08X, symbols.toml's at 0x%08X (VA 0x%08X)", kKept[i].name, kKept[i].at,
-site	src/hook/snapshot.cpp	1250	fmt_place	word	live	names[i]	%08X	Fatal("snapshot: kKept's %s is 0x%08X, symbols.toml's at 0x%08X (VA 0x%08X)", kKept[i].name, kKept[i].at,
+site	src/hook/region_table.cpp	42	fmt_place	word	live	exe_layout::kDataVa	%08X	Fatal("region table: its span is 0x%08X..0x%08X, exe_layout.h's 0x%08X..0x%08X (kDataVa..kOwnVa): "
+site	src/hook/region_table.cpp	42	fmt_place	word	live	exe_layout::kOwnVa	%08X	Fatal("region table: its span is 0x%08X..0x%08X, exe_layout.h's 0x%08X..0x%08X (kDataVa..kOwnVa): "
+site	src/hook/region_table.cpp	42	fmt_place	word	live	rg::kSpanEnd	%08X	Fatal("region table: its span is 0x%08X..0x%08X, exe_layout.h's 0x%08X..0x%08X (kDataVa..kOwnVa): "
+site	src/hook/region_table.cpp	42	fmt_place	word	live	rg::kSpanVa	%08X	Fatal("region table: its span is 0x%08X..0x%08X, exe_layout.h's 0x%08X..0x%08X (kDataVa..kOwnVa): "
+site	src/hook/region_table.cpp	54	fmt_place	word	live	r.va	%08X	Fatal("region table: run %u (0x%08X, 0x%X bytes, class %u, \"%s\") does not follow the run before it, "
+site	src/hook/region_table.cpp	55	fmt_place	word	live	i	%08X	"which ends at 0x%08X",
+site	src/hook/region_table.cpp	61	fmt_place	pointer	live	at	%08X	if (at != rg::kSpanEnd) Fatal("region table: the runs end at 0x%08X, the span at 0x%08X", at, rg::kSpanEnd);
+site	src/hook/region_table.cpp	61	fmt_place	word	live	rg::kSpanEnd	%08X	if (at != rg::kSpanEnd) Fatal("region table: the runs end at 0x%08X, the span at 0x%08X", at, rg::kSpanEnd);
+site	src/hook/region_table.cpp	71	fmt_place	word	live	n.run < rg::kRuns ? rg::kRun[n.run].va : 0u	%08X	Fatal("region table: \"%s\" starts at 0x%08X in the table, at 0x%08X in symbols.gen.h",
+site	src/hook/region_table.cpp	71	fmt_place	word	live	n.va	%08X	Fatal("region table: \"%s\" starts at 0x%08X in the table, at 0x%08X in symbols.gen.h",
+site	src/hook/region_table.cpp	84	fmt_place	word	live	kr.va	%08X	Fatal("region table: keep row 0x%08X (0x%X bytes) holds 0x%08X, in run \"%s\" of class %s, not process",
+site	src/hook/region_table.cpp	84	fmt_place	word	live	va	%08X	Fatal("region table: keep row 0x%08X (0x%X bytes) holds 0x%08X, in run \"%s\" of class %s, not process",
+site	src/hook/region_table.cpp	98	fmt_place	word	live	sr.va	%08X	Fatal("region table: skip row 0x%08X (0x%X bytes) is outside the span", sr.va, sr.bytes);
+site	src/hook/region_table.cpp	102	fmt_place	word	live	sr.va	%08X	Fatal("region table: skip row 0x%08X (0x%X bytes) holds 0x%08X, in run \"%s\", which no row of "
+site	src/hook/region_table.cpp	102	fmt_place	word	live	va	%08X	Fatal("region table: skip row 0x%08X (0x%X bytes) holds 0x%08X, in run \"%s\", which no row of "
+site	src/hook/region_table.cpp	109	fmt_place	word	live	rg::kSpanEnd	%08X	Log("region_table %u runs over 0x%08X..0x%08X: state %u, process %u, derived %u, stack %u, unknown %u bytes; "
+site	src/hook/region_table.cpp	109	fmt_place	word	live	rg::kSpanVa	%08X	Log("region_table %u runs over 0x%08X..0x%08X: state %u, process %u, derived %u, stack %u, unknown %u bytes; "
+site	src/hook/snapshot.cpp	85	sizeof_ptr	-	live	sizeof(void*)	-	constexpr U kSlice = sizeof(void*) == 8 ? 0x8000 : 0x4000;
+site	src/hook/snapshot.cpp	283	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U va) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(va)); }
+site	src/hook/snapshot.cpp	283	widen	param	live	va	unsigned char*	unsigned char* At(U va) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(va)); }
+site	src/hook/snapshot.cpp	288	low32	helper_def	live	p	Low32	U Va(const void* p) { return Low32(p); }
+site	src/hook/snapshot.cpp	324	narrow_call	pool	live	draw_pool::Items()	Va	const U items = Va(draw_pool::Items());
+site	src/hook/snapshot.cpp	335	narrow_call	unread	live	reinterpret_cast<const void*>(mbi.base)	Va	at = Va(reinterpret_cast<const void*>(mbi.base)) + static_cast<U>(mbi.size);
+site	src/hook/snapshot.cpp	347	fmt_place	pointer	live	at	%08X	Fatal("snapshot: 0x%08X is not committed memory, inside a range checked before the restore began", at);
+site	src/hook/snapshot.cpp	348	narrow_call	unread	live	reinterpret_cast<const void*>(mbi.base)	Va	U end = Va(reinterpret_cast<const void*>(mbi.base)) + static_cast<U>(mbi.size);
+site	src/hook/snapshot.cpp	353	fmt_place	pointer	live	at	%08X	Fatal("snapshot: MemProtect(0x%08X, 0x%X) failed (%lu)", at, end - at, (unsigned long)os::LastError());
+site	src/hook/snapshot.cpp	353	long	ul	live	unsigned long	-	Fatal(" ", at, end - at, (unsigned long)os::LastError());
+site	src/hook/snapshot.cpp	370	narrow_call	unread	live	reinterpret_cast<const void*>(mbi.base)	Va	const U region = Va(reinterpret_cast<const void*>(mbi.base));
+site	src/hook/snapshot.cpp	405	uintptr	-	live	std::uintptr_t	-	std::uintptr_t module = 0;
+site	src/hook/snapshot.cpp	407	long	ul	live	unsigned long	-	Fatal(" ", static_cast<unsigned long>(bof3::os::LastError()));
+site	src/hook/snapshot.cpp	412	narrow_call	windows	live	reinterpret_cast<const void*>(module)	Va	build.dll_base = Va(reinterpret_cast<const void*>(module));
+site	src/hook/snapshot.cpp	413	fmt_place	word	live	build.dll_base	%08X	Log("quicksave this build: %s, bof3x.dll sha256 %.64s at 0x%08X, %s host", build.tag, build.sha, build.dll_base,
+site	src/hook/snapshot.cpp	593	narrow_call	unread	live	pool	Va	wp.pool = pool ? Va(pool) : 0;
+site	src/hook/snapshot.cpp	808	fmt_place	word	live	live	%08X	why = Printf("a slot of Capcom's held text of ours at the take and holds 0x%08X here", live);
+site	src/hook/snapshot.cpp	816	fmt_place	word	live	stored	%08X	why = Printf("a WORDS entry of kind %u holding 0x%08X has no place here", kind, stored);
+site	src/hook/snapshot.cpp	852	uintptr	-	live	std::uintptr_t	-	std::uintptr_t entry = 0;
+site	src/hook/snapshot.cpp	946	fmt_place	word	live	now[i + 1]	%08X	std::fprintf(g_words_probe, "+ %08X %08X %u\n", now[i], now[i + 1], now[i + 2]);
+site	src/hook/snapshot.cpp	946	fmt_place	word	live	now[i]	%08X	std::fprintf(g_words_probe, "+ %08X %08X %u\n", now[i], now[i + 1], now[i + 2]);
+site	src/hook/snapshot.cpp	949	fmt_place	word	live	was[j]	%08X	std::fprintf(g_words_probe, "- %08X\n", was[j]);
+site	src/hook/snapshot.cpp	952	fmt_place	word	live	now[i + 1]	%08X	if (now[i + 1] != was[j + 1]) std::fprintf(g_words_probe, "+ %08X %08X %u\n", now[i], now[i + 1], now[i + 2]);
+site	src/hook/snapshot.cpp	952	fmt_place	word	live	now[i]	%08X	if (now[i + 1] != was[j + 1]) std::fprintf(g_words_probe, "+ %08X %08X %u\n", now[i], now[i + 1], now[i + 2]);
+site	src/hook/snapshot.cpp	1011	fmt_place	word	live	pool_raw	%08X	"0x%08X); a portable load writes them as the take had them",
+site	src/hook/snapshot.cpp	1024	sizeof_ptr	-	live	sizeof(void*)	-	ext.pointer_bytes = sizeof(void*);
+site	src/hook/snapshot.cpp	1073	narrow_call	image	live	&Frame_Counter	Va	std::memcpy(&frame, image + (Va(&Frame_Counter) - span.image.base), 4);
+site	src/hook/snapshot.cpp	1179	fmt_place	pointer	live	span.image.base	%08X	return Printf("span 0x%08X+0x%X, pool 0x%08X+0x%X; here 0x%08X+0x%X, 0x%08X+0x%X", h.span_base, h.span_bytes, h.pool_base,
+site	src/hook/snapshot.cpp	1179	fmt_place	pointer	live	span.pool.base	%08X	return Printf("span 0x%08X+0x%X, pool 0x%08X+0x%X; here 0x%08X+0x%X, 0x%08X+0x%X", h.span_base, h.span_bytes, h.pool_base,
+site	src/hook/snapshot.cpp	1179	fmt_place	word	live	h.pool_base	%08X	return Printf("span 0x%08X+0x%X, pool 0x%08X+0x%X; here 0x%08X+0x%X, 0x%08X+0x%X", h.span_base, h.span_bytes, h.pool_base,
+site	src/hook/snapshot.cpp	1179	fmt_place	word	live	h.span_base	%08X	return Printf("span 0x%08X+0x%X, pool 0x%08X+0x%X; here 0x%08X+0x%X, 0x%08X+0x%X", h.span_base, h.span_bytes, h.pool_base,
+site	src/hook/snapshot.cpp	1204	fmt_place	word	live	build.dll_base	%08X	Printf("bof3x.dll was at 0x%08X, here at 0x%08X: the task stacks name its code where it was", h.dll_base,
+site	src/hook/snapshot.cpp	1204	fmt_place	word	live	h.dll_base	%08X	Printf("bof3x.dll was at 0x%08X, here at 0x%08X: the task stacks name its code where it was", h.dll_base,
+site	src/hook/snapshot.cpp	1209	fmt_place	word	live	arena_top	%08X	Printf("the task stacks hung from 0x%08X (0x%X bytes), here from 0x%08X: a quicksave is this process's",
+site	src/hook/snapshot.cpp	1209	fmt_place	word	live	h.arena_top	%08X	Printf("the task stacks hung from 0x%08X (0x%X bytes), here from 0x%08X: a quicksave is this process's",
+site	src/hook/snapshot.cpp	1303	fmt_place	word	live	build.dll_base	%08X	detail = Printf("bof3x.dll was at 0x%08X, here at 0x%08X: the task stacks name its code where it was", h.dll_base, build.dll_base);
+site	src/hook/snapshot.cpp	1303	fmt_place	word	live	h.dll_base	%08X	detail = Printf("bof3x.dll was at 0x%08X, here at 0x%08X: the task stacks name its code where it was", h.dll_base, build.dll_base);
+site	src/hook/snapshot.cpp	1306	fmt_place	word	live	arena_top	%08X	detail = Printf("the task stacks hung from 0x%08X (0x%X bytes), here from 0x%08X", h.arena_top, h.arena_bytes, arena_top);
+site	src/hook/snapshot.cpp	1306	fmt_place	word	live	h.arena_top	%08X	detail = Printf("the task stacks hung from 0x%08X (0x%X bytes), here from 0x%08X", h.arena_top, h.arena_bytes, arena_top);
+site	src/hook/snapshot.cpp	1309	fmt_place	word	live	Bind_TableLo()	%08X	detail = Printf("the code places lay at 0x%08X, here at 0x%08X: the task stacks hold them", x.table_lo, Bind_TableLo());
+site	src/hook/snapshot.cpp	1309	fmt_place	word	live	x.table_lo	%08X	detail = Printf("the code places lay at 0x%08X, here at 0x%08X: the task stacks hold them", x.table_lo, Bind_TableLo());
+site	src/hook/snapshot.cpp	1312	fmt_place	word	live	ImageBase()	%08X	detail = Printf("the image lay at 0x%08X, here at 0x%08X", x.image_base, ImageBase());
+site	src/hook/snapshot.cpp	1312	fmt_place	word	live	x.image_base	%08X	detail = Printf("the image lay at 0x%08X, here at 0x%08X", x.image_base, ImageBase());
+site	src/hook/snapshot.cpp	1334	fmt_place	word	live	fnv	%08X	detail + Printf("; the file's build binds %u VAs (FNV %08X), this one %u (%08X)", x.bind_rows, x.bind_fnv, rows, fnv));
+site	src/hook/snapshot.cpp	1334	fmt_place	word	live	x.bind_fnv	%08X	detail + Printf("; the file's build binds %u VAs (FNV %08X), this one %u (%08X)", x.bind_rows, x.bind_fnv, rows, fnv));
+site	src/hook/snapshot.cpp	1386	fmt_place	word	live	va	%08X	Printf("the file names the word at 0x%08X as a copy of a slot's text, and that word holds none", va));
+site	src/hook/snapshot.cpp	1393	fmt_place	word	live	span_words::kDataLo + off	%08X	(detail.empty() ? std::string() : detail + "; ") + Printf("the word at 0x%08X: ", span_words::kDataLo + off) + what);
+site	src/hook/snapshot.cpp	1436	uintptr	-	live	std::uintptr_t	-	entry = reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(t.name)));
+site	src/hook/snapshot.cpp	1436	widen	code_place	live	::bof3::Code(t.name)	void*	entry = reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(t.name)));
+site	src/hook/snapshot.cpp	1580	long	ul	live	unsigned long	-	static_cast<unsigned long>(bof3::os::LastError()));
+site	src/hook/snapshot.cpp	1590	long	ul	live	unsigned long	-	why = Printf(" ", PathText(path).c_str(), static_cast<unsigned long>(bof3::os::LastError()));
+site	src/hook/snapshot.cpp	1597	long	ul	live	unsigned long	-	const unsigned long error = bof3::os::LastError();
+site	src/hook/snapshot.cpp	1624	long	ul	live	unsigned long	-	static_cast<unsigned long>(bof3::os::LastError()));
+site	src/hook/snapshot.cpp	1685	long	ul	live	unsigned long	-	if (r != os::OwnStackResult::Done) Fatal(" ", os::OwnStackFailure(r), static_cast<unsigned long>(bof3::os::LastError()));
+site	src/hook/snapshot.cpp	1714	fmt_place	word	live	File_Slots_addr	%08X	Log("quicksave F6 at Frame_Counter %u refused: a file is open in File_Slots (0x%08X) between frames",
+site	src/hook/snapshot.cpp	1732	fmt_place	word	live	h->pool_base	%08X	Log("quicksave F6 at Frame_Counter %u: BISLPS10.DAT, %u bytes (save half 0x%X, span 0x%08X+0x%X, pool 0x%08X+0x%X, "
+site	src/hook/snapshot.cpp	1732	fmt_place	word	live	h->span_base	%08X	Log("quicksave F6 at Frame_Counter %u: BISLPS10.DAT, %u bytes (save half 0x%X, span 0x%08X+0x%X, pool 0x%08X+0x%X, "
+site	src/hook/snapshot.cpp	1733	fmt_place	word	live	h->frame_counter	%08X	"task arena 0x%08X-0x%X, %u participants; .rdata fnv %08X); format %u, state revision %u, %u words by their names, "
+site	src/hook/snapshot.cpp	1733	fmt_place	word	live	h->span_base	%08X	"task arena 0x%08X-0x%X, %u participants; .rdata fnv %08X); format %u, state revision %u, %u words by their names, "
+site	src/hook/snapshot.cpp	1734	fmt_place	word	live	h->frame_counter	%08X	"settings %08X, %s%s",
+site	src/hook/snapshot.cpp	1773	fmt_place	word	live	top	%08X	Log("quicksave F7 %s refused: the task arena 0x%08X-0x%X is not committed", SlotName(slot).c_str(), top,
+site	src/hook/snapshot.cpp	1784	fmt_place	word	live	p.header.rdata_fnv	%08X	Log("quicksave F7 %s: .rdata fnv %08X now, %08X at the take - written in play, and not copied (the census's "
+site	src/hook/snapshot.cpp	1784	fmt_place	word	live	rdata	%08X	Log("quicksave F7 %s: .rdata fnv %08X now, %08X at the take - written in play, and not copied (the census's "
+site	src/hook/snapshot.cpp	2036	narrow_call	object_ours	live	arena_block.data()	Va	const U top = (Va(arena_block.data()) + kArenaBytes + kPage - 1) & ~(kPage - 1);
+site	src/hook/snapshot.cpp	2037	narrow_call	object_ours	live	arena_block.data()	Va	if (top - kArenaBytes < Va(arena_block.data())) Fatal(" ");
+site	src/hook/snapshot.cpp	2042	narrow_call	image	live	&Task_StackTop	Va	WriteRange(Va(&Task_StackTop), reinterpret_cast<const unsigned char*>(&t), 4);
+site	src/hook/snapshot.cpp	2101	fmt_place	pointer	live	span.image.base + at	%08X	Log("shadow snapshot: span byte 0x%08X is 0x%02X after the restore, 0x%02X at the take", span.image.base + at,
+site	src/hook/snapshot.cpp	2199	narrow_call	object_ours	live	arena_block.data()	Va	const U top = (Va(arena_block.data()) + kArenaBytes + kPage - 1) & ~(kPage - 1);
+site	src/hook/snapshot.cpp	2200	narrow_call	object_ours	live	arena_block.data()	Va	if (top - kArenaBytes < Va(arena_block.data())) Fatal(" ");
+site	src/hook/snapshot.cpp	2235	fmt_place	pointer	live	span.image.base + at	%08X	Log("shadow snapshot: %s: span byte 0x%08X is 0x%02X, 0x%02X wanted", what, span.image.base + at,
+site	src/hook/snapshot.cpp	2271	uintptr	-	live	std::uintptr_t	-	::Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
+site	src/hook/snapshot.cpp	2271	widen	code_place	live	::bof3::Code(bof3::addr::Boot_Task)	void*	::Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
+site	src/hook/snapshot.cpp	2284	narrow_call	unread	live	kTextA	Va	const U text_a = Va(kTextA), text_b = Va(kTextB);
+site	src/hook/snapshot.cpp	2284	narrow_call	unread	live	kTextB	Va	const U text_a = Va(kTextA), text_b = Va(kTextB);
+site	src/hook/snapshot.cpp	2327	uintptr	-	live	std::uintptr_t	-	std::uintptr_t entry = 0;
+site	src/hook/snapshot.cpp	2330	uintptr	-	live	std::uintptr_t	-	entry == static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task)) &&
+site	src/hook/snapshot.cpp	2429	narrow_call	object_ours	live	g_test_warp_page	Va	set_word(Msgbox_Base_addr, Va(g_test_warp_page));
+site	src/hook/snapshot.cpp	2534	uintptr	-	live	std::uintptr_t	-	::Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
+site	src/hook/snapshot.cpp	2534	widen	code_place	live	::bof3::Code(bof3::addr::Boot_Task)	void*	::Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
+site	src/hook/snapshot.cpp	2600	narrow_call	unread	live	kTextA	Va	Check(PlaceWord(wp, kWordText, Va(kTextA), Va(kTextB), true, &w, why) && w == Va(kTextB) &&
+site	src/hook/snapshot.cpp	2600	narrow_call	unread	live	kTextB	Va	Check(PlaceWord(wp, kWordText, Va(kTextA), Va(kTextB), true, &w, why) && w == Va(kTextB) &&
+site	src/hook/snapshot.cpp	2600	narrow_call	unread	live	kTextB	Va	Check(PlaceWord(wp, kWordText, Va(kTextA), Va(kTextB), true, &w, why) && w == Va(kTextB) &&
+site	src/hook/snapshot.cpp	2601	narrow_call	unread	live	kTextA	Va	PlaceWord(wp, kWordText, Va(kTextA), Va(kTextB), false, &w, why) && w == Va(kTextA) &&
+site	src/hook/snapshot.cpp	2601	narrow_call	unread	live	kTextA	Va	PlaceWord(wp, kWordText, Va(kTextA), Va(kTextB), false, &w, why) && w == Va(kTextA) &&
+site	src/hook/snapshot.cpp	2601	narrow_call	unread	live	kTextB	Va	PlaceWord(wp, kWordText, Va(kTextA), Va(kTextB), false, &w, why) && w == Va(kTextA) &&
+site	src/hook/snapshot.cpp	2602	narrow_call	unread	live	kTextA	Va	!PlaceWord(wp, kWordText, Va(kTextA), 0x1234, true, &w, why),
+site	src/hook/snapshot.cpp	2613	narrow_call	unread	live	kTextA	Va	wp.texts = {{Va(kTextA), line_slot}};
+site	src/hook/snapshot.cpp	2616	narrow_call	unread	live	kTextA	Va	Check(!NameWord(wp, plain, Va(kTextA), &kind, &stored, &np) && !NameWord(wp, plain, Va(kTextA) + 5, &kind, &stored, &np) &&
+site	src/hook/snapshot.cpp	2616	narrow_call	unread	live	kTextA	Va	Check(!NameWord(wp, plain, Va(kTextA), &kind, &stored, &np) && !NameWord(wp, plain, Va(kTextA) + 5, &kind, &stored, &np) &&
+site	src/hook/snapshot.cpp	2619	narrow_call	unread	live	kTextA	Va	Check(NameWord(wp, battle, Va(kTextA), &kind, &stored, &np) && kind == kWordTextCopy && stored == line_slot &&
+site	src/hook/snapshot.cpp	2620	narrow_call	unread	live	kTextA	Va	NameWord(wp, battle, Va(kTextA) + 5, &kind, &stored, &np) && stored == (5u << 24 | line_slot),
+site	src/hook/snapshot.cpp	2633	narrow_call	unread	live	kTextA	Va	Check(NameWord(wp, typing, Va(kTextA) + 5, &kind, &stored, &np) && kind == kWordTextCopy && stored == (5u << 24 | line_slot) &&
+site	src/hook/snapshot.cpp	2634	narrow_call	unread	live	kTextA	Va	NameWord(wp, scrolling, Va(kTextA) + end, &kind, &stored, &np) && stored == (end << 24 | line_slot) &&
+site	src/hook/snapshot.cpp	2635	narrow_call	unread	live	kTextA	Va	!NameWord(wp, scrolling, Va(kTextA) + end + 1, &kind, &stored, &np) &&
+site	src/hook/snapshot.cpp	2636	narrow_call	unread	live	kTextA	Va	!NameWord(wp, other_field, Va(kTextA) + 5, &kind, &stored, &np),
+site	src/hook/snapshot.cpp	2641	narrow_call	unread	live	kTextA	Va	Check(NameWord(wp, typing, Va(kTextA) + 5, &kind, &stored, &np) && kind == kWordTextCopy,
+site	src/hook/snapshot.cpp	2646	narrow_call	unread	live	kTextA	Va	wp.texts = {{Va(kTextA), text_slot}};
+site	src/hook/snapshot.cpp	2647	narrow_call	unread	live	kTextA	Va	Check(!NameWord(wp, typing, Va(kTextA) + 5, &kind, &stored, &np) && np == kNpTextOurs,
+site	src/hook/snapshot.cpp	2652	narrow_call	unread	live	kTextA	Va	wp.texts = {{Va(kTextA), line_slot}};
+site	src/hook/snapshot.cpp	2653	narrow_call	unread	live	kTextA	Va	Check(!NameWord(wp, typing, Va(kTextA) + 5, &kind, &stored, &np) && np == 0,
+site	src/hook/snapshot.cpp	2656	narrow_call	unread	live	kTextA	Va	wp.texts = {{Va(kTextA), text_slot}};
+site	src/hook/snapshot.cpp	2657	narrow_call	unread	live	kTextB	Va	Check(!NameWord(wp, box, Va(kTextB), &kind, &stored, &np) && np == kNpTextOurs,
+site	src/hook/snapshot.cpp	2762	long	ul	live	unsigned long	-	const fs::path dir = temp / Printf(" ", static_cast<unsigned long>(bof3::os::ProcessId()));
+site	src/hook/snapshot.cpp	2773	fmt_place	pointer	live	span.image.base	%08X	Log("shadow snapshot: self-test passed - span 0x%08X+0x%X and pool 0x%08X+0x%X copied, scribbled and restored equal; "
+site	src/hook/snapshot.cpp	2773	fmt_place	pointer	live	span.pool.base	%08X	Log("shadow snapshot: self-test passed - span 0x%08X+0x%X and pool 0x%08X+0x%X copied, scribbled and restored equal; "
+site	src/hook/snapshot.cpp	2870	narrow_call	image	live	&Frame_Deadline	Va	const U names[] = {Va(&Task_SchedulerEsp), Va(&Game_Hwnd), Va(&Game_HInstance), Va(&Frame_Deadline),
+site	src/hook/snapshot.cpp	2870	narrow_call	image	live	&Game_HInstance	Va	const U names[] = {Va(&Task_SchedulerEsp), Va(&Game_Hwnd), Va(&Game_HInstance), Va(&Frame_Deadline),
+site	src/hook/snapshot.cpp	2870	narrow_call	image	live	&Game_Hwnd	Va	const U names[] = {Va(&Task_SchedulerEsp), Va(&Game_Hwnd), Va(&Game_HInstance), Va(&Frame_Deadline),
+site	src/hook/snapshot.cpp	2870	narrow_call	image	live	&Task_SchedulerEsp	Va	const U names[] = {Va(&Task_SchedulerEsp), Va(&Game_Hwnd), Va(&Game_HInstance), Va(&Frame_Deadline),
+site	src/hook/snapshot.cpp	2871	narrow_call	image	live	&App_Active	Va	Va(&Fps_Shown), Va(&App_Active), Va(&Cfg_Fullscreen), Va(&Cfg_RenderMode),
+site	src/hook/snapshot.cpp	2871	narrow_call	image	live	&Cfg_Fullscreen	Va	Va(&Fps_Shown), Va(&App_Active), Va(&Cfg_Fullscreen), Va(&Cfg_RenderMode),
+site	src/hook/snapshot.cpp	2871	narrow_call	image	live	&Cfg_RenderMode	Va	Va(&Fps_Shown), Va(&App_Active), Va(&Cfg_Fullscreen), Va(&Cfg_RenderMode),
+site	src/hook/snapshot.cpp	2871	narrow_call	image	live	&Fps_Shown	Va	Va(&Fps_Shown), Va(&App_Active), Va(&Cfg_Fullscreen), Va(&Cfg_RenderMode),
+site	src/hook/snapshot.cpp	2872	narrow_call	image	live	&DInput_Object	Va	Va(Key_Table), Va(&DInput_Object), Va(&Font_GlyphData), Va(Gfx_WindowRect),
+site	src/hook/snapshot.cpp	2872	narrow_call	image	live	&Font_GlyphData	Va	Va(Key_Table), Va(&DInput_Object), Va(&Font_GlyphData), Va(Gfx_WindowRect),
+site	src/hook/snapshot.cpp	2872	narrow_call	image	live	Gfx_WindowRect	Va	Va(Key_Table), Va(&DInput_Object), Va(&Font_GlyphData), Va(Gfx_WindowRect),
+site	src/hook/snapshot.cpp	2872	narrow_call	image	live	Key_Table	Va	Va(Key_Table), Va(&DInput_Object), Va(&Font_GlyphData), Va(Gfx_WindowRect),
+site	src/hook/snapshot.cpp	2873	narrow_call	image	live	&Dd_DirectDraw	Va	Va(Gfx_ClutRows), Va(D3d_DeviceDesc), Va(&Dd_DirectDraw), Va(&Dd_StageSurface),
+site	src/hook/snapshot.cpp	2873	narrow_call	image	live	&Dd_StageSurface	Va	Va(Gfx_ClutRows), Va(D3d_DeviceDesc), Va(&Dd_DirectDraw), Va(&Dd_StageSurface),
+site	src/hook/snapshot.cpp	2873	narrow_call	image	live	D3d_DeviceDesc	Va	Va(Gfx_ClutRows), Va(D3d_DeviceDesc), Va(&Dd_DirectDraw), Va(&Dd_StageSurface),
+site	src/hook/snapshot.cpp	2873	narrow_call	image	live	Gfx_ClutRows	Va	Va(Gfx_ClutRows), Va(D3d_DeviceDesc), Va(&Dd_DirectDraw), Va(&Dd_StageSurface),
+site	src/hook/snapshot.cpp	2874	narrow_call	image	live	&D3d_Device	Va	Va(&D3d_Device), Va(&Desktop_Bpp)};
+site	src/hook/snapshot.cpp	2874	narrow_call	image	live	&Desktop_Bpp	Va	Va(&D3d_Device), Va(&Desktop_Bpp)};
+site	src/hook/snapshot.cpp	2878	fmt_place	pointer	live	kKept[i].at	%08X	Fatal("snapshot: kKept's %s is 0x%08X, symbols.toml's at 0x%08X (VA 0x%08X)", kKept[i].name, kKept[i].at,
+site	src/hook/snapshot.cpp	2878	fmt_place	pointer	live	names[i] - Img(kKept[i].at) + kKept[i].at	%08X	Fatal("snapshot: kKept's %s is 0x%08X, symbols.toml's at 0x%08X (VA 0x%08X)", kKept[i].name, kKept[i].at,
+site	src/hook/snapshot.cpp	2878	fmt_place	word	live	names[i]	%08X	Fatal("snapshot: kKept's %s is 0x%08X, symbols.toml's at 0x%08X (VA 0x%08X)", kKept[i].name, kKept[i].at,
+site	src/hook/span_words.h	183	fmt_place	pointer	live	module	%p	Fatal("statehash: our module at %p has no image headers the loader mapped", module);
+site	src/hook/span_words.h	184	low32	unread	live	reinterpret_cast<const void*>(image.base)	Low32	const auto base = Low32(reinterpret_cast<const void*>(image.base));
+site	src/hook/span_words.h	197	long	ul	live	unsigned long	-	if (sections.empty()) Fatal(" ", (unsigned long)base);
+site	src/hook/span_words.h	233	uintptr	-	live	std::uintptr_t	-	std::memcpy(&w, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(data + off)), 4);
+site	src/hook/span_words.h	233	widen	other	live	data + off	const void*	std::memcpy(&w, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(data + off)), 4);
+site	src/hook/span_words.h	239	long	ul	live	unsigned long	-	(unsigned long)g_slots.size());
 site	src/hook/stackwatch.h	23	long	ul	live	unsigned long	-	void __cdecl StackWatch_AtSetStackBase(unsigned long arrival_esp);
 site	src/hook/stackwatch_posix.cpp	32	asm	cw	live	fnstcw %0	fnstcw	asm volatile("fnstcw %0" : "=m"(cw));
 site	src/hook/stackwatch_posix.cpp	33	asm	cw	live	stmxcsr %0	stmxcsr	asm volatile("stmxcsr %0" : "=m"(mxcsr));
@@ -8990,109 +9079,119 @@ site	src/hook/stallwatch.cpp	203	long	ul	live	unsigned long	-	const unsigned lon
 site	src/hook/stallwatch.cpp	213	uintptr	-	live	std::uintptr_t	-	g_stack_base = reinterpret_cast<std::uintptr_t>(os::CurrentStack().base);
 site	src/hook/stallwatch.cpp	215	long	ul	live	unsigned long	-	if (!g_main) Fatal(" ", static_cast<unsigned long>(os::LastError()));
 site	src/hook/stallwatch.cpp	225	long	ul	live	unsigned long	-	if (!g_out) Fatal(" ", shown.c_str(), static_cast<unsigned long>(os::LastError()));
-site	src/hook/statehash.cpp	219	uintptr	-	live	std::uintptr_t	-	std::memcpy(&w, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(va)), 4);
-site	src/hook/statehash.cpp	219	widen	param	live	va	const void*	std::memcpy(&w, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(va)), 4);
-site	src/hook/statehash.cpp	275	uintptr	-	live	std::uintptr_t	-	const auto* p = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(target));
-site	src/hook/statehash.cpp	275	widen	param	live	target	const unsigned char*	const auto* p = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(target));
-site	src/hook/statehash.cpp	292	fmt_place	pointer	live	module	%p	Fatal("statehash: our module at %p has no image headers the loader mapped", module);
-site	src/hook/statehash.cpp	293	low32	unread	live	reinterpret_cast<const void*>(image.base)	Low32	const auto base = Low32(reinterpret_cast<const void*>(image.base));
-site	src/hook/statehash.cpp	306	long	ul	live	unsigned long	-	Fatal(" ", (unsigned long)base);
-site	src/hook/statehash.cpp	327	long	ul	live	unsigned long	-	when, (unsigned long)all, (unsigned long)g_dll_lo, (unsigned long)g_dll_hi, (unsigned long)named,
-site	src/hook/statehash.cpp	327	long	ul	live	unsigned long	-	when, (unsigned long)all, (unsigned long)g_dll_lo, (unsigned long)g_dll_hi, (unsigned long)named,
-site	src/hook/statehash.cpp	327	long	ul	live	unsigned long	-	when, (unsigned long)all, (unsigned long)g_dll_lo, (unsigned long)g_dll_hi, (unsigned long)named,
-site	src/hook/statehash.cpp	327	long	ul	live	unsigned long	-	when, (unsigned long)all, (unsigned long)g_dll_lo, (unsigned long)g_dll_hi, (unsigned long)named,
-site	src/hook/statehash.cpp	328	long	ul	live	unsigned long	-	(unsigned long)g_named_lo, (unsigned long)g_named_hi, (unsigned long)listed.size());
-site	src/hook/statehash.cpp	328	long	ul	live	unsigned long	-	(unsigned long)g_named_lo, (unsigned long)g_named_hi, (unsigned long)listed.size());
-site	src/hook/statehash.cpp	328	long	ul	live	unsigned long	-	(unsigned long)g_named_lo, (unsigned long)g_named_hi, (unsigned long)listed.size());
-site	src/hook/statehash.cpp	330	long	ul	live	unsigned long	-	Log(" ", (unsigned long)(kBase + listed[i]),
-site	src/hook/statehash.cpp	331	long	ul	live	unsigned long	-	(unsigned long)WordAt(g_data + listed[i]));
-site	src/hook/statehash.cpp	332	long	ul	live	unsigned long	-	if (listed.size() > 32) Log(" ", (unsigned long)(listed.size() - 32));
-site	src/hook/statehash.cpp	422	long	l	live	long	-	void CheckImageBase(const char* what, unsigned long long b) {
-site	src/hook/statehash.cpp	425	long	ul	live	unsigned long	-	(unsigned long)kImageExtent);
-site	src/hook/statehash.cpp	428	long	ul	live	unsigned long	-	(unsigned long)kExeLo, (unsigned long)(kExeLo + kImageExtent));
-site	src/hook/statehash.cpp	428	long	ul	live	unsigned long	-	(unsigned long)kExeLo, (unsigned long)(kExeLo + kImageExtent));
-site	src/hook/statehash.cpp	489	long	ul	live	unsigned long	-	" ", (unsigned long)F, (unsigned long)hf, (unsigned long)h0, (unsigned long)F);
-site	src/hook/statehash.cpp	489	long	ul	live	unsigned long	-	" ", (unsigned long)F, (unsigned long)hf, (unsigned long)h0, (unsigned long)F);
-site	src/hook/statehash.cpp	489	long	ul	live	unsigned long	-	" ", (unsigned long)F, (unsigned long)hf, (unsigned long)h0, (unsigned long)F);
-site	src/hook/statehash.cpp	489	long	ul	live	unsigned long	-	" ", (unsigned long)F, (unsigned long)hf, (unsigned long)h0, (unsigned long)F);
-site	src/hook/statehash.cpp	519	long	ul	live	unsigned long	-	" ", (unsigned long)F24);
-site	src/hook/statehash.cpp	555	long	ul	live	unsigned long	-	(unsigned long)exe_layout::kPoolVa, (unsigned long)exe_layout::kOwnVa, (unsigned long)F,
-site	src/hook/statehash.cpp	555	long	ul	live	unsigned long	-	(unsigned long)exe_layout::kPoolVa, (unsigned long)exe_layout::kOwnVa, (unsigned long)F,
-site	src/hook/statehash.cpp	555	long	ul	live	unsigned long	-	(unsigned long)exe_layout::kPoolVa, (unsigned long)exe_layout::kOwnVa, (unsigned long)F,
-site	src/hook/statehash.cpp	556	long	ul	live	unsigned long	-	(unsigned long)F24, (unsigned long)hpf, (unsigned long)hp0, (unsigned long)kImageExtent);
-site	src/hook/statehash.cpp	556	long	ul	live	unsigned long	-	(unsigned long)F24, (unsigned long)hpf, (unsigned long)hp0, (unsigned long)kImageExtent);
-site	src/hook/statehash.cpp	556	long	ul	live	unsigned long	-	(unsigned long)F24, (unsigned long)hpf, (unsigned long)hp0, (unsigned long)kImageExtent);
-site	src/hook/statehash.cpp	556	long	ul	live	unsigned long	-	(unsigned long)F24, (unsigned long)hpf, (unsigned long)hp0, (unsigned long)kImageExtent);
-site	src/hook/statehash.cpp	579	low32	func_ours	live	Bind_Ours(Bind_RowVa((next() >> 8) % rows))	Low32	w = Low32(Bind_Ours(Bind_RowVa((next() >> 8) % rows)));
-site	src/hook/statehash.cpp	621	long	ul	live	unsigned long	-	" ", (unsigned long)pointers,
-site	src/hook/statehash.cpp	622	long	ul	live	unsigned long	-	(unsigned long)sites.size(), (unsigned long)data_in_fold, (unsigned long)numbers,
-site	src/hook/statehash.cpp	622	long	ul	live	unsigned long	-	(unsigned long)sites.size(), (unsigned long)data_in_fold, (unsigned long)numbers,
-site	src/hook/statehash.cpp	622	long	ul	live	unsigned long	-	(unsigned long)sites.size(), (unsigned long)data_in_fold, (unsigned long)numbers,
-site	src/hook/statehash.cpp	623	long	ul	live	unsigned long	-	(unsigned long)pool_mixed, (unsigned long)pool_pointers, (unsigned long)pool_links);
-site	src/hook/statehash.cpp	623	long	ul	live	unsigned long	-	(unsigned long)pool_mixed, (unsigned long)pool_pointers, (unsigned long)pool_links);
-site	src/hook/statehash.cpp	623	long	ul	live	unsigned long	-	(unsigned long)pool_mixed, (unsigned long)pool_pointers, (unsigned long)pool_links);
-site	src/hook/statehash.cpp	632	long	ul	live	unsigned long	-	(unsigned long)pointers, (unsigned long)sites.size(), (unsigned long)pool_mixed, (unsigned long)delta,
-site	src/hook/statehash.cpp	632	long	ul	live	unsigned long	-	(unsigned long)pointers, (unsigned long)sites.size(), (unsigned long)pool_mixed, (unsigned long)delta,
-site	src/hook/statehash.cpp	632	long	ul	live	unsigned long	-	(unsigned long)pointers, (unsigned long)sites.size(), (unsigned long)pool_mixed, (unsigned long)delta,
-site	src/hook/statehash.cpp	632	long	ul	live	unsigned long	-	(unsigned long)pointers, (unsigned long)sites.size(), (unsigned long)pool_mixed, (unsigned long)delta,
-site	src/hook/statehash.cpp	633	long	ul	live	unsigned long	-	(unsigned long)data_in_fold, (unsigned long)numbers, (unsigned long)F, (unsigned long)kImageExtent,
-site	src/hook/statehash.cpp	633	long	ul	live	unsigned long	-	(unsigned long)data_in_fold, (unsigned long)numbers, (unsigned long)F, (unsigned long)kImageExtent,
-site	src/hook/statehash.cpp	633	long	ul	live	unsigned long	-	(unsigned long)data_in_fold, (unsigned long)numbers, (unsigned long)F, (unsigned long)kImageExtent,
-site	src/hook/statehash.cpp	633	long	ul	live	unsigned long	-	(unsigned long)data_in_fold, (unsigned long)numbers, (unsigned long)F, (unsigned long)kImageExtent,
-site	src/hook/statehash.cpp	634	long	ul	live	unsigned long	-	(unsigned long)pool_pointers, (unsigned long)pool_links, (unsigned long)exe_layout::kPoolVa,
-site	src/hook/statehash.cpp	634	long	ul	live	unsigned long	-	(unsigned long)pool_pointers, (unsigned long)pool_links, (unsigned long)exe_layout::kPoolVa,
-site	src/hook/statehash.cpp	634	long	ul	live	unsigned long	-	(unsigned long)pool_pointers, (unsigned long)pool_links, (unsigned long)exe_layout::kPoolVa,
-site	src/hook/statehash.cpp	635	long	ul	live	unsigned long	-	(unsigned long)exe_layout::kOwnVa,
-site	src/hook/statehash.cpp	653	long	ul	live	unsigned long	-	const unsigned long at = std::strtoul(line, &end, 0);
-site	src/hook/statehash.cpp	655	long	ul	live	unsigned long	-	const unsigned long len = end == line ? 0 : std::strtoul(end, &end2, 0);
-site	src/hook/statehash.cpp	677	long	ul	live	unsigned long	-	std::snprintf(path, sizeof path, " ", g_path.c_str(), static_cast<unsigned long>(g_tick));
-site	src/hook/statehash.cpp	680	uintptr	-	live	std::uintptr_t	-	std::fwrite(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(g_data)), 1, kEnd - kBase, f);
-site	src/hook/statehash.cpp	680	widen	param	live	g_data	const void*	std::fwrite(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(g_data)), 1, kEnd - kBase, f);
-site	src/hook/statehash.cpp	682	long	ul	live	unsigned long	-	Log(" ", static_cast<unsigned long>(g_tick),
-site	src/hook/statehash.cpp	683	long	ul	live	unsigned long	-	static_cast<unsigned long>(Frame_Counter), path);
-site	src/hook/statehash.cpp	688	long	ul	live	unsigned long	-	void StateHash_SetImageBase(unsigned long base) {
-site	src/hook/statehash.cpp	712	long	l	live	long	-	const unsigned long long f = std::strtoull(fold, &end, 0);
-site	src/hook/statehash.cpp	721	long	ul	live	unsigned long	-	(unsigned long)g_fold_env, (unsigned long)g_image);
-site	src/hook/statehash.cpp	721	long	ul	live	unsigned long	-	(unsigned long)g_fold_env, (unsigned long)g_image);
-site	src/hook/statehash.cpp	729	long	ul	live	unsigned long	-	" ", (unsigned long)g_folds[i],
-site	src/hook/statehash.cpp	730	long	ul	live	unsigned long	-	(unsigned long)(g_folds[i] + kImageExtent), (unsigned long)g_dll_lo, (unsigned long)g_dll_hi);
-site	src/hook/statehash.cpp	730	long	ul	live	unsigned long	-	(unsigned long)(g_folds[i] + kImageExtent), (unsigned long)g_dll_lo, (unsigned long)g_dll_hi);
-site	src/hook/statehash.cpp	730	long	ul	live	unsigned long	-	(unsigned long)(g_folds[i] + kImageExtent), (unsigned long)g_dll_lo, (unsigned long)g_dll_hi);
-site	src/hook/statehash.cpp	736	long	ul	live	unsigned long	-	" ", (unsigned long)Bind_TableLo(),
-site	src/hook/statehash.cpp	737	long	ul	live	unsigned long	-	(unsigned long)Bind_TableHi());
-site	src/hook/statehash.cpp	742	long	ul	live	unsigned long	-	" ", (unsigned long)g_folds[i], (unsigned long)(g_folds[i] + kImageExtent),
-site	src/hook/statehash.cpp	742	long	ul	live	unsigned long	-	" ", (unsigned long)g_folds[i], (unsigned long)(g_folds[i] + kImageExtent),
-site	src/hook/statehash.cpp	743	long	ul	live	unsigned long	-	(unsigned long)Bind_TableLo(), (unsigned long)Bind_TableHi());
-site	src/hook/statehash.cpp	743	long	ul	live	unsigned long	-	(unsigned long)Bind_TableLo(), (unsigned long)Bind_TableHi());
-site	src/hook/statehash.cpp	746	long	ul	live	unsigned long	-	(unsigned long)g_image, (unsigned long)g_folds[i], (unsigned long)(g_folds[i] + kImageExtent));
-site	src/hook/statehash.cpp	746	long	ul	live	unsigned long	-	(unsigned long)g_image, (unsigned long)g_folds[i], (unsigned long)(g_folds[i] + kImageExtent));
-site	src/hook/statehash.cpp	746	long	ul	live	unsigned long	-	(unsigned long)g_image, (unsigned long)g_folds[i], (unsigned long)(g_folds[i] + kImageExtent));
-site	src/hook/statehash.cpp	752	long	ul	live	unsigned long	-	(unsigned long)g_dll_lo, (unsigned long)g_dll_hi, (unsigned)g_sections.size(), (unsigned long)g_named_lo,
-site	src/hook/statehash.cpp	752	long	ul	live	unsigned long	-	(unsigned long)g_dll_lo, (unsigned long)g_dll_hi, (unsigned)g_sections.size(), (unsigned long)g_named_lo,
-site	src/hook/statehash.cpp	752	long	ul	live	unsigned long	-	(unsigned long)g_dll_lo, (unsigned long)g_dll_hi, (unsigned)g_sections.size(), (unsigned long)g_named_lo,
-site	src/hook/statehash.cpp	753	long	ul	live	unsigned long	-	(unsigned long)g_named_hi, (unsigned long)g_image, (unsigned long)(g_image + kImageExtent),
-site	src/hook/statehash.cpp	753	long	ul	live	unsigned long	-	(unsigned long)g_named_hi, (unsigned long)g_image, (unsigned long)(g_image + kImageExtent),
-site	src/hook/statehash.cpp	753	long	ul	live	unsigned long	-	(unsigned long)g_named_hi, (unsigned long)g_image, (unsigned long)(g_image + kImageExtent),
-site	src/hook/statehash.cpp	765	long	ul	live	unsigned long	-	Fatal(" ", (unsigned long)va);
-site	src/hook/statehash.cpp	782	long	ul	live	unsigned long	-	(unsigned long)(g_sites.size() - runtime_added), (unsigned long)runtime_added, (unsigned long)g_sites.size(),
-site	src/hook/statehash.cpp	782	long	ul	live	unsigned long	-	(unsigned long)(g_sites.size() - runtime_added), (unsigned long)runtime_added, (unsigned long)g_sites.size(),
-site	src/hook/statehash.cpp	782	long	ul	live	unsigned long	-	(unsigned long)(g_sites.size() - runtime_added), (unsigned long)runtime_added, (unsigned long)g_sites.size(),
-site	src/hook/statehash.cpp	797	long	ul	live	unsigned long	-	if (n >= sizeof path) Fatal(" ", (unsigned long)n);
-site	src/hook/statehash.cpp	841	long	ul	live	unsigned long	-	static_cast<unsigned long>(kPages), static_cast<unsigned long>(kBase), path, (unsigned)g_skips.size(),
-site	src/hook/statehash.cpp	841	long	ul	live	unsigned long	-	static_cast<unsigned long>(kPages), static_cast<unsigned long>(kBase), path, (unsigned)g_skips.size(),
-site	src/hook/statehash.cpp	843	long	ul	live	unsigned long	-	static_cast<unsigned long>(g_image), g_nfolds, static_cast<unsigned long>(kImageExtent));
-site	src/hook/statehash.cpp	843	long	ul	live	unsigned long	-	static_cast<unsigned long>(g_image), g_nfolds, static_cast<unsigned long>(kImageExtent));
-site	src/hook/statehash.cpp	879	long	ul	live	unsigned long	-	Log(" ", (unsigned long)g_tick,
-site	src/hook/statehash.cpp	880	long	ul	live	unsigned long	-	(unsigned long)va, (unsigned long)w, what, fn ? " " : "", fn ? fn : "", fn ? " " : "");
-site	src/hook/statehash.cpp	880	long	ul	live	unsigned long	-	(unsigned long)va, (unsigned long)w, what, fn ? " " : "", fn ? fn : "", fn ? " " : "");
-site	src/hook/statehash.cpp	899	uintptr	-	live	std::uintptr_t	-	const unsigned char* const page = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(g_data + i * kPage));
-site	src/hook/statehash.cpp	899	widen	other	live	g_data + i * kPage	const unsigned char*	const unsigned char* const page = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(g_data + i * kPage));
-site	src/hook/statehash.cpp	916	long	ul	live	unsigned long	-	static_cast<unsigned long>(g_tick), static_cast<unsigned long>(normalised),
-site	src/hook/statehash.cpp	916	long	ul	live	unsigned long	-	static_cast<unsigned long>(g_tick), static_cast<unsigned long>(normalised),
+site	src/hook/statehash.cpp	189	uintptr	-	live	std::uintptr_t	-	std::memcpy(&w, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(va)), 4);
+site	src/hook/statehash.cpp	189	widen	param	live	va	const void*	std::memcpy(&w, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(va)), 4);
+site	src/hook/statehash.cpp	216	uintptr	-	live	std::uintptr_t	-	const auto* p = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(target));
+site	src/hook/statehash.cpp	216	widen	param	live	target	const unsigned char*	const auto* p = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(target));
+site	src/hook/statehash.cpp	244	long	ul	live	unsigned long	-	when, (unsigned long)all, (unsigned long)g_ours.lo, (unsigned long)g_ours.hi, (unsigned long)named,
+site	src/hook/statehash.cpp	244	long	ul	live	unsigned long	-	when, (unsigned long)all, (unsigned long)g_ours.lo, (unsigned long)g_ours.hi, (unsigned long)named,
+site	src/hook/statehash.cpp	244	long	ul	live	unsigned long	-	when, (unsigned long)all, (unsigned long)g_ours.lo, (unsigned long)g_ours.hi, (unsigned long)named,
+site	src/hook/statehash.cpp	244	long	ul	live	unsigned long	-	when, (unsigned long)all, (unsigned long)g_ours.lo, (unsigned long)g_ours.hi, (unsigned long)named,
+site	src/hook/statehash.cpp	245	long	ul	live	unsigned long	-	(unsigned long)g_ours.named_lo, (unsigned long)g_ours.named_hi, (unsigned long)listed.size());
+site	src/hook/statehash.cpp	245	long	ul	live	unsigned long	-	(unsigned long)g_ours.named_lo, (unsigned long)g_ours.named_hi, (unsigned long)listed.size());
+site	src/hook/statehash.cpp	245	long	ul	live	unsigned long	-	(unsigned long)g_ours.named_lo, (unsigned long)g_ours.named_hi, (unsigned long)listed.size());
+site	src/hook/statehash.cpp	247	long	ul	live	unsigned long	-	Log(" ", (unsigned long)(kBase + listed[i]),
+site	src/hook/statehash.cpp	248	long	ul	live	unsigned long	-	(unsigned long)WordAt(g_data + listed[i]));
+site	src/hook/statehash.cpp	249	long	ul	live	unsigned long	-	if (listed.size() > 32) Log(" ", (unsigned long)(listed.size() - 32));
+site	src/hook/statehash.cpp	339	long	l	live	long	-	void CheckImageBase(const char* what, unsigned long long b) {
+site	src/hook/statehash.cpp	342	long	ul	live	unsigned long	-	(unsigned long)kImageExtent);
+site	src/hook/statehash.cpp	345	long	ul	live	unsigned long	-	(unsigned long)kExeLo, (unsigned long)(kExeLo + kImageExtent));
+site	src/hook/statehash.cpp	345	long	ul	live	unsigned long	-	(unsigned long)kExeLo, (unsigned long)(kExeLo + kImageExtent));
+site	src/hook/statehash.cpp	406	long	ul	live	unsigned long	-	" ", (unsigned long)F, (unsigned long)hf, (unsigned long)h0, (unsigned long)F);
+site	src/hook/statehash.cpp	406	long	ul	live	unsigned long	-	" ", (unsigned long)F, (unsigned long)hf, (unsigned long)h0, (unsigned long)F);
+site	src/hook/statehash.cpp	406	long	ul	live	unsigned long	-	" ", (unsigned long)F, (unsigned long)hf, (unsigned long)h0, (unsigned long)F);
+site	src/hook/statehash.cpp	406	long	ul	live	unsigned long	-	" ", (unsigned long)F, (unsigned long)hf, (unsigned long)h0, (unsigned long)F);
+site	src/hook/statehash.cpp	436	long	ul	live	unsigned long	-	" ", (unsigned long)F24);
+site	src/hook/statehash.cpp	472	long	ul	live	unsigned long	-	(unsigned long)exe_layout::kPoolVa, (unsigned long)exe_layout::kOwnVa, (unsigned long)F,
+site	src/hook/statehash.cpp	472	long	ul	live	unsigned long	-	(unsigned long)exe_layout::kPoolVa, (unsigned long)exe_layout::kOwnVa, (unsigned long)F,
+site	src/hook/statehash.cpp	472	long	ul	live	unsigned long	-	(unsigned long)exe_layout::kPoolVa, (unsigned long)exe_layout::kOwnVa, (unsigned long)F,
+site	src/hook/statehash.cpp	473	long	ul	live	unsigned long	-	(unsigned long)F24, (unsigned long)hpf, (unsigned long)hp0, (unsigned long)kImageExtent);
+site	src/hook/statehash.cpp	473	long	ul	live	unsigned long	-	(unsigned long)F24, (unsigned long)hpf, (unsigned long)hp0, (unsigned long)kImageExtent);
+site	src/hook/statehash.cpp	473	long	ul	live	unsigned long	-	(unsigned long)F24, (unsigned long)hpf, (unsigned long)hp0, (unsigned long)kImageExtent);
+site	src/hook/statehash.cpp	473	long	ul	live	unsigned long	-	(unsigned long)F24, (unsigned long)hpf, (unsigned long)hp0, (unsigned long)kImageExtent);
+site	src/hook/statehash.cpp	496	low32	func_ours	live	Bind_Ours(Bind_RowVa((next() >> 8) % rows))	Low32	w = Low32(Bind_Ours(Bind_RowVa((next() >> 8) % rows)));
+site	src/hook/statehash.cpp	538	long	ul	live	unsigned long	-	" ", (unsigned long)pointers,
+site	src/hook/statehash.cpp	539	long	ul	live	unsigned long	-	(unsigned long)sites.size(), (unsigned long)data_in_fold, (unsigned long)numbers,
+site	src/hook/statehash.cpp	539	long	ul	live	unsigned long	-	(unsigned long)sites.size(), (unsigned long)data_in_fold, (unsigned long)numbers,
+site	src/hook/statehash.cpp	539	long	ul	live	unsigned long	-	(unsigned long)sites.size(), (unsigned long)data_in_fold, (unsigned long)numbers,
+site	src/hook/statehash.cpp	540	long	ul	live	unsigned long	-	(unsigned long)pool_mixed, (unsigned long)pool_pointers, (unsigned long)pool_links);
+site	src/hook/statehash.cpp	540	long	ul	live	unsigned long	-	(unsigned long)pool_mixed, (unsigned long)pool_pointers, (unsigned long)pool_links);
+site	src/hook/statehash.cpp	540	long	ul	live	unsigned long	-	(unsigned long)pool_mixed, (unsigned long)pool_pointers, (unsigned long)pool_links);
+site	src/hook/statehash.cpp	549	long	ul	live	unsigned long	-	(unsigned long)pointers, (unsigned long)sites.size(), (unsigned long)pool_mixed, (unsigned long)delta,
+site	src/hook/statehash.cpp	549	long	ul	live	unsigned long	-	(unsigned long)pointers, (unsigned long)sites.size(), (unsigned long)pool_mixed, (unsigned long)delta,
+site	src/hook/statehash.cpp	549	long	ul	live	unsigned long	-	(unsigned long)pointers, (unsigned long)sites.size(), (unsigned long)pool_mixed, (unsigned long)delta,
+site	src/hook/statehash.cpp	549	long	ul	live	unsigned long	-	(unsigned long)pointers, (unsigned long)sites.size(), (unsigned long)pool_mixed, (unsigned long)delta,
+site	src/hook/statehash.cpp	550	long	ul	live	unsigned long	-	(unsigned long)data_in_fold, (unsigned long)numbers, (unsigned long)F, (unsigned long)kImageExtent,
+site	src/hook/statehash.cpp	550	long	ul	live	unsigned long	-	(unsigned long)data_in_fold, (unsigned long)numbers, (unsigned long)F, (unsigned long)kImageExtent,
+site	src/hook/statehash.cpp	550	long	ul	live	unsigned long	-	(unsigned long)data_in_fold, (unsigned long)numbers, (unsigned long)F, (unsigned long)kImageExtent,
+site	src/hook/statehash.cpp	550	long	ul	live	unsigned long	-	(unsigned long)data_in_fold, (unsigned long)numbers, (unsigned long)F, (unsigned long)kImageExtent,
+site	src/hook/statehash.cpp	551	long	ul	live	unsigned long	-	(unsigned long)pool_pointers, (unsigned long)pool_links, (unsigned long)exe_layout::kPoolVa,
+site	src/hook/statehash.cpp	551	long	ul	live	unsigned long	-	(unsigned long)pool_pointers, (unsigned long)pool_links, (unsigned long)exe_layout::kPoolVa,
+site	src/hook/statehash.cpp	551	long	ul	live	unsigned long	-	(unsigned long)pool_pointers, (unsigned long)pool_links, (unsigned long)exe_layout::kPoolVa,
+site	src/hook/statehash.cpp	552	long	ul	live	unsigned long	-	(unsigned long)exe_layout::kOwnVa,
+site	src/hook/statehash.cpp	570	long	ul	live	unsigned long	-	const unsigned long at = std::strtoul(line, &end, 0);
+site	src/hook/statehash.cpp	572	long	ul	live	unsigned long	-	const unsigned long len = end == line ? 0 : std::strtoul(end, &end2, 0);
+site	src/hook/statehash.cpp	594	long	ul	live	unsigned long	-	std::snprintf(path, sizeof path, " ", g_path.c_str(), static_cast<unsigned long>(g_tick));
+site	src/hook/statehash.cpp	597	uintptr	-	live	std::uintptr_t	-	std::fwrite(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(g_data)), 1, kEnd - kBase, f);
+site	src/hook/statehash.cpp	597	widen	param	live	g_data	const void*	std::fwrite(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(g_data)), 1, kEnd - kBase, f);
+site	src/hook/statehash.cpp	599	long	ul	live	unsigned long	-	Log(" ", static_cast<unsigned long>(g_tick),
+site	src/hook/statehash.cpp	600	long	ul	live	unsigned long	-	static_cast<unsigned long>(Frame_Counter), path);
+site	src/hook/statehash.cpp	605	long	ul	live	unsigned long	-	void StateHash_SetImageBase(unsigned long base) {
+site	src/hook/statehash.cpp	630	long	l	live	long	-	const unsigned long long f = std::strtoull(fold, &end, 0);
+site	src/hook/statehash.cpp	639	long	ul	live	unsigned long	-	(unsigned long)g_fold_env, (unsigned long)g_image);
+site	src/hook/statehash.cpp	639	long	ul	live	unsigned long	-	(unsigned long)g_fold_env, (unsigned long)g_image);
+site	src/hook/statehash.cpp	647	long	ul	live	unsigned long	-	" ", (unsigned long)g_folds[i],
+site	src/hook/statehash.cpp	648	long	ul	live	unsigned long	-	(unsigned long)(g_folds[i] + kImageExtent), (unsigned long)g_ours.lo, (unsigned long)g_ours.hi);
+site	src/hook/statehash.cpp	648	long	ul	live	unsigned long	-	(unsigned long)(g_folds[i] + kImageExtent), (unsigned long)g_ours.lo, (unsigned long)g_ours.hi);
+site	src/hook/statehash.cpp	648	long	ul	live	unsigned long	-	(unsigned long)(g_folds[i] + kImageExtent), (unsigned long)g_ours.lo, (unsigned long)g_ours.hi);
+site	src/hook/statehash.cpp	654	long	ul	live	unsigned long	-	" ", (unsigned long)Bind_TableLo(),
+site	src/hook/statehash.cpp	655	long	ul	live	unsigned long	-	(unsigned long)Bind_TableHi());
+site	src/hook/statehash.cpp	660	long	ul	live	unsigned long	-	" ", (unsigned long)g_folds[i], (unsigned long)(g_folds[i] + kImageExtent),
+site	src/hook/statehash.cpp	660	long	ul	live	unsigned long	-	" ", (unsigned long)g_folds[i], (unsigned long)(g_folds[i] + kImageExtent),
+site	src/hook/statehash.cpp	661	long	ul	live	unsigned long	-	(unsigned long)Bind_TableLo(), (unsigned long)Bind_TableHi());
+site	src/hook/statehash.cpp	661	long	ul	live	unsigned long	-	(unsigned long)Bind_TableLo(), (unsigned long)Bind_TableHi());
+site	src/hook/statehash.cpp	664	long	ul	live	unsigned long	-	(unsigned long)g_image, (unsigned long)g_folds[i], (unsigned long)(g_folds[i] + kImageExtent));
+site	src/hook/statehash.cpp	664	long	ul	live	unsigned long	-	(unsigned long)g_image, (unsigned long)g_folds[i], (unsigned long)(g_folds[i] + kImageExtent));
+site	src/hook/statehash.cpp	664	long	ul	live	unsigned long	-	(unsigned long)g_image, (unsigned long)g_folds[i], (unsigned long)(g_folds[i] + kImageExtent));
+site	src/hook/statehash.cpp	670	long	ul	live	unsigned long	-	(unsigned long)g_ours.lo, (unsigned long)g_ours.hi, (unsigned)g_ours.sections.size(), (unsigned long)g_ours.named_lo,
+site	src/hook/statehash.cpp	670	long	ul	live	unsigned long	-	(unsigned long)g_ours.lo, (unsigned long)g_ours.hi, (unsigned)g_ours.sections.size(), (unsigned long)g_ours.named_lo,
+site	src/hook/statehash.cpp	670	long	ul	live	unsigned long	-	(unsigned long)g_ours.lo, (unsigned long)g_ours.hi, (unsigned)g_ours.sections.size(), (unsigned long)g_ours.named_lo,
+site	src/hook/statehash.cpp	671	long	ul	live	unsigned long	-	(unsigned long)g_ours.named_hi, (unsigned long)g_image, (unsigned long)(g_image + kImageExtent),
+site	src/hook/statehash.cpp	671	long	ul	live	unsigned long	-	(unsigned long)g_ours.named_hi, (unsigned long)g_image, (unsigned long)(g_image + kImageExtent),
+site	src/hook/statehash.cpp	671	long	ul	live	unsigned long	-	(unsigned long)g_ours.named_hi, (unsigned long)g_image, (unsigned long)(g_image + kImageExtent),
+site	src/hook/statehash.cpp	683	long	ul	live	unsigned long	-	Fatal(" ", (unsigned long)va);
+site	src/hook/statehash.cpp	700	long	ul	live	unsigned long	-	(unsigned long)(g_sites.size() - runtime_added), (unsigned long)runtime_added, (unsigned long)g_sites.size(),
+site	src/hook/statehash.cpp	700	long	ul	live	unsigned long	-	(unsigned long)(g_sites.size() - runtime_added), (unsigned long)runtime_added, (unsigned long)g_sites.size(),
+site	src/hook/statehash.cpp	700	long	ul	live	unsigned long	-	(unsigned long)(g_sites.size() - runtime_added), (unsigned long)runtime_added, (unsigned long)g_sites.size(),
+site	src/hook/statehash.cpp	715	long	ul	live	unsigned long	-	if (n >= sizeof path) Fatal(" ", (unsigned long)n);
+site	src/hook/statehash.cpp	759	long	ul	live	unsigned long	-	static_cast<unsigned long>(kPages), static_cast<unsigned long>(kBase), path, (unsigned)g_skips.size(),
+site	src/hook/statehash.cpp	759	long	ul	live	unsigned long	-	static_cast<unsigned long>(kPages), static_cast<unsigned long>(kBase), path, (unsigned)g_skips.size(),
+site	src/hook/statehash.cpp	761	long	ul	live	unsigned long	-	static_cast<unsigned long>(g_image), g_nfolds, static_cast<unsigned long>(kImageExtent));
+site	src/hook/statehash.cpp	761	long	ul	live	unsigned long	-	static_cast<unsigned long>(g_image), g_nfolds, static_cast<unsigned long>(kImageExtent));
+site	src/hook/statehash.cpp	797	long	ul	live	unsigned long	-	Log(" ", (unsigned long)g_tick,
+site	src/hook/statehash.cpp	798	long	ul	live	unsigned long	-	(unsigned long)va, (unsigned long)w, what, fn ? " " : "", fn ? fn : "", fn ? " " : "");
+site	src/hook/statehash.cpp	798	long	ul	live	unsigned long	-	(unsigned long)va, (unsigned long)w, what, fn ? " " : "", fn ? fn : "", fn ? " " : "");
+site	src/hook/statehash.cpp	817	uintptr	-	live	std::uintptr_t	-	const unsigned char* const page = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(g_data + i * kPage));
+site	src/hook/statehash.cpp	817	widen	other	live	g_data + i * kPage	const unsigned char*	const unsigned char* const page = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(g_data + i * kPage));
+site	src/hook/statehash.cpp	834	long	ul	live	unsigned long	-	static_cast<unsigned long>(g_tick), static_cast<unsigned long>(normalised),
+site	src/hook/statehash.cpp	834	long	ul	live	unsigned long	-	static_cast<unsigned long>(g_tick), static_cast<unsigned long>(normalised),
 site	src/hook/statehash.h	24	long	ul	live	unsigned long	-	void StateHash_SetImageBase(unsigned long base);
 site	src/hook/stp_census.cpp	31	uintptr	-	live	std::uintptr_t	-	const unsigned char* At(std::uint32_t a) { return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(a)); }
 site	src/hook/stp_census.cpp	31	widen	param	live	a	const unsigned char*	const unsigned char* At(std::uint32_t a) { return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(a)); }
 site	src/hook/stp_census.cpp	48	long	l	live	long	-	unsigned long long zero = 0, stp = 0, opaque = 0;
+site	src/hook/task_census.cpp	24	uintptr	-	live	std::uintptr_t	-	using Chain = std::vector<std::uintptr_t>;
+site	src/hook/task_census.cpp	57	uintptr	-	live	std::uintptr_t	-	const unsigned char* Native(std::uintptr_t a) { return reinterpret_cast<const unsigned char*>(a); }
+site	src/hook/task_census.cpp	59	uintptr	-	live	std::uintptr_t	-	bool Executable(std::uintptr_t a) {
+site	src/hook/task_census.cpp	69	uintptr	-	live	std::uintptr_t	-	bool AfterCall(std::uintptr_t a) {
+site	src/hook/task_census.cpp	86	long	l	live	long	-	std::fprintf(f, " ", static_cast<unsigned long long>(g_module.base),
+site	src/hook/task_census.cpp	87	long	l	live	long	-	static_cast<unsigned long long>(g_module.extent), g_seen, task_sched::kStackSize);
+site	src/hook/task_census.cpp	103	uintptr	-	live	std::uintptr_t	-	for (std::uintptr_t a : chain) {
+site	src/hook/task_census.cpp	104	long	l	live	long	-	std::fprintf(f, " ", first ? "" : " ", static_cast<unsigned long long>(a));
+site	src/hook/task_census.cpp	129	long	l	live	long	-	static_cast<unsigned long long>(g_module.base), static_cast<unsigned long long>(g_module.extent));
+site	src/hook/task_census.cpp	129	long	l	live	long	-	static_cast<unsigned long long>(g_module.base), static_cast<unsigned long long>(g_module.extent));
+site	src/hook/task_census.cpp	149	fmt_place	word	live	sp	%08X	bof3::Fatal("BOF3X_TASKCENSUS: task %u's saved sp 0x%08X is outside its slice under 0x%08X", k, sp, top);
+site	src/hook/task_census.cpp	149	fmt_place	word	live	top	%08X	bof3::Fatal("BOF3X_TASKCENSUS: task %u's saved sp 0x%08X is outside its slice under 0x%08X", k, sp, top);
+site	src/hook/task_census.cpp	151	uintptr	-	live	std::uintptr_t	-	std::uintptr_t word;
 site	src/hook/wav_dump.cpp	95	long	ul	live	unsigned long	-	constexpr unsigned long kPrimaryBuffer = 0x01, kPositionNotify = 0x100;
 site	src/hook/wav_dump.cpp	96	long	ul	live	unsigned long	-	constexpr unsigned long kLockFromWriteCursor = 0x01, kLockEntireBuffer = 0x02;
 site	src/hook/wav_dump.cpp	97	long	ul	live	unsigned long	-	constexpr unsigned long kPlayLooping = 0x01;
@@ -9341,35 +9440,40 @@ site	src/os/win32/thread.cpp	41	uintptr	-	live	std::uintptr_t	-	bool SampleThrea
 site	src/os/win32/thread.cpp	52	width_if	logic	live	-	#if defined(__x86_64__)	#if defined(__x86_64__)
 site	src/os/win32/thread_start.cpp	18	ptr_overlay	unread	live	p	Start	const Start s = *static_cast<Start*>(p);
 site	src/os/win32/thread_start.cpp	19	ptr_overlay	unread	live	p	Start	delete static_cast<Start*>(p);
-site	src/render/gfx_snapshot.cpp	30	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/render/gfx_snapshot.cpp	30	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/render/gfx_snapshot.cpp	33	low32	helper_def	live	p	Low32	return Low32(p);
-site	src/render/gfx_snapshot.cpp	90	narrow_call	image	live	Gfx_TexCache	Va	U TexEntry(U page, U i) { return Va(Gfx_TexCache) + (page * kPageEntries + i) * kTexEntry; }
-site	src/render/gfx_snapshot.cpp	91	narrow_call	image	live	Font_TexCache	Va	U FontEntry(U i) { return Va(Font_TexCache) + i * kFontEntry; }
-site	src/render/gfx_snapshot.cpp	92	narrow_call	image	live	D3d_CellTexCache	Va	U CellEntry(U i) { return Va(D3d_CellTexCache) + i * kCellEntry; }
-site	src/render/gfx_snapshot.cpp	93	narrow_call	image	live	Gfx_ClutRows	Va	U RowAt(U y) { return Va(Gfx_ClutRows) + y * 8; }
-site	src/render/gfx_snapshot.cpp	135	uintptr	-	live	std::uintptr_t	-	void* Object(U slot) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(Long(slot))); }
-site	src/render/gfx_snapshot.cpp	135	widen	word_read	live	Long(slot)	void*	void* Object(U slot) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(Long(slot))); }
-site	src/render/gfx_snapshot.cpp	229	narrow_call	unread	live	made	Va	live = Va(made);
-site	src/render/gfx_snapshot.cpp	335	narrow_call	unread	live	b	Va	Row(y)->block = Va(b);
-site	src/render/gfx_snapshot.cpp	362	narrow_call	unread	live	page	Va	Tex(TexEntry(5, 0))->surface = Va(page);
-site	src/render/gfx_snapshot.cpp	363	narrow_call	unread	live	&page->texture_vtable	Va	Tex(TexEntry(5, 0))->texture = Va(&page->texture_vtable);
-site	src/render/gfx_snapshot.cpp	364	narrow_call	unread	live	glyph	Va	Font(FontEntry(9))->surface = Va(glyph);
-site	src/render/gfx_snapshot.cpp	365	narrow_call	unread	live	&glyph->texture_vtable	Va	Font(FontEntry(9))->texture = Va(&glyph->texture_vtable);
-site	src/render/gfx_snapshot.cpp	366	narrow_call	unread	live	cell	Va	Cell(CellEntry(77))->surface = Va(cell);
-site	src/render/gfx_snapshot.cpp	367	narrow_call	unread	live	&cell->texture_vtable	Va	Cell(CellEntry(77))->texture = Va(&cell->texture_vtable);
-site	src/render/gfx_snapshot.cpp	437	narrow_call	image	live	&D3d_BackMaterialHandle	Va	{::bof3::Img(0x66B710), Va(Gfx_ScreenRect) + 8}, {::bof3::Img(0x6BEA00), Va(&Dd_CellBackdrop)}, {::bof3::Img(0x6C3A40), Va(&D3d_BackMaterialHandle)},
-site	src/render/gfx_snapshot.cpp	437	narrow_call	image	live	&Dd_CellBackdrop	Va	{::bof3::Img(0x66B710), Va(Gfx_ScreenRect) + 8}, {::bof3::Img(0x6BEA00), Va(&Dd_CellBackdrop)}, {::bof3::Img(0x6C3A40), Va(&D3d_BackMaterialHandle)},
-site	src/render/gfx_snapshot.cpp	437	narrow_call	image	live	Gfx_ScreenRect	Va	{::bof3::Img(0x66B710), Va(Gfx_ScreenRect) + 8}, {::bof3::Img(0x6BEA00), Va(&Dd_CellBackdrop)}, {::bof3::Img(0x6C3A40), Va(&D3d_BackMaterialHandle)},
-site	src/render/gfx_snapshot.cpp	438	narrow_call	image	live	&D3d_CaptureSurface	Va	{::bof3::Img(0x6C3A48), Va(&Gfx_RenderFlags) - 4}, {::bof3::Img(0x7C9F44), Va(&D3d_ScaleY) - 4}, {::bof3::Img(0x7CADF8), Va(&D3d_CaptureSurface)},
-site	src/render/gfx_snapshot.cpp	438	narrow_call	image	live	&D3d_ScaleY	Va	{::bof3::Img(0x6C3A48), Va(&Gfx_RenderFlags) - 4}, {::bof3::Img(0x7C9F44), Va(&D3d_ScaleY) - 4}, {::bof3::Img(0x7CADF8), Va(&D3d_CaptureSurface)},
-site	src/render/gfx_snapshot.cpp	438	narrow_call	image	live	&Gfx_RenderFlags	Va	{::bof3::Img(0x6C3A48), Va(&Gfx_RenderFlags) - 4}, {::bof3::Img(0x7C9F44), Va(&D3d_ScaleY) - 4}, {::bof3::Img(0x7CADF8), Va(&D3d_CaptureSurface)},
-site	src/render/gfx_snapshot.cpp	439	narrow_call	image	live	&D3d_Viewport	Va	{::bof3::Img(0x7CC338), Va(&DDraw_Primary)}, {::bof3::Img(0x7CC354), Va(&D3d_Viewport)}, {::bof3::Img(0x7DED5C), Va(Gfx_PixelFormat) - 4},
-site	src/render/gfx_snapshot.cpp	439	narrow_call	image	live	&DDraw_Primary	Va	{::bof3::Img(0x7CC338), Va(&DDraw_Primary)}, {::bof3::Img(0x7CC354), Va(&D3d_Viewport)}, {::bof3::Img(0x7DED5C), Va(Gfx_PixelFormat) - 4},
-site	src/render/gfx_snapshot.cpp	439	narrow_call	image	live	Gfx_PixelFormat	Va	{::bof3::Img(0x7CC338), Va(&DDraw_Primary)}, {::bof3::Img(0x7CC354), Va(&D3d_Viewport)}, {::bof3::Img(0x7DED5C), Va(Gfx_PixelFormat) - 4},
-site	src/render/gfx_snapshot.cpp	444	fmt_place	pointer	live	n.at	%08X	if (i == kKeptCount || n.at != n.symbol) Fatal("gfx_snapshot: kept range 0x%08X, symbols.toml says 0x%08X", n.at, n.symbol);
-site	src/render/gfx_snapshot.cpp	444	fmt_place	word	live	n.symbol	%08X	if (i == kKeptCount || n.at != n.symbol) Fatal("gfx_snapshot: kept range 0x%08X, symbols.toml says 0x%08X", n.at, n.symbol);
-site	src/render/gfx_snapshot.cpp	446	narrow_call	image	live	&D3d_ShadeModeCache	Va	if (Va(&D3d_ShadeModeCache) != ::bof3::Img(0x6C3A44)) Fatal(" ");
+site	src/render/gfx_snapshot.cpp	32	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/render/gfx_snapshot.cpp	32	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/render/gfx_snapshot.cpp	35	low32	helper_def	live	p	Low32	return Low32(p);
+site	src/render/gfx_snapshot.cpp	98	narrow_call	image	live	Gfx_TexCache	Va	U TexEntry(U page, U i) { return Va(Gfx_TexCache) + (page * kPageEntries + i) * kTexEntry; }
+site	src/render/gfx_snapshot.cpp	99	narrow_call	image	live	Font_TexCache	Va	U FontEntry(U i) { return Va(Font_TexCache) + i * kFontEntry; }
+site	src/render/gfx_snapshot.cpp	100	narrow_call	image	live	D3d_CellTexCache	Va	U CellEntry(U i) { return Va(D3d_CellTexCache) + i * kCellEntry; }
+site	src/render/gfx_snapshot.cpp	101	narrow_call	image	live	Gfx_ClutRows	Va	U RowAt(U y) { return Va(Gfx_ClutRows) + y * 8; }
+site	src/render/gfx_snapshot.cpp	143	uintptr	-	live	std::uintptr_t	-	void* Object(U slot) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(Long(slot))); }
+site	src/render/gfx_snapshot.cpp	143	widen	word_read	live	Long(slot)	void*	void* Object(U slot) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(Long(slot))); }
+site	src/render/gfx_snapshot.cpp	204	sizeof_ptr	-	live	sizeof(void*)	-	static_assert(sizeof(render::PipeState) == (sizeof(void*) == 8 ? 88 : 84),
+site	src/render/gfx_snapshot.cpp	294	narrow_call	unread	live	map_rim::ExtraLayer()	Va	w.Put(Va(map_rim::ExtraLayer()));
+site	src/render/gfx_snapshot.cpp	400	narrow_call	unread	live	made	Va	live = Va(made);
+site	src/render/gfx_snapshot.cpp	492	narrow_call	unread	live	map_rim::ExtraLayer()	Va	const U extra_now = Va(map_rim::ExtraLayer());
+site	src/render/gfx_snapshot.cpp	496	fmt_place	word	live	extra_at	%08X	Log("quicksave GFX: the extra layer lay at 0x%08X at the take, here at 0x%08X: %u list heads rebased", extra_at,
+site	src/render/gfx_snapshot.cpp	496	fmt_place	word	live	extra_now	%08X	Log("quicksave GFX: the extra layer lay at 0x%08X at the take, here at 0x%08X: %u list heads rebased", extra_at,
+site	src/render/gfx_snapshot.cpp	610	narrow_call	unread	live	b	Va	Row(y)->block = Va(b);
+site	src/render/gfx_snapshot.cpp	637	narrow_call	unread	live	page	Va	Tex(TexEntry(5, 0))->surface = Va(page);
+site	src/render/gfx_snapshot.cpp	638	narrow_call	unread	live	&page->texture_vtable	Va	Tex(TexEntry(5, 0))->texture = Va(&page->texture_vtable);
+site	src/render/gfx_snapshot.cpp	639	narrow_call	unread	live	glyph	Va	Font(FontEntry(9))->surface = Va(glyph);
+site	src/render/gfx_snapshot.cpp	640	narrow_call	unread	live	&glyph->texture_vtable	Va	Font(FontEntry(9))->texture = Va(&glyph->texture_vtable);
+site	src/render/gfx_snapshot.cpp	641	narrow_call	unread	live	cell	Va	Cell(CellEntry(77))->surface = Va(cell);
+site	src/render/gfx_snapshot.cpp	642	narrow_call	unread	live	&cell->texture_vtable	Va	Cell(CellEntry(77))->texture = Va(&cell->texture_vtable);
+site	src/render/gfx_snapshot.cpp	714	narrow_call	image	live	&D3d_BackMaterialHandle	Va	{::bof3::Img(0x66B710), Va(Gfx_ScreenRect) + 8}, {::bof3::Img(0x6BEA00), Va(&Dd_CellBackdrop)}, {::bof3::Img(0x6C3A40), Va(&D3d_BackMaterialHandle)},
+site	src/render/gfx_snapshot.cpp	714	narrow_call	image	live	&Dd_CellBackdrop	Va	{::bof3::Img(0x66B710), Va(Gfx_ScreenRect) + 8}, {::bof3::Img(0x6BEA00), Va(&Dd_CellBackdrop)}, {::bof3::Img(0x6C3A40), Va(&D3d_BackMaterialHandle)},
+site	src/render/gfx_snapshot.cpp	714	narrow_call	image	live	Gfx_ScreenRect	Va	{::bof3::Img(0x66B710), Va(Gfx_ScreenRect) + 8}, {::bof3::Img(0x6BEA00), Va(&Dd_CellBackdrop)}, {::bof3::Img(0x6C3A40), Va(&D3d_BackMaterialHandle)},
+site	src/render/gfx_snapshot.cpp	715	narrow_call	image	live	&D3d_CaptureSurface	Va	{::bof3::Img(0x6C3A48), Va(&Gfx_RenderFlags) - 4}, {::bof3::Img(0x7C9F44), Va(&D3d_ScaleY) - 4}, {::bof3::Img(0x7CADF8), Va(&D3d_CaptureSurface)},
+site	src/render/gfx_snapshot.cpp	715	narrow_call	image	live	&D3d_ScaleY	Va	{::bof3::Img(0x6C3A48), Va(&Gfx_RenderFlags) - 4}, {::bof3::Img(0x7C9F44), Va(&D3d_ScaleY) - 4}, {::bof3::Img(0x7CADF8), Va(&D3d_CaptureSurface)},
+site	src/render/gfx_snapshot.cpp	715	narrow_call	image	live	&Gfx_RenderFlags	Va	{::bof3::Img(0x6C3A48), Va(&Gfx_RenderFlags) - 4}, {::bof3::Img(0x7C9F44), Va(&D3d_ScaleY) - 4}, {::bof3::Img(0x7CADF8), Va(&D3d_CaptureSurface)},
+site	src/render/gfx_snapshot.cpp	716	narrow_call	image	live	&D3d_Viewport	Va	{::bof3::Img(0x7CC338), Va(&DDraw_Primary)}, {::bof3::Img(0x7CC354), Va(&D3d_Viewport)}, {::bof3::Img(0x7DED5C), Va(Gfx_PixelFormat) - 4},
+site	src/render/gfx_snapshot.cpp	716	narrow_call	image	live	&DDraw_Primary	Va	{::bof3::Img(0x7CC338), Va(&DDraw_Primary)}, {::bof3::Img(0x7CC354), Va(&D3d_Viewport)}, {::bof3::Img(0x7DED5C), Va(Gfx_PixelFormat) - 4},
+site	src/render/gfx_snapshot.cpp	716	narrow_call	image	live	Gfx_PixelFormat	Va	{::bof3::Img(0x7CC338), Va(&DDraw_Primary)}, {::bof3::Img(0x7CC354), Va(&D3d_Viewport)}, {::bof3::Img(0x7DED5C), Va(Gfx_PixelFormat) - 4},
+site	src/render/gfx_snapshot.cpp	721	fmt_place	pointer	live	n.at	%08X	if (i == kKeptCount || n.at != n.symbol) Fatal("gfx_snapshot: kept range 0x%08X, symbols.toml says 0x%08X", n.at, n.symbol);
+site	src/render/gfx_snapshot.cpp	721	fmt_place	word	live	n.symbol	%08X	if (i == kKeptCount || n.at != n.symbol) Fatal("gfx_snapshot: kept range 0x%08X, symbols.toml says 0x%08X", n.at, n.symbol);
+site	src/render/gfx_snapshot.cpp	723	narrow_call	image	live	&D3d_ShadeModeCache	Va	if (Va(&D3d_ShadeModeCache) != ::bof3::Img(0x6C3A44)) Fatal(" ");
 site	src/render/interp.cpp	646	fmt_place	word	live	n.object	%08X	bof3::Log("interp-dbg NOTE cmd %u object %08X stands (%.1f, %.1f)", n.index, n.object, n.x, n.y);
 site	src/render/interp.cpp	657	fmt_place	word	live	note->object	%08X	bof3::Log("interp-dbg IDENT cmd %u object %08X tex %u at (%.1f, %.1f) stands (%.1f, %.1f) d (%.1f, %.1f)", i, note->object,
 site	src/render/interp.cpp	922	fmt_place	word	live	n.object	%08X	bof3::Log("interp-fig fc %u object %08X paired %d shown (%.2f, %.2f) kept %d stands (%.2f, %.2f) picture (%.2f, %.2f)",
@@ -12342,6 +12446,9 @@ file	src/game/core/save_menu_fuzz.cpp	fuzz	narrow_call	image_local	27
 file	src/game/core/save_menu_fuzz.cpp	fuzz	narrow_call	object_ours	19
 file	src/game/core/save_menu_fuzz.cpp	fuzz	uintptr	-	2
 file	src/game/core/save_menu_fuzz.cpp	fuzz	widen	param	1
+file	src/game/core/save_tail.cpp	live	low32	object_ours	1
+file	src/game/core/save_tail.cpp	live	uintptr	-	1
+file	src/game/core/save_tail.cpp	live	widen	img_place	1
 file	src/game/core/sound.cpp	live	asm	stack	8
 file	src/game/core/sound.cpp	live	asm	x87	4
 file	src/game/core/sound.cpp	live	fmt_place	pointer	4
@@ -13561,7 +13668,7 @@ file	src/game/field/layering.cpp	live	widen	img_place	4
 file	src/game/field/layering.cpp	live	widen	param	1
 file	src/game/field/leader_panel.cpp	live	low32	helper_def	3
 file	src/game/field/leader_panel.cpp	live	low32	image_local	1
-file	src/game/field/leader_panel.cpp	live	low32	object_ours	3
+file	src/game/field/leader_panel.cpp	live	low32	object_ours	4
 file	src/game/field/leader_panel.cpp	live	narrow_call	image	3
 file	src/game/field/leader_panel.cpp	live	narrow_call	image_local	28
 file	src/game/field/leader_panel.cpp	live	narrow_call	object_ours	3
@@ -15279,18 +15386,26 @@ file	src/hook/input_script.cpp	live	uintptr	-	6
 file	src/hook/input_script.cpp	live	widen	img_place	3
 file	src/hook/input_script.cpp	live	widen	param	3
 file	src/hook/input_script.h	live	long	l	1
-file	src/hook/snapshot.cpp	live	fmt_place	pointer	9
-file	src/hook/snapshot.cpp	live	fmt_place	word	16
+file	src/hook/region_table.cpp	live	fmt_place	pointer	1
+file	src/hook/region_table.cpp	live	fmt_place	word	16
+file	src/hook/snapshot.cpp	live	fmt_place	pointer	10
+file	src/hook/snapshot.cpp	live	fmt_place	word	37
 file	src/hook/snapshot.cpp	live	long	ul	8
 file	src/hook/snapshot.cpp	live	low32	helper_def	1
-file	src/hook/snapshot.cpp	live	narrow_call	image	19
-file	src/hook/snapshot.cpp	live	narrow_call	object_ours	2
+file	src/hook/snapshot.cpp	live	narrow_call	image	20
+file	src/hook/snapshot.cpp	live	narrow_call	object_ours	5
 file	src/hook/snapshot.cpp	live	narrow_call	pool	1
-file	src/hook/snapshot.cpp	live	narrow_call	unread	3
+file	src/hook/snapshot.cpp	live	narrow_call	unread	29
 file	src/hook/snapshot.cpp	live	narrow_call	windows	1
-file	src/hook/snapshot.cpp	live	sizeof_ptr	-	1
-file	src/hook/snapshot.cpp	live	uintptr	-	2
+file	src/hook/snapshot.cpp	live	sizeof_ptr	-	2
+file	src/hook/snapshot.cpp	live	uintptr	-	8
+file	src/hook/snapshot.cpp	live	widen	code_place	3
 file	src/hook/snapshot.cpp	live	widen	param	1
+file	src/hook/span_words.h	live	fmt_place	pointer	1
+file	src/hook/span_words.h	live	long	ul	2
+file	src/hook/span_words.h	live	low32	unread	1
+file	src/hook/span_words.h	live	uintptr	-	1
+file	src/hook/span_words.h	live	widen	other	1
 file	src/hook/stackwatch.h	live	long	ul	1
 file	src/hook/stackwatch_posix.cpp	live	asm	cw	2
 file	src/hook/stackwatch_posix.cpp	live	fmt_place	word	1
@@ -15310,11 +15425,9 @@ file	src/hook/stallwatch.cpp	live	long	l	2
 file	src/hook/stallwatch.cpp	live	long	ul	4
 file	src/hook/stallwatch.cpp	live	sizeof_ptr	-	2
 file	src/hook/stallwatch.cpp	live	uintptr	-	17
-file	src/hook/statehash.cpp	live	fmt_place	pointer	1
 file	src/hook/statehash.cpp	live	long	l	2
-file	src/hook/statehash.cpp	live	long	ul	86
+file	src/hook/statehash.cpp	live	long	ul	85
 file	src/hook/statehash.cpp	live	low32	func_ours	1
-file	src/hook/statehash.cpp	live	low32	unread	1
 file	src/hook/statehash.cpp	live	uintptr	-	4
 file	src/hook/statehash.cpp	live	widen	other	1
 file	src/hook/statehash.cpp	live	widen	param	3
@@ -15322,6 +15435,9 @@ file	src/hook/statehash.h	live	long	ul	1
 file	src/hook/stp_census.cpp	live	long	l	1
 file	src/hook/stp_census.cpp	live	uintptr	-	1
 file	src/hook/stp_census.cpp	live	widen	param	1
+file	src/hook/task_census.cpp	live	fmt_place	word	2
+file	src/hook/task_census.cpp	live	long	l	5
+file	src/hook/task_census.cpp	live	uintptr	-	6
 file	src/hook/wav_dump.cpp	live	fmt_place	pointer	18
 file	src/hook/wav_dump.cpp	live	fmt_place	word	2
 file	src/hook/wav_dump.cpp	live	long	l	39
@@ -15390,10 +15506,11 @@ file	src/os/win32/thread.cpp	live	uintptr	-	2
 file	src/os/win32/thread.cpp	live	width_if	logic	1
 file	src/os/win32/thread_start.cpp	live	ptr_overlay	unread	2
 file	src/render/gfx_snapshot.cpp	live	fmt_place	pointer	1
-file	src/render/gfx_snapshot.cpp	live	fmt_place	word	1
+file	src/render/gfx_snapshot.cpp	live	fmt_place	word	3
 file	src/render/gfx_snapshot.cpp	live	low32	helper_def	1
 file	src/render/gfx_snapshot.cpp	live	narrow_call	image	14
-file	src/render/gfx_snapshot.cpp	live	narrow_call	unread	8
+file	src/render/gfx_snapshot.cpp	live	narrow_call	unread	10
+file	src/render/gfx_snapshot.cpp	live	sizeof_ptr	-	1
 file	src/render/gfx_snapshot.cpp	live	uintptr	-	2
 file	src/render/gfx_snapshot.cpp	live	widen	param	1
 file	src/render/gfx_snapshot.cpp	live	widen	word_read	1
@@ -15423,8 +15540,8 @@ file	symbols.toml	live	ptr_member	ours_render	11
 file	symbols.toml	live	ptr_member	windows_function	14
 file	symbols.toml	live	ptr_member	windows_handle	3
 file	symbols.toml	live	ptr_member	windows_object	10
-#count sites	11385
-#count sites_live	7901
+#count sites	11489
+#count sites_live	8005
 #count sites_fuzz	3484
 #count fuzz_files	250
 #count narrow	357
@@ -15459,8 +15576,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count narrow_windows	4
 #count narrow_windows_live	2
 #count narrow_windows_live_files	2
-#count narrow_call	3345
-#count narrow_call_live	1503
+#count narrow_call	3377
+#count narrow_call_live	1535
 #count narrow_call_live_files	332
 #count narrow_call_fuzz	1842
 #count narrow_call_fuzz_files	234
@@ -15473,47 +15590,47 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count narrow_call_heap	1
 #count narrow_call_heap_live	1
 #count narrow_call_heap_live_files	1
-#count narrow_call_image	1230
-#count narrow_call_image_live	828
+#count narrow_call_image	1231
+#count narrow_call_image_live	829
 #count narrow_call_image_live_files	194
 #count narrow_call_image_local	1204
 #count narrow_call_image_local_live	535
 #count narrow_call_image_local_live_files	197
-#count narrow_call_object_ours	524
-#count narrow_call_object_ours_live	64
+#count narrow_call_object_ours	527
+#count narrow_call_object_ours_live	67
 #count narrow_call_object_ours_live_files	15
 #count narrow_call_pool	79
 #count narrow_call_pool_live	13
 #count narrow_call_pool_live_files	5
-#count narrow_call_unread	58
-#count narrow_call_unread_live	15
+#count narrow_call_unread	86
+#count narrow_call_unread_live	43
 #count narrow_call_unread_live_files	5
 #count narrow_call_windows	11
 #count narrow_call_windows_live	5
 #count narrow_call_windows_live_files	2
-#count widen	1351
-#count widen_live	1041
-#count widen_live_files	488
+#count widen	1356
+#count widen_live	1046
+#count widen_live_files	490
 #count widen_fuzz	310
 #count widen_fuzz_files	147
-#count widen_code_place	27
-#count widen_code_place_live	27
-#count widen_code_place_live_files	17
-#count widen_img_place	98
-#count widen_img_place_live	93
-#count widen_img_place_live_files	56
-#count widen_other	209
-#count widen_other_live	195
-#count widen_other_live_files	116
+#count widen_code_place	30
+#count widen_code_place_live	30
+#count widen_code_place_live_files	18
+#count widen_img_place	99
+#count widen_img_place_live	94
+#count widen_img_place_live_files	57
+#count widen_other	210
+#count widen_other_live	196
+#count widen_other_live_files	117
 #count widen_param	644
 #count widen_param_live	362
 #count widen_param_live_files	164
 #count widen_word_read	373
 #count widen_word_read_live	364
 #count widen_word_read_live_files	295
-#count long	2332
-#count long_live	2331
-#count long_live_files	53
+#count long	2338
+#count long_live	2337
+#count long_live_files	55
 #count long_fuzz	1
 #count long_fuzz_files	1
 #count long_ctype:long	42
@@ -15525,12 +15642,12 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count long_ctype:unsigned long *	1
 #count long_ctype:unsigned long *_live	1
 #count long_ctype:unsigned long *_live_files	1
-#count long_l	324
-#count long_l_live	323
-#count long_l_live_files	41
-#count long_ul	219
-#count long_ul_live	219
-#count long_ul_live_files	28
+#count long_l	329
+#count long_l_live	328
+#count long_l_live_files	42
+#count long_ul	220
+#count long_ul_live	220
+#count long_ul_live_files	29
 #count asm	328
 #count asm_live	207
 #count asm_live_files	82
@@ -15591,36 +15708,36 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count valloc_addr_-	6
 #count valloc_addr_-_live	6
 #count valloc_addr_-_live_files	3
-#count sizeof_ptr	17
-#count sizeof_ptr_live	17
-#count sizeof_ptr_live_files	9
+#count sizeof_ptr	19
+#count sizeof_ptr_live	19
+#count sizeof_ptr_live_files	10
 #count sizeof_ptr_fuzz	0
 #count sizeof_ptr_fuzz_files	0
-#count sizeof_ptr_-	17
-#count sizeof_ptr_-_live	17
-#count sizeof_ptr_-_live_files	9
-#count uintptr	1989
-#count uintptr_live	1323
-#count uintptr_live_files	524
+#count sizeof_ptr_-	19
+#count sizeof_ptr_-_live	19
+#count sizeof_ptr_-_live_files	10
+#count uintptr	2003
+#count uintptr_live	1337
+#count uintptr_live_files	527
 #count uintptr_fuzz	666
 #count uintptr_fuzz_files	249
-#count uintptr_-	1989
-#count uintptr_-_live	1323
-#count uintptr_-_live_files	524
-#count fmt_place	553
-#count fmt_place_live	483
-#count fmt_place_live_files	75
+#count uintptr_-	2003
+#count uintptr_-_live	1337
+#count uintptr_-_live_files	527
+#count fmt_place	596
+#count fmt_place_live	526
+#count fmt_place_live_files	77
 #count fmt_place_fuzz	70
 #count fmt_place_fuzz_files	35
 #count fmt_place_narrowed	28
 #count fmt_place_narrowed_live	21
 #count fmt_place_narrowed_live_files	8
-#count fmt_place_pointer	124
-#count fmt_place_pointer_live	109
-#count fmt_place_pointer_live_files	34
-#count fmt_place_word	401
-#count fmt_place_word_live	353
-#count fmt_place_word_live_files	61
+#count fmt_place_pointer	126
+#count fmt_place_pointer_live	111
+#count fmt_place_pointer_live_files	35
+#count fmt_place_word	442
+#count fmt_place_word_live	394
+#count fmt_place_word_live_files	63
 #count import_slot	14
 #count import_slot_live	14
 #count import_slot_live_files	1
@@ -15661,9 +15778,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count ptr_member_windows_object	10
 #count ptr_member_windows_object_live	10
 #count ptr_member_windows_object_live_files	1
-#count low32	739
-#count low32_live	731
-#count low32_live_files	469
+#count low32	741
+#count low32_live	733
+#count low32_live_files	471
 #count low32_fuzz	8
 #count low32_fuzz_files	1
 #count low32_crt	1
@@ -15681,9 +15798,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count low32_image_local	142
 #count low32_image_local_live	142
 #count low32_image_local_live_files	91
-#count low32_object_ours	95
-#count low32_object_ours_live	95
-#count low32_object_ours_live_files	65
+#count low32_object_ours	97
+#count low32_object_ours_live	97
+#count low32_object_ours_live_files	66
 #count low32_pool	20
 #count low32_pool_live	20
 #count low32_pool_live_files	14
@@ -15743,7 +15860,7 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count width_if_logic_live_files	15
 #count asm_live_x87_only_files	42
 #count widen_live_fnptr	472
-#count long_src	543
+#count long_src	549
 #count long_src_game	46
 #count long_src_game_ul	1
 #count long_ctype	1789
@@ -15752,17 +15869,17 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count callconv_CALLBACK_live	7
 #count callconv_WINAPI	11
 #count callconv_WINAPI_live	11
-#count callconv___cdecl	16382
+#count callconv___cdecl	16414
 #count callconv___cdecl_fuzz	2015
-#count callconv___cdecl_live	14367
+#count callconv___cdecl_live	14399
 #count callconv___stdcall	366
 #count callconv___stdcall_fuzz	96
 #count callconv___stdcall_live	270
-#count img_place_Code	625
+#count img_place_Code	631
 #count img_place_Code_fuzz	6
-#count img_place_Code_live	619
-#count img_place_Img	16033
+#count img_place_Code_live	625
+#count img_place_Img	16061
 #count img_place_Img_fuzz	1070
-#count img_place_Img_live	14963
+#count img_place_Img_live	14991
 #count img_place_VaOf	106
 #count img_place_VaOf_live	106

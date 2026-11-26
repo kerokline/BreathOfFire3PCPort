@@ -1206,6 +1206,11 @@ std::vector<Issue> Check(const Block& before, const Block& now, const PartyTable
 // ---- the PC file --------------------------------------------------------------------
 
 bool ReadPcFile(const std::wstring& path, Block& block, std::string& why) {
+    Tail tail{};
+    return ReadPcFile(path, block, tail, why);
+}
+
+bool ReadPcFile(const std::wstring& path, Block& block, Tail& tail, std::string& why) {
     std::ifstream in(std::filesystem::path(path), std::ios::binary);
     if (!in) {
         why = "The file cannot be opened.";
@@ -1218,14 +1223,26 @@ bool ReadPcFile(const std::wstring& path, Block& block, std::string& why) {
         return false;
     }
     std::memcpy(block.data(), bytes.data(), kBlockSize);
+    std::memcpy(tail.data(), bytes.data() + kBlockSize, kTailSize);
     return true;
 }
 
 bool WritePcFile(const std::wstring& path, const Block& block, const std::wstring& backup_dir, std::wstring& backup,
                  std::string& why) {
+    return WritePcFile(path, block, Tail{}, backup_dir, backup, why);
+}
+
+bool WritePcFile(const std::wstring& path, const Block& block, const Tail& tail, const std::wstring& backup_dir,
+                 std::wstring& backup, std::string& why) {
     std::vector<char> bytes(kPcFileSize, 0);
     std::memcpy(bytes.data(), block.data(), kBlockSize);
+    std::memcpy(bytes.data() + kBlockSize, tail.data(), kTailSize);
     return WriteKept(path, bytes, backup_dir, backup, why);
+}
+
+Tail KeptTail(const Block& before, const Block& now, const Tail& tail) {
+    if (before[0x24] != now[0x24] || before[0x25] != now[0x25]) return Tail{};
+    return tail;
 }
 
 void Seal(Block& block) { Put(block, 0x70, 2, Checksum(block)); }

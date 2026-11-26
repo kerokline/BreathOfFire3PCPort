@@ -15,7 +15,12 @@
 #                           memory and compared)
 #   tools/gen_symbols.py    symbols.toml parses and generates (names, addresses,
 #                           signatures, impl files) - the same step the build
-#                           runs, here without waiting for a toolchain
+#                           runs, here without waiting for a toolchain; it
+#                           writes the region table beside it
+#   tools/region_table.py   the region table (docs/region-table.md): its class
+#     --check               rows are snapshot.cpp's kKept and cover the skip
+#                           list, and its unknown bytes may not rise above
+#                           tools/region_unknown.txt's committed count
 #   tools/tables.py check   the table catalog: every table's symbol and build
 #                           exist, every field fits its record, nothing overlaps
 #                           unmarked, every claimed field cites its reader
@@ -111,6 +116,9 @@ jobs:
 
       - name: symbols.toml generates
         run: python tools/gen_symbols.py --toml symbols.toml --out "$RUNNER_TEMP/symbols.gen.h"
+
+      - name: The region table against the keep list and the skip list; its unknown bytes may not rise (no game data)
+        run: python tools/region_table.py --check
 
       - name: tables.toml against symbols.toml and fixtures.toml
         run: python tools/tables.py check

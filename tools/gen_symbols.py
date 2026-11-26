@@ -96,6 +96,17 @@ helper of src/common/image_base.h: a data macro and `BOF3_GAME` through
 `orig::Name` converted or called), since `ImageBase()` is a run-time value
 (relocatable-image round stage C).
 
+The region table (the state-by-name round's A3, docs/region-table.md). Every
+run also writes bof3/region_table.gen.h beside --out: every run of the
+quicksave's span with a name or an address, its length and a class (state,
+process, derived, stack, unknown), built by tools/region_table.py from
+symbols.toml, tools/region_classes.txt, tools/statehash_skip.txt and
+src/hook/snapshot.cpp's kKept, and refused here - the build stops - when the
+class rows disagree with kKept or leave a skip-list byte unread.
+src/hook/region_table.cpp checks it at start-up. Always written, with no
+option, so that every caller of this script (the build, CI's `symbols.toml
+generates`, tools/linux_probe/linux_tree.py's compile) has the header.
+
 The output contains addresses and names only — our work product, not game data.
 It is still generated into the build tree rather than committed, so it cannot
 drift from symbols.toml.
@@ -356,6 +367,30 @@ def write_bind(path, ours, funcs):
     print(f'gen_symbols: bind table {len(rows)} rows, {len(funcs)} function names -> {path}')
 
 
+def write_region_table(path, root, toml, typed_names):
+    """The region table (the module docstring; tools/region_table.py), beside
+    symbols.gen.h. A typed entry's VA is spelled <Name>_addr (its macro
+    rewrites bof3::addr::<Name>), any other's bof3::addr::<Name>."""
+    import region_table   # beside this file; it imports this module back for game_data_layout
+    try:
+        tab = region_table.build(root, toml)
+    except region_table.TableError as e:
+        fail(f'region table: {e}')
+    text = region_table.emit_header(
+        tab, lambda n: f'{n}_addr' if n in typed_names else f'::bof3::addr::{n}')
+    try:
+        with open(path, encoding='utf-8') as f:
+            if f.read() == text:
+                return
+    except FileNotFoundError:
+        pass
+    with open(path, 'w', encoding='utf-8', newline='\n') as f:
+        f.write(text)
+    c = tab['counts']
+    print(f'gen_symbols: region table {len(tab["runs"])} runs, '
+          + ', '.join(f'{k} {c[k][0]}' for k in region_table.CLASSES) + f' bytes -> {path}')
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--toml', required=True)
@@ -573,6 +608,9 @@ def main():
         write_retirable(a.retirable, os.path.dirname(os.path.abspath(a.toml)), datas)
     if a.bind_out:
         write_bind(a.bind_out, [e for e, _ in ours], funcs)
+    typed_names = {e['name'] for e in datas if 'ctype' in e} | {b['name'] for b in blocks if 'ctype' in b}
+    write_region_table(os.path.join(os.path.dirname(os.path.abspath(a.out)), 'region_table.gen.h'),
+                       os.path.dirname(os.path.abspath(a.toml)), a.toml, typed_names)
 
     text = '\n'.join(out)
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)

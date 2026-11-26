@@ -201,7 +201,14 @@ a pair recorded under the new list, or, across the cutover, the hosted build
 of the same tree under it (state3-build.md 5.1). On 2026-11-24 the list went
 to **176** (hash `929F2913`): the host desktop's size, three ranges on
 `0x6C9000`, `0x7C9000` and `0x939000` (section 6, `orig6`). A run under 176
-against a pair under 173 leaves those three pages out the same way.
+against a pair under 173 leaves those three pages out the same way. On
+2026-11-26 it went to **179** (hash `AFD29A9A`): `Overlay_Text` and the
+four text words, pointers of ours the hash read raw
+([`state-by-name-proof.md`](state-by-name-proof.md) 2; the owner's call). They
+lie on `0x6BC000`, `0x7DE000` and `0x93B000`; a run under 179 against a pair
+under 176 leaves those three pages out. The pairs recorded under 179 are
+`orig7` / `orig7b` (Capcom's side) and `o7w32` / `o7w64` (ours, the exe host
+at both widths): [`state-by-name-proof.md`](state-by-name-proof.md) 10.5.
 
 ## 5. What the first runs found, and what is open
 
@@ -534,6 +541,14 @@ of the same tick as three runs of bytes a tick behind.
   headless default k = 2 already (their `BOF3.CFG` the install's
   launcher-written `0` / `1`): nine routes on every tick, and `shop` but for
   the same window, where `lx6b` is identical.
+
+  **Under 179 ranges (2026-11-26):** the pair recorded again on the
+  state-by-name round's Linux build at `250097a6`, `cn_<route>_lx7` /
+  `_lx7b` (`~/bof3x-runs/sbn1125/lap1126/pairs` on that machine; not
+  tracked). Against `lx6` / `lx6b` it is identical on every compared tick
+  of nine routes outside the three pages the added ranges touch; `shop`
+  differs in the same jingle window
+  ([`state-by-name-proof.md`](state-by-name-proof.md) 11).
 
   **Windows against Linux, the ten routes** (2026-11-24): the desktop's
   runs of ours under `orig6`, the `latest` release zips at `65b7810f`

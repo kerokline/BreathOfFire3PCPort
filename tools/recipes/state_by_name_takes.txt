@@ -1,0 +1,54 @@
+# The state-by-name round's proof (docs/state-by-name-proof.md; quicksave_check.py matrix): the takes.
+# NAME ROUTE FC [keep=N] [lang=TAG|none] [# why] - FC is the Frame_Counter the take holds (recipe frame FC-1,
+# made idle when it holds a button). Chosen from the task census (BOF3X_TASKCENSUS) under the state hash's
+# conditions (docs/state-hash.md 6: --only-slot0, BOF3X_SCALE=2, BOF3X_OPT=none, BOF3X_LAYERING=0), en-US unless
+# a line says lang=none. The site each stands at is read back from the file's TASKS record (quicksave_check.py
+# qsinfo); on the laptop's builds of 2026-11-25 every take stood where its comment says.
+#
+# One take a site and the contexts:
+c901     combat                     901           # site 1: a battle mid-turn (A1's quick_combat)
+s1111    shop                       1111          # site 1: the shop's Sell list after a sale (quick_shop)
+s100     shop                       100           # site 3: the title (Title_Task)
+s290     shop                       290           # site 4: a fade on the title's menu (task 0 site 2)
+s2638    shop                       2638          # site 4 under Field_Task: the shop's fade
+w11680   whelpBoss                  11680 keep=300 # site 5: Transition_FadeAdd, task 0 site 1
+f605     fairyVillage               605           # site 6: SwingOut, task 0 site 11
+f297     fairyVillage               297           # site 7: SwingIn's opening, task 0 site 9
+f4640    fairyVillage               4640          # site 8: SwingIn's turn, task 0 site 9
+s378     shop                       378           # site 9: the field's entry after an area change, a fade
+s360     shop                       360           # site 11: the area change's wait, a fade
+f3375    fairyVillage               3375          # site 11 in the faerie village
+w681     worldMapAndAreaTransition  681           # site 12 (only this route measured)
+w675     worldMapAndAreaTransition  675           # site 14 (only this route measured)
+w679     worldMapAndAreaTransition  679           # site 15 (only this route measured)
+mm3320   masterAndManillo           3320          # site 8 after GameMode8_Leave (the fishing spot's way back)
+c407     combat                     407           # site 1: the battle's entry, mode 5 step 1
+c412     combat                     412           # site 1: the battle's entry, mode 5 step 2
+c440     combat                     440           # site 1: the battle's entry, mode 5 step 4
+wb1078   whelpBoss                  1078 keep=300  # site 1: the battle's exit, mode 5 step 6
+wb1090   whelpBoss                  1090 keep=300  # site 1: the scene after the battle, mode 4
+wb1144   whelpBoss                  1144 keep=300  # site 4 under site 1: the fade after the scene
+s2500    shop                       2500          # B1b: the message box's words into DIV-0007's moved pool (re-aimed as pool offsets)
+mm1600   masterAndManillo           1600          # B1b: six Effect_Objects words, copies of and cursors into a text slot's string
+bf1753   bossAndFlash     1753                # site 1: the boss fight's entry, mode 5 step 0
+bf3000   bossAndFlash     3000                # site 1: mid boss fight, mode 5 step 5
+bf5050   bossAndFlash     5050                # site 1: the boss fight's end, mode 5 step 7
+bf900    bossAndFlash     900                 # site 1: a scene, mode 4
+cf1500   caughFish        1500                # site 1: the fishing, mode 8 step 1
+cf3600   caughFish        3600                # site 1: the fishing, mode 8 step 3
+cp1000   campingFishing   1000                # site 1: the camp (area 90, mode 7)
+cp2590   campingFishing   2590                # site 4 under site 1: a fade at the camp (mode 7 step 0)
+cp370    campingFishing   370                 # site 9 with SwingIn's turn (site 8) onto the world map
+cp560    campingFishing   560                 # site 11 with SwingOut (site 6)
+cn2166   cutsceneAndNue   2166 lang=none      # site 1: a scene mid-message (quick_cutsceneAndNue's frame)
+cn1020   cutsceneAndNue   1020 lang=none      # site 11 in a scene route
+s180     shop                       180           # site 2: the title's menu (TitleTask_Run), no fade
+w634     worldMapAndAreaTransition  634           # site 10: the wait to the menu, a fade (task 2 site 4)
+w637     worldMapAndAreaTransition  637           # site 10: its last sleep
+w640     worldMapAndAreaTransition  640           # site 13: the menu's open wait, a fade
+# A nested frame the round leaves (written not portable; refused by another build, its save offered):
+mm3297   masterAndManillo 3297                # task 0 in GameMode8_Leave's framed wait (B2's 3297)
+cp5100   campingFishing   5100                # task 0 at no site (the traced census: FC 5091..5105)
+# Settings crossed (row 5) also use:
+wb1000   whelpBoss        1000 keep=300       # the battle's last turns (measured: nothing in this window gives EXP or zenny)
+bf4950   bossAndFlash     4950 keep=400       # the boss fight's last turns: its end (step 7 at 5040) gives EXP and zenny

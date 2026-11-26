@@ -5,7 +5,9 @@
 
 
 #include <cstdint>
+#include <cstdio>
 #include <cstring>
+#include <string>
 #include <vector>
 
 #include "bof3/symbols.gen.h"
@@ -39,7 +41,13 @@ U Long(U address) {
 }
 void PutLong(U address, U v) { std::memcpy(At(address), &v, 4); }
 
-constexpr U kVersion = 3;   // 2: the grown view ring's rim (DIV-0041, wide-ring); 3: DIV-0071's sprite boxes (docs/garr-fire.md)
+// 2: the grown view ring's rim (DIV-0041, wide-ring); 3: DIV-0071's sprite boxes (docs/garr-fire.md); 4: written
+// field by field in fixed-width words - the pipe state no longer as render::PipeState's bytes (a pointer and
+// padding: 84 bytes on i686, 88 on x86-64) - each sub-record framed by its byte count, and the extra layer's place
+// carried so its list heads are rebased (docs/state-by-name-participants.md). The record is the same bytes at
+// both widths and on both systems. A change to any sub-record's layout (kSubs) raises this version, unless the
+// sub-record carries a version or size word of its own that Check compares (map_rim's, widescreen's).
+constexpr U kVersion = 4;
 
 // --- the display words the live process keeps ----------------------------------
 // The snapshot core keeps Gfx_WindowRect .. 0x6BEA00, Gfx_ClutRows' table,
@@ -175,6 +183,77 @@ void Before() {
     g_before_ran = true;
 }
 
+// --- the record, version 4 ---------------------------------------------------------
+//
+//   u32 version (4)
+//   u32 generation[512]                 the palette rows' generations
+//   u32 n, then n x {u16 row, 0x1000 bytes}   the rows with a block, ascending
+//   the pipe state, kPipeBytes: u32 src_blend, u32 dst_blend, u8 blend_enable,
+//     u8 alpha_test, u32 alpha_ref, u32 alpha_func, u8 color_key, u8 specular,
+//     u8 alpha_modulate, u8 point_filter, u8 flat, u32 topology
+//     (the texture and the grabs are not written: PipeForSnapshot clears them
+//     and RestorePipe keeps them clear)
+//   u32 the clear colour
+//   five sub-records (kSubs), each u32 bytes then its bytes
+//   u32 the extra layer's place at the take (map_rim::ExtraLayer)
+//
+// Little-endian, as every x86 build writes a word.
+constexpr U kPipeBytes = 4 + 4 + 1 + 1 + 4 + 4 + 1 + 1 + 1 + 1 + 1 + 4;
+// A field added to PipeState must be added to the record above (and the
+// version raised): the struct's size at both widths, as laid out here.
+static_assert(sizeof(render::PipeState) == (sizeof(void*) == 8 ? 88 : 84),
+              "render::PipeState changed: write its new field in GFX's record and raise kVersion");
+
+// The sub-records, in the record's order: ours (DIV-0071, DIV-0085, DIV-0041's three), written and read by their
+// own files' functions; GFX frames each.
+struct Sub {
+    const char* name;
+    void (*save)(bof3::SnapshotWriter&);
+    void (*restore)(bof3::SnapshotReader&);
+};
+const Sub kSubs[] = {
+    {"layering", &layering::SnapshotSave, &layering::SnapshotRestore},
+    {"map_layers", &map_layers::QuickSaveSides, &map_layers::QuickRestoreSides},
+    {"widescreen", &Widescreen_QuickSave, &Widescreen_QuickRestore},
+    {"wide_rand", &wide_rand::QuickSave, &wide_rand::QuickRestore},
+    {"map_rim", &map_rim::QuickSave, &map_rim::QuickRestore},
+};
+constexpr std::size_t kSubCount = sizeof kSubs / sizeof kSubs[0];
+enum : std::size_t { kSubLayering, kSubMapLayers, kSubWidescreen, kSubWideRand, kSubMapRim };
+
+// The extra layer (map_rim.h: 12 dwords, three (first, last) pairs a display
+// buffer). An empty list's "last" word is the head's own address
+// (map_rim::ExtraReset, as DrawLayers_Reset writes Capcom's): a place in our
+// module, which another build or system links elsewhere. The other words are
+// 0 or draw items in the pool, inside the span.
+constexpr U kExtraWords = 12;
+
+// Each of `n` words that names a place in [from, from + span) made to name the
+// same place in [to, to + span). The words rebased.
+U RebaseWords(std::uint32_t* words, U n, U from, U to, U span) {
+    U moved = 0;
+    if (from == to) return 0;
+    for (U i = 0; i < n; ++i)
+        if (words[i] - from < span) {
+            words[i] = words[i] - from + to;
+            ++moved;
+        }
+    return moved;
+}
+
+std::vector<unsigned char> SubBytes(const Sub& sub) {
+    std::vector<unsigned char> bytes;
+    bof3::SnapshotWriter w(bytes);
+    sub.save(w);
+    return bytes;
+}
+
+U WordAt(const unsigned char* p) {
+    U v;
+    std::memcpy(&v, p, 4);
+    return v;
+}
+
 void Save(bof3::SnapshotWriter& w) {
     w.Put(kVersion);
     // The palette rows: every generation; each row's block as it stands.
@@ -190,17 +269,109 @@ void Save(bof3::SnapshotWriter& w) {
         w.Put(static_cast<std::uint16_t>(y));
         w.Put(At(block), kRowBytes);
     }
-    // The device's pipe state between draws, and the clear colour.
+    // The device's pipe state between draws, field by field, and the clear colour.
     const render::PipeState pipe = render::PipeForSnapshot();
-    w.Put(static_cast<U>(sizeof pipe));
-    w.Put(pipe);
-    w.Put(render::ClearColor());
-    // Ours: DIV-0071, DIV-0085, DIV-0041's three.
-    layering::SnapshotSave(w);
-    map_layers::QuickSaveSides(w);
-    Widescreen_QuickSave(w);
-    wide_rand::QuickSave(w);
-    map_rim::QuickSave(w);
+    const auto flag = [&w](bool b) { w.Put(static_cast<std::uint8_t>(b ? 1 : 0)); };
+    w.Put(static_cast<U>(pipe.src_blend));
+    w.Put(static_cast<U>(pipe.dst_blend));
+    flag(pipe.blend_enable);
+    flag(pipe.alpha_test);
+    w.Put(static_cast<U>(pipe.alpha_ref));
+    w.Put(static_cast<U>(pipe.alpha_func));
+    flag(pipe.color_key);
+    flag(pipe.specular);
+    flag(pipe.alpha_modulate);
+    flag(pipe.point_filter);
+    flag(pipe.flat);
+    w.Put(static_cast<U>(pipe.topology));
+    w.Put(static_cast<U>(render::ClearColor()));
+    // Ours: DIV-0071, DIV-0085, DIV-0041's three, each framed.
+    for (const Sub& sub : kSubs) {
+        const std::vector<unsigned char> bytes = SubBytes(sub);
+        w.Put(static_cast<U>(bytes.size()));
+        if (!bytes.empty()) w.Put(bytes.data(), bytes.size());
+    }
+    w.Put(Va(map_rim::ExtraLayer()));
+}
+
+// The record checked before a byte of the span is written (Snapshot_Register's
+// check): every condition Restore and the sub-records' restores can fail on
+// that a record shows - its version, its size, a row out of range, a
+// sub-record of another layout where the sub-record says so. A refusal names
+// the reason; Restore's own Fatals then cannot be reached by a record that
+// passed (docs/state-by-name-participants.md 3 lists each).
+bool CheckRecord(bof3::SnapshotReader& r, std::string& why, std::string& detail) {
+    char text[200];
+    const auto damaged = [&](const char* what) {
+        why = "damaged";
+        detail = std::string("GFX's record: ") + what;
+        return false;
+    };
+    if (r.Left() < 4) return damaged("no version word");
+    const U version = r.Get<U>();
+    if (version != kVersion) {
+        why = "another graphics record";
+        std::snprintf(text, sizeof text,
+                      "GFX's record is version %u; this build reads %u only (version 3 and before wrote the pipe state as "
+                      "the writing build's struct)",
+                      version, kVersion);
+        detail = text;
+        return false;
+    }
+    if (r.Left() < kRows * 4 + 4) return damaged("the palette rows' generations run past the record");
+    r.Skip(kRows * 4);
+    const U n = r.Get<U>();
+    if (n > kRows) return damaged("more palette rows than 512");
+    for (U k = 0, last = 0; k < n; ++k) {
+        if (r.Left() < 2 + kRowBytes) return damaged("a palette row runs past the record");
+        const U y = r.Get<std::uint16_t>();
+        if (y >= kRows || (k && y <= last)) return damaged("a palette row out of order or range");
+        last = y;
+        r.Skip(kRowBytes);
+    }
+    if (r.Left() < kPipeBytes + 4) return damaged("the pipe state runs past the record");
+    r.Skip(kPipeBytes + 4);
+    for (std::size_t i = 0; i < kSubCount; ++i) {
+        if (r.Left() < 4) return damaged("a sub-record's size runs past the record");
+        const U bytes = r.Get<U>();
+        if (r.Left() < bytes) return damaged("a sub-record runs past the record");
+        std::vector<unsigned char> sub(bytes);
+        if (bytes) r.Get(sub.data(), bytes);
+        // What this build's own writer gives, for the sub-records whose
+        // restore fails on a word it compares: map_rim's version word,
+        // widescreen's size word (and wide_rand's and widescreen's fixed size).
+        const std::vector<unsigned char> mine = SubBytes(kSubs[i]);
+        const char* other = nullptr;
+        switch (i) {
+        case kSubLayering:
+            if (bytes < 12) return damaged("layering's sub-record is under its three counts");
+            break;
+        case kSubMapLayers:
+            if (bytes < 4 || WordAt(sub.data()) != bytes - 4) return damaged("map_layers' sub-record does not hold its count");
+            break;
+        case kSubWidescreen:
+            if (bytes < 4 || WordAt(sub.data()) != WordAt(mine.data()) || bytes != mine.size()) other = "widescreen's slide split";
+            break;
+        case kSubWideRand:
+            if (bytes != mine.size()) other = "wide_rand's draw-only generator";
+            break;
+        case kSubMapRim:
+            if (bytes < 8 || WordAt(sub.data()) != WordAt(mine.data())) other = "map_rim's rim record";
+            break;
+        }
+        if (other) {
+            why = "another graphics record";
+            std::snprintf(text, sizeof text, "GFX's record holds %s of another layout (%u bytes, first word %u; this build's %u, %u)",
+                          other, bytes, bytes >= 4 ? WordAt(sub.data()) : 0u, static_cast<unsigned>(mine.size()),
+                          WordAt(mine.data()));
+            detail = text;
+            return false;
+        }
+    }
+    if (r.Left() < 4) return damaged("the extra layer's place runs past the record");
+    r.Skip(4);
+    if (r.Left() != 0) return damaged("bytes after the record's end");
+    return true;
 }
 
 struct Tally {
@@ -277,7 +448,7 @@ U RebuildGlyphs() {
 void Restore(bof3::SnapshotReader& r) {
     if (!g_before_ran) Fatal("gfx_snapshot: a restore without the before-restore step: the live caches' objects are lost");
     g_before_ran = false;
-    if (r.Get<U>() != kVersion) Fatal("gfx_snapshot: the record is another version");
+    if (r.Get<U>() != kVersion) Fatal("gfx_snapshot: the record is another version, past CheckRecord");
     for (std::size_t i = 0; i < kKeptCount; ++i) std::memcpy(At(kKept[i].at), g_live[i].data(), kKept[i].bytes);
     Tally t = RestoreRows(r);
     // The page and cell textures are built again when a draw asks for them:
@@ -286,16 +457,45 @@ void Restore(bof3::SnapshotReader& r) {
     std::memset(Gfx_TexCache, 0, Gfx_TexCache_count);
     std::memset(D3d_CellTexCache, 0, D3d_CellTexCache_count);
     t.glyphs = RebuildGlyphs();
-    if (r.Get<U>() != sizeof(render::PipeState)) Fatal("gfx_snapshot: the record's pipe state is another size");
-    const render::PipeState pipe = r.Get<render::PipeState>();
+    render::PipeState pipe{};   // texture null, no grab: as PipeForSnapshot left the take's
+    const auto flag = [&r]() { return r.Get<std::uint8_t>() != 0; };
+    pipe.src_blend = r.Get<U>();
+    pipe.dst_blend = r.Get<U>();
+    pipe.blend_enable = flag();
+    pipe.alpha_test = flag();
+    pipe.alpha_ref = r.Get<U>();
+    pipe.alpha_func = r.Get<U>();
+    pipe.color_key = flag();
+    pipe.specular = flag();
+    pipe.alpha_modulate = flag();
+    pipe.point_filter = flag();
+    pipe.flat = flag();
+    pipe.topology = r.Get<U>();
     const U clear = r.Get<U>();
     render::RestorePipe(pipe, clear);
     render::ForgetGrabs();
-    layering::SnapshotRestore(r);
-    map_layers::QuickRestoreSides(r);
-    Widescreen_QuickRestore(r);
-    wide_rand::QuickRestore(r);
-    map_rim::QuickRestore(r);
+    U rim_taken = 0;
+    for (std::size_t i = 0; i < kSubCount; ++i) {
+        std::vector<unsigned char> bytes(r.Get<U>());
+        if (!bytes.empty()) r.Get(bytes.data(), bytes.size());
+        if (i == kSubMapRim && bytes.size() >= 8) rim_taken = WordAt(bytes.data() + 4);
+        bof3::SnapshotReader sub(kSubs[i].name, bytes.data(), bytes.size());
+        kSubs[i].restore(sub);
+        if (sub.Left() != 0)
+            Fatal("gfx_snapshot: %s restored from %u of its sub-record's %u bytes (a layout changed without GFX's version)",
+                  kSubs[i].name, static_cast<unsigned>(bytes.size() - sub.Left()), static_cast<unsigned>(bytes.size()));
+    }
+    // The extra layer as at the take holds the take's places for its empty
+    // lists' heads; map_rim put it back only when it was taken wide and is
+    // wide now. Another build or system placed it elsewhere: the same heads.
+    const U extra_at = r.Get<U>();
+    const U extra_now = Va(map_rim::ExtraLayer());
+    if (rim_taken != 0 && map_rim::Active()) {
+        const U moved = RebaseWords(map_rim::ExtraLayer(), kExtraWords, extra_at, extra_now, kExtraWords * 4);
+        if (moved)
+            Log("quicksave   GFX: the extra layer lay at 0x%08X at the take, here at 0x%08X: %u list heads rebased", extra_at,
+                extra_now, moved);
+    }
     Log("quicksave   GFX: %u palette rows put back (%u blocks made, %u freed), %u glyph textures built again, page and cell "
         "caches emptied, %u live objects released after the next present; pipe state, grabs forgotten, DIV-0071 / 0085 / "
         "0041 state as at the take",
@@ -315,6 +515,81 @@ void Check(bool ok, const char* what) {
     if (ok) return;
     ++g_fails;
     Log("shadow      gfx_snapshot: FAIL %s", what);
+}
+
+// Version 4 on a record Save wrote (rows 3, 40 and 480 with blocks): its size
+// is its parts, whatever the width; CheckRecord passes it and refuses each
+// doctored copy before anything is written; RebaseWords on a stand-in layer.
+// The cases checked.
+unsigned SelfTestVersion4(const std::vector<unsigned char>& record) {
+    unsigned cases = 0;
+    const auto check = [&cases](bool ok, const char* what) {
+        Check(ok, what);
+        ++cases;
+    };
+    const auto answer = [](const std::vector<unsigned char>& rec, std::string& why) {
+        std::string detail;
+        bof3::SnapshotReader rr("GFX", rec.data(), rec.size());
+        const bool ok = CheckRecord(rr, why, detail);
+        if (!ok) Log("shadow      gfx_snapshot: refused as the self-test means: %s - %s", why.c_str(), detail.c_str());
+        return ok;
+    };
+    const auto refused = [&answer](const std::vector<unsigned char>& rec, const char* want) {
+        std::string why;
+        return !answer(rec, why) && why == want;
+    };
+    const auto put = [](std::vector<unsigned char>& rec, std::size_t at, U v) { std::memcpy(rec.data() + at, &v, 4); };
+    const std::size_t rows_at = 4 + kRows * 4 + 4, pipe_at = rows_at + 3 * (2 + kRowBytes), subs_at = pipe_at + kPipeBytes + 4;
+    std::size_t frame[kSubCount], end = subs_at, parts = subs_at;
+    for (std::size_t i = 0; i < kSubCount; ++i) {
+        frame[i] = end;
+        end += 4 + WordAt(record.data() + end);
+        parts += 4 + SubBytes(kSubs[i]).size();
+    }
+    std::string why;
+    check(answer(record, why), "CheckRecord passes a record Save wrote");
+    check(WordAt(record.data()) == 4 && WordAt(record.data() + rows_at - 4) == 3 && record.size() == end + 4 && end == parts,
+          "the record is its parts: version, 512 generations, three rows, 27 bytes of pipe, the clear colour, five framed "
+          "sub-records, the extra layer's place - the same bytes at both widths");
+    std::vector<unsigned char> d = record;
+    put(d, 0, 3);
+    check(refused(d, "another graphics record"), "version 3 (the pipe state by sizeof) is refused");
+    put(d, 0, 5);
+    check(refused(d, "another graphics record"), "version 5 is refused");
+    d = record;
+    d.pop_back();
+    check(refused(d, "damaged"), "a record a byte short is refused");
+    d = record;
+    d.push_back(0);
+    check(refused(d, "damaged"), "a byte past the record's end is refused");
+    d = record;
+    put(d, rows_at - 4, kRows + 1);
+    check(refused(d, "damaged"), "more rows than 512 are refused");
+    d = record;
+    std::memcpy(d.data() + rows_at + (2 + kRowBytes), d.data() + rows_at, 2);
+    check(refused(d, "damaged"), "a row out of order is refused");
+    d = record;
+    put(d, frame[kSubMapRim] + 4, WordAt(d.data() + frame[kSubMapRim] + 4) + 1);
+    check(refused(d, "another graphics record"), "map_rim's rim record of another version is refused");
+    d = record;
+    put(d, frame[kSubWidescreen] + 4, WordAt(d.data() + frame[kSubWidescreen] + 4) + 1);
+    check(refused(d, "another graphics record"), "widescreen's slide split of another size is refused");
+    d = record;
+    put(d, frame[kSubWideRand], WordAt(d.data() + frame[kSubWideRand]) + 1);
+    d.insert(d.begin() + static_cast<std::ptrdiff_t>(frame[kSubWideRand] + 4), 0);
+    check(refused(d, "another graphics record"), "wide_rand's sub-record of another size is refused");
+    d = record;
+    put(d, frame[kSubMapLayers], WordAt(d.data() + frame[kSubMapLayers]) + 1);
+    d.insert(d.begin() + static_cast<std::ptrdiff_t>(frame[kSubMapLayers] + 4), 0);
+    check(refused(d, "damaged"), "map_layers' sub-record that does not hold its count is refused");
+    // The rebase: the heads' own places move; a word outside the layer (a pool item) and the rest do not.
+    const U from = 0x10203000, to = 0x0FF01000;
+    std::uint32_t layer[kExtraWords] = {0, from + 4, from + 0x1000, from + 0x2C, from + 0x30, from - 4};
+    check(RebaseWords(layer, kExtraWords, from, to, kExtraWords * 4) == 2 && layer[0] == 0 && layer[1] == to + 4 &&
+              layer[2] == from + 0x1000 && layer[3] == to + 0x2C && layer[4] == from + 0x30 && layer[5] == from - 4,
+          "the extra layer's heads rebased to its place here, nothing else");
+    check(RebaseWords(layer, kExtraWords, to, to, kExtraWords * 4) == 0, "nothing rebased at the place it was taken");
+    return cases;
 }
 
 void SelfTest() {
@@ -410,6 +685,7 @@ void SelfTest() {
     bof3::SnapshotWriter w2(again);
     Save(w2);
     Check(again == record, "a take after the restore writes the same record");
+    const unsigned v4_cases = SelfTestVersion4(record);
 
     // The game's words as they were.
     for (U y = 0; y < kRows; ++y)
@@ -422,8 +698,9 @@ void SelfTest() {
     if (g_fails) Fatal("gfx_snapshot self-test: %d check(s) failed (the log has each)", g_fails);
     Log("shadow      gfx_snapshot: self-test passed - palette rows as at the take (a block made again, one freed, "
         "pixels and generations back), three cache objects released after the present and not before, the page and cell "
-        "caches emptied, %u display ranges kept live, a %u-byte record read to its end and written again the same",
-        static_cast<unsigned>(kKeptCount), static_cast<unsigned>(record.size()));
+        "caches emptied, %u display ranges kept live, a %u-byte record read to its end and written again the same; "
+        "version 4: the record its parts, field by field, %u refusals and rebases checked",
+        static_cast<unsigned>(kKeptCount), static_cast<unsigned>(record.size()), v4_cases);
 }
 
 }  // namespace
@@ -446,5 +723,5 @@ void GfxSnapshot_Inject() {
     if (Va(&D3d_ShadeModeCache) != ::bof3::Img(0x6C3A44)) Fatal("gfx_snapshot: D3d_ShadeModeCache moved");
     if (bof3::IsExeHost() ? bof3::os::GetEnv("BOF3X_SELFTEST_ONLY", nullptr, 0) > 0 : bof3::WantsShadow("gfx_snapshot"))
         SelfTest();
-    bof3::Snapshot_Register("GFX", &Save, &Restore, &Before);
+    bof3::Snapshot_Register("GFX", &Save, &Restore, &Before, &CheckRecord);
 }

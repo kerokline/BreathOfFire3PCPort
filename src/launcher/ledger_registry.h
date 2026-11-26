@@ -71,7 +71,7 @@ struct Entry {
     std::uint8_t languages;        // kLang* bits, or kLangAny
 };
 
-inline constexpr std::size_t kSwitchCount = 239;
+inline constexpr std::size_t kSwitchCount = 240;
 inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "Save_WriteFile", 0, 14},   // DIV-0002
     {SwitchForm::Name, "File_OpenWrite", 0, 14},   // DIV-0003
@@ -312,9 +312,10 @@ inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "FasterFaerieVillage", 0, 19},   // DIV-0245
     {SwitchForm::Env, "env:BOF3X_LAYERING=0", 4, 14},   // DIV-0246
     {SwitchForm::Env, "env:BOF3X_LAYERING=0", 4, 14},   // DIV-0247
+    {SwitchForm::Name, "SaveCameFrom", 0, 12},   // DIV-0248
 };
 
-inline constexpr std::size_t kEntryCount = 247;
+inline constexpr std::size_t kEntryCount = 248;
 inline constexpr Entry kEntries[kEntryCount] = {
     {1, "Re-encode `capcom.avi` from Indeo 5 to Cinepak",
      Tier::Intent, State::Active, 0, 0, 0, true, Player::Never, 0, kLangAny},
@@ -810,6 +811,8 @@ inline constexpr Entry kEntries[kEntryCount] = {
      Tier::Intent, State::Active, 0, 237, 1, true, Player::Yes, 0, kLangAny},
     {247, "The plate on Bunyan's table is drawn whole, over the table's faces",
      Tier::Intent, State::Active, 0, 238, 1, true, Player::Yes, 0, kLangAny},
+    {248, "A save keeps where the party came from: an edge leads back after a load",
+     Tier::Sensible, State::Active, 0, 239, 1, true, Player::Yes, 0, kLangAny},
 };
 
 // The switches of one entry.

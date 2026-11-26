@@ -1,0 +1,106 @@
+# The region table's classes (docs/region-table.md; docs/state-by-name-round.md 3.4):
+# byte ranges of the quicksave's span with the class a reading gave them,
+# ADDRESS LENGTH CLASS # why (source).
+#
+# The classes (round doc 3.4):
+#   state    the game's logic state                          (a portable load writes it)
+#   process  the process's own: exactly src/hook/snapshot.cpp's kKept, row for row (kept)
+#   derived  rebuilt from state by a participant or by the next frames (as the participant says)
+#   stack    the scheduler's words                           (written fresh)
+#   unknown  read, and no class above fits or nobody has decided (written, and counted)
+#
+# A byte no row here covers takes its class from the table: `state` when a
+# symbols.toml entry with a length names it, `unknown` when none does.
+#
+# tools/region_table.py refuses: two rows over one byte; a `process` row that is
+# not a kKept range, or a kKept range with no `process` row; a byte of
+# tools/statehash_skip.txt that no row here covers (every range the hash cannot
+# see has been read, and its class says what the reading found). Add a row only
+# with its source: a census row, a skip-list row, a ledger entry, a measurement.
+# "census" below is docs/quicksave-census.md.
+
+# --- process: the keep list (kKept), in its order -------------------------------
+0x66C854 4      process # Task_SchedulerEsp: Task_RunAll's own esp (kKept; census 5)
+0x6BC620 4      process # Game_Hwnd (kKept; census 5)
+0x6BC624 4      process # Game_HInstance (kKept; census 5)
+0x6BC628 4      process # Frame_Deadline: the original loop's float, unwritten by ours, DIV-0047 (kKept)
+0x6BC634 4      process # Fps_Shown (kKept; census 5)
+0x6BC63B 1      process # App_Active (kKept; census 5)
+0x65DA44 4      process # Cfg_Fullscreen (kKept; census 5)
+0x65DA48 4      process # Cfg_RenderMode (kKept; census 5)
+0x7DE7A8 128    process # Key_Table: the launcher's key table (kKept; census 5)
+0x7DE928 952    process # DInput_Object and the device records, to Gpu_DispEnv (kKept; census 5)
+0x7CC35C 4      process # Font_GlyphData: a heap block made once a launch (kKept; census 4)
+0x6BE1D0 2096   process # Gfx_WindowRect and the mode list, to Dd_CellBackdrop (kKept; census 5)
+0x6C2A40 0x1000 process # Gfx_ClutRows: heap row pointers; SP-G reconverts the rows (kKept; census 4)
+0x7CC238 0xFC   process # D3d_DeviceDesc (kKept; census 5)
+0x7CC334 4      process # Dd_DirectDraw (kKept; census 5)
+0x7CC344 4      process # Dd_StageSurface (kKept; census 5)
+0x7CC350 4      process # D3d_Device (kKept; census 5)
+
+# --- stack: the scheduler's words (round doc 2.2: "written fresh by the restore") -
+0x66C7D4 4      stack   # Task_Records+0x04, task 0's saved esp (skip list; census 2.1)
+0x66C7F4 4      stack   # task 1's saved esp (skip list)
+0x66C814 4      stack   # task 2's saved esp (skip list)
+0x66C834 4      stack   # task 3's saved esp (skip list)
+0x66C858 4      stack   # Task_StackTop: checked at a restore (census 5); the round doc's 3.3 moves it to the keep list
+0x66C85C 0x91A4 unknown # past Task_StackTop to Area42_Rank: "unread data" (skip row 0x66C854 37292; census 7)
+
+# --- derived: sound and music, SP-A's (census 4, 5, 7) ---------------------------
+0x6BC8C8 92     derived # Sound_Channels: DirectSound buffer and heap pointers, rebuilt by SP-A (census 5)
+0x6BC928 5400   derived # Sound_Banks: heap sample data and DirectSound buffers, rebuilt by SP-A (census 4)
+0x6BDE44 4      derived # kStreamData: the last stream's file, a heap block (census 4)
+0x6BDE50 4      derived # Music_File: the track's file image, rebuilt from Music_LoadedTrack (census 4)
+0x7CC378 73728  derived # Music_Staging: refilled by the next Music_Pump (census 5, 6; round doc 3.4)
+0x7DE3B4 40     derived # Music_Events .. Music_Data: released and rebuilt by SP-A, the device and primary kept by it (census 5)
+0x7DE3E0 4      derived # Music_Finished: set by the pump from the play cursor; SP-A restores it with the stream (census 7)
+
+# --- state: skip-list rows that are the game's (census 7) ------------------------
+0x6BDE5C 4      state   # Music_Volume: SP-A sets the buffer's volume from it (census 7)
+0x6BDE54 4      state   # Music_FadeCount: DIV-0028 (skip list; census 7)
+0x6BDE60 4      state   # Music_FadeStep: DIV-0028 (skip list; census 7)
+0x7DE46E 2      state   # Gte_Vertices[1]'s top half: DIV-0023 (skip list; census 7)
+0x7DE476 2      state   # Gte_Vertices[3]'s top half: DIV-0023
+0x7DE47E 2      state   # Gte_Vertices[5]'s top half: DIV-0023
+0x66A418 8      state   # Pause_LinesGame's two pointers, DIV-0038: a slot written by what it names (round doc 3.4)
+0x66A448 8      state   # Pause_LinesTitle's two pointers, DIV-0038: the same
+0x7E09E0 2048   state   # DrawItemPool_Free, Capcom's: unused under DIV-0062, the game's with it off (census 7)
+0x9037D0 4      state   # Gfx_OtHeads+0x10: a pointer into .pool, copied (census 7)
+0x9037F0 4      state   # Gfx_OtHeads+0x30: the same
+0x9039D4 2      state   # DrawItemPool_Top: copied with ST's free ring (census 7)
+0x905E80 147456 state   # DrawItems, Capcom's: unused under DIV-0062, the game's with it off (census 7)
+0x929EB0 4      state   # Gfx_OtPointers+0x10: a pointer into .pool, copied (census 7)
+0x929EB8 4      state   # Gfx_OtPointers+0x18: the same
+0x93F000 0x48000 state  # .pool, DIV-0062's draw items: copied, with ST's free ring (census 5; exe_layout.h kPoolVa)
+
+# --- derived: the display, SP-G's and the frame's (census 4, 5, 7) ---------------
+0x6C3A40 1280   derived # D3d_BackMaterialHandle, D3d_ShadeModeCache, Gfx_RenderFlags, the device description: SP-G (census 5)
+0x6C3F40 24576  derived # Gfx_TexCache: render_shim surfaces, cleared by SP-G (census 4, 5)
+0x7C9F50 2560   derived # Font_TexCache, 128 records of 20: cleared by SP-G (census 5); the skip list's 128 rows lie in it
+0x7CA958 136    derived # D3d_Vertices: the quad the draw builds, per frame (census 7)
+0x7CAE38 0x1400 derived # D3d_CellTexCache: cleared by SP-G (census 5)
+0x7E1C00 131072 derived # Gfx_PacketPools: rebuilt by the next frame's draw (census 7)
+0x8022A0 2720   derived # DrawLayers and Gfx_FrameNodes: per frame (census 7)
+
+# --- unknown: read, and the process's by their reading, but not in kKept (reported to A1) --
+0x7CC338 12     unknown # DDraw_Primary, DDraw_BackBuffer, PsxRest_ZBuffer: display objects inside skip row 0x7CAE38 5440
+0x7CC348 8      unknown # PsxRest_Clipper, PsxRest_Direct3D: the same
+0x7CC354 8      unknown # D3d_Viewport, D3d_BackMaterial: the same
+0x7CC360 0x18   unknown # the end of skip row 0x7CAE38 5440, with SpriteCell_Count: not read for this table
+0x6C9F40 4      unknown # Display_Setup's copy of the desktop's VERTRES: the machine's screen (skip list, 2026-11-24)
+0x7C9F44 4      unknown # Display_DesktopWidth: the desktop's HORZRES (skip list, 2026-11-24)
+0x939A2C 12     process # Desktop_Bpp, Desktop_Height, Desktop_Width: WinMain's GetDeviceCaps; kKept since the round's A1 (docs/state-by-name-format.md)
+
+# --- unknown: the C runtime's words, dead in the exe host (census 5, 7) ----------
+0x93C35C 4      unknown # the multibyte code page word: start-up data the exe host never writes (state3-build.md 3.1)
+0x93C380 516    unknown # the two multibyte classification tables (the same)
+0x93C5A0 4      unknown # a stack address, written only by Capcom's start-up (census 5)
+0x93C6A0 12     unknown # _nhandle, the environment word, the code-page word (the same)
+0x93C6B4 4      unknown # a stack address (census 5)
+0x93D6C0 4      unknown # _nstream (the same)
+0x93D6E0 12     unknown # a stack address and a heap pointer (census 5)
+
+# --- the pointers of ours the state hash skips since 2026-11-26 (docs/state-by-name-proof.md 2) ---
+0x6BC62C 4      derived # Overlay_Text: our line buffer after F6 / F7 / the quick menu; a load writes the file's and Show sets this process's before a frame runs (snapshot.cpp DoLoad)
+0x7DEE4C 12     state   # Msgbox_Base, MenuWindows_ListText, Msgbox_Resume: text in our message pool, written by name (span_words.h kTextWords)
+0x93B8FC 4      state   # BattleFlow_TaskCurrent+0x38: the battle block's text word, written by name (kTextWords)

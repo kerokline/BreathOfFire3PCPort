@@ -20,10 +20,15 @@
 namespace bof3x::save {
 
 constexpr std::size_t kBlockSize = 0x10B0;    // the game state
-constexpr std::size_t kPcFileSize = 0x12B0;   // BISLPS0X.DAT: the block, then 0x200 zero bytes
+constexpr std::size_t kPcFileSize = 0x12B0;   // BISLPS0X.DAT: the block, then the 0x200-byte tail
+// The tail: zero in every save of the original port; this project's saves
+// keep a tag and the came-from place there (src/game/save_tail.h, the
+// state-by-name round's draft C). The game neither sums nor copies it.
+constexpr std::size_t kTailSize = kPcFileSize - 0x10B0;
 constexpr int kSlots = 16;                    // BISLPS00..0F; 10..1F are quicksaves, never touched
 
 using Block = std::array<std::uint8_t, kBlockSize>;
+using Tail = std::array<std::uint8_t, kTailSize>;
 
 // The u16 at +0x70: the byte sum of the block with that word counted as zero.
 std::uint16_t Checksum(const Block& block);
@@ -138,9 +143,20 @@ std::vector<Issue> Check(const Block& before, const Block& now, const PartyTable
 // checksum is not a refusal, the caller asks StoredChecksum. WritePcFile
 // writes beside the target, reads the bytes back, keeps the file it replaces
 // in `backup_dir` (made if absent; `backup` names the copy) and then replaces.
+// The forms with a Tail read it and write it as given; the others drop it
+// on a read and write it zero.
 bool ReadPcFile(const std::wstring& path, Block& block, std::string& why);
+bool ReadPcFile(const std::wstring& path, Block& block, Tail& tail, std::string& why);
 bool WritePcFile(const std::wstring& path, const Block& block, const std::wstring& backup_dir, std::wstring& backup,
                  std::string& why);
+bool WritePcFile(const std::wstring& path, const Block& block, const Tail& tail, const std::wstring& backup_dir,
+                 std::wstring& backup, std::string& why);
+// The tail to write after an edit of the block `before` into `now`: the
+// opened file's `tail`, kept byte for byte, unless the edit changed the area
+// the save resumes in (+0x24): the came-from place is the way out of that
+// area, so for another area the tail is written zero (the game then holds at
+// an edge as for any save without it, DIV-0121).
+Tail KeptTail(const Block& before, const Block& now, const Tail& tail);
 // The write that WritePcFile and the card file share: `bytes` beside `path`,
 // read back, the file from before kept in `backup_dir`, then the replace.
 bool WriteKept(const std::wstring& path, const std::vector<char>& bytes, const std::wstring& backup_dir,

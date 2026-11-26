@@ -25,10 +25,12 @@
 #include "game/music_loops.h"
 #include "game/music_resume.h"
 #include "game/music_seq.h"
+#include "game/quick_menu.h"
 #include "game/record_views.h"
 #include "game/records.h"
 #include "game/save_menu.h"
 #include "game/save_menu_callees.h"
+#include "game/save_tail.h"
 #include "game/scena_sx2_callees.h"
 #include "game/scenario_harness.h"
 #include "game/shop_states2.h"
@@ -796,6 +798,28 @@ extern "C" void __cdecl TitleFlow_Step(void) {
 // set byte 0xFF, Save_ListFiles, Game_Step + 1, 0x9039D6 and the state 0, and
 // the answer's non-zero into both 0x6BDF8E (three rows) and the cursor - the
 // cursor starts on LOAD GAME when saves exist.
+//
+// DIVERGENCE (the state-by-name round's A4, ledger draft B,
+// docs/state-by-name-tier0.md 2): on the way to a refused quicksave's save
+// (quick_menu.cpp), the step goes on to the load menu's read: the summaries
+// every slot empty but slot 0, which is the save half's own (0x1C bytes at
+// 0xCA0, the entry's index 0, as Save_ReadSummaries leaves a listed file's),
+// the slot and the first shown 0, the title's cursor on LOAD GAME (row 1:
+// TitleFlow_EnterGame sends row 2 to the title menu), Game_Step 3 and the load
+// menu's state 4, LoadMenu_Read. The fades the title menu and the list would
+// start are not: LoadMenu_Loaded starts the one that leads into the game.
+void TitleFlow_ToSaveHalf(const unsigned char* half) {
+    unsigned char* const sums = AtSaveMenu(::bof3::Img(save_menu::at::kSummaries.v));
+    for (save_menu::U i = 0; i < 16; ++i) sums[i * save_menu::at::kSummaryBytes + 0x15] = 0xFF;
+    std::memcpy(sums, half + 0xCA0, save_menu::at::kSummaryBytes);
+    sums[0x15] = 0;
+    Rest2c_Slot = 0;
+    PutLongSaveMenu(::bof3::Img(save_menu::at::kSlotTop.v), 0);
+    SaveMenu_Cursor = 1;
+    Game_Step = 3;
+    SetState(4);
+}
+
 extern "C" void __cdecl TitleFlow_Begin(void) {
     Field_ScriptFlags = 0;
     Field_ScriptFlags2 = 0;
@@ -822,6 +846,7 @@ extern "C" void __cdecl TitleFlow_Begin(void) {
     SaveMenu_AnySave = any;
     SaveMenu_Cursor = any;
     new_game::NewGame_TitleBegins();   // ours: no Capcom byte; the New Game name buffer's reset (new_game.h)
+    if (const unsigned char* const half = bof3::QuickMenu_TitleBegins()) TitleFlow_ToSaveHalf(half);   // draft B
 }
 
 #pragma clang attribute pop
@@ -1078,13 +1103,22 @@ extern "C" void __cdecl LoadMenu_Confirm(void) {
 // byte +0x74D (after the copy, whatever the sum); the sum's low word equal
 // to the checksum's: state 6; otherwise Sound_PlayEffect(0x107), error 2,
 // state 5 - with the game block already overwritten.
+//
+// DIVERGENCE (draft B, docs/state-by-name-tier0.md 2): on the way to a refused
+// quicksave's save, the 0x12B0 bytes are the quicksave's save half in place of
+// the slot's file (quick_menu.cpp), and the rest is the read's own. (Draft C,
+// 3): a block that sums hands the staging buffer's tail to save_tail.h, which
+// arms the came-from place's put-back when the tail is tagged.
 extern "C" void __cdecl LoadMenu_Read(void) {
     LoadWindows();
     save_menu::g.draw_slots(0x20, 0x30, 0);
     const save_menu::U slot = Rest2c_Slot;
     for (save_menu::U i = 0; i < save_menu::at::kClearBytes; i += 4) PutLongSaveMenu(::bof3::Img(save_menu::at::kStaging.v) + i, 0);
     save_menu::g.sprintf(reinterpret_cast<char*>(AtSaveMenu(::bof3::Img(save_menu::at::kPath.v))), reinterpret_cast<const char*>(AtSaveMenu(::bof3::Img(save_menu::at::kSaveName.v))), slot);
-    if (save_menu::g.read_file(reinterpret_cast<const char*>(AtSaveMenu(::bof3::Img(save_menu::at::kPath.v))), save_menu::at::kFileBytes, 0) == -1) {
+    const unsigned char* const half = bof3::QuickMenu_SaveHalfForRead();
+    if (half) {
+        std::memcpy(Save_Staging, half, save_menu::at::kFileBytes);
+    } else if (save_menu::g.read_file(reinterpret_cast<const char*>(AtSaveMenu(::bof3::Img(save_menu::at::kPath.v))), save_menu::at::kFileBytes, 0) == -1) {
         SaveMenu_ErrorKind = 2;
         SetState(5);
         return;
@@ -1102,7 +1136,9 @@ extern "C" void __cdecl LoadMenu_Read(void) {
         // Instrumentation, not behaviour: tools/input_run.py hands slot 0 back
         // on this line (docs/input-script.md section 1a) - the file is not
         // read again until a save menu lists the slots.
-        bof3::Log("save        loaded slot %X (%s)", (unsigned)slot, reinterpret_cast<const char*>(AtSaveMenu(::bof3::Img(save_menu::at::kPath.v))));
+        if (half) bof3::Log("save        loaded the save half of BISLPS%02X.DAT (draft B)", bof3::QuickMenu_SaveHalfSlot());
+        else bof3::Log("save        loaded slot %X (%s)", (unsigned)slot, reinterpret_cast<const char*>(AtSaveMenu(::bof3::Img(save_menu::at::kPath.v))));
+        bof3::SaveTail_Loaded(Save_Staging, FieldModes_Pending);   // the block's +0x24, copied: the area the save resumes in
         SetState(6);
         return;
     }
@@ -1412,16 +1448,37 @@ extern "C" void __cdecl Save_ReadSummaries(void) {
 // - and Field_RunTaskRecords. The task leaves only through Task_Restart
 // (TitleFlow_EnterGame). As the original has it, the mode is not checked:
 // the table is two long and a 0 follows (ours aborts on a null entry).
+//
+// The yield word (docs/state-by-name-sites.md): the sleep opens the loop's
+// pass, so site 2's resume entry runs the rest of that pass and then the
+// loop. Nothing is alive across the sleep: the mode is Game_Mode, in the
+// span. (The include is here, not with the others, to keep this one hunk.)
+#include "hook/task_yield.h"
+namespace {
+void TitleTaskRunPass() {
+    Entry(::bof3::Img(TitleTask_Modes_addr), LongShopStates2(::bof3::Img(shop_states2::at::kGameMode.v)) & 0xFFFF, "TitleTask_Run")();
+    shop_states2::g.run_task_records();
+}
+[[noreturn]] void TitleTaskRunLoop() {
+    for (;;) {
+        Task_YieldAt(bof3::task_yield::kSiteTitleTaskRun, 1, nullptr, 0, shop_states2::g.task_sleep);
+        TitleTaskRunPass();
+    }
+}
+}  // namespace
+
 extern "C" void __cdecl TitleTask_Run(void) {
     Game_Mode = 0;
     Game_Step = 0;
     shop_states2::g.task_clear();
     shop_states2::g.window_reset();
-    for (;;) {
-        shop_states2::g.task_sleep(1);
-        Entry(::bof3::Img(TitleTask_Modes_addr), LongShopStates2(::bof3::Img(shop_states2::at::kGameMode.v)) & 0xFFFF, "TitleTask_Run")();
-        shop_states2::g.run_task_records();
-    }
+    TitleTaskRunLoop();
+}
+
+void __cdecl bof3::task_yield::ResumeTitleTaskRun() {
+    Task_YieldResume(kSiteTitleTaskRun, nullptr, 0);
+    TitleTaskRunPass();
+    TitleTaskRunLoop();
 }
 
 // original 0x588EB0: task 0's mode 0 - LoadDatFile(0x31D), Task_Sleep(1)
