@@ -99,16 +99,21 @@ int ScreenOf(unsigned sub) {
     return -1;
 }
 
-// After the last screen (or with none): the port's rest of TitleFlow_NewGame,
-// then the Config screen at Game_Step 4 with the screen black and no fade
-// running - as the title's third row enters it after TitleMenu_Leave's wait -
-// or, with the options off, the port's Transition_Start(0) and Game_Step 5.
-// ours: on the PlayStation the options come after EnterGame's growth roll and
-// their closing starts the scenario; the port moved that tail here (M1,
-// correction a), and the order stays the port's.
+// After the last screen (or with none): the Config screen at Game_Step 4 with
+// the screen black and no fade running - as the title's third row enters it
+// after TitleMenu_Leave's wait - with the port's rest of TitleFlow_NewGame
+// left for TitleFlow_EnterGame (NewGame_RestOwed below); or, with the options
+// off, that rest now, with the port's Transition_Start(0) and Game_Step 5.
+// The rest waits because Scenario_Start(0) runs chapter 0's start, whose
+// Scena16_PartyReset loads the whelp's party set file (PartySet_Load(0xA,
+// 0xFF, 0xFF, 0): PL27A.DAT) over sound bank 1 - the bank the title's file
+// START.DAT filled and the Config screen's cues 0x100..0x106 play from. Run
+// before the screen, as this did until 2026-11-25, the screen's cursor and
+// confirm cues played the party's sounds (the owner's report). The
+// PlayStation starts the scenario in the options' closing too (M1).
 void Finish() {
     SaveMenu_FlowState = kOpen;
-    if (g_options_on != 0) TitleFlow_NewGameRest(false, 4);
+    if (g_options_on != 0) Game_Step = 4;
     else TitleFlow_NewGameRest(true, 5);
 }
 
@@ -453,6 +458,13 @@ bool NewGame_Sequence() {
 }
 
 void NewGame_TitleBegins() { g_fresh = true; }
+
+// No cell of ours: with the options on, every New Game reaches
+// TitleFlow_EnterGame from the Config screen's closing with the title cursor
+// still 0 and the rest not run (Finish above); a load arrives with the cursor
+// 1 and the title's third row with 2. So a take on that Config screen loads
+// with the rest still owed, and nothing joins the snapshot record.
+bool NewGame_RestOwed() { return g_options_on != 0 && SaveMenu_Cursor == 0; }
 
 void Arm() {
     if (bof3::WantsShadow("new_game")) SelfTest();

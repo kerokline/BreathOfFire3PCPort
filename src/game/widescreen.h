@@ -68,6 +68,12 @@ unsigned Widescreen_Live();
 // Widescreen_LogicColumns() once Widescreen_Inject has run, 0 before it and when the view is not wide.
 unsigned Widescreen_LiveLogic();
 
+// D284: a scene effect that draws its own sky over the whole frame calls this
+// each frame it does (Gfx_DrawSkyGradient). AreaMap_DrawBackdrop then leaves
+// the area's backdrop out while only the grown ring's rim cells lie off the
+// map, as the 4:3 view does (src/game/field/area_map.cpp). Writes ours only.
+void WideSky_NoteEffectSky();
+
 // The terrain cull of MapView_Build 0x56EC00 (ours, src/game/map_layers.cpp):
 // the kept screen-x interval, -50..370 as the original has it, widened by
 // Widescreen_Inject by widescreen_rule::TerrainMargin when the view is wide

@@ -13,6 +13,19 @@ Each item says what to do at the machine, what to look or listen for, and
 where the reading behind it is. Nothing here is a divergence until it is in
 [`DIVERGENCE.md`](DIVERGENCE.md).
 
+## 2026-11-25, three scenes from the owner's report (branch `fix/scene-touchups`)
+
+[`scene-touchups-1125.md`](scene-touchups-1125.md). Built and checked in captures at 16:9; not seen in play.
+
+- **The Yraall road:** Teepo is behind Ryu through his kick (D436, DIV-0071's amendment).
+- **Bunyan's house, upstairs:** Rei's tail is behind the table while he talks, and over it from the frame he
+  turns away to the frame he turns back (DIV-0246). To settle by eye: whether the tail should come over the
+  table that early - it does from his first turn, 35 frames before his back is to the camera - or only once
+  his back is turned. The plate is drawn over the tail.
+- **The plate on that table:** whole, its lower edge round (DIV-0247).
+- **Mt. Glaus, the sunset:** the sky turns orange at 16:9 (D284, DIV-0041's amendment). 21:9 takes the same
+  code and was not looked at.
+
 ## 2026-11-16, the owner's word in chat
 
 - **The New Game screen** "looked perfect in eng and jpn" (the section

@@ -1393,8 +1393,21 @@ extern "C" void __cdecl MapView_ShiftRowsNext(void) {
 //     so the next frame refreshes buffer 1 either way;
 //   - a failed allocation leaves the cell word 0 and draws nothing, the cell
 //     released by no one.
+//
+// DIV-0041 (D284): the grown walk also notes whether any cell off the map is
+// one Capcom's walk reads (view rows 0..54, view columns inset..27 - inset).
+// When none is, bit 0 of MapView_BuildFlags is the rim's alone and
+// AreaMap_DrawBackdrop asks g_rim_alone before it draws over a scene's sky.
+namespace {
+bool g_rim_alone = false;                       // bit 0 set by this build, by rim cells only
+std::uint32_t g_effect_sky_frame = 0x80000000u;   // Frame_Counter of a scene effect's last sky
+}  // namespace
+
+void WideSky_NoteEffectSky() { g_effect_sky_frame = Frame_Counter; }
+
 extern "C" void __cdecl MapView_Build(void) {
     map_rim::NoteOwnView(false);   // the ring's view again (issue 185)
+    g_rim_alone = false;
     map_layers::g.layers_reset();
     const int origin_y = MapView_Origin[1], origin_x = MapView_Origin[0];
     const int kind2_z = static_cast<short>(static_cast<std::uint32_t>(Field_Kind2Z) >> 16);
@@ -1417,9 +1430,22 @@ extern "C" void __cdecl MapView_Build(void) {
         int walk = static_cast<int>(original) + 2 - lowered_by;
         walk = walk < 0 ? 0 : walk > 16 ? 16 : walk;
         map_rim::NoteWalk(static_cast<unsigned>(walk), MapView_Inset);
+        bool window_off_map = false;
+        const int capcom_inset = static_cast<int>(original);
         for (int grown_row = 0; grown_row < map_rim::kRows - 1; ++grown_row)
-            for (int grown_column = walk; grown_column < map_rim::kColumns - walk; ++grown_column)
-                BuildCell(map_rim::Cell(grown_row, grown_column), grown_row - 1, threshold);
+            for (int grown_column = walk; grown_column < map_rim::kColumns - walk; ++grown_column) {
+                unsigned char* const cell = map_rim::Cell(grown_row, grown_column);
+                if (cell[0] == 0 || cell[1] == 0) {
+                    // Capcom's view cell of a grown position (map_rim.h): row gr - 1, column gc - 2 - (row odd).
+                    const int view_row = grown_row - 1;
+                    const int view_column = grown_column - 2 - (view_row & 1);
+                    if (view_row >= 0 && view_row <= 0x36 && view_column >= capcom_inset &&
+                        view_column <= 0x1B - capcom_inset)
+                        window_off_map = true;
+                }
+                BuildCell(cell, grown_row - 1, threshold);
+            }
+        g_rim_alone = (MapView_BuildFlags & 1) != 0 && !window_off_map;
         map_rim::ExtraTableSort();
         map_layers::g.sort();
         map_rim::NoteBuildPeaks(g_table_adds);
@@ -2683,8 +2709,18 @@ extern "C" void __cdecl AreaMap_ClutCycle(const unsigned char* entry) {
 // a byte against the 24-bit shifted focus; the packet cursor is read again
 // after the first commit for the quad; the PC dropped the PSX's video-mode
 // test that picks tpage 0x225 over 0x95, and passes 0x95 always.
+//
+// DIV-0041 (D284): under a wide picture the grown ring's rim cells set bit 0
+// where Capcom's 28 x 56 walk reads no cell off the map. A scene effect that
+// draws its own sky over the whole frame (area 23's sunset, Gfx_DrawSkyGradient)
+// counts on the backdrop not being drawn then, and at 4:3 it is not. So when
+// the flag byte is the rim's bit alone and such a sky was drawn this frame or
+// the one before, the backdrop is left out, as at 4:3.
 extern "C" void __cdecl AreaMap_DrawBackdrop(const unsigned char* entry) {
     if (MapView_BuildFlags == 0) return;
+    if (MapView_BuildFlags == 1 && g_rim_alone && map_rim::Active() &&
+        static_cast<std::uint32_t>(Frame_Counter) - g_effect_sky_frame <= 1u)
+        return;
     const auto fz = static_cast<std::int32_t>((0x8000u - static_cast<std::uint32_t>(MapView_FocusZ)) >> 8);
     const auto fx = static_cast<std::int32_t>((0x7FFFu - static_cast<std::uint32_t>(MapView_FocusX)) >> 8);
     const std::uint32_t bounds = Dword(entry + 4);
