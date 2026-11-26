@@ -351,16 +351,22 @@ extern "C" std::int32_t __cdecl SndBuf_Write(void* buffer, const void* src, unsi
 // is 1; `wave` is the voice's wave, from which a lost buffer is written again
 // (then played again). As the original has it: SetCurrentPosition and
 // SetFrequency results are not looked at, nor the second Play's. The data
-// pointer starts as the wave; Wave_FindData always writes it.
-void __cdecl sound::PlayVoice(std::uint32_t wave, void* buffer, unsigned frequency, std::uint32_t loops) {
+// pointer starts as `data`, which Wave_FindData writes when the wave has a
+// data chunk; PlayVoice starts it as the wave.
+namespace {
+void PlayVoiceFrom(std::uint32_t wave, const unsigned char* data, void* buffer, unsigned frequency, std::uint32_t loops) {
     if (!buffer) return;
     sound::Method<ComValue>(buffer, kSetCurrentPosition)(buffer, 0);
     sound::Method<ComValue>(buffer, kSetFrequency)(buffer, frequency);
     if (sound::Method<ComPlay>(buffer, kPlay)(buffer, 0, 0, loops) != kBufferLost) return;
-    const unsigned char* data = sound::At(wave);
     const unsigned size = sound::g.wave_find_data(sound::At(wave), &data);
     sound::g.sndbuf_write(buffer, data, 0, size);
     sound::Method<ComPlay>(buffer, kPlay)(buffer, 0, 0, loops);
+}
+}  // namespace
+
+void __cdecl sound::PlayVoice(std::uint32_t wave, void* buffer, unsigned frequency, std::uint32_t loops) {
+    PlayVoiceFrom(wave, sound::At(wave), buffer, frequency, loops);
 }
 
 // original 0x5A6BB0: PlayVoice with the original's packing - looping when bit
@@ -369,9 +375,12 @@ void __cdecl sound::PlayVoice(std::uint32_t wave, void* buffer, unsigned frequen
 // original ran on; the heap arena of the Linux build (os/heap.h LowArena) lies
 // in [0x80000000, 4 GB), where bit 31 of every wave is set. So no caller of
 // ours packs: Sound_PlayEffect calls PlayVoice. This entry is kept for the
-// original's contract (the sound fuzz's SndBuf_Play against 0x5A6BB0).
+// original's contract (the sound fuzz's SndBuf_Play against 0x5A6BB0). The
+// original's data pointer is its argument's own stack slot (lea eax, [esp+0x10]
+// at 0x5A6BFA), so it starts as `sample` with the flag still in it; a wave
+// with no data chunk leaves it so (the fuzz's 55 of 2000 rounds, 2026-11-25).
 extern "C" void __cdecl SndBuf_Play(unsigned sample, void* buffer, unsigned frequency) {
-    sound::PlayVoice(sample & 0x7FFFFFFFu, buffer, frequency, (sample & 0x80000000u) ? 1 : 0);
+    PlayVoiceFrom(sample & 0x7FFFFFFFu, sound::At(sample), buffer, frequency, (sample & 0x80000000u) ? 1 : 0);
 }
 
 // original 0x5A6C30: stops a buffer that is playing. GetStatus writes into
