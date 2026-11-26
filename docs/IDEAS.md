@@ -2356,6 +2356,8 @@ What the two roads are is [`x64-build-round.md`](x64-build-round.md) section 1. 
 
 **First concrete step, when wanted:** tier 0 (a refused snapshot loads as its save half, a line in the overlay and the log, a DIV amendment of DIV-0145's refusal rule). Then tier 2's census: for each of the 41 task-creating sites, what the task is and how many named words would place it, which prices tier 3 before anyone commits to it.
 
+**Run 2026-11-25 on the laptop** (branch `sbn/round`; [`state-by-name-round.md`](state-by-name-round.md) 4b): tier 0, the portable quicksave at fifteen yield sites and the region table are built and proved between two Linux builds; the Windows rows of the proof are owed on the desktop ([`state-by-name-proof.md`](state-by-name-proof.md) 8). Left on the list: the yields in `GameMode8_Leave`, `GameMode9_Leave`, `MenuModeEnter`, the mode-3 load waits and `Transition_Kind20`; the image field by field (I53).
+
 **Staged 2026-11-24** (the owner chose it as the first larger change after `v0.1.0-beta.2`): [`state-by-name-round.md`](state-by-name-round.md). Its measurement changes two things above. Tier 2's census is run (`BOF3X_TASKCENSUS`, `tools/task_census.py`): on 16 routes every live task stands at the top of its own loop on 97.2 % of frames, battles and scenes included, so tier 2 is a deliverable (a named place and a way back in) and tier 3 is a short list of nested waits, not the renovation of the mode loops. And tier 1 as written is not what persistence needs: the span survives a build as bytes already, but for a short list of words (section 2.2 there); the field-by-field writer is the wide image's (I53).
 
 ## I55 — A readable form of the cache: decompile, edit, compile

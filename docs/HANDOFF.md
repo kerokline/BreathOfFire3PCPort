@@ -32,9 +32,15 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
 ## Pick up here
 
 00. **Next, 2026-11-16** (the order is the owner's; these are the candidates):
-   - **State by name (IDEAS I54), staged 2026-11-24, LAUNCHED 2026-11-25 on the laptop** (the owner's calls 3 to 8
-     answered as proposed; two agents at a time, branch `sbn/round`, scratch `~/bof3x-runs/sbn1125`: section 4a there.
-     The proof's Windows rows are owed on the desktop. What follows is the staging's text.)
+   - **State by name (IDEAS I54): RUN on the laptop 2026-11-25, branch `sbn/round`, not merged to `main`, no PR**
+     ([`state-by-name-round.md`](state-by-name-round.md) 4b; scratch `~/bof3x-runs/sbn1125`). A quicksave is format 2;
+     a take at one of fifteen yield sites loads in another build; anything else another build refuses and offers as
+     its save (F5 asks). DIV-0246 (the came-from place in a save's tail), DIV-0145 / 0147 / 0121 amended, D436.
+     **Owed on the desktop:** [`state-by-name-proof.md`](state-by-name-proof.md) 8 - the width and system rows
+     (`quicksave_check.py matrix`, its Windows branch not yet run), the task bodies' fuzz and the hosted suite in the
+     32-bit build, the Windows builds compiling, the owner's eye on F5's question. **The owner's:** the six
+     questions and the code-place rule in section 4b; whether the state hash skips our text pointers (every
+     reference pair recorded again). What follows is the staging's text.
      ([`state-by-name-round.md`](state-by-name-round.md), branch `docs/state-by-name-staging`): the owner's first
      larger change after `v0.1.0-beta.2`. Measured on the laptop: the task census (`BOF3X_TASKCENSUS`, a read-only
      probe; 16 routes on the Linux build). The round is two waves - the quicksave's format 2 and the words written by

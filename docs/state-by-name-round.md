@@ -1,7 +1,7 @@
 # State by name, the first round: a quicksave that outlives its build (IDEAS I54)
 
-**Status: LAUNCHED, 2026-11-25, on the laptop (section 4a). Staged
-2026-11-24.** The owner chose I54 as the first of the larger changes after `v0.1.0-beta.2`
+**Status: RUN on the laptop, 2026-11-25 (section 4b); the Windows rows of the
+proof and the owner's eye are owed on the desktop. Staged 2026-11-24.** The owner chose I54 as the first of the larger changes after `v0.1.0-beta.2`
 (2026-11-24, by chat) and asked for the investigation and this staging on the
 laptop, the round to launch on the desktop. Section 2 is measured (the task
 census ran here the same day, on the Linux build of `main` `65b7810f` plus the
@@ -540,6 +540,66 @@ killed with no message). So:
 - **Not done before this launch:** the census during the owner's own play
   on the desktop (section 7's last paragraph), and the 32-bit build's
   census (section 9). The site list is fixed from the sixteen routes.
+
+### 4b. As run (2026-11-25, branch `sbn/round`)
+
+Merged in the order A3, A1, A4, A2, B1, B2, B1b, B3, B1c. The scratch root is
+`~/bof3x-runs/sbn1125` on the laptop; each group's hand-back is its
+`HANDBACK*.md` there. Each group's notes doc has its measurements.
+
+| Group | Notes | What it left |
+|---|---|---|
+| A3 | [`region-table.md`](region-table.md) | The region table: 3,898 runs, 1,630,953 bytes `unknown` (a CI number that may only fall), checked at start-up. The ledger's `Saved state:` field, required from DIV-0246 (call 6). |
+| A1 | [`state-by-name-format.md`](state-by-name-format.md) | Format 2: the state revision (1), portable, the settings fingerprint (call 8's read), `TASKS`, the words written by name, the three answers. The desktop's size words joined the keep list. |
+| A4 | [`state-by-name-tier0.md`](state-by-name-tier0.md) | F5's question and the save half's road through the title's own load; the came-from place in a save's tail (DIV-0246, `SaveCameFrom`). Known-defects D436. |
+| A2 | [`state-by-name-sites.md`](state-by-name-sites.md) 1 to 6 | `Task_YieldAt`, sites 1 to 8, the census column, `BOF3X_QSPORTABLE=1`. The first portable loads in a live game. |
+| B1 | [`state-by-name-participants.md`](state-by-name-participants.md) | A record this build cannot read is a refusal before the span is written (four of the six stopped the game before); `GFX` version 4, field by field. |
+| B2 | [`state-by-name-sites.md`](state-by-name-sites.md) 7 to 12 | Sites 9 to 15: task 0's waits. Task 0 at no site on 1,507 frames before and 16 after, on eight routes. |
+| B1b, B1c | [`state-by-name-participants.md`](state-by-name-participants.md) 10 | The pointers of ours in the span: the message box's words into the moved pool, the fishing lines' cursors. B1b named a copy by its value; the proof met a number renamed across builds; B1c names a word by where it is. |
+| B3 | [`state-by-name-proof.md`](state-by-name-proof.md) | The proof on the laptop and `quicksave_check.py matrix`; section 8 there is the desktop's procedure. |
+
+**Where the plan did not hold:**
+
+- **A load at another image base stays refused** (A1): the fold tests by
+  value and data holds numbers in any range. Every released build is at
+  `0x400000`.
+- **A portable load wants the same set of bound functions** (A1): a
+  fingerprint in the header. It refused nothing on the laptop; how two
+  releases compare is not measured.
+- **`SwingIn` is two sites**, and during play every fade ran with task 0 in
+  a wait, so B2's sites were needed for a take in an area change to be
+  portable (A2, B2). The waits' callers are six, all in `transition.cpp`,
+  with nothing alive across the wait (2.1's count, done).
+- **The road to the save needed one step more** (A4): after the restart the
+  title waits for Start; the title task's state word is put to the menu's.
+- **Words of the span that point into our module** were not in 2.2's list
+  beyond the language overlay's (B1b). A value test cannot name them: 3,620
+  to 16,567 numbers a tick lie in our module's range. They are named by
+  place.
+- **The state hash cannot compare two builds as it stands** (B3): it reads
+  three kinds of pointers of ours raw. The proof hashes with extra skip
+  rows. Changing `tools/statehash_skip.txt` means recording every reference
+  pair again: open, the owner's.
+- **The laptop's two builds differ in code addresses, not in frames** (B3):
+  the yield chains' frames are the same at `-O1`, and `-O0` does not link
+  (`effect_gte::IdentityCheck` is in the fuzz file, which the Linux build
+  leaves out; already so on `main`). Different frames are the desktop's
+  rows.
+
+**Open in principle, not changed** (B1c's read of A1's rules): the
+code-place rule names any word whose value is a bound place. It is the
+identity while both processes chose the same top byte, which every measured
+run did; where the top bytes differ a number equal to a place would be
+renamed. To settle on the desktop, where the top byte can differ: name code
+words by the load-time census of code words, or refuse a portable load when
+the top bytes differ.
+
+**The owner's, from the groups** (the round is built to the proposal in
+each): the question's text is English under every language; the question
+starts where the game's Yes / No starts; `SaveCameFrom` is a player's
+switch, default on; the save editor writes a zero tail for a save it moves
+to another area; the title task's state word is written in place of a Start
+press; what an untagged save at the fishing spot does on the quit (D436).
 
 ## 5. The proof
 
