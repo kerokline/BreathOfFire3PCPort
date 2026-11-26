@@ -651,6 +651,19 @@ and T); the forced loads in one build (row 1) are in the row tables.
    that no number is ever rewritten. Proof wanted after the fix: this row's
    three `fairyVillage` takes U to T equal, and `mm1600`, `cf1500` still
    re-aimed (T to U and back).
+
+   **Corrected (B1c, 2026-11-25; `sbn/B1` `f8bb996f`, `fab53dad`;
+   [`state-by-name-participants.md`](state-by-name-participants.md) 10.7,
+   10.8).** A word is now renamed only by where it is. The copy rule is
+   tried at the four `kTextWords` (against every slot's text) and at
+   `+0x50` / `+0x54` of a kind-0xF `Effect_Objects` record (the fishing
+   lines' typing and scrolling cursors, `effect_kind_0f.cpp`), against the
+   thirteen line records of `0x653B98` only. Any other word, `0x8262EC`
+   among them, is written as it is. A file of a B1b build that named a copy
+   anywhere else is refused, "another build (a word this build cannot
+   place)", with its save offered: this row's `f297` file by U, loaded by
+   the fixed build, is refused so. The proof's measurements of the fix are
+   in the participants doc, 10.8.
 3. **The state hash reads pointers of ours raw** (section 2): `Overlay_Text`
    after any quicksave key, B1b's `kTextWords`, the `Effect_Objects` copies.
    Between builds they are differences that are not the game's. The proof
