@@ -107,6 +107,25 @@ constexpr bool IsTextWord(std::uint32_t va) {
     return false;
 }
 
+// The words of .data that hold a code place and are not load-time code words
+// (rebase.gen.h's kText runs, which the loader binds): the game stores a
+// function there in play. Measured 2026-11-25 on the desktop's 88 takes of
+// the state-by-name proof (docs/state-by-name-proof.md 10): of 8,675 to 8,680
+// code words a take, all but these are load-time ones - the battle's three
+// hooks (BattleHook_End, BattleHook_Exit, BattleHook_Event) and +0xF4 of a
+// Battle_Enemies record (records 0 and 1 seen). A code word is named by
+// where it is: a load-time word or one of these. A word elsewhere whose value
+// is a code place is named by its value under its own kind, which only a
+// process with the take's top byte places (snapshot.cpp NameWord).
+constexpr std::uint32_t kCodeWords[] = {0x904B64, 0x904B68, 0x904B6C};
+constexpr std::uint32_t kEnemyRecords = 0x93B960, kEnemyStride = 0x128, kEnemyCount = 8, kEnemyCode = 0xF4;
+constexpr bool IsRuntimeCodeWord(std::uint32_t va) {
+    for (const std::uint32_t w : kCodeWords)
+        if (w == va) return true;
+    const std::uint32_t r = va - kEnemyRecords;
+    return r < kEnemyStride * kEnemyCount && r % kEnemyStride == kEnemyCode;
+}
+
 // The other place a cursor into text of ours is kept (B1c; the proof's
 // finding 2, docs/state-by-name-participants.md 10.7): a kind-0xF effect
 // object's +0x50 (the typing cursor) and +0x54 (the scrolling one), into one

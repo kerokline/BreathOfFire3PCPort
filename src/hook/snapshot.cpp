@@ -21,6 +21,7 @@
 #include <utility>
 #include <vector>
 
+#include "bof3/rebase.gen.h"
 #include "bof3/symbols.gen.h"
 #include "common/sha256.h"
 #include "game/draw_pool.h"
@@ -209,6 +210,8 @@ enum WordKind : U {
     kWordPool = 3,     // a run-time slot into our message pool, written as its offset in the pool
     kWordText = 4,     // a slot of Capcom's holding text of ours: written raw, kept as the process has it
     kWordTextCopy = 5, // a word inside the text a slot names: (offset in the text << 24) | the slot's offset, placed from the slot
+    kWordCodeValue = 6, // a code place at a word that is no code word's place (CodeWordPlace), named by its value: written
+                        // as its VA, placed only under the take's own top byte, where the placing is the identity
 };
 
 struct Participant {
@@ -612,6 +615,32 @@ static_assert(span_words::kTextWords[0] == Msgbox_Base_addr && span_words::kText
               "span_words::kTextWords against symbols.toml (the box state's three, the battle block's +0x38)");
 static_assert(span_words::kEffectObjects == Effect_Objects_addr && span_words::kEffectRecords == Effect_Objects_count,
               "span_words::kEffectObjects against symbols.toml");
+static_assert(span_words::kCodeWords[0] == BattleHook_End_addr && span_words::kCodeWords[1] == BattleHook_Exit_addr &&
+                  span_words::kCodeWords[2] == BattleHook_Event_addr,
+              "span_words::kCodeWords against symbols.toml (the battle's three hooks)");
+static_assert(span_words::kEnemyRecords == Battle_Enemies_addr && span_words::kEnemyCount == Battle_Enemies_count &&
+                  span_words::kEnemyStride == sizeof(::bof3::GameData::Battle_Enemies_type),
+              "span_words::kEnemyRecords against symbols.toml (Battle_Enemies, 8 records of 0x128)");
+
+// Whether `va` is a place a code word is kept (the owner's call of
+// 2026-11-25: a code word is named by where it is, not by what its value
+// looks like): a load-time code word - rebase.gen.h's kText runs, ascending,
+// the words the loader binds - or one of the words the game stores a function
+// in during play (span_words::IsRuntimeCodeWord). A table lookup: the take's
+// scan asks it only of a word whose value is a code place.
+bool CodeWordPlace(U va) {
+    if (span_words::IsRuntimeCodeWord(va)) return true;
+    const rebase::Run* lo = rebase::kRuns;
+    const rebase::Run* hi = rebase::kRuns + rebase::kRunCount;
+    while (lo < hi) {   // the last run starting at or below va
+        const rebase::Run* mid = lo + (hi - lo) / 2;
+        if (mid->pc <= va) lo = mid + 1;
+        else hi = mid;
+    }
+    if (lo == rebase::kRuns) return false;
+    const rebase::Run& r = lo[-1];
+    return r.to == rebase::kText && va - r.pc < 4u * r.words && (va - r.pc) % 4 == 0;
+}
 
 // A kind-0xF effect object's cursor field, by `record_bytes` (the record's
 // 0x80 bytes, the live span's at a take, the file's at a load). Live or not:
@@ -702,7 +731,11 @@ bool NameWord(const WordPlace& wp, U off, U w, U* kind, U* stored, U* np) {
     if ((runtime || cursor) && span_words::g_ours.Named(w) && !*np) *np = text_word || cursor ? kNpTextOurs : kNpRuntimeSlot;
     if (wp.code) {
         if (const U named = Bind_VaOf(w)) {
-            *kind = kWordCode;
+            // By where it is; a place's value at any other word (a function
+            // the game stored at a word no take has shown, or a number that
+            // happens to equal a place) keeps its own kind, which a process
+            // under another top byte refuses rather than renames.
+            *kind = CodeWordPlace(va) ? kWordCode : kWordCodeValue;
             *stored = named;
             return true;
         }
@@ -742,6 +775,7 @@ bool NameWord(const WordPlace& wp, U off, U w, U* kind, U* stored, U* np) {
 bool PlaceWord(const WordPlace& wp, U kind, U stored, U live, bool keep_live, U* w, std::string& why) {
     switch (kind) {
     case kWordCode:
+    case kWordCodeValue:
         if (!Bind_Ours(stored)) {
             why = Printf("a code word names 0x%06X, which this build does not bind", stored);
             return false;
@@ -1358,6 +1392,17 @@ Parsed Parse(const std::vector<unsigned char>& file, const BuildId& build, const
             return Refuse(p, reason.empty() ? std::string("a word this process cannot place") : reason + " (a word this build cannot place)",
                           (detail.empty() ? std::string() : detail + "; ") + Printf("the word at 0x%08X: ", span_words::kDataLo + off) + what);
         };
+        // A code word is named by where it is. A file naming one at another
+        // word is a build's that named them by value anywhere (before
+        // 2026-11-26), or damaged: refused, not renamed. A place named by its
+        // value is placed only where that is the identity: under the take's
+        // own top byte.
+        if (kind == kWordCode && !CodeWordPlace(span_words::kDataLo + off))
+            return cannot("the file names it as a code word, and no code word is kept there");
+        if (kind == kWordCodeValue && x.table_lo >> 24 != Bind_TableLo() >> 24)
+            return cannot(Printf("it held the value of a code place (0x%06X) at a word that is no code word's, under the top byte "
+                                 "0x%02X; this process's is 0x%02X, where the same value may be a number",
+                                 file_value, x.table_lo >> 24, Bind_TableLo() >> 24));
         if (!PlaceWord(wp, place_kind, file_value, live_value, portable, &w, why)) return cannot(why);
         if (kind == kWordTextCopy) {
             if (portable && delta > TextExtent(w))
@@ -2471,6 +2516,58 @@ void SelfTestFormat2() {
         PutExt(c, cx);
         q = Parse(c, other, span, top, reg);
         Check(!q.ok && q.why == "another build (other functions bound)", "a build that binds other functions refuses a portable file");
+
+        // (5b) A code word is named by where it is (CodeWordPlace): a place's
+        // value at a word that is no code word's keeps its own kind, placed
+        // under the take's top byte alone.
+        {
+            U value_words = 0;
+            for (U i = 0; i < x.words; ++i)
+                if ((U32(f.data() + WordsAt(f) + std::size_t{i} * sizeof(U)) & 7) == kWordCodeValue) ++value_words;
+            Check(value_words == 0, "every code place of the start-up span lies at a code word's place");
+            Check(CodeWordPlace(BattleHook_End_addr) && CodeWordPlace(Battle_Enemies_addr + span_words::kEnemyStride + span_words::kEnemyCode) &&
+                      !CodeWordPlace(Battle_Enemies_addr + 0x10) && !CodeWordPlace(span_words::kDataLo),
+                  "the battle's hooks and an enemy record's +0xF4 are code words' places, a record's +0x10 and .data's first word are not");
+            WriteRange(span.image.base, take1.data(), span.image.bytes);
+            set_word(Task_StackTop_addr, top);
+            scribble_arena(0);
+            ::Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
+            const U place = ::bof3::Code(bof3::addr::Boot_Task);
+            const U hook = BattleHook_End_addr, number = Battle_Enemies_addr + 0x10;
+            set_word(hook, place);
+            set_word(number, place);
+            std::vector<unsigned char> g;
+            OnOwnStack([&] { g = Take(reg, span, top, &FakeSaveHalf); });
+            Stamp(g, build);
+            const HeaderExt gx = ExtOf(g);
+            U hook_kind = 7, number_kind = 7, number_entry = 0;
+            for (U i = 0; i < gx.words; ++i) {
+                const U e = U32(g.data() + WordsAt(g) + std::size_t{i} * sizeof(U));
+                const U va = span_words::kDataLo + (e >> 3) * 4;
+                if (va == hook) hook_kind = e & 7;
+                if (va == number) {
+                    number_kind = e & 7;
+                    number_entry = i;
+                }
+            }
+            Check(hook_kind == kWordCode && number_kind == kWordCodeValue && gx.portable == 1,
+                  "a place stored in a battle hook is a code word; the same value at another word is named by its value; the take is portable");
+            q = Parse(g, other, span, top, reg);
+            Check(q.ok && q.answer == Answer::Portable, "a place named by its value is placed under the take's own top byte");
+            std::vector<unsigned char> d = g;
+            HeaderExt dx = gx;
+            dx.table_lo ^= 0x01000000u;
+            PutExt(d, dx);
+            q = Parse(d, other, span, top, reg);
+            Check(!q.ok && q.why == "another build (a word this build cannot place)" && q.offer_save,
+                  "a place named by its value is refused under another top byte, the save offered");
+            d = g;
+            const U as_code = ((number - span_words::kDataLo) >> 2) << 3 | kWordCode;
+            std::memcpy(d.data() + WordsAt(d) + std::size_t{number_entry} * sizeof(U), &as_code, sizeof as_code);
+            q = Parse(d, other, span, top, reg);
+            Check(!q.ok && q.why == "another build (a word this build cannot place)" && q.offer_save,
+                  "a file naming a code word where none is kept is refused");
+        }
     }
 
     // (6) The other kinds of word, one at a time.
