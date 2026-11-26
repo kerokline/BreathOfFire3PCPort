@@ -1,6 +1,6 @@
 # Ideas — intake for unscheduled proposals
 
-**Status:** IN PROGRESS (2026-10-22, I21 and I50 built; 55 entries, I1..I55 - see the index for each one's state; 2026-10-31, the index brought to I33's, I43's and I44's outcomes; 2026-11-01, I53 the wide image, I54 state as named data, I55 the readable form of the cache; 2026-11-03, I56 the solo-character challenge, I57 the Traditional Chinese PC CD; 2026-11-06..14, I58..I68, each with its own date in the index; 2026-11-15, I34's and I56's rows brought to their merges, PRs #247 and #240; 2026-11-23, I73 a native macOS build, and a staleness pass of the index: the rows of I33, I34, I37, I38, I43, I44, I56 and I69..I72 brought to their merges, the missing rows of I62..I64 added; the rows marked open were not each measured again)
+**Status:** IN PROGRESS (2026-10-22, I21 and I50 built; 55 entries, I1..I55 - see the index for each one's state; 2026-10-31, the index brought to I33's, I43's and I44's outcomes; 2026-11-01, I53 the wide image, I54 state as named data, I55 the readable form of the cache; 2026-11-03, I56 the solo-character challenge, I57 the Traditional Chinese PC CD; 2026-11-06..14, I58..I68, each with its own date in the index; 2026-11-15, I34's and I56's rows brought to their merges, PRs #247 and #240; 2026-11-23, I73 a native macOS build, and a staleness pass of the index: the rows of I33, I34, I37, I38, I43, I44, I56 and I69..I72 brought to their merges, the missing rows of I62..I64 added; the rows marked open were not each measured again; 2026-11-26, I74 bug reports with a state attached)
 
 Nothing here is scheduled. This is the intake: an idea lands here with a
 feasibility rating and a first step, and leaves when it is promoted, built, or
@@ -118,6 +118,7 @@ rule ([`README.md`](README.md)) here too.
 | I71 | A Cheats slider for the faerie village's speed: 0 to 10 times the battles the village counts between its steps, the battle count itself left alone | game behaviour | HIGH | **built 2026-11-21, merged as PR #273** (DIV-0243; [`cheats.md`](cheats.md) 9); not played |
 | I72 | The Parch sellers stock the Shisu minigame's ingredients when the no-fail minigames box is on | game behaviour | MEDIUM | **built 2026-11-21, merged as PR #272** (DIV-0188 amended): form (a), the item seller's first four entries, the three with no price at 1 zenny; seen by the owner |
 | I73 | A native macOS build: a Mach-O of the 64-bit host beside the Windows and Linux ones | platform | LOW | open 2026-11-23 (the owner); nothing measured on a Mac, none on hand; first step two probes (the tree compiled for macOS, the low-memory mapping) |
+| I74 | Bug reports with a state attached: a player on a release sends a quicksave and a developer's build loads it at the same frame | tooling / support | MEDIUM | open 2026-11-26 (the owner, from the state-by-name round, I54); nothing built; three things to settle first - a quicksave is game data (rule 1), a stranger's file is native memory (I46), and a build that binds one more function refuses the file |
 
 ---
 
@@ -2814,3 +2815,30 @@ Two probes, neither needing game data: (1) `tools/linux_probe/linux_tree.py`'s m
 
 ### Outcome
 _(2026-11-23) open; written up at the owner's word, nothing measured or built._
+
+## I74 — Bug reports with a state attached
+
+**Ask (2026-11-26, the owner):** asked what the state-by-name change (I54) opens up; of the answers, chose this one to write down so it is not forgotten: a player on a release build sends a quicksave with a report, and a developer's build loads it at the same frame.
+**Kind:** tooling / support. **Feasibility:** MEDIUM: the load across builds is built; what a report may carry and what a developer's build accepts are not.   **Gated on:** the state-by-name round merged (PR #290); the owner's call on what a report may carry (below).
+
+Before the round a quicksave loaded in the build that wrote it and in no other ([`quicksave.md`](quicksave.md) 4), so a player's file was of no use on a developer's machine: the release's build had to be fetched and the fault found there, with no debug build and no changed source. After it, a take at one of fifteen yield sites loads in another build - another width, another system - and plays on to the same state hashes ([`state-by-name-proof.md`](state-by-name-proof.md)).
+
+### What already exists
+- The portable quicksave (format 2) and its proof across builds, widths and systems (I54's round).
+- `tools/quicksave_check.py qsinfo FILE`: a file's header, its build stamp, whether it is portable and why not, its `TASKS` record and its settings lines - what a developer reads first.
+- The save half: any quicksave starts with a plain save that every build loads, and a refused file is offered as that save (tier 0). So a report's file is never useless: at worst it is the save, not the frame.
+- The crash reporter (I11) and the log, which a report carries today.
+
+### What is missing
+- **Rule 1.** A quicksave is the game's memory: the image, the pool, the loaded area's data. It is game data and may not go into the repository, an issue, or any public place. Either a report's file travels privately, or a report form is made that carries state only - the region table says which bytes are state, and I45's smaller file is the same work. The owner's call; nothing here is decided.
+- **Trust (I46).** A developer who loads a stranger's quicksave loads native memory. The portable road reads no stack, which is most of the danger gone, but the span is still taken as written. I46's review comes before this is offered to players.
+- **The developer's build is rarely the release's twin.** A portable load wants the same set of bound functions ([`state-by-name-proof.md`](state-by-name-proof.md) 1): a build that takes over one more function refuses the file, "another build (other functions bound)". A developer's build of the release's commit loads it; a build of today's `main` may not. Either the fix is first found on the release's commit, or the fingerprint's rule is loosened by a converter (not designed).
+- **The take must be at a site.** Fifteen sites cover 99.9 % of the census's frames, but a fault is often not at an ordinary frame: a take inside a scene script's sleep or a battle's wait is not portable (the round's section 8 list). Each site added there widens what a report can hold.
+- **The player's install.** The file is refused across languages and music sources (I47), and the settings' fingerprint is in the header: a developer needs the same language layer, sources and settings, which `qsinfo` names but nothing sets up.
+- **The player's side.** Nothing tells a player to press F6 before reporting, or where the file is.
+
+### First concrete step
+No code: take a quicksave on a released build at an ordinary frame, carry it by hand to a developer's build of the same commit with debug information, load it, and write down every step that had to be done by hand. That list is this idea's design. Then the owner's call on rule 1.
+
+### Outcome
+_(2026-11-26) open; written up at the owner's word, nothing measured or built._

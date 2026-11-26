@@ -7,6 +7,8 @@ round's tip `56e5461e`, B1b merged). The state-by-name round's group B3
 take / load split; `tools/recipes/state_by_name_takes.txt`. No change to
 `src/`. No ledger entry: nothing in the game changed. Not played by the
 owner. The width row and the system row are owed on the desktop (section 8).
+Section 10 is the desktop's run; **section 11 is the laptop's run at the
+pull request's tip** (2026-11-26, `250097a6`).
 
 **In one paragraph.** Seventy-five quicksaves taken by one Linux build were
 loaded at frame 0 by another and played on with the state hash compared
@@ -1074,3 +1076,83 @@ pair in the WSL.
 - The moved-base self-test (`BOF3X_IMAGEBASE=0xA00000`).
 - The owner's eye on F5's question, and the music after tier 0's road.
 - A portable load between two builds with different top bytes, in a game.
+
+## 11. The laptop again, at the pull request's tip (2026-11-26)
+
+The desktop built Linux in the WSL only, and that build was older than its
+last four commits (PR #290's list for the laptop). So the laptop's rows ran
+again at the tip `250097a6` (the merge of `main` into the round), native,
+with a sound device. Scratch: `~/bof3x-runs/sbn1125/lap1126` (`chain.sh`,
+`chain2.sh`; the matrix under `m/`, the pairs under `pairs/`).
+
+**The builds.** As section 1: **T** the round's build (`-O2 -g`, SHA-256
+`8d13c30a...`), **U** the same source at `-O1 -g -DNDEBUG` (`1d336128...`).
+Other code addresses for every function (`Field_Task` `0x1010F440` /
+`0x10106380`, `Task_Sleep` `0x1021EC00` / `0x10207180`); the same bound
+functions (10,088, `26C32EC0`).
+
+**The self-tests.** T's start-up self-tests exit 0 (10,426 log lines); the
+snapshot's line names the word kinds, case 5b's with them. CI at the tip is
+green, `linux_tree.py --check` and `fnptr_census.py --check` included, so
+neither ran here.
+
+**The matrix**, the 44 takes of `tools/recipes/state_by_name_takes.txt`,
+hashed under `tools/statehash_skip.txt` alone (179 ranges):
+
+| Takes by | Loaded by | Portable and equal | Differs | Refused, save offered |
+|---|---|---|---|---|
+| T (44) | T, forced portable | 40 | 2 | 2 |
+| T (44) | U | 37 | 5 | 2 |
+| U (22, section 4's list) | T | 20 | 2 | 0 |
+
+- **The refusals** are `mm3297` and `cp5100`, "a task stands at no named
+  place (task 0)", as before.
+- **The timing class** (section 4): `s2638` in all three rows (k = 210, 8
+  pages) and `cp2590` (k = 211, 24 pages; not among U's takes). `s2500`
+  loaded equal in every row this time; on 2026-11-25 it differed under U.
+- **The raw page** (`0x7E1000`, `Effect_Objects`; the take's log: "7 word(s)
+  no rule names hold an address in the message pool, written raw", 6 on the
+  two `caughFish` takes):
+  `mm1600` both ways, `cf1500` and `cf3600` from T to U. Equal when forced
+  portable in the taking build. The desktop's reading (10.2), the same here.
+- **Gone since 2026-11-25:** `mm3320` (T to U) and `f605`, `f297`, `f4640`
+  (U to T), each one page at k = 0 then, are equal now. The 179-range
+  list and the code-place rule both came after that run; which of them it
+  is, take by take, is not read.
+
+**The title takes.** `s100` and `s180`, Linux to Linux: **equal**, 477 and
+484 ticks, under an exact load in T, a forced portable load in T, and a load
+by U. So 10.2's difference stays Windows': not met on this system at the
+tip either.
+
+**The pairs under 179 ranges.** `cn_<route>_lx7` / `_lx7b`, the ten routes
+on T under `orig6`'s settings, in `lap1126/pairs` (not tracked); 20 runs,
+each `end: done`. `lx7` against `lx7b`: identical on nine routes; `shop`
+differs on 9 pages at ticks 2,712..2,755, the jingle window, as `lx6`
+against `lx6b` did. `lx6` against `lx7` and `lx6b` against `lx7b`
+(`statehash.py diff`, which leaves out the three pages the added ranges
+touch, `0x6BC000`, `0x7DE000`, `0x93B000`): **identical on every compared
+tick of nine routes**; `shop` 8 pages from tick 2,712, the same window.
+The expected result.
+
+**The fishing spot without the came-from place** (`fishQuicksave.txt`, the
+owner's save carried from the desktop; T, `--direct`, `en-US`). The route
+replays on this install. With the hold: the log says "the fishing's leave
+choice holds: this game was loaded here from a save with no came-from
+place" and the recipe runs to its end, exit 0. With `BOF3X_OFF=EdgeNoArea`:
+SIGSEGV at `bof3x+0x128AB4` reading `0`, the game stops (D439). As on the
+desktop's exe host.
+
+**The music after tier 0's road, on a sound device** (`tier0` on
+`masterAndManillo` at 3296, T takes, U refuses and loads the save;
+`BOF3X_MUSIC_LOG=1`, SDL on the laptop's own device, "Ryzen HD Audio
+Controller Analog Stereo"). The road's six steps all `yes`; the place
+equal to the reference load's. `music_heard.py` on the load's log: pass -
+the title's track 141 halts at frame 150, `Music_Play(40, 8)` at frame 282,
+track 40 heard advancing. The reference load through the title's menu
+starts the same track at its frame 336. **By the log, not by an ear**: the
+owner's listen is still owed.
+
+**Not run here:** nothing of 10.6 but the two lines above. The Windows
+cause of `s100` / `s180`, page `0x92A000`, the 32-bit census, the
+moved-base self-test and a load across two top bytes stay as 10.6 has them.
