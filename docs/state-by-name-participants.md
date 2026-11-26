@@ -470,3 +470,150 @@ that a portable load writes these words by their names.
   under orig6's conditions), the original Chinese text (no moved pool, the
   slots hold BOF3.exe's text), and the 32-bit and Windows builds.
 - A pointer of ours stored where no rule looks (10.3's last point).
+
+### 10.7 B1c: corrected - a word is named by where it is (2026-11-25)
+
+**What was wrong.** B1b's copy rule (10.2's fourth row, as built in
+`d8c9917f` / `e15d1f3a`) tried every word of `.data` that is not a slot:
+a value at a text slot's pointer, or inside that slot's text up to its NUL,
+was written as a cursor into the text (`kWordTextCopy`). The proof found the
+fault across builds ([`state-by-name-proof.md`](state-by-name-proof.md) 6,
+finding 2): in B3's `-O1` build U a word of area data, `0x8262EC`, holding
+the number `0x1149015B` in every run of both builds, lay inside U's `g_lines`.
+So U's take named it, and the tip's load wrote the tip's `g_lines+0xCB`,
+`0x114FF14B`, into the game's data: a wrong restore. 10.3's measurement of
+the rule's false positives compared two builds whose statics were `0x8000`
+apart. A number clear of the text in that pair fell inside it in U's layout,
+and some layout always will: a test of what a value looks like, over the
+whole span, meets some number in some build.
+
+**The principle**: a word is renamed only by where it is, never by what its
+value looks like. A value test on its own may only make a take less trusted
+(a not-portable code, a line in the log), never rewrite a word.
+
+**The rules as they stand** (`snapshot.cpp` `NameWord`, `Parse`):
+
+| Rule | Owner | Named by | The principle |
+|---|---|---|---|
+| Capcom's text slots (`kWordText`) | A1 | place: the slot list, read before the injects (`span_words::g_slots`) | holds |
+| the 17 run-time message slots into the pool (`kWordPool`) | A1 | place: the named list | holds |
+| `kTextWords` into the pool (`kWordPool`) | B1b | place: four named words | holds (question (b) below) |
+| `kTextWords` into a slot's text (`kWordTextCopy`) | B1b, B1c | place: four named words, a pointer by their type; matched against every slot's text | holds |
+| a kind-0xF effect object's `+0x50` / `+0x54` into a fishing line (`kWordTextCopy`) | B1c | place: `Effect_Objects` `0x7E11E0`, 20 x `0x80`, the record of kind 0xF (`+5`) as the take's bytes hold it, live or ended; matched against the thirteen line records of `0x653B98` only | holds |
+| any other word whose value lies in a slot's text | B1c | - | **written raw** (it was B1b's rule; now nothing renames it) |
+| a text word or a cursor field naming our module elsewhere (`kNpTextOurs`); a run-time slot doing so (`kNpRuntimeSlot`); a slot holding our code (`kNpSlotCode`) | A1, B1b, B1c | a value test, making the take not portable | holds: less trusted only |
+| a word no rule names holding a pool address | B1b | a value test, logged at the take | holds: logged only |
+| a code place (`kWordCode`) | A1 | **value**: `Bind_VaOf(w)`, any word equal to a bound place | **does not hold in principle**: a number equal to `(top << 24) \| VA` of a bound function is written as the VA and placed with this process's top byte. That is the identity while the two processes' top bytes agree, which every measured run shows (A1: a differing top byte "has not been seen"). For A1's file: name a place by where it is (the census of load-time code words), or make a process with another top byte refuse a portable take |
+| an image pointer or link (`kWordFold`, `kWordFold24`) | A1 | **value**: the fold | does not hold in principle, but harmless as built: the take writes them only when its image is moved, and a load at another base is refused (A1's "another span"), so the placing is the identity |
+
+`Parse` also checks the place on the way in. A file whose WORDS list names a
+copy at any word that is neither a text word nor a kind-0xF record's
+cursor field (by the record's bytes in the file), into a fishing line, is
+refused as "another build (a word this build cannot place)", with its save
+offered. (The file's record bytes give the kind: a kind-0xF record.) Every file a B1b build wrote with a misnamed number is refused that
+way rather than having its word rewritten.
+
+**Question (a), which fields of an effect record.** Only `+0x50` and `+0x54`,
+and only in a record of kind 0xF. `effect_kind_0f.cpp`:
+- `+0x50` is the typing cursor, set to the text of line record `+0x4B` and
+  stepped one character a frame (`:1615`, `:1634`, `:1672`);
+- `+0x54` is the scrolling cursor, copied from `+0x50` (`:1770`).
+
+Measured on `masterAndManillo`'s dumps (ticks 1,200 to 2,000), the kinds
+0x2, 0x3, 0x5, 0xA, 0xC, 0xD and 0x1A hold span addresses in the same
+fields (`0x8B....`), or zero, and are left alone. Inside a kind-0xF record,
+`+0x54` need not lie in `+0x4B`'s line: record 7 at tick 1,200 had `+0x4B`
+5 and `+0x54` at `g_lines+0xCB`, inside line 3, the previous text. So the
+cursor is matched against all thirteen lines, not against `+0x4B`'s alone.
+A number in another field of a record is never tried.
+
+**Live or ended.** The first cut (`f8bb996f`) asked for a live record (`+0`
+not 0). The probe re-run on `masterAndManillo` then showed the six cursor
+fields written raw on 247 to 3,599 passes: records 8 and 9 from tick 1,700
+have `+0` clear (their effect ended) and keep kind 0xF and their cursors.
+The kind byte is its last owner's until `Effect_Spawn` reuses the record
+and writes `+5`, so the fields are still that owner's cursors, and
+`fab53dad` names them whether the effect is live or ended. A record reused
+by another kind is that kind's. Record 7 from tick 4,000 is kind 0x16
+(`EffectKind16_WorldMap`, a record handler that never reads `+0x50` /
+`+0x54`) and holds a stale `g_lines+4` from its kind-0xF life: it is written
+raw, and nothing reads it before the next owner writes it.
+
+**Question (b), the pool rule.** `kWordPool` is tried only at the 17
+run-time slots and the four `kTextWords` (the `runtime` test in `NameWord`).
+It was bound to named words from the start, so it does not share the fault.
+The value test over the pool is the log line, which changes no word.
+
+**Question (c), the principle**: stated above; the rules that hold it and
+the two of A1's that do not, in the table.
+
+**What this gives up.** A copy of a text pointer stored somewhere other than
+these places is written raw. On the seven routes no such word was measured
+(10.8), and the town warp's and the reading row's case is a not-portable
+take, as before.
+
+### 10.8 B1c: proved
+
+The build of `fab53dad` (N, `3532ce44...`) and the same source at `-O1 -g
+-DNDEBUG` in `build-u` (L, `65e438ff...`, configured as B3 configured U),
+each run from a copy with its libraries. Between them `g_lines` lies at
+`0x11500080` (N) and `0x11491090` (L). Captures in
+`~/bof3x-runs/sbn1125/B1/root/c/` (the matrix rows `m/`, `chain.log`,
+`chain2.log`), `qd/` (the probe) and `sh/b1c/`. B3's tool, takes and
+conditions: `quicksave_check.py matrix` under the proof's skip rows.
+
+| Take | L takes, N loads | N takes, L loads |
+|---|---|---|
+| `f297`, `f605`, `f4640` (`fairyVillage`) | portable, **equal** 472, 484, 59 ticks | portable, **equal** 472, 484, 59 |
+| `s2500` (`shop`, the pool words) | portable, **equal** 497 | portable, differs from k=348 (`Frame_Counter` 2848): the shop's jingle, B3's finding 5, as its U and T loads did |
+| `mm1600` (`masterAndManillo`) | portable; one page, `0x7E1000`, every tick | the same |
+| `cf1500` (`caughFish`) | portable; one page, `0x7E1000`, every tick | the same |
+| `mm3320` (a record reused by another kind, below) | portable, **equal** 479 | portable, **equal** 479 |
+
+- **`0x8262EC` unchanged by the load.** `f297` by L: the file holds
+  `0x1149015B`, and raw dumps at ticks 1, 100 and 400 of L's forced load and
+  of N's load hold `0x1149015B` in all six.
+- **The cursors re-aimed, by dump.** `mm1600` and `cf1500`, both directions,
+  the taker's forced load against the other build's load at ticks 1, 100 and
+  400: the four to six cursor fields that differ are each at the **same
+  offset into its own build's `g_lines`** (`mm1600` tick 1: record 7
+  `+0x14D` / `+0x14C`, record 8 `+0x10F` / `+0x11C`, record 9 `+0xC0` /
+  `+0xCB`), and every other differing word outside the skip rows (103 a
+  tick) is a slot holding each build's own text. The one page the hash
+  reports is the hash reading those cursors raw (finding 3 of the proof).
+- **A B1b file is refused, not renamed.** `f297` taken by B3's U (the B1b
+  rule), loaded by N: `REFUSED another build (a word this build cannot
+  place) ... the file names the word at 0x008262EC as a copy of a slot's
+  text, and that word holds none (the save half is whole ...)`.
+- **The self-test**, original text and `en-US`: exit 0, 10,424 and 10,481
+  lines, no FAIL.
+- **No state hash moved**: `bridgeWalk` and `combat` against T (`round/wt`,
+  `2bf9bde3...`): identical on all 2,074 and 2,602 ticks.
+- **The no-data checks** pass; the width and reloc censuses regenerated.
+
+**The probe again** (`BOF3X_QSWORDS`, the seven routes, against B1b's
+`e15d1f3a`; the differential's dumps class each word): what is written raw
+now and was named before, outside the skip list -
+
+| Word | Routes, passes | What it is |
+|---|---|---|
+| `0x760E60`, `0x77AE1C`, `0x797E1C` (the VRAM shadow), `0x82D1DC`, `0x851E94`, `0x867D38` (past `Gfx_ClutStrip`) | every route; 108 to 7,328 passes | **numbers**: equal in both builds at every dumped tick. B1b's rule was renaming them (each lay in some slot's text in that layout): finding 2's fault, six more times, now gone |
+| `0x7E15B0` (record 7's `+0x50`) | `masterAndManillo`, 2,213 passes from 3,307 | **a stale pointer**: `g_lines+4` left from the record's kind-0xF life, the record now kind 0x16. Written raw, by the rule |
+| `0x7E1630`, `34`, `16B0`, `B4` | `masterAndManillo`, the one pass 3,307 | the same, on the frame the fishing spot is left: the kind bytes already another's, the cursors not yet cleared |
+
+The stale pointer is the one pointer of ours now left raw. `mm3320` is a
+take inside its window (`Frame_Counter` 3,320): it loads portably in the
+other build and runs **equal for 479 ticks both ways**, the word holding
+the taker's address in every dump of both loads: nothing reads it. So it is
+left as a number, and the take stays portable.
+
+### 10.9 B1c: not checked
+
+- That no code ever reads a kind-0x16 (or other) record's stale `+0x50`:
+  shown by `mm3320`'s 479 ticks and by the record living and dying as kind
+  0x16 with the word unchanged, not by reading every effect kind.
+- The stale cursor is not logged at the take.
+- A1's two value-named rules (the code place, the fold) are described in
+  10.7's table, not changed.
+- A copy of a text pointer stored outside the named places, on a route not
+  measured; the 32-bit and Windows builds.

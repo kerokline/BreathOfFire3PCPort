@@ -2239,27 +2239,27 @@ site	src/game/core/title_states.cpp	79	uintptr	-	live	std::uintptr_t	-	const aut
 site	src/game/core/title_states.cpp	80	uintptr	-	live	std::uintptr_t	-	const auto prim = reinterpret_cast<std::uintptr_t>(g_prim), out = reinterpret_cast<std::uintptr_t>(g_sprite_out);
 site	src/game/core/title_states.cpp	80	uintptr	-	live	std::uintptr_t	-	const auto prim = reinterpret_cast<std::uintptr_t>(g_prim), out = reinterpret_cast<std::uintptr_t>(g_sprite_out);
 site	src/game/core/title_states.cpp	140	low32	func_ours	live	entry	Low32	Record(12, static_cast<std::uint32_t>(slot), Low32(entry));
-site	src/game/core/transition.cpp	214	low32	helper_def	live	p	Low32	U AddressOf(const void* p) { return Low32(p); }
-site	src/game/core/transition.cpp	228	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<HandlerModeRest>(static_cast<std::uintptr_t>(UL(table + 4 * step)))();
-site	src/game/core/transition.cpp	228	widen	word_read	live	UL(table + 4 * step)	HandlerModeRest	reinterpret_cast<HandlerModeRest>(static_cast<std::uintptr_t>(UL(table + 4 * step)))();
-site	src/game/core/transition.cpp	290	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<mode_states::Handler>(static_cast<std::uintptr_t>(
-site	src/game/core/transition.cpp	290	widen	word_read	live	static_cast<std::uint32_t>(mode_states::Long(mode_states::At(table + 4u * static_cast<std::uint32_t>(index))))	mode_states::Handler [fn]	return reinterpret_cast<mode_states::Handler>(static_cast<std::uintptr_t>(
-site	src/game/core/transition.cpp	338	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<HandlerRest3g>(static_cast<std::uintptr_t>(ULRest3g(table + 4 * step)))();
-site	src/game/core/transition.cpp	338	widen	other	live	ULRest3g(table + 4 * step)	HandlerRest3g	reinterpret_cast<HandlerRest3g>(static_cast<std::uintptr_t>(ULRest3g(table + 4 * step)))();
-site	src/game/core/transition.cpp	401	uintptr	-	live	std::uintptr_t	-	template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
-site	src/game/core/transition.cpp	401	widen	param	live	address	T	template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
-site	src/game/core/transition.cpp	436	uintptr	-	live	std::uintptr_t	-	mode_flow::g.task_create(2, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kTransitionEntry.v))));
-site	src/game/core/transition.cpp	436	widen	code_place	live	::bof3::Code(kTransitionEntry.v)	void*	mode_flow::g.task_create(2, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kTransitionEntry.v))));
-site	src/game/core/transition.cpp	837	narrow_call	image	live	GameMode3_Steps	AddressOf	StepDispatch(" ", AddressOf(GameMode3_Steps), GameMode3_Steps_count);
-site	src/game/core/transition.cpp	957	narrow_call	image	live	GameMode5_Steps	AddressOf	StepDispatch(" ", AddressOf(GameMode5_Steps), GameMode5_Steps_count);
-site	src/game/core/transition.cpp	1296	narrow_call	image	live	GameMode8_Steps	AddressOf	StepDispatchRest3g(" ", AddressOf(GameMode8_Steps), GameMode8_Steps_count);
-site	src/game/core/transition.cpp	1356	narrow_call	image	live	GameMode9_Steps	AddressOf	StepDispatchRest3g(" ", AddressOf(GameMode9_Steps), GameMode9_Steps_count);
-site	src/game/core/transition.cpp	1381	narrow_call	image	live	GameMode10_Steps	AddressOf	StepDispatchRest3g(" ", AddressOf(GameMode10_Steps), GameMode10_Steps_count);
-site	src/game/core/transition.cpp	1390	narrow_call	image	live	GameMode11_Steps	AddressOf	StepDispatchRest3g(" ", AddressOf(GameMode11_Steps), GameMode11_Steps_count);
-site	src/game/core/transition.cpp	1623	uintptr	-	live	std::uintptr_t	-	mode_flow::g.task_create(1, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kTitleLoadEntry.v))));
-site	src/game/core/transition.cpp	1623	widen	code_place	live	::bof3::Code(kTitleLoadEntry.v)	void*	mode_flow::g.task_create(1, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kTitleLoadEntry.v))));
-site	src/game/core/transition.cpp	1677	low32	object_ours	live	&mode_flow::g_area_track_fallback	Low32	Low32(&mode_flow::g_area_track_fallback), was, is, 4);
-site	src/game/core/transition.cpp	1683	low32	object_ours	live	&mode_rest::g_event_keeps_music	Low32	bof3::PatchBytes(" ", Low32(&mode_rest::g_event_keeps_music),
+site	src/game/core/transition.cpp	215	low32	helper_def	live	p	Low32	U AddressOf(const void* p) { return Low32(p); }
+site	src/game/core/transition.cpp	229	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<HandlerModeRest>(static_cast<std::uintptr_t>(UL(table + 4 * step)))();
+site	src/game/core/transition.cpp	229	widen	word_read	live	UL(table + 4 * step)	HandlerModeRest	reinterpret_cast<HandlerModeRest>(static_cast<std::uintptr_t>(UL(table + 4 * step)))();
+site	src/game/core/transition.cpp	291	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<mode_states::Handler>(static_cast<std::uintptr_t>(
+site	src/game/core/transition.cpp	291	widen	word_read	live	static_cast<std::uint32_t>(mode_states::Long(mode_states::At(table + 4u * static_cast<std::uint32_t>(index))))	mode_states::Handler [fn]	return reinterpret_cast<mode_states::Handler>(static_cast<std::uintptr_t>(
+site	src/game/core/transition.cpp	339	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<HandlerRest3g>(static_cast<std::uintptr_t>(ULRest3g(table + 4 * step)))();
+site	src/game/core/transition.cpp	339	widen	other	live	ULRest3g(table + 4 * step)	HandlerRest3g	reinterpret_cast<HandlerRest3g>(static_cast<std::uintptr_t>(ULRest3g(table + 4 * step)))();
+site	src/game/core/transition.cpp	402	uintptr	-	live	std::uintptr_t	-	template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+site	src/game/core/transition.cpp	402	widen	param	live	address	T	template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+site	src/game/core/transition.cpp	437	uintptr	-	live	std::uintptr_t	-	mode_flow::g.task_create(2, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kTransitionEntry.v))));
+site	src/game/core/transition.cpp	437	widen	code_place	live	::bof3::Code(kTransitionEntry.v)	void*	mode_flow::g.task_create(2, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kTransitionEntry.v))));
+site	src/game/core/transition.cpp	900	narrow_call	image	live	GameMode3_Steps	AddressOf	StepDispatch(" ", AddressOf(GameMode3_Steps), GameMode3_Steps_count);
+site	src/game/core/transition.cpp	1060	narrow_call	image	live	GameMode5_Steps	AddressOf	StepDispatch(" ", AddressOf(GameMode5_Steps), GameMode5_Steps_count);
+site	src/game/core/transition.cpp	1399	narrow_call	image	live	GameMode8_Steps	AddressOf	StepDispatchRest3g(" ", AddressOf(GameMode8_Steps), GameMode8_Steps_count);
+site	src/game/core/transition.cpp	1459	narrow_call	image	live	GameMode9_Steps	AddressOf	StepDispatchRest3g(" ", AddressOf(GameMode9_Steps), GameMode9_Steps_count);
+site	src/game/core/transition.cpp	1484	narrow_call	image	live	GameMode10_Steps	AddressOf	StepDispatchRest3g(" ", AddressOf(GameMode10_Steps), GameMode10_Steps_count);
+site	src/game/core/transition.cpp	1493	narrow_call	image	live	GameMode11_Steps	AddressOf	StepDispatchRest3g(" ", AddressOf(GameMode11_Steps), GameMode11_Steps_count);
+site	src/game/core/transition.cpp	1834	uintptr	-	live	std::uintptr_t	-	mode_flow::g.task_create(1, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kTitleLoadEntry.v))));
+site	src/game/core/transition.cpp	1834	widen	code_place	live	::bof3::Code(kTitleLoadEntry.v)	void*	mode_flow::g.task_create(1, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kTitleLoadEntry.v))));
+site	src/game/core/transition.cpp	1888	low32	object_ours	live	&mode_flow::g_area_track_fallback	Low32	Low32(&mode_flow::g_area_track_fallback), was, is, 4);
+site	src/game/core/transition.cpp	1894	low32	object_ours	live	&mode_rest::g_event_keeps_music	Low32	bof3::PatchBytes(" ", Low32(&mode_rest::g_event_keeps_music),
 site	src/game/crt_rest.cpp	79	low32	func_ours	live	ret	Low32	const auto at = Low32(ret);
 site	src/game/crt_rest.cpp	81	low32	object_ours	live	&__ImageBase	Low32	const auto dll = Low32(&__ImageBase);
 site	src/game/crt_rest.cpp	83	low32	unread	live	reinterpret_cast<const void*>(::bof3::image::g_ownBase)	Low32	const auto dll = Low32(reinterpret_cast<const void*>(::bof3::image::g_ownBase));
@@ -8838,110 +8838,120 @@ site	src/hook/snapshot.cpp	404	long	ul	live	unsigned long	-	Fatal(" ", static_ca
 site	src/hook/snapshot.cpp	409	narrow_call	windows	live	reinterpret_cast<const void*>(module)	Va	build.dll_base = Va(reinterpret_cast<const void*>(module));
 site	src/hook/snapshot.cpp	410	fmt_place	word	live	build.dll_base	%08X	Log("quicksave this build: %s, bof3x.dll sha256 %.64s at 0x%08X, %s host", build.tag, build.sha, build.dll_base,
 site	src/hook/snapshot.cpp	590	narrow_call	unread	live	pool	Va	wp.pool = pool ? Va(pool) : 0;
-site	src/hook/snapshot.cpp	750	fmt_place	word	live	live	%08X	why = Printf("a slot of Capcom's held text of ours at the take and holds 0x%08X here", live);
-site	src/hook/snapshot.cpp	758	fmt_place	word	live	stored	%08X	why = Printf("a WORDS entry of kind %u holding 0x%08X has no place here", kind, stored);
-site	src/hook/snapshot.cpp	794	uintptr	-	live	std::uintptr_t	-	std::uintptr_t entry = 0;
-site	src/hook/snapshot.cpp	888	fmt_place	word	live	now[i + 1]	%08X	std::fprintf(g_words_probe, "+ %08X %08X %u\n", now[i], now[i + 1], now[i + 2]);
-site	src/hook/snapshot.cpp	888	fmt_place	word	live	now[i]	%08X	std::fprintf(g_words_probe, "+ %08X %08X %u\n", now[i], now[i + 1], now[i + 2]);
-site	src/hook/snapshot.cpp	891	fmt_place	word	live	was[j]	%08X	std::fprintf(g_words_probe, "- %08X\n", was[j]);
-site	src/hook/snapshot.cpp	894	fmt_place	word	live	now[i + 1]	%08X	if (now[i + 1] != was[j + 1]) std::fprintf(g_words_probe, "+ %08X %08X %u\n", now[i], now[i + 1], now[i + 2]);
-site	src/hook/snapshot.cpp	894	fmt_place	word	live	now[i]	%08X	if (now[i + 1] != was[j + 1]) std::fprintf(g_words_probe, "+ %08X %08X %u\n", now[i], now[i + 1], now[i + 2]);
-site	src/hook/snapshot.cpp	953	fmt_place	word	live	pool_raw	%08X	"0x%08X); a portable load writes them as the take had them",
-site	src/hook/snapshot.cpp	966	sizeof_ptr	-	live	sizeof(void*)	-	ext.pointer_bytes = sizeof(void*);
-site	src/hook/snapshot.cpp	1015	narrow_call	image	live	&Frame_Counter	Va	std::memcpy(&frame, image + (Va(&Frame_Counter) - span.image.base), 4);
-site	src/hook/snapshot.cpp	1121	fmt_place	pointer	live	span.image.base	%08X	return Printf("span 0x%08X+0x%X, pool 0x%08X+0x%X; here 0x%08X+0x%X, 0x%08X+0x%X", h.span_base, h.span_bytes, h.pool_base,
-site	src/hook/snapshot.cpp	1121	fmt_place	pointer	live	span.pool.base	%08X	return Printf("span 0x%08X+0x%X, pool 0x%08X+0x%X; here 0x%08X+0x%X, 0x%08X+0x%X", h.span_base, h.span_bytes, h.pool_base,
-site	src/hook/snapshot.cpp	1121	fmt_place	word	live	h.pool_base	%08X	return Printf("span 0x%08X+0x%X, pool 0x%08X+0x%X; here 0x%08X+0x%X, 0x%08X+0x%X", h.span_base, h.span_bytes, h.pool_base,
-site	src/hook/snapshot.cpp	1121	fmt_place	word	live	h.span_base	%08X	return Printf("span 0x%08X+0x%X, pool 0x%08X+0x%X; here 0x%08X+0x%X, 0x%08X+0x%X", h.span_base, h.span_bytes, h.pool_base,
-site	src/hook/snapshot.cpp	1146	fmt_place	word	live	build.dll_base	%08X	Printf("bof3x.dll was at 0x%08X, here at 0x%08X: the task stacks name its code where it was", h.dll_base,
-site	src/hook/snapshot.cpp	1146	fmt_place	word	live	h.dll_base	%08X	Printf("bof3x.dll was at 0x%08X, here at 0x%08X: the task stacks name its code where it was", h.dll_base,
-site	src/hook/snapshot.cpp	1151	fmt_place	word	live	arena_top	%08X	Printf("the task stacks hung from 0x%08X (0x%X bytes), here from 0x%08X: a quicksave is this process's",
-site	src/hook/snapshot.cpp	1151	fmt_place	word	live	h.arena_top	%08X	Printf("the task stacks hung from 0x%08X (0x%X bytes), here from 0x%08X: a quicksave is this process's",
-site	src/hook/snapshot.cpp	1245	fmt_place	word	live	build.dll_base	%08X	detail = Printf("bof3x.dll was at 0x%08X, here at 0x%08X: the task stacks name its code where it was", h.dll_base, build.dll_base);
-site	src/hook/snapshot.cpp	1245	fmt_place	word	live	h.dll_base	%08X	detail = Printf("bof3x.dll was at 0x%08X, here at 0x%08X: the task stacks name its code where it was", h.dll_base, build.dll_base);
-site	src/hook/snapshot.cpp	1248	fmt_place	word	live	arena_top	%08X	detail = Printf("the task stacks hung from 0x%08X (0x%X bytes), here from 0x%08X", h.arena_top, h.arena_bytes, arena_top);
-site	src/hook/snapshot.cpp	1248	fmt_place	word	live	h.arena_top	%08X	detail = Printf("the task stacks hung from 0x%08X (0x%X bytes), here from 0x%08X", h.arena_top, h.arena_bytes, arena_top);
-site	src/hook/snapshot.cpp	1251	fmt_place	word	live	Bind_TableLo()	%08X	detail = Printf("the code places lay at 0x%08X, here at 0x%08X: the task stacks hold them", x.table_lo, Bind_TableLo());
-site	src/hook/snapshot.cpp	1251	fmt_place	word	live	x.table_lo	%08X	detail = Printf("the code places lay at 0x%08X, here at 0x%08X: the task stacks hold them", x.table_lo, Bind_TableLo());
-site	src/hook/snapshot.cpp	1254	fmt_place	word	live	ImageBase()	%08X	detail = Printf("the image lay at 0x%08X, here at 0x%08X", x.image_base, ImageBase());
-site	src/hook/snapshot.cpp	1254	fmt_place	word	live	x.image_base	%08X	detail = Printf("the image lay at 0x%08X, here at 0x%08X", x.image_base, ImageBase());
-site	src/hook/snapshot.cpp	1276	fmt_place	word	live	fnv	%08X	detail + Printf("; the file's build binds %u VAs (FNV %08X), this one %u (%08X)", x.bind_rows, x.bind_fnv, rows, fnv));
-site	src/hook/snapshot.cpp	1276	fmt_place	word	live	x.bind_fnv	%08X	detail + Printf("; the file's build binds %u VAs (FNV %08X), this one %u (%08X)", x.bind_rows, x.bind_fnv, rows, fnv));
-site	src/hook/snapshot.cpp	1322	fmt_place	word	live	span_words::kDataLo + off	%08X	(detail.empty() ? std::string() : detail + "; ") + Printf("the word at 0x%08X: ", span_words::kDataLo + off) + what);
-site	src/hook/snapshot.cpp	1354	uintptr	-	live	std::uintptr_t	-	entry = reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(t.name)));
-site	src/hook/snapshot.cpp	1354	widen	code_place	live	::bof3::Code(t.name)	void*	entry = reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(t.name)));
-site	src/hook/snapshot.cpp	1498	long	ul	live	unsigned long	-	static_cast<unsigned long>(bof3::os::LastError()));
-site	src/hook/snapshot.cpp	1508	long	ul	live	unsigned long	-	why = Printf(" ", PathText(path).c_str(), static_cast<unsigned long>(bof3::os::LastError()));
-site	src/hook/snapshot.cpp	1515	long	ul	live	unsigned long	-	const unsigned long error = bof3::os::LastError();
-site	src/hook/snapshot.cpp	1542	long	ul	live	unsigned long	-	static_cast<unsigned long>(bof3::os::LastError()));
-site	src/hook/snapshot.cpp	1603	long	ul	live	unsigned long	-	if (r != os::OwnStackResult::Done) Fatal(" ", os::OwnStackFailure(r), static_cast<unsigned long>(bof3::os::LastError()));
-site	src/hook/snapshot.cpp	1632	fmt_place	word	live	File_Slots_addr	%08X	Log("quicksave F6 at Frame_Counter %u refused: a file is open in File_Slots (0x%08X) between frames",
-site	src/hook/snapshot.cpp	1650	fmt_place	word	live	h->pool_base	%08X	Log("quicksave F6 at Frame_Counter %u: BISLPS10.DAT, %u bytes (save half 0x%X, span 0x%08X+0x%X, pool 0x%08X+0x%X, "
-site	src/hook/snapshot.cpp	1650	fmt_place	word	live	h->span_base	%08X	Log("quicksave F6 at Frame_Counter %u: BISLPS10.DAT, %u bytes (save half 0x%X, span 0x%08X+0x%X, pool 0x%08X+0x%X, "
-site	src/hook/snapshot.cpp	1651	fmt_place	word	live	h->frame_counter	%08X	"task arena 0x%08X-0x%X, %u participants; .rdata fnv %08X); format %u, state revision %u, %u words by their names, "
-site	src/hook/snapshot.cpp	1651	fmt_place	word	live	h->span_base	%08X	"task arena 0x%08X-0x%X, %u participants; .rdata fnv %08X); format %u, state revision %u, %u words by their names, "
-site	src/hook/snapshot.cpp	1652	fmt_place	word	live	h->frame_counter	%08X	"settings %08X, %s%s",
-site	src/hook/snapshot.cpp	1691	fmt_place	word	live	top	%08X	Log("quicksave F7 %s refused: the task arena 0x%08X-0x%X is not committed", SlotName(slot).c_str(), top,
-site	src/hook/snapshot.cpp	1702	fmt_place	word	live	p.header.rdata_fnv	%08X	Log("quicksave F7 %s: .rdata fnv %08X now, %08X at the take - written in play, and not copied (the census's "
-site	src/hook/snapshot.cpp	1702	fmt_place	word	live	rdata	%08X	Log("quicksave F7 %s: .rdata fnv %08X now, %08X at the take - written in play, and not copied (the census's "
-site	src/hook/snapshot.cpp	1954	narrow_call	object_ours	live	arena_block.data()	Va	const U top = (Va(arena_block.data()) + kArenaBytes + kPage - 1) & ~(kPage - 1);
-site	src/hook/snapshot.cpp	1955	narrow_call	object_ours	live	arena_block.data()	Va	if (top - kArenaBytes < Va(arena_block.data())) Fatal(" ");
-site	src/hook/snapshot.cpp	1960	narrow_call	image	live	&Task_StackTop	Va	WriteRange(Va(&Task_StackTop), reinterpret_cast<const unsigned char*>(&t), 4);
-site	src/hook/snapshot.cpp	2019	fmt_place	pointer	live	span.image.base + at	%08X	Log("shadow snapshot: span byte 0x%08X is 0x%02X after the restore, 0x%02X at the take", span.image.base + at,
-site	src/hook/snapshot.cpp	2117	narrow_call	object_ours	live	arena_block.data()	Va	const U top = (Va(arena_block.data()) + kArenaBytes + kPage - 1) & ~(kPage - 1);
-site	src/hook/snapshot.cpp	2118	narrow_call	object_ours	live	arena_block.data()	Va	if (top - kArenaBytes < Va(arena_block.data())) Fatal(" ");
-site	src/hook/snapshot.cpp	2153	fmt_place	pointer	live	span.image.base + at	%08X	Log("shadow snapshot: %s: span byte 0x%08X is 0x%02X, 0x%02X wanted", what, span.image.base + at,
-site	src/hook/snapshot.cpp	2189	uintptr	-	live	std::uintptr_t	-	::Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
-site	src/hook/snapshot.cpp	2189	widen	code_place	live	::bof3::Code(bof3::addr::Boot_Task)	void*	::Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
-site	src/hook/snapshot.cpp	2202	narrow_call	unread	live	kTextA	Va	const U text_a = Va(kTextA), text_b = Va(kTextB);
-site	src/hook/snapshot.cpp	2202	narrow_call	unread	live	kTextB	Va	const U text_a = Va(kTextA), text_b = Va(kTextB);
-site	src/hook/snapshot.cpp	2245	uintptr	-	live	std::uintptr_t	-	std::uintptr_t entry = 0;
-site	src/hook/snapshot.cpp	2248	uintptr	-	live	std::uintptr_t	-	entry == static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task)) &&
-site	src/hook/snapshot.cpp	2313	narrow_call	object_ours	live	g_test_warp_page	Va	set_word(Msgbox_Base_addr, Va(g_test_warp_page));
-site	src/hook/snapshot.cpp	2432	narrow_call	unread	live	kTextA	Va	Check(PlaceWord(wp, kWordText, Va(kTextA), Va(kTextB), true, &w, why) && w == Va(kTextB) &&
-site	src/hook/snapshot.cpp	2432	narrow_call	unread	live	kTextB	Va	Check(PlaceWord(wp, kWordText, Va(kTextA), Va(kTextB), true, &w, why) && w == Va(kTextB) &&
-site	src/hook/snapshot.cpp	2432	narrow_call	unread	live	kTextB	Va	Check(PlaceWord(wp, kWordText, Va(kTextA), Va(kTextB), true, &w, why) && w == Va(kTextB) &&
-site	src/hook/snapshot.cpp	2433	narrow_call	unread	live	kTextA	Va	PlaceWord(wp, kWordText, Va(kTextA), Va(kTextB), false, &w, why) && w == Va(kTextA) &&
-site	src/hook/snapshot.cpp	2433	narrow_call	unread	live	kTextA	Va	PlaceWord(wp, kWordText, Va(kTextA), Va(kTextB), false, &w, why) && w == Va(kTextA) &&
-site	src/hook/snapshot.cpp	2433	narrow_call	unread	live	kTextB	Va	PlaceWord(wp, kWordText, Va(kTextA), Va(kTextB), false, &w, why) && w == Va(kTextA) &&
-site	src/hook/snapshot.cpp	2434	narrow_call	unread	live	kTextA	Va	!PlaceWord(wp, kWordText, Va(kTextA), 0x1234, true, &w, why),
-site	src/hook/snapshot.cpp	2443	narrow_call	unread	live	kTextA	Va	wp.texts = {{Va(kTextA), text_slot}};
-site	src/hook/snapshot.cpp	2444	narrow_call	unread	live	kTextA	Va	Check(NameWord(wp, plain, Va(kTextA), &kind, &stored, &np) && kind == kWordTextCopy && stored == text_slot && np == 0 &&
-site	src/hook/snapshot.cpp	2445	narrow_call	unread	live	kTextA	Va	NameWord(wp, battle, Va(kTextA), &kind, &stored, &np) && kind == kWordTextCopy && stored == text_slot,
-site	src/hook/snapshot.cpp	2448	narrow_call	unread	live	kTextA	Va	Check(NameWord(wp, plain, Va(kTextA) + 5, &kind, &stored, &np) && kind == kWordTextCopy && stored == (5u << 24 | text_slot) &&
-site	src/hook/snapshot.cpp	2449	narrow_call	unread	live	kTextA	Va	NameWord(wp, plain, Va(kTextA) + end, &kind, &stored, &np) && stored == (end << 24 | text_slot) &&
-site	src/hook/snapshot.cpp	2450	narrow_call	unread	live	kTextA	Va	!NameWord(wp, plain, Va(kTextA) + end + 1, &kind, &stored, &np),
-site	src/hook/snapshot.cpp	2452	narrow_call	unread	live	kTextB	Va	Check(!NameWord(wp, box, Va(kTextB), &kind, &stored, &np) && np == kNpTextOurs,
-site	src/hook/snapshot.cpp	2557	long	ul	live	unsigned long	-	const fs::path dir = temp / Printf(" ", static_cast<unsigned long>(bof3::os::ProcessId()));
-site	src/hook/snapshot.cpp	2568	fmt_place	pointer	live	span.image.base	%08X	Log("shadow snapshot: self-test passed - span 0x%08X+0x%X and pool 0x%08X+0x%X copied, scribbled and restored equal; "
-site	src/hook/snapshot.cpp	2568	fmt_place	pointer	live	span.pool.base	%08X	Log("shadow snapshot: self-test passed - span 0x%08X+0x%X and pool 0x%08X+0x%X copied, scribbled and restored equal; "
-site	src/hook/snapshot.cpp	2665	narrow_call	image	live	&Frame_Deadline	Va	const U names[] = {Va(&Task_SchedulerEsp), Va(&Game_Hwnd), Va(&Game_HInstance), Va(&Frame_Deadline),
-site	src/hook/snapshot.cpp	2665	narrow_call	image	live	&Game_HInstance	Va	const U names[] = {Va(&Task_SchedulerEsp), Va(&Game_Hwnd), Va(&Game_HInstance), Va(&Frame_Deadline),
-site	src/hook/snapshot.cpp	2665	narrow_call	image	live	&Game_Hwnd	Va	const U names[] = {Va(&Task_SchedulerEsp), Va(&Game_Hwnd), Va(&Game_HInstance), Va(&Frame_Deadline),
-site	src/hook/snapshot.cpp	2665	narrow_call	image	live	&Task_SchedulerEsp	Va	const U names[] = {Va(&Task_SchedulerEsp), Va(&Game_Hwnd), Va(&Game_HInstance), Va(&Frame_Deadline),
-site	src/hook/snapshot.cpp	2666	narrow_call	image	live	&App_Active	Va	Va(&Fps_Shown), Va(&App_Active), Va(&Cfg_Fullscreen), Va(&Cfg_RenderMode),
-site	src/hook/snapshot.cpp	2666	narrow_call	image	live	&Cfg_Fullscreen	Va	Va(&Fps_Shown), Va(&App_Active), Va(&Cfg_Fullscreen), Va(&Cfg_RenderMode),
-site	src/hook/snapshot.cpp	2666	narrow_call	image	live	&Cfg_RenderMode	Va	Va(&Fps_Shown), Va(&App_Active), Va(&Cfg_Fullscreen), Va(&Cfg_RenderMode),
-site	src/hook/snapshot.cpp	2666	narrow_call	image	live	&Fps_Shown	Va	Va(&Fps_Shown), Va(&App_Active), Va(&Cfg_Fullscreen), Va(&Cfg_RenderMode),
-site	src/hook/snapshot.cpp	2667	narrow_call	image	live	&DInput_Object	Va	Va(Key_Table), Va(&DInput_Object), Va(&Font_GlyphData), Va(Gfx_WindowRect),
-site	src/hook/snapshot.cpp	2667	narrow_call	image	live	&Font_GlyphData	Va	Va(Key_Table), Va(&DInput_Object), Va(&Font_GlyphData), Va(Gfx_WindowRect),
-site	src/hook/snapshot.cpp	2667	narrow_call	image	live	Gfx_WindowRect	Va	Va(Key_Table), Va(&DInput_Object), Va(&Font_GlyphData), Va(Gfx_WindowRect),
-site	src/hook/snapshot.cpp	2667	narrow_call	image	live	Key_Table	Va	Va(Key_Table), Va(&DInput_Object), Va(&Font_GlyphData), Va(Gfx_WindowRect),
-site	src/hook/snapshot.cpp	2668	narrow_call	image	live	&Dd_DirectDraw	Va	Va(Gfx_ClutRows), Va(D3d_DeviceDesc), Va(&Dd_DirectDraw), Va(&Dd_StageSurface),
-site	src/hook/snapshot.cpp	2668	narrow_call	image	live	&Dd_StageSurface	Va	Va(Gfx_ClutRows), Va(D3d_DeviceDesc), Va(&Dd_DirectDraw), Va(&Dd_StageSurface),
-site	src/hook/snapshot.cpp	2668	narrow_call	image	live	D3d_DeviceDesc	Va	Va(Gfx_ClutRows), Va(D3d_DeviceDesc), Va(&Dd_DirectDraw), Va(&Dd_StageSurface),
-site	src/hook/snapshot.cpp	2668	narrow_call	image	live	Gfx_ClutRows	Va	Va(Gfx_ClutRows), Va(D3d_DeviceDesc), Va(&Dd_DirectDraw), Va(&Dd_StageSurface),
-site	src/hook/snapshot.cpp	2669	narrow_call	image	live	&D3d_Device	Va	Va(&D3d_Device), Va(&Desktop_Bpp)};
-site	src/hook/snapshot.cpp	2669	narrow_call	image	live	&Desktop_Bpp	Va	Va(&D3d_Device), Va(&Desktop_Bpp)};
-site	src/hook/snapshot.cpp	2673	fmt_place	pointer	live	kKept[i].at	%08X	Fatal("snapshot: kKept's %s is 0x%08X, symbols.toml's at 0x%08X (VA 0x%08X)", kKept[i].name, kKept[i].at,
-site	src/hook/snapshot.cpp	2673	fmt_place	pointer	live	names[i] - Img(kKept[i].at) + kKept[i].at	%08X	Fatal("snapshot: kKept's %s is 0x%08X, symbols.toml's at 0x%08X (VA 0x%08X)", kKept[i].name, kKept[i].at,
-site	src/hook/snapshot.cpp	2673	fmt_place	word	live	names[i]	%08X	Fatal("snapshot: kKept's %s is 0x%08X, symbols.toml's at 0x%08X (VA 0x%08X)", kKept[i].name, kKept[i].at,
-site	src/hook/span_words.h	139	fmt_place	pointer	live	module	%p	Fatal("statehash: our module at %p has no image headers the loader mapped", module);
-site	src/hook/span_words.h	140	low32	unread	live	reinterpret_cast<const void*>(image.base)	Low32	const auto base = Low32(reinterpret_cast<const void*>(image.base));
-site	src/hook/span_words.h	153	long	ul	live	unsigned long	-	if (sections.empty()) Fatal(" ", (unsigned long)base);
-site	src/hook/span_words.h	189	uintptr	-	live	std::uintptr_t	-	std::memcpy(&w, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(data + off)), 4);
-site	src/hook/span_words.h	189	widen	other	live	data + off	const void*	std::memcpy(&w, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(data + off)), 4);
-site	src/hook/span_words.h	195	long	ul	live	unsigned long	-	(unsigned long)g_slots.size());
+site	src/hook/snapshot.cpp	774	fmt_place	word	live	live	%08X	why = Printf("a slot of Capcom's held text of ours at the take and holds 0x%08X here", live);
+site	src/hook/snapshot.cpp	782	fmt_place	word	live	stored	%08X	why = Printf("a WORDS entry of kind %u holding 0x%08X has no place here", kind, stored);
+site	src/hook/snapshot.cpp	818	uintptr	-	live	std::uintptr_t	-	std::uintptr_t entry = 0;
+site	src/hook/snapshot.cpp	912	fmt_place	word	live	now[i + 1]	%08X	std::fprintf(g_words_probe, "+ %08X %08X %u\n", now[i], now[i + 1], now[i + 2]);
+site	src/hook/snapshot.cpp	912	fmt_place	word	live	now[i]	%08X	std::fprintf(g_words_probe, "+ %08X %08X %u\n", now[i], now[i + 1], now[i + 2]);
+site	src/hook/snapshot.cpp	915	fmt_place	word	live	was[j]	%08X	std::fprintf(g_words_probe, "- %08X\n", was[j]);
+site	src/hook/snapshot.cpp	918	fmt_place	word	live	now[i + 1]	%08X	if (now[i + 1] != was[j + 1]) std::fprintf(g_words_probe, "+ %08X %08X %u\n", now[i], now[i + 1], now[i + 2]);
+site	src/hook/snapshot.cpp	918	fmt_place	word	live	now[i]	%08X	if (now[i + 1] != was[j + 1]) std::fprintf(g_words_probe, "+ %08X %08X %u\n", now[i], now[i + 1], now[i + 2]);
+site	src/hook/snapshot.cpp	977	fmt_place	word	live	pool_raw	%08X	"0x%08X); a portable load writes them as the take had them",
+site	src/hook/snapshot.cpp	990	sizeof_ptr	-	live	sizeof(void*)	-	ext.pointer_bytes = sizeof(void*);
+site	src/hook/snapshot.cpp	1039	narrow_call	image	live	&Frame_Counter	Va	std::memcpy(&frame, image + (Va(&Frame_Counter) - span.image.base), 4);
+site	src/hook/snapshot.cpp	1145	fmt_place	pointer	live	span.image.base	%08X	return Printf("span 0x%08X+0x%X, pool 0x%08X+0x%X; here 0x%08X+0x%X, 0x%08X+0x%X", h.span_base, h.span_bytes, h.pool_base,
+site	src/hook/snapshot.cpp	1145	fmt_place	pointer	live	span.pool.base	%08X	return Printf("span 0x%08X+0x%X, pool 0x%08X+0x%X; here 0x%08X+0x%X, 0x%08X+0x%X", h.span_base, h.span_bytes, h.pool_base,
+site	src/hook/snapshot.cpp	1145	fmt_place	word	live	h.pool_base	%08X	return Printf("span 0x%08X+0x%X, pool 0x%08X+0x%X; here 0x%08X+0x%X, 0x%08X+0x%X", h.span_base, h.span_bytes, h.pool_base,
+site	src/hook/snapshot.cpp	1145	fmt_place	word	live	h.span_base	%08X	return Printf("span 0x%08X+0x%X, pool 0x%08X+0x%X; here 0x%08X+0x%X, 0x%08X+0x%X", h.span_base, h.span_bytes, h.pool_base,
+site	src/hook/snapshot.cpp	1170	fmt_place	word	live	build.dll_base	%08X	Printf("bof3x.dll was at 0x%08X, here at 0x%08X: the task stacks name its code where it was", h.dll_base,
+site	src/hook/snapshot.cpp	1170	fmt_place	word	live	h.dll_base	%08X	Printf("bof3x.dll was at 0x%08X, here at 0x%08X: the task stacks name its code where it was", h.dll_base,
+site	src/hook/snapshot.cpp	1175	fmt_place	word	live	arena_top	%08X	Printf("the task stacks hung from 0x%08X (0x%X bytes), here from 0x%08X: a quicksave is this process's",
+site	src/hook/snapshot.cpp	1175	fmt_place	word	live	h.arena_top	%08X	Printf("the task stacks hung from 0x%08X (0x%X bytes), here from 0x%08X: a quicksave is this process's",
+site	src/hook/snapshot.cpp	1269	fmt_place	word	live	build.dll_base	%08X	detail = Printf("bof3x.dll was at 0x%08X, here at 0x%08X: the task stacks name its code where it was", h.dll_base, build.dll_base);
+site	src/hook/snapshot.cpp	1269	fmt_place	word	live	h.dll_base	%08X	detail = Printf("bof3x.dll was at 0x%08X, here at 0x%08X: the task stacks name its code where it was", h.dll_base, build.dll_base);
+site	src/hook/snapshot.cpp	1272	fmt_place	word	live	arena_top	%08X	detail = Printf("the task stacks hung from 0x%08X (0x%X bytes), here from 0x%08X", h.arena_top, h.arena_bytes, arena_top);
+site	src/hook/snapshot.cpp	1272	fmt_place	word	live	h.arena_top	%08X	detail = Printf("the task stacks hung from 0x%08X (0x%X bytes), here from 0x%08X", h.arena_top, h.arena_bytes, arena_top);
+site	src/hook/snapshot.cpp	1275	fmt_place	word	live	Bind_TableLo()	%08X	detail = Printf("the code places lay at 0x%08X, here at 0x%08X: the task stacks hold them", x.table_lo, Bind_TableLo());
+site	src/hook/snapshot.cpp	1275	fmt_place	word	live	x.table_lo	%08X	detail = Printf("the code places lay at 0x%08X, here at 0x%08X: the task stacks hold them", x.table_lo, Bind_TableLo());
+site	src/hook/snapshot.cpp	1278	fmt_place	word	live	ImageBase()	%08X	detail = Printf("the image lay at 0x%08X, here at 0x%08X", x.image_base, ImageBase());
+site	src/hook/snapshot.cpp	1278	fmt_place	word	live	x.image_base	%08X	detail = Printf("the image lay at 0x%08X, here at 0x%08X", x.image_base, ImageBase());
+site	src/hook/snapshot.cpp	1300	fmt_place	word	live	fnv	%08X	detail + Printf("; the file's build binds %u VAs (FNV %08X), this one %u (%08X)", x.bind_rows, x.bind_fnv, rows, fnv));
+site	src/hook/snapshot.cpp	1300	fmt_place	word	live	x.bind_fnv	%08X	detail + Printf("; the file's build binds %u VAs (FNV %08X), this one %u (%08X)", x.bind_rows, x.bind_fnv, rows, fnv));
+site	src/hook/snapshot.cpp	1352	fmt_place	word	live	va	%08X	Printf("the file names the word at 0x%08X as a copy of a slot's text, and that word holds none", va));
+site	src/hook/snapshot.cpp	1359	fmt_place	word	live	span_words::kDataLo + off	%08X	(detail.empty() ? std::string() : detail + "; ") + Printf("the word at 0x%08X: ", span_words::kDataLo + off) + what);
+site	src/hook/snapshot.cpp	1391	uintptr	-	live	std::uintptr_t	-	entry = reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(t.name)));
+site	src/hook/snapshot.cpp	1391	widen	code_place	live	::bof3::Code(t.name)	void*	entry = reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(t.name)));
+site	src/hook/snapshot.cpp	1535	long	ul	live	unsigned long	-	static_cast<unsigned long>(bof3::os::LastError()));
+site	src/hook/snapshot.cpp	1545	long	ul	live	unsigned long	-	why = Printf(" ", PathText(path).c_str(), static_cast<unsigned long>(bof3::os::LastError()));
+site	src/hook/snapshot.cpp	1552	long	ul	live	unsigned long	-	const unsigned long error = bof3::os::LastError();
+site	src/hook/snapshot.cpp	1579	long	ul	live	unsigned long	-	static_cast<unsigned long>(bof3::os::LastError()));
+site	src/hook/snapshot.cpp	1640	long	ul	live	unsigned long	-	if (r != os::OwnStackResult::Done) Fatal(" ", os::OwnStackFailure(r), static_cast<unsigned long>(bof3::os::LastError()));
+site	src/hook/snapshot.cpp	1669	fmt_place	word	live	File_Slots_addr	%08X	Log("quicksave F6 at Frame_Counter %u refused: a file is open in File_Slots (0x%08X) between frames",
+site	src/hook/snapshot.cpp	1687	fmt_place	word	live	h->pool_base	%08X	Log("quicksave F6 at Frame_Counter %u: BISLPS10.DAT, %u bytes (save half 0x%X, span 0x%08X+0x%X, pool 0x%08X+0x%X, "
+site	src/hook/snapshot.cpp	1687	fmt_place	word	live	h->span_base	%08X	Log("quicksave F6 at Frame_Counter %u: BISLPS10.DAT, %u bytes (save half 0x%X, span 0x%08X+0x%X, pool 0x%08X+0x%X, "
+site	src/hook/snapshot.cpp	1688	fmt_place	word	live	h->frame_counter	%08X	"task arena 0x%08X-0x%X, %u participants; .rdata fnv %08X); format %u, state revision %u, %u words by their names, "
+site	src/hook/snapshot.cpp	1688	fmt_place	word	live	h->span_base	%08X	"task arena 0x%08X-0x%X, %u participants; .rdata fnv %08X); format %u, state revision %u, %u words by their names, "
+site	src/hook/snapshot.cpp	1689	fmt_place	word	live	h->frame_counter	%08X	"settings %08X, %s%s",
+site	src/hook/snapshot.cpp	1728	fmt_place	word	live	top	%08X	Log("quicksave F7 %s refused: the task arena 0x%08X-0x%X is not committed", SlotName(slot).c_str(), top,
+site	src/hook/snapshot.cpp	1739	fmt_place	word	live	p.header.rdata_fnv	%08X	Log("quicksave F7 %s: .rdata fnv %08X now, %08X at the take - written in play, and not copied (the census's "
+site	src/hook/snapshot.cpp	1739	fmt_place	word	live	rdata	%08X	Log("quicksave F7 %s: .rdata fnv %08X now, %08X at the take - written in play, and not copied (the census's "
+site	src/hook/snapshot.cpp	1991	narrow_call	object_ours	live	arena_block.data()	Va	const U top = (Va(arena_block.data()) + kArenaBytes + kPage - 1) & ~(kPage - 1);
+site	src/hook/snapshot.cpp	1992	narrow_call	object_ours	live	arena_block.data()	Va	if (top - kArenaBytes < Va(arena_block.data())) Fatal(" ");
+site	src/hook/snapshot.cpp	1997	narrow_call	image	live	&Task_StackTop	Va	WriteRange(Va(&Task_StackTop), reinterpret_cast<const unsigned char*>(&t), 4);
+site	src/hook/snapshot.cpp	2056	fmt_place	pointer	live	span.image.base + at	%08X	Log("shadow snapshot: span byte 0x%08X is 0x%02X after the restore, 0x%02X at the take", span.image.base + at,
+site	src/hook/snapshot.cpp	2154	narrow_call	object_ours	live	arena_block.data()	Va	const U top = (Va(arena_block.data()) + kArenaBytes + kPage - 1) & ~(kPage - 1);
+site	src/hook/snapshot.cpp	2155	narrow_call	object_ours	live	arena_block.data()	Va	if (top - kArenaBytes < Va(arena_block.data())) Fatal(" ");
+site	src/hook/snapshot.cpp	2190	fmt_place	pointer	live	span.image.base + at	%08X	Log("shadow snapshot: %s: span byte 0x%08X is 0x%02X, 0x%02X wanted", what, span.image.base + at,
+site	src/hook/snapshot.cpp	2226	uintptr	-	live	std::uintptr_t	-	::Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
+site	src/hook/snapshot.cpp	2226	widen	code_place	live	::bof3::Code(bof3::addr::Boot_Task)	void*	::Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
+site	src/hook/snapshot.cpp	2239	narrow_call	unread	live	kTextA	Va	const U text_a = Va(kTextA), text_b = Va(kTextB);
+site	src/hook/snapshot.cpp	2239	narrow_call	unread	live	kTextB	Va	const U text_a = Va(kTextA), text_b = Va(kTextB);
+site	src/hook/snapshot.cpp	2282	uintptr	-	live	std::uintptr_t	-	std::uintptr_t entry = 0;
+site	src/hook/snapshot.cpp	2285	uintptr	-	live	std::uintptr_t	-	entry == static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task)) &&
+site	src/hook/snapshot.cpp	2384	narrow_call	object_ours	live	g_test_warp_page	Va	set_word(Msgbox_Base_addr, Va(g_test_warp_page));
+site	src/hook/snapshot.cpp	2503	narrow_call	unread	live	kTextA	Va	Check(PlaceWord(wp, kWordText, Va(kTextA), Va(kTextB), true, &w, why) && w == Va(kTextB) &&
+site	src/hook/snapshot.cpp	2503	narrow_call	unread	live	kTextB	Va	Check(PlaceWord(wp, kWordText, Va(kTextA), Va(kTextB), true, &w, why) && w == Va(kTextB) &&
+site	src/hook/snapshot.cpp	2503	narrow_call	unread	live	kTextB	Va	Check(PlaceWord(wp, kWordText, Va(kTextA), Va(kTextB), true, &w, why) && w == Va(kTextB) &&
+site	src/hook/snapshot.cpp	2504	narrow_call	unread	live	kTextA	Va	PlaceWord(wp, kWordText, Va(kTextA), Va(kTextB), false, &w, why) && w == Va(kTextA) &&
+site	src/hook/snapshot.cpp	2504	narrow_call	unread	live	kTextA	Va	PlaceWord(wp, kWordText, Va(kTextA), Va(kTextB), false, &w, why) && w == Va(kTextA) &&
+site	src/hook/snapshot.cpp	2504	narrow_call	unread	live	kTextB	Va	PlaceWord(wp, kWordText, Va(kTextA), Va(kTextB), false, &w, why) && w == Va(kTextA) &&
+site	src/hook/snapshot.cpp	2505	narrow_call	unread	live	kTextA	Va	!PlaceWord(wp, kWordText, Va(kTextA), 0x1234, true, &w, why),
+site	src/hook/snapshot.cpp	2516	narrow_call	unread	live	kTextA	Va	wp.texts = {{Va(kTextA), line_slot}};
+site	src/hook/snapshot.cpp	2519	narrow_call	unread	live	kTextA	Va	Check(!NameWord(wp, plain, Va(kTextA), &kind, &stored, &np) && !NameWord(wp, plain, Va(kTextA) + 5, &kind, &stored, &np) &&
+site	src/hook/snapshot.cpp	2519	narrow_call	unread	live	kTextA	Va	Check(!NameWord(wp, plain, Va(kTextA), &kind, &stored, &np) && !NameWord(wp, plain, Va(kTextA) + 5, &kind, &stored, &np) &&
+site	src/hook/snapshot.cpp	2522	narrow_call	unread	live	kTextA	Va	Check(NameWord(wp, battle, Va(kTextA), &kind, &stored, &np) && kind == kWordTextCopy && stored == line_slot &&
+site	src/hook/snapshot.cpp	2523	narrow_call	unread	live	kTextA	Va	NameWord(wp, battle, Va(kTextA) + 5, &kind, &stored, &np) && stored == (5u << 24 | line_slot),
+site	src/hook/snapshot.cpp	2536	narrow_call	unread	live	kTextA	Va	Check(NameWord(wp, typing, Va(kTextA) + 5, &kind, &stored, &np) && kind == kWordTextCopy && stored == (5u << 24 | line_slot) &&
+site	src/hook/snapshot.cpp	2537	narrow_call	unread	live	kTextA	Va	NameWord(wp, scrolling, Va(kTextA) + end, &kind, &stored, &np) && stored == (end << 24 | line_slot) &&
+site	src/hook/snapshot.cpp	2538	narrow_call	unread	live	kTextA	Va	!NameWord(wp, scrolling, Va(kTextA) + end + 1, &kind, &stored, &np) &&
+site	src/hook/snapshot.cpp	2539	narrow_call	unread	live	kTextA	Va	!NameWord(wp, other_field, Va(kTextA) + 5, &kind, &stored, &np),
+site	src/hook/snapshot.cpp	2544	narrow_call	unread	live	kTextA	Va	Check(NameWord(wp, typing, Va(kTextA) + 5, &kind, &stored, &np) && kind == kWordTextCopy,
+site	src/hook/snapshot.cpp	2549	narrow_call	unread	live	kTextA	Va	wp.texts = {{Va(kTextA), text_slot}};
+site	src/hook/snapshot.cpp	2550	narrow_call	unread	live	kTextA	Va	Check(!NameWord(wp, typing, Va(kTextA) + 5, &kind, &stored, &np) && np == kNpTextOurs,
+site	src/hook/snapshot.cpp	2555	narrow_call	unread	live	kTextA	Va	wp.texts = {{Va(kTextA), line_slot}};
+site	src/hook/snapshot.cpp	2556	narrow_call	unread	live	kTextA	Va	Check(!NameWord(wp, typing, Va(kTextA) + 5, &kind, &stored, &np) && np == 0,
+site	src/hook/snapshot.cpp	2559	narrow_call	unread	live	kTextA	Va	wp.texts = {{Va(kTextA), text_slot}};
+site	src/hook/snapshot.cpp	2560	narrow_call	unread	live	kTextB	Va	Check(!NameWord(wp, box, Va(kTextB), &kind, &stored, &np) && np == kNpTextOurs,
+site	src/hook/snapshot.cpp	2665	long	ul	live	unsigned long	-	const fs::path dir = temp / Printf(" ", static_cast<unsigned long>(bof3::os::ProcessId()));
+site	src/hook/snapshot.cpp	2676	fmt_place	pointer	live	span.image.base	%08X	Log("shadow snapshot: self-test passed - span 0x%08X+0x%X and pool 0x%08X+0x%X copied, scribbled and restored equal; "
+site	src/hook/snapshot.cpp	2676	fmt_place	pointer	live	span.pool.base	%08X	Log("shadow snapshot: self-test passed - span 0x%08X+0x%X and pool 0x%08X+0x%X copied, scribbled and restored equal; "
+site	src/hook/snapshot.cpp	2773	narrow_call	image	live	&Frame_Deadline	Va	const U names[] = {Va(&Task_SchedulerEsp), Va(&Game_Hwnd), Va(&Game_HInstance), Va(&Frame_Deadline),
+site	src/hook/snapshot.cpp	2773	narrow_call	image	live	&Game_HInstance	Va	const U names[] = {Va(&Task_SchedulerEsp), Va(&Game_Hwnd), Va(&Game_HInstance), Va(&Frame_Deadline),
+site	src/hook/snapshot.cpp	2773	narrow_call	image	live	&Game_Hwnd	Va	const U names[] = {Va(&Task_SchedulerEsp), Va(&Game_Hwnd), Va(&Game_HInstance), Va(&Frame_Deadline),
+site	src/hook/snapshot.cpp	2773	narrow_call	image	live	&Task_SchedulerEsp	Va	const U names[] = {Va(&Task_SchedulerEsp), Va(&Game_Hwnd), Va(&Game_HInstance), Va(&Frame_Deadline),
+site	src/hook/snapshot.cpp	2774	narrow_call	image	live	&App_Active	Va	Va(&Fps_Shown), Va(&App_Active), Va(&Cfg_Fullscreen), Va(&Cfg_RenderMode),
+site	src/hook/snapshot.cpp	2774	narrow_call	image	live	&Cfg_Fullscreen	Va	Va(&Fps_Shown), Va(&App_Active), Va(&Cfg_Fullscreen), Va(&Cfg_RenderMode),
+site	src/hook/snapshot.cpp	2774	narrow_call	image	live	&Cfg_RenderMode	Va	Va(&Fps_Shown), Va(&App_Active), Va(&Cfg_Fullscreen), Va(&Cfg_RenderMode),
+site	src/hook/snapshot.cpp	2774	narrow_call	image	live	&Fps_Shown	Va	Va(&Fps_Shown), Va(&App_Active), Va(&Cfg_Fullscreen), Va(&Cfg_RenderMode),
+site	src/hook/snapshot.cpp	2775	narrow_call	image	live	&DInput_Object	Va	Va(Key_Table), Va(&DInput_Object), Va(&Font_GlyphData), Va(Gfx_WindowRect),
+site	src/hook/snapshot.cpp	2775	narrow_call	image	live	&Font_GlyphData	Va	Va(Key_Table), Va(&DInput_Object), Va(&Font_GlyphData), Va(Gfx_WindowRect),
+site	src/hook/snapshot.cpp	2775	narrow_call	image	live	Gfx_WindowRect	Va	Va(Key_Table), Va(&DInput_Object), Va(&Font_GlyphData), Va(Gfx_WindowRect),
+site	src/hook/snapshot.cpp	2775	narrow_call	image	live	Key_Table	Va	Va(Key_Table), Va(&DInput_Object), Va(&Font_GlyphData), Va(Gfx_WindowRect),
+site	src/hook/snapshot.cpp	2776	narrow_call	image	live	&Dd_DirectDraw	Va	Va(Gfx_ClutRows), Va(D3d_DeviceDesc), Va(&Dd_DirectDraw), Va(&Dd_StageSurface),
+site	src/hook/snapshot.cpp	2776	narrow_call	image	live	&Dd_StageSurface	Va	Va(Gfx_ClutRows), Va(D3d_DeviceDesc), Va(&Dd_DirectDraw), Va(&Dd_StageSurface),
+site	src/hook/snapshot.cpp	2776	narrow_call	image	live	D3d_DeviceDesc	Va	Va(Gfx_ClutRows), Va(D3d_DeviceDesc), Va(&Dd_DirectDraw), Va(&Dd_StageSurface),
+site	src/hook/snapshot.cpp	2776	narrow_call	image	live	Gfx_ClutRows	Va	Va(Gfx_ClutRows), Va(D3d_DeviceDesc), Va(&Dd_DirectDraw), Va(&Dd_StageSurface),
+site	src/hook/snapshot.cpp	2777	narrow_call	image	live	&D3d_Device	Va	Va(&D3d_Device), Va(&Desktop_Bpp)};
+site	src/hook/snapshot.cpp	2777	narrow_call	image	live	&Desktop_Bpp	Va	Va(&D3d_Device), Va(&Desktop_Bpp)};
+site	src/hook/snapshot.cpp	2781	fmt_place	pointer	live	kKept[i].at	%08X	Fatal("snapshot: kKept's %s is 0x%08X, symbols.toml's at 0x%08X (VA 0x%08X)", kKept[i].name, kKept[i].at,
+site	src/hook/snapshot.cpp	2781	fmt_place	pointer	live	names[i] - Img(kKept[i].at) + kKept[i].at	%08X	Fatal("snapshot: kKept's %s is 0x%08X, symbols.toml's at 0x%08X (VA 0x%08X)", kKept[i].name, kKept[i].at,
+site	src/hook/snapshot.cpp	2781	fmt_place	word	live	names[i]	%08X	Fatal("snapshot: kKept's %s is 0x%08X, symbols.toml's at 0x%08X (VA 0x%08X)", kKept[i].name, kKept[i].at,
+site	src/hook/span_words.h	164	fmt_place	pointer	live	module	%p	Fatal("statehash: our module at %p has no image headers the loader mapped", module);
+site	src/hook/span_words.h	165	low32	unread	live	reinterpret_cast<const void*>(image.base)	Low32	const auto base = Low32(reinterpret_cast<const void*>(image.base));
+site	src/hook/span_words.h	178	long	ul	live	unsigned long	-	if (sections.empty()) Fatal(" ", (unsigned long)base);
+site	src/hook/span_words.h	214	uintptr	-	live	std::uintptr_t	-	std::memcpy(&w, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(data + off)), 4);
+site	src/hook/span_words.h	214	widen	other	live	data + off	const void*	std::memcpy(&w, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(data + off)), 4);
+site	src/hook/span_words.h	220	long	ul	live	unsigned long	-	(unsigned long)g_slots.size());
 site	src/hook/stackwatch.h	23	long	ul	live	unsigned long	-	void __cdecl StackWatch_AtSetStackBase(unsigned long arrival_esp);
 site	src/hook/stackwatch_posix.cpp	32	asm	cw	live	fnstcw %0	fnstcw	asm volatile("fnstcw %0" : "=m"(cw));
 site	src/hook/stackwatch_posix.cpp	33	asm	cw	live	stmxcsr %0	stmxcsr	asm volatile("stmxcsr %0" : "=m"(mxcsr));
@@ -15366,13 +15376,13 @@ file	src/hook/input_script.h	live	long	l	1
 file	src/hook/region_table.cpp	live	fmt_place	pointer	1
 file	src/hook/region_table.cpp	live	fmt_place	word	16
 file	src/hook/snapshot.cpp	live	fmt_place	pointer	10
-file	src/hook/snapshot.cpp	live	fmt_place	word	36
+file	src/hook/snapshot.cpp	live	fmt_place	word	37
 file	src/hook/snapshot.cpp	live	long	ul	8
 file	src/hook/snapshot.cpp	live	low32	helper_def	1
 file	src/hook/snapshot.cpp	live	narrow_call	image	20
 file	src/hook/snapshot.cpp	live	narrow_call	object_ours	5
 file	src/hook/snapshot.cpp	live	narrow_call	pool	1
-file	src/hook/snapshot.cpp	live	narrow_call	unread	20
+file	src/hook/snapshot.cpp	live	narrow_call	unread	29
 file	src/hook/snapshot.cpp	live	narrow_call	windows	1
 file	src/hook/snapshot.cpp	live	sizeof_ptr	-	2
 file	src/hook/snapshot.cpp	live	uintptr	-	7
@@ -15517,8 +15527,8 @@ file	symbols.toml	live	ptr_member	ours_render	11
 file	symbols.toml	live	ptr_member	windows_function	14
 file	symbols.toml	live	ptr_member	windows_handle	3
 file	symbols.toml	live	ptr_member	windows_object	10
-#count sites	11466
-#count sites_live	7982
+#count sites	11476
+#count sites_live	7992
 #count sites_fuzz	3484
 #count fuzz_files	250
 #count narrow	357
@@ -15553,8 +15563,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count narrow_windows	4
 #count narrow_windows_live	2
 #count narrow_windows_live_files	2
-#count narrow_call	3364
-#count narrow_call_live	1522
+#count narrow_call	3373
+#count narrow_call_live	1531
 #count narrow_call_live_files	332
 #count narrow_call_fuzz	1842
 #count narrow_call_fuzz_files	234
@@ -15579,8 +15589,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count narrow_call_pool	79
 #count narrow_call_pool_live	13
 #count narrow_call_pool_live_files	5
-#count narrow_call_unread	77
-#count narrow_call_unread_live	34
+#count narrow_call_unread	86
+#count narrow_call_unread_live	43
 #count narrow_call_unread_live_files	5
 #count narrow_call_windows	11
 #count narrow_call_windows_live	5
@@ -15701,8 +15711,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count uintptr_-	2002
 #count uintptr_-_live	1336
 #count uintptr_-_live_files	527
-#count fmt_place	591
-#count fmt_place_live	521
+#count fmt_place	592
+#count fmt_place_live	522
 #count fmt_place_live_files	77
 #count fmt_place_fuzz	70
 #count fmt_place_fuzz_files	35
@@ -15712,8 +15722,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count fmt_place_pointer	126
 #count fmt_place_pointer_live	111
 #count fmt_place_pointer_live_files	35
-#count fmt_place_word	441
-#count fmt_place_word_live	393
+#count fmt_place_word	442
+#count fmt_place_word_live	394
 #count fmt_place_word_live_files	63
 #count import_slot	14
 #count import_slot_live	14
@@ -15846,17 +15856,17 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count callconv_CALLBACK_live	7
 #count callconv_WINAPI	11
 #count callconv_WINAPI_live	11
-#count callconv___cdecl	16400
+#count callconv___cdecl	16414
 #count callconv___cdecl_fuzz	2015
-#count callconv___cdecl_live	14385
+#count callconv___cdecl_live	14399
 #count callconv___stdcall	366
 #count callconv___stdcall_fuzz	96
 #count callconv___stdcall_live	270
 #count img_place_Code	629
 #count img_place_Code_fuzz	6
 #count img_place_Code_live	623
-#count img_place_Img	16047
+#count img_place_Img	16059
 #count img_place_Img_fuzz	1070
-#count img_place_Img_live	14977
+#count img_place_Img_live	14989
 #count img_place_VaOf	106
 #count img_place_VaOf_live	106
