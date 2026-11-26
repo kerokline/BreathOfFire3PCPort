@@ -774,27 +774,8 @@ TASK_KIND = {0: 'free', 1: 'new', 2: 'site', 3: 'nowhere'}
 NOT_PORTABLE = {0: 'portable', 1: 'taken by the hosted build', 2: 'the code places lie under an unmeasured top byte',
                 3: 'a task stands at no named place', 4: "a new task's entry names no VA",
                 5: 'a slot holds a function of ours', 6: 'a message slot names our module'}
-# The proof's skip list: the state hash's, and the words the proof measured as
-# naming the build that wrote them (docs/state-by-name-proof.md 3). Both sides of
-# every comparison of the matrix hash under this list, so their headers agree.
-PROOF_SKIP_EXTRA = [
-    (0x6BC62C, 4, 'ours   Overlay_Text: after F6 / F7 / the quick menu it names our line buffer (snapshot.cpp Show, '
-                  'quick_menu.cpp g_f7_line), an address in our module that each build links elsewhere'),
-    (0x7DEE4C, 12, 'ours   Msgbox_Base, MenuWindows_ListText, Msgbox_Resume: text in our message pool (DIV-0007), '
-                   'which the quicksave writes by its offset (span_words.h kTextWords) and the hash reads raw'),
-    (0x93B8FC, 4, 'ours   BattleFlow_TaskCurrent+0x38: the battle block\'s text word, as above (kTextWords)'),
-]
-
-
-def proof_skip(out):
-    """The skip list for the matrix's runs: tools/statehash_skip.txt and PROOF_SKIP_EXTRA, written into out."""
-    p = os.path.join(out, 'proof_skip.txt')
-    text = open(SKIP_FILE, encoding='utf-8').read().rstrip('\n') + '\n# The proof (quicksave_check.py matrix):\n'
-    text += ''.join(f'0x{a:06X} {n:<8d}# {why}\n' for a, n, why in PROOF_SKIP_EXTRA)
-    open(p, 'w', encoding='utf-8', newline='\n').write(text)
-    return p
-
-
+# The matrix hashes under the state hash's own skip list. Until 2026-11-26 it added three rows (Overlay_Text and
+# the text words, docs/state-by-name-proof.md 2); those are in tools/statehash_skip.txt now.
 RESULT_COLS = ['take', 'route', 'fc', 'by', 'loaded_by', 'forced', 'taken_fc', 'format', 'portable', 'why_not',
                'tasks', 'settings_fnv', 'bound', 'peeks', 'answer', 'reason', 'cross', 'ticks', 'first_k', 'pages',
                'exit']
@@ -1073,7 +1054,7 @@ def cmd_matrix(a):
     if not os.path.exists(res) or not os.path.getsize(res) or not a.resume:
         open(res, 'w', encoding='utf-8').write('\t'.join(RESULT_COLS) + '\n')
     hashenv = [] if a.defaults else ['BOF3X_OPT=none', 'BOF3X_LAYERING=0']
-    skip = SKIP_FILE if a.hash_skip_only else proof_skip(out)
+    skip = SKIP_FILE
     common = [f'BOF3X_STATEHASH_SKIP={skip}'] + hashenv + a.env
     worst = 0
     for t in takes:
@@ -1437,7 +1418,7 @@ def main():
     p.add_argument('--load-env', action='append', default=[], metavar='K=V', help='the loads only')
     p.add_argument('--only', help='the takes of these names, comma-separated')
     p.add_argument('--hash-skip-only', action='store_true',
-                   help="hash under the state hash's skip list alone, without PROOF_SKIP_EXTRA")
+                   help="no effect since 2026-11-26: the matrix always hashes under the state hash's skip list")
     p.add_argument('--resume', action='store_true', help='keep the results file and skip the rows it has')
     p.add_argument('--lock-file', help='an flock held for each game run (POSIX)')
     p.add_argument('--lock', help='a mkdir lock held for each game run (the Windows runs)')
