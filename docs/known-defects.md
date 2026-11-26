@@ -11671,6 +11671,17 @@ confirmation. A packed flag in bit 31 of another heap pointer would fail the
 same way; a grep of `src/game` for the masks found no other, and it was not
 exhaustive.
 
+**Amended 2026-11-26 (the desktop, the state-by-name round's checks):** the
+kept `SndBuf_Play` was not the original's contract in one case. The hosted
+shadow suite (`BOF3X_SHADOW='*'`) found it: 55 of 2,000 rounds differed from
+`0x5A6BB0`. The original's data pointer starts as its argument's own stack
+slot, flag and all (`lea eax, [esp+0x10]` at `0x5A6BFA`), and stays so when
+`Wave_FindData` finds no data chunk; the fix above started it as the masked
+wave. `fe203d57` starts it as the original does (46,000 rounds, 0
+mismatches). No caller of ours calls `SndBuf_Play` and a wave with no data
+chunk is not the game's, so no player met it. The suite had not run on a
+32-bit hosted build between the fix and this date.
+
 ## D435 — The game held on the logo movie's last frame until the window's focus changed (ours; seen 2026-11-23 by the owner; fixed)
 
 **Seen:** owner, 2026-11-23, the Linux ELF on GNOME on Wayland: "pressing

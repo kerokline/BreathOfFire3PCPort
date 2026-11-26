@@ -36,11 +36,15 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      ([`state-by-name-round.md`](state-by-name-round.md) 4b; scratch `~/bof3x-runs/sbn1125`). A quicksave is format 2;
      a take at one of fifteen yield sites loads in another build; anything else another build refuses and offers as
      its save (F5 asks). DIV-0246 (the came-from place in a save's tail), DIV-0145 / 0147 / 0121 amended, D436.
-     **Owed on the desktop:** [`state-by-name-proof.md`](state-by-name-proof.md) 8 - the width and system rows
-     (`quicksave_check.py matrix`, its Windows branch not yet run), the task bodies' fuzz and the hosted suite in the
-     32-bit build, the Windows builds compiling, the owner's eye on F5's question. **The owner's:** the six
-     questions and the code-place rule in section 4b; whether the state hash skips our text pointers (every
-     reference pair recorded again). What follows is the staging's text.
+     **Run on the desktop 2026-11-26** ([`state-by-name-proof.md`](state-by-name-proof.md) 10): both Windows builds
+     compile, the self-tests and the hosted suite pass (one stop, `SndBuf_Play`, was `main`'s: `fe203d57`), the width
+     and system rows load portable and equal on 34 or 35 of 42 portable takes in every direction, and the seven or eight that
+     differ do so under a load that is not portable too or on the page the hash reads raw. **The owner's calls of
+     2026-11-26 are made** (the round doc 4b): a code word is named by where it is; the state hash skips our text
+     pointers (179 ranges) and the pairs are `orig7` / `o7w`. **Still owed:** the cause of the two title takes
+     (`s100`, `s180`) differing on Windows, the 32-bit task census, the owner's eye on F5's question, and the
+     owner's answers on the title's state word and the fishing spot's untagged save (D436). The editor's zero tail
+     is the editor's repository's. What follows is the staging's text.
      ([`state-by-name-round.md`](state-by-name-round.md), branch `docs/state-by-name-staging`): the owner's first
      larger change after `v0.1.0-beta.2`. Measured on the laptop: the task census (`BOF3X_TASKCENSUS`, a read-only
      probe; 16 routes on the Linux build). The round is two waves - the quicksave's format 2 and the words written by

@@ -99,3 +99,8 @@
 0x93C6B4 4      unknown # a stack address (census 5)
 0x93D6C0 4      unknown # _nstream (the same)
 0x93D6E0 12     unknown # a stack address and a heap pointer (census 5)
+
+# --- the pointers of ours the state hash skips since 2026-11-26 (docs/state-by-name-proof.md 2) ---
+0x6BC62C 4      derived # Overlay_Text: our line buffer after F6 / F7 / the quick menu; a load writes the file's and Show sets this process's before a frame runs (snapshot.cpp DoLoad)
+0x7DEE4C 12     state   # Msgbox_Base, MenuWindows_ListText, Msgbox_Resume: text in our message pool, written by name (span_words.h kTextWords)
+0x93B8FC 4      state   # BattleFlow_TaskCurrent+0x38: the battle block's text word, written by name (kTextWords)

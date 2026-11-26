@@ -579,63 +579,46 @@ Merged in the order A3, A1, A4, A2, B1, B2, B1b, B3, B1c. The scratch root is
 - **The state hash cannot compare two builds as it stands** (B3): it reads
   three kinds of pointers of ours raw. The proof hashes with extra skip
   rows. Changing `tools/statehash_skip.txt` means recording every reference
-  pair again: open, the owner's.
+  pair again: done 2026-11-26, below.
 - **The laptop's two builds differ in code addresses, not in frames** (B3):
   the yield chains' frames are the same at `-O1`, and `-O0` does not link
   (`effect_gte::IdentityCheck` is in the fuzz file, which the Linux build
   leaves out; already so on `main`). Different frames are the desktop's
   rows.
 
-**Open in principle, not changed** (B1c's read of A1's rules): the
-code-place rule names any word whose value is a bound place. It is the
-identity while both processes chose the same top byte, which every measured
-run did; where the top bytes differ a number equal to a place would be
-renamed. To settle on the desktop, where the top byte can differ: name code
-words by the load-time census of code words, or refuse a portable load when
-the top bytes differ.
+**The code-place rule, settled 2026-11-26** (the owner: "name code words by
+the load-time census sounds fine, assuming it doesn't cost too much time").
+It was B1c's read of A1's rules: the rule named any word whose value is a
+bound place, which is the identity while both processes chose the same top
+byte, and renames a number equal to a place where they differ. Now a word is
+a code word by **where it is**: one of the 8,784 code words of the load-time
+table (`rebase.gen.h`, the runs to `kText`), or one of the places the game
+writes a function to at run time (`span_words.h` `kCodeWords`: the three
+battle hooks; the eight enemy records' word at `+0xF4`). Measured on 88
+takes of the desktop's rows: no other word of any take held a place
+([`state-by-name-proof.md`](state-by-name-proof.md) 10). A word elsewhere
+whose value is a bound place is written as a value (`kWordCodeValue`): it
+loads under the take's own top byte, as before, and a build with another top
+byte refuses the load and offers the save. The cost: none at run time. The
+table is generated with the build, and a take looks a word up in it by
+binary search.
 
-**The owner's, from the groups** (the round is built to the proposal in
-each): the question's text is English under every language; the question
-starts where the game's Yes / No starts; `SaveCameFrom` is a player's
-switch, default on; the save editor writes a zero tail for a save it moves
-to another area; the title task's state word is written in place of a Start
-press; what an untagged save at the fishing spot does on the quit (D436).
+**The state hash's skip list, settled 2026-11-26** (the owner: "lets skip
+the text pointer, and rerecord the pairs"). `Overlay_Text` and the four
+text words are in `tools/statehash_skip.txt` (179 ranges), the proof's extra
+rows are gone, and the pairs are recorded again
+([`state-hash.md`](state-hash.md) 6).
 
-## 5. The proof
+**The groups' six, answered 2026-11-26** (the owner, by chat):
 
-The quicksave round's test, across builds ([`quicksave-routes.md`](quicksave-routes.md)):
-a live run takes a quicksave at a frame and plays on; a second process loads
-it at its frame 0 and plays the rest of the route; the two hash sequences
-are equal tick for tick (`quicksave_check.py cross`). Here the second
-process is **another build**:
-
-| Taken by | Loaded by | Shows |
+| The question | The answer | State |
 |---|---|---|
-| a build | the same build, as a portable load forced | the resume entries are the stacks' equal |
-| the 32-bit Windows build | the 64-bit Windows build, and back | the width |
-| the 64-bit Windows build | the Linux build, and back | the system |
-| a build of the round's base | a build of its tip | a build changed by real work |
-
-**On the laptop (section 4a) only the first and last rows can run**: it
-builds the Linux ELF and no Windows build. The width and the system rows are
-owed on the desktop, with the round's files as they stand at its end; until
-they run, "32-bit to 64-bit, Windows to Linux" is designed and not shown.
-
-On the six quicksave routes at the frames they have, and on frames chosen
-from the census: one in each flat site, and one on a nested frame, which
-must be written as not portable and load as its save. Then the ten
-state-hash routes with no quicksave taken, against `_m1116`'s readings, to
-show the yield word moved nothing; the hosted shadow suite; the self-tests.
-
-## 6. The ledger
-
-DIV-0145's refusal rule changes: a quicksave from another build is restored
-when it is portable, and otherwise offered as its save. An amendment of
-DIV-0145 and DIV-0147 (the menu's question), drafted by A1 and A4, numbered
-at the merge. The came-from place in a save's tail is a behaviour change
-of its own: a new entry, drafted by A4, with DIV-0121 amended to say when
-its hold is still reached (a save without the tag). The yield word and the region table change no behaviour and
-have no entry.
+| The question's text is English under every language | "for now, this is fine" | as built |
+| Where the question starts | "start on yes" | as built: the hand starts on Yes ([`state-by-name-tier0.md`](state-by-name-tier0.md) 9) |
+| `SaveCameFrom`, a player's switch, default on | "default on is fine" | as built |
+| The save editor writes a zero tail for a save it moves to another area | "Yeah, this makes sense to me to do" | the editor's repository; not in this branch |
+| The title task's state word written in place of a Start press | asked what it means; explained, not yet answered | as built (the word is written) |
+| An untagged save at the fishing spot, on the quit (D436) | asked whether the spots' ways in are fixed and whether the quit crashes; answered, the call is open | as built: no change, D436 stands |
 
 ## 7. The owner's calls
 

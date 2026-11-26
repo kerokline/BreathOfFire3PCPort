@@ -145,7 +145,8 @@ named: they are the process's, and a portable load writes them fresh.
 
 | Kind | The test (shared) | In the file | Back at a load |
 |---|---|---|---|
-| code place | `Bind_VaOf` (bind.h): a place `(top << 24) \| VA` under the table's top byte | the VA | `Code(VA)`: this process's place; refused when this build binds no function there |
+| code place | **where the word is** (2026-11-26, the owner's call): a code word of the load-time table (`rebase.gen.h`, 8,784) or a run-time place (`span_words.h` `kCodeWords`, the enemy records' `+0xF4`), holding a place `(top << 24) \| VA` (`Bind_VaOf`) | the VA | `Code(VA)`: this process's place; refused when this build binds no function there, or when the word is no code word's place |
+| code-place value | any other word whose value is a bound place (the rule until 2026-11-26, for every word) | the VA | as a code place when this process's top byte is the take's; another top byte refuses the load, the save offered. None in 120 measured takes ([`state-by-name-proof.md`](state-by-name-proof.md) 10.3) |
 | image pointer | `span_words::Fold`, the image's base when it is not `0x400000` | as at `0x400000` | at this process's base |
 | image link | `span_words::Fold24` | the low 24 bits as at `0x400000`, the top byte kept | at this process's base |
 | message slot | the 17 run-time slots (`span_words::RuntimeSlot`), a value inside our message pool | the offset in the pool | this process's pool plus the offset |

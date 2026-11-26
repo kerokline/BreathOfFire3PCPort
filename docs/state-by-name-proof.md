@@ -154,11 +154,10 @@ is hashed. The `Effect_Objects` words are in records the game allocates, so
 they cannot be listed by address; a take that holds them is read in section
 4. Row 6 (nothing else moved) uses the state hash's own list.
 
-**For the state hash's owner (not made: not this group's file).** Add
-`0x6BC62C 4` (`ours`) to `tools/statehash_skip.txt`, or fold the word as a
-pointer of ours like the run-time slots; and B1b's `kTextWords` and its copy
-rule are the hash's next candidates (B1b says so too). Either changes the
-skip list's hash, so every reference pair is recorded again.
+**Made 2026-11-26 (the owner's call).** The three rows are in
+`tools/statehash_skip.txt` (179 ranges, hash `AFD29A9A`), `PROOF_SKIP_EXTRA`
+is gone and the matrix hashes under the state hash's own list. The reference
+pairs are recorded again under it (section 10.5).
 
 ## 3. How every row ran
 
@@ -713,7 +712,8 @@ and T); the forced loads in one build (row 1) are in the row tables.
   `--lock DIR` (the Windows runs' mkdir lock) is held for each game run and
   the copy of its log. `--resume` keeps the results file and skips the rows
   it has (a stopped matrix starts where it stopped). `--hash-skip-only`
-  hashes under the state hash's list alone. **The results file** is
+  has no effect since 2026-11-26 (the matrix hashes under the state hash's
+  list alone, section 2). **The results file** is
   tab-separated with a header: the take, the route, FC, the taking and
   loading builds, forced, the file's FC, format, portability and why not,
   the `TASKS` record, the settings' FNV-1a, the bound functions' count and
@@ -882,8 +882,8 @@ Gathered from the six hand-backs and the notes docs' last sections:
 
 ## 9. Not checked
 
-- **The width row and the system row** (section 8): no Windows build here.
-  Until they run, "32-bit to 64-bit, Windows to Linux" is designed, not shown.
+- **The width row and the system row** (section 8): run on the desktop,
+  section 10.
 - **A build whose frames differ from T's on the yield chains.** `-O1`
   changed none (section 1) and `-O0` does not link. The portable restore
   reads nothing of the arena by design, so frames cannot matter to it; that
@@ -891,7 +891,7 @@ Gathered from the six hand-backs and the notes docs' last sections:
   `0x8000`, another ABI) is the run that tests it.
 - **The matrix's Windows branch** (a launcher `.exe` as a build, the
   quicksave moved in and out of a shared game folder) and a Linux load of a
-  Windows take: written, not run.
+  Windows take: run on the desktop, section 10.4.
 - **Takes on frames no route reaches**: swing kinds 17 and 18,
   `GameMode3_Leave`'s camp and load branches, `Transition_Kind20`, scene
   scripts and battles that sleep (none seen). A take in `Transition_FadeAdd`
@@ -913,3 +913,164 @@ Gathered from the six hand-backs and the notes docs' last sections:
 - **`linux_tree.py --check` and `fnptr_census.py --check`**: left to CI, as
   the round's rules say.
 
+## 10. The desktop's rows, as run (2026-11-25 and 26)
+
+On the owner's desktop (Windows 11, llvm-mingw; the Linux build in the WSL,
+Ubuntu, clang, Vulkan by llvmpipe). The worktree is `D:\bof3x-runs\sbn\wt`
+at `sbn/round` `690bef78` plus the desktop's commits; every output is under
+`D:\bof3x-runs\sbn`. The install is `orig6`
+([`state-hash-clean-install.md`](state-hash-clean-install.md)).
+
+### 10.1 What compiled and what the self-tests said
+
+| Check | Result |
+|---|---|
+| The 32-bit build (`--preset i686`) | compiles, 1,438 steps |
+| The 64-bit build (`--preset x86_64`) | compiles, 1,169 steps |
+| The Linux build in the WSL (`linux-x86_64`, `-DSDL_X11_XTEST=OFF`) | compiles |
+| Warnings in the round's files | three: `kDialogueGlyphs` unused in `title.cpp`; two unused functions in `sound_rest.cpp` |
+| The exe host's self-tests at 32 and at 64 bits (`BOF3X_SELFTEST_ONLY=1`) | pass: the snapshot's, `GFX`'s, the save tail's. The span is `0x005DA000+0x3AD000`, pool `0+0`, at both widths - the Linux build's |
+| The participants' `static_assert`s at 32 bits | hold (the build) |
+| The hosted shadow suite, 32 bits, `BOF3X_SHADOW='*'` | exit 0 after one fix (below). The task bodies' fuzz: `mode_flow`, `mode_tasks`, `mode_states`, `mode_rest`, `shop_states2`, `save_menu`, 0 mismatches each |
+| `ledger_check`, `ledger_switches`, `ledger_registry`, `region_table` (1,630,953 unknown; 1,630,937 after the three skipped ranges were classed), `tables`, `data_census --check` and `--strict`, `reloc_census`, `reloc_bare`, `width_census`, `tu_census`, `retire_shells`, `os_census`, `quicksave_check.py selftest` | pass |
+
+**The one stop was not the round's.** The hosted suite stopped in the sound
+module: `SndBuf_Play` differed from `0x5A6BB0` in 55 of 2,000 rounds. The
+same on `main`'s build of 2026-11-24. D434's fix had started the data
+pointer as the masked wave; the original's is its argument's own stack slot
+(`lea eax, [esp+0x10]` at `0x5A6BFA`), which keeps bit 31 when
+`Wave_FindData` finds no data chunk. Fixed in `fe203d57` (46,000 rounds, 0
+mismatches). No caller of ours calls `SndBuf_Play`, so no player met it.
+
+### 10.2 The width row and the system row
+
+The 44 takes of `tools/recipes/state_by_name_takes.txt`; W32 and W64 are the
+Windows exe hosts through ini-less launcher copies, L is the Linux ELF in
+the WSL. `settings_fnv` (`114FA51B`) and the bound functions (10,088 VAs,
+fnv `26C32EC0`) are **the same in the three builds**, so no load was refused
+for the build's sake. The arena's slices differ (`0x4000` against `0x8000`)
+and so does the ABI: the frames a portable load never reads.
+
+| Takes by | Loaded by | Portable and equal | Differs | Refused, save offered |
+|---|---|---|---|---|
+| W32 | W64 | 35 | 7 | 2 |
+| W32 | W32, forced portable | 38 | 4 | 2 |
+| W64 | W32 | 35 | 7 | 2 |
+| W64 | L | 35 | 7 | 2 |
+| L | W64 | 34 | 8 | 2 |
+| L | W32 | 34 | 8 | 2 |
+
+Every load of the 42 portable takes was answered `PORTABLE`. The two
+refusals are `mm3297` and `cp5100` in every row: "a task stands at no named
+place (task 0)", the save offered - section 4's reading, the same here.
+
+**The takes that differ**, and the control that reads them (W32 takes, W32
+loads the file exactly, not forced: `ctl32`):
+
+| Takes | Where it differs | The exact load in the same build | Reading |
+|---|---|---|---|
+| `s2638`, `s2500`, `cp2590` | k = 210 to 227 (`s2500`: 348), 7 to 24 pages | `s2638`, `cp2590`: **differ the same way** | Section 4's: the shop's jingle and the camp's fade, timed by the sound. Not the portable load's. `s2500` differs with L on either side only, as on the laptop |
+| `s100`, `s180` (the title) | k = 64 and k = 29, 387 and 364 pages | **differ the same way** | **New on the desktop.** Equal on the laptop (section 4); here they differ whenever a Windows build is on either side, an exact load in one build included. So it is the run after a load at the title, not the portable restore. The cause is not established: not dumped |
+| `mm1600`, `cf1500`, `cf3600` | k = 0, one page (`0x7E1000`, `Effect_Objects`) | **equal** | Between builds only. The take's log names it: "7 word(s) no rule names hold an address in the message pool, written raw". Section 4's class (`mm1600` there); `cf1500` and `cf3600` are two more takes of it. Read from the page and the log, not from a dump |
+
+So: of the 42 portable takes, 34 or 35 load equal tick for tick across the
+widths and across the systems, in both directions; the seven or eight that
+differ, differ
+under a load that is not portable too, or on the one page the hash reads
+raw.
+
+### 10.3 The code-place rule (the owner's call, 2026-11-26)
+
+[`state-by-name-round.md`](state-by-name-round.md) 4b has the rule. What was
+measured for it (`D:\bof3x-runs\sbn\codewords.py`, the `WORDS` record of the
+88 takes of the two width rows against `rebase.gen.h`):
+
+- The load-time table holds **8,784** code words. Every one is a code word
+  in every take.
+- A take holds at most **5** code words outside the table, and over the 88
+  takes they are five addresses: `BattleHook_End` `0x904B64` (18 takes),
+  `BattleHook_Exit` `0x904B68` (18), `BattleHook_Event` `0x904B6C` (16), and
+  the first two enemy records' word at `+0xF4`, `0x93BA54` (16) and
+  `0x93BB7C` (10).
+- So the rule's places are the table, the three hooks, and `+0xF4` of each
+  of the eight enemy records (`Battle_Enemies`, stride `0x128`).
+
+After the change: the self-test's case (5b) passes at 32 and 64 bits on
+Windows and on Linux; 16 takes (the battles, the boss fights, a shop, a
+field, a scene) by W64 loaded by L and by W32, and by L loaded by W64: **48
+loads portable and equal**. No take holds a word of the value kind
+(`kWordCodeValue`). The three builds chose the same top byte, so the refusal
+for another top byte ran in the self-test only.
+
+### 10.4 The commands as they ran (8.2 corrected)
+
+8.2's commands needed these on the desktop:
+
+- `BOF3X_RECIPE_SAVES` set to the main checkout's `tools\recipe_saves` (a
+  worktree has none), and `--env BOF3X_HOME=D:/bof3x-runs/orig6/home` (the
+  install's cache).
+- From Git Bash, `MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL="*"`, or the shell
+  rewrites `/home/kerok/...` into a Windows path.
+- The Linux build as the ELF itself, not `@launcher`: started from Windows,
+  the Linux launcher returns and the game it started ends with it. The ELF
+  alone needs `--env BOF3X_EXEIMAGE=<cache>` and `--env BOF3X_CACHE=<cache>`.
+- A Linux load of a Windows take makes its run folder through the WSL
+  helper (`ff0647c0`): `os.symlink` needs a privilege a Windows session does
+  not hold.
+- The exe host's self-test wants the install too: `BOF3X_EXEIMAGE`,
+  `BOF3X_CACHE`, `BOF3X_LANG=en-US`.
+
+The scripts are `D:\bof3x-runs\sbn\chain5.sh` (the system rows and the
+control) and `chain6.sh` (10.3's rerun).
+
+### 10.5 The reference pairs under 179 ranges
+
+Recorded 2026-11-26 by `D:\bof3x-runs\sbn\rec7.py` (a run starts on a quiet
+machine; one made beside a compiler is set aside - none was), on the round's
+builds with the desktop's commits, under the 179-range list (`AFD29A9A`),
+`BOF3X_OPT=none`, `BOF3X_LAYERING=0`. The ten routes of
+[`state-hash.md`](state-hash.md) 6; 50 runs, each `rc 0` at the first try.
+The files are `cn_<route>_<name>.sh` in `D:\bof3x-runs\sbn\pairs`, copied
+to the main checkout's `analysis\statehash`.
+
+| Name | What | Install |
+|---|---|---|
+| `orig7`, `orig7b` | Capcom's side (`--original "*,-Game_Clock"`), hosted, 32 bits | `<repo>\bof3`, as `orig5` |
+| `c7` | ours, the exe host, 32 bits | the same |
+| `o7w32`, `o7w64` | ours, the exe host at both widths | `orig6`, `BOF3X_SCALE=2`, as `o6w` |
+
+- **`o7w32` against `o7w64`: identical on every route**, all compared ticks
+  (1,409 to 13,185).
+- **`o6w32` against `o7w32`: identical on every route** on every page but
+  the three the added ranges touch. That is row 6 at the widths: the round
+  and the desktop's commits moved nothing the ten routes hash.
+- **`orig7` against `orig7b`: identical on six routes.** On `field_menu`,
+  `shop`, `whelpBoss` and `worldMapAndAreaTransition` seven pages differ at
+  tick 3 alone (five of `Gfx_VramShadow`, `0x7DE000`, `0x937000`). `check`
+  leaves a page out where the references disagree, so the pair is usable;
+  why one start in two differs at tick 3 is not read.
+- **`c7` against the pair** shows the signature
+  [`state-hash.md`](state-hash.md) 6 gives for `m1116` (`0x5FD000` every
+  tick, the music pages, `0x803000`, the glyph switches' pages), and **one
+  page more on every route: `0x92A000`** (`MapView_CornerPtr`,
+  `Save_Staging`) from the route's load on. It is not this round's:
+  `main`'s build of 2026-11-24 shows it the same on `field_menu`, and
+  `SaveCameFrom` off does not remove it. A change on `main` since
+  2026-11-16; which ledger entry it is, is not read, and no hosted control
+  with the switches off was run.
+
+Not recorded again: the laptop's `lx6` pairs (the laptop's), and a Linux
+pair in the WSL.
+
+### 10.6 Still owed
+
+- **The cause of `s100` and `s180`** on Windows (10.2): two dumps of one
+  build, live against loaded, at the first differing tick.
+- **`0x92A000` against Capcom's side** (10.5): name the word and its
+  ledger entry.
+- The 32-bit build's task census (`BOF3X_TASKCENSUS`).
+- `BOF3X_ORIGINAL` naming `Task_Create`, and the hosted build with Capcom's
+  waits in the callee tables.
+- The moved-base self-test (`BOF3X_IMAGEBASE=0xA00000`).
+- The owner's eye on F5's question, and the music after tier 0's road.
+- A portable load between two builds with different top bytes, in a game.

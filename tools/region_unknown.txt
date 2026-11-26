@@ -3,4 +3,4 @@
 # change that classes or names unknown bytes lowers this number with it; a
 # change that raises the count fails CI until its bytes are classed
 # (tools/region_classes.txt) or named (symbols.toml).
-1630953
+1630937
