@@ -9895,155 +9895,155 @@ site	src/game/field/kind2_object.cpp	261	value_literal	%	0x400000	0x400000	base	
 site	src/game/field/layering.cpp	444	const_def	literal	kPoolLimit	0x7f1bac	data	game	engine	module	Gfx_PacketPools+0xffac	-	constexpr std::uint32_t kPoolLimit = 0x7F1BAC;
 site	src/game/field/layering.cpp	715	module_const	-	kPoolLimit	0x7f1bac	data	game	engine	base_helper	Gfx_PacketPools+0xffac	file	const std::uint32_t limit = (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16) + ::bof3::Img(kPoolLimit);
 site	src/game/field/leader_panel.cpp	99	at_global	-	effect_1e::at::kPools	0x803580	data	game	engine	base_helper	-	-	const unsigned char* Pool(U cell) { return At(::bof3::Img(effect_1e::at::kPools.v) + Word(At(cell))); }
-site	src/game/field/leader_panel.cpp	146	abs_call	via=SH_AT	at::kBoxPrims	0x469750	code	game	engine	call	Panel_DrawWindow	-	void BoxPrims(U y) { SH_AT(void (__cdecl*)(int, int, int, int, int), at::kBoxPrims.v)(0x14, static_cast<int>(y), 0x118, 0x13, 0); }
-site	src/game/field/leader_panel.cpp	153	abs_call	via=SH_AT	at::kEffect3Mode	0x52b2a0	code	game	engine	call	LeaderPanel_Effect3Mode	-	void Effect3Mode(unsigned mode) { SH_AT(void (__cdecl*)(unsigned), at::kEffect3Mode.v)(mode); }
-site	src/game/field/leader_panel.cpp	155	abs_call	via=SH_AT	at::kPoseSound	0x52b1b0	code	game	engine	call	LeaderPanel_PoseSound	-	void PoseSound() { SH_AT(void (__cdecl*)(), at::kPoseSound.v)(); }
-site	src/game/field/leader_panel.cpp	228	at_global	-	at::kRecord6	0x7e14e0	data	game	engine	base_helper	Effect_Objects+0x300	-	unsigned char& R6(unsigned offset) { return BEffect1f(::bof3::Img(at::kRecord6.v) + offset); }
-site	src/game/field/leader_panel.cpp	256	at_global	-	at::kAccessoryIds	0x9042d4	data	game	engine	base_helper	-	-	return BEffect1f(::bof3::Img(at::kAccessoryIds.v) + static_cast<U>(index));
-site	src/game/field/leader_panel.cpp	259	at_global	-	at::kAccessoryKind	0x658462	data	game	engine	base_helper	-	-	unsigned char KindOf(unsigned char id) { return BEffect1f(::bof3::Img(at::kAccessoryKind.v) + 24u * id); }
-site	src/game/field/leader_panel.cpp	276	abs_call	via=SH_AT	at::kDrawMode	0x52cf60	code	game	engine	call	UiSprite_SetMode	-	void DrawMode(unsigned index, unsigned slot) { SH_AT(void (__cdecl*)(unsigned, unsigned), at::kDrawMode.v)(index, slot); }
-site	src/game/field/leader_panel.cpp	279	abs_call	via=SH_AT	at::kDrawSprite	0x52cfe0	code	game	engine	call	UiSprite_Draw	-	return SH_AT(unsigned char* (__cdecl*)(unsigned, unsigned, int, int), at::kDrawSprite.v)(sprite, slot, x, y);
-site	src/game/field/leader_panel.cpp	282	abs_call	via=SH_AT	at::kKindPoints	0x52ce60	code	game	engine	call	FieldPanel_KindPoints	-	unsigned KindPoints(unsigned kind, unsigned count) { return SH_AT(unsigned (__cdecl*)(unsigned, unsigned), at::kKindPoints.v)(kind, count); }
-site	src/game/field/leader_panel.cpp	284	abs_call	via=SH_AT	at::kKindTotal	0x52ced0	code	game	engine	call	FieldPanel_KindTotal	-	unsigned KindTotal() { return SH_AT(unsigned (__cdecl*)(), at::kKindTotal.v)(); }
-site	src/game/field/leader_panel.cpp	287	abs_call	via=SH_AT	at::kDrawQuad	0x468950	code	game	engine	call	Panel_DrawEdgeQuad	-	SH_AT(void (__cdecl*)(int, int, unsigned, unsigned), at::kDrawQuad.v)(x, y, height, which);
-site	src/game/field/leader_panel.cpp	295	at_global	-	field_e1::at::kPools	0x803580	data	game	engine	base_helper	-	-	std::uint32_t PoolText(std::uint32_t offset_cell) { return ::bof3::Img(field_e1::at::kPools) + W(offset_cell); }
-site	src/game/field/leader_panel.cpp	345	const_def	literal	kEff0StepX	0x7e11ec	data	game	engine	module	Effect_Objects+0xc	-	constexpr ::bof3::image::Va kEff0StepX{0x7E11EC};
-site	src/game/field/leader_panel.cpp	347	const_def	literal	kEff0StepY	0x7e11f0	data	game	engine	module	Effect_Objects+0x10	-	constexpr ::bof3::image::Va kEff0StepY{0x7E11F0};
-site	src/game/field/leader_panel.cpp	355	const_def	literal	kEff5Frame	0x7e1470	data	game	engine	module	Effect_Objects+0x290	-	constexpr ::bof3::image::Va kEff5Frame{0x7E1470};
-site	src/game/field/leader_panel.cpp	357	const_def	literal	kEff5Level	0x7e1490	data	game	engine	module	Effect_Objects+0x2b0	-	constexpr ::bof3::image::Va kEff5Level{0x7E1490};
-site	src/game/field/leader_panel.cpp	372	const_def	literal	kItemA	0x904130	data	game	engine	module	-	-	constexpr ::bof3::image::Va kItemA{0x904130};
-site	src/game/field/leader_panel.cpp	377	const_def	literal	kComboStep	0x6bc70c	data	game	engine	module	-	-	constexpr ::bof3::image::Va kComboStep{0x6BC70C};
-site	src/game/field/leader_panel.cpp	379	const_def	literal	kComboTimer	0x6bc710	data	game	engine	module	-	-	constexpr ::bof3::image::Va kComboTimer{0x6BC710};
-site	src/game/field/leader_panel.cpp	386	const_def	literal	kPoolWordData	0x803642	data	game	engine	module	-	-	constexpr ::bof3::image::Va kPoolWordData{0x803642};
-site	src/game/field/leader_panel.cpp	388	const_def	literal	kPoolWordRule	0x803660	data	game	engine	module	-	-	constexpr ::bof3::image::Va kPoolWordRule{0x803660};
-site	src/game/field/leader_panel.cpp	390	const_def	literal	kPoolWordStage1	0x803600	data	game	engine	module	-	-	constexpr ::bof3::image::Va kPoolWordStage1{0x803600};
-site	src/game/field/leader_panel.cpp	392	const_def	literal	kPools	0x803580	data	game	engine	module	-	-	constexpr ::bof3::image::Va kPools{0x803580};
-site	src/game/field/leader_panel.cpp	395	const_def	literal	kDrawMode	0x93985c	data	game	engine	module	Effect1g_TradeState	-	constexpr ::bof3::image::Va kDrawMode{0x93985C};
-site	src/game/field/leader_panel.cpp	399	const_def	literal	kSpotCounts	0x66a9cc	data	game	engine	module	-	-	constexpr ::bof3::image::Va kSpotCounts{0x66A9CC};
-site	src/game/field/leader_panel.cpp	401	const_def	literal	kComboTable	0x66a4c8	data	game	engine	module	-	-	constexpr ::bof3::image::Va kComboTable{0x66A4C8};
-site	src/game/field/leader_panel.cpp	403	const_def	literal	kRecordsA	0x66a4e8	data	game	engine	module	-	-	constexpr ::bof3::image::Va kRecordsA{0x66A4E8};
-site	src/game/field/leader_panel.cpp	405	const_def	literal	kRecordsB	0x66a528	data	game	engine	module	-	-	constexpr ::bof3::image::Va kRecordsB{0x66A528};
-site	src/game/field/leader_panel.cpp	407	const_def	literal	kDirAnims	0x660340	data	game	engine	module	-	-	constexpr ::bof3::image::Va kDirAnims{0x660340};
-site	src/game/field/leader_panel.cpp	409	const_def	literal	kS6Frames	0x660364	data	game	engine	module	-	-	constexpr ::bof3::image::Va kS6Frames{0x660364};
-site	src/game/field/leader_panel.cpp	412	const_def	literal	kF9StepsEnd	0x669720	data	game	engine	module	-	-	constexpr U kF9StepsEnd = 0x669720;
-site	src/game/field/leader_panel.cpp	451	module_const	-	kDirAnims	0x660340	data	game	engine	base_helper	-	file	unsigned char DirAnim(unsigned d) { return At(::bof3::Img(kDirAnims.v) + 2 * d)[0]; }
-site	src/game/field/leader_panel.cpp	453	module_const	-	kDirAnims	0x660340	data	game	engine	base_helper	-	file	unsigned char DirByte(unsigned d) { return At(::bof3::Img(kDirAnims.v) + 2 * d + 1)[0]; }
-site	src/game/field/leader_panel.cpp	567	module_const	-	kItemA	0x904130	data	game	engine	base_helper	-	file	const unsigned mode = CharStats_ExtraItem != 0 && B(::bof3::Img(kItemA.v)) != 0 ? 0u : 6u;
-site	src/game/field/leader_panel.cpp	610	module_const	-	kItemA	0x904130	data	game	engine	base_helper	-	file	if (item == 0 || B(::bof3::Img(kItemA.v)) == 0) {
-site	src/game/field/leader_panel.cpp	673	module_const	-	kPoolWordStage1	0x803600	data	game	engine	base_helper	-	file	const U pool = static_cast<U>(LRest1g(::bof3::Img(kPoolWordStage1.v))) & 0xFFFF;
-site	src/game/field/leader_panel.cpp	674	module_const	-	kPools	0x803580	data	game	engine	base_helper	-	file	Text(0x1D, static_cast<int>(0x15u - (static_cast<U>(S()[9]) << 3)), At(::bof3::Img(kPools.v) + pool));
-site	src/game/field/leader_panel.cpp	703	at_global	-	at::kPoolWord00	0x803600	data	game	engine	base_helper	-	-	Text(0x1D, 0x15, Pool(::bof3::Img(at::kPoolWord00.v)));
-site	src/game/field/leader_panel.cpp	730	at_global	-	at::kPoolWord00	0x803600	data	game	engine	base_helper	-	-	Text(0x1D, static_cast<int>(0x15u - (static_cast<U>(S()[9]) << 3)), Pool(::bof3::Img(at::kPoolWord00.v)));
-site	src/game/field/leader_panel.cpp	800	code_literal	literal	0x410000	0x410000	code	game	engine	-	-	aligned_8000	rv::Current<records::PartyMember>()->z = 0x410000;
-site	src/game/field/leader_panel.cpp	838	at_global	-	at::kEff0StepY	0x7e11f0	data	game	engine	base_helper	Effect_Objects+0x10	-	const std::int32_t y = L(::bof3::Img(at::kEff0StepY.v));
-site	src/game/field/leader_panel.cpp	839	at_global	-	at::kEff0StepY	0x7e11f0	data	game	engine	base_helper	Effect_Objects+0x10	-	if (y > 0x110000) SetL(::bof3::Img(at::kEff0StepY.v), static_cast<U>(y) - 0x4000u);
-site	src/game/field/leader_panel.cpp	848	at_global	-	at::kEff0StepX	0x7e11ec	data	game	engine	base_helper	Effect_Objects+0xc	-	SetL(::bof3::Img(at::kEff0StepX.v), static_cast<U>(L(Key(t + 0xC))) != 0x8000u ? 0x800u : 0xFFFFF800u);
-site	src/game/field/leader_panel.cpp	852	at_global	-	at::kEff0X	0x7e1214	data	game	engine	base_helper	Effect_Objects+0x34	-	const std::int32_t x = L(::bof3::Img(at::kEff0X.v));
-site	src/game/field/leader_panel.cpp	854	at_global	-	at::kEff0StepX	0x7e11ec	data	game	engine	base_helper	Effect_Objects+0xc	-	SetL(::bof3::Img(at::kEff0StepX.v), 0);
-site	src/game/field/leader_panel.cpp	878	at_global	-	at::kCounter	-	ambiguous	game	engine	base_helper	-	ambiguous	SetL(::bof3::Img(at::kCounter.v), 0);
-site	src/game/field/leader_panel.cpp	927	at_global	-	at::kEff0StepX	0x7e11ec	data	game	engine	base_helper	Effect_Objects+0xc	-	SetL(::bof3::Img(at::kEff0StepX.v), 0);
-site	src/game/field/leader_panel.cpp	928	at_global	-	at::kEff0StepY	0x7e11f0	data	game	engine	base_helper	Effect_Objects+0x10	-	SetL(::bof3::Img(at::kEff0StepY.v), 0);
-site	src/game/field/leader_panel.cpp	940	abs_call	via=SH_AT	at::kHoldTest	0x52b2e0	code	game	engine	call	LeaderPanel_HoldTest	-	SH_AT(void (__cdecl*)(), at::kHoldTest.v)();
-site	src/game/field/leader_panel.cpp	941	abs_call	via=SH_AT	at::kEffectsStep	0x52b370	code	game	engine	call	LeaderPanel_EffectsStep	-	SH_AT(void (__cdecl*)(), at::kEffectsStep.v)();
-site	src/game/field/leader_panel.cpp	950	at_global	-	at::kEff0StepX	0x7e11ec	data	game	engine	base_helper	Effect_Objects+0xc	-	SetL(::bof3::Img(at::kEff0StepX.v), 0xFFFFF000u);
-site	src/game/field/leader_panel.cpp	951	at_global	-	at::kEff0StepY	0x7e11f0	data	game	engine	base_helper	Effect_Objects+0x10	-	SetL(::bof3::Img(at::kEff0StepY.v), 0x1000);
-site	src/game/field/leader_panel.cpp	956	at_global	-	at::kEff0StepX	0x7e11ec	data	game	engine	base_helper	Effect_Objects+0xc	-	SetL(::bof3::Img(at::kEff0StepX.v), 0x1000);
-site	src/game/field/leader_panel.cpp	957	at_global	-	at::kEff0StepY	0x7e11f0	data	game	engine	base_helper	Effect_Objects+0x10	-	SetL(::bof3::Img(at::kEff0StepY.v), 0x1000);
-site	src/game/field/leader_panel.cpp	961	base_offset	-	0x903850	0x903850	data	game	engine	base_helper	SharedScratch	-	const unsigned char sloped = B(::bof3::Img(0x903850));
-site	src/game/field/leader_panel.cpp	962	at_global	-	at::kEff0StepX	0x7e11ec	data	game	engine	base_helper	Effect_Objects+0xc	-	SetL(::bof3::Img(at::kEff0StepX.v), 0);
-site	src/game/field/leader_panel.cpp	966	at_global	-	at::kEff0StepY	0x7e11f0	data	game	engine	base_helper	Effect_Objects+0x10	-	SetL(::bof3::Img(at::kEff0StepY.v), 0x2000);
-site	src/game/field/leader_panel.cpp	972	at_global	-	at::kEff0StepY	0x7e11f0	data	game	engine	base_helper	Effect_Objects+0x10	-	SetL(::bof3::Img(at::kEff0StepY.v), 0x1000);
-site	src/game/field/leader_panel.cpp	976	base_offset	-	0x903850	0x903850	data	game	engine	base_helper	SharedScratch	-	} else if (B(::bof3::Img(0x903850)) != 0) {
-site	src/game/field/leader_panel.cpp	979	at_global	-	at::kEff0StepX	0x7e11ec	data	game	engine	base_helper	Effect_Objects+0xc	-	SetL(::bof3::Img(at::kEff0StepX.v), 0);
-site	src/game/field/leader_panel.cpp	980	at_global	-	at::kEff0StepY	0x7e11f0	data	game	engine	base_helper	Effect_Objects+0x10	-	SetL(::bof3::Img(at::kEff0StepY.v), 0x1000);
-site	src/game/field/leader_panel.cpp	986	at_global	-	at::kEff0StepX	0x7e11ec	data	game	engine	base_helper	Effect_Objects+0xc	-	SetL(::bof3::Img(at::kEff0StepX.v), 0);
-site	src/game/field/leader_panel.cpp	987	at_global	-	at::kEff0StepY	0x7e11f0	data	game	engine	base_helper	Effect_Objects+0x10	-	SetL(::bof3::Img(at::kEff0StepY.v), 0);
-site	src/game/field/leader_panel.cpp	994	at_global	-	at::kEff0StepY	0x7e11f0	data	game	engine	base_helper	Effect_Objects+0x10	-	const std::int32_t step = L(::bof3::Img(at::kEff0StepY.v));
-site	src/game/field/leader_panel.cpp	1003	at_global	-	at::kEff0StepX	0x7e11ec	data	game	engine	base_helper	Effect_Objects+0xc	-	const std::int32_t dx = L(::bof3::Img(at::kEff0StepX.v));
-site	src/game/field/leader_panel.cpp	1004	at_global	-	at::kEff0StepX	0x7e11ec	data	game	engine	base_helper	Effect_Objects+0xc	-	if ((x <= 0x80000 && dx < 0) || (x >= 0x120000 && dx > 0)) SetL(::bof3::Img(at::kEff0StepX.v), 0);
-site	src/game/field/leader_panel.cpp	1095	at_global	-	at::kEff5Frame	0x7e1470	data	game	engine	base_helper	Effect_Objects+0x290	-	SetL(::bof3::Img(at::kEff5Frame.v), static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(RecordA()[5]))));
-site	src/game/field/leader_panel.cpp	1105	at_global	-	at::kEff5Frame	0x7e1470	data	game	engine	base_helper	Effect_Objects+0x290	-	SetL(::bof3::Img(at::kEff5Frame.v), 0);
-site	src/game/field/leader_panel.cpp	1130	at_global	-	at::kEff5Frame	0x7e1470	data	game	engine	base_helper	Effect_Objects+0x290	-	SetL(::bof3::Img(at::kEff5Frame.v), static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(a[6]))));
-site	src/game/field/leader_panel.cpp	1143	at_global	-	at::kEff5Frame	0x7e1470	data	game	engine	base_helper	Effect_Objects+0x290	-	SetL(::bof3::Img(at::kEff5Frame.v), static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(RecordA()[4]))));
-site	src/game/field/leader_panel.cpp	1152	at_global	-	at::kEff5Frame	0x7e1470	data	game	engine	base_helper	Effect_Objects+0x290	-	SetL(::bof3::Img(at::kEff5Frame.v), 0);
-site	src/game/field/leader_panel.cpp	1164	at_global	-	at::kEff5Frame	0x7e1470	data	game	engine	base_helper	Effect_Objects+0x290	-	SetL(::bof3::Img(at::kEff5Frame.v), static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(a[7]))));
-site	src/game/field/leader_panel.cpp	1168	at_global	-	at::kEff5Frame	0x7e1470	data	game	engine	base_helper	Effect_Objects+0x290	-	SetL(::bof3::Img(at::kEff5Frame.v), static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(a[4]))));
-site	src/game/field/leader_panel.cpp	1188	at_global	-	at::kBestCounts	0x9040ec	data	game	engine	base_helper	Fish_RecordSizes	-	unsigned char& best = B(::bof3::Img(at::kBestCounts.v) + p[6]);
-site	src/game/field/leader_panel.cpp	1212	at_global	-	at::kKindSounds	0x66a6ad	data	game	engine	base_helper	Fish_Kinds+0x1d	-	Sound(B(::bof3::Img(at::kKindSounds.v) + 36u * kind) >= 2 ? 0x20C : 0x20B);
-site	src/game/field/leader_panel.cpp	1428	at_global	-	effect_1e::at::kPools	0x803580	data	game	engine	base_helper	-	-	const U row = FirstAnswerRow(At(::bof3::Img(effect_1e::at::kPools.v) + Word(At(::bof3::Img(effect_1e::at::kPools.v) + 0x44u * 2u))), 0x44);
-site	src/game/field/leader_panel.cpp	1428	at_global	-	effect_1e::at::kPools	0x803580	data	game	engine	base_helper	-	-	const U row = FirstAnswerRow(At(::bof3::Img(effect_1e::at::kPools.v) + Word(At(::bof3::Img(effect_1e::at::kPools.v) + 0x44u * 2u))), 0x44);
-site	src/game/field/leader_panel.cpp	1491	abs_call	via=SH_AT	at::kUseItemEnd	0x52b200	code	game	engine	call	LeaderPanel_UseItemEnd	-	SH_AT(void (__cdecl*)(), at::kUseItemEnd.v)();
-site	src/game/field/leader_panel.cpp	1509	abs_call	via=SH_AT	at::kLeaveOnPress	0x52b330	code	game	engine	call	LeaderPanel_LeaveOnPress	-	SH_AT(unsigned char (__cdecl*)(unsigned), at::kLeaveOnPress.v)(Sigma(0x60));
-site	src/game/field/leader_panel.cpp	1547	abs_call	via=SH_AT	at::kClearEffects	0x52ce20	code	game	engine	call	Effect_ResetFirstSeven	-	SH_AT(void (__cdecl*)(), at::kClearEffects.v)();
-site	src/game/field/leader_panel.cpp	1663	at_global	-	at::kPoolWord20	0x803620	data	game	engine	base_helper	-	-	case 0: Text(0x1D, 0x14, At(::bof3::Img(effect_1e::at::kPools.v) + Word(At(::bof3::Img(at::kPoolWord20.v))))); break;
-site	src/game/field/leader_panel.cpp	1663	at_global	-	effect_1e::at::kPools	0x803580	data	game	engine	base_helper	-	-	case 0: Text(0x1D, 0x14, At(::bof3::Img(effect_1e::at::kPools.v) + Word(At(::bof3::Img(at::kPoolWord20.v))))); break;
-site	src/game/field/leader_panel.cpp	1664	at_global	-	at::kPoolWord40	0x803640	data	game	engine	base_helper	-	-	case 1: Text(0x1D, 0x14, At(::bof3::Img(effect_1e::at::kPools.v) + Word(At(::bof3::Img(at::kPoolWord40.v))))); break;
-site	src/game/field/leader_panel.cpp	1664	at_global	-	effect_1e::at::kPools	0x803580	data	game	engine	base_helper	-	-	case 1: Text(0x1D, 0x14, At(::bof3::Img(effect_1e::at::kPools.v) + Word(At(::bof3::Img(at::kPoolWord40.v))))); break;
-site	src/game/field/leader_panel.cpp	1665	at_global	-	at::kPoolWord5E	0x80365e	data	game	engine	base_helper	-	-	case 2: Text(0x1D, 0x14, At(::bof3::Img(effect_1e::at::kPools.v) + Word(At(::bof3::Img(at::kPoolWord5E.v))))); break;
-site	src/game/field/leader_panel.cpp	1665	at_global	-	effect_1e::at::kPools	0x803580	data	game	engine	base_helper	-	-	case 2: Text(0x1D, 0x14, At(::bof3::Img(effect_1e::at::kPools.v) + Word(At(::bof3::Img(at::kPoolWord5E.v))))); break;
-site	src/game/field/leader_panel.cpp	1696	at_global	-	at::kLabelA	0x803622	data	game	engine	base_helper	-	-	Label((R6(7) & 1) ? ::bof3::Img(at::kLabelB.v) : ::bof3::Img(at::kLabelA.v));
-site	src/game/field/leader_panel.cpp	1696	at_global	-	at::kLabelB	0x803624	data	game	engine	base_helper	-	-	Label((R6(7) & 1) ? ::bof3::Img(at::kLabelB.v) : ::bof3::Img(at::kLabelA.v));
-site	src/game/field/leader_panel.cpp	1736	at_global	-	at::kLabelA	0x803622	data	game	engine	base_helper	-	-	Label((R6(7) & 1) ? ::bof3::Img(at::kLabelB.v) : ::bof3::Img(at::kLabelA.v));
-site	src/game/field/leader_panel.cpp	1736	at_global	-	at::kLabelB	0x803624	data	game	engine	base_helper	-	-	Label((R6(7) & 1) ? ::bof3::Img(at::kLabelB.v) : ::bof3::Img(at::kLabelA.v));
-site	src/game/field/leader_panel.cpp	1739	at_global	-	at::kExtraAccessory	0x904130	data	game	engine	base_helper	-	-	const unsigned char held = (b & 1) ? CharStats_ExtraItem : BEffect1f(::bof3::Img(at::kExtraAccessory.v));
-site	src/game/field/leader_panel.cpp	1776	at_global	-	at::kListLabelA	0x803626	data	game	engine	base_helper	-	-	Label(::bof3::Img(at::kListLabelA.v));
-site	src/game/field/leader_panel.cpp	1781	at_global	-	at::kExtraAccessory	0x904130	data	game	engine	base_helper	-	-	const unsigned char old = BEffect1f(::bof3::Img(at::kExtraAccessory.v));
-site	src/game/field/leader_panel.cpp	1783	at_global	-	at::kExtraAccessory	0x904130	data	game	engine	base_helper	-	-	BEffect1f(::bof3::Img(at::kExtraAccessory.v)) = id;
-site	src/game/field/leader_panel.cpp	1806	at_global	-	at::kListLabelB	0x803628	data	game	engine	base_helper	-	-	Label(::bof3::Img(at::kListLabelB.v));
-site	src/game/field/leader_panel.cpp	1819	at_global	-	at::kAccessoryIds	0x9042d4	data	game	engine	base_helper	-	-	if (KindOf(BEffect1f(::bof3::Img(at::kAccessoryIds.v) + i)) == 0xA) ++count;
-site	src/game/field/leader_panel.cpp	1907	module_const	-	kPoolWordData	0x803642	data	game	engine	base_helper	-	file	Text(0x1D, 0x14, At(::bof3::Img(kPools.v) + WRest1g(::bof3::Img(kPoolWordData.v))));
-site	src/game/field/leader_panel.cpp	1907	module_const	-	kPools	0x803580	data	game	engine	base_helper	-	file	Text(0x1D, 0x14, At(::bof3::Img(kPools.v) + WRest1g(::bof3::Img(kPoolWordData.v))));
-site	src/game/field/leader_panel.cpp	1939	module_const	-	kPoolWordRule	0x803660	data	game	engine	base_helper	-	file	Text(0x1D, 0x14, At(::bof3::Img(kPools.v) + (static_cast<U>(LRest1g(::bof3::Img(kPoolWordRule.v))) & 0xFFFF)));
-site	src/game/field/leader_panel.cpp	1939	module_const	-	kPools	0x803580	data	game	engine	base_helper	-	file	Text(0x1D, 0x14, At(::bof3::Img(kPools.v) + (static_cast<U>(LRest1g(::bof3::Img(kPoolWordRule.v))) & 0xFFFF)));
-site	src/game/field/leader_panel.cpp	2052	module_const	-	kDrawMode	0x93985c	data	game	engine	base_helper	Effect1g_TradeState	file	B(::bof3::Img(kDrawMode.v) + 2) = 0;
-site	src/game/field/leader_panel.cpp	2053	module_const	-	kDrawMode	0x93985c	data	game	engine	base_helper	Effect1g_TradeState	file	B(::bof3::Img(kDrawMode.v) + 1) = 0;
-site	src/game/field/leader_panel.cpp	2054	module_const	-	kDrawMode	0x93985c	data	game	engine	base_helper	Effect1g_TradeState	file	B(::bof3::Img(kDrawMode.v) + 3) = 0;
-site	src/game/field/leader_panel.cpp	2114	module_const	-	kRecordsB	0x66a528	data	game	engine	base_helper	-	file	if (b != 0) Effect1a_PanelSet = ::bof3::Img(kRecordsB.v) + 20u * (b - 0x1Cu);
-site	src/game/field/leader_panel.cpp	2115	module_const	-	kItemA	0x904130	data	game	engine	base_helper	-	file	const unsigned a = B(::bof3::Img(kItemA.v));
-site	src/game/field/leader_panel.cpp	2116	module_const	-	kRecordsA	0x66a4e8	data	game	engine	base_helper	-	file	if (a != 0) Effect1a_PanelScript = ::bof3::Img(kRecordsA.v) + 10u * (a - 0x2Eu);
-site	src/game/field/leader_panel.cpp	2175	module_const	-	kComboTable	0x66a4c8	data	game	engine	base_helper	-	file	const U row = ::bof3::Img(kComboTable.v) + 8 * i;
-site	src/game/field/leader_panel.cpp	2176	module_const	-	kComboStep	0x6bc70c	data	game	engine	base_helper	-	file	const unsigned char step = B(::bof3::Img(kComboStep.v) + i);
-site	src/game/field/leader_panel.cpp	2179	module_const	-	kComboTimer	0x6bc710	data	game	engine	base_helper	-	file	if (step != 0) B(::bof3::Img(kComboTimer.v) + i) = static_cast<unsigned char>(B(::bof3::Img(kComboTimer.v) + i) - 1);
-site	src/game/field/leader_panel.cpp	2179	module_const	-	kComboTimer	0x6bc710	data	game	engine	base_helper	-	file	if (step != 0) B(::bof3::Img(kComboTimer.v) + i) = static_cast<unsigned char>(B(::bof3::Img(kComboTimer.v) + i) - 1);
-site	src/game/field/leader_panel.cpp	2183	module_const	-	kComboTimer	0x6bc710	data	game	engine	base_helper	-	file	else if (B(::bof3::Img(kComboTimer.v) + i) < 4 && want == now) advance = true;
-site	src/game/field/leader_panel.cpp	2185	module_const	-	kComboTimer	0x6bc710	data	game	engine	base_helper	-	file	B(::bof3::Img(kComboTimer.v) + i) = 0;
-site	src/game/field/leader_panel.cpp	2186	module_const	-	kComboStep	0x6bc70c	data	game	engine	base_helper	-	file	B(::bof3::Img(kComboStep.v) + i) = 0;
-site	src/game/field/leader_panel.cpp	2191	module_const	-	kComboTimer	0x6bc710	data	game	engine	base_helper	-	file	if (B(::bof3::Img(kComboTimer.v) + i) != now) continue;
-site	src/game/field/leader_panel.cpp	2193	module_const	-	kComboTimer	0x6bc710	data	game	engine	base_helper	-	file	B(::bof3::Img(kComboTimer.v) + i) = 0;
-site	src/game/field/leader_panel.cpp	2194	module_const	-	kComboStep	0x6bc70c	data	game	engine	base_helper	-	file	B(::bof3::Img(kComboStep.v) + i) = 0;
-site	src/game/field/leader_panel.cpp	2201	module_const	-	kComboTimer	0x6bc710	data	game	engine	base_helper	-	file	B(::bof3::Img(kComboTimer.v) + i) = 0xC;
-site	src/game/field/leader_panel.cpp	2202	module_const	-	kComboStep	0x6bc70c	data	game	engine	base_helper	-	file	B(::bof3::Img(kComboStep.v) + i) = static_cast<unsigned char>(step + 1);
-site	src/game/field/leader_panel.cpp	2214	module_const	-	kComboStep	0x6bc70c	data	game	engine	base_helper	-	file	B(::bof3::Img(kComboStep.v) + i) = 0;
-site	src/game/field/leader_panel.cpp	2215	module_const	-	kComboTimer	0x6bc710	data	game	engine	base_helper	-	file	B(::bof3::Img(kComboTimer.v) + i) = 0;
-site	src/game/field/leader_panel.cpp	2240	module_const	-	kSpotCounts	0x66a9cc	data	game	engine	base_helper	-	file	unsigned count = At(::bof3::Img(kSpotCounts.v) + 23 * spot + k)[0];
-site	src/game/field/leader_panel.cpp	2555	module_const	-	kEff0StepX	0x7e11ec	data	game	engine	base_helper	Effect_Objects+0xc	file	SetLRest1g(::bof3::Img(kEff0StepX.v), 0);
-site	src/game/field/leader_panel.cpp	2556	module_const	-	kEff0StepY	0x7e11f0	data	game	engine	base_helper	Effect_Objects+0x10	file	SetLRest1g(::bof3::Img(kEff0StepY.v), 0);
-site	src/game/field/leader_panel.cpp	2610	module_const	-	kEff5Frame	0x7e1470	data	game	engine	base_helper	Effect_Objects+0x290	file	SetLRest1g(::bof3::Img(kEff5Frame.v), 0xFFFFFFF9u);
-site	src/game/field/leader_panel.cpp	2647	module_const	-	kEff5Frame	0x7e1470	data	game	engine	base_helper	Effect_Objects+0x290	file	if (LRest1g(::bof3::Img(kEff5Frame.v)) < 0) {
-site	src/game/field/leader_panel.cpp	2653	module_const	-	kEff5Frame	0x7e1470	data	game	engine	base_helper	Effect_Objects+0x290	file	SetLRest1g(::bof3::Img(kEff5Frame.v), 0xFFFFFFF9u);
-site	src/game/field/leader_panel.cpp	2728	module_const	-	kEff5Frame	0x7e1470	data	game	engine	base_helper	Effect_Objects+0x290	file	if (LRest1g(::bof3::Img(kEff5Frame.v)) < 0) {
-site	src/game/field/leader_panel.cpp	2729	module_const	-	kEff5Level	0x7e1490	data	game	engine	base_helper	Effect_Objects+0x2b0	file	const std::int32_t gap = static_cast<signed char>(S()[0xA]) - static_cast<short>(WRest1g(::bof3::Img(kEff5Level.v)));
-site	src/game/field/leader_panel.cpp	2782	module_const	-	kEff5Level	0x7e1490	data	game	engine	base_helper	Effect_Objects+0x2b0	file	const short limit = static_cast<short>(WRest1g(::bof3::Img(kEff5Level.v)));
-site	src/game/field/leader_panel.cpp	2814	module_const	-	kEff5Frame	0x7e1470	data	game	engine	base_helper	Effect_Objects+0x290	file	} else if (tension < limit && LRest1g(::bof3::Img(kEff5Frame.v)) < 0) {
-site	src/game/field/leader_panel.cpp	2916	module_const	-	kS6Frames	0x660364	data	game	engine	base_helper	-	file	if (rv::As<records::SpriteObject>(s)->script_pos == Word(At(::bof3::Img(kS6Frames.v) + 2 * s[6]))) {
-site	src/game/field/leader_panel.cpp	3023	module_const	-	kF9StepsEnd	0x669720	data	game	engine	base_helper	-	file	for (U at = ::bof3::Img(MoveCmd_F9Steps_addr) + 4; at < ::bof3::Img(kF9StepsEnd); at += 8, ++row) {
-site	src/game/field/leader_panel.cpp	3155	at_global	-	effect_1f::at::kKindCounts	0x9040ec	data	game	engine	base_helper	Fish_RecordSizes	-	const unsigned char count = BEffect1f(::bof3::Img(effect_1f::at::kKindCounts.v) + i);
-site	src/game/field/leader_panel.cpp	3164	abs_call	via=SH_AT	at::kMode8Panel	0x52b6c0	code	game	engine	call	Fish_RunAll	-	SH_AT(void (__cdecl*)(), at::kMode8Panel.v)();
-site	src/game/field/leader_panel.cpp	3174	abs_call	via=SH_AT	at::kTradeDispatch	0x593950	code	game	engine	call	ItemTrade_Dispatch	-	extern " " void __cdecl GameMode8_TradeStep(void) { SH_AT(void (__cdecl*)(), at::kTradeDispatch.v)(); }
-site	src/game/field/leader_panel.cpp	3265	at_global	-	scenario_harness::at::kTextBuffer	0x904ba0	data	game	engine	base_helper	-	-	unsigned char* const name = move_script::At(::bof3::Img(scenario_harness::at::kTextBuffer));
-site	src/game/field/leader_panel.cpp	3272	at_global	-	at::kKindNames	0x656ff8	data	game	engine	base_helper	-	-	std::memcpy(name, move_script::At(::bof3::Img(at::kKindNames) + k * 22u), 16);
-site	src/game/field/leader_panel.cpp	3277	at_global	-	at::kCountFormat	0x64e324	data	game	engine	base_helper	-	-	SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(name), reinterpret_cast<const char*>(move_script::At(::bof3::Img(at::kCountFormat))),
-site	src/game/field/leader_panel.cpp	3282	at_global	-	at::kCountFormat	0x64e324	data	game	engine	base_helper	-	-	SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(name), reinterpret_cast<const char*>(move_script::At(::bof3::Img(at::kCountFormat))), points);
-site	src/game/field/leader_panel.cpp	3321	at_global	-	scenario_harness::at::kTextBuffer	0x904ba0	data	game	engine	base_helper	-	-	unsigned char* const text = move_script::At(::bof3::Img(scenario_harness::at::kTextBuffer));
-site	src/game/field/leader_panel.cpp	3322	at_global	-	at::kTotalFormat	0x64add8	data	game	engine	base_helper	-	-	SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(text), reinterpret_cast<const char*>(move_script::At(::bof3::Img(at::kTotalFormat))),
-site	src/game/field/leader_panel.cpp	3334	at_global	-	field_e1::at::kPools	0x803580	data	game	engine	base_helper	-	-	TextFieldE1(x + 0xA, y + 8, 0, 0xFF, PoolText(::bof3::Img(field_e1::at::kPools) + message * 2u));
-site	src/game/field/leader_panel.cpp	3362	at_global	-	field_e1::at::kPools	0x803580	data	game	engine	base_helper	-	-	TextFieldE1(x + 0x28, y + 6, 0, 0xFF, PoolText(::bof3::Img(field_e1::at::kPools) + 0x7A));
-site	src/game/field/leader_panel.cpp	3363	at_global	-	field_e1::at::kPools	0x803580	data	game	engine	base_helper	-	-	TextFieldE1(x + 6, y + 0x19, 0, 0xFF, PoolText(::bof3::Img(field_e1::at::kPools) + 0x7C));
-site	src/game/field/leader_panel.cpp	3364	at_global	-	field_e1::at::kPools	0x803580	data	game	engine	base_helper	-	-	TextFieldE1(x + 6, y + 0x29, 0, 0xFF, PoolText(::bof3::Img(field_e1::at::kPools) + 0x7E));
-site	src/game/field/leader_panel.cpp	3373	at_global	-	field_e1::at::kPools	0x803580	data	game	engine	base_helper	-	-	TextFieldE1(x + 0x32, y + 6, 0, 0xFF, PoolText(::bof3::Img(field_e1::at::kPools) + 0x78));
-site	src/game/field/leader_panel.cpp	3374	at_global	-	field_e1::at::kPools	0x803580	data	game	engine	base_helper	-	-	TextFieldE1(x + 6, y + 0x19, 0, 0xFF, PoolText(::bof3::Img(field_e1::at::kPools) + 0x82));
-site	src/game/field/leader_panel.cpp	3384	at_global	-	at::kItemCounts	0x904354	data	game	engine	base_helper	-	-	if (BFieldE1(::bof3::Img(at::kItemIds) + i) == id && BFieldE1(::bof3::Img(at::kItemCounts) + i) == 0x63) ++n;
-site	src/game/field/leader_panel.cpp	3384	at_global	-	at::kItemIds	0x904154	data	game	engine	base_helper	-	-	if (BFieldE1(::bof3::Img(at::kItemIds) + i) == id && BFieldE1(::bof3::Img(at::kItemCounts) + i) == 0x63) ++n;
+site	src/game/field/leader_panel.cpp	156	abs_call	via=SH_AT	at::kBoxPrims	0x469750	code	game	engine	call	Panel_DrawWindow	-	void BoxPrims(U y) { SH_AT(void (__cdecl*)(int, int, int, int, int), at::kBoxPrims.v)(0x14, static_cast<int>(y), 0x118, 0x13, 0); }
+site	src/game/field/leader_panel.cpp	163	abs_call	via=SH_AT	at::kEffect3Mode	0x52b2a0	code	game	engine	call	LeaderPanel_Effect3Mode	-	void Effect3Mode(unsigned mode) { SH_AT(void (__cdecl*)(unsigned), at::kEffect3Mode.v)(mode); }
+site	src/game/field/leader_panel.cpp	165	abs_call	via=SH_AT	at::kPoseSound	0x52b1b0	code	game	engine	call	LeaderPanel_PoseSound	-	void PoseSound() { SH_AT(void (__cdecl*)(), at::kPoseSound.v)(); }
+site	src/game/field/leader_panel.cpp	238	at_global	-	at::kRecord6	0x7e14e0	data	game	engine	base_helper	Effect_Objects+0x300	-	unsigned char& R6(unsigned offset) { return BEffect1f(::bof3::Img(at::kRecord6.v) + offset); }
+site	src/game/field/leader_panel.cpp	266	at_global	-	at::kAccessoryIds	0x9042d4	data	game	engine	base_helper	-	-	return BEffect1f(::bof3::Img(at::kAccessoryIds.v) + static_cast<U>(index));
+site	src/game/field/leader_panel.cpp	269	at_global	-	at::kAccessoryKind	0x658462	data	game	engine	base_helper	-	-	unsigned char KindOf(unsigned char id) { return BEffect1f(::bof3::Img(at::kAccessoryKind.v) + 24u * id); }
+site	src/game/field/leader_panel.cpp	286	abs_call	via=SH_AT	at::kDrawMode	0x52cf60	code	game	engine	call	UiSprite_SetMode	-	void DrawMode(unsigned index, unsigned slot) { SH_AT(void (__cdecl*)(unsigned, unsigned), at::kDrawMode.v)(index, slot); }
+site	src/game/field/leader_panel.cpp	289	abs_call	via=SH_AT	at::kDrawSprite	0x52cfe0	code	game	engine	call	UiSprite_Draw	-	return SH_AT(unsigned char* (__cdecl*)(unsigned, unsigned, int, int), at::kDrawSprite.v)(sprite, slot, x, y);
+site	src/game/field/leader_panel.cpp	292	abs_call	via=SH_AT	at::kKindPoints	0x52ce60	code	game	engine	call	FieldPanel_KindPoints	-	unsigned KindPoints(unsigned kind, unsigned count) { return SH_AT(unsigned (__cdecl*)(unsigned, unsigned), at::kKindPoints.v)(kind, count); }
+site	src/game/field/leader_panel.cpp	294	abs_call	via=SH_AT	at::kKindTotal	0x52ced0	code	game	engine	call	FieldPanel_KindTotal	-	unsigned KindTotal() { return SH_AT(unsigned (__cdecl*)(), at::kKindTotal.v)(); }
+site	src/game/field/leader_panel.cpp	297	abs_call	via=SH_AT	at::kDrawQuad	0x468950	code	game	engine	call	Panel_DrawEdgeQuad	-	SH_AT(void (__cdecl*)(int, int, unsigned, unsigned), at::kDrawQuad.v)(x, y, height, which);
+site	src/game/field/leader_panel.cpp	305	at_global	-	field_e1::at::kPools	0x803580	data	game	engine	base_helper	-	-	std::uint32_t PoolText(std::uint32_t offset_cell) { return ::bof3::Img(field_e1::at::kPools) + W(offset_cell); }
+site	src/game/field/leader_panel.cpp	355	const_def	literal	kEff0StepX	0x7e11ec	data	game	engine	module	Effect_Objects+0xc	-	constexpr ::bof3::image::Va kEff0StepX{0x7E11EC};
+site	src/game/field/leader_panel.cpp	357	const_def	literal	kEff0StepY	0x7e11f0	data	game	engine	module	Effect_Objects+0x10	-	constexpr ::bof3::image::Va kEff0StepY{0x7E11F0};
+site	src/game/field/leader_panel.cpp	365	const_def	literal	kEff5Frame	0x7e1470	data	game	engine	module	Effect_Objects+0x290	-	constexpr ::bof3::image::Va kEff5Frame{0x7E1470};
+site	src/game/field/leader_panel.cpp	367	const_def	literal	kEff5Level	0x7e1490	data	game	engine	module	Effect_Objects+0x2b0	-	constexpr ::bof3::image::Va kEff5Level{0x7E1490};
+site	src/game/field/leader_panel.cpp	382	const_def	literal	kItemA	0x904130	data	game	engine	module	-	-	constexpr ::bof3::image::Va kItemA{0x904130};
+site	src/game/field/leader_panel.cpp	387	const_def	literal	kComboStep	0x6bc70c	data	game	engine	module	-	-	constexpr ::bof3::image::Va kComboStep{0x6BC70C};
+site	src/game/field/leader_panel.cpp	389	const_def	literal	kComboTimer	0x6bc710	data	game	engine	module	-	-	constexpr ::bof3::image::Va kComboTimer{0x6BC710};
+site	src/game/field/leader_panel.cpp	396	const_def	literal	kPoolWordData	0x803642	data	game	engine	module	-	-	constexpr ::bof3::image::Va kPoolWordData{0x803642};
+site	src/game/field/leader_panel.cpp	398	const_def	literal	kPoolWordRule	0x803660	data	game	engine	module	-	-	constexpr ::bof3::image::Va kPoolWordRule{0x803660};
+site	src/game/field/leader_panel.cpp	400	const_def	literal	kPoolWordStage1	0x803600	data	game	engine	module	-	-	constexpr ::bof3::image::Va kPoolWordStage1{0x803600};
+site	src/game/field/leader_panel.cpp	402	const_def	literal	kPools	0x803580	data	game	engine	module	-	-	constexpr ::bof3::image::Va kPools{0x803580};
+site	src/game/field/leader_panel.cpp	405	const_def	literal	kDrawMode	0x93985c	data	game	engine	module	Effect1g_TradeState	-	constexpr ::bof3::image::Va kDrawMode{0x93985C};
+site	src/game/field/leader_panel.cpp	409	const_def	literal	kSpotCounts	0x66a9cc	data	game	engine	module	-	-	constexpr ::bof3::image::Va kSpotCounts{0x66A9CC};
+site	src/game/field/leader_panel.cpp	411	const_def	literal	kComboTable	0x66a4c8	data	game	engine	module	-	-	constexpr ::bof3::image::Va kComboTable{0x66A4C8};
+site	src/game/field/leader_panel.cpp	413	const_def	literal	kRecordsA	0x66a4e8	data	game	engine	module	-	-	constexpr ::bof3::image::Va kRecordsA{0x66A4E8};
+site	src/game/field/leader_panel.cpp	415	const_def	literal	kRecordsB	0x66a528	data	game	engine	module	-	-	constexpr ::bof3::image::Va kRecordsB{0x66A528};
+site	src/game/field/leader_panel.cpp	417	const_def	literal	kDirAnims	0x660340	data	game	engine	module	-	-	constexpr ::bof3::image::Va kDirAnims{0x660340};
+site	src/game/field/leader_panel.cpp	419	const_def	literal	kS6Frames	0x660364	data	game	engine	module	-	-	constexpr ::bof3::image::Va kS6Frames{0x660364};
+site	src/game/field/leader_panel.cpp	422	const_def	literal	kF9StepsEnd	0x669720	data	game	engine	module	-	-	constexpr U kF9StepsEnd = 0x669720;
+site	src/game/field/leader_panel.cpp	461	module_const	-	kDirAnims	0x660340	data	game	engine	base_helper	-	file	unsigned char DirAnim(unsigned d) { return At(::bof3::Img(kDirAnims.v) + 2 * d)[0]; }
+site	src/game/field/leader_panel.cpp	463	module_const	-	kDirAnims	0x660340	data	game	engine	base_helper	-	file	unsigned char DirByte(unsigned d) { return At(::bof3::Img(kDirAnims.v) + 2 * d + 1)[0]; }
+site	src/game/field/leader_panel.cpp	577	module_const	-	kItemA	0x904130	data	game	engine	base_helper	-	file	const unsigned mode = CharStats_ExtraItem != 0 && B(::bof3::Img(kItemA.v)) != 0 ? 0u : 6u;
+site	src/game/field/leader_panel.cpp	620	module_const	-	kItemA	0x904130	data	game	engine	base_helper	-	file	if (item == 0 || B(::bof3::Img(kItemA.v)) == 0) {
+site	src/game/field/leader_panel.cpp	683	module_const	-	kPoolWordStage1	0x803600	data	game	engine	base_helper	-	file	const U pool = static_cast<U>(LRest1g(::bof3::Img(kPoolWordStage1.v))) & 0xFFFF;
+site	src/game/field/leader_panel.cpp	684	module_const	-	kPools	0x803580	data	game	engine	base_helper	-	file	Text(0x1D, static_cast<int>(0x15u - (static_cast<U>(S()[9]) << 3)), At(::bof3::Img(kPools.v) + pool));
+site	src/game/field/leader_panel.cpp	719	at_global	-	at::kPoolWord00	0x803600	data	game	engine	base_helper	-	-	Text(0x1D, 0x15, Pool(::bof3::Img(at::kPoolWord00.v)));
+site	src/game/field/leader_panel.cpp	746	at_global	-	at::kPoolWord00	0x803600	data	game	engine	base_helper	-	-	Text(0x1D, static_cast<int>(0x15u - (static_cast<U>(S()[9]) << 3)), Pool(::bof3::Img(at::kPoolWord00.v)));
+site	src/game/field/leader_panel.cpp	816	code_literal	literal	0x410000	0x410000	code	game	engine	-	-	aligned_8000	rv::Current<records::PartyMember>()->z = 0x410000;
+site	src/game/field/leader_panel.cpp	854	at_global	-	at::kEff0StepY	0x7e11f0	data	game	engine	base_helper	Effect_Objects+0x10	-	const std::int32_t y = L(::bof3::Img(at::kEff0StepY.v));
+site	src/game/field/leader_panel.cpp	855	at_global	-	at::kEff0StepY	0x7e11f0	data	game	engine	base_helper	Effect_Objects+0x10	-	if (y > 0x110000) SetL(::bof3::Img(at::kEff0StepY.v), static_cast<U>(y) - 0x4000u);
+site	src/game/field/leader_panel.cpp	864	at_global	-	at::kEff0StepX	0x7e11ec	data	game	engine	base_helper	Effect_Objects+0xc	-	SetL(::bof3::Img(at::kEff0StepX.v), static_cast<U>(L(Key(t + 0xC))) != 0x8000u ? 0x800u : 0xFFFFF800u);
+site	src/game/field/leader_panel.cpp	868	at_global	-	at::kEff0X	0x7e1214	data	game	engine	base_helper	Effect_Objects+0x34	-	const std::int32_t x = L(::bof3::Img(at::kEff0X.v));
+site	src/game/field/leader_panel.cpp	870	at_global	-	at::kEff0StepX	0x7e11ec	data	game	engine	base_helper	Effect_Objects+0xc	-	SetL(::bof3::Img(at::kEff0StepX.v), 0);
+site	src/game/field/leader_panel.cpp	894	at_global	-	at::kCounter	-	ambiguous	game	engine	base_helper	-	ambiguous	SetL(::bof3::Img(at::kCounter.v), 0);
+site	src/game/field/leader_panel.cpp	943	at_global	-	at::kEff0StepX	0x7e11ec	data	game	engine	base_helper	Effect_Objects+0xc	-	SetL(::bof3::Img(at::kEff0StepX.v), 0);
+site	src/game/field/leader_panel.cpp	944	at_global	-	at::kEff0StepY	0x7e11f0	data	game	engine	base_helper	Effect_Objects+0x10	-	SetL(::bof3::Img(at::kEff0StepY.v), 0);
+site	src/game/field/leader_panel.cpp	956	abs_call	via=SH_AT	at::kHoldTest	0x52b2e0	code	game	engine	call	LeaderPanel_HoldTest	-	SH_AT(void (__cdecl*)(), at::kHoldTest.v)();
+site	src/game/field/leader_panel.cpp	957	abs_call	via=SH_AT	at::kEffectsStep	0x52b370	code	game	engine	call	LeaderPanel_EffectsStep	-	SH_AT(void (__cdecl*)(), at::kEffectsStep.v)();
+site	src/game/field/leader_panel.cpp	966	at_global	-	at::kEff0StepX	0x7e11ec	data	game	engine	base_helper	Effect_Objects+0xc	-	SetL(::bof3::Img(at::kEff0StepX.v), 0xFFFFF000u);
+site	src/game/field/leader_panel.cpp	967	at_global	-	at::kEff0StepY	0x7e11f0	data	game	engine	base_helper	Effect_Objects+0x10	-	SetL(::bof3::Img(at::kEff0StepY.v), 0x1000);
+site	src/game/field/leader_panel.cpp	972	at_global	-	at::kEff0StepX	0x7e11ec	data	game	engine	base_helper	Effect_Objects+0xc	-	SetL(::bof3::Img(at::kEff0StepX.v), 0x1000);
+site	src/game/field/leader_panel.cpp	973	at_global	-	at::kEff0StepY	0x7e11f0	data	game	engine	base_helper	Effect_Objects+0x10	-	SetL(::bof3::Img(at::kEff0StepY.v), 0x1000);
+site	src/game/field/leader_panel.cpp	977	base_offset	-	0x903850	0x903850	data	game	engine	base_helper	SharedScratch	-	const unsigned char sloped = B(::bof3::Img(0x903850));
+site	src/game/field/leader_panel.cpp	978	at_global	-	at::kEff0StepX	0x7e11ec	data	game	engine	base_helper	Effect_Objects+0xc	-	SetL(::bof3::Img(at::kEff0StepX.v), 0);
+site	src/game/field/leader_panel.cpp	982	at_global	-	at::kEff0StepY	0x7e11f0	data	game	engine	base_helper	Effect_Objects+0x10	-	SetL(::bof3::Img(at::kEff0StepY.v), 0x2000);
+site	src/game/field/leader_panel.cpp	988	at_global	-	at::kEff0StepY	0x7e11f0	data	game	engine	base_helper	Effect_Objects+0x10	-	SetL(::bof3::Img(at::kEff0StepY.v), 0x1000);
+site	src/game/field/leader_panel.cpp	992	base_offset	-	0x903850	0x903850	data	game	engine	base_helper	SharedScratch	-	} else if (B(::bof3::Img(0x903850)) != 0) {
+site	src/game/field/leader_panel.cpp	995	at_global	-	at::kEff0StepX	0x7e11ec	data	game	engine	base_helper	Effect_Objects+0xc	-	SetL(::bof3::Img(at::kEff0StepX.v), 0);
+site	src/game/field/leader_panel.cpp	996	at_global	-	at::kEff0StepY	0x7e11f0	data	game	engine	base_helper	Effect_Objects+0x10	-	SetL(::bof3::Img(at::kEff0StepY.v), 0x1000);
+site	src/game/field/leader_panel.cpp	1002	at_global	-	at::kEff0StepX	0x7e11ec	data	game	engine	base_helper	Effect_Objects+0xc	-	SetL(::bof3::Img(at::kEff0StepX.v), 0);
+site	src/game/field/leader_panel.cpp	1003	at_global	-	at::kEff0StepY	0x7e11f0	data	game	engine	base_helper	Effect_Objects+0x10	-	SetL(::bof3::Img(at::kEff0StepY.v), 0);
+site	src/game/field/leader_panel.cpp	1010	at_global	-	at::kEff0StepY	0x7e11f0	data	game	engine	base_helper	Effect_Objects+0x10	-	const std::int32_t step = L(::bof3::Img(at::kEff0StepY.v));
+site	src/game/field/leader_panel.cpp	1019	at_global	-	at::kEff0StepX	0x7e11ec	data	game	engine	base_helper	Effect_Objects+0xc	-	const std::int32_t dx = L(::bof3::Img(at::kEff0StepX.v));
+site	src/game/field/leader_panel.cpp	1020	at_global	-	at::kEff0StepX	0x7e11ec	data	game	engine	base_helper	Effect_Objects+0xc	-	if ((x <= 0x80000 && dx < 0) || (x >= 0x120000 && dx > 0)) SetL(::bof3::Img(at::kEff0StepX.v), 0);
+site	src/game/field/leader_panel.cpp	1111	at_global	-	at::kEff5Frame	0x7e1470	data	game	engine	base_helper	Effect_Objects+0x290	-	SetL(::bof3::Img(at::kEff5Frame.v), static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(RecordA()[5]))));
+site	src/game/field/leader_panel.cpp	1121	at_global	-	at::kEff5Frame	0x7e1470	data	game	engine	base_helper	Effect_Objects+0x290	-	SetL(::bof3::Img(at::kEff5Frame.v), 0);
+site	src/game/field/leader_panel.cpp	1146	at_global	-	at::kEff5Frame	0x7e1470	data	game	engine	base_helper	Effect_Objects+0x290	-	SetL(::bof3::Img(at::kEff5Frame.v), static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(a[6]))));
+site	src/game/field/leader_panel.cpp	1159	at_global	-	at::kEff5Frame	0x7e1470	data	game	engine	base_helper	Effect_Objects+0x290	-	SetL(::bof3::Img(at::kEff5Frame.v), static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(RecordA()[4]))));
+site	src/game/field/leader_panel.cpp	1168	at_global	-	at::kEff5Frame	0x7e1470	data	game	engine	base_helper	Effect_Objects+0x290	-	SetL(::bof3::Img(at::kEff5Frame.v), 0);
+site	src/game/field/leader_panel.cpp	1180	at_global	-	at::kEff5Frame	0x7e1470	data	game	engine	base_helper	Effect_Objects+0x290	-	SetL(::bof3::Img(at::kEff5Frame.v), static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(a[7]))));
+site	src/game/field/leader_panel.cpp	1184	at_global	-	at::kEff5Frame	0x7e1470	data	game	engine	base_helper	Effect_Objects+0x290	-	SetL(::bof3::Img(at::kEff5Frame.v), static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(a[4]))));
+site	src/game/field/leader_panel.cpp	1204	at_global	-	at::kBestCounts	0x9040ec	data	game	engine	base_helper	Fish_RecordSizes	-	unsigned char& best = B(::bof3::Img(at::kBestCounts.v) + p[6]);
+site	src/game/field/leader_panel.cpp	1228	at_global	-	at::kKindSounds	0x66a6ad	data	game	engine	base_helper	Fish_Kinds+0x1d	-	Sound(B(::bof3::Img(at::kKindSounds.v) + 36u * kind) >= 2 ? 0x20C : 0x20B);
+site	src/game/field/leader_panel.cpp	1444	at_global	-	effect_1e::at::kPools	0x803580	data	game	engine	base_helper	-	-	const U row = FirstAnswerRow(At(::bof3::Img(effect_1e::at::kPools.v) + Word(At(::bof3::Img(effect_1e::at::kPools.v) + 0x44u * 2u))), 0x44);
+site	src/game/field/leader_panel.cpp	1444	at_global	-	effect_1e::at::kPools	0x803580	data	game	engine	base_helper	-	-	const U row = FirstAnswerRow(At(::bof3::Img(effect_1e::at::kPools.v) + Word(At(::bof3::Img(effect_1e::at::kPools.v) + 0x44u * 2u))), 0x44);
+site	src/game/field/leader_panel.cpp	1507	abs_call	via=SH_AT	at::kUseItemEnd	0x52b200	code	game	engine	call	LeaderPanel_UseItemEnd	-	SH_AT(void (__cdecl*)(), at::kUseItemEnd.v)();
+site	src/game/field/leader_panel.cpp	1525	abs_call	via=SH_AT	at::kLeaveOnPress	0x52b330	code	game	engine	call	LeaderPanel_LeaveOnPress	-	SH_AT(unsigned char (__cdecl*)(unsigned), at::kLeaveOnPress.v)(Sigma(0x60));
+site	src/game/field/leader_panel.cpp	1563	abs_call	via=SH_AT	at::kClearEffects	0x52ce20	code	game	engine	call	Effect_ResetFirstSeven	-	SH_AT(void (__cdecl*)(), at::kClearEffects.v)();
+site	src/game/field/leader_panel.cpp	1679	at_global	-	at::kPoolWord20	0x803620	data	game	engine	base_helper	-	-	case 0: Text(0x1D, 0x14, At(::bof3::Img(effect_1e::at::kPools.v) + Word(At(::bof3::Img(at::kPoolWord20.v))))); break;
+site	src/game/field/leader_panel.cpp	1679	at_global	-	effect_1e::at::kPools	0x803580	data	game	engine	base_helper	-	-	case 0: Text(0x1D, 0x14, At(::bof3::Img(effect_1e::at::kPools.v) + Word(At(::bof3::Img(at::kPoolWord20.v))))); break;
+site	src/game/field/leader_panel.cpp	1680	at_global	-	at::kPoolWord40	0x803640	data	game	engine	base_helper	-	-	case 1: Text(0x1D, 0x14, At(::bof3::Img(effect_1e::at::kPools.v) + Word(At(::bof3::Img(at::kPoolWord40.v))))); break;
+site	src/game/field/leader_panel.cpp	1680	at_global	-	effect_1e::at::kPools	0x803580	data	game	engine	base_helper	-	-	case 1: Text(0x1D, 0x14, At(::bof3::Img(effect_1e::at::kPools.v) + Word(At(::bof3::Img(at::kPoolWord40.v))))); break;
+site	src/game/field/leader_panel.cpp	1681	at_global	-	at::kPoolWord5E	0x80365e	data	game	engine	base_helper	-	-	case 2: Text(0x1D, 0x14, At(::bof3::Img(effect_1e::at::kPools.v) + Word(At(::bof3::Img(at::kPoolWord5E.v))))); break;
+site	src/game/field/leader_panel.cpp	1681	at_global	-	effect_1e::at::kPools	0x803580	data	game	engine	base_helper	-	-	case 2: Text(0x1D, 0x14, At(::bof3::Img(effect_1e::at::kPools.v) + Word(At(::bof3::Img(at::kPoolWord5E.v))))); break;
+site	src/game/field/leader_panel.cpp	1712	at_global	-	at::kLabelA	0x803622	data	game	engine	base_helper	-	-	Label((R6(7) & 1) ? ::bof3::Img(at::kLabelB.v) : ::bof3::Img(at::kLabelA.v));
+site	src/game/field/leader_panel.cpp	1712	at_global	-	at::kLabelB	0x803624	data	game	engine	base_helper	-	-	Label((R6(7) & 1) ? ::bof3::Img(at::kLabelB.v) : ::bof3::Img(at::kLabelA.v));
+site	src/game/field/leader_panel.cpp	1752	at_global	-	at::kLabelA	0x803622	data	game	engine	base_helper	-	-	Label((R6(7) & 1) ? ::bof3::Img(at::kLabelB.v) : ::bof3::Img(at::kLabelA.v));
+site	src/game/field/leader_panel.cpp	1752	at_global	-	at::kLabelB	0x803624	data	game	engine	base_helper	-	-	Label((R6(7) & 1) ? ::bof3::Img(at::kLabelB.v) : ::bof3::Img(at::kLabelA.v));
+site	src/game/field/leader_panel.cpp	1755	at_global	-	at::kExtraAccessory	0x904130	data	game	engine	base_helper	-	-	const unsigned char held = (b & 1) ? CharStats_ExtraItem : BEffect1f(::bof3::Img(at::kExtraAccessory.v));
+site	src/game/field/leader_panel.cpp	1792	at_global	-	at::kListLabelA	0x803626	data	game	engine	base_helper	-	-	Label(::bof3::Img(at::kListLabelA.v));
+site	src/game/field/leader_panel.cpp	1797	at_global	-	at::kExtraAccessory	0x904130	data	game	engine	base_helper	-	-	const unsigned char old = BEffect1f(::bof3::Img(at::kExtraAccessory.v));
+site	src/game/field/leader_panel.cpp	1799	at_global	-	at::kExtraAccessory	0x904130	data	game	engine	base_helper	-	-	BEffect1f(::bof3::Img(at::kExtraAccessory.v)) = id;
+site	src/game/field/leader_panel.cpp	1822	at_global	-	at::kListLabelB	0x803628	data	game	engine	base_helper	-	-	Label(::bof3::Img(at::kListLabelB.v));
+site	src/game/field/leader_panel.cpp	1835	at_global	-	at::kAccessoryIds	0x9042d4	data	game	engine	base_helper	-	-	if (KindOf(BEffect1f(::bof3::Img(at::kAccessoryIds.v) + i)) == 0xA) ++count;
+site	src/game/field/leader_panel.cpp	1923	module_const	-	kPoolWordData	0x803642	data	game	engine	base_helper	-	file	Text(0x1D, 0x14, At(::bof3::Img(kPools.v) + WRest1g(::bof3::Img(kPoolWordData.v))));
+site	src/game/field/leader_panel.cpp	1923	module_const	-	kPools	0x803580	data	game	engine	base_helper	-	file	Text(0x1D, 0x14, At(::bof3::Img(kPools.v) + WRest1g(::bof3::Img(kPoolWordData.v))));
+site	src/game/field/leader_panel.cpp	1955	module_const	-	kPoolWordRule	0x803660	data	game	engine	base_helper	-	file	Text(0x1D, 0x14, At(::bof3::Img(kPools.v) + (static_cast<U>(LRest1g(::bof3::Img(kPoolWordRule.v))) & 0xFFFF)));
+site	src/game/field/leader_panel.cpp	1955	module_const	-	kPools	0x803580	data	game	engine	base_helper	-	file	Text(0x1D, 0x14, At(::bof3::Img(kPools.v) + (static_cast<U>(LRest1g(::bof3::Img(kPoolWordRule.v))) & 0xFFFF)));
+site	src/game/field/leader_panel.cpp	2068	module_const	-	kDrawMode	0x93985c	data	game	engine	base_helper	Effect1g_TradeState	file	B(::bof3::Img(kDrawMode.v) + 2) = 0;
+site	src/game/field/leader_panel.cpp	2069	module_const	-	kDrawMode	0x93985c	data	game	engine	base_helper	Effect1g_TradeState	file	B(::bof3::Img(kDrawMode.v) + 1) = 0;
+site	src/game/field/leader_panel.cpp	2070	module_const	-	kDrawMode	0x93985c	data	game	engine	base_helper	Effect1g_TradeState	file	B(::bof3::Img(kDrawMode.v) + 3) = 0;
+site	src/game/field/leader_panel.cpp	2130	module_const	-	kRecordsB	0x66a528	data	game	engine	base_helper	-	file	if (b != 0) Effect1a_PanelSet = ::bof3::Img(kRecordsB.v) + 20u * (b - 0x1Cu);
+site	src/game/field/leader_panel.cpp	2131	module_const	-	kItemA	0x904130	data	game	engine	base_helper	-	file	const unsigned a = B(::bof3::Img(kItemA.v));
+site	src/game/field/leader_panel.cpp	2132	module_const	-	kRecordsA	0x66a4e8	data	game	engine	base_helper	-	file	if (a != 0) Effect1a_PanelScript = ::bof3::Img(kRecordsA.v) + 10u * (a - 0x2Eu);
+site	src/game/field/leader_panel.cpp	2191	module_const	-	kComboTable	0x66a4c8	data	game	engine	base_helper	-	file	const U row = ::bof3::Img(kComboTable.v) + 8 * i;
+site	src/game/field/leader_panel.cpp	2192	module_const	-	kComboStep	0x6bc70c	data	game	engine	base_helper	-	file	const unsigned char step = B(::bof3::Img(kComboStep.v) + i);
+site	src/game/field/leader_panel.cpp	2195	module_const	-	kComboTimer	0x6bc710	data	game	engine	base_helper	-	file	if (step != 0) B(::bof3::Img(kComboTimer.v) + i) = static_cast<unsigned char>(B(::bof3::Img(kComboTimer.v) + i) - 1);
+site	src/game/field/leader_panel.cpp	2195	module_const	-	kComboTimer	0x6bc710	data	game	engine	base_helper	-	file	if (step != 0) B(::bof3::Img(kComboTimer.v) + i) = static_cast<unsigned char>(B(::bof3::Img(kComboTimer.v) + i) - 1);
+site	src/game/field/leader_panel.cpp	2199	module_const	-	kComboTimer	0x6bc710	data	game	engine	base_helper	-	file	else if (B(::bof3::Img(kComboTimer.v) + i) < 4 && want == now) advance = true;
+site	src/game/field/leader_panel.cpp	2201	module_const	-	kComboTimer	0x6bc710	data	game	engine	base_helper	-	file	B(::bof3::Img(kComboTimer.v) + i) = 0;
+site	src/game/field/leader_panel.cpp	2202	module_const	-	kComboStep	0x6bc70c	data	game	engine	base_helper	-	file	B(::bof3::Img(kComboStep.v) + i) = 0;
+site	src/game/field/leader_panel.cpp	2207	module_const	-	kComboTimer	0x6bc710	data	game	engine	base_helper	-	file	if (B(::bof3::Img(kComboTimer.v) + i) != now) continue;
+site	src/game/field/leader_panel.cpp	2209	module_const	-	kComboTimer	0x6bc710	data	game	engine	base_helper	-	file	B(::bof3::Img(kComboTimer.v) + i) = 0;
+site	src/game/field/leader_panel.cpp	2210	module_const	-	kComboStep	0x6bc70c	data	game	engine	base_helper	-	file	B(::bof3::Img(kComboStep.v) + i) = 0;
+site	src/game/field/leader_panel.cpp	2217	module_const	-	kComboTimer	0x6bc710	data	game	engine	base_helper	-	file	B(::bof3::Img(kComboTimer.v) + i) = 0xC;
+site	src/game/field/leader_panel.cpp	2218	module_const	-	kComboStep	0x6bc70c	data	game	engine	base_helper	-	file	B(::bof3::Img(kComboStep.v) + i) = static_cast<unsigned char>(step + 1);
+site	src/game/field/leader_panel.cpp	2230	module_const	-	kComboStep	0x6bc70c	data	game	engine	base_helper	-	file	B(::bof3::Img(kComboStep.v) + i) = 0;
+site	src/game/field/leader_panel.cpp	2231	module_const	-	kComboTimer	0x6bc710	data	game	engine	base_helper	-	file	B(::bof3::Img(kComboTimer.v) + i) = 0;
+site	src/game/field/leader_panel.cpp	2256	module_const	-	kSpotCounts	0x66a9cc	data	game	engine	base_helper	-	file	unsigned count = At(::bof3::Img(kSpotCounts.v) + 23 * spot + k)[0];
+site	src/game/field/leader_panel.cpp	2571	module_const	-	kEff0StepX	0x7e11ec	data	game	engine	base_helper	Effect_Objects+0xc	file	SetLRest1g(::bof3::Img(kEff0StepX.v), 0);
+site	src/game/field/leader_panel.cpp	2572	module_const	-	kEff0StepY	0x7e11f0	data	game	engine	base_helper	Effect_Objects+0x10	file	SetLRest1g(::bof3::Img(kEff0StepY.v), 0);
+site	src/game/field/leader_panel.cpp	2626	module_const	-	kEff5Frame	0x7e1470	data	game	engine	base_helper	Effect_Objects+0x290	file	SetLRest1g(::bof3::Img(kEff5Frame.v), 0xFFFFFFF9u);
+site	src/game/field/leader_panel.cpp	2663	module_const	-	kEff5Frame	0x7e1470	data	game	engine	base_helper	Effect_Objects+0x290	file	if (LRest1g(::bof3::Img(kEff5Frame.v)) < 0) {
+site	src/game/field/leader_panel.cpp	2669	module_const	-	kEff5Frame	0x7e1470	data	game	engine	base_helper	Effect_Objects+0x290	file	SetLRest1g(::bof3::Img(kEff5Frame.v), 0xFFFFFFF9u);
+site	src/game/field/leader_panel.cpp	2744	module_const	-	kEff5Frame	0x7e1470	data	game	engine	base_helper	Effect_Objects+0x290	file	if (LRest1g(::bof3::Img(kEff5Frame.v)) < 0) {
+site	src/game/field/leader_panel.cpp	2745	module_const	-	kEff5Level	0x7e1490	data	game	engine	base_helper	Effect_Objects+0x2b0	file	const std::int32_t gap = static_cast<signed char>(S()[0xA]) - static_cast<short>(WRest1g(::bof3::Img(kEff5Level.v)));
+site	src/game/field/leader_panel.cpp	2798	module_const	-	kEff5Level	0x7e1490	data	game	engine	base_helper	Effect_Objects+0x2b0	file	const short limit = static_cast<short>(WRest1g(::bof3::Img(kEff5Level.v)));
+site	src/game/field/leader_panel.cpp	2830	module_const	-	kEff5Frame	0x7e1470	data	game	engine	base_helper	Effect_Objects+0x290	file	} else if (tension < limit && LRest1g(::bof3::Img(kEff5Frame.v)) < 0) {
+site	src/game/field/leader_panel.cpp	2932	module_const	-	kS6Frames	0x660364	data	game	engine	base_helper	-	file	if (rv::As<records::SpriteObject>(s)->script_pos == Word(At(::bof3::Img(kS6Frames.v) + 2 * s[6]))) {
+site	src/game/field/leader_panel.cpp	3039	module_const	-	kF9StepsEnd	0x669720	data	game	engine	base_helper	-	file	for (U at = ::bof3::Img(MoveCmd_F9Steps_addr) + 4; at < ::bof3::Img(kF9StepsEnd); at += 8, ++row) {
+site	src/game/field/leader_panel.cpp	3171	at_global	-	effect_1f::at::kKindCounts	0x9040ec	data	game	engine	base_helper	Fish_RecordSizes	-	const unsigned char count = BEffect1f(::bof3::Img(effect_1f::at::kKindCounts.v) + i);
+site	src/game/field/leader_panel.cpp	3180	abs_call	via=SH_AT	at::kMode8Panel	0x52b6c0	code	game	engine	call	Fish_RunAll	-	SH_AT(void (__cdecl*)(), at::kMode8Panel.v)();
+site	src/game/field/leader_panel.cpp	3190	abs_call	via=SH_AT	at::kTradeDispatch	0x593950	code	game	engine	call	ItemTrade_Dispatch	-	extern " " void __cdecl GameMode8_TradeStep(void) { SH_AT(void (__cdecl*)(), at::kTradeDispatch.v)(); }
+site	src/game/field/leader_panel.cpp	3281	at_global	-	scenario_harness::at::kTextBuffer	0x904ba0	data	game	engine	base_helper	-	-	unsigned char* const name = move_script::At(::bof3::Img(scenario_harness::at::kTextBuffer));
+site	src/game/field/leader_panel.cpp	3288	at_global	-	at::kKindNames	0x656ff8	data	game	engine	base_helper	-	-	std::memcpy(name, move_script::At(::bof3::Img(at::kKindNames) + k * 22u), 16);
+site	src/game/field/leader_panel.cpp	3293	at_global	-	at::kCountFormat	0x64e324	data	game	engine	base_helper	-	-	SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(name), reinterpret_cast<const char*>(move_script::At(::bof3::Img(at::kCountFormat))),
+site	src/game/field/leader_panel.cpp	3298	at_global	-	at::kCountFormat	0x64e324	data	game	engine	base_helper	-	-	SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(name), reinterpret_cast<const char*>(move_script::At(::bof3::Img(at::kCountFormat))), points);
+site	src/game/field/leader_panel.cpp	3337	at_global	-	scenario_harness::at::kTextBuffer	0x904ba0	data	game	engine	base_helper	-	-	unsigned char* const text = move_script::At(::bof3::Img(scenario_harness::at::kTextBuffer));
+site	src/game/field/leader_panel.cpp	3338	at_global	-	at::kTotalFormat	0x64add8	data	game	engine	base_helper	-	-	SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(text), reinterpret_cast<const char*>(move_script::At(::bof3::Img(at::kTotalFormat))),
+site	src/game/field/leader_panel.cpp	3350	at_global	-	field_e1::at::kPools	0x803580	data	game	engine	base_helper	-	-	TextFieldE1(x + 0xA, y + 8, 0, 0xFF, PoolText(::bof3::Img(field_e1::at::kPools) + message * 2u));
+site	src/game/field/leader_panel.cpp	3378	at_global	-	field_e1::at::kPools	0x803580	data	game	engine	base_helper	-	-	TextFieldE1(x + 0x28, y + 6, 0, 0xFF, PoolText(::bof3::Img(field_e1::at::kPools) + 0x7A));
+site	src/game/field/leader_panel.cpp	3379	at_global	-	field_e1::at::kPools	0x803580	data	game	engine	base_helper	-	-	TextFieldE1(x + 6, y + 0x19, 0, 0xFF, PoolText(::bof3::Img(field_e1::at::kPools) + 0x7C));
+site	src/game/field/leader_panel.cpp	3380	at_global	-	field_e1::at::kPools	0x803580	data	game	engine	base_helper	-	-	TextFieldE1(x + 6, y + 0x29, 0, 0xFF, PoolText(::bof3::Img(field_e1::at::kPools) + 0x7E));
+site	src/game/field/leader_panel.cpp	3389	at_global	-	field_e1::at::kPools	0x803580	data	game	engine	base_helper	-	-	TextFieldE1(x + 0x32, y + 6, 0, 0xFF, PoolText(::bof3::Img(field_e1::at::kPools) + 0x78));
+site	src/game/field/leader_panel.cpp	3390	at_global	-	field_e1::at::kPools	0x803580	data	game	engine	base_helper	-	-	TextFieldE1(x + 6, y + 0x19, 0, 0xFF, PoolText(::bof3::Img(field_e1::at::kPools) + 0x82));
+site	src/game/field/leader_panel.cpp	3400	at_global	-	at::kItemCounts	0x904354	data	game	engine	base_helper	-	-	if (BFieldE1(::bof3::Img(at::kItemIds) + i) == id && BFieldE1(::bof3::Img(at::kItemCounts) + i) == 0x63) ++n;
+site	src/game/field/leader_panel.cpp	3400	at_global	-	at::kItemIds	0x904154	data	game	engine	base_helper	-	-	if (BFieldE1(::bof3::Img(at::kItemIds) + i) == id && BFieldE1(::bof3::Img(at::kItemCounts) + i) == 0x63) ++n;
 site	src/game/field/map_cells.cpp	460	code_const	gen_func	bof3::addr::Area_TestCondition	0x56ff00	code	hosted	field	call	Area_TestCondition	-	bof3::CloneOriginal(" ", bof3::addr::Area_TestCondition, 0x118, kTestCalls, 2);
 site	src/game/field/map_cells.cpp	461	code_const	gen_func	bof3::addr::AreaMap_Elevation	0x5720c0	code	hosted	field	call	AreaMap_Elevation	-	const void* elevation = bof3::CloneOriginal(" ", bof3::addr::AreaMap_Elevation, 0x20B);
 site	src/game/field/map_cells.cpp	471	code_const	gen_func	bof3::addr::MapCell_DrawQuads	0x570020	code	hosted	field	call	MapCell_DrawQuads	-	const void* quads = bof3::CloneOriginal(" ", bof3::addr::MapCell_DrawQuads, 0x1EF, quad_calls,
@@ -25108,7 +25108,7 @@ file	src/game/field/layering.cpp	game	engine	accessor_addr	2
 file	src/game/field/layering.cpp	game	engine	const_def_literal	1
 file	src/game/field/layering.cpp	game	engine	module_const	1
 file	src/game/field/leader_panel.cpp	game	engine	abs_call	15
-file	src/game/field/leader_panel.cpp	game	engine	accessor	399
+file	src/game/field/leader_panel.cpp	game	engine	accessor	400
 file	src/game/field/leader_panel.cpp	game	engine	accessor_addr	12
 file	src/game/field/leader_panel.cpp	game	engine	at_global	71
 file	src/game/field/leader_panel.cpp	game	engine	base_offset	2
@@ -28011,14 +28011,14 @@ file	src/launcher/ui/main.cpp	launcher	launcher	addr_eq	1
 file	src/render/gfx_snapshot.cpp	platform	render	accessor	30
 file	src/render/gfx_snapshot.cpp	platform	render	base_offset	22
 file	src/render/render_shim.cpp	platform	render	accessor	8
-#count sites	126110
-#count sites_game	57330
+#count sites	126111
+#count sites_game	57331
 #count sites_platform	881
 #count sites_hosted	302
 #count sites_fuzz	67580
 #count sites_launcher	17
-#count class_accessor	27383
-#count class_accessor_game	23755
+#count class_accessor	27384
+#count class_accessor_game	23756
 #count class_accessor_platform	186
 #count class_accessor_hosted	0
 #count class_accessor_fuzz	3441

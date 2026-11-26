@@ -11701,7 +11701,7 @@ of focus. An unskipped movie stalls the same way at its end.
 takes is handed to the game at the next message step. **Not seen yet on the
 desktop:** the owner's run owes it.
 
-## D436 — Quitting the fishing in a game loaded at the fishing spot stops the game (Capcom's path, D270's; met 2026-11-25 by the state-by-name round's A4; open for a save without the came-from place)
+## D436 — Quitting the fishing in a game loaded at the fishing spot stops the game (Capcom's path, D270's; met 2026-11-25 by the state-by-name round's A4; held since 2026-11-26 for a save without the came-from place)
 
 **Who saw it, in which configuration:** the state-by-name round's group A4, on
 the Linux ELF of `sbn/A4`, headless: a quicksave's save half taken at the
@@ -11723,4 +11723,11 @@ the original's by reading. A fix for the untagged save would be DIV-0121's
 hold applied in `GameMode8_Leave` too (the fishing then has no way out but a
 reload), or a default place for each mode-8 area: **the owner's call**. Mode-8
 areas other than the fishing spot are not tried.
+
+**Fixed 2026-11-26 for the fishing menu (the owner's call: hold the player in
+the spot).** DIV-0121's amendment of that date: while the came-from area is
+`0xFFFF`, a confirm press on the fishing menu's leave choice does nothing.
+The owner's route `fishQuicksave.txt` stops the game with the hold off and
+runs to its end with it on. A save without the place still has no way out of
+the spot but another load.
 

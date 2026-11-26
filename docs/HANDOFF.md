@@ -42,8 +42,8 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      differ do so under a load that is not portable too or on the page the hash reads raw. **The owner's calls of
      2026-11-26 are made** (the round doc 4b): a code word is named by where it is; the state hash skips our text
      pointers (179 ranges) and the pairs are `orig7` / `o7w`. **Still owed:** the cause of the two title takes
-     (`s100`, `s180`) differing on Windows, the 32-bit task census, the owner's eye on F5's question, and the
-     owner's answers on the title's state word and the fishing spot's untagged save (D436). The editor's zero tail
+     (`s100`, `s180`) differing on Windows, the 32-bit task census, the owner's eye on F5's question and on
+     the fishing menu's held leave choice (DIV-0121's amendment, D436). The editor's zero tail
      is the editor's repository's. What follows is the staging's text.
      ([`state-by-name-round.md`](state-by-name-round.md), branch `docs/state-by-name-staging`): the owner's first
      larger change after `v0.1.0-beta.2`. Measured on the laptop: the task census (`BOF3X_TASKCENSUS`, a read-only

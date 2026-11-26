@@ -617,8 +617,8 @@ rows are gone, and the pairs are recorded again
 | Where the question starts | "start on yes" | as built: the hand starts on Yes ([`state-by-name-tier0.md`](state-by-name-tier0.md) 9) |
 | `SaveCameFrom`, a player's switch, default on | "default on is fine" | as built |
 | The save editor writes a zero tail for a save it moves to another area | "Yeah, this makes sense to me to do" | the editor's repository; not in this branch |
-| The title task's state word written in place of a Start press | asked what it means; explained, not yet answered | as built (the word is written) |
-| An untagged save at the fishing spot, on the quit (D436) | asked whether the spots' ways in are fixed and whether the quit crashes; answered, the call is open | as built: no change, D436 stands |
+| The title task's state word written in place of a Start press | agreed (2026-11-26, after the explanation) | as built (the word is written) |
+| An untagged save at the fishing spot, on the quit (D436) | "lets let it load but hold the player in the spot" | built 2026-11-26: the menu's leave choice does nothing (DIV-0121's amendment) |
 
 ## 7. The owner's calls
 

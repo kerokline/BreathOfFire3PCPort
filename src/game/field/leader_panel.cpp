@@ -120,6 +120,16 @@ void KindRow(unsigned kind, unsigned count, unsigned row) { SH_CALL(FieldPanel_D
 unsigned char g_fish_count_word = 0;
 // The count's high byte beside the panel's +9, ours: 0 from LeaderPanel_S4RowIn.
 unsigned g_fish_count_high = 0;
+
+// DIVERGENCE DIV-0121 (amended 2026-11-26): 1 (PatchBytes "EdgeNoArea", after
+// the self-test, which compares Capcom's rule). The fishing's leave
+// (GameMode8_Leave) goes to the area the party came from; a game loaded at
+// the spot from a save without that place (DIV-0246) came from none (0xFFFF,
+// GameMode_Start's), and Capcom's leave asks Field_ChangeArea for area 0xFFFF:
+// Area_ZoneAtIn reads a null zone list (D436). The menu's leave choice holds
+// instead: the press does nothing.
+unsigned char g_fish_leave_hold = 0;
+bool LeaveHeld() { return g_fish_leave_hold && AreaW2c_LastArea == 0xFFFF; }
 // The number FieldPanel_DrawKindRow prints in place of its byte, or -1.
 int g_fish_row_number = -1;
 
@@ -687,7 +697,13 @@ extern "C" void __cdecl LeaderPanel_S1Choose(void) {
         s[6] = static_cast<unsigned char>(s[6] ^ 1);
         pressed = Input_Pressed;
     }
-    if (pressed & Sigma(0x60)) {
+    // DIV-0121: the leave choice (+6 clear) confirmed with nowhere to leave to.
+    const bool held = (pressed & Sigma(0x60)) && !(pressed & Sigma(0x40)) && S()[6] == 0 && LeaveHeld();
+    if (held) {
+        static bool said = false;
+        if (!said) bof3::Log("DIV-0121    the fishing's leave choice holds: this game was loaded here from a save with no came-from place");
+        said = true;
+    } else if (pressed & Sigma(0x60)) {
         if (pressed & Sigma(0x40)) {
             Sound(0x106);
             S()[6] = 1;
@@ -3534,6 +3550,12 @@ void LeaderPanelFromEffect1e_Inject() {
         bof3::PatchBytes("FishPanelDuck", Low32(&g_fish_panel_duck),
                          &was, &is, 1);
         bof3::Log("DIV-0132    the fishing panel ducks the music as the PlayStation does (on unless the line above says OFF)");
+    }
+    // DIVERGENCE DIV-0121 (amended 2026-11-26): after the self-test, which compares Capcom's rule.
+    {
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("EdgeNoArea", Low32(&g_fish_leave_hold), &was, &is, 1);
+        bof3::Log("DIV-0121    the fishing's leave choice holds in a game loaded at the spot with no came-from place (on unless the line above says OFF)");
     }
     // DIVERGENCE DIV-0209: after the self-test, which compares Capcom's byte count.
     {

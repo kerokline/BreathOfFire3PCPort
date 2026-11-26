@@ -9943,6 +9943,29 @@ designed in rather than bolted on.
   the put-back is dropped (an entry event took the party on). Measured:
   `stallion.txt` from the `combat` save still stays in area 29; from a tagged
   save made there it leaves at the edge (DIV-0246).
+- **Amended 2026-11-26 - the fishing spot's leave choice holds too** (the
+  owner, by chat: "for older saves, lets let it load but hold the player in
+  the spot"; known-defects D436). The same cause by another road: the fishing
+  spot is a mode-8 area, and its leave (`GameMode8_Leave` `0x4964E0`) calls
+  `Field_ChangeArea` with the same came-from word and position. The step
+  that leads there is the fishing menu's (`LeaderPanel_S1Choose` `0x528CD0`,
+  `LeaderPanel_Stage1Steps[5]`): a confirm press on the choice whose `+6` is
+  0 moves on, and `LeaderPanel_S1Out` `0x528DA0` raises `Game_Step`.
+  **Original:** in a game loaded at the spot from a save with no came-from
+  place the word is `0xFFFF` and the leave stops the game in
+  `Area_ZoneAtIn`. **Ours:** while the word is `0xFFFF`, a confirm press on
+  that choice does nothing: no sound, the menu stays, the other choice and
+  the cancel button are Capcom's. The player fishes on and leaves by loading
+  another save. A save made with DIV-0246 leaves as Capcom's code does.
+  The same switch, `EdgeNoArea` (a second flag, `g_fish_leave_hold` in
+  `src/game/field/leader_panel.cpp`, armed after the panel's self-test).
+  **Verification:** the owner's route `tools/recipes/fishQuicksave.txt`
+  (their save of 2026-11-26 at the spot, no tag; the 32-bit exe host, their
+  install and ini): with `BOF3X_OFF=EdgeNoArea` the game stops, `0xC0000005`
+  in our module, some frames after the press; with the hold the log says
+  "the fishing's leave choice holds" and the recipe runs its 300 further
+  frames to the end. Mode-8 areas other than the fishing spot are not
+  tried. **Not seen by the owner.**
 - **Reversible?** `BOF3X_ORIGINAL=EdgeNoArea`.
   A player turns it off with `BOF3X_OFF=EdgeNoArea` (the ini's `off=`).
 - **Switch:** EdgeNoArea
