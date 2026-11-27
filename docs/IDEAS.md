@@ -1,6 +1,6 @@
 # Ideas — intake for unscheduled proposals
 
-**Status:** IN PROGRESS (2026-10-22, I21 and I50 built; 55 entries, I1..I55 - see the index for each one's state; 2026-10-31, the index brought to I33's, I43's and I44's outcomes; 2026-11-01, I53 the wide image, I54 state as named data, I55 the readable form of the cache; 2026-11-03, I56 the solo-character challenge, I57 the Traditional Chinese PC CD; 2026-11-06..14, I58..I68, each with its own date in the index; 2026-11-15, I34's and I56's rows brought to their merges, PRs #247 and #240; 2026-11-23, I73 a native macOS build, and a staleness pass of the index: the rows of I33, I34, I37, I38, I43, I44, I56 and I69..I72 brought to their merges, the missing rows of I62..I64 added; the rows marked open were not each measured again; 2026-11-26, I74 bug reports with a state attached)
+**Status:** IN PROGRESS (2026-10-22, I21 and I50 built; 55 entries, I1..I55 - see the index for each one's state; 2026-10-31, the index brought to I33's, I43's and I44's outcomes; 2026-11-01, I53 the wide image, I54 state as named data, I55 the readable form of the cache; 2026-11-03, I56 the solo-character challenge, I57 the Traditional Chinese PC CD; 2026-11-06..14, I58..I68, each with its own date in the index; 2026-11-15, I34's and I56's rows brought to their merges, PRs #247 and #240; 2026-11-23, I73 a native macOS build, and a staleness pass of the index: the rows of I33, I34, I37, I38, I43, I44, I56 and I69..I72 brought to their merges, the missing rows of I62..I64 added; the rows marked open were not each measured again; 2026-11-26, I74 bug reports with a state attached; 2026-11-27, I75 Android)
 
 Nothing here is scheduled. This is the intake: an idea lands here with a
 feasibility rating and a first step, and leaves when it is promoted, built, or
@@ -119,6 +119,7 @@ rule ([`README.md`](README.md)) here too.
 | I72 | The Parch sellers stock the Shisu minigame's ingredients when the no-fail minigames box is on | game behaviour | MEDIUM | **built 2026-11-21, merged as PR #272** (DIV-0188 amended): form (a), the item seller's first four entries, the three with no price at 1 zenny; seen by the owner |
 | I73 | A native macOS build: a Mach-O of the 64-bit host beside the Windows and Linux ones | platform | LOW | open 2026-11-23 (the owner); nothing measured on a Mac, none on hand; first step two probes (the tree compiled for macOS, the low-memory mapping) |
 | I74 | Bug reports with a state attached: a player on a release sends a quicksave and a developer's build loads it at the same frame | tooling / support | MEDIUM | open 2026-11-26 (the owner, from the state-by-name round, I54); nothing built; three things to settle first - a quicksave is game data (rule 1), a stranger's file is native memory (I46), and a build that binds one more function refuses the file |
+| I75 | Android: an ARM64 build (the 111 live x87 blocks rewritten and fuzzed, the task switch, the bind table's x86 rows), then an app (a `.so` in a Java process, a second renderer backend, one process, touch, the install) | platform | LOW | open 2026-11-27 (the owner; issue #292): source counts measured, nothing built; first step two probes (the tree and low memory on a Raspberry Pi 4; low memory inside an app in the x86-64 emulator), the second of which decides whether it waits for the wide image (I53) |
 
 ---
 
@@ -2633,6 +2634,7 @@ _(2026-11-23, a staleness pass) tier 1 ran under Proton on 2026-11-10 and 2026-1
 _(2026-11-10) open; nothing built._
 _(2026-11-18) the Linux build took DXVK-native ([`linux-round.md`](linux-round.md) 6, call 1); the owner asked for a Vulkan / Direct3D 11 toggle on Windows, staged by the same road in [`vulkan-toggle-round.md`](vulkan-toggle-round.md). Nothing built._
 _(2026-11-18, the owner) SDL3's GPU API is kept for an away day, when the machine is free to compare as many routes as possible for the same picture. Read in SDL 3.4.16's source that day: its backends are Direct3D 12, Vulkan and Metal, with no Direct3D 11 (`src/gpu`); its Direct3D 12 backend asks resource binding tier 2 (`SDL_gpu_d3d12.c:8664`), where today's renderer accepts feature level 10_0; `SDL_gpu.h`'s blend factors have no second-source factor, which DIV-0160's draw uses. So it is a second renderer beside Direct3D 11, not a replacement, and the dual-source draw must be made another way. First step that day: the present pass alone and the dual-source draw on SDL's GPU API, then every recipe's shots against Direct3D 11's._
+_(2026-11-27) I75 (Android) needs this backend and cannot take DXVK-native's road as Linux did; with I73 (macOS) and a Raspberry Pi that makes three users. Nothing built._
 
 ## I64 — A sequencer truer to the PlayStation's
 
@@ -2842,3 +2844,68 @@ No code: take a quicksave on a released build at an ordinary frame, carry it by 
 
 ### Outcome
 _(2026-11-26) open; written up at the owner's word, nothing measured or built._
+
+## I75 — Android: an ARM64 build, then an app
+
+**Ask (2026-11-27, the owner; issue #292, from discussion #291):** a player asked whether an Android port is planned. Investigate what it needs and write it down. The owner's two guesses: that it is much like the SDL3 graphics layer (I63), and that it may want the wide image (I53). The owner has a Raspberry Pi 4 (4 or 8 GB) and asks whether it serves as a test bed.
+**Kind:** platform. **Feasibility:** LOW: it is two ports in one (a new processor and a new kind of system), neither has been built on any machine, and four of its answers are probes not yet run.   **Gated on:** the Linux round's group D3 (a person's look at the Linux build first); the two probes below; the owner's call on the renderer (I63), which this entry needs more than any other does.
+
+**The short answers.** (1) Yes, the renderer is the same question as I63, and Android makes it harder to put off: Linux could take DXVK-native and did, and Android very likely cannot. (2) The wide image is not needed if two probes pass; if the low-memory probe fails inside an Android app, the wide image is the only road, and the port waits for I53. (3) The Pi 4 is a good test bed for the larger half (the processor) and no test bed for the other half (the app).
+
+### The two halves
+
+A phone differs from the Linux desktop build in two ways that do not depend on each other, and each can be built and proved alone:
+
+- **The processor: ARM64.** Every build so far is x86. This half is the same work a native ARM64 Mac wants (I73) and it is what the Pi tests: an ARM64 Linux build of the tree as it is, same SDL3, same launcher, same importer.
+- **The system: Android.** An app is not a program started from a folder. This half can be built for x86-64 Android and run in the emulator on a desktop, with no ARM64 code at all.
+
+The join of the two is the phone build. Doing them apart keeps each fault on one side.
+
+### What already exists
+- The Linux round (I62): the OS seam with a POSIX backend (`src/os/posix`, 25 files), the window, keyboard, pad and sound on SDL 3.4.16, which has an Android port of its own; the drawn launcher on Dear ImGui (I69); a case-sensitive file system handled; `long` fixed-width.
+- The game's own movie decoders (DIV-0205) and minimp3 (DIV-0091): no system codec is asked for.
+- The narrow image's rule written as code: `Low32()` is a `Fatal` at or above 4 GB (`src/common/image_base.h:159`), so a placement the design missed stops with the caller's name.
+- The state hash, the ten routes and the 64-bit references: the proof an ARM64 build is held to.
+- `tools/linux_probe/` (the low-memory probe, the tree compile): the method of both first steps.
+
+### What is missing: the processor half (measured 2026-11-27 at `main` `8d4f7728`)
+
+- **No ARM64 line exists.** `grep -rlE '__aarch64__|__arm' src cmake CMakeLists.txt` finds nothing.
+- **The x87 blocks.** `python3 tools/width_census.py --counts`: 207 live `asm` blocks in 82 files, of them 111 x87 in 46 files, 32 control-word, 34 stack, 29 other, 1 `fs:`; 29 live naked functions. The 64-bit round kept every x87 block as asm on purpose - "the x87 semantics (the control word, 80-bit intermediates, `fistp` under chop) are what the original computes, and a C++ rewrite is a divergence until fuzzed; the round that leaves x86 altogether owns that question" ([`x64-build-round.md`](x64-build-round.md) XA3 and section 9). This is that round. Each of the 111 becomes C++ that gives the same bits, proved in the 32-bit hosted fuzz against Capcom's code, where the asm and the rewrite can run side by side. It can be done today on Windows, with no ARM machine, and it is the largest single piece of this entry. Compiler flags to settle with it: `-ffp-contract=off` (ARM64 fuses multiply-add by default, x86-64 does not) and `-fsigned-char` (`char` is unsigned on ARM).
+- **The task switch and the forwarders.** `python3 tools/linux_probe/asm_by_abi.py`: 23 live x86-64 blocks, 10 of them written to the Win64 rule (the task switch in `src/game/task_switch_x86_64.h`, `mp3.cpp`'s decoder stack, `Cfg_Load`, the two scenario calls). The 64-bit round left a `task_switch_<arch>.h` contract for this; an ARM64 file is new. The `__cdecl` as `ms_abi` road (`cmake/linux_target.cmake:50`) is x86 only; on ARM64 there is one calling rule, which removes the reason for it, and `tools/fnptr_census.py`'s findings want reading again under that rule.
+- **The bind table's rows are x86 code.** `src/hook/bind.cpp:168` writes a `jmp rel32` (`0xE9`) at each of Capcom's code places, so a 32-bit code word in the image's tables runs our function. An ARM64 processor cannot run that row, and an ARM64 instruction must lie at a multiple of 4, which a row at Capcom's own address need not. So a code word becomes a looked-up native pointer, not a place to jump to. Not measured: how many call shapes that touches. This is the one design item of the half.
+- **The low link.** The Linux ELF is `-fno-pie`, linked at `0x10000000` (`cmake/linux_target.cmake:48-61`), with the image mapped at `0x400000` and the stacks and heap in an arena below 4 GB. On ARM64 Linux this should hold as it is; `mmap_min_addr` on the Pi's system is the probe.
+- **The picture.** DXVK-native asks for Vulkan 1.3 and a desktop driver's features. Whether the Pi 4's driver (Mesa's V3DV) runs it is not read; `vulkaninfo` and DXVK's own start-up log on the Pi answer it in an hour. If it does not, the Pi runs the ten routes headless as the laptop's harness does, and the picture waits for the renderer below.
+- **Smaller.** `src/os/posix/module.cpp:38` holds a page size of `0x1000` as a constant. 31 files name an x86 macro or intrinsic (13 in `src/hook`, 7 in `src/game/platform`); each wants a reading.
+
+### What is missing: the system half
+
+- **An app is a shared library, not a program.** Android loads the game as a position-independent `.so` inside a Java process that already holds the Java runtime; a non-PIE ELF at a fixed base is refused. So the low link above is not available, and two things follow. Our code lies above 4 GB, so every function address the game's memory holds needs a low thunk (the Linux probe named this "the 64-bit-thunk mode" and did not need it; [`linux-round.md`](linux-round.md) LA2). And the image at `0x400000`, the arena and the stacks must be mapped low *inside that process*, late, after the runtime has taken what it takes. Whether those ranges are free there is **the probe that decides the wide image**: stated from memory and not probed, the Java runtime keeps its own heap below 4 GB and Android's `mmap_min_addr` is 32 KB. Newer devices use 16 KB pages, so every fixed address and size must be a multiple of 16 KB.
+- **The renderer.** DXVK has no Android target, phone drivers differ far more than desktop ones, and DIV-0160's draw uses dual-source blending (`render_d3d11.cpp:1057`), which many phone GPUs do not offer in Vulkan (stated, not read per GPU). So Android wants what I63 describes: a second backend behind `render_shim.cpp`, on SDL3's GPU API (Vulkan on Android) or OpenGL ES 3, with the dual-source draw made another way - which I63 already found SDL's GPU API needs (2026-11-18). A backend written for this serves macOS (Metal) and the Pi in the same stroke. The ten HLSL shaders need a second form.
+- **One process.** The launcher starts the game by `fork` and `execve` with the settings as environment (`src/os/posix/process.cpp:114`). An app has one process and one window. The launcher's pages and the game must live in one, or as two screens of one app.
+- **The install.** The importer is Python (178 scripts under `tools/`; the launcher runs it) and the PSP conversions and the PC movie's repair call the player's `ffmpeg`. A phone has neither. Roads: I40 (the importer in C++), which becomes a gate; or the install made on a computer and the cache copied to the phone, which needs nothing new and is the right first form. Reading a disc image the player picks goes through Android's file picker, not a path.
+- **Touch.** The game reads keys and pads; touch events are thrown away (`game_window.cpp:493`). A pad works through SDL as it does today. A phone alone needs buttons drawn on the screen, and the launcher's pages need a finger-sized layout. New player-facing text falls under the STE rule.
+- **The app's life.** The system stops and resumes an app and takes its drawing surface away at will. The game must hold still while it is away (the reverse of I12) and should write a quicksave before it may be killed.
+- **The package.** A Gradle project around SDL's Java glue, an NDK toolchain in CMake, a signed APK, a CI job. Rule 1 holds as it does everywhere: the APK carries the engine and no game data.
+
+### The order, if it is taken up
+
+1. **The x87 rewrite**, on Windows, in the hosted fuzz. Needs no decision and no new machine; it also serves I73.
+2. **The Pi: ARM64 Linux.** The tree compiled for `aarch64-linux-gnu`, the task switch, the code-word lookup, then the ten routes headless against the 64-bit references.
+3. **The renderer** (I63's away day, now with three users). On Windows first, shot against Direct3D 11.
+4. **x86-64 Android in the emulator:** the `.so`, the low mapping, the thunks, one process, a pad, a cache copied in.
+5. **The join:** ARM64 Android on a phone; then touch, then the install on the device.
+
+Steps 1 to 3 are each worth having with no Android at all. A guess, not an estimate: each of 1, 2, 3 and 4 is a round the size of the Linux round's waves.
+
+### The Pi 4 as a test bed
+
+Good for step 2 and for nothing in step 4. Its processor (four Cortex-A72 cores, from memory) is in the range of a low-end phone's, so a pace measured there is a fair floor; its 4 GB or 8 GB is more than the game uses. It is also a second machine that can build and run through the night. What it does not tell: anything about an app's process, Android's C library, its storage, touch, or a phone GPU's driver - its GPU and driver are neither Adreno nor Mali. Android can be installed on a Pi 4 by an unofficial build; that would test the app half on ARM64, on a GPU no phone has. Waydroid (the owner's suggestion, 2026-11-27) is the lighter road to the same test: it runs Android's own userland in a container on the Linux kernel already there, with no processor emulated, so on the Pi an app is a true ARM64 Android app (step 5's join) and on the x86-64 laptop a true x86-64 one (step 4, in place of the emulator). What it does not stand for: the kernel is the host's (its page size, its `mmap_min_addr`, not a phone's), the GPU driver is the host's Mesa, and touch is a mouse. Stated from Waydroid's description, not installed or run here; whether the Pi's kernel carries the binder driver it needs is the first thing to check. The Pi 4's own system uses 4 KB pages (the Pi 5's uses 16 KB), so it does not test the 16 KB rule.
+
+### First concrete step
+Two probes, neither needing game data, as I73's are:
+1. **On the Pi:** `tools/linux_probe/linux_tree.py`'s method for `aarch64-linux-gnu` - how many source files compile, and a reason for each that does not; and `lowmem_probe.cpp` built for ARM64 - `mmap_min_addr`, the image's range, the arena. With them, `vulkaninfo` and a DXVK-native start.
+2. **In the Android emulator (x86-64):** the same low-memory probe as a `.so` loaded by an empty SDL app, run after the window exists - whether `0x400000`..`0x98F000` (or the moved base `0xA00000`), the stacks' range and a 1 GB arena below 4 GB map, read and write. If they do, the narrow image goes to Android with thunks. If they do not, this entry waits for I53.
+
+### Outcome
+_(2026-11-27) open; written up at the owner's word. Measured: the source counts above. Not measured: anything on ARM64 or on Android; the statements about Android, DXVK, V3DV and phone GPUs are from memory and each is named as such._
