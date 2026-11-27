@@ -98,7 +98,8 @@ void SuitesRefresh(Pages& p) {
 }
 
 // The member lines' places in dialog units, from the suite's label line:
-// two columns, two rows on Graphics and audio, three on Data (launcher.rc).
+// two columns, three rows on Graphics (its reason line three lines high,
+// since the demo's badge members, DIV-0249), two on audio, three on Data.
 struct MemberPlace {
     float x, dy;
 };
@@ -172,7 +173,7 @@ void VersionsGraphicsPage(Pages& p) {
     Place(Dx(8), Dy(12));
     Size(Dx(248), Dy(18));
     Label(g_boxes.note.c_str());
-    SuiteRows(p, 0, 34, 30, 36);
+    SuiteRows(p, 0, 34, 39, 27);
     SuiteRows(p, 1, 104, 30, 36);
     GroupEnd();
 }

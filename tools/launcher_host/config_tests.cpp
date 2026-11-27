@@ -532,7 +532,8 @@ void TestSuites() {
     Check(Member(Suite(v, "data"), "psp-ryu-forms").available, "TG, PSP-only: Ryu's forms the base's");
 
     // The order a written list takes: the suites' layers as recipes/suites.toml has them.
-    Check(bof3x::SuiteLayers() == std::vector<std::string>{"psp-art", "psp-tiles", "psp-maps", "psp-snd",
+    Check(bof3x::SuiteLayers() == std::vector<std::string>{"psp-art", "psp-tiles", "psp-maps", "psp-badge-jp",
+                                                         "psp-badge-eu", "psp-snd",
                                                          "psp-tables", "psp-names-en-150", "psp-names-ja-JP",
                                                          "psp-ryu-forms"},
           "SuiteLayers: the catalogue's order");

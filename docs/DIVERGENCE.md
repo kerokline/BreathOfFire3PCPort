@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 248 entries, DIV-0001..0248, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 249 entries, DIV-0001..0249, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -7072,6 +7072,19 @@ designed in rather than bolted on.
   the layers installed and of the language played (no dialog box yet); an
   empty `opt=` gives the default layers installed (since 2026-10-10 DIV-0080's
   `area4-walls`), `opt=none` none. `BOF3X_OPT=none` is none, as `original` is.
+
+  *Amended 2026-11-27 (D440).* `psp-tiles` no longer carries the palette of
+  the demo's corner badge: 352 of the 515 rows, the whole of the layer's
+  chunks in `AREA002`, `AREA004` and `AREA031` (163 rows in 49 areas are
+  left; 434 chunks). The badge (`Title_DrawBadge` `0x4624F0`,
+  `Title_Sprites` entry 10) takes CLUT row 494, the last 256-colour row of
+  the area's `0x8002BE00` section, and the three areas of the demo fill their
+  unused rows with copies of it. The PSP redrew the badge and its palette;
+  its page (`0x1A080400`) is a language page no layer takes, so the layer
+  drew the PSP's colours over the PlayStation's picture. `opt-recipes` now
+  leaves out every 256-colour row that is Japan's badge palette on the JP
+  disc and the PSP's on the PSP disc (`tools/importer.py` `badge_rows`).
+  The badge is DIV-0249's two layers instead, page and palette together.
 - **Rationale:** the plan's divergence policy for data
   ([`unified-data-plan.md`](unified-data-plan.md) 7): a later build's
   content change is an optional layer from the player's own disc, off by
@@ -19148,3 +19161,53 @@ designed in rather than bolted on.
 - **Languages:** any
 - **State:** active
 - **Saved state:** unchanged - the tail is the save file's, outside the block; in a quicksave's span only `Save_Staging`'s tail holds it after a save, a transient that `Save_BuildBlock` clears before every save and `LoadMenu_Read` before every load and nothing reads; the put-back's request is a static of ours
+
+### The PSP's graphics draw the PSP's demo badge, whole: its page, its palette, its frame
+
+- **ID:** DIV-0249
+- **Date:** 2026-11-27
+- **Subsystem:** the demo's corner badge - `Title_DrawBadge` `0x4624F0` (ours,
+  `src/game/core/title.cpp`); the layers `psp-badge-jp` and `psp-badge-eu`
+  (`recipes/opt.toml`, `tools/importer.py` `badge_recipe`); the Graphics suite
+  (`recipes/suites.toml`); [`opt-layers.md`](opt-layers.md) 1 and 3
+- **Tier:** Sensible - a later release's picture, with the PSP's graphics
+  chosen; and a repair of how our engine frames it, which no original drew.
+- **Original behaviour:** the badge is `Title_Sprites` entry 10 at (0xC0, 4):
+  128 x 80 from (0, 0) of the page `0x1A080400`, CLUT row 494, the page and
+  the row both loaded by the demo's areas (`AREA004`'s page; the last row of
+  the `0x8002BE00` section of `AREA004` and `AREA002`). The PSP redrew it as
+  its own title's logo - art x 7..153, y 18..75 of the page - with a new
+  palette, and its `Title_Sprites` entry 10 is 160 x 80 (both PSP discs'
+  `BOOT.BIN`); two of the page's tiles differ PSP-JP to PSP-EU (the mark
+  beside the logo). Until this entry `psp-tiles` carried the palette alone
+  (known-defects D440), and no layer the page or the frame.
+- **New behaviour:** two layers, each whole from one PSP disc:
+  `psp-badge-jp` and `psp-badge-eu`, the 32 tiles of `AREA004`'s page and the
+  badge's palette rows in `AREA002`, `AREA004` and `AREA031` (352 rows; the
+  rows `psp-tiles` gave up). The Graphics suite holds both, Japan's first, so
+  with both in the cache Europe's lands on top: the English badge, whatever
+  the language played (the owner's call). With a badge layer named in
+  `BOF3X_OPT`, or on a PSP base (DIV-0103, which holds the page, the palette
+  and the PSP's entry already), the badge is drawn through the PSP's
+  rectangle (0, 0, 160 x 80) at (0xC0, 4), where the PSP's code draws it: its
+  right edge 32 past the 4:3 view. In a 4:3 picture, which the PSP does not
+  have, the badge moves left to end at the picture's edge (x = 0x140 + the
+  picture's side columns - 160, never right of 0xC0). Any other install
+  draws as before.
+- **Rationale:** the owner, 2026-11-27: "lets use the psp badge when the psp
+  graphics option is enabled. Lets default to using the eng psp badge if both
+  are in cache, I dont' think we need to try tying that to localization."
+  The 4:3 move is ours and not asked: the PSP's place cuts the last 25
+  columns of art there, the final letter and the mark.
+- **Also in the PSX version?** No: the PlayStation draws its own badge, 128
+  wide, which every install without the PSP's graphics keeps.
+- **Verification:** see [`known-defects.md`](known-defects.md) D440.
+- **Reversible?** The Graphics suite's PlayStation side, or `opt=` without the
+  two layers.
+- **Switch:** ini:opt= - the layers `psp-badge-jp`, `psp-badge-eu`; a PSP base draws it always
+- **Default:** off - the layers wait to be named (the Graphics suite, DIV-0107)
+- **Player:** yes - the launcher's Graphics suite (its PSP side turns the badge's layers on), or opt=
+- **Toward:** psp - the PSP's badge; the 4:3 place is ours
+- **Languages:** any
+- **State:** active
+- **Saved state:** unchanged - a picture and where it is drawn (by reading)
