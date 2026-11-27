@@ -2998,6 +2998,9 @@ extern "C" void __cdecl LoadDatFile(int file_index) {
         // layers carry; without them the game stops here, at the title.
         field_idle::TownWarpFirstLoaded();
     }
+    // DIV-0147 (amended, QM.9): the menus' page is START.DAT's; the quick
+    // menu keeps the backdrop's cells of it.
+    if (bof3::os::SameName(name, "START.DAT")) bof3::QuickMenu_MenuPageLoaded();
 }
 
 #pragma clang attribute push(__attribute__((disable_tail_calls)), apply_to = function)

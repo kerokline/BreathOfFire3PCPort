@@ -363,7 +363,9 @@ read from the CLUT strip), and issue #191, Station Myria's hologram in a box of 
 D405, DIV-0142 amended: kind 0x9D clears its page; the stripe at its edge the owner saw in play fixed 2026-11-07
 as PR #208, the clear 25 x 49). D226, area 196's sand hill not drawn on a later showing in one session (2026-11-05, DIV-0182
 amended). The owner's F5 in a battle drawing a corrupt menu and a load from it stopping the game (2026-11-06,
-DIV-0145 amended: the menu's lines from `FIRST.DAT`'s pool, no backdrop in a battle). Area 198, Myria's chamber,
+DIV-0145 amended: the menu's lines from `FIRST.DAT`'s pool, no backdrop in a battle; since 2026-11-27 the backdrop
+in a battle too, its cells copied at `START.DAT`'s load and put in while the menu is open, DIV-0147 amended,
+[`quicksave.md`](quicksave.md) QM.9). Area 198, Myria's chamber,
 taken off the pillarbox list (2026-11-07, DIV-0041 amended). **And the owner's request, DIV-0204 (PR #202,
 2026-11-05):** a second faerie village entrance on the desert map near Caer Xhan, off by default (Mods, Extras),
 with its flower ring made at load from the player's own `AREA151.DAT`; played and approved ("That worked great",

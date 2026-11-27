@@ -33,6 +33,13 @@ void QuickMenu_AfterPoint();
 // battle's has other messages at those ids).
 void QuickMenu_TitlePoolLoaded();
 
+// LoadDatFile, after START.DAT and its layers are walked (the title's menu):
+// copies the cells Menu_DrawBackdrop draws from - its tiles on the page
+// (0x340, 0x100), which START.DAT has just loaded, and its four CLUTs on row
+// 0x1E2 - out of the VRAM shadow, so the menu draws the load menu's backdrop
+// in a scene that keeps other pictures there (a battle; docs/quicksave.md QM.9).
+void QuickMenu_MenuPageLoaded();
+
 // Draft B (docs/state-by-name-tier0.md 2), the title's load path: a refused
 // quicksave's save half, loaded through the title after the restart.
 // TitleFlow_Begin: the save half's bytes when the title's menu begins on the
