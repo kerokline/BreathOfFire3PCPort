@@ -71,7 +71,7 @@ struct Entry {
     std::uint8_t languages;        // kLang* bits, or kLangAny
 };
 
-inline constexpr std::size_t kSwitchCount = 240;
+inline constexpr std::size_t kSwitchCount = 241;
 inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "Save_WriteFile", 0, 14},   // DIV-0002
     {SwitchForm::Name, "File_OpenWrite", 0, 14},   // DIV-0003
@@ -313,9 +313,10 @@ inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Env, "env:BOF3X_LAYERING=0", 4, 14},   // DIV-0246
     {SwitchForm::Env, "env:BOF3X_LAYERING=0", 4, 14},   // DIV-0247
     {SwitchForm::Name, "SaveCameFrom", 0, 12},   // DIV-0248
+    {SwitchForm::Ini, "ini:opt=", 4, 3},   // DIV-0249
 };
 
-inline constexpr std::size_t kEntryCount = 248;
+inline constexpr std::size_t kEntryCount = 249;
 inline constexpr Entry kEntries[kEntryCount] = {
     {1, "Re-encode `capcom.avi` from Indeo 5 to Cinepak",
      Tier::Intent, State::Active, 0, 0, 0, true, Player::Never, 0, kLangAny},
@@ -813,6 +814,8 @@ inline constexpr Entry kEntries[kEntryCount] = {
      Tier::Intent, State::Active, 0, 238, 1, true, Player::Yes, 0, kLangAny},
     {248, "A save keeps where the party came from: an edge leads back after a load",
      Tier::Sensible, State::Active, 0, 239, 1, true, Player::Yes, 0, kLangAny},
+    {249, "The PSP's graphics draw the PSP's demo badge, whole: its page, its palette, its frame",
+     Tier::Sensible, State::Active, 0, 240, 1, false, Player::Yes, kTowardPsp, kLangAny},
 };
 
 // The switches of one entry.
