@@ -72,7 +72,6 @@
 #include <vector>
 
 #include "bof3/symbols.gen.h"
-#include "game/menu_windows_callees.h"
 #include "game/save_menu.h"
 #include "game/win_main.h"
 #include "game/yes_no_layout.h"
@@ -257,7 +256,8 @@ const unsigned char* TitleLine(unsigned id) {
 // while the menu is open on a scene whose cells differ, the title's are in the
 // VRAM shadow and the scene's are kept here; closing puts the scene's back.
 // The tiles' cells are the box around every rectangle the pattern names
-// (0x663874 by 0x663920), read from the image, 4-bit texels: four to a cell.
+// (Menu_BackdropRects by Menu_BackdropPattern), read from the image, 4-bit
+// texels: four to a cell.
 //
 // A quick-load that runs writes the span over the shadow, the take's cells
 // with it, so nothing is put back then. F6 is the menu's while it is open, so
@@ -274,12 +274,8 @@ bool g_backdrop_draw = false;    // this opening draws the backdrop
 
 constexpr int kPageX = 0x340, kPageY = 0x100;                    // Menu_DrawBackdrop's page
 constexpr int kClutX = 0x30, kClutY = 0x1E2, kClutCells = 0x40;   // its four CLUTs: 0x30, 0x40, 0x50, 0x60
-constexpr unsigned kPatternBytes = 0x66396C - 0x663920;          // the pattern, up to the kinds' starts
-constexpr unsigned kRectCount = (0x663920 - 0x663874) / 4;       // the rectangles, up to the pattern
-
-const unsigned char* Image(::bof3::image::Va va) {
-    return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(va.v)));
-}
+constexpr unsigned kPatternBytes = Menu_BackdropPattern_count;   // the pattern, up to the kinds' starts
+constexpr unsigned kRectCount = Menu_BackdropRects_count / 4;    // the rectangles, up to the pattern
 
 void StoreCells(const Cells& c, std::vector<std::uint16_t>& into) {
     into.resize(static_cast<std::size_t>(c.rect[2]) * static_cast<std::size_t>(c.rect[3]));
@@ -302,8 +298,8 @@ void LoadCells(const Cells& c, const std::vector<std::uint16_t>& from, bool clut
 // value are no picture: the backdrop is then drawn as before this entry (from
 // the scene's cells, and not in a battle).
 void TakeBackdrop() {
-    const unsigned char* const pattern = Image(menu_windows::at::kBackdropPattern);
-    const unsigned char* const rects = Image(menu_windows::at::kBackdropRects);
+    const unsigned char* const pattern = Menu_BackdropPattern;
+    const unsigned char* const rects = Menu_BackdropRects;
     int u0 = 256, v0 = 256, u1 = 0, v1 = 0;
     for (unsigned i = 0; i < kPatternBytes; ++i) {
         if (pattern[i] >= kRectCount)
