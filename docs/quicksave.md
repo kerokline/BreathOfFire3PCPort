@@ -735,6 +735,58 @@ spaces, a word (lead 0, words at 0..3 and 4..9, then byte 0x20)`.
   world map, the minigames, the events). The backdrop test is the battle
   mode alone.
 
+### QM.9 The backdrop in every scene (2026-11-27)
+
+The owner (2026-11-27): the save screen's pixels and palette on the quick
+menu, the option QM.8 set aside ("uploading the backdrop's textures").
+
+- **Where the backdrop's cells come from.** The image chunks of the title's
+  files, read from the PC install's `DAT` (kind 1; the tag gives the place):
+  `FIRST.DAT` loads `(0x340, 0x100)`, four tiles wide; `DEMO.DAT` loads the
+  same place over it; `START.DAT`, loaded when the title's menu begins,
+  loads `(0x340, 0x100)` two tiles wide, 64 x 256 cells. That last load is
+  the menus' page. `BATTLE.DAT` and the other battle files load the same
+  place again. The four CLUTs are cells `0x30..0x6F` of row `0x1E2`: the
+  palette strip's row 2, `FIRST.DAT`'s chunk `0x8400`.
+- **A first try, wrong.** A copy taken at the end of `FIRST.DAT`'s load drew
+  a black backdrop on the field: the log gave 8192 of 8192 tile cells and 60
+  of 64 CLUT cells different from the field's. The page is not the menus'
+  yet, and the strip is not in the shadow yet.
+- **Now.** `QuickMenu_MenuPageLoaded` runs at the end of `LoadDatFile` for
+  `START.DAT`. It copies the box around every rectangle the backdrop's
+  pattern names (`0x663874` by `0x663920`, read from the image: `(0x340,
+  0x100)`, 64 x 128 cells) and the 64 CLUT cells into statics outside the
+  span. At F5 the menu compares the shadow with the copy. Equal: nothing is
+  written. Different: the scene's cells are kept, the copy is written
+  (`Gfx_LoadImage`; the CLUT row converted again), and the backdrop is
+  drawn; closing the menu, or the restart of a save half's load, writes the
+  scene's cells back. A quick-load that runs writes the span over the
+  shadow, so nothing is put back then. With no copy held (tiles of one
+  value), the menu draws as QM.8 left it.
+- **Measured** (exe host, en-US, an ini-less launcher copy, scratch recipes
+  on `quick_menu.txt`, `quick_combat_keys.txt` and `quick_worldMap_keys.txt`,
+  F5 after their first F6):
+
+  | Scene | The log at F5 | The capture |
+  |---|---|---|
+  | the field, area 7 (`Game_Mode` 2) | the cells are the title's | the leaf backdrop, as before |
+  | the world map (`Game_Mode` 2) | the cells are the title's | the leaf backdrop |
+  | a battle (`Game_Mode` 5) | 8184 of 8192 tile cells differ, 0 of 64 CLUT cells | the leaf backdrop, where QM.8 had black |
+
+  In the battle, after a second F5 closed the menu, the picture 40 and 140
+  frames later is the battle's own (Rei's Pilfer, its message, the gauges).
+  A Yes from the battle's menu logged `F7 BISLPS10.DAT restored at
+  Frame_Counter 1001: back to Frame_Counter 901` and the battle went on.
+  QM.8's "CLUT rows y `0x1E2` hold the battle's pictures" did not hold in
+  this battle: the row's 64 cells were the title's.
+- **Not measured:** a boss battle (`BOSS*.DAT`), the minigames, an event
+  scene, the spell files (`MAGIC*.DAT`, some of which load this place). The
+  code makes no test of the scene, only of the cells.
+- **A limit.** `Gfx_LoadImage` ends a frame-buffer grab (DIV-0125) whose
+  rectangle it meets. A grab living in `(0x340, 0x100)` when F5 opens in a
+  scene with other cells there is dropped and not made again at the close;
+  the cells under it are put back. No such case was seen.
+
 ## SP-G: the graphics participant (`GFX`)
 
 Stage B's group SP-G, branch `quicksave/spg` (2026-10-19):

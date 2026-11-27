@@ -242,6 +242,128 @@ const unsigned char* TitleLine(unsigned id) {
     bof3::Fatal("quick menu: system message 0x%X is not one of the load menu's four", id);
 }
 
+// --- the backdrop ----------------------------------------------------------------
+//
+// DIVERGENCE (DIV-0147 amended, docs/quicksave.md QM.9): the load menu's
+// backdrop in every scene. Menu_DrawBackdrop's tiles are cells of the page
+// (0x340, 0x100) and its four CLUTs sixteen cells each of row 0x1E2 from x
+// 0x30; a scene may keep pictures of its own there (a battle does, QM.8). So
+// the cells are copied when the title's menu has loaded START.DAT, whose image
+// chunk at (0x340, 0x100) is the menus' page (FIRST.DAT's there is DEMO.DAT's
+// to overwrite; row 0x1E2 is FIRST.DAT's strip chunk 0x8400, in the shadow by
+// then) - the player's own data, kept in memory of ours outside the span, as
+// the four lines are - and
+// while the menu is open on a scene whose cells differ, the title's are in the
+// VRAM shadow and the scene's are kept here; closing puts the scene's back.
+// The tiles' cells are the box around every rectangle the pattern names
+// (Menu_BackdropRects by Menu_BackdropPattern), read from the image, 4-bit
+// texels: four to a cell.
+//
+// A quick-load that runs writes the span over the shadow, the take's cells
+// with it, so nothing is put back then. F6 is the menu's while it is open, so
+// no take holds the title's cells in a scene's place.
+struct Cells {
+    short rect[4];                     // x, y, w, h in VRAM cells
+    std::vector<std::uint16_t> title;  // as the title had them
+    std::vector<std::uint16_t> scene;  // the scene's, while the title's are in
+};
+Cells g_tiles, g_cluts;
+bool g_backdrop_taken = false;   // the title's cells are held
+bool g_backdrop_in = false;      // the title's cells are in the shadow, the scene's in `scene`
+bool g_backdrop_draw = false;    // this opening draws the backdrop
+
+constexpr int kPageX = 0x340, kPageY = 0x100;                    // Menu_DrawBackdrop's page
+constexpr int kClutX = 0x30, kClutY = 0x1E2, kClutCells = 0x40;   // its four CLUTs: 0x30, 0x40, 0x50, 0x60
+constexpr unsigned kPatternBytes = Menu_BackdropPattern_count;   // the pattern, up to the kinds' starts
+constexpr unsigned kRectCount = Menu_BackdropRects_count / 4;    // the rectangles, up to the pattern
+
+void StoreCells(const Cells& c, std::vector<std::uint16_t>& into) {
+    into.resize(static_cast<std::size_t>(c.rect[2]) * static_cast<std::size_t>(c.rect[3]));
+    Gfx_StoreImage(c.rect, into.data());
+}
+
+// The cells written and the textures under them dropped (Gfx_LoadImage); a
+// CLUT row's converted copy made again, as world_map_ours.cpp's KeepDimCluts
+// does it: the row's first-use conversion if not yet made, then our cells.
+void LoadCells(const Cells& c, const std::vector<std::uint16_t>& from, bool clut) {
+    Gfx_LoadImage(c.rect, from.data());
+    if (!clut) return;
+    struct ClutRow { std::uint32_t generation; ::bof3::Slot32<void> pixels; };   // gfx_clut.cpp's
+    auto* const rows = reinterpret_cast<ClutRow*>(Gfx_ClutRows);
+    if (rows[c.rect[1]].pixels == nullptr) Gfx_ClutPixels(static_cast<unsigned>(c.rect[1] << 6));
+    Gfx_ConvertRow(c.rect[0], c.rect[1], c.rect[2]);
+}
+
+// The title's cells taken (QuickMenu_MenuPageLoaded). Tiles that are all one
+// value are no picture: the backdrop is then drawn as before this entry (from
+// the scene's cells, and not in a battle).
+void TakeBackdrop() {
+    const unsigned char* const pattern = Menu_BackdropPattern;
+    const unsigned char* const rects = Menu_BackdropRects;
+    int u0 = 256, v0 = 256, u1 = 0, v1 = 0;
+    for (unsigned i = 0; i < kPatternBytes; ++i) {
+        if (pattern[i] >= kRectCount)
+            bof3::Fatal("quick menu: the backdrop's pattern byte %u names rectangle %u of %u", i, pattern[i], kRectCount);
+        const unsigned char* const r = rects + pattern[i] * 4u;
+        if (r[2] == 0 || r[3] == 0) continue;
+        if (r[0] < u0) u0 = r[0];
+        if (r[1] < v0) v0 = r[1];
+        if (r[0] + r[2] > u1) u1 = r[0] + r[2];
+        if (r[1] + r[3] > v1) v1 = r[1] + r[3];
+    }
+    if (u0 >= u1 || v0 >= v1 || v1 > 256) bof3::Fatal("quick menu: the backdrop's rectangles cover u %d..%d, v %d..%d", u0, u1, v0, v1);
+    const int x0 = u0 / 4, x1 = (u1 + 3) / 4;
+    const short tiles[4] = {static_cast<short>(kPageX + x0), static_cast<short>(kPageY + v0), static_cast<short>(x1 - x0),
+                            static_cast<short>(v1 - v0)};
+    const short cluts[4] = {kClutX, kClutY, kClutCells, 1};
+    std::memcpy(g_tiles.rect, tiles, sizeof tiles);
+    std::memcpy(g_cluts.rect, cluts, sizeof cluts);
+    StoreCells(g_tiles, g_tiles.title);
+    StoreCells(g_cluts, g_cluts.title);
+    bool picture = false;
+    for (const std::uint16_t cell : g_tiles.title) picture = picture || cell != g_tiles.title[0];
+    if (picture != g_backdrop_taken || !picture)
+        bof3::Log("quickmenu   the load menu's backdrop %s START.DAT's load: tiles at (0x%X, 0x%X) %d x %d cells, CLUTs at "
+                  "(0x%X, 0x%X) %d cells", picture ? "taken after" : "is not in the VRAM shadow after", tiles[0], tiles[1],
+                  tiles[2], tiles[3], kClutX, kClutY, kClutCells);
+    g_backdrop_taken = picture;
+}
+
+// At the menu's open: the title's cells in, when the scene's differ.
+void BackdropIn() {
+    g_backdrop_in = false;
+    if (!g_backdrop_taken) {
+        g_backdrop_draw = Game_Mode != kBattleMode;   // QM.8's test, as before
+        return;
+    }
+    g_backdrop_draw = true;
+    StoreCells(g_tiles, g_tiles.scene);
+    StoreCells(g_cluts, g_cluts.scene);
+    unsigned tiles = 0, cluts = 0;
+    for (std::size_t i = 0; i < g_tiles.title.size(); ++i) tiles += g_tiles.scene[i] != g_tiles.title[i];
+    for (std::size_t i = 0; i < g_cluts.title.size(); ++i) cluts += g_cluts.scene[i] != g_cluts.title[i];
+    if (tiles == 0 && cluts == 0) {
+        bof3::Log("quickmenu   the backdrop's cells are the title's in this scene (Game_Mode %u): drawn as they are",
+                  static_cast<U>(Game_Mode));
+        return;
+    }
+    LoadCells(g_tiles, g_tiles.title, false);
+    LoadCells(g_cluts, g_cluts.title, true);
+    g_backdrop_in = true;
+    bof3::Log("quickmenu   the backdrop's cells differ from the title's in this scene (Game_Mode %u: %u of %u tile cells, "
+              "%u of %u CLUT cells): the title's put in while the menu is open", static_cast<U>(Game_Mode), tiles,
+              static_cast<unsigned>(g_tiles.title.size()), cluts, static_cast<unsigned>(g_cluts.title.size()));
+}
+
+// The scene's cells back (the menu closed, or the restart asked).
+void BackdropOut() {
+    if (!g_backdrop_in) return;
+    g_backdrop_in = false;
+    LoadCells(g_tiles, g_tiles.scene, false);
+    LoadCells(g_cluts, g_cluts.scene, true);
+    bof3::Log("quickmenu   the scene's cells put back under the backdrop");
+}
+
 void Open() {
     if (!g_title_taken) {
         // Only before the title has loaded FIRST.DAT through our LoadDatFile
@@ -254,6 +376,7 @@ void Open() {
     g_menu = Menu{};
     g_open = true;
     g_refusal[0] = 0;
+    BackdropIn();
     g_paused_by_us = Game_Paused == 0;
     if (g_paused_by_us) {
         Game_Paused = 1;
@@ -266,6 +389,7 @@ void Open() {
 // Closing ends the pause, as any key ends F9's.
 void Close(const char* why) {
     g_open = false;
+    BackdropOut();
     Game_Paused = 0;
     Sound_ResumeAll();
     bof3::Log("quickmenu   closed at Frame_Counter %u (%s)", static_cast<U>(Frame_Counter), why);
@@ -298,6 +422,9 @@ void DrawYesNo(U yes) {
 // battle's pictures, so the backdrop is left out and the black screen is the
 // background; the title box, the slots, the portraits, the font and the hand
 // draw right there (the capture of 2026-11-06, docs/quicksave.md QM.8).
+// Since QM.9 that is only when the title's backdrop was not taken: with it
+// held, BackdropIn has the title's cells in the shadow and the backdrop is
+// drawn in every scene (g_backdrop_draw).
 //
 // Draft B's question: the title box holds the game's Yes / No alone (its line
 // is spaces and then the two words, so no message of the box's is under it),
@@ -307,7 +434,7 @@ void Draw() {
     Menu_DrawBlackScreen();
     static const unsigned char kNoMessage[1] = {0};
     const unsigned message = g_menu.asking ? kMsgConfirm : g_refusal[0] != 0 ? kMsgCouldNot : kMsgChoose;
-    save_menu::DrawLoadWindows(Game_Mode != kBattleMode, g_menu.offer ? kNoMessage : TitleLine(message));
+    save_menu::DrawLoadWindows(g_backdrop_draw, g_menu.offer ? kNoMessage : TitleLine(message));
     save_menu::DrawSlotsOver(kSlotsX, kSlotsY, g_menu.asking || g_menu.offer ? 0 : 1, g_summaries, &g_menu.first, &g_menu.cursor);
     if (g_menu.asking || g_menu.offer) DrawYesNo(g_menu.yes);
     if (g_menu.offer) {
@@ -334,6 +461,7 @@ void AskSaveLoad(unsigned slot) {
         return;
     }
     g_half_slot = slot;
+    BackdropOut();   // the restart's scene is the game's to load: the cells as the scene had them
     g_tier0 = Tier0::Restart;
     Title_State = kTitleStateMark;
     g_open = false;
@@ -642,6 +770,8 @@ void QuickMenu_TitlePoolLoaded() {
     g_title_taken = true;
 }
 
+void QuickMenu_MenuPageLoaded() { TakeBackdrop(); }
+
 void QuickMenu_AfterPoint() {
     Tier0Frame();
     SaveTail_Frame();
@@ -674,7 +804,10 @@ void QuickMenu_AfterPoint() {
     // Restored: the span holds the take's Game_Paused (0: a take is never
     // made while paused - F6's WM_KEYDOWN ends a pause first, and the menu
     // takes F6 while it is open). The sound the menu paused is resumed.
+    // The backdrop's cells are the take's now (the shadow is in the span):
+    // nothing of this scene is put back.
     g_open = false;
+    g_backdrop_in = false;
     if (Game_Paused != 0) {
         // Not a path known to exist: then the game is paused as the take
         // had it, the pause lines up, and the next key resumes it and its sound.

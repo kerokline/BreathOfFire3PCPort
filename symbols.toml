@@ -3039,6 +3039,24 @@ evidence = "disasm 2026-09-21: Sprite_Draw reads bytes 2n and 2n + 1 for n = the
 # The menu's button rows (2026-09-21, DIV-0018, docs/config-screen.md section 8).
 # ---------------------------------------------------------------------------
 [[data]]
+pc = 0x663874
+name = "Menu_BackdropRects"
+ctype = "unsigned char"
+count = 172
+status = "evidence"
+evidence = "disasm 2026-09-23 (Menu_DrawBackdrop 0x575690): each tile's u, v, w, h are the four bytes at 0x663874 + 4 * the pattern's byte. bytes 2026-11-27 (BOF3.exe): 43 four-byte rectangles up to the pattern at 0x663920, none with a zero width or height; the pattern names every one of 0..42 and no other. Together they cover u 0..256, v 0..128 of the page (0x340, 0x100)."
+note = "module name menu_windows::at::kBackdropRects. Read by the quick menu for the cells its backdrop copy covers (docs/quicksave.md QM.9)."
+
+[[data]]
+pc = 0x663920
+name = "Menu_BackdropPattern"
+ctype = "unsigned char"
+count = 76
+status = "evidence"
+evidence = "disasm 2026-09-23 (Menu_DrawBackdrop 0x575690): the order of the backdrop's tiles, a rectangle index a byte, read from the kind's start (the four bytes at 0x66396C) on through each pair of columns. bytes 2026-11-27 (BOF3.exe): 76 bytes up to the starts at 0x66396C, the largest 42, 43 distinct values; the four starts are inside it."
+note = "module name menu_windows::at::kBackdropPattern."
+
+[[data]]
 pc = 0x66383C
 name = "Menu_ButtonSets"
 ctype = "unsigned char"

@@ -11858,6 +11858,21 @@ designed in rather than bolted on.
   area, the leader's position, the came-from place, the picture), on
   `combat` in the field; section 4 has a take in a battle, a scene and the
   fishing minigame.
+- **Amended 2026-11-27 - the backdrop in every scene** (the owner: the save
+  screen's pixels and palette on the quick menu; the option set aside on
+  2026-11-06): the backdrop's cells - its tiles on the page `(0x340, 0x100)`
+  and its four CLUTs on row `0x1E2` - are copied out of the VRAM shadow when
+  the title's menu has loaded `START.DAT`, whose image chunk is the menus'
+  page, and kept outside the snapshot span. At F5, when the scene's cells
+  there differ from the copy, the copy is written into the shadow while the
+  menu is open and the scene's cells are written back when it closes (or
+  when a save half's restart is asked); a quick-load that runs replaces the
+  shadow with the take's, so nothing is put back. The backdrop is then drawn
+  in every scene, a battle included. The test is of the cells, not of
+  `Game_Mode`; with no copy held the menu draws as the 2026-11-06 amendment
+  left it. Measured on the field, the world map and a battle:
+  [`quicksave.md`](quicksave.md) QM.9. A frame-buffer grab (DIV-0125) living
+  in that place at F5 would be dropped; none was seen.
 - **Reversible?** F5 is ours (nothing of Capcom's is replaced; without the
   key nothing changes). It is read only in our window procedure, so only the
   hosted build's `BOF3X_ORIGINAL=Game_WndProc` turns it off (Capcom's window
