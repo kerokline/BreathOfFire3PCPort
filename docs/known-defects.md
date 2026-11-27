@@ -11800,3 +11800,68 @@ The owner's route `fishQuicksave.txt` stops the game with the hold off and
 runs to its end with it on. A save without the place still has no way out of
 the spot but another load.
 
+
+## D440 — The demo's corner badge drew the PSP's palette over the PlayStation's picture with `psp-tiles` on (ours; fixed 2026-11-27, DIV-0249, DIV-0086 amended)
+
+**Found:** the owner, 2026-11-27: in the attract sequence the game's logo
+"didn't look quite right"; it should have the start screen's colours.
+
+**Established** (from the discs and the cache): the badge is `Title_Sprites`
+entry 10 (`Title_DrawBadge` `0x4624F0`, 128 x 80 at (0, 0) of the page
+`0x1A080400`, CLUT row 494). Row 494 is not `DEMO.DAT`'s: it is the last
+256-colour row of the *area's* `0x8002BE00` section (PC tag `0x8600`, rows
+483..494), and `AREA004`, `AREA002` and `AREA031` fill the rows before it with
+copies (from row 488, 490 and 485). The PSP redrew the badge as its own
+title's logo, with a new palette in the same rows. `psp-tiles` took those rows
+as "palette rows the PSP changed" - its only chunks in the three files - while
+the badge's page is a language page no layer took. Rendered from the data: the
+PC's page under Japan's row is the title logo's colours; under the PSP's row,
+scrambled; the PSP's page under the PSP's row, the PSP's logo. A PC or PSX
+base with the graphics suite (or the `psp` preset) had the scrambled one. A
+PSP base has the PSP's page and row together and was not affected, nor an
+install without `psp-tiles`.
+
+**The PSP's frame** (the owner, the same day: "a bit wider and shorter"):
+the PSP's `Title_Sprites` entry 10 is 160 x 80 where the PlayStation's and the
+PC's is 128 x 80 (both PSP discs' `BOOT.BIN`), its art x 7..153, y 18..75 of
+the page; two of the page's tiles differ PSP-JP to PSP-EU (the mark). A PSP
+base keeps that entry (a PSP-EU-only cache built for this: `base/exe/data.bin`
+holds 160 x 80, the PSP's page and row), and the draw stays at (0xC0, 4), so
+the badge ends at x 352: whole in every wide mode, its last 25 columns of art
+cut at 4:3.
+
+**The owner's call, 2026-11-27:** the PSP's badge when the PSP's graphics
+are on, the English one when both PSP discs are in the cache, not tied to the
+language played.
+
+**Fixed 2026-11-27** (DIV-0249; DIV-0086 amended):
+- `importer.py opt-recipes` leaves the badge's palette out of `psp-tiles`
+  (`badge_rows`: its three chunks in `AREA002`, `AREA004`, `AREA031` gone,
+  every other line of the layer the same) and writes two layers,
+  `psp-badge-jp` and `psp-badge-eu`, each the page's 32 tiles and those
+  palette rows from its own disc (`badge_recipe`). `recipes/opt.toml`
+  regenerated from the JP, four Western and two PSP discs.
+- The Graphics suite holds both layers, Japan's first, so Europe's lands on
+  top (`recipes/suites.toml`; the group's member lines three rows now).
+- `Title_DrawBadge` draws the PSP's 160 x 80 rectangle with a badge layer on
+  or on a PSP base, and at 4:3 moves the badge left to end at the picture's
+  edge.
+
+**Verified:** `importer.py check`, `ledger_check.py` and the launcher's
+`config_tests` (5,279 checks) pass. `importer.py setup` into a scratch home
+(`D:\bof3x-runs\badge1127\home`, the owner's source list) built both layers.
+The attract sequence there, no input, the game's own frames
+(`BOF3X_SHOT_DIR`), `BOF3X_OPT=psp-art,psp-tiles,psp-maps,psp-badge-jp,psp-badge-eu,area4-walls`:
+- 16:9, nine frames across areas 4 and 2: the PSP's badge whole, in the
+  PSP's colours, the EU mark, ending 21 columns inside the picture's edge;
+  the log has `DIV-0249 ... (a badge layer)` and both layers' files opened.
+- 4:3: the badge whole, ending at the picture's right edge.
+- 16:10 with `psp-tiles,psp-badge-jp` alone: the JP disc's badge, whole.
+- 16:9 with `BOF3X_OPT=area4-walls` (no PSP layer): the PlayStation's badge
+  in the title logo's colours, as before the layer.
+
+**Not done:** the launcher's Graphics page was not looked at with its third
+row of member lines; a PSP-only install was not run (its data was read: the
+PSP's page, palette and entry). A cache built before this keeps the old
+`psp-tiles` until setup rebuilds it (`importer.py stale` names `base`,
+`manifest` and `opt`).

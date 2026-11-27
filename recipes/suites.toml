@@ -34,7 +34,7 @@
 [[suite]]
 id = "graphics"
 label = "Graphics"
-what = "the PSP's art: Stallion's palettes (P6), the area tiles and palettes it redrew or blanked, its map-band edits"
+what = "the PSP's art: Stallion's palettes (P6), the area tiles and palettes it redrew or blanked, its map-band edits, the demo's badge"
 
 [[suite.member]]
 id = "psp-art"
@@ -58,6 +58,26 @@ label = "map bands"
 kind = "opt"
 layer = "psp-maps"
 from = ["psp-jp", "psp-eu"]
+over_psx = "layer"
+
+# The demo's corner badge (DIV-0249): one layer per PSP disc, since the mark
+# beside the logo differs. Japan's is listed first, so Europe's lands on top
+# when the cache holds both (the owner, 2026-11-27: the English badge then,
+# whatever the language played).
+[[suite.member]]
+id = "psp-badge-jp"
+label = "demo badge, PSP-JP"
+kind = "opt"
+layer = "psp-badge-jp"
+from = ["psp-jp"]
+over_psx = "layer"
+
+[[suite.member]]
+id = "psp-badge-eu"
+label = "demo badge, PSP-EU"
+kind = "opt"
+layer = "psp-badge-eu"
+from = ["psp-eu"]
 over_psx = "layer"
 
 [[suite]]

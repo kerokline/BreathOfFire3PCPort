@@ -10,4 +10,5 @@ void TitleStates_Inject();
 
 namespace title_states {
 extern bool g_psp_title;   // defined in title_states.cpp (source-layout B0: promoted for a moved reader)
+extern bool g_psp_badge;   // DIV-0249: the PSP's badge is drawn (a PSP base or a badge layer); defined in title.cpp
 }  // namespace title_states

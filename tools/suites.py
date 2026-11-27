@@ -42,7 +42,7 @@ OVER = {"layer": "kLayer", "engine": "kEngine", "none": "kNone", "switch": "kSwi
 CODES = ["duel-loss", "myria-item"]
 ROLES = {"pc-port": "kPc", "psx-disc": "kPsx", "psp-disc": "kPsp"}
 DEFAULT_LAYERS = {"area4-walls"}                   # importer.py DEFAULT_OPT; config.h kOptDefault
-MEMBERS_MAX = {"graphics": 4, "audio": 4, "data": 6}   # the member lines each suite has (src/launcher/ui/page_versions.cpp kMemberPlaces; launcher.rc's until stage P6)
+MEMBERS_MAX = {"graphics": 6, "audio": 4, "data": 6}   # the member lines each suite has (src/launcher/ui/page_versions.cpp kMemberPlaces; launcher.rc's until stage P6)
 
 
 def _load(path):

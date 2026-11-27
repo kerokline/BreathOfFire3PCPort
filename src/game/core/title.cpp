@@ -30,6 +30,7 @@
 #include "game/move_script_bytes.h"
 #include "game/prim.h"
 #include "game/psp_code.h"
+#include "game/dat_load.h"
 #include "game/rdata_consts.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -520,6 +521,15 @@ constexpr PspRect kPspTextLower = {0, 117, 106, 102};  // "IRE", the right wing,
 constexpr PspRect kPspEmblem = {0, 0, 202, 122};       // the "III" emblem, without the caption below it
 
 constexpr int kPspTextDx = -3, kPspLowerDx = 224, kPspLowerDy = 5, kPspEmblemDx = 30;
+
+// DIVERGENCE DIV-0249: the PSP's corner badge, 160 wide where the PlayStation's
+// is 128 (the PSP's own Title_Sprites entry 10; its art lies x 7..153, y
+// 18..75 of the page, measured 2026-11-27). A PSP base holds that entry; a
+// badge layer (psp-badge-jp, psp-badge-eu) over another base brings the page
+// and the palette but not the entry, so the rectangle is set here for both.
+constexpr PspRect kPspBadge = {0, 0, 160, 80};
+// The two layers that carry the PSP's badge (recipes/opt.toml).
+constexpr const char* kPspBadgeLayers[] = {"psp-badge-jp", "psp-badge-eu"};
 
 // The 16-bit words the handlers count with, as the original's `inc word` /
 // `dec word` in memory: wrapping at 0x10000.
@@ -1984,11 +1994,22 @@ extern "C" void __cdecl Title_StopMusic(void) {
 // Title_BadgeOn as bytes, Game_Mode and the wait word as words; the packet
 // cursor read for the draw mode at the call. The PSX asks a video-mode
 // function for the tpage; the port always takes 0x9D.
+//
+// DIV-0249: the PSP's badge (a PSP base, or a badge layer) is drawn through
+// the PSP's 160 x 80 rectangle at the same place, as the PSP draws it - its
+// right edge 32 past the 4:3 view, inside every wide picture. At 4:3 that
+// edge would cut the last letters, so there the badge moves left until it
+// ends at the picture's edge (ours: the PSP has no 4:3 picture).
 extern "C" void __cdecl Title_DrawBadge(void) {
     if (Field_Request == 5 && Game_Mode == 2 && Transition_Busy == 0) Title_BadgeOn = 0;
     if (Draw_PassFlags == 0 || Title_BadgeOn == 0) return;
     title_states::gTitleStates.draw_mode(Gfx_PacketNext, 0, 0, 0x9D, 0);
     title_states::gTitleStates.commit(2, 0xC);
+    if (title_states::g_psp_badge) {
+        const int fit = 0x140 + static_cast<int>(Widescreen_Live()) - kPspBadge.w;
+        PspSprite(fit < 0xC0 ? fit : 0xC0, 4, 0xA, kPspBadge, 2, 0);
+        return;
+    }
     title_states::gTitleStates.sprite(0xC0, 4, 0xA, 2, 0);
 }
 
@@ -2122,6 +2143,7 @@ extern "C" void __cdecl Title_DrawLogo(void) {
 }
 
 namespace title_states { bool g_psp_title = false; }
+namespace title_states { bool g_psp_badge = false; }
 
 // original 0x462820: the logo's first set (PSX 0x801D12CC): sprite 1 through
 // OT slot 1, sprites 8 and 9 through slot 2, each semi-transparent by `flag`
@@ -2311,6 +2333,13 @@ void TitleFromRest4f_Inject() {
 void TitleFromTitleStates_Inject() {
     title_states::g_psp_title = psp_code::PspBase();
     if (title_states::g_psp_title) bof3::Log("DIV-0131    the title's logo: the PSP base's own pieces (D256)");
+    title_states::g_psp_badge = title_states::g_psp_title;
+    for (int i = 0; i < dat_load::g_opt_count; ++i)
+        for (const char* layer : kPspBadgeLayers)
+            if (std::strcmp(dat_load::g_opt[i], layer) == 0) title_states::g_psp_badge = true;
+    if (title_states::g_psp_badge)
+        bof3::Log("DIV-0249    the demo's badge: the PSP's 160 x 80 rectangle (%s)",
+                  title_states::g_psp_title ? "a PSP base" : "a badge layer");
     BOF3_INJECT(Title_StateLoad);
     BOF3_INJECT(Title_StateFadeIn);
     BOF3_INJECT(Title_StateBackdrop);

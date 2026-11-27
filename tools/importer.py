@@ -1575,6 +1575,24 @@ P6_DEST, CLUT_DEST, PAGE_DEST, BAND_DEST = 0x8002D800, 0x8002BE00, 0x0A081000, 0
 # rows 0-7 of the 0x8002D800 section (PC tag 0xA000). The generator asserts the
 # counts.
 P6_ROWS = {"AREA067": [6, 7], "AREA166": list(range(8))}
+# The demo's corner badge (Title_DrawBadge 0x4624F0: Title_Sprites entry 10, its
+# CLUT word row 494, on the page 0x1A080400). Row 494 is the last 256-colour row
+# of an area's 0x8002BE00 section (the section starts at row 483), and the areas
+# of the demo fill the unused rows before it with the same palette. The PSP
+# redrew the badge and its palette; the badge's page is not taken (a language
+# page, OPT_EXCLUDED), so its palette is not taken either: on the PC's badge it
+# drew the PSP's colours over the PlayStation's picture (DIV-0086, amended
+# 2026-11-27). The palette is read from AREA004's section on each disc.
+# The badge is a layer of its own per PSP disc instead (BADGE_LAYERS): the
+# page's tiles in AREA004 (the demo's areas draw the badge from the page
+# AREA004 loads) and the palette's rows in the demo's three areas, all from
+# that one disc, since two of the page's tiles differ PSP-JP to PSP-EU (the
+# mark beside the logo). The suite lists Japan's first, so Europe's lands on
+# top when a cache holds both (the owner, 2026-11-27).
+BADGE_EMI, BADGE_AT, BADGE_SIZE = "WORLD00/AREA004.EMI", (494 - 483) * 512, 512
+BADGE_PAGE = 0x1A080400
+BADGE_LAYERS = {"psp-badge-jp": "psp-jp", "psp-badge-eu": "psp-eu"}
+BADGE_CLUT_EMIS = ("WORLD00/AREA002.EMI", "WORLD00/AREA004.EMI", "WORLD00/AREA031.EMI")
 OPT_LAYERS = {
     "psp-art": "P6: Stallion's palettes, AREA067 rows 6-7 and AREA166 rows 0-7 of the 0x8002D800 "
                "section, as the PSP discs ship them (psp-stallion.md 2)",
@@ -1585,6 +1603,9 @@ OPT_LAYERS = {
     "psp-names-en-150": "the PSP-EU's item and ability names where they differ from the US disc's "
                         "tables (P7: ability 116; three more abilities, four items)",
     "psp-names-ja-JP": "the PSP-JP's renamed ability 116 and key items 2, 5, 7, 9",
+    "psp-badge-jp": "the demo's corner badge as the PSP-JP disc draws it: the 0x1A080400 page's tiles in "
+                    "AREA004 and the badge's palette rows in AREA002, AREA004 and AREA031 (DIV-0249)",
+    "psp-badge-eu": "the demo's corner badge as the PSP-EU disc draws it: the same tiles and rows from that disc",
     "area4-walls": "DIV-0080: AREA004's collision as the Western PSX discs ship it - the area block's whole "
                    "cell-byte plane (in PC tag 0xC8000) and the whole battle placement map (PC tag 0xC0800); "
                    "not the tile words or texture records",
@@ -1641,10 +1662,22 @@ def _runs(idx, gap=0):
     return [tuple(r) for r in out]
 
 
-def opt_units(layer, kind, tag, jp, psp, pc):
+def badge_rows(jp, psp, badge):
+    """The 32-byte rows of a palette section that hold the demo badge's palette:
+    each whole 256-colour row that is the JP disc's badge palette on the JP side
+    and the PSP's on the PSP side (`badge`, the two palettes)."""
+    out = set()
+    for at in range(0, len(jp) - BADGE_SIZE + 1, BADGE_SIZE):
+        if (jp[at:at + BADGE_SIZE], psp[at:at + BADGE_SIZE]) == badge:
+            out.update(range(at // CLUT_ROW, (at + BADGE_SIZE) // CLUT_ROW))
+    return out
+
+
+def opt_units(layer, kind, tag, jp, psp, pc, badge=None):
     """The chunks a layer carries for one section: [(kind, tag, at, size)], `at`
     a byte offset into the section. Where the PC's chunk is not the JP section
-    (the port's dial page), a unit the port changed is not taken."""
+    (the port's dial page), a unit the port changed is not taken; nor is a
+    palette row of the demo's badge (`badge`, BADGE_EMI's comment)."""
     if kind == 1:
         cols, x0, y0 = (tag >> 8) & 0xFF, tag >> 24, (tag >> 16) & 0xFF
         diff = [i for i in range(len(jp) // PAGE_TILE)
@@ -1661,8 +1694,9 @@ def opt_units(layer, kind, tag, jp, psp, pc):
     if layer == "psp-maps":
         diff = [i for i in range(len(jp)) if jp[i] != psp[i] and pc[i] == jp[i]]
         return [(0, tag + a, a, b - a + 1) for a, b in _runs(diff, BAND_GAP)]
+    left = badge_rows(jp, psp, badge) if badge else set()
     diff = [r for r in range(len(jp) // CLUT_ROW)
-            if jp[r * CLUT_ROW:(r + 1) * CLUT_ROW] != psp[r * CLUT_ROW:(r + 1) * CLUT_ROW]]
+            if jp[r * CLUT_ROW:(r + 1) * CLUT_ROW] != psp[r * CLUT_ROW:(r + 1) * CLUT_ROW] and r not in left]
     return [(0, tag + a * CLUT_ROW, a * CLUT_ROW, (b - a + 1) * CLUT_ROW) for a, b in _runs(diff)]
 
 
@@ -1759,6 +1793,10 @@ def cmd_opt_recipes(a):
     jp, pj, pe = discs["psx-jp"], discs["psp-jp"], discs["psp-eu"]
     layers = collections.defaultdict(lambda: collections.OrderedDict())
     excluded, stats = collections.Counter(), collections.Counter()
+    badge = tuple(next(b for _, t, dest, b in d.sections(BADGE_EMI).values() if t == 0 and region_nd(t, dest) == CLUT_DEST)
+                  [BADGE_AT:BADGE_AT + BADGE_SIZE] for d in (jp, pj))
+    if len(badge[0]) != BADGE_SIZE or badge[0] == badge[1]:
+        raise SystemExit("%s: the badge's palette row is not where BADGE_AT says, or the PSP's is Japan's" % BADGE_EMI)
     for key, rows in sorted(json.load(open(p))["files"].items()):
         stem = key.rsplit("/", 1)[-1][:-4]
         for r in rows:
@@ -1787,7 +1825,15 @@ def cmd_opt_recipes(a):
             blob, chunks = pc.chunks(name)
             c = chunks[slot]
             pcb = blob[c.offset:c.offset + c.size]
-            units = opt_units(layer, ch["kind"], ch["tag"], jb, pb, pcb)
+            is_clut = layer == "psp-tiles" and ch["kind"] == 0
+            units = opt_units(layer, ch["kind"], ch["tag"], jb, pb, pcb, badge if is_clut else None)
+            if is_clut:
+                n = len(badge_rows(jb, pb, badge))
+                stats[(layer, "palette rows left out (the demo badge's)")] += n
+                stats[(layer, "sections with the demo badge's palette")] += n > 0
+            if not units and is_clut:   # the PSP changed the badge's palette only
+                stats[(layer, "sections wholly the demo badge's palette")] += 1
+                continue
             if not units:            # every tile the PSP changed is one the port redrew too
                 stats[(layer, "sections wholly under the port's dial page")] += 1
                 continue
@@ -1803,13 +1849,14 @@ def cmd_opt_recipes(a):
                 stats[(layer, "chunks")] += 1
                 stats[(layer, "tiles" if kind == 1 else "bytes")] += size // PAGE_TILE if kind == 1 else size
                 stats[(layer, "on both PSP discs")] += len(on) == 2
-            if pcb == jb and bytes(composed) != pb:
+            if pcb == jb and bytes(composed) != pb and not (is_clut and badge_rows(jb, pb, badge)):
                 raise SystemExit("%s slot %d: the layer over the PC's chunk is not the PSP's section" % (name, slot))
             if pcb != jb:
                 stats[(layer, "port-art sections (the port's tiles kept)")] += 1
             stats[(layer, "sections")] += 1
             layers[layer].setdefault(name, []).append((slot, key, r["b"], sha(bytes(composed)), out))
     walls_recipe(discs, jp, where, files, pc, layers, stats)
+    badge_recipe(discs, jp, where, files, pc, layers, stats)
     for lname, (psp_id, base_id, ja) in NAME_LAYERS.items():
         src, base = discs[psp_id], discs[base_id]
         for t, pc_at in name_tables():
@@ -1865,6 +1912,62 @@ def cmd_opt_recipes(a):
     print("  not carried (region_diff class, what: sections):")
     for (k, what), n in sorted(excluded.items(), key=str):
         print("    %-10s %-34s %4d  %s" % (k, what, n, OPT_CONVERTED if k == "converted" else OPT_EXCLUDED[(k, what)]))
+
+
+def badge_recipe(discs, jp, where, files, pc, layers, stats):
+    """The two badge layers (BADGE_LAYERS), each whole from its own PSP disc:
+    every tile of AREA004's 0x1A080400 page that differs from Japan's, and
+    every palette row badge_rows finds in the demo's three areas. The PC's
+    chunks must be JP's sections, and the composed page the PSP disc's."""
+    for lname, bid in BADGE_LAYERS.items():
+        src = discs[bid]
+        def twin(key, t, dest):
+            # JP's section and the PSP-JP's by destination; this disc's by the PSP-JP's index
+            # (the PSP-EU's kind-0 bands sit 0x8000 higher, as in cmd_opt_recipes)
+            out = []
+            for d in (jp, discs["psp-jp"]):
+                idx = [i for i, sec in d.sections(key).items() if sec[1] == t and region_nd(sec[1], sec[2]) & ~1 == dest]
+                if len(idx) != 1:
+                    raise SystemExit("%s: %d sections at 0x%08X on %s" % (key, len(idx), dest, d.id))
+                out.append((idx[0], d.sections(key)[idx[0]][3]))
+            mine = src.sections(key).get(out[1][0])
+            if not mine or mine[1] != t or len(mine[3]) != len(out[1][1]):
+                raise SystemExit("%s section %d: %s's twin is not the same shape" % (key, out[1][0], src.id))
+            return [out[0], (out[1][0], mine[3])]
+        pal = tuple(b[BADGE_AT:BADGE_AT + BADGE_SIZE] for _, b in twin(BADGE_EMI, 0, CLUT_DEST))
+        if pal[0] == pal[1]:
+            raise SystemExit("%s: %s's badge palette is Japan's" % (lname, bid))
+        for key, t, dest in [(BADGE_EMI, 3, BADGE_PAGE)] + [(k, 0, CLUT_DEST) for k in BADGE_CLUT_EMIS]:
+            (ji, jb), (pi, pb) = twin(key, t, dest)
+            name = key.rsplit("/", 1)[-1][:-4] + ".DAT"
+            got = where.get((key, ji))
+            if got is None or len(pb) != len(jb):
+                raise SystemExit("%s section %d: no PC base chunk it lands on, or the PSP's twin another size" % (key, ji))
+            slot = got[1]
+            ch = files[name]["chunks"][slot]
+            blob, chunks = pc.chunks(name)
+            c = chunks[slot]
+            pcb = blob[c.offset:c.offset + c.size]
+            if pcb != jb:
+                raise SystemExit("%s slot %d: the PC's chunk is not JP's section" % (name, slot))
+            if t == 3:
+                units = opt_units(lname, 1, ch["tag"], jb, pb, pcb)
+            else:
+                units = [(0, ch["tag"] + a * CLUT_ROW, a * CLUT_ROW, (b - a + 1) * CLUT_ROW)
+                         for a, b in _runs(sorted(badge_rows(jb, pb, pal)))]
+            if not units:
+                raise SystemExit("%s: %s has nothing of the badge at 0x%08X" % (lname, key, dest))
+            composed = bytearray(pcb)
+            out = []
+            for kind, tag, at, size in units:
+                composed[at:at + size] = pb[at:at + size]
+                out.append((kind, tag, at, size, sha(pb[at:at + size]), [bid]))
+                stats[(lname, "chunks")] += 1
+                stats[(lname, "tiles" if kind == 1 else "palette rows")] += size // (PAGE_TILE if kind == 1 else CLUT_ROW)
+            if t == 3 and bytes(composed) != pb:
+                raise SystemExit("%s slot %d: the layer over the PC's page is not %s's" % (name, slot, bid))
+            stats[(lname, "sections")] += 1
+            layers[lname].setdefault(name, []).append((slot, key, pi, sha(bytes(composed)), out))
 
 
 def walls_recipe(discs, jp, where, files, pc, layers, stats):

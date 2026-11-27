@@ -9,8 +9,8 @@
 
 [meta]
 target = "pc-zh"
-generated = 2026-10-10
-recipe_sha256 = "c7b3628fceb4af9e53cff42c2b5f0164a2d7239587d14c12990850bc14b057f3"
+generated = 2026-11-27
+recipe_sha256 = "42c10b75003ae568a5d4bdb9a2f40ef9d21f2c8723a114344b87bfb861d35f7d"
 pairs = ["psx-jp_vs_psp-jp.json"]
 
 [[layer]]
@@ -43,22 +43,10 @@ chunks = [
   { kind = 1, tag = 0x0B0E0200, size = 4096, sha256 = "df053131e077cec9ccf73cc4fd099590e5e625cd216067888a00073b623a3850", over = 5, emi = "WORLD00/AREA000.EMI#7", at = 198656, on = ["psp-jp", "psp-eu"] },
 ]
 [[layer.file]]
-name = "AREA002.DAT"
-composed = [{ over = 8, sha256 = "3b515ed534eef9c7653cde0b754aa96dd281eaa5ee7373fd78580974f3f53e66" }]
-chunks = [
-  { kind = 0, tag = 0x00009400, size = 2560, sha256 = "0cd7ded385ba22285e8d77c142f7a0234ddde121a3468ac9a2e0d06938644842", over = 8, emi = "WORLD00/AREA002.EMI#11", at = 3584, on = ["psp-jp", "psp-eu"] },
-]
-[[layer.file]]
 name = "AREA003.DAT"
 composed = [{ over = 5, sha256 = "211319ba27a98d68123f06d0414efcd1f110ad19d8d0138d9db332d35e7971a0" }]
 chunks = [
   { kind = 1, tag = 0x0B0E0200, size = 4096, sha256 = "df053131e077cec9ccf73cc4fd099590e5e625cd216067888a00073b623a3850", over = 5, emi = "WORLD00/AREA003.EMI#7", at = 198656, on = ["psp-jp", "psp-eu"] },
-]
-[[layer.file]]
-name = "AREA004.DAT"
-composed = [{ over = 9, sha256 = "9d5261891c2d15128a8d9be79bbbe656ad695c1d752c5410491fb73e0279a996" }]
-chunks = [
-  { kind = 0, tag = 0x00009000, size = 3584, sha256 = "3b958e96dfdf2365e1c498379614c3ec65173e6dce5f7d0aa237e4fa0a0edfc7", over = 9, emi = "WORLD00/AREA004.EMI#12", at = 2560, on = ["psp-jp", "psp-eu"] },
 ]
 [[layer.file]]
 name = "AREA005.DAT"
@@ -165,12 +153,6 @@ chunks = [
   { kind = 0, tag = 0x000086A0, size = 32, sha256 = "c69baaf9f4a384386065e5dc01d76d0ec5d0eb72db397eb5e046dbfbba9e9ee9", over = 7, emi = "WORLD00/AREA030.EMI#14", at = 160, on = ["psp-jp", "psp-eu"] },
   { kind = 0, tag = 0x00009200, size = 864, sha256 = "d4bc68642616e39155e5f841d1cb50a6b95d01b2906469457dbb3b967e737254", over = 7, emi = "WORLD00/AREA030.EMI#14", at = 3072, on = ["psp-jp", "psp-eu"] },
   { kind = 0, tag = 0x00009580, size = 128, sha256 = "fcaa57798dea940a70082ec40d25aa287646575710ba299234ac40146f3cf2b5", over = 7, emi = "WORLD00/AREA030.EMI#14", at = 3968, on = ["psp-jp", "psp-eu"] },
-]
-[[layer.file]]
-name = "AREA031.DAT"
-composed = [{ over = 6, sha256 = "84dfae227410f0348f491625fc72ca9a73edbc5e1328946d14d3950d65d5028f" }]
-chunks = [
-  { kind = 0, tag = 0x00008A00, size = 5120, sha256 = "d499118d80f260c404e431d05959d1803fc1bf57b2ea6098402a5ebe88532e87", over = 6, emi = "WORLD00/AREA031.EMI#8", at = 1024, on = ["psp-jp", "psp-eu"] },
 ]
 [[layer.file]]
 name = "AREA036.DAT"
@@ -1321,6 +1303,66 @@ chunks = [
   { kind = 5, tag = 0x0065739C, size = 16, sha256 = "67fb2db4b4d6ab4776c6fa28e8d68852cd1a622722aea85daab24ab04136d1c1", table = "key_items", record = 7, on = ["psp-jp"] },
   { kind = 5, tag = 0x006573C4, size = 16, sha256 = "ead585c78c6c5d365ea35a54588cc43d4491293d6e8d756d97e345ded54f08f9", table = "key_items", record = 9, on = ["psp-jp"] },
   { kind = 5, tag = 0x0065CFA8, size = 16, sha256 = "aac3780c23b5d63cc37a4869325008601bcd10603698766483d9b61d674d4310", table = "abilities", record = 116, on = ["psp-jp"] },
+]
+
+[[layer]]
+name = "psp-badge-jp"
+what = "the demo's corner badge as the PSP-JP disc draws it: the 0x1A080400 page's tiles in AREA004 and the badge's palette rows in AREA002, AREA004 and AREA031 (DIV-0249)"
+[[layer.file]]
+name = "AREA002.DAT"
+composed = [{ over = 8, sha256 = "3b515ed534eef9c7653cde0b754aa96dd281eaa5ee7373fd78580974f3f53e66" }]
+chunks = [
+  { kind = 0, tag = 0x00009400, size = 2560, sha256 = "0cd7ded385ba22285e8d77c142f7a0234ddde121a3468ac9a2e0d06938644842", over = 8, emi = "WORLD00/AREA002.EMI#11", at = 3584, on = ["psp-jp"] },
+]
+[[layer.file]]
+name = "AREA004.DAT"
+composed = [{ over = 11, sha256 = "fd9200de1a73a44c45a48ffb549158bd514283e09b1e6340de32bae7a8d6e465" }, { over = 9, sha256 = "9d5261891c2d15128a8d9be79bbbe656ad695c1d752c5410491fb73e0279a996" }]
+chunks = [
+  { kind = 1, tag = 0x1A080400, size = 8192, sha256 = "867847c808f68bf8e83c9edeb3b571df661f93b49293d2f578fa40d909d7d476", over = 11, emi = "WORLD00/AREA004.EMI#14", at = 0, on = ["psp-jp"] },
+  { kind = 1, tag = 0x1A090400, size = 8192, sha256 = "72a858948b04d2277027c163d2cb980a7ce14ddd522af0251e2fbe5722d8523d", over = 11, emi = "WORLD00/AREA004.EMI#14", at = 8192, on = ["psp-jp"] },
+  { kind = 1, tag = 0x1A0A0400, size = 8192, sha256 = "c1d88fe2ae05a9572e09c22575d2c9598106de43e52e98fd6821fc9b13398b79", over = 11, emi = "WORLD00/AREA004.EMI#14", at = 16384, on = ["psp-jp"] },
+  { kind = 1, tag = 0x1A0B0400, size = 8192, sha256 = "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47", over = 11, emi = "WORLD00/AREA004.EMI#14", at = 24576, on = ["psp-jp"] },
+  { kind = 1, tag = 0x1A0C0400, size = 8192, sha256 = "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47", over = 11, emi = "WORLD00/AREA004.EMI#14", at = 32768, on = ["psp-jp"] },
+  { kind = 1, tag = 0x1A0D0400, size = 8192, sha256 = "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47", over = 11, emi = "WORLD00/AREA004.EMI#14", at = 40960, on = ["psp-jp"] },
+  { kind = 1, tag = 0x1A0E0400, size = 8192, sha256 = "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47", over = 11, emi = "WORLD00/AREA004.EMI#14", at = 49152, on = ["psp-jp"] },
+  { kind = 1, tag = 0x1A0F0400, size = 8192, sha256 = "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47", over = 11, emi = "WORLD00/AREA004.EMI#14", at = 57344, on = ["psp-jp"] },
+  { kind = 0, tag = 0x00009000, size = 3584, sha256 = "3b958e96dfdf2365e1c498379614c3ec65173e6dce5f7d0aa237e4fa0a0edfc7", over = 9, emi = "WORLD00/AREA004.EMI#12", at = 2560, on = ["psp-jp"] },
+]
+[[layer.file]]
+name = "AREA031.DAT"
+composed = [{ over = 6, sha256 = "84dfae227410f0348f491625fc72ca9a73edbc5e1328946d14d3950d65d5028f" }]
+chunks = [
+  { kind = 0, tag = 0x00008A00, size = 5120, sha256 = "d499118d80f260c404e431d05959d1803fc1bf57b2ea6098402a5ebe88532e87", over = 6, emi = "WORLD00/AREA031.EMI#8", at = 1024, on = ["psp-jp"] },
+]
+
+[[layer]]
+name = "psp-badge-eu"
+what = "the demo's corner badge as the PSP-EU disc draws it: the same tiles and rows from that disc"
+[[layer.file]]
+name = "AREA002.DAT"
+composed = [{ over = 8, sha256 = "3b515ed534eef9c7653cde0b754aa96dd281eaa5ee7373fd78580974f3f53e66" }]
+chunks = [
+  { kind = 0, tag = 0x00009400, size = 2560, sha256 = "0cd7ded385ba22285e8d77c142f7a0234ddde121a3468ac9a2e0d06938644842", over = 8, emi = "WORLD00/AREA002.EMI#11", at = 3584, on = ["psp-eu"] },
+]
+[[layer.file]]
+name = "AREA004.DAT"
+composed = [{ over = 11, sha256 = "ac5e14775bd5030885252dd0460f15e50345fb947c6fad609ae03cc5d4e7da85" }, { over = 9, sha256 = "9d5261891c2d15128a8d9be79bbbe656ad695c1d752c5410491fb73e0279a996" }]
+chunks = [
+  { kind = 1, tag = 0x1A080400, size = 8192, sha256 = "867847c808f68bf8e83c9edeb3b571df661f93b49293d2f578fa40d909d7d476", over = 11, emi = "WORLD00/AREA004.EMI#14", at = 0, on = ["psp-eu"] },
+  { kind = 1, tag = 0x1A090400, size = 8192, sha256 = "9e672f07c2eee5cd7a264f12af0be3e60ea4ea1d6dbff22c5db7a718685dcd68", over = 11, emi = "WORLD00/AREA004.EMI#14", at = 8192, on = ["psp-eu"] },
+  { kind = 1, tag = 0x1A0A0400, size = 8192, sha256 = "268d0e4bf80e290eee8cc92ed364fe2887151746d3fbe7e8a6c39cac0905887c", over = 11, emi = "WORLD00/AREA004.EMI#14", at = 16384, on = ["psp-eu"] },
+  { kind = 1, tag = 0x1A0B0400, size = 8192, sha256 = "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47", over = 11, emi = "WORLD00/AREA004.EMI#14", at = 24576, on = ["psp-eu"] },
+  { kind = 1, tag = 0x1A0C0400, size = 8192, sha256 = "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47", over = 11, emi = "WORLD00/AREA004.EMI#14", at = 32768, on = ["psp-eu"] },
+  { kind = 1, tag = 0x1A0D0400, size = 8192, sha256 = "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47", over = 11, emi = "WORLD00/AREA004.EMI#14", at = 40960, on = ["psp-eu"] },
+  { kind = 1, tag = 0x1A0E0400, size = 8192, sha256 = "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47", over = 11, emi = "WORLD00/AREA004.EMI#14", at = 49152, on = ["psp-eu"] },
+  { kind = 1, tag = 0x1A0F0400, size = 8192, sha256 = "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47", over = 11, emi = "WORLD00/AREA004.EMI#14", at = 57344, on = ["psp-eu"] },
+  { kind = 0, tag = 0x00009000, size = 3584, sha256 = "3b958e96dfdf2365e1c498379614c3ec65173e6dce5f7d0aa237e4fa0a0edfc7", over = 9, emi = "WORLD00/AREA004.EMI#12", at = 2560, on = ["psp-eu"] },
+]
+[[layer.file]]
+name = "AREA031.DAT"
+composed = [{ over = 6, sha256 = "84dfae227410f0348f491625fc72ca9a73edbc5e1328946d14d3950d65d5028f" }]
+chunks = [
+  { kind = 0, tag = 0x00008A00, size = 5120, sha256 = "d499118d80f260c404e431d05959d1803fc1bf57b2ea6098402a5ebe88532e87", over = 6, emi = "WORLD00/AREA031.EMI#8", at = 1024, on = ["psp-eu"] },
 ]
 
 [[layer]]
