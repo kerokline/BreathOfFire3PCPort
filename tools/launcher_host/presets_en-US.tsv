@@ -249,6 +249,7 @@ en-US	as-shipped	already-off	DIV-0245	FasterFaerieVillage	A mod can run the faer
 en-US	as-shipped	off	DIV-0246	env:BOF3X_LAYERING=0	Rei's tail is drawn over Bunyan's table while he swings it at the plate	Player yes
 en-US	as-shipped	off	DIV-0247	env:BOF3X_LAYERING=0	The plate on Bunyan's table is drawn whole, over the table's faces	Player yes
 en-US	as-shipped	off	DIV-0248	SaveCameFrom	A save keeps where the party came from: an edge leads back after a load	Player yes
+en-US	as-shipped	already-off	DIV-0249	ini:opt=	The PSP's graphics draw the PSP's demo badge, whole: its page, its palette, its frame	Default off: already off
 en-US	repaired	lang-governed	DIV-0005	lang	Walk a language overlay after each `DAT` file	Switch: lang - part of the language pick, which no preset changes
 en-US	repaired	lang-governed	DIV-0006	lang	Advance the dialogue pen by the glyph's width	Switch: lang - part of the language pick, which no preset changes
 en-US	repaired	lang-governed	DIV-0007	lang	Move the system message pool out of the area script's way	Switch: lang - part of the language pick, which no preset changes
@@ -411,6 +412,7 @@ en-US	repaired	already-off	DIV-0243	ini:cheat.faerie=1	The faerie village's spee
 en-US	repaired	already-off	DIV-0244	ExamineAlwaysLearns	A mod can make an examining member always learn the enemy's skill	Default off: already off
 en-US	repaired	already-off	DIV-0245	FasterFaerieVillage	A mod can run the faerie village at five times its speed	Default off: already off
 en-US	repaired	off	DIV-0248	SaveCameFrom	A save keeps where the party came from: an edge leads back after a load	Player yes
+en-US	repaired	already-off	DIV-0249	ini:opt=	The PSP's graphics draw the PSP's demo badge, whole: its page, its palette, its frame	Default off: already off
 en-US	playstation	also-available	DIV-0012	ini:filter=linear	Offer point sampling as a choice of look	Default off: the preset keeps it on, so switch it on yourself
 en-US	playstation	already-off	DIV-0041	ini:wide=0	A 384, 426 or 560 x 240 picture: the view widened by 32, 53 or 120 columns a side	Default off: already off
 en-US	playstation	already-off	DIV-0086	ini:opt=	Optional layers from the player's PSP disc, walked after the language overlay	Default off: already off
@@ -425,6 +427,7 @@ en-US	playstation	already-off	DIV-0111	ini:opt=	The PSP's level table and consum
 en-US	playstation	already-off	DIV-0112	ini:opt=	Ryu's forms (P8) as a layer	Default off: already off
 en-US	playstation	already-off	DIV-0113	ini:opt=	The battle chord as the PSP plays it, and a layer's banks in Snd_LoadBankFile	Default off: already off
 en-US	playstation	off	DIV-0123	env:BOF3X_WIDE_STAGING=0	Case zero takes the PSP's staging in the wide modes	Player yes
+en-US	playstation	already-off	DIV-0249	ini:opt=	The PSP's graphics draw the PSP's demo badge, whole: its page, its palette, its frame	Default off: already off
 en-US	psp	cannot	DIV-0002	Save_WriteFile	Refresh the save directory after writing a save	Player costly: the original is only Capcom's function; this build cannot
 en-US	psp	lang-governed	DIV-0006	lang	Advance the dialogue pen by the glyph's width	Switch: lang - part of the language pick, which no preset changes
 en-US	psp	lang-governed	DIV-0007	lang	Move the system message pool out of the area script's way	Switch: lang - part of the language pick, which no preset changes
@@ -489,3 +492,4 @@ en-US	psp	cannot	DIV-0198	EffectKind5E_DrawList	The dock's parts list starts its
 en-US	psp	never	DIV-0212	env:BOF3X_EXEFILE=1	A PC install reads .data from the cache's image and its table files	Player never: Forced or one-way
 en-US	psp	cannot	DIV-0235	Commu_DrawTiledFrame	The tiled frame keeps its texture windows in the packet pool	Player costly: the original is only Capcom's function; this build cannot
 en-US	psp	lang-governed	DIV-0236	lang	The name screen's START word and the French panel label come from the language's own disc	Switch: lang - part of the language pick, which no preset changes
+en-US	psp	also-available	DIV-0249	ini:opt=	The PSP's graphics draw the PSP's demo badge, whole: its page, its palette, its frame	Default off: the preset keeps it on, so switch it on yourself
