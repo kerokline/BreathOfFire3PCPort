@@ -11921,5 +11921,8 @@ chip unheard until every voice's envelope is 0, then empties the reverb.
   oracle's that is stopped and run out first (882 samples run). With
   `BOF3X_OFF=SongStartsQuiet` the log has `patch   OFF  SongStartsQuiet`.
 
-**Not done:** not heard in play by the owner. No scripted run of the game
-crossed a song change with the new build.
+**Heard by the owner in play, 2026-11-27**, on the build of this fix:
+"Yeah, thats much better!"
+
+**Not done:** no scripted run of the game crossed a song change with the new
+build.

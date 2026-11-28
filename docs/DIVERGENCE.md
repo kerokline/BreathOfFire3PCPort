@@ -19255,7 +19255,7 @@ designed in rather than bolted on.
   leftover measured on all 167 songs of a cache before and after
   (`tools/bgm/host/stop_tail`), the host test `seq_tests` "a stopped song run
   out", and the seam's self-test (`BOF3X_SHADOW=sound`, case 4b).
-  **Not heard by the owner in play yet.**
+  **Heard by the owner in play, 2026-11-27**: "Yeah, thats much better!"
 - **Reversible?** `BOF3X_ORIGINAL=SongStartsQuiet`: `Begin` as before. A
   player turns it off with `BOF3X_OFF=SongStartsQuiet` (the ini's `off=`).
 - **Switch:** SongStartsQuiet
