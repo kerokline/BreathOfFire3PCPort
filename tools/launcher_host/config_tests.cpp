@@ -1791,7 +1791,7 @@ void TestPresetPlan() {
         // 93 since DIV-0212 became Player never (the exe-retire round's X6, the owner's decision 2): it was 94;
         // 95 with DIV-0246 and DIV-0247 (2026-11-25, both off with DIV-0071's switch);
         // 96 with DIV-0248 (the state-by-name round's SaveCameFrom, merged 2026-11-26)
-        Check(off == 96, "as shipped, original: 96 entries off, as the tool's table", std::to_string(off));
+        Check(off == 97, "as shipped, original: 97 entries off, as the tool's table", std::to_string(off));
         const std::vector<std::string> n = names(plan.off);
         Check(std::find(n.begin(), n.end(), "SunderLoop") != n.end() &&
                   std::find(n.begin(), n.end(), "Game_Clock") != n.end(),

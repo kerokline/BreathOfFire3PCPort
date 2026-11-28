@@ -250,6 +250,7 @@ original	as-shipped	off	DIV-0246	env:BOF3X_LAYERING=0	Rei's tail is drawn over B
 original	as-shipped	off	DIV-0247	env:BOF3X_LAYERING=0	The plate on Bunyan's table is drawn whole, over the table's faces	Player yes
 original	as-shipped	off	DIV-0248	SaveCameFrom	A save keeps where the party came from: an edge leads back after a load	Player yes
 original	as-shipped	already-off	DIV-0249	ini:opt=	The PSP's graphics draw the PSP's demo badge, whole: its page, its palette, its frame	Default off: already off
+original	as-shipped	off	DIV-0250	SongStartsQuiet	A sequenced song starts after the last song's notes and echo have run out, unheard	Player yes
 original	repaired	skipped-language	DIV-0005	lang	Walk a language overlay after each `DAT` file	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
 original	repaired	skipped-language	DIV-0006	lang	Advance the dialogue pen by the glyph's width	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
 original	repaired	skipped-language	DIV-0007	lang	Move the system message pool out of the area script's way	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
@@ -413,6 +414,7 @@ original	repaired	already-off	DIV-0244	ExamineAlwaysLearns	A mod can make an exa
 original	repaired	already-off	DIV-0245	FasterFaerieVillage	A mod can run the faerie village at five times its speed	Default off: already off
 original	repaired	off	DIV-0248	SaveCameFrom	A save keeps where the party came from: an edge leads back after a load	Player yes
 original	repaired	already-off	DIV-0249	ini:opt=	The PSP's graphics draw the PSP's demo badge, whole: its page, its palette, its frame	Default off: already off
+original	repaired	off	DIV-0250	SongStartsQuiet	A sequenced song starts after the last song's notes and echo have run out, unheard	Player yes
 original	playstation	also-available	DIV-0012	ini:filter=linear	Offer point sampling as a choice of look	Default off: the preset keeps it on, so switch it on yourself
 original	playstation	already-off	DIV-0041	ini:wide=0	A 384, 426 or 560 x 240 picture: the view widened by 32, 53 or 120 columns a side	Default off: already off
 original	playstation	already-off	DIV-0086	ini:opt=	Optional layers from the player's PSP disc, walked after the language overlay	Default off: already off
