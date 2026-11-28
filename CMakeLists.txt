@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.25)
-project(bof3x VERSION 0.1.0 LANGUAGES CXX)
+project(bof3x VERSION 0.1.1 LANGUAGES CXX)
 # The resource compiler is Windows' alone: the version resources, the icon and
 # the launchers' manifest. The Linux build (--preset linux-x86_64,
 # cmake/linux_target.cmake) has no .rc file to compile.
