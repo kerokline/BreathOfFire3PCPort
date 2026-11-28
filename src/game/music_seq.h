@@ -56,6 +56,16 @@ bool IsSong(const void* file, unsigned size);
 // the stream marked as the synth's from here on (Active).
 void Begin();
 
+// DIVERGENCE DIV-0250 (SongStartsQuiet): 1 through PatchBytes at Arm. Begin
+// then stops the synth's last song and runs the chip, unheard, until its
+// voices' envelopes are at 0 (at most kRunOutMax samples) and empties the
+// reverb, before the bank and the new song go in. The synth's clock is the
+// ring's pump, so without this a stopped song's release tails and echo wait
+// in the synth and sound over the next song's first half second; a
+// PlayStation's SPU runs through the load and they end unheard.
+extern std::uint8_t g_song_starts_quiet;
+inline constexpr std::uint64_t kRunOutMax = 10 * 44100;
+
 // The stream Music_Start last started is the synth's (until Music_Release or
 // the next Music_Start of an MP3).
 bool Active();

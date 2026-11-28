@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 249 entries, DIV-0001..0249, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 250 entries, DIV-0001..0250, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -19211,3 +19211,57 @@ designed in rather than bolted on.
 - **Languages:** any
 - **State:** active
 - **Saved state:** unchanged - a picture and where it is drawn (by reading)
+
+### A sequenced song starts after the last song's notes and echo have run out, unheard
+
+- **ID:** DIV-0250
+- **Date:** 2026-11-27
+- **Subsystem:** the sequenced music's start - `music_seq::Begin`
+  (`src/game/platform/music_seq.cpp`, `Music_Start`'s seam of DIV-0087) and
+  `psx::MusicSynth::StopAndRunOut` (`src/audio/seq.cpp`);
+  [`known-defects.md`](known-defects.md) D441,
+  [`libsnd-reading.md`](libsnd-reading.md) 3.11
+- **Tier:** Sensible - a repair of our own engine (DIV-0087), toward what a
+  PlayStation sounds like. Capcom's port plays MP3s and has nothing here.
+- **Original behaviour:** on the PlayStation a stop (`SsSepStop`) keys the
+  song's voices off and the SPU goes on running: the release tails and the
+  reverb's echo sound for a moment and end, while the next song loads from
+  the disc. Under DIV-0087 the synth's clock is the music ring's pump
+  (`music_seq::Decode`), and a stopped ring asks for nothing. So the stopped
+  song's tails and echo stayed in the synth as they were and sounded over the
+  first moments of the next song, however long after the stop it started.
+  With a new bank they read the new bank's samples
+  ([`libsnd-reading.md`](libsnd-reading.md) 3.11).
+- **New behaviour:** `Begin`, before it changes the bank and plays the song,
+  stops the synth's last song and runs the chip with no sample mixed
+  (`FastForward`'s steps, a hundredth of a second at a time) until the
+  envelope of all 24 voices is at 0. Then it empties the reverb unit. The
+  limit is 10 seconds of the chip's time (`kRunOutMax`); a voice that still
+  sounds then is left sounding, and the log line says so. One log line per
+  start that ran anything: `DIV-0250    the last song's notes ran out unheard:
+  N samples`. Nothing the game reads changes. **To the ear:** a song change
+  no longer starts with a short burst of the last song. This holds also where
+  the PlayStation would overlap two songs: a song started in the same frame
+  as the stop, with no load between.
+- **Rationale:** the owner's report of 2026-11-27 ("instead of a fade there's
+  kind of a 'ping' noise. like a quick rising tone - it doesn't show up on the
+  original game"), their confirmation on hearing a rendered pair ("that
+  definitely sounds like the noise I'm hearing"), and their call: "let the
+  tail run out before the new song starts".
+- **Also in the PSX version?** No. Its SPU runs through the stop and the load.
+  Where the PlayStation starts a song with no load after a stop, it plays
+  over the tails; this entry does not (above).
+- **Verification:** see [`known-defects.md`](known-defects.md) D441: the
+  leftover measured on all 167 songs of a cache before and after
+  (`tools/bgm/host/stop_tail`), the host test `seq_tests` "a stopped song run
+  out", and the seam's self-test (`BOF3X_SHADOW=sound`, case 4b).
+  **Not heard by the owner in play yet.**
+- **Reversible?** `BOF3X_ORIGINAL=SongStartsQuiet`: `Begin` as before. A
+  player turns it off with `BOF3X_OFF=SongStartsQuiet` (the ini's `off=`).
+- **Switch:** SongStartsQuiet
+- **Default:** on
+- **Player:** yes - BOF3X_OFF=SongStartsQuiet (ini off=)
+- **Toward:** psx, psp - a song starts on a quiet chip, as after a disc's load; the same-frame overlap is not kept
+- **Languages:** any
+- **State:** active
+- **Saved state:** unchanged - the synth's voices and reverb are in no quicksave; the game's music words are written as before

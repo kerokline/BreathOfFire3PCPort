@@ -22,6 +22,7 @@
 #include "game/dat_cache.h"
 #include "game/music_resume.h"
 #include "game/sound_callees.h"
+#include "hook/detour.h"
 #include "hook/log.h"
 #include "os/os.h"
 
@@ -290,8 +291,17 @@ bool IsSong(const void* file, unsigned size) {
     return g_s.song_file && file == g_s.song_file && size == g_s.song_size;
 }
 
+std::uint8_t g_song_starts_quiet = 0;
+
 void Begin() {
     Objects();
+    if (g_song_starts_quiet) {
+        // DIV-0250: before the bank changes under the old song's voices
+        const std::uint64_t ran = g_s.synth->StopAndRunOut(kRunOutMax);
+        if (ran != 0)
+            bof3::Log("DIV-0250    the last song's notes ran out unheard: %u samples%s", static_cast<unsigned>(ran),
+                      ran >= kRunOutMax ? " (the limit: a voice still sounds)" : "");
+    }
     if (g_s.synth_bank != g_s.bank_path) {
         g_s.synth->LoadBank(*g_s.bank);
         g_s.synth_bank = g_s.bank_path;
@@ -429,6 +439,14 @@ const char* SourceName(char source) {
 }  // namespace
 
 void Arm() {
+    {
+        // DIV-0250: after every self-test, which ran the seam without it but
+        // for its own case
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("SongStartsQuiet", Low32(&g_song_starts_quiet), &was, &is, 1);
+        bof3::Log("DIV-0250    a sequenced song starts after the last one's notes and echo have run out, unheard "
+                  "(on unless the line above says OFF)");
+    }
     char mode[8];
     const std::uint32_t m = bof3::os::GetEnv("BOF3X_MUSIC", mode, sizeof mode);
     // DIV-0150: psx, psp, pc choose a source; seq and mp3 (DIV-0087) as before
@@ -854,6 +872,29 @@ void SelfTest() {
     const bool to_big = change(10, on_big, big) && files[5].opens == 1;
     const bool to_small = change(11, after_big, bank) && files[2].opens == 2;
 
+    // 4b. DIV-0250: song 11 started again while it plays, the switch on. The
+    // seam's samples are the oracle's, which is stopped and run out first: it
+    // ran (a note sounded or was in release), ended inside the limit, and no
+    // voice's envelope is above 0 when the song goes in.
+    g_song_starts_quiet = 1;
+    capture.clear();
+    bool quiet_start = Music_LoadFile(11) == 0 && Music_LoadedTrack == 11;
+    Music_Start(Music_File, static_cast<unsigned>(Music_FileSize), Music_FileLoops);
+    for (int i = 0; i < 3; ++i) {
+        const std::size_t at = capture.size();
+        capture.resize(at + kHalf);
+        Music_Decode(capture.data() + at, static_cast<int>(kHalf));
+    }
+    g_song_starts_quiet = 0;
+    const std::uint64_t ran_out = ref->StopAndRunOut(kRunOutMax);
+    bool voices_off = true;
+    for (int v = 0; v < 24; ++v) voices_off = voices_off && ref->spu().VoiceEnvelope(v) == 0;
+    {
+        const std::vector<std::int16_t> r = Reference(ref, after_big, static_cast<int>(capture.size() / 4));
+        quiet_start = quiet_start && ran_out > 0 && ran_out < kRunOutMax && voices_off &&
+                      std::memcmp(capture.data(), r.data(), capture.size()) == 0;
+    }
+
     // 5. A track the cache lacks, and BOF3X_MUSIC=mp3: the MP3's names, the
     // cache's song untouched.
     names.clear();
@@ -1044,6 +1085,15 @@ void SelfTest() {
                     static_cast<unsigned long long>(period), load7 ? "ok" : "WRONG", start7 ? "ok" : "WRONG", same7 ? "ok" : "WRONG", volume ? "ok" : "WRONG",
                     load8 ? "ok" : "WRONG", end8 ? "ok" : "WRONG", cut, frames8, to_big ? "ok" : "WRONG",
                     to_small ? "ok" : "WRONG", fallback ? "ok" : "WRONG", mp3 ? "ok" : "WRONG", released ? "ok" : "WRONG");
+    if (!quiet_start)
+        bof3::Fatal("DIV-0250 self-test: a song started over a playing one, the switch on: the samples are not the "
+                    "oracle's stopped and run out first, or it ran %llu samples (wanted above 0, below %llu), or a voice "
+                    "still sounded (%s)",
+                    static_cast<unsigned long long>(ran_out), static_cast<unsigned long long>(kRunOutMax),
+                    voices_off ? "none did" : "one did");
+    bof3::Log("shadow      DIV-0250 self-test: a song started over a playing one equals the oracle's stopped and run "
+              "out first (%llu samples), no voice sounding when it goes in",
+              static_cast<unsigned long long>(ran_out));
     if (!layer_song || !layer_name_twin || !layer_under)
         bof3::Fatal("DIV-0109 self-test: a layer's song and bank %s; a base song on a bank named as the layer's %s; a base "
                     "song under the layer %s",
