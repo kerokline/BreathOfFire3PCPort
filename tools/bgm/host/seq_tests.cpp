@@ -300,6 +300,46 @@ void TestBankChange() {
     }));
 }
 
+// StopAndRunOut: a song stopped in a note (a slow release: ADSR2 0x1FCC,
+// linear, shift 12) leaves a tail that the next Play would start over; run
+// out first, every voice's envelope is at 0, the next seconds are silent with
+// nothing played, and a song started then is, sample for sample, the song on a
+// synth that never played another.
+void TestRunOut() {
+    const psx::Bank bank = MakeBank(0x1FCC);
+    auto m = std::make_unique<psx::MusicSynth>();
+    m->LoadBank(bank);
+    m->Play(MakeSong(), 100, 8);
+    std::vector<std::int16_t> out(2 * 44100);
+    m->Render(out.data(), 737 * 10);  // inside the first note
+    auto frozen = std::make_unique<psx::MusicSynth>(*m);
+    frozen->Stop();
+    frozen->Render(out.data(), 4410);
+    long long tail = 0;
+    for (int i = 0; i < 2 * 4410; ++i) tail += static_cast<long long>(out[i]) * out[i];
+    CHECK(tail > 0);  // what the next song would start over
+    const std::uint64_t ran = m->StopAndRunOut(10 * 44100);
+    CHECK(ran > 0);
+    CHECK(ran < 10 * 44100);
+    CHECK_EQ(ran % 441, 0);
+    for (int v = 0; v < 24; ++v) CHECK_EQ(m->spu().VoiceEnvelope(v), 0);
+    CHECK_EQ(m->StopAndRunOut(10 * 44100), 0);  // nothing left to run
+    auto idle = std::make_unique<psx::MusicSynth>(*m);
+    idle->Render(out.data(), 44100);
+    bool silent = true;
+    for (std::int16_t v : out) silent &= v == 0;
+    CHECK(silent);
+    // the limit: a voice that outlasts it is left sounding
+    auto capped = std::make_unique<psx::MusicSynth>();
+    capped->LoadBank(bank);
+    capped->Play(MakeSong(), 100, 8);
+    capped->Render(out.data(), 737 * 10);
+    CHECK_EQ(capped->StopAndRunOut(441), 441);
+    bool sounding = false;
+    for (int v = 0; v < 24; ++v) sounding = sounding || capped->spu().VoiceEnvelope(v) != 0;
+    CHECK(sounding);
+}
+
 // The loaders reject what is not the format.
 void TestLoaders() {
     CHECK(Aborts([] {
@@ -338,6 +378,7 @@ int main(int argc, char** argv) {
         {"once-only song ends", TestEnded},
         {"aborts", TestAborts},
         {"bank change to a smaller bank", TestBankChange},
+        {"a stopped song run out", TestRunOut},
         {"loaders", TestLoaders},
     };
     for (auto& t : tests) {

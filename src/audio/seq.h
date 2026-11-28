@@ -84,6 +84,19 @@ public:
     // resume after a battle (docs/music-seq-engine.md section 8).
     bool FastForward(std::uint64_t frames);
 
+    // Not libsnd: the song stopped (SsSepStop), then the chip run on with no
+    // sample mixed (FastForward's steps) until the envelope of every voice
+    // is at 0, or for `max_frames` samples; the reverb unit is then cleared.
+    // What a PlayStation's SPU does by itself in the seconds a load takes:
+    // the stopped song's release tails and echo end in silence. Here the
+    // SPU's clock is the caller's Render, so a stopped song's tails wait for
+    // the next one (the game's Music_Start calls this first, DIV-0250). The
+    // samples run: 0 when nothing sounded; `max_frames` when a voice still
+    // sounds, and it is then left sounding.
+    std::uint64_t StopAndRunOut(std::uint64_t max_frames);
+    // The envelope (ENVX) of one of the SPU's 24 voices is above 0.
+    bool Sounding() const;
+
     bool Playing() const { return (score_.flags & kPlay) != 0; }
     // A song that plays once (no loop markers) has reached its end of track
     // (_SsSeqGetEof stopped it and keyed its voices off) and every sequencer

@@ -22,6 +22,7 @@
 #include "game/dat_cache.h"
 #include "game/music_resume.h"
 #include "game/sound_callees.h"
+#include "hook/detour.h"
 #include "hook/log.h"
 #include "os/os.h"
 
@@ -81,6 +82,18 @@ struct State {
     std::string song_from;         // where the song came from, for the log (base\bgm or opt\<layer>\bgm)
     std::string synth_bank;        // the bank file the synth holds ("" none)
     psx::MusicSynth* synth = nullptr;
+    // DIV-0250. The frame of the stop that ended the synth's playing song
+    // (stop_seen: there was one since the last Begin). The second synth and
+    // the bank file it holds: made at the first tail kept; the two change
+    // places at each. tail_on: Decode mixes `tail` under the song; tail_run
+    // the samples mixed, tail_quiet the run of zero samples at its end.
+    std::uint32_t stop_frame = 0;
+    bool stop_seen = false;
+    psx::MusicSynth* tail = nullptr;
+    std::string tail_bank;
+    bool tail_on = false;
+    std::uint64_t tail_run = 0;
+    std::uint64_t tail_quiet = 0;
 };
 State g_s;
 
@@ -290,8 +303,47 @@ bool IsSong(const void* file, unsigned size) {
     return g_s.song_file && file == g_s.song_file && size == g_s.song_size;
 }
 
+std::uint8_t g_song_starts_quiet = 0;
+
+namespace {
+// Before a stop of the synth: the frame, when the stop ends a playing song.
+void NoteStop() {
+    if (!g_s.synth || !g_s.synth->Playing()) return;
+    g_s.stop_frame = static_cast<std::uint32_t>(Frame_Counter);
+    g_s.stop_seen = true;
+}
+}  // namespace
+
 void Begin() {
     Objects();
+    g_s.tail_on = false;
+    if (g_song_starts_quiet) {
+        // DIV-0250: before the bank changes under the old song's voices
+        const std::uint32_t now = static_cast<std::uint32_t>(Frame_Counter);
+        const bool same_frame = g_s.stop_seen && g_s.stop_frame == now;
+        g_s.synth->Stop();
+        if (same_frame && g_s.synth->Sounding()) {
+            // the tail kept: this synth goes on as the tail's, the song on the other
+            if (!g_s.tail) g_s.tail = new psx::MusicSynth;
+            std::swap(g_s.synth, g_s.tail);
+            std::swap(g_s.synth_bank, g_s.tail_bank);
+            g_s.synth->StopAndRunOut(kRunOutMax);  // what an older tail left in it
+            g_s.tail_on = true;
+            g_s.tail_run = 0;
+            g_s.tail_quiet = 0;
+            bof3::Log("DIV-0250    the last song stopped in this frame: its notes end under the new song");
+        } else {
+            const std::uint64_t ran = g_s.synth->StopAndRunOut(kRunOutMax);
+            if (ran != 0 && g_s.stop_seen)
+                bof3::Log("DIV-0250    the last song's notes ran out unheard: %u samples, %u frames after its stop%s",
+                          static_cast<unsigned>(ran), static_cast<unsigned>(now - g_s.stop_frame),
+                          ran >= kRunOutMax ? " (the limit: a voice still sounds)" : "");
+            else if (ran != 0)
+                bof3::Log("DIV-0250    the last song's notes ran out unheard: %u samples%s", static_cast<unsigned>(ran),
+                          ran >= kRunOutMax ? " (the limit: a voice still sounds)" : "");
+        }
+    }
+    g_s.stop_seen = false;
     if (g_s.synth_bank != g_s.bank_path) {
         g_s.synth->LoadBank(*g_s.bank);
         g_s.synth_bank = g_s.bank_path;
@@ -319,6 +371,24 @@ void Decode(unsigned char* dst, int size) {
     while (done < frames) {
         const int n = frames - done < kPiece ? frames - done : kPiece;
         g_s.synth->Render(piece, n);
+        if (g_s.tail_on) {
+            // DIV-0250: the last song's tail, from its own synth, under this one
+            std::int16_t tail[2 * kPiece];
+            g_s.tail->SetMono(Mono());
+            g_s.tail->Render(tail, n);
+            for (int i = 0; i < 2 * n; ++i) {
+                if (tail[i] == 0) {
+                    ++g_s.tail_quiet;
+                    continue;
+                }
+                g_s.tail_quiet = 0;
+                const int sum = piece[i] + tail[i];
+                piece[i] = static_cast<std::int16_t>(sum > 32767 ? 32767 : sum < -32768 ? -32768 : sum);
+            }
+            g_s.tail_run += static_cast<std::uint64_t>(n);
+            // off: no voice sounds and a second (2 x 44,100 values) of it was zero - past any echo of the reverb
+            if ((!g_s.tail->Sounding() && g_s.tail_quiet >= 2 * 44100) || g_s.tail_run >= kRunOutMax) g_s.tail_on = false;
+        }
         std::memcpy(dst + static_cast<std::size_t>(done) * 4, piece, static_cast<std::size_t>(n) * 4);
         done += n;
         if (g_s.synth->Ended()) {
@@ -354,12 +424,16 @@ std::int32_t Level(float volume) {
 }
 
 void Release() {
+    NoteStop();
     if (g_s.synth) g_s.synth->Stop();
     g_s.active = false;
 }
 
 void Stop() {
-    if (g_s.synth && g_s.active) g_s.synth->Stop();
+    if (g_s.synth && g_s.active) {
+        NoteStop();
+        g_s.synth->Stop();
+    }
 }
 
 bool PcFirst() { return g_s.armed && g_s.source == 'c'; }
@@ -429,6 +503,14 @@ const char* SourceName(char source) {
 }  // namespace
 
 void Arm() {
+    {
+        // DIV-0250: after every self-test, which ran the seam without it but
+        // for its own case
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("SongStartsQuiet", Low32(&g_song_starts_quiet), &was, &is, 1);
+        bof3::Log("DIV-0250    a sequenced song starts after the last one's notes and echo have run out, unheard "
+                  "(on unless the line above says OFF)");
+    }
     char mode[8];
     const std::uint32_t m = bof3::os::GetEnv("BOF3X_MUSIC", mode, sizeof mode);
     // DIV-0150: psx, psp, pc choose a source; seq and mp3 (DIV-0087) as before
@@ -731,7 +813,7 @@ void SelfTest() {
     psx::Bank bank, big;
     psx::LoadBank(bank_bytes.data(), bank_bytes.size(), &bank);
     psx::LoadBank(big_bytes.data(), big_bytes.size(), &big);
-    psx::MusicSynth* const ref = new psx::MusicSynth;  // the oracle, one synth across the songs as g_s.synth is
+    psx::MusicSynth* ref = new psx::MusicSynth;  // the oracle, one synth across the songs as g_s.synth is
     ref->LoadBank(bank);
     std::vector<TestFile> files = {{std::string(kTestRoot) + "\\base\\bgm\\007.DAT", &looping, 0},
                                    {std::string(kTestRoot) + "\\base\\bgm\\008.DAT", &once, 0},
@@ -853,6 +935,57 @@ void SelfTest() {
     };
     const bool to_big = change(10, on_big, big) && files[5].opens == 1;
     const bool to_small = change(11, after_big, bank) && files[2].opens == 2;
+
+    // 4b. DIV-0250, the switch on. (i) Song 11 started again while it plays:
+    // the stop is this start's own, in its frame, so the tail is kept - the
+    // seam's samples are the oracle's song on a second synth plus the first
+    // synth's tail, stopped and rendered on (it has sound in it). The second
+    // synth is the game's from here on, and the oracle's. (ii) The song
+    // stopped a frame before the start: the seam's samples are the oracle's
+    // stopped and run out first - it ran, ended inside the limit, and no
+    // voice sounds when the song goes in.
+    const auto starts11 = [&] {
+        capture.clear();
+        const bool ok = Music_LoadFile(11) == 0 && Music_LoadedTrack == 11;
+        Music_Start(Music_File, static_cast<unsigned>(Music_FileSize), Music_FileLoops);
+        for (int i = 0; i < 3; ++i) {
+            const std::size_t at = capture.size();
+            capture.resize(at + kHalf);
+            Music_Decode(capture.data() + at, static_cast<int>(kHalf));
+        }
+        return ok;
+    };
+    g_song_starts_quiet = 1;
+    bool tail_kept = starts11() && g_s.tail != nullptr;
+    long long tail_energy = 0;
+    psx::MusicSynth* const ref_tail = ref;
+    {
+        const int frames = static_cast<int>(capture.size() / 4);
+        ref_tail->Stop();
+        ref = new psx::MusicSynth;
+        ref->LoadBank(bank);
+        std::vector<std::int16_t> r = Reference(ref, after_big, frames);
+        std::vector<std::int16_t> t(r.size());
+        ref_tail->SetMono(Mono());
+        ref_tail->Render(t.data(), frames);
+        for (std::size_t i = 0; i < r.size(); ++i) {
+            tail_energy += static_cast<long long>(t[i]) * t[i];
+            const int sum = r[i] + t[i];
+            r[i] = static_cast<std::int16_t>(sum > 32767 ? 32767 : sum < -32768 ? -32768 : sum);
+        }
+        tail_kept = tail_kept && tail_energy > 0 && std::memcmp(capture.data(), r.data(), capture.size()) == 0;
+    }
+    Stop();
+    --g_s.stop_frame;  // the stop was a frame ago
+    bool quiet_start = starts11();
+    g_song_starts_quiet = 0;
+    const std::uint64_t ran_out = ref->StopAndRunOut(kRunOutMax);
+    const bool voices_off = !ref->Sounding();
+    {
+        const std::vector<std::int16_t> r = Reference(ref, after_big, static_cast<int>(capture.size() / 4));
+        quiet_start = quiet_start && !g_s.tail_on && ran_out > 0 && ran_out < kRunOutMax && voices_off &&
+                      std::memcmp(capture.data(), r.data(), capture.size()) == 0;
+    }
 
     // 5. A track the cache lacks, and BOF3X_MUSIC=mp3: the MP3's names, the
     // cache's song untouched.
@@ -1001,6 +1134,7 @@ void SelfTest() {
     Music_Release();
     const bool released = !Active() && !Music_Data;
     delete ref;
+    delete ref_tail;
     std::free(Music_File);
 
     g = saved_g;
@@ -1026,6 +1160,9 @@ void SelfTest() {
     g_s.track = saved_s.track;
     g_s.active = saved_s.active;
     g_s.synth_bank.clear();  // the synth holds the test's bank: the game's first song loads its own
+    g_s.tail_bank.clear();   // so does the second synth, which case 4b made
+    g_s.tail_on = false;
+    g_s.stop_seen = false;
     g_s.bank->name.clear();
     g_s.bank_path.clear();
     g_s.song_from = saved_s.song_from;
@@ -1044,6 +1181,17 @@ void SelfTest() {
                     static_cast<unsigned long long>(period), load7 ? "ok" : "WRONG", start7 ? "ok" : "WRONG", same7 ? "ok" : "WRONG", volume ? "ok" : "WRONG",
                     load8 ? "ok" : "WRONG", end8 ? "ok" : "WRONG", cut, frames8, to_big ? "ok" : "WRONG",
                     to_small ? "ok" : "WRONG", fallback ? "ok" : "WRONG", mp3 ? "ok" : "WRONG", released ? "ok" : "WRONG");
+    if (!tail_kept || !quiet_start)
+        bof3::Fatal("DIV-0250 self-test: a song started over a playing one, its tail kept and mixed from a second "
+                    "synth %s (the tail's energy %lld); a song started a frame after the stop, the oracle's stopped and "
+                    "run out first %s (ran %llu samples, wanted above 0 and below %llu; a voice still sounding: %s)",
+                    tail_kept ? "ok" : "WRONG", tail_energy, quiet_start ? "ok" : "WRONG",
+                    static_cast<unsigned long long>(ran_out), static_cast<unsigned long long>(kRunOutMax),
+                    voices_off ? "none" : "one");
+    bof3::Log("shadow      DIV-0250 self-test: a song started over a playing one equals the oracle's song on a second "
+              "synth plus the first's tail; a song started a frame after the stop equals the oracle's stopped and run "
+              "out first (%llu samples), no voice sounding when it goes in",
+              static_cast<unsigned long long>(ran_out));
     if (!layer_song || !layer_name_twin || !layer_under)
         bof3::Fatal("DIV-0109 self-test: a layer's song and bank %s; a base song on a bank named as the layer's %s; a base "
                     "song under the layer %s",

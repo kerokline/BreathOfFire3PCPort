@@ -41,3 +41,8 @@ target_compile_options(seq_tests PRIVATE -Wall -Wextra)
 add_executable(se_render se_render.cpp)
 target_link_libraries(se_render PRIVATE psx_spu)
 target_compile_options(se_render PRIVATE -Wall -Wextra)
+
+# What the synth holds after a stop, per song of a cache (DIV-0250, known-defects D441).
+add_executable(stop_tail stop_tail.cpp)
+target_link_libraries(stop_tail PRIVATE psx_music)
+target_compile_options(stop_tail PRIVATE -Wall -Wextra)

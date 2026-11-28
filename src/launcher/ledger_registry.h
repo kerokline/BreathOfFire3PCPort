@@ -71,7 +71,7 @@ struct Entry {
     std::uint8_t languages;        // kLang* bits, or kLangAny
 };
 
-inline constexpr std::size_t kSwitchCount = 241;
+inline constexpr std::size_t kSwitchCount = 242;
 inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "Save_WriteFile", 0, 14},   // DIV-0002
     {SwitchForm::Name, "File_OpenWrite", 0, 14},   // DIV-0003
@@ -314,9 +314,10 @@ inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Env, "env:BOF3X_LAYERING=0", 4, 14},   // DIV-0247
     {SwitchForm::Name, "SaveCameFrom", 0, 12},   // DIV-0248
     {SwitchForm::Ini, "ini:opt=", 4, 3},   // DIV-0249
+    {SwitchForm::Name, "SongStartsQuiet", 0, 15},   // DIV-0250
 };
 
-inline constexpr std::size_t kEntryCount = 249;
+inline constexpr std::size_t kEntryCount = 250;
 inline constexpr Entry kEntries[kEntryCount] = {
     {1, "Re-encode `capcom.avi` from Indeo 5 to Cinepak",
      Tier::Intent, State::Active, 0, 0, 0, true, Player::Never, 0, kLangAny},
@@ -816,6 +817,8 @@ inline constexpr Entry kEntries[kEntryCount] = {
      Tier::Sensible, State::Active, 0, 239, 1, true, Player::Yes, 0, kLangAny},
     {249, "The PSP's graphics draw the PSP's demo badge, whole: its page, its palette, its frame",
      Tier::Sensible, State::Active, 0, 240, 1, false, Player::Yes, kTowardPsp, kLangAny},
+    {250, "A sequenced song starts after the last song's notes and echo have run out, unheard",
+     Tier::Sensible, State::Active, 0, 241, 1, true, Player::Yes, kTowardPsx | kTowardPsp, kLangAny},
 };
 
 // The switches of one entry.

@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 249 entries, DIV-0001..0249, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 250 entries, DIV-0001..0250, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -19211,3 +19211,88 @@ designed in rather than bolted on.
 - **Languages:** any
 - **State:** active
 - **Saved state:** unchanged - a picture and where it is drawn (by reading)
+
+### A sequenced song starts after the last song's notes and echo have run out, unheard
+
+- **ID:** DIV-0250
+- **Date:** 2026-11-27
+- **Subsystem:** the sequenced music's start - `music_seq::Begin`
+  (`src/game/platform/music_seq.cpp`, `Music_Start`'s seam of DIV-0087) and
+  `psx::MusicSynth::StopAndRunOut` (`src/audio/seq.cpp`);
+  [`known-defects.md`](known-defects.md) D441,
+  [`libsnd-reading.md`](libsnd-reading.md) 3.11
+- **Tier:** Sensible - a repair of our own engine (DIV-0087), toward what a
+  PlayStation sounds like. Capcom's port plays MP3s and has nothing here.
+- **Original behaviour:** on the PlayStation a stop (`SsSepStop`) keys the
+  song's voices off and the SPU goes on running: the release tails and the
+  reverb's echo sound for a moment and end, while the next song loads from
+  the disc. Under DIV-0087 the synth's clock is the music ring's pump
+  (`music_seq::Decode`), and a stopped ring asks for nothing. So the stopped
+  song's tails and echo stayed in the synth as they were and sounded over the
+  first moments of the next song, however long after the stop it started.
+  With a new bank they read the new bank's samples
+  ([`libsnd-reading.md`](libsnd-reading.md) 3.11).
+- **New behaviour:** `Begin`, before it changes the bank and plays the song,
+  stops the synth's last song and does one of two things with what it left.
+  Nothing the game reads changes in either.
+  - **The song was stopped in an earlier logic frame** (`Frame_Counter`) than
+    this start - an area change, whose stop comes at the transition's end:
+    the chip is run with no sample mixed (`FastForward`'s steps, a hundredth
+    of a second at a time) until the envelope of all 24 voices is at 0, and
+    the reverb unit is emptied. The limit is 10 seconds of the chip's time
+    (`kRunOutMax`); a voice that still sounds then is left sounding, and the
+    log line says so. Log: `DIV-0250    the last song's notes ran out
+    unheard: N samples, M frames after its stop`.
+  - **The song was stopped in this frame** - a `Music_Start` over a playing
+    song, or a stop and a start in one frame (the battle's start, the
+    fanfares): the tail is kept, as on a PlayStation where no load comes
+    between. The synth that holds it goes on as the tail's, with its own bank
+    in its own memory, and the new song plays on a second synth (made at the
+    first such start; the two change places at each). `Decode` adds the
+    tail's samples to the song's, saturating, until no voice of it sounds and
+    a second of it was silent (at most `kRunOutMax` samples). So the old
+    notes end through their own instruments, also when the bank changes -
+    which a PlayStation's one SPU cannot do: there the tail reads the new
+    bank's samples ([`libsnd-reading.md`](libsnd-reading.md) 3.11). Log:
+    `DIV-0250    the last song stopped in this frame: its notes end under the
+    new song`.
+  - A stop counts when it ends a playing song (`MusicSynth::Playing`); a
+    once-only song that ended by itself is run out.
+
+  **To the ear:** an area's song change starts on silence. A battle's start
+  and the fanfares come in over the last notes of the song before.
+  **Known:** the ring renders 0.4 to 0.8 s ahead of what is heard, so the tail
+  kept is of notes up to that far past the last one heard.
+- **Rationale:** the owner's report of 2026-11-27 ("instead of a fade there's
+  kind of a 'ping' noise. like a quick rising tone - it doesn't show up on the
+  original game"), their confirmation on hearing a rendered pair ("that
+  definitely sounds like the noise I'm hearing"), and their call: "let the
+  tail run out before the new song starts". The same-frame tail is their
+  second call of that day, on three renders of the field's song into a
+  battle's (run out, the old one-synth overlap, the two-synth overlap): "the
+  proposed effect is a large improvement of the clean cut between the two so I
+  would prefer us to build that fix". In the one-synth render they heard the
+  ping too ("mostly hidden by the 'snare' sound"): field track 097 is on bank
+  `BGM127`, the battle tracks 153 and 016 on `BGMBAT02` and `BGM013`.
+- **Also in the PSX version?** In effect: its SPU runs through the stop and
+  the load, so a song after a load starts on silence, and a song with no load
+  after the stop plays over the tails. Which starts have a load between was
+  not read from the disc: the frame of the PC's calls stands in for it. The
+  tail through its own bank across a bank change is ours.
+- **Verification:** see [`known-defects.md`](known-defects.md) D441: the
+  leftover measured on all 167 songs of a cache before and after
+  (`tools/bgm/host/stop_tail`), the host test `seq_tests` "a stopped song run
+  out", and the seam's self-test (`BOF3X_SHADOW=sound`, case 4b: both
+  branches against an oracle).
+  **Heard by the owner in play, 2026-11-27**, the run-out at area changes:
+  "Yeah, thats much better!" The same-frame tail: heard as a render, **not in
+  play yet**.
+- **Reversible?** `BOF3X_ORIGINAL=SongStartsQuiet`: `Begin` as before. A
+  player turns it off with `BOF3X_OFF=SongStartsQuiet` (the ini's `off=`).
+- **Switch:** SongStartsQuiet
+- **Default:** on
+- **Player:** yes - BOF3X_OFF=SongStartsQuiet (ini off=)
+- **Toward:** psx, psp - a song starts on a quiet chip, as after a disc's load, and over the last song's tail where the stop is in the start's frame; the tail's own bank is ours
+- **Languages:** any
+- **State:** active
+- **Saved state:** unchanged - the synth's voices and reverb are in no quicksave; the game's music words are written as before

@@ -11865,3 +11865,81 @@ row of member lines; a PSP-only install was not run (its data was read: the
 PSP's page, palette and entry). A cache built before this keeps the old
 `psp-tiles` until setup rebuilds it (`importer.py stale` names `base`,
 `manifest` and `opt`).
+
+## D441 — A song change began with a burst of the last song: the synth kept a stopped song's tails for the next one (ours, DIV-0087; fixed 2026-11-27, DIV-0250)
+
+**Found:** the owner, 2026-11-27, in play with the disc's music: "Sometimes,
+when transitioning between areas, it sounds like instead of a fade there's
+kind of a 'ping' noise. like a quick rising tone - it doesn't show up on the
+original game".
+
+**Established** (by reading, then measured):
+
+- A music stop keys the synth's voices off (`MusicSynth::SndStop`,
+  `VmSeqKeyOff`) and halts the ring. The synth advances only in
+  `music_seq::Decode`, which the ring's pump calls, so its release tails and
+  its reverb's echo stay as they are.
+- `music_seq::Begin` then loads the next song's bank and plays the song on
+  the same synth. The first samples rendered hold the old tails and echo.
+  After a bank change the old voices read the new bank's samples.
+- On the PlayStation the SPU runs through the stop and the load, and the
+  tails end unheard.
+
+**Measured** (2026-11-27, `tools/bgm/host/stop_tail` on the play install's
+cache, the synth's own code built for the host): each of the 167 songs
+played and stopped at 8, 16, 24, 32 and 40 s; the next 3 s rendered with
+nothing playing.
+
+| | Bank kept | Bank swapped |
+|---|---|---|
+| Cases with a leftover above -40 dBFS at its peak | 797 of 835 | 801 of 835 |
+| Peak, median | -11.5 dBFS | -11.7 dBFS |
+| First 100 ms against the song's own level, median | -2.1 dB | -3.0 dB |
+| Time above -50 dBFS, median / 90th percentile | 0.5 s / 1.0 s | 0.5 s / 1.0 s |
+
+In 53 cases the swapped bank's leftover peaked more than 6 dB above the kept
+bank's. The owner heard one rendered pair (song 0 stopped at 16 s, then
+song 2) and named it the noise.
+
+How long the voices take to end after a stop (a scratch run of the same day,
+not kept: 2,505 stops, every song each 4 s to 60 s, stepped with
+`FastForward` until every envelope was 0): median 0.35 s, 99th percentile
+2.5 s, longest 5.94 s (song 141). None reached 10 s. The run cost 6.4 ms a
+second of the chip's time on the host, 35 ms at worst.
+
+**Fixed 2026-11-27** (DIV-0250): `Begin` stops the last song and runs the
+chip unheard until every voice's envelope is 0, then empties the reverb.
+
+- `stop_tail --run-out`, the same 835 cases: the leftover is digital silence
+  in every one, bank kept and bank swapped.
+- `seq_tests` "a stopped song run out" (host): a song stopped in a note with
+  a slow release has a tail; after `StopAndRunOut` every envelope is 0, a
+  second of render is silent, a second call runs 0 samples, and a limit of
+  441 samples leaves the voice sounding. 60 checks, 0 failures.
+- `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=sound`, exit 0: case 4b starts a song
+  over a playing one with the switch on, and the seam's samples equal an
+  oracle's that is stopped and run out first (882 samples run). With
+  `BOF3X_OFF=SongStartsQuiet` the log has `patch   OFF  SongStartsQuiet`.
+
+**Heard by the owner in play, 2026-11-27**, on the build of this fix:
+"Yeah, thats much better!"
+
+**The same-frame tail, 2026-11-27** (the owner's second call, DIV-0250): the
+run-out alone also removed the overlap at a battle's start, where the stop
+and the start are in one frame. Three renders of field track 097 into battle
+tracks 153 and 016 (a scratch tool, not kept: the tail run out; one synth, the
+tail over the new bank; two synths, the tail from its own bank) went to the
+owner, who chose the third. `Begin` now keeps the tail when the stop is in the
+start's frame and `Decode` mixes it from a second synth.
+
+- `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=sound`, exit 0: case 4b (i) a song
+  started over a playing one equals an oracle's song on a second synth plus
+  the first synth's tail (the tail has energy); (ii) a song started a frame
+  after the stop equals the oracle's stopped and run out first (882 samples).
+- The log of a start says which branch ran, and for a run-out how many frames
+  after the stop the start came.
+
+**Not done:** no scripted run of the game crossed a song change with the new
+build. The same-frame tail is not heard in play yet. Whether any area change
+stops and starts in one frame (its song change would then overlap) was not
+measured: the log line of each start shows it.

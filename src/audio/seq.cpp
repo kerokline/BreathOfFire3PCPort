@@ -1108,4 +1108,27 @@ bool MusicSynth::FastForward(std::uint64_t frames) {
     return !Ended();
 }
 
+bool MusicSynth::Sounding() const {
+    for (int v = 0; v < 24; ++v)
+        if (spu_.VoiceEnvelope(v) != 0) return true;
+    return false;
+}
+
+// The stop, then FastForward a hundredth of a second at a time while a voice's
+// envelope (ENVX, all 24) is above 0. The first step's VSync tick writes the
+// stop's key-offs to the SPU; the song is stopped, so no tick keys a voice on.
+std::uint64_t MusicSynth::StopAndRunOut(std::uint64_t max_frames) {
+    Stop();
+    constexpr std::uint64_t kStep = 441;
+    std::uint64_t run = 0;
+    while (run < max_frames) {
+        if (!Sounding()) break;
+        const std::uint64_t n = max_frames - run < kStep ? max_frames - run : kStep;
+        FastForward(n);
+        run += n;
+    }
+    spu_.ClearReverb();
+    return run;
+}
+
 } // namespace psx

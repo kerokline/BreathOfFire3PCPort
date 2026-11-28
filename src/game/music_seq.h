@@ -56,6 +56,24 @@ bool IsSong(const void* file, unsigned size);
 // the stream marked as the synth's from here on (Active).
 void Begin();
 
+// DIVERGENCE DIV-0250 (SongStartsQuiet): 1 through PatchBytes at Arm. The
+// synth's clock is the ring's pump, so a stopped song's release tails and
+// echo wait in the synth and would sound over the next song's first half
+// second, whenever it starts; a PlayStation's SPU runs through the load and
+// they end unheard. Begin then does one of two things with the last song:
+//   - stopped in an earlier logic frame (Frame_Counter) than this start: the
+//     chip is run, unheard, until its voices' envelopes are at 0 (at most
+//     kRunOutMax samples) and the reverb emptied, before the bank and the new
+//     song go in - the load's silence;
+//   - stopped in this frame (a Music_Start over a playing song, or a stop
+//     and a start in one frame: the battle's start, the fanfares): its tail
+//     is kept, as on a PlayStation with no load between. The synth holding
+//     it goes on as the tail's, with its own bank, and Decode mixes it under
+//     the new song, which plays on a second synth, until its voices are off
+//     and a second of it is silent (at most kRunOutMax samples).
+extern std::uint8_t g_song_starts_quiet;
+inline constexpr std::uint64_t kRunOutMax = 10 * 44100;
+
 // The stream Music_Start last started is the synth's (until Music_Release or
 // the next Music_Start of an MP3).
 bool Active();
