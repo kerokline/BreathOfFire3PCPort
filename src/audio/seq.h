@@ -94,6 +94,8 @@ public:
     // samples run: 0 when nothing sounded; `max_frames` when a voice still
     // sounds, and it is then left sounding.
     std::uint64_t StopAndRunOut(std::uint64_t max_frames);
+    // The envelope (ENVX) of one of the SPU's 24 voices is above 0.
+    bool Sounding() const;
 
     bool Playing() const { return (score_.flags & kPlay) != 0; }
     // A song that plays once (no loop markers) has reached its end of track

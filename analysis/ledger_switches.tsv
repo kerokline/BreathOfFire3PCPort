@@ -9552,7 +9552,7 @@ switch	SndStream_Play	detour	costly		src/game/platform/music.cpp:846	BOF3_INJECT
 switch	SndStream_Stop	detour	costly		src/game/platform/music.cpp:847	BOF3_INJECT
 switch	SoloChampionIfPresent	behaviour	yes		src/game/solo/solo.cpp:159 src/game/solo/solo.cpp:207	BehaviourOn
 switch	SoloCharacter	behaviour	yes		src/game/solo/solo.cpp:157 src/game/solo/solo.cpp:206 src/game/solo/solo.cpp:241 src/game/solo/solo.cpp:259 src/game/solo/solo_battle.cpp:412	BehaviourOn
-switch	SongStartsQuiet	code	yes		src/game/platform/music_seq.cpp:446	PatchBytes
+switch	SongStartsQuiet	code	yes		src/game/platform/music_seq.cpp:510	PatchBytes
 switch	Sound_LoadStream	detour	costly		src/game/core/sound.cpp:1506	BOF3_INJECT
 switch	Sound_MusicPlaying	detour	costly		src/game/core/sound.cpp:1515	BOF3_INJECT
 switch	Sound_PauseAll	detour	costly		src/game/core/sound.cpp:1516	BOF3_INJECT
@@ -10250,7 +10250,7 @@ switch	env:BOF3X_BSI_RUN	env	yes		src/game/boss/boss_si_fuzz.cpp:152	read in src
 switch	env:BOF3X_BSJ_RUN	env	yes		src/game/boss/boss_sj_fuzz.cpp:323	read in src/
 switch	env:BOF3X_BW_TRACE	env	yes		src/game/battle/battle_windows_fuzz.cpp:746	read in src/
 switch	env:BOF3X_BWS_TRACE	env	yes		src/game/menu/battle_win_states_fuzz.cpp:534	read in src/
-switch	env:BOF3X_CACHE	launcher	yes		src/launcher/config.cpp:697 src/common/cache_manifest.cpp:237 src/game/core/psp_code.cpp:38 src/game/platform/dat_cache.cpp:385 src/game/platform/music_seq.cpp:461 src/game/text/shoulder_glyphs.cpp:417 src/hook/exe_image.cpp:1089 src/input/sigma.cpp:140 src/launcher/config.cpp:695 src/launcher/config.cpp:699 src/launcher/config.cpp:880 src/launcher/config.cpp:1163 src/launcher/config.cpp:1851 src/launcher/start.cpp:202 src/launcher/ui/main.cpp:484 src/launcher/ui/pages.cpp:44	read in src/, set by the launcher
+switch	env:BOF3X_CACHE	launcher	yes		src/launcher/config.cpp:697 src/common/cache_manifest.cpp:237 src/game/core/psp_code.cpp:38 src/game/platform/dat_cache.cpp:385 src/game/platform/music_seq.cpp:525 src/game/text/shoulder_glyphs.cpp:417 src/hook/exe_image.cpp:1089 src/input/sigma.cpp:140 src/launcher/config.cpp:695 src/launcher/config.cpp:699 src/launcher/config.cpp:880 src/launcher/config.cpp:1163 src/launcher/config.cpp:1851 src/launcher/start.cpp:202 src/launcher/ui/main.cpp:484 src/launcher/ui/pages.cpp:44	read in src/, set by the launcher
 switch	env:BOF3X_CACHE_DATA	env	yes		src/game/platform/dat_cache.cpp:381 src/hook/exe_image.cpp:1086 src/launcher/config.cpp:872 src/launcher/config.cpp:1835 src/launcher/start.cpp:201 src/launcher/ui/pages.cpp:58	read in src/
 switch	env:BOF3X_CALLTRACE	hosted-only	costly		src/hook/exe_host.cpp:104 src/launcher/launcher.cpp:74 src/game/crt_rest.cpp:553 src/hook/calltrace.cpp:318 src/hook/exe_host_posix.cpp:205 src/hook/input_script.cpp:1260 src/hook/windows_only.cpp:49 src/launcher/ui/main.cpp:238	read in src/, refused by bof3x.exe
 switch	env:BOF3X_CALLTRACE_DETAIL	env	yes		src/hook/calltrace.cpp:390	read in src/
@@ -10369,7 +10369,7 @@ switch	env:BOF3X_MP3=original	hosted-only	costly		src/hook/exe_host.cpp:94 src/l
 switch	env:BOF3X_MP3_COMPARE	hosted-only	costly		src/hook/exe_host.cpp:101 src/launcher/launcher.cpp:74 src/audio/mp3.cpp:627 src/hook/exe_host_posix.cpp:202 src/launcher/ui/main.cpp:238	read in src/, refused by bof3x.exe
 switch	env:BOF3X_MP3_DUMP	env	yes		src/audio/mp3.cpp:505	read in src/
 switch	env:BOF3X_MP3_DUMP_FILES	env	yes		src/audio/mp3.cpp:506	read in src/
-switch	env:BOF3X_MUSIC	launcher	yes		src/launcher/config.cpp:706 src/game/platform/music_seq.cpp:451 src/launcher/config.cpp:703 src/launcher/config.cpp:1851 src/launcher/config.cpp:1976	read in src/, set by the launcher
+switch	env:BOF3X_MUSIC	launcher	yes		src/launcher/config.cpp:706 src/game/platform/music_seq.cpp:515 src/launcher/config.cpp:703 src/launcher/config.cpp:1851 src/launcher/config.cpp:1976	read in src/, set by the launcher
 switch	env:BOF3X_MUSIC_LOG	env	yes		src/audio/sound_sdl.cpp:235 src/game/platform/sound_ours.cpp:76	read in src/
 switch	env:BOF3X_MUSIC_LOOPS	env	yes		src/game/platform/music_loops.cpp:36	read in src/
 switch	env:BOF3X_MW_TRACE	env	yes		src/game/menu/menu_windows_fuzz.cpp:985	read in src/
@@ -10756,3 +10756,4 @@ entry	DIV-0246	env	yes	env:BOF3X_LAYERING		tier Intent; kind launcher
 entry	DIV-0247	env	yes	env:BOF3X_LAYERING		tier Intent; kind launcher
 entry	DIV-0248	code,launcher	yes	SaveCameFrom, env:BOF3X_OFF, ini:off		tier Sensible; kind code
 entry	DIV-0249	launcher	yes	ini:opt		tier Sensible; kind launcher
+entry	DIV-0250	code,launcher	yes	SongStartsQuiet, env:BOF3X_OFF, ini:off		tier Sensible; kind code

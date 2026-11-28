@@ -6923,27 +6923,29 @@ site	src/game/platform/music.cpp	787	asm	stack	live	jmp	jmp	__asm__ volatile("jm
 site	src/game/platform/music.cpp	803	width_if	logic	live	Music_Pump	#if defined(__i386__)	#if defined(__i386__)
 site	src/game/platform/music.cpp	804	handle_array	slot_i686	live	Music_Events	g.msg_wait	const unsigned signalled = sound::g.msg_wait(2, Music_Events, 0, 0, 0xFF);
 site	src/game/platform/music.cpp	811	handle_array	native	live	events	g.msg_wait	const unsigned signalled = sound::g.msg_wait(2, events, 0, 0, 0xFF);
-site	src/game/platform/music_seq.cpp	106	uintptr	-	live	std::uintptr_t	-	bool Mono() { return *reinterpret_cast<const volatile unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(Rest4f_Setting3_addr))) != 0; }
-site	src/game/platform/music_seq.cpp	106	widen	img_place	live	::bof3::Img(Rest4f_Setting3_addr)	const volatile unsigned char*	bool Mono() { return *reinterpret_cast<const volatile unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(Rest4f_Setting3_addr))) != 0; }
-site	src/game/platform/music_seq.cpp	146	long	l	live	long	-	const long long size = static_cast<long long>(h.tellg());
-site	src/game/platform/music_seq.cpp	146	long	l	live	long	-	const long long size = static_cast<long long>(h.tellg());
-site	src/game/platform/music_seq.cpp	148	long	l	live	long	-	constexpr long long kFileMax = 64ll << 20;
-site	src/game/platform/music_seq.cpp	153	long	l	live	long	-	if (static_cast<std::size_t>(h.gcount()) != out->size()) bof3::Fatal(" ", path, static_cast<long long>(h.gcount()), out->size());
-site	src/game/platform/music_seq.cpp	446	low32	object_ours	live	&g_song_starts_quiet	Low32	bof3::PatchBytes(" ", Low32(&g_song_starts_quiet), &was, &is, 1);
-site	src/game/platform/music_seq.cpp	816	long	l	live	long	-	long long energy = 0;
-site	src/game/platform/music_seq.cpp	817	long	l	live	long	-	for (std::int16_t v : ref7) energy += static_cast<long long>(v) * v;
-site	src/game/platform/music_seq.cpp	868	long	l	live	long	-	long long e = 0;
-site	src/game/platform/music_seq.cpp	869	long	l	live	long	-	for (std::int16_t v : r) e += static_cast<long long>(v) * v;
-site	src/game/platform/music_seq.cpp	929	long	l	live	long	-	long long* energy_out) {
-site	src/game/platform/music_seq.cpp	956	long	l	live	long	-	long long e = 0;
-site	src/game/platform/music_seq.cpp	957	long	l	live	long	-	for (std::size_t i = 2 * static_cast<std::size_t>(expect); i < r.size(); ++i) e += static_cast<long long>(r[i]) * r[i];
-site	src/game/platform/music_seq.cpp	966	long	l	live	long	-	long long resume_energy = 0, past_energy = 0;
-site	src/game/platform/music_seq.cpp	1085	long	l	live	long	-	static_cast<unsigned long long>(period), load7 ? " " : " ", start7 ? " " : " ", same7 ? " " : " ", volume ? " " : " ",
-site	src/game/platform/music_seq.cpp	1092	long	l	live	long	-	static_cast<unsigned long long>(ran_out), static_cast<unsigned long long>(kRunOutMax),
-site	src/game/platform/music_seq.cpp	1092	long	l	live	long	-	static_cast<unsigned long long>(ran_out), static_cast<unsigned long long>(kRunOutMax),
-site	src/game/platform/music_seq.cpp	1096	long	l	live	long	-	static_cast<unsigned long long>(ran_out));
-site	src/game/platform/music_seq.cpp	1121	long	l	live	long	-	mid, 3 * kHalf / 4, static_cast<unsigned long long>(far_point), folded, jumps,
-site	src/game/platform/music_seq.cpp	1122	long	l	live	long	-	static_cast<unsigned long long>(period));
+site	src/game/platform/music_seq.cpp	118	uintptr	-	live	std::uintptr_t	-	bool Mono() { return *reinterpret_cast<const volatile unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(Rest4f_Setting3_addr))) != 0; }
+site	src/game/platform/music_seq.cpp	118	widen	img_place	live	::bof3::Img(Rest4f_Setting3_addr)	const volatile unsigned char*	bool Mono() { return *reinterpret_cast<const volatile unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(Rest4f_Setting3_addr))) != 0; }
+site	src/game/platform/music_seq.cpp	158	long	l	live	long	-	const long long size = static_cast<long long>(h.tellg());
+site	src/game/platform/music_seq.cpp	158	long	l	live	long	-	const long long size = static_cast<long long>(h.tellg());
+site	src/game/platform/music_seq.cpp	160	long	l	live	long	-	constexpr long long kFileMax = 64ll << 20;
+site	src/game/platform/music_seq.cpp	165	long	l	live	long	-	if (static_cast<std::size_t>(h.gcount()) != out->size()) bof3::Fatal(" ", path, static_cast<long long>(h.gcount()), out->size());
+site	src/game/platform/music_seq.cpp	510	low32	object_ours	live	&g_song_starts_quiet	Low32	bof3::PatchBytes(" ", Low32(&g_song_starts_quiet), &was, &is, 1);
+site	src/game/platform/music_seq.cpp	880	long	l	live	long	-	long long energy = 0;
+site	src/game/platform/music_seq.cpp	881	long	l	live	long	-	for (std::int16_t v : ref7) energy += static_cast<long long>(v) * v;
+site	src/game/platform/music_seq.cpp	932	long	l	live	long	-	long long e = 0;
+site	src/game/platform/music_seq.cpp	933	long	l	live	long	-	for (std::int16_t v : r) e += static_cast<long long>(v) * v;
+site	src/game/platform/music_seq.cpp	960	long	l	live	long	-	long long tail_energy = 0;
+site	src/game/platform/music_seq.cpp	972	long	l	live	long	-	tail_energy += static_cast<long long>(t[i]) * t[i];
+site	src/game/platform/music_seq.cpp	1021	long	l	live	long	-	long long* energy_out) {
+site	src/game/platform/music_seq.cpp	1048	long	l	live	long	-	long long e = 0;
+site	src/game/platform/music_seq.cpp	1049	long	l	live	long	-	for (std::size_t i = 2 * static_cast<std::size_t>(expect); i < r.size(); ++i) e += static_cast<long long>(r[i]) * r[i];
+site	src/game/platform/music_seq.cpp	1058	long	l	live	long	-	long long resume_energy = 0, past_energy = 0;
+site	src/game/platform/music_seq.cpp	1181	long	l	live	long	-	static_cast<unsigned long long>(period), load7 ? " " : " ", start7 ? " " : " ", same7 ? " " : " ", volume ? " " : " ",
+site	src/game/platform/music_seq.cpp	1189	long	l	live	long	-	static_cast<unsigned long long>(ran_out), static_cast<unsigned long long>(kRunOutMax),
+site	src/game/platform/music_seq.cpp	1189	long	l	live	long	-	static_cast<unsigned long long>(ran_out), static_cast<unsigned long long>(kRunOutMax),
+site	src/game/platform/music_seq.cpp	1194	long	l	live	long	-	static_cast<unsigned long long>(ran_out));
+site	src/game/platform/music_seq.cpp	1219	long	l	live	long	-	mid, 3 * kHalf / 4, static_cast<unsigned long long>(far_point), folded, jumps,
+site	src/game/platform/music_seq.cpp	1220	long	l	live	long	-	static_cast<unsigned long long>(period));
 site	src/game/platform/pillarbox.cpp	79	uintptr	-	live	std::uintptr_t	-	if (*reinterpret_cast<const volatile std::uint16_t*>(static_cast<std::uintptr_t>(::bof3::Img(kTaskSlot0State))) == 0) {
 site	src/game/platform/pillarbox.cpp	79	widen	img_place	live	::bof3::Img(kTaskSlot0State)	const volatile std::uint16_t*	if (*reinterpret_cast<const volatile std::uint16_t*>(static_cast<std::uintptr_t>(::bof3::Img(kTaskSlot0State))) == 0) {
 site	src/game/platform/psx_gpu.cpp	79	low32	image_local	live	base	Low32	const std::uint32_t low = v & ~kLinkFlag, from = Low32(base);
@@ -14776,7 +14778,7 @@ file	src/game/platform/music.cpp	live	widen	img_place	1
 file	src/game/platform/music.cpp	live	widen	param	7
 file	src/game/platform/music.cpp	live	width_if	asm_pair	3
 file	src/game/platform/music.cpp	live	width_if	logic	1
-file	src/game/platform/music_seq.cpp	live	long	l	18
+file	src/game/platform/music_seq.cpp	live	long	l	20
 file	src/game/platform/music_seq.cpp	live	low32	object_ours	1
 file	src/game/platform/music_seq.cpp	live	uintptr	-	1
 file	src/game/platform/music_seq.cpp	live	widen	img_place	1
@@ -15545,8 +15547,8 @@ file	symbols.toml	live	ptr_member	ours_render	11
 file	symbols.toml	live	ptr_member	windows_function	14
 file	symbols.toml	live	ptr_member	windows_handle	3
 file	symbols.toml	live	ptr_member	windows_object	10
-#count sites	11493
-#count sites_live	8009
+#count sites	11495
+#count sites_live	8011
 #count sites_fuzz	3484
 #count fuzz_files	250
 #count narrow	357
@@ -15633,8 +15635,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count widen_word_read	373
 #count widen_word_read_live	364
 #count widen_word_read_live_files	295
-#count long	2341
-#count long_live	2340
+#count long	2343
+#count long_live	2342
 #count long_live_files	55
 #count long_fuzz	1
 #count long_fuzz_files	1
@@ -15647,8 +15649,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count long_ctype:unsigned long *	1
 #count long_ctype:unsigned long *_live	1
 #count long_ctype:unsigned long *_live_files	1
-#count long_l	332
-#count long_l_live	331
+#count long_l	334
+#count long_l_live	333
 #count long_l_live_files	42
 #count long_ul	220
 #count long_ul_live	220
@@ -15865,8 +15867,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count width_if_logic_live_files	15
 #count asm_live_x87_only_files	42
 #count widen_live_fnptr	472
-#count long_src	552
-#count long_src_game	49
+#count long_src	554
+#count long_src_game	51
 #count long_src_game_ul	1
 #count long_ctype	1789
 #count callconv_CALLBACK	8

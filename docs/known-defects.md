@@ -11924,5 +11924,22 @@ chip unheard until every voice's envelope is 0, then empties the reverb.
 **Heard by the owner in play, 2026-11-27**, on the build of this fix:
 "Yeah, thats much better!"
 
+**The same-frame tail, 2026-11-27** (the owner's second call, DIV-0250): the
+run-out alone also removed the overlap at a battle's start, where the stop
+and the start are in one frame. Three renders of field track 097 into battle
+tracks 153 and 016 (a scratch tool, not kept: the tail run out; one synth, the
+tail over the new bank; two synths, the tail from its own bank) went to the
+owner, who chose the third. `Begin` now keeps the tail when the stop is in the
+start's frame and `Decode` mixes it from a second synth.
+
+- `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=sound`, exit 0: case 4b (i) a song
+  started over a playing one equals an oracle's song on a second synth plus
+  the first synth's tail (the tail has energy); (ii) a song started a frame
+  after the stop equals the oracle's stopped and run out first (882 samples).
+- The log of a start says which branch ran, and for a run-out how many frames
+  after the stop the start came.
+
 **Not done:** no scripted run of the game crossed a song change with the new
-build.
+build. The same-frame tail is not heard in play yet. Whether any area change
+stops and starts in one frame (its song change would then overlap) was not
+measured: the log line of each start shows it.
